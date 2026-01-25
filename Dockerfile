@@ -32,7 +32,8 @@ ENV SKIP_ENV_VALIDATION=1
 # Provide dummy DATABASE_URL for Prisma during build (not used, just for validation)
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 # Use development mode for build to include devDependencies
-ENV NODE_ENV=development
+# Build Next.js (standalone output)
+ENV NODE_ENV=production
 RUN npm run build
 
 # Set production mode after build
