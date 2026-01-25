@@ -16,9 +16,29 @@ self.addEventListener("install", (event) => {
 
 // Fetch event - Network first, fallback to cache
 self.addEventListener("fetch", (event) => {
+  // Only cache GET requests
+  if (event.request.method !== "GET") {
+    return;
+  }
+
+  // Skip caching for Next.js API routes and internal resources
+  const url = new URL(event.request.url);
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/_next/") ||
+    url.pathname.includes("extension:")
+  ) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
+        // Check if we received a valid response
+        if (!response || response.status !== 200 || response.type !== "basic") {
+          return response;
+        }
+
         // Clone the response
         const responseToCache = response.clone();
 
