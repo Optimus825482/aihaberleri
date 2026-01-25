@@ -27,68 +27,87 @@ export default async function HomePage() {
     );
   }
 
-  // Fetch settings from database
-  const settingsFromDb = await db.setting.findMany({
-    where: {
-      key: {
-        in: ["heroCarouselCount", "heroCarouselInterval"],
-      },
-    },
-  });
-
-  const settingsMap = settingsFromDb.reduce(
-    (acc, setting) => {
-      acc[setting.key] = parseInt(setting.value);
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-
-  // Default settings
-  const settings = {
-    heroCarouselCount: settingsMap.heroCarouselCount || 5,
-    heroCarouselInterval: settingsMap.heroCarouselInterval || 6000,
+  // Fetch settings from database with error handling
+  let settings = {
+    heroCarouselCount: 5,
+    heroCarouselInterval: 6000,
   };
 
-  // Fetch latest articles
-  const articles = await db.article.findMany({
-    where: {
-      status: "PUBLISHED",
-      publishedAt: { not: null },
-    },
-    include: {
-      category: {
-        select: {
-          name: true,
-          slug: true,
+  try {
+    const settingsFromDb = await db.setting.findMany({
+      where: {
+        key: {
+          in: ["heroCarouselCount", "heroCarouselInterval"],
         },
       },
-    },
-    orderBy: {
-      publishedAt: "desc",
-    },
-    take: 12,
-  });
+    });
+
+    const settingsMap = settingsFromDb.reduce(
+      (acc, setting) => {
+        acc[setting.key] = parseInt(setting.value);
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    settings = {
+      heroCarouselCount: settingsMap.heroCarouselCount || 5,
+      heroCarouselInterval: settingsMap.heroCarouselInterval || 6000,
+    };
+  } catch (error) {
+    console.error("Failed to fetch settings:", error);
+    // Fallback to defaults is already set
+  }
+
+  // Fetch latest articles with error handling
+  let articles: any[] = [];
+  try {
+    articles = await db.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        publishedAt: { not: null },
+      },
+      include: {
+        category: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+      },
+      orderBy: {
+        publishedAt: "desc",
+      },
+      take: 12,
+    });
+  } catch (error) {
+    console.error("Failed to fetch articles:", error);
+  }
 
   type ArticleWithCategory = (typeof articles)[0];
 
-  // Fetch top articles for hero carousel (based on settings)
-  const heroArticles = await db.article.findMany({
-    where: {
-      status: "PUBLISHED",
-      publishedAt: { not: null },
-    },
-    include: {
-      category: {
-        select: {
-          name: true,
-          slug: true,
+  // Fetch top articles for hero carousel with error handling
+  let heroArticles: any[] = [];
+  try {
+    heroArticles = await db.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        publishedAt: { not: null },
+      },
+      include: {
+        category: {
+          select: {
+            name: true,
+            slug: true,
+          },
         },
       },
-    },
-    orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
-    take: settings.heroCarouselCount,
-  });
+      orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
+      take: settings.heroCarouselCount,
+    });
+  } catch (error) {
+    console.error("Failed to fetch hero articles:", error);
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
