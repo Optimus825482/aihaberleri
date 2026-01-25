@@ -1,0 +1,93 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai-news-postgres
+    environment:
+      POSTGRES_USER: aiuser
+      POSTGRES_PASSWORD: aipassword
+      POSTGRES_DB: ai_news_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aiuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: ai-news-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js App
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-news-app
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://aiuser:aipassword@postgres:5432/ai_news_db
+      REDIS_URL: redis://redis:6379
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY}
+      PEXELS_API_KEY: ${PEXELS_API_KEY}
+      NEXT_PUBLIC_ADSENSE_CLIENT_ID: ${NEXT_PUBLIC_ADSENSE_CLIENT_ID}
+      NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_SITE_DESCRIPTION: ${NEXT_PUBLIC_SITE_DESCRIPTION}
+      AGENT_ENABLED: ${AGENT_ENABLED:-true}
+      AGENT_MIN_ARTICLES_PER_RUN: ${AGENT_MIN_ARTICLES_PER_RUN:-2}
+      AGENT_MAX_ARTICLES_PER_RUN: ${AGENT_MAX_ARTICLES_PER_RUN:-3}
+      AGENT_MIN_INTERVAL_HOURS: ${AGENT_MIN_INTERVAL_HOURS:-5}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Background Worker
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-news-worker
+    command: npm run worker
+    environment:
+      DATABASE_URL: postgresql://aiuser:aipassword@postgres:5432/ai_news_db
+      REDIS_URL: redis://redis:6379
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY}
+      PEXELS_API_KEY: ${PEXELS_API_KEY}
+      AGENT_ENABLED: ${AGENT_ENABLED:-true}
+      AGENT_MIN_ARTICLES_PER_RUN: ${AGENT_MIN_ARTICLES_PER_RUN:-2}
+      AGENT_MAX_ARTICLES_PER_RUN: ${AGENT_MAX_ARTICLES_PER_RUN:-3}
+      AGENT_MIN_INTERVAL_HOURS: ${AGENT_MIN_INTERVAL_HOURS:-5}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

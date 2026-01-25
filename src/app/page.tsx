@@ -1,0 +1,117 @@
+import { db } from "@/lib/db";
+import { HeaderWrapper } from "@/components/HeaderWrapper";
+import { Footer } from "@/components/Footer";
+import { ArticleCard } from "@/components/ArticleCard";
+import { HeroCarousel } from "@/components/HeroCarousel";
+
+export const revalidate = 60; // Revalidate every 60 seconds
+
+export default async function HomePage() {
+  // Fetch settings from database
+  const settingsFromDb = await db.setting.findMany({
+    where: {
+      key: {
+        in: ["heroCarouselCount", "heroCarouselInterval"],
+      },
+    },
+  });
+
+  const settingsMap = settingsFromDb.reduce(
+    (acc, setting) => {
+      acc[setting.key] = parseInt(setting.value);
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+
+  // Default settings
+  const settings = {
+    heroCarouselCount: settingsMap.heroCarouselCount || 5,
+    heroCarouselInterval: settingsMap.heroCarouselInterval || 6000,
+  };
+
+  // Fetch latest articles
+  const articles = await db.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      publishedAt: { not: null },
+    },
+    include: {
+      category: {
+        select: {
+          name: true,
+          slug: true,
+        },
+      },
+    },
+    orderBy: {
+      publishedAt: "desc",
+    },
+    take: 12,
+  });
+
+  type ArticleWithCategory = (typeof articles)[0];
+
+  // Fetch top articles for hero carousel (based on settings)
+  const heroArticles = await db.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      publishedAt: { not: null },
+    },
+    include: {
+      category: {
+        select: {
+          name: true,
+          slug: true,
+        },
+      },
+    },
+    orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
+    take: settings.heroCarouselCount,
+  });
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <HeaderWrapper />
+
+      <main className="flex-1">
+        {/* Hero Carousel - Manşet Haberleri */}
+        <HeroCarousel
+          articles={heroArticles}
+          autoPlayInterval={settings.heroCarouselInterval}
+        />
+
+        {/* Latest Articles */}
+        <section id="latest-news" className="container mx-auto px-4 py-12">
+          <h2 className="text-3xl font-bold mb-8">Son Haberler</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {articles.map((article: ArticleWithCategory) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+
+          {articles.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">
+                Henüz haber yok. Otonom agent yakında haber yayınlamaya
+                başlayacak!
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* AdSense Placeholder */}
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
+          <section className="container mx-auto px-4 py-8">
+            <div className="bg-muted rounded-lg p-8 text-center">
+              <p className="text-sm text-muted-foreground">Reklam</p>
+              {/* AdSense ad unit would go here */}
+            </div>
+          </section>
+        )}
+      </main>
+
+      <Footer />
+    </div>
+  );
+}

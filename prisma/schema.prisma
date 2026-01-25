@@ -1,0 +1,222 @@
+// Prisma Schema for AI News Site
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for admin authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @default(ADMIN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  articles Article[]
+  sessions Session[]
+  accounts Account[]
+
+  @@index([email])
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+}
+
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Category model
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  articles Article[]
+
+  @@index([slug])
+}
+
+// Article model
+model Article {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  excerpt     String
+  content     String        @db.Text
+  imageUrl    String?
+  sourceUrl   String?
+  status      ArticleStatus @default(DRAFT)
+  views       Int           @default(0)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id])
+
+  agentLogId String?
+  agentLog   AgentLog? @relation(fields: [agentLogId], references: [id])
+
+  // SEO fields
+  metaTitle       String?
+  metaDescription String?
+  keywords        String[]
+
+  @@index([slug])
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@index([publishedAt])
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// Agent execution log
+model AgentLog {
+  id               String    @id @default(cuid())
+  executionTime    DateTime  @default(now())
+  status           AgentStatus
+  articlesCreated  Int       @default(0)
+  articlesScraped  Int       @default(0)
+  duration         Int?      // in seconds
+  errors           String[]
+  metadata         Json?
+
+  articles Article[]
+
+  @@index([executionTime])
+  @@index([status])
+}
+
+enum AgentStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+  PARTIAL
+}
+
+// Settings model for configuration
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  encrypted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}
+
+// Social media links model
+model SocialMedia {
+  id        String   @id @default(cuid())
+  platform  String   @unique // youtube, facebook, instagram, twitter
+  url       String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([platform])
+}
+
+// Newsletter subscription model
+model Newsletter {
+  id          String            @id @default(cuid())
+  email       String            @unique
+  status      SubscriptionStatus @default(ACTIVE)
+  token       String            @unique @default(cuid())
+  subscribedAt DateTime         @default(now())
+  unsubscribedAt DateTime?
+  lastSentAt  DateTime?
+  
+  // Preferences
+  frequency   EmailFrequency    @default(DAILY)
+  categories  String[]          // Category IDs user is interested in
+  
+  // Metadata
+  source      String?           // Where they subscribed from
+  ipAddress   String?
+  userAgent   String?
+  
+  @@index([email])
+  @@index([status])
+  @@index([token])
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+}
+
+enum EmailFrequency {
+  REALTIME    // Immediate notifications
+  DAILY       // Daily digest
+  WEEKLY      // Weekly digest
+  MONTHLY     // Monthly digest
+}
+
+// Push notification subscription model
+model PushSubscription {
+  id          String   @id @default(cuid())
+  endpoint    String   @unique
+  keys        Json     // p256dh and auth keys
+  userAgent   String?
+  ipAddress   String?
+  subscribedAt DateTime @default(now())
+  lastUsedAt  DateTime @default(now())
+  
+  @@index([endpoint])
+}

@@ -1,0 +1,39 @@
+/* Admin Panel Responsive Styles */
+
+/* Mobile table improvements */
+@media (max-width: 768px) {
+  /* Make tables scrollable on mobile */
+  .admin-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Reduce padding on mobile */
+  .admin-card {
+    padding: 1rem;
+  }
+
+  /* Stack form elements on mobile */
+  .admin-form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Full width buttons on mobile */
+  .admin-button-group {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .admin-button-group button {
+    width: 100%;
+  }
+}
+
+/* Tablet improvements */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Adjust grid columns for tablets */
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
