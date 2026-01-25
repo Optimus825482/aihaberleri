@@ -7,8 +7,10 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
-# Install ALL dependencies (including devDependencies) for build
-RUN npm ci --include=dev
+# Install dependencies (Force development mode to ensure devDependencies are installed)
+ENV NODE_ENV=development
+# Install ALL dependencies
+RUN npm ci
 
 # Stage 2: Builder
 FROM node:20-slim AS builder
