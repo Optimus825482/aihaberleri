@@ -15,8 +15,8 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
-    "worker": "tsx src/workers/news-agent.worker.ts",
-    "seo:init": "tsx scripts/init-indexnow.ts"
+    "worker": "npx tsx src/workers/news-agent.worker.ts",
+    "seo:init": "npx tsx scripts/init-indexnow.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.2",
