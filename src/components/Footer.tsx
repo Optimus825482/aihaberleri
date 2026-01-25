@@ -110,6 +110,14 @@ export async function Footer() {
                   Gizlilik Politikası
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Hizmet Şartları
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -144,6 +152,13 @@ export async function Footer() {
             </Link>
             {" · "}
             <Link
+              href="/terms"
+              className="hover:text-primary transition-colors"
+            >
+              Hizmet Şartları
+            </Link>
+            {" · "}
+            <Link
               href="/about"
               className="hover:text-primary transition-colors"
             >
@@ -151,7 +166,7 @@ export async function Footer() {
             </Link>
             {" · "}
             <a
-              href="mailto:info@aihaberleriorg.com"
+              href="mailto:info@aihaberleri.org"
               className="hover:text-primary transition-colors"
             >
               İletişim
