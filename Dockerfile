@@ -1,9 +1,8 @@
-# Production-optimized Dockerfile
+# Production-optimized Dockerfile (Debian Slim for Stability)
 
 # Stage 1: Dependencies
-FROM node:20-alpine AS deps
-# Install OpenSSL 3.x (Alpine 3.19+ uses OpenSSL 3)
-RUN apk add --no-cache libc6-compat openssl
+FROM node:20-slim AS deps
+RUN apt-get update && apt-get install -y openssl ca-certificates libc6
 WORKDIR /app
 
 # Copy package files
@@ -12,35 +11,29 @@ COPY package.json package-lock.json* ./
 RUN npm ci --include=dev
 
 # Stage 2: Builder
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 
-# Install OpenSSL 3.x
-RUN apk add --no-cache openssl
+# Install OpenSSL
+RUN apt-get update && apt-get install -y openssl
 
 # Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client with correct binary target for Alpine + OpenSSL 3.x
+# Generate Prisma Client
 RUN npx prisma generate
 
-# Build Next.js (standalone output)
-# Skip build-time checks that require external services
+# Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
-# Provide dummy DATABASE_URL for Prisma during build (not used, just for validation)
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-# Use development mode for build to include devDependencies
-# Build Next.js (standalone output)
+# Mandatory for Next.js 15+ build
 ENV NODE_ENV=production
 RUN npm run build
 
-# Set production mode after build
-ENV NODE_ENV=production
-
 # Stage 3: Runner
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -48,8 +41,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Install runtime dependencies including OpenSSL 3.x and libc6-compat for native modules
-RUN apk add --no-cache openssl curl libc6-compat
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y openssl curl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
@@ -62,7 +55,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 
-# Copy scripts for initialization
+# Copy scripts
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
@@ -70,7 +63,7 @@ USER nextjs
 
 EXPOSE 3000
 
-# Health check
+# Health check (Disabled temporarily to prevent loop)
 # HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 #   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
