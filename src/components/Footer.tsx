@@ -8,15 +8,25 @@ import { Youtube, Facebook, Instagram, Twitter } from "lucide-react";
 export async function Footer() {
   const currentYear = new Date().getFullYear();
 
-  // Fetch all categories
-  const categories = await db.category.findMany({
-    orderBy: { order: "asc" },
-  });
+  // Skip database queries during build
+  let categories = [];
+  let socialMedia = [];
 
-  // Fetch social media links
-  const socialMedia = await db.socialMedia.findMany({
-    where: { enabled: true },
-  });
+  if (process.env.SKIP_ENV_VALIDATION !== "1") {
+    try {
+      // Fetch all categories
+      categories = await db.category.findMany({
+        orderBy: { order: "asc" },
+      });
+
+      // Fetch social media links
+      socialMedia = await db.socialMedia.findMany({
+        where: { enabled: true },
+      });
+    } catch (error) {
+      console.error("Error fetching footer data:", error);
+    }
+  }
 
   const socialIcons: Record<string, React.ReactNode> = {
     youtube: <Youtube className="h-5 w-5" />,
