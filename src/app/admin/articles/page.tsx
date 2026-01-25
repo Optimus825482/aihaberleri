@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, RefreshCw, Eye, Search } from "lucide-react";
+import { Edit, Trash2, RefreshCw, Eye, Search, Plus } from "lucide-react";
 import Image from "next/image";
 
 interface Article {
@@ -129,6 +129,12 @@ export default function ArticlesPage() {
             <p className="text-muted-foreground mt-2">
               Tüm haberleri görüntüle ve yönet
             </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => router.push("/admin/articles/create")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Yeni Haber Ekle
+            </Button>
           </div>
         </div>
 

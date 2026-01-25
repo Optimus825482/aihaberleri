@@ -155,6 +155,7 @@ export async function rewriteArticle(
   originalTitle: string,
   originalContent: string,
   category: string,
+  contextArticles: Array<{ title: string; slug: string }> = [],
 ): Promise<{
   title: string;
   excerpt: string;
@@ -162,7 +163,12 @@ export async function rewriteArticle(
   keywords: string[];
   metaDescription: string;
 }> {
-  const prompt = `Sen deneyimli, sivri dilli ve tutkulu bir teknoloji yazarı/editörüsün. SADECE çeviri yapmıyorsun; haberi alıp kendi benzersiz, insan sesinle yeniden yaratıyorsun.
+  const contextText =
+    contextArticles.length > 0
+      ? `\n\n### İÇ LİNKLEME BAĞLAMI (SEO):\nŞu makaleler halihazırda sitemizde yayında. Yazı içinde doğal bir yerini bulursan bu haberlere link (<a href="/news/slug">başlık</a>) verebilirsin:\n${contextArticles.map((a) => `- ${a.title} (Link: /news/${a.slug})`).join("\n")}`
+      : "";
+
+  const prompt = `Sen deneyimli, sivri dilli ve tutkulu bir teknoloji yazarı/editörüsün. SADECE çeviri yapmıyorsun; haberi alıp kendi benzersiz, insan sesinle yeniden yaratıyorsun.${contextText}
 
 HEDEF: Bu yazıyı okuyan kişi "Bunu kesinlikle bir insan yazmış, hem de işini bilen biri" demeli. AI dedektörlerini atlatacak kadar doğal ve karmaşık ("perplexity" ve "burstiness" yüksek) bir dil kullan.
 

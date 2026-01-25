@@ -73,12 +73,24 @@ export async function processArticle(
     // Step 1: Fetch full article content
     const fullContent = await fetchArticleContent(article.url);
 
-    // Step 2: Rewrite article using DeepSeek
+    // Step 2: Fetch recent articles for internal linking context
+    const recentArticles = await db.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        category: { name: category },
+      },
+      select: { title: true, slug: true },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Step 3: Rewrite article using DeepSeek
     console.log("🤖 DeepSeek ile haber yeniden yazılıyor...");
     const rewritten = await rewriteArticle(
       article.title,
       fullContent,
       category,
+      recentArticles,
     );
 
     // Step 3: Generate AI image prompt using DeepSeek
