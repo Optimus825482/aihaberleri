@@ -4,9 +4,29 @@ import { Footer } from "@/components/Footer";
 import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
 export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function HomePage() {
+  // Skip database queries during build
+  if (process.env.SKIP_ENV_VALIDATION === "1") {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <HeaderWrapper />
+        <main className="flex-1">
+          <section className="container mx-auto px-4 py-12">
+            <h2 className="text-3xl font-bold mb-8">Son Haberler</h2>
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Yükleniyor...</p>
+            </div>
+          </section>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   // Fetch settings from database
   const settingsFromDb = await db.setting.findMany({
     where: {

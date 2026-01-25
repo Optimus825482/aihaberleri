@@ -5,12 +5,25 @@ import { PushNotificationButton } from "@/components/PushNotificationButton";
 import { db } from "@/lib/db";
 import { Youtube, Facebook, Instagram, Twitter } from "lucide-react";
 
+// Force dynamic rendering to avoid SSR issues
+export const dynamic = "force-dynamic";
+
 export async function Footer() {
   const currentYear = new Date().getFullYear();
 
   // Skip database queries during build
-  let categories = [];
-  let socialMedia = [];
+  let categories: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    order: number;
+  }> = [];
+  let socialMedia: Array<{
+    id: string;
+    platform: string;
+    url: string;
+    enabled: boolean;
+  }> = [];
 
   if (process.env.SKIP_ENV_VALIDATION !== "1") {
     try {

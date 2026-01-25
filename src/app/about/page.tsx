@@ -7,6 +7,9 @@ export const metadata = {
     "Yapay zeka dünyasındaki gelişmeleri yakından takip edenler için oluşturulmuş, özgün ve güncel haber platformu.",
 };
 
+// Force dynamic rendering to avoid SSR issues
+export const dynamic = "force-dynamic";
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col">
