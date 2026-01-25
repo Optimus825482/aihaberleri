@@ -103,7 +103,13 @@ export function PushNotificationButton() {
     }
   };
 
-  if (!("Notification" in window)) {
+  const [isSupported, setIsSupported] = useState(false);
+
+  useEffect(() => {
+    setIsSupported("Notification" in window);
+  }, []);
+
+  if (!isSupported) {
     return null;
   }
 
@@ -146,6 +152,11 @@ export function PushNotificationButton() {
 function urlBase64ToUint8Array(base64String: string): BufferSource {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+
+  // Safe check for window
+  if (typeof window === "undefined") {
+    return new Uint8Array(0);
+  }
 
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
