@@ -182,6 +182,36 @@ export async function getAgentStats() {
   };
 }
 
+export async function getCategoryStats() {
+  const stats = await db.article.groupBy({
+    by: ["categoryId"],
+    _count: {
+      id: true,
+    },
+    where: {
+      status: "PUBLISHED",
+    },
+  });
+
+  const categories = await db.category.findMany({
+    where: {
+      id: {
+        in: stats.map((s) => s.categoryId),
+      },
+    },
+  });
+
+  return stats
+    .map((stat) => {
+      const category = categories.find((c) => c.id === stat.categoryId);
+      return {
+        name: category?.name || "Bilinmiyor",
+        count: stat._count.id,
+      };
+    })
+    .sort((a, b) => b.count - a.count);
+}
+
 export default {
   executeNewsAgent,
   getAgentHistory,

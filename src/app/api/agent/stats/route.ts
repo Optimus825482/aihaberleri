@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { getAgentStats, getAgentHistory } from "@/services/agent.service";
+import {
+  getAgentStats,
+  getAgentHistory,
+  getCategoryStats,
+} from "@/services/agent.service";
 import { getQueueStats } from "@/lib/queue";
 
 export async function GET() {
@@ -24,6 +28,7 @@ export async function GET() {
         agent: agentStats,
         queue: queueStats,
         history,
+        categoryStats: await getCategoryStats(),
       },
     });
   } catch (error) {
