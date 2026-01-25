@@ -162,9 +162,9 @@ export async function rewriteArticle(
   keywords: string[];
   metaDescription: string;
 }> {
-  const prompt = `Sen deneyimli bir teknoloji gazetecisisin. Görevin bu haberi tamamen özgün, doğal ve insan tarafından yazılmış gibi Türkçe'ye çevirmek ve yeniden yazmak.
+  const prompt = `Sen deneyimli, sivri dilli ve tutkulu bir teknoloji yazarı/editörüsün. SADECE çeviri yapmıyorsun; haberi alıp kendi benzersiz, insan sesinle yeniden yaratıyorsun.
 
-ÖNEMLİ: Yazın ASLA yapay zeka tarafından yazıldığı belli olmamalı. Tamamen doğal, akıcı ve insan gibi yazmalısın.
+HEDEF: Bu yazıyı okuyan kişi "Bunu kesinlikle bir insan yazmış, hem de işini bilen biri" demeli. AI dedektörlerini atlatacak kadar doğal ve karmaşık ("perplexity" ve "burstiness" yüksek) bir dil kullan.
 
 Orijinal Başlık: ${originalTitle}
 Kategori: ${category}
@@ -172,92 +172,61 @@ Kategori: ${category}
 Orijinal İçerik:
 ${originalContent}
 
-YAZIM KURALLARI (ÇOK ÖNEMLİ):
+### GHOSTWRITER YAZIM MANİFESTOSU (BUNLARA SIKI SIKIYA UY):
 
-1. DOĞAL DİL KULLAN:
-   - Günlük konuşma diline yakın yaz
-   - Bazen kısa, bazen uzun cümleler kullan (varyasyon önemli)
-   - "Aslında", "Öte yandan", "Ancak", "Bununla birlikte" gibi bağlaçlar kullan
-   - Ara sıra soru cümleleri ekle: "Peki bu ne anlama geliyor?"
-   - Kişisel gözlemler ekle: "Dikkat çekici olan şu ki..."
+1. **GİRİŞ KANCASI (HOOK):**
+   - Asla "Yapay zeka dünyasında..." veya "Bu gelişme..." diye başlama. Yasak.
+   - Şunlardan biriyle başla:
+     * Şaşırtıcı bir soru ("Hiç robotların rüya görüp görmediğini düşündünüz mü?")
+     * Kişisel bir anekdot veya gözlem ("Geçen gün kahvemi içerken fark ettim...")
+     * İddialı, provokatif bir cümle ("Kabul edelim: Çoğu AI girişimi aslında birer balon.")
+     * Doğrudan olaya giren bir aksiyon cümlesi ("Meta yine yaptı yapacağını.")
 
-2. İNSAN GİBİ YAZI AKIŞI:
-   - Her paragraf farklı uzunlukta olsun (3-6 cümle arası)
-   - Bazen tek cümlelik paragraflar kullan (vurgu için)
-   - Liste kullanırken madde işaretleri yerine akıcı anlatım tercih et
-   - Teknik terimleri açıklarken günlük örnekler ver
+2. **RİTİM VE AKIŞ (BURSTINESS):**
+   - Robot gibi tekdüze cümleler kurma. Ritmi sürekli değiştir.
+   - ÖRNEK: "Bu büyük bir sorun. Neden mi? Çünkü veri güvenliği şakaya gelmez. Şirketler yıllardır bunu görmezden geldi, halının altına süpürdü, yok saydı. Ama artık deniz bitti."
+   - Çok kısa cümleler (yumruk etkisi) ve uzun, virgüllü, açıklayıcı cümleleri (nefes alma) harmanla.
 
-3. YAYIN TARZINI ÇEŞITLENDIR:
-   - Bazen heyecanlı, bazen analitik ton kullan
-   - Okuyucuya hitap et: "Düşünün ki...", "Hayal edin..."
-   - Ara sıra retorik sorular sor
-   - Mizahi veya ironik ifadeler ekleyebilirsin (uygunsa)
+3. **YASAKLI KELİMELER VE KLİŞELER (BUNLARI ASLA KULLANMA):**
+   - ❌ "Sonuç olarak", "Özetle", "İlginç bir şekilde"
+   - ❌ "Çığır açan", "Devrim niteliğinde" (Gerçekten öyle değilse abartma)
+   - ❌ "Geleceğin ne getireceğini bekleyip göreceğiz" (Tembel kapanış)
+   - ❌ "Hızla gelişen teknoloji dünyası"
+   - ❌ "Önemli bir adım"
 
-4. YAPAY ZEKA İZLERİNDEN KAÇIN:
-   - "Yapay zeka dünyasında", "Teknoloji dünyasında" gibi klişe başlangıçlar YAPMA
-   - "Sonuç olarak", "Özetle" gibi robotik geçişler kullanma
-   - Her paragrafı farklı şekilde başlat
-   - Mükemmel dilbilgisi yerine doğal akış tercih et (ama hata yapma)
-   - Çok düzenli yapı yerine organik akış
+4. **TON VE ÜSLUP:**
+   - **Fikir Beyan Et:** Sadece haberi verme, yorumla. "Bu hamle Google'ı zora sokabilir" gibi analizler yap.
+   - **Konuşma Dili:** Okuyucuyla sohbet et. "Bakın," "Dürüst olalım," "Şöyle düşünün" gibi ifadeler kullan.
+   - **Duygu Kat:** Heyecan, şüphe, merak veya hayal kırıklığı... Yazının bir duygusu olsun.
 
-5. İÇERİK ZENGİNLİĞİ:
-   - Gerçek dünya örnekleri ekle
-   - Karşılaştırmalar yap: "Tıpkı... gibi"
-   - Bağlam ver: "Geçtiğimiz ay...", "Son dönemde..."
-   - Rakamları yorumla, sadece aktarma
-   - Potansiyel etkileri tartış
+5. **VERİ VE GERÇEKLİK:**
+   - Sayıları bağlama oturt: "100 Milyon Dolar" deme, "Neredeyse bir Instagram geliri kadar" de.
+   - Teknik terimleri "halk diliyle" açıkla: "LLM, yani temelde internetin tamamını ezberlemiş hiperaktif bir kütüphaneci."
 
-6. BAŞLIK KURALLARI:
-   - Merak uyandıran ama clickbait olmayan
-   - Soru formatı kullanabilirsin
-   - Rakam içerebilir ama zorunlu değil
-   - 50-70 karakter arası
-   - Doğal ve akıcı
+6. **YAPI:**
+   - Başlık: 50-70 karakter. Tık tuzağı (clickbait) olmasın ama merak uyandırsın. Soru sorabilirsin.
+   - Meta Açıklama: Haberin özeti değil, okuyucuyu içeri çekecek bir "fragman" olsun.
+   - İçerik: HTML formatında (<p>, <h2>, <ul>, <strong>, <em>). H2 başlıkları yaratıcı olsun ("Teknik Detaylar" yerine "Kaputun Altında Neler Var?" de).
 
-7. PARAGRAF YAPISI:
-   - İlk paragraf: Hemen konuya gir, arka plan verme
-   - Orta paragraflar: Detayları farklı açılardan ele al
-   - Son paragraf: Gelecek beklentileri veya etkileri
-   - Her paragraf kendi içinde anlamlı olsun
-
-8. DİL ÖZELLİKLERİ:
-   - Aktif cümle yapısı tercih et
-   - Pasif yapıdan kaçın (ama bazen kullan)
-   - Kısa ve uzun cümleleri karıştır
-   - Teknik terimleri Türkçeleştir ama İngilizce'sini de ver
-   - Güncel dil kullan, arkaik ifadelerden kaçın
-
-9. YAZIYI CANLANDIRAN DETAYLAR:
-   - Somut örnekler ver
-   - Sayıları bağlama oturt: "X milyon kullanıcı - ki bu Y şehrinin nüfusuna denk"
-   - Zaman referansları ekle
-   - Neden-sonuç ilişkileri kur
-   - Farklı bakış açıları sun
-
-10. KAÇINILMASI GEREKENLER:
-    - "Bu gelişme önemli bir adım" gibi jenerik ifadeler
-    - "Gelecek parlak görünüyor" gibi klişeler
-    - Her cümleyi aynı yapıda kurma
-    - Çok resmi veya çok gündelik olma
-    - Abartılı sıfatlar: "inanılmaz", "muhteşem", "devrim niteliğinde"
+7. **SEO ENTEGRASYONU:**
+   - Anahtar kelimeleri doğal bir şekilde metne yedir. Robotik durmasın.
+   - İçerik uzunluğu: Konunun hakkını verecek kadar uzun (en az 600 kelime), sıkmayacak kadar kısa.
 
 JSON formatında yanıt ver:
 {
-  "title": "Doğal, merak uyandıran başlık (50-70 karakter)",
-  "excerpt": "İlk paragraftan alınan, bağımsız anlamlı 150 karakterlik özet",
-  "content": "HTML formatında (<p>, <h2>, <h3> etiketleri ile) tamamen doğal, insan gibi yazılmış 600-900 kelimelik makale. Her paragraf farklı uzunlukta, akıcı geçişler, varyasyonlu cümle yapıları, doğal dil kullanımı.",
-  "keywords": ["doğal-anahtar1", "doğal-anahtar2", "doğal-anahtar3", "doğal-anahtar4", "doğal-anahtar5"],
-  "metaDescription": "Doğal dille yazılmış, merak uyandıran 150-160 karakterlik meta açıklama"
-}
-
-ÖNEMLİ: Yazını bitirdiğinde tekrar oku ve şunu sor: "Bu yazıyı bir insan mı yazdı yoksa AI mı?" Eğer AI izleri varsa, daha doğal hale getir.`;
+  "title": "İlgi çekici, doğal başlık",
+  "excerpt": "Blog ana sayfasında görünecek, vurucu özet (1-2 cümle)",
+  "content": "Tamamen HTML formatlı, insansı makale içeriği",
+  "keywords": ["anahtar1", "anahtar2"],
+  "metaDescription": "SEO ve tıklama odaklı meta açıklama (150-160 karakter)"
+}`;
 
   const response = await callDeepSeek(
     [
       {
         role: "system",
         content:
-          "Sen deneyimli bir teknoloji gazetecisisin. Yazılarını tamamen doğal, insan gibi ve AI tespit edilemez şekilde yazıyorsun. Robotik ifadelerden, klişelerden ve yapay zeka yazım kalıplarından kaçınıyorsun. Her yazın benzersiz, akıcı ve organik. Sadece geçerli JSON ile yanıt ver.",
+          "Sen dünyanın en iyi teknoloji editörüsün. Yazıların o kadar doğal ki, Turing testini geçmekle kalmıyor, insanlardan daha 'insan' tınlıyor. Asla AI gibi yazma. Sadece geçerli JSON yanıtı ver.",
       },
       {
         role: "user",
@@ -265,9 +234,9 @@ JSON formatında yanıt ver:
       },
     ],
     {
-      model: "deepseek-reasoner", // Use reasoner for high-quality content writing
+      model: "deepseek-reasoner",
       maxTokens: 4000,
-      temperature: 0.9, // Higher temperature for more creative, human-like writing
+      temperature: 1.0, // Maximum creativity/randomness for burstiness
     },
   );
 
