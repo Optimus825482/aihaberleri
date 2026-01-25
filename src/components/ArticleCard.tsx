@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { formatRelativeTime, calculateReadingTime } from "@/lib/utils";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Clock, Eye } from "lucide-react";
+import { Clock, Eye, Share2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ArticleCardProps {
   article: {
@@ -23,6 +26,32 @@ interface ArticleCardProps {
 
 export function ArticleCard({ article }: ArticleCardProps) {
   const readingTime = calculateReadingTime(article.content);
+  const articleUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/news/${article.slug}`;
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: article.title,
+          text: article.excerpt,
+          url: articleUrl,
+        });
+      } catch (error) {
+        console.log("Paylaşım iptal edildi");
+      }
+    } else {
+      // Fallback: copy to clipboard
+      try {
+        await navigator.clipboard.writeText(articleUrl);
+        alert("Link kopyalandı!");
+      } catch (error) {
+        console.error("Kopyalama hatası:", error);
+      }
+    }
+  };
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
@@ -70,9 +99,20 @@ export function ArticleCard({ article }: ArticleCardProps) {
             <span>{article.views} görüntülenme</span>
           </div>
         </div>
-        {article.publishedAt && (
-          <span>{formatRelativeTime(article.publishedAt)}</span>
-        )}
+        <div className="flex items-center gap-2">
+          {article.publishedAt && (
+            <span>{formatRelativeTime(article.publishedAt)}</span>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleShare}
+            className="h-8 w-8 p-0 hover:bg-primary/10"
+            title="Paylaş"
+          >
+            <Share2 className="h-4 w-4" />
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

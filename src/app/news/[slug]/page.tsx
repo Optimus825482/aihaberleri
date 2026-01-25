@@ -152,7 +152,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
           {/* Share Buttons */}
           <div className="mb-8">
-            <ShareButtons title={article.title} url={articleUrl} />
+            <ShareButtons
+              title={article.title}
+              url={articleUrl}
+              description={article.excerpt}
+            />
           </div>
 
           {/* Featured Image */}
