@@ -25,7 +25,7 @@ export const getRedis = () => {
   if (!redisInstance) {
     try {
       redisInstance = new Redis(getRedisUrl(), {
-        maxRetriesPerRequest: 3,
+        maxRetriesPerRequest: null, // Required for BullMQ
         enableReadyCheck: false,
         lazyConnect: true, // Don't connect immediately
       });
