@@ -1,32 +1,44 @@
 import { Queue, Worker, QueueEvents } from "bullmq";
-import redis from "./redis";
+import { getRedis } from "./redis";
 
-// News agent queue
-export const newsAgentQueue = new Queue("news-agent", {
-  connection: redis,
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: {
-      type: "exponential",
-      delay: 5000,
-    },
-    removeOnComplete: {
-      count: 100,
-      age: 24 * 3600, // 24 hours
-    },
-    removeOnFail: {
-      count: 50,
-    },
-  },
-});
+// Get Redis connection (may be null during build)
+const redis = getRedis();
 
-// Queue events for monitoring
-export const newsAgentQueueEvents = new QueueEvents("news-agent", {
-  connection: redis,
-});
+// Create queue only if Redis is available
+export const newsAgentQueue = redis
+  ? new Queue("news-agent", {
+      connection: redis,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 5000,
+        },
+        removeOnComplete: {
+          count: 100,
+          age: 24 * 3600, // 24 hours
+        },
+        removeOnFail: {
+          count: 50,
+        },
+      },
+    })
+  : null;
+
+// Queue events for monitoring (only if Redis is available)
+export const newsAgentQueueEvents = redis
+  ? new QueueEvents("news-agent", {
+      connection: redis,
+    })
+  : null;
 
 // Helper to add news agent job
 export async function scheduleNewsAgentJob() {
+  if (!newsAgentQueue) {
+    console.warn("⚠️  Queue not available (Redis not connected)");
+    return null;
+  }
+
   // Calculate next execution time (random between 5-8 hours from now)
   const minHours = parseInt(process.env.AGENT_MIN_INTERVAL_HOURS || "5");
   const maxHours = minHours + 3;
@@ -54,6 +66,16 @@ export async function scheduleNewsAgentJob() {
 
 // Get queue stats
 export async function getQueueStats() {
+  if (!newsAgentQueue) {
+    return {
+      waiting: 0,
+      active: 0,
+      completed: 0,
+      failed: 0,
+      delayed: 0,
+    };
+  }
+
   const [waiting, active, completed, failed, delayed] = await Promise.all([
     newsAgentQueue.getWaitingCount(),
     newsAgentQueue.getActiveCount(),
@@ -73,6 +95,10 @@ export async function getQueueStats() {
 
 // Get upcoming jobs
 export async function getUpcomingJobs() {
+  if (!newsAgentQueue) {
+    return [];
+  }
+
   const jobs = await newsAgentQueue.getJobs(["delayed", "waiting"]);
   return jobs.map((job) => ({
     id: job.id,
