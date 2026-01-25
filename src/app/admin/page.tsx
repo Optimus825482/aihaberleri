@@ -44,6 +44,10 @@ interface Stats {
     articlesScraped: number;
     duration: number | null;
   }>;
+  categoryStats: Array<{
+    name: string;
+    count: number;
+  }>;
 }
 
 interface LogMessage {
@@ -172,14 +176,21 @@ export default function AdminDashboard() {
     );
   }
 
+  // Calculate max count for progress bars
+  const maxCategoryCount = stats?.categoryStats?.length
+    ? Math.max(...stats.categoryStats.map((c) => c.count))
+    : 1;
+
   return (
     <AdminLayout>
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold">Dashboard</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold">
+              Command Center <span className="text-primary">Pro</span>
+            </h1>
             <p className="text-muted-foreground mt-2">
-              Sistem durumu ve istatistikler
+              Sistem durumu, otonom agent kontrolü ve içerik analizi
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -194,22 +205,24 @@ export default function AdminDashboard() {
             <Button
               onClick={executeAgent}
               disabled={executing}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0"
             >
               <Play className="mr-2 h-4 w-4" />
-              {executing ? "Çalıştırılıyor..." : "Agent'ı Şimdi Çalıştır"}
+              {executing
+                ? "Ghostwriter Çalışıyor..."
+                : "Agent'ı Şimdi Çalıştır"}
             </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <Card>
+          <Card className="bg-card/50 backdrop-blur border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Toplam Çalıştırma
               </CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <Activity className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -221,12 +234,12 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-card/50 backdrop-blur border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Oluşturulan Haberler
               </CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -238,12 +251,12 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-card/50 backdrop-blur border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Kuyruk Durumu
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -255,12 +268,12 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-card/50 backdrop-blur border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 Son Çalıştırma
               </CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Clock className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -275,100 +288,147 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Real-time Logs - Embedded */}
-        {logs.length > 0 && (
-          <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Category Distribution Chart */}
+          <Card className="col-span-1">
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <Terminal className="h-5 w-5" />
-                <CardTitle>Agent Çalıştırma Logları</CardTitle>
-              </div>
-              <CardDescription>Gerçek zamanlı işlem logları</CardDescription>
+              <CardTitle>Kategori Dağılımı</CardTitle>
+              <CardDescription>Hangi kategoride kaç haber var?</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="bg-slate-950 text-slate-50 p-3 sm:p-4 rounded-lg max-h-96 overflow-y-auto font-mono text-xs sm:text-sm overflow-x-auto">
-                {logs.map((log, index) => (
-                  <div
-                    key={index}
-                    className={`mb-2 ${
-                      log.type === "error"
-                        ? "text-red-400"
-                        : log.type === "success"
-                          ? "text-green-400"
-                          : log.type === "progress"
-                            ? "text-blue-400"
-                            : "text-slate-300"
-                    }`}
-                  >
-                    <span className="text-slate-500 mr-2">
-                      [{new Date(log.timestamp).toLocaleTimeString("tr-TR")}]
-                    </span>
-                    {log.message}
-                  </div>
-                ))}
-                {executing && (
-                  <div className="flex items-center gap-2 text-blue-400">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
-                    <span>Çalıştırılıyor...</span>
-                  </div>
+              <div className="space-y-4">
+                {stats?.categoryStats && stats.categoryStats.length > 0 ? (
+                  stats.categoryStats.map((cat, index) => (
+                    <div key={index} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{cat.name}</span>
+                        <span className="text-muted-foreground">
+                          {cat.count} haber
+                        </span>
+                      </div>
+                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary/80 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${(cat.count / maxCategoryCount) * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Henüz kategori verisi yok.
+                  </p>
                 )}
-                <div ref={logsEndRef} />
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Execution History */}
-        <Card>
+          {/* Execution History */}
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle>Son Operasyonlar</CardTitle>
+              <CardDescription>Son 5 Ghostwriter görevi</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {stats?.history.map((execution) => (
+                  <div
+                    key={execution.id}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 border rounded-lg gap-2"
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">
+                        {new Date(execution.executionTime).toLocaleString(
+                          "tr-TR",
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {execution.articlesCreated} haber oluşturuldu (
+                        {execution.articlesScraped} tarandı)
+                      </p>
+                    </div>
+                    <div className="self-end sm:self-auto">
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          execution.status === "SUCCESS"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                            : execution.status === "FAILED"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        }`}
+                      >
+                        {execution.status === "SUCCESS"
+                          ? "BAŞARILI"
+                          : execution.status === "FAILED"
+                            ? "BAŞARISIZ"
+                            : "KISMİ"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+
+                {(!stats?.history || stats.history.length === 0) && (
+                  <p className="text-center text-muted-foreground py-4">
+                    Henüz işlem yok.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Real-time Logs - Embedded */}
+        <Card className="bg-zinc-950 border-zinc-800">
           <CardHeader>
-            <CardTitle>Son Çalıştırmalar</CardTitle>
-            <CardDescription>Son 5 agent çalıştırması</CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Terminal className="h-5 w-5 text-green-500" />
+                <CardTitle className="text-zinc-100">Agent Terminali</CardTitle>
+              </div>
+              {executing && (
+                <div className="flex items-center gap-2 text-green-500 text-sm animate-pulse">
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  CANLI
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {stats?.history.map((execution) => (
-                <div
-                  key={execution.id}
-                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-3"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium text-sm sm:text-base">
-                      {new Date(execution.executionTime).toLocaleString(
-                        "tr-TR",
-                      )}
-                    </p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {execution.articlesCreated} haber oluşturuldu (
-                      {execution.articlesScraped} tarandı)
-                      {execution.duration && ` • ${execution.duration}s`}
-                    </p>
-                  </div>
-                  <div className="self-end sm:self-auto">
+            <div className="font-mono text-sm h-64 overflow-y-auto space-y-1 pr-2">
+              {logs.length === 0 && !executing ? (
+                <p className="text-zinc-500 italic">
+                  Terminal hazır. Komut bekleniyor...
+                </p>
+              ) : (
+                logs.map((log, index) => (
+                  <div key={index} className="flex gap-2">
+                    <span className="text-zinc-600 shrink-0">
+                      [{new Date(log.timestamp).toLocaleTimeString("tr-TR")}]
+                    </span>
                     <span
-                      className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap ${
-                        execution.status === "SUCCESS"
-                          ? "bg-green-100 text-green-800"
-                          : execution.status === "FAILED"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
+                      className={`${
+                        log.type === "error"
+                          ? "text-red-400"
+                          : log.type === "success"
+                            ? "text-green-400 font-semibold"
+                            : log.type === "progress"
+                              ? "text-blue-400"
+                              : "text-zinc-300"
                       }`}
                     >
-                      {execution.status === "SUCCESS"
-                        ? "BAŞARILI"
-                        : execution.status === "FAILED"
-                          ? "BAŞARISIZ"
-                          : "KISMİ"}
+                      {log.message}
                     </span>
                   </div>
-                </div>
-              ))}
-
-              {(!stats?.history || stats.history.length === 0) && (
-                <p className="text-center text-muted-foreground py-8">
-                  Henüz çalıştırma yok. Başlamak için "Agent'ı Şimdi Çalıştır"
-                  butonuna tıklayın.
-                </p>
+                ))
               )}
+              {executing && (
+                <div className="flex items-center gap-2 text-green-500/50">
+                  <span>_</span>
+                </div>
+              )}
+              <div ref={logsEndRef} />
             </div>
           </CardContent>
         </Card>
