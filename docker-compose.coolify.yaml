@@ -87,6 +87,7 @@ services:
     restart: unless-stopped
     networks:
       - aihaberleri-network
+      - coolify
     # healthcheck:
     #   test:
     #     [
@@ -109,3 +110,5 @@ volumes:
 networks:
   aihaberleri-network:
     driver: bridge
+  coolify:
+    external: true
