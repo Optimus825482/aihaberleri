@@ -267,9 +267,41 @@ After deployment, verify:
 5. ✅ `src/lib/queue.ts` - Null Redis handling
 6. ✅ `src/workers/news-agent.worker.ts` - Null handling
 7. ✅ `src/components/HeaderWrapper.tsx` - Build-time skip
-8. ✅ `src/components/Footer.tsx` - Build-time skip + TypeScript fixes
+8. ✅ `src/components/Footer.tsx` - Build-time skip + TypeScript fixes + force-dynamic
 9. ✅ `src/app/sitemap.ts` - Force dynamic + build-time skip
 10. ✅ `src/app/news-sitemap.xml/route.ts` - Force dynamic + build-time skip
+11. ✅ `src/app/page.tsx` - Force dynamic + build-time skip
+12. ✅ `src/app/about/page.tsx` - Force dynamic
+13. ✅ `src/app/privacy/page.tsx` - Force dynamic
+
+## Build Test Results
+
+✅ **Local Build Test: PASSED**
+
+```bash
+$env:SKIP_ENV_VALIDATION="1"
+npm run build
+
+# Results:
+✓ Compiled successfully in 10.5s
+✓ Linting and checking validity of types
+✓ Collecting page data
+✓ Generating static pages (30/30)
+✓ Collecting build traces
+✓ Finalizing page optimization
+
+Exit Code: 0
+```
+
+**All pages built successfully:**
+
+- ✅ Homepage (/)
+- ✅ About page (/about)
+- ✅ Privacy page (/privacy)
+- ✅ All admin pages
+- ✅ All API routes
+- ✅ Dynamic routes (news, categories)
+- ✅ Sitemaps
 
 ## Next Steps
 
