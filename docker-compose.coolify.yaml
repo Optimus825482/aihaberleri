@@ -1,28 +1,7 @@
 version: "3.8"
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: aihaberleri-postgres
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-ainewsdb}
-      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ${POSTGRES_DB:-ainewsdb}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 40s
-    restart: unless-stopped
-    networks:
-      - aihaberleri-network
-
-  # Redis
+  # Redis (Local container)
   redis:
     image: redis:7-alpine
     container_name: aihaberleri-redis
@@ -39,7 +18,7 @@ services:
     networks:
       - aihaberleri-network
 
-  # Next.js App
+  # Next.js App (PostgreSQL harici container'da, Redis local)
   app:
     build:
       context: .
@@ -48,12 +27,12 @@ services:
         - NODE_ENV=production
     container_name: aihaberleri-app
     ports:
-      - "${APP_PORT:-3001}:3000" # Changed default from 3000 to 3001
+      - "${APP_PORT:-3001}:3000"
     environment:
-      # Database
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # Database (Harici PostgreSQL container - internal URL kullan)
+      DATABASE_URL: ${DATABASE_URL}
 
-      # Redis
+      # Redis (Local Redis container)
       REDIS_URL: redis://redis:6379
 
       # NextAuth
@@ -102,14 +81,7 @@ services:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
 
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     restart: unless-stopped
-    networks:
-      - aihaberleri-network
     healthcheck:
       test:
         [
@@ -126,8 +98,6 @@ services:
       start_period: 60s
 
 volumes:
-  postgres_data:
-    driver: local
   redis_data:
     driver: local
 
