@@ -62,8 +62,8 @@ export function Logo({
     logoSrc = "/logos/brand/logo-secondary.png";
   } else {
     logoSrc = isDark
-      ? "/logos/brand/logo-white.png"
-      : "/logos/brand/logo-dark.png";
+      ? "/logos/brand/ai-logo-white.png"
+      : "/logos/brand/ai-logo-dark.png";
   }
 
   const logoContent = (
