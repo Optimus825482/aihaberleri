@@ -45,7 +45,7 @@ services:
         - NODE_ENV=production
     container_name: aihaberleri-app
     ports:
-      - "${APP_PORT:-3000}:3000"
+      - "${APP_PORT:-3001}:3000" # Changed default from 3000 to 3001
     environment:
       # Database
       DATABASE_URL: postgresql://${POSTGRES_USER:-aiuser}:${POSTGRES_PASSWORD:-aipassword}@postgres:5432/${POSTGRES_DB:-ainewsdb}
