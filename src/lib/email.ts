@@ -118,30 +118,25 @@ class ResendClient {
       errors: [] as string[],
     };
 
-    // Process in batches
-    for (let i = 0; i < emails.length; i += EMAIL_CONFIG.batchSize) {
-      const batch = emails.slice(i, i + EMAIL_CONFIG.batchSize);
+    // Process in batches with rate limiting (2 emails/second for free plan)
+    const RATE_LIMIT_DELAY = 600; // 600ms between emails (safe margin)
 
-      // Send emails in parallel within batch
-      const promises = batch.map(async (email) => {
-        try {
-          await this.send(email);
-          results.sent++;
-        } catch (error) {
-          results.failed++;
-          results.errors.push(
-            `${email.to}: ${error instanceof Error ? error.message : "Unknown error"}`,
-          );
-        }
-      });
+    for (let i = 0; i < emails.length; i++) {
+      const email = emails[i];
 
-      await Promise.all(promises);
-
-      // Rate limiting between batches
-      if (i + EMAIL_CONFIG.batchSize < emails.length) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, EMAIL_CONFIG.rateLimitDelay),
+      try {
+        await this.send(email);
+        results.sent++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push(
+          `${email.to}: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
+      }
+
+      // Rate limiting: wait between emails
+      if (i < emails.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
       }
     }
 

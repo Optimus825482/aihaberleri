@@ -7,10 +7,15 @@
  *   npx tsx scripts/test-email.ts
  */
 
+import "dotenv/config";
 import { emailService } from "../src/lib/email";
+
+// Helper function to wait
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function testEmailService() {
   console.log("🧪 Testing Email Service...\n");
+  console.log("⏱️  Rate limit: 2 emails/second (adding delays)\n");
 
   // Test 1: Connection Test
   console.log("1️⃣ Testing email configuration...");
@@ -23,6 +28,9 @@ async function testEmailService() {
     console.error(`   Error: ${connectionTest.error}\n`);
     process.exit(1);
   }
+
+  // Wait to respect rate limit
+  await wait(600);
 
   // Test 2: Welcome Email
   console.log("2️⃣ Testing welcome email...");
@@ -39,6 +47,9 @@ async function testEmailService() {
     console.error(`   Error: ${welcomeTest.error}\n`);
   }
 
+  // Wait to respect rate limit
+  await wait(600);
+
   // Test 3: Unsubscribe Confirmation
   console.log("3️⃣ Testing unsubscribe confirmation...");
   const unsubscribeTest =
@@ -50,6 +61,9 @@ async function testEmailService() {
     console.error("❌ Unsubscribe confirmation failed!");
     console.error(`   Error: ${unsubscribeTest.error}\n`);
   }
+
+  // Wait to respect rate limit
+  await wait(600);
 
   // Test 4: Newsletter Email
   console.log("4️⃣ Testing newsletter email...");

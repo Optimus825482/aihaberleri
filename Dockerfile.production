@@ -1,32 +1,37 @@
 # Production-optimized Dockerfile for Coolify
 
 # Stage 1: Dependencies
-FROM node:18-alpine AS deps
-RUN apk add --no-cache libc6-compat openssl
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat openssl1.1-compat
 WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+RUN npm ci
 
 # Stage 2: Builder
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
+
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl1.1-compat
 
 # Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client
+# Generate Prisma Client with correct binary target
 RUN npx prisma generate
 
 # Build Next.js (standalone output)
+# Skip build-time checks that require external services
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV SKIP_ENV_VALIDATION=1
 RUN npm run build
 
 # Stage 3: Runner
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -34,8 +39,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Install runtime dependencies
-RUN apk add --no-cache openssl curl
+# Install runtime dependencies including OpenSSL 1.1
+RUN apk add --no-cache openssl1.1-compat curl
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
