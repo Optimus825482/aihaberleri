@@ -1,0 +1,808 @@
+2026-Jan-25 17:50:21.487447 Starting deployment of optimus825482/aihaberleri:main-b0gwgks0wwowwkckg0ggokso to localhost.
+2026-Jan-25 17:50:21.704601 Preparing container with helper image: ghcr.io/coollabsio/coolify-helper:1.0.12
+2026-Jan-25 17:50:21.833610 [DEBUG] [CMD]: docker stop -t 30 pccs48scsowcw40osos8w8c8
+2026-Jan-25 17:50:21.833610 [DEBUG] Error response from daemon: No such container: pccs48scsowcw40osos8w8c8
+2026-Jan-25 17:50:22.005960 [DEBUG] [CMD]: docker run -d --network coolify --name pccs48scsowcw40osos8w8c8  --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/coollabsio/coolify-helper:1.0.12
+2026-Jan-25 17:50:22.005960 [DEBUG] a1b5dbaf7a8b2ccbf55593b8e4875f039f9a25edf391f6dc0753d1cb48ac7334
+2026-Jan-25 17:50:23.074303 [DEBUG] [CMD]: docker exec pccs48scsowcw40osos8w8c8 bash -c 'GIT_SSH_COMMAND="ssh -o ConnectTimeout=30 -p 22 -o Port=22 -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git ls-remote https://github.com/Optimus825482/aihaberleri refs/heads/main'
+2026-Jan-25 17:50:23.074303 [DEBUG] b52a65482f545229e1dc317fe10d64966bf0a259	refs/heads/main
+2026-Jan-25 17:50:23.094880 ----------------------------------------
+2026-Jan-25 17:50:23.105852 Importing Optimus825482/aihaberleri:main (commit sha b52a65482f545229e1dc317fe10d64966bf0a259) to /artifacts/pccs48scsowcw40osos8w8c8.
+2026-Jan-25 17:50:23.377975 [DEBUG] [CMD]: docker exec pccs48scsowcw40osos8w8c8 bash -c 'git clone --depth=1 --recurse-submodules --shallow-submodules -b 'main' 'https://github.com/Optimus825482/aihaberleri' '/artifacts/pccs48scsowcw40osos8w8c8' && cd '/artifacts/pccs48scsowcw40osos8w8c8' && if [ -f .gitmodules ]; then sed -i "s#git@\(.*\):#https://\1/#g" '/artifacts/pccs48scsowcw40osos8w8c8'/.gitmodules || true && git submodule sync && GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git submodule update --init --recursive --depth=1; fi && cd '/artifacts/pccs48scsowcw40osos8w8c8' && GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git lfs pull'
+2026-Jan-25 17:50:23.377975 [DEBUG] Cloning into '/artifacts/pccs48scsowcw40osos8w8c8'...
+2026-Jan-25 17:50:25.417028 [DEBUG] [CMD]: docker exec pccs48scsowcw40osos8w8c8 bash -c 'cd /artifacts/pccs48scsowcw40osos8w8c8 && git log -1 b52a65482f545229e1dc317fe10d64966bf0a259 --pretty=%B'
+2026-Jan-25 17:50:25.417028 [DEBUG] fix(docker): migrate from alpine to debian-slim for stability
+2026-Jan-25 17:50:25.894527 ----------------------------------------
+2026-Jan-25 17:50:25.905700 ⚠️ Build-time environment variable warning: NODE_ENV=production
+2026-Jan-25 17:50:25.916306 Affects: Node.js/npm/yarn/bun/pnpm
+2026-Jan-25 17:50:25.927896 Issue: Skips devDependencies installation which are often required for building (webpack, typescript, etc.)
+2026-Jan-25 17:50:25.938831 Recommendation: Uncheck "Available at Buildtime" or use "development" during build
+2026-Jan-25 17:50:25.956308 
+2026-Jan-25 17:50:25.969081 💡 Tips to resolve build issues:
+2026-Jan-25 17:50:25.981272 1. Set these variables as "Runtime only" in the environment variables settings
+2026-Jan-25 17:50:25.993246 2. Use different values for build-time (e.g., NODE_ENV=development for build)
+2026-Jan-25 17:50:26.005659 3. Consider using multi-stage Docker builds to separate build and runtime environments
+2026-Jan-25 17:50:29.067216 [DEBUG] [CMD]: docker exec pccs48scsowcw40osos8w8c8 bash -c 'test -f /artifacts/pccs48scsowcw40osos8w8c8/Dockerfile && echo 'exists' || echo 'not found''
+2026-Jan-25 17:50:29.067216 [DEBUG] exists
+2026-Jan-25 17:50:29.317866 [DEBUG] [CMD]: docker exec pccs48scsowcw40osos8w8c8 bash -c 'cat /artifacts/pccs48scsowcw40osos8w8c8/Dockerfile'
+2026-Jan-25 17:50:29.317866 [DEBUG] # Production-optimized Dockerfile (Debian Slim for Stability)
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Stage 1: Dependencies
+2026-Jan-25 17:50:29.317866 [DEBUG] FROM node:20-slim AS deps
+2026-Jan-25 17:50:29.317866 [DEBUG] RUN apt-get update && apt-get install -y openssl ca-certificates libc6
+2026-Jan-25 17:50:29.317866 [DEBUG] WORKDIR /app
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Copy package files
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY package.json package-lock.json* ./
+2026-Jan-25 17:50:29.317866 [DEBUG] # Install ALL dependencies (including devDependencies) for build
+2026-Jan-25 17:50:29.317866 [DEBUG] RUN npm ci --include=dev
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Stage 2: Builder
+2026-Jan-25 17:50:29.317866 [DEBUG] FROM node:20-slim AS builder
+2026-Jan-25 17:50:29.317866 [DEBUG] WORKDIR /app
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Install OpenSSL
+2026-Jan-25 17:50:29.317866 [DEBUG] RUN apt-get update && apt-get install -y openssl
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Copy dependencies
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY --from=deps /app/node_modules ./node_modules
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY . .
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Generate Prisma Client
+2026-Jan-25 17:50:29.317866 [DEBUG] RUN npx prisma generate
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Build Next.js
+2026-Jan-25 17:50:29.317866 [DEBUG] ENV NEXT_TELEMETRY_DISABLED=1
+2026-Jan-25 17:50:29.317866 [DEBUG] ENV SKIP_ENV_VALIDATION=1
+2026-Jan-25 17:50:29.317866 [DEBUG] ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+2026-Jan-25 17:50:29.317866 [DEBUG] # Mandatory for Next.js 15+ build
+2026-Jan-25 17:50:29.317866 [DEBUG] ENV NODE_ENV=production
+2026-Jan-25 17:50:29.317866 [DEBUG] RUN npm run build
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Stage 3: Runner
+2026-Jan-25 17:50:29.317866 [DEBUG] FROM node:20-slim AS runner
+2026-Jan-25 17:50:29.317866 [DEBUG] WORKDIR /app
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] ENV NODE_ENV=production
+2026-Jan-25 17:50:29.317866 [DEBUG] ENV NEXT_TELEMETRY_DISABLED=1
+2026-Jan-25 17:50:29.317866 [DEBUG] ENV PORT=3000
+2026-Jan-25 17:50:29.317866 [DEBUG] ENV HOSTNAME="0.0.0.0"
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Install runtime dependencies
+2026-Jan-25 17:50:29.317866 [DEBUG] RUN apt-get update && apt-get install -y openssl curl ca-certificates && rm -rf /var/lib/apt/lists/*
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Create non-root user
+2026-Jan-25 17:50:29.317866 [DEBUG] RUN addgroup --system --gid 1001 nodejs
+2026-Jan-25 17:50:29.317866 [DEBUG] RUN adduser --system --uid 1001 nextjs
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Copy built application
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Copy scripts
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+2026-Jan-25 17:50:29.317866 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] USER nextjs
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] EXPOSE 3000
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] # Health check (Disabled temporarily to prevent loop)
+2026-Jan-25 17:50:29.317866 [DEBUG] # HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+2026-Jan-25 17:50:29.317866 [DEBUG] #   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+2026-Jan-25 17:50:29.317866 [DEBUG] 
+2026-Jan-25 17:50:29.317866 [DEBUG] CMD ["node", "server.js"]
+2026-Jan-25 17:50:29.599569 Added 141 ARG declarations to Dockerfile for service app (multi-stage build, added to 3 stages).
+2026-Jan-25 17:50:29.611959 Pulling & building required images.
+2026-Jan-25 17:50:29.799972 [DEBUG] Creating build-time .env file in /artifacts (outside Docker context).
+2026-Jan-25 17:50:30.089917 Adding build arguments to Docker Compose build command.
+2026-Jan-25 17:50:30.578926 [DEBUG] [CMD]: docker exec pccs48scsowcw40osos8w8c8 bash -c 'COOLIFY_BRANCH=main COOLIFY_RESOURCE_UUID=i8ggkoowk4s8okc4gso8kg4w  docker compose --env-file /artifacts/build-time.env --project-name i8ggkoowk4s8okc4gso8kg4w --project-directory /artifacts/pccs48scsowcw40osos8w8c8 -f /artifacts/pccs48scsowcw40osos8w8c8/docker-compose.coolify.yaml build --pull --build-arg COOLIFY_URL --build-arg COOLIFY_FQDN --build-arg POSTGRES_DB --build-arg BRAVE_API_KEY --build-arg NEXTAUTH_SECRET --build-arg SMTP_PORT --build-arg DEEPSEEK_API_KEY --build-arg SMTP_HOST --build-arg POSTGRES_USER --build-arg EXA_API_KEY --build-arg FIREBASE_PRIVATE_KEY --build-arg SMTP_USER --build-arg AGENT_ENABLED --build-arg SMTP_PASSWORD --build-arg FIREBASE_CLIENT_EMAIL --build-arg SMTP_FROM --build-arg AGENT_MAX_ARTICLES_PER_RUN --build-arg FIREBASE_PROJECT_ID --build-arg AGENT_MIN_ARTICLES_PER_RUN --build-arg DEEPSEEK_API_URL --build-arg NEXT_PUBLIC_ADSENSE_CLIENT_ID --build-arg NEXTAUTH_URL --build-arg REDIS_URL --build-arg AGENT_MIN_INTERVAL_HOURS --build-arg SERVICE_URL_APP --build-arg NEXT_PUBLIC_VAPID_PUBLIC_KEY --build-arg UNSPLASH_ACCESS_KEY --build-arg NEXT_PUBLIC_SITE_DESCRIPTION --build-arg PEXELS_API_KEY --build-arg NEXT_PUBLIC_SITE_URL --build-arg NEXT_PUBLIC_SITE_NAME --build-arg TAVILY_API_KEY --build-arg SERVICE_FQDN_APP --build-arg POSTGRES_PASSWORD --build-arg FIREBASR_CILENT_MAIL --build-arg PORT --build-arg VAPID_PRIVATE_KEY --build-arg RESEND_API_KEY --build-arg VAPID_EMAIL --build-arg FIREBASE_SERVER_KEY --build-arg RESEND_FROM_EMAIL --build-arg TWITTER_HANDLE --build-arg CONTACT_EMAIL --build-arg DATABASE_URL --build-arg NODE_ENV --build-arg NEXT_TELEMETRY_DISABLED --build-arg APP_PORT --build-arg COOLIFY_BUILD_SECRETS_HASH=7bae9b2308a88a7adf1dac952980423e321b446815b3649c57b52d91214ee70c'
+2026-Jan-25 17:50:30.578926 [DEBUG] #1 [internal] load local bake definitions
+2026-Jan-25 17:50:30.688992 [DEBUG] #1 reading from stdin 5.02kB done
+2026-Jan-25 17:50:30.688992 [DEBUG] #1 DONE 0.0s
+2026-Jan-25 17:50:30.868010 [DEBUG] #2 [internal] load build definition from Dockerfile
+2026-Jan-25 17:50:30.868010 [DEBUG] #2 transferring dockerfile: 5.02kB done
+2026-Jan-25 17:50:30.868010 [DEBUG] #2 DONE 0.0s
+2026-Jan-25 17:50:30.868010 [DEBUG] 
+2026-Jan-25 17:50:30.868010 [DEBUG] #3 [internal] load metadata for docker.io/library/node:20-slim
+2026-Jan-25 17:50:32.187496 [DEBUG] #3 DONE 1.5s
+2026-Jan-25 17:50:32.340420 [DEBUG] 
+2026-Jan-25 17:50:32.344534 [DEBUG] #4 [internal] load .dockerignore
+2026-Jan-25 17:50:32.344534 [DEBUG] #4 transferring context: 243B done
+2026-Jan-25 17:50:32.344534 [DEBUG] #4 DONE 0.0s
+2026-Jan-25 17:50:32.344534 [DEBUG] 
+2026-Jan-25 17:50:32.344534 [DEBUG] #5 [deps 1/5] FROM docker.io/library/node:20-slim@sha256:6c51af7dc83f4708aaac35991306bca8f478351cfd2bda35750a62d7efcf05bb
+2026-Jan-25 17:50:32.344534 [DEBUG] #5 resolve docker.io/library/node:20-slim@sha256:6c51af7dc83f4708aaac35991306bca8f478351cfd2bda35750a62d7efcf05bb 0.0s done
+2026-Jan-25 17:50:32.344534 [DEBUG] #5 sha256:a98168ca575a7f9a177a9348c0ff4ed8e5c9ca39eb648a0654dd3c29928412cf 0B / 1.71MB 0.1s
+2026-Jan-25 17:50:32.344534 [DEBUG] #5 sha256:6c51af7dc83f4708aaac35991306bca8f478351cfd2bda35750a62d7efcf05bb 6.49kB / 6.49kB done
+2026-Jan-25 17:50:32.344534 [DEBUG] #5 sha256:5536118f282f272dc85854180720a3b3a68e3880576da1d7304410bb4969815c 1.93kB / 1.93kB done
+2026-Jan-25 17:50:32.344534 [DEBUG] #5 sha256:7bd7304bb01064dcd8fbfe70d5228c15b325d6a94ee567ba1b909b96c7fdfba6 6.88kB / 6.88kB done
+2026-Jan-25 17:50:32.344534 [DEBUG] #5 sha256:024b9523dc7f8055cf2750f04c65434cae8f1b05241e73a5f0878d117366ad8a 0B / 3.31kB 0.1s
+2026-Jan-25 17:50:32.344534 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 0B / 40.98MB 0.1s
+2026-Jan-25 17:50:32.586254 [DEBUG] #5 ...
+2026-Jan-25 17:50:32.586254 [DEBUG] 
+2026-Jan-25 17:50:32.586254 [DEBUG] #6 [internal] load build context
+2026-Jan-25 17:50:32.591118 [DEBUG] #6 transferring context: 41.43MB 0.3s done
+2026-Jan-25 17:50:32.591118 [DEBUG] #6 DONE 0.3s
+2026-Jan-25 17:50:32.591118 [DEBUG] 
+2026-Jan-25 17:50:32.591118 [DEBUG] #5 [deps 1/5] FROM docker.io/library/node:20-slim@sha256:6c51af7dc83f4708aaac35991306bca8f478351cfd2bda35750a62d7efcf05bb
+2026-Jan-25 17:50:32.591118 [DEBUG] #5 extracting sha256:024b9523dc7f8055cf2750f04c65434cae8f1b05241e73a5f0878d117366ad8a
+2026-Jan-25 17:50:32.740496 [DEBUG] #5 sha256:024b9523dc7f8055cf2750f04c65434cae8f1b05241e73a5f0878d117366ad8a 3.31kB / 3.31kB 0.3s done
+2026-Jan-25 17:50:32.740496 [DEBUG] #5 extracting sha256:024b9523dc7f8055cf2750f04c65434cae8f1b05241e73a5f0878d117366ad8a done
+2026-Jan-25 17:50:32.740496 [DEBUG] #5 sha256:7d393bf487b04ce90e509f8c13715578b3c9785f7aa2ba9bcd797b5a50c0e731 0B / 446B 0.5s
+2026-Jan-25 17:50:32.841113 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 2.10MB / 40.98MB 0.6s
+2026-Jan-25 17:50:32.941229 [DEBUG] #5 sha256:a98168ca575a7f9a177a9348c0ff4ed8e5c9ca39eb648a0654dd3c29928412cf 1.71MB / 1.71MB 0.6s done
+2026-Jan-25 17:50:32.941229 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 5.24MB / 40.98MB 0.7s
+2026-Jan-25 17:50:32.941229 [DEBUG] #5 sha256:7d393bf487b04ce90e509f8c13715578b3c9785f7aa2ba9bcd797b5a50c0e731 446B / 446B 0.7s
+2026-Jan-25 17:50:33.141077 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 11.53MB / 40.98MB 0.9s
+2026-Jan-25 17:50:33.141077 [DEBUG] #5 sha256:7d393bf487b04ce90e509f8c13715578b3c9785f7aa2ba9bcd797b5a50c0e731 446B / 446B 0.7s done
+2026-Jan-25 17:50:33.340318 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 19.92MB / 40.98MB 1.1s
+2026-Jan-25 17:50:33.440147 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 24.12MB / 40.98MB 1.2s
+2026-Jan-25 17:50:33.539921 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 28.31MB / 40.98MB 1.3s
+2026-Jan-25 17:50:33.740526 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 32.51MB / 40.98MB 1.5s
+2026-Jan-25 17:50:33.841307 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 35.65MB / 40.98MB 1.6s
+2026-Jan-25 17:50:34.019366 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 39.85MB / 40.98MB 1.7s
+2026-Jan-25 17:50:34.025822 [DEBUG] #5 extracting sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade
+2026-Jan-25 17:50:34.120761 [DEBUG] #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 40.98MB / 40.98MB 1.8s done
+2026-Jan-25 17:50:36.145722 [DEBUG] #5 extracting sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 2.0s done
+2026-Jan-25 17:50:36.145722 [DEBUG] #5 extracting sha256:a98168ca575a7f9a177a9348c0ff4ed8e5c9ca39eb648a0654dd3c29928412cf 0.1s done
+2026-Jan-25 17:50:36.298861 [DEBUG] #5 extracting sha256:7d393bf487b04ce90e509f8c13715578b3c9785f7aa2ba9bcd797b5a50c0e731 done
+2026-Jan-25 17:50:36.298861 [DEBUG] #5 DONE 4.1s
+2026-Jan-25 17:50:36.456275 [DEBUG] #7 [builder 2/7] WORKDIR /app
+2026-Jan-25 17:50:36.589469 [DEBUG] #7 DONE 0.3s
+2026-Jan-25 17:50:36.589469 [DEBUG] 
+2026-Jan-25 17:50:36.589469 [DEBUG] #8 [deps 2/5] RUN apt-get update && apt-get install -y openssl ca-certificates libc6
+2026-Jan-25 17:50:36.830388 [DEBUG] #8 0.529 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+2026-Jan-25 17:50:36.986727 [DEBUG] #8 0.553 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+2026-Jan-25 17:50:36.986727 [DEBUG] #8 0.558 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+2026-Jan-25 17:50:36.986727 [DEBUG] #8 0.685 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8792 kB]
+2026-Jan-25 17:50:37.095799 [DEBUG] #8 0.795 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+2026-Jan-25 17:50:37.215797 [DEBUG] #8 0.916 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [292 kB]
+2026-Jan-25 17:50:38.091479 [DEBUG] #8 1.558 Fetched 9346 kB in 1s (8917 kB/s)
+2026-Jan-25 17:50:38.091479 [DEBUG] #8 1.558 Reading package lists...
+2026-Jan-25 17:50:38.215680 [DEBUG] 
+2026-Jan-25 17:50:38.362406 [DEBUG] #8 1.942 Reading package lists...
+2026-Jan-25 17:50:38.599437 [DEBUG] 
+2026-Jan-25 17:50:38.714395 [DEBUG] #8 2.317 Building dependency tree...
+2026-Jan-25 17:50:38.717643 [DEBUG] #8 2.413 Reading state information...
+2026-Jan-25 17:50:38.849408 [DEBUG] 
+2026-Jan-25 17:50:38.959873 [DEBUG] #8 2.576 libc6 is already the newest version (2.36-9+deb12u13).
+2026-Jan-25 17:50:38.959873 [DEBUG] #8 2.576 The following NEW packages will be installed:
+2026-Jan-25 17:50:38.959873 [DEBUG] #8 2.576   ca-certificates libssl3 openssl
+2026-Jan-25 17:50:38.959873 [DEBUG] #8 2.605 0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
+2026-Jan-25 17:50:38.959873 [DEBUG] #8 2.605 Need to get 3616 kB of archives.
+2026-Jan-25 17:50:38.971414 [DEBUG] #8 2.605 After this operation, 8926 kB of additional disk space will be used.
+2026-Jan-25 17:50:38.971414 [DEBUG] #8 2.605 Get:1 http://deb.debian.org/debian bookworm/main amd64 libssl3 amd64 3.0.18-1~deb12u1 [2029 kB]
+2026-Jan-25 17:50:38.971414 [DEBUG] #8 2.654 Get:2 http://deb.debian.org/debian bookworm/main amd64 openssl amd64 3.0.18-1~deb12u1 [1432 kB]
+2026-Jan-25 17:50:39.075236 [DEBUG] #8 2.679 Get:3 http://deb.debian.org/debian bookworm/main amd64 ca-certificates all 20230311+deb12u1 [155 kB]
+2026-Jan-25 17:50:39.082401 [DEBUG] 
+2026-Jan-25 17:50:39.204358 [DEBUG] #8 2.903 debconf: delaying package configuration, since apt-utils is not installed
+2026-Jan-25 17:50:39.305260 [DEBUG] #8 2.936 Fetched 3616 kB in 0s (36.0 MB/s)
+2026-Jan-25 17:50:39.305260 [DEBUG] #8 2.981 Selecting previously unselected package libssl3:amd64.
+2026-Jan-25 17:50:39.305260 [DEBUG] #8 2.981 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%
+2026-Jan-25 17:50:39.452204 [DEBUG] (Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+2026-Jan-25 17:50:39.452204 [DEBUG] #8 3.016 Preparing to unpack .../libssl3_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:50:39.458325 [DEBUG] #8 3.021 Unpacking libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:39.458325 [DEBUG] #8 3.151 Selecting previously unselected package openssl.
+2026-Jan-25 17:50:39.556507 [DEBUG] #8 3.152 Preparing to unpack .../openssl_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:50:39.556507 [DEBUG] #8 3.155 Unpacking openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:39.556507 [DEBUG] #8 3.256 Selecting previously unselected package ca-certificates.
+2026-Jan-25 17:50:39.669241 [DEBUG] #8 3.258 Preparing to unpack .../ca-certificates_20230311+deb12u1_all.deb ...
+2026-Jan-25 17:50:39.669241 [DEBUG] #8 3.260 Unpacking ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:50:39.669241 [DEBUG] #8 3.316 Setting up libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:39.669241 [DEBUG] #8 3.324 Setting up openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:39.669241 [DEBUG] #8 3.338 Setting up ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:50:39.824900 [DEBUG] #8 3.410 debconf: unable to initialize frontend: Dialog
+2026-Jan-25 17:50:39.824900 [DEBUG] #8 3.411 debconf: (TERM is not set, so the dialog frontend is not usable.)
+2026-Jan-25 17:50:39.824900 [DEBUG] #8 3.411 debconf: falling back to frontend: Readline
+2026-Jan-25 17:50:39.824900 [DEBUG] #8 3.411 debconf: unable to initialize frontend: Readline
+2026-Jan-25 17:50:39.824900 [DEBUG] #8 3.411 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/x86_64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+2026-Jan-25 17:50:39.824900 [DEBUG] #8 3.411 debconf: falling back to frontend: Teletype
+2026-Jan-25 17:50:39.930218 [DEBUG] #8 ...
+2026-Jan-25 17:50:39.930218 [DEBUG] 
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 [builder 3/7] RUN apt-get update && apt-get install -y openssl
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 0.271 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 0.298 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 0.304 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 0.431 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8792 kB]
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 0.587 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 0.626 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [292 kB]
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 1.347 Fetched 9346 kB in 1s (8571 kB/s)
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 1.347 Reading package lists...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 1.791 Reading package lists...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.297 Building dependency tree...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.412 Reading state information...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.494 The following additional packages will be installed:
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.495   libssl3
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.495 Suggested packages:
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.495   ca-certificates
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.528 The following NEW packages will be installed:
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.528   libssl3 openssl
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.554 0 upgraded, 2 newly installed, 0 to remove and 0 not upgraded.
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.554 Need to get 3460 kB of archives.
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.554 After this operation, 8530 kB of additional disk space will be used.
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.554 Get:1 http://deb.debian.org/debian bookworm/main amd64 libssl3 amd64 3.0.18-1~deb12u1 [2029 kB]
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.614 Get:2 http://deb.debian.org/debian bookworm/main amd64 openssl amd64 3.0.18-1~deb12u1 [1432 kB]
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.726 debconf: delaying package configuration, since apt-utils is not installed
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.762 Fetched 3460 kB in 0s (39.2 MB/s)
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.792 Selecting previously unselected package libssl3:amd64.
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.792 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.803 Preparing to unpack .../libssl3_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.809 Unpacking libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.971 Selecting previously unselected package openssl.
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.973 Preparing to unpack .../openssl_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 2.975 Unpacking openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 3.076 Setting up libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 3.086 Setting up openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 3.099 Processing triggers for libc-bin (2.36-9+deb12u13) ...
+2026-Jan-25 17:50:39.930218 [DEBUG] #9 DONE 3.2s
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 [runner  3/12] RUN apt-get update && apt-get install -y openssl curl ca-certificates && rm -rf /var/lib/apt/lists/*
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 0.296 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 0.321 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 0.326 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 0.460 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8792 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 0.566 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 0.636 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [292 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 1.257 Fetched 9346 kB in 1s (9506 kB/s)
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 1.257 Reading package lists...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 1.644 Reading package lists...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.076 Building dependency tree...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.171 Reading state information...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.255 The following additional packages will be installed:
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.255   krb5-locales libbrotli1 libcurl4 libgssapi-krb5-2 libk5crypto3 libkeyutils1
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.255   libkrb5-3 libkrb5support0 libldap-2.5-0 libldap-common libnghttp2-14 libpsl5
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.255   librtmp1 libsasl2-2 libsasl2-modules libsasl2-modules-db libssh2-1 libssl3
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.256   publicsuffix
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.256 Suggested packages:
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.256   krb5-doc krb5-user libsasl2-modules-gssapi-mit
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.256   | libsasl2-modules-gssapi-heimdal libsasl2-modules-ldap libsasl2-modules-otp
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.256   libsasl2-modules-sql
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.389 The following NEW packages will be installed:
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.389   ca-certificates curl krb5-locales libbrotli1 libcurl4 libgssapi-krb5-2
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.389   libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap-2.5-0
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.390   libldap-common libnghttp2-14 libpsl5 librtmp1 libsasl2-2 libsasl2-modules
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.390   libsasl2-modules-db libssh2-1 libssl3 openssl publicsuffix
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.427 0 upgraded, 22 newly installed, 0 to remove and 0 not upgraded.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.427 Need to get 6109 kB of archives.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.427 After this operation, 15.7 MB of additional disk space will be used.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.427 Get:1 http://deb.debian.org/debian bookworm/main amd64 libssl3 amd64 3.0.18-1~deb12u1 [2029 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.482 Get:2 http://deb.debian.org/debian bookworm/main amd64 openssl amd64 3.0.18-1~deb12u1 [1432 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.499 Get:3 http://deb.debian.org/debian bookworm/main amd64 ca-certificates all 20230311+deb12u1 [155 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.500 Get:4 http://deb.debian.org/debian bookworm/main amd64 krb5-locales all 1.20.1-2+deb12u4 [63.4 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.502 Get:5 http://deb.debian.org/debian bookworm/main amd64 libbrotli1 amd64 1.0.9-2+b6 [275 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.506 Get:6 http://deb.debian.org/debian bookworm/main amd64 libkrb5support0 amd64 1.20.1-2+deb12u4 [33.2 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.507 Get:7 http://deb.debian.org/debian bookworm/main amd64 libk5crypto3 amd64 1.20.1-2+deb12u4 [79.8 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.508 Get:8 http://deb.debian.org/debian bookworm/main amd64 libkeyutils1 amd64 1.6.3-2 [8808 B]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.516 Get:9 http://deb.debian.org/debian bookworm/main amd64 libkrb5-3 amd64 1.20.1-2+deb12u4 [334 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.518 Get:10 http://deb.debian.org/debian bookworm/main amd64 libgssapi-krb5-2 amd64 1.20.1-2+deb12u4 [135 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.520 Get:11 http://deb.debian.org/debian bookworm/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg-10 [20.3 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.521 Get:12 http://deb.debian.org/debian bookworm/main amd64 libsasl2-2 amd64 2.1.28+dfsg-10 [59.7 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.523 Get:13 http://deb.debian.org/debian bookworm/main amd64 libldap-2.5-0 amd64 2.5.13+dfsg-5 [183 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.525 Get:14 http://deb.debian.org/debian bookworm/main amd64 libnghttp2-14 amd64 1.52.0-1+deb12u2 [73.0 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.527 Get:15 http://deb.debian.org/debian bookworm/main amd64 libpsl5 amd64 0.21.2-1 [58.7 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.528 Get:16 http://deb.debian.org/debian bookworm/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b2 [60.8 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.530 Get:17 http://deb.debian.org/debian bookworm/main amd64 libssh2-1 amd64 1.10.0-3+b1 [179 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.532 Get:18 http://deb.debian.org/debian bookworm/main amd64 libcurl4 amd64 7.88.1-10+deb12u14 [392 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.537 Get:19 http://deb.debian.org/debian bookworm/main amd64 curl amd64 7.88.1-10+deb12u14 [316 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.541 Get:20 http://deb.debian.org/debian bookworm/main amd64 libldap-common all 2.5.13+dfsg-5 [29.3 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.542 Get:21 http://deb.debian.org/debian bookworm/main amd64 libsasl2-modules amd64 2.1.28+dfsg-10 [66.6 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.543 Get:22 http://deb.debian.org/debian bookworm/main amd64 publicsuffix all 20230209.2326-1 [126 kB]
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.692 debconf: delaying package configuration, since apt-utils is not installed
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.722 Fetched 6109 kB in 0s (40.7 MB/s)
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.755 Selecting previously unselected package libssl3:amd64.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.755 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.760 Preparing to unpack .../00-libssl3_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.765 Unpacking libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.920 Selecting previously unselected package openssl.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.920 Preparing to unpack .../01-openssl_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 2.922 Unpacking openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.025 Selecting previously unselected package ca-certificates.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.025 Preparing to unpack .../02-ca-certificates_20230311+deb12u1_all.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.028 Unpacking ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.085 Selecting previously unselected package krb5-locales.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.086 Preparing to unpack .../03-krb5-locales_1.20.1-2+deb12u4_all.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.089 Unpacking krb5-locales (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.117 Selecting previously unselected package libbrotli1:amd64.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.118 Preparing to unpack .../04-libbrotli1_1.0.9-2+b6_amd64.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.121 Unpacking libbrotli1:amd64 (1.0.9-2+b6) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.229 Selecting previously unselected package libkrb5support0:amd64.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.231 Preparing to unpack .../05-libkrb5support0_1.20.1-2+deb12u4_amd64.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.247 Unpacking libkrb5support0:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.280 Selecting previously unselected package libk5crypto3:amd64.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.281 Preparing to unpack .../06-libk5crypto3_1.20.1-2+deb12u4_amd64.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.284 Unpacking libk5crypto3:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.313 Selecting previously unselected package libkeyutils1:amd64.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.314 Preparing to unpack .../07-libkeyutils1_1.6.3-2_amd64.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.316 Unpacking libkeyutils1:amd64 (1.6.3-2) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.338 Selecting previously unselected package libkrb5-3:amd64.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.339 Preparing to unpack .../08-libkrb5-3_1.20.1-2+deb12u4_amd64.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.341 Unpacking libkrb5-3:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.386 Selecting previously unselected package libgssapi-krb5-2:amd64.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.387 Preparing to unpack .../09-libgssapi-krb5-2_1.20.1-2+deb12u4_amd64.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.389 Unpacking libgssapi-krb5-2:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.416 Selecting previously unselected package libsasl2-modules-db:amd64.
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.417 Preparing to unpack .../10-libsasl2-modules-db_2.1.28+dfsg-10_amd64.deb ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.420 Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:50:40.034516 [DEBUG] #10 3.442 Selecting previously unselected package libsasl2-2:amd64.
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.443 Preparing to unpack .../11-libsasl2-2_2.1.28+dfsg-10_amd64.deb ...
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.445 Unpacking libsasl2-2:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.471 Selecting previously unselected package libldap-2.5-0:amd64.
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.472 Preparing to unpack .../12-libldap-2.5-0_2.5.13+dfsg-5_amd64.deb ...
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.475 Unpacking libldap-2.5-0:amd64 (2.5.13+dfsg-5) ...
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.507 Selecting previously unselected package libnghttp2-14:amd64.
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.508 Preparing to unpack .../13-libnghttp2-14_1.52.0-1+deb12u2_amd64.deb ...
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.510 Unpacking libnghttp2-14:amd64 (1.52.0-1+deb12u2) ...
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.538 Selecting previously unselected package libpsl5:amd64.
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.539 Preparing to unpack .../14-libpsl5_0.21.2-1_amd64.deb ...
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.542 Unpacking libpsl5:amd64 (0.21.2-1) ...
+2026-Jan-25 17:50:40.167716 [DEBUG] #10 3.575 Selecting previously unselected package librtmp1:amd64.
+2026-Jan-25 17:50:40.269679 [DEBUG] #10 3.576 Preparing to unpack .../15-librtmp1_2.4+20151223.gitfa8646d.1-2+b2_amd64.deb ...
+2026-Jan-25 17:50:40.269679 [DEBUG] #10 3.579 Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+2026-Jan-25 17:50:40.269679 [DEBUG] #10 3.613 Selecting previously unselected package libssh2-1:amd64.
+2026-Jan-25 17:50:40.269679 [DEBUG] #10 3.616 Preparing to unpack .../16-libssh2-1_1.10.0-3+b1_amd64.deb ...
+2026-Jan-25 17:50:40.269679 [DEBUG] #10 3.617 Unpacking libssh2-1:amd64 (1.10.0-3+b1) ...
+2026-Jan-25 17:50:40.269679 [DEBUG] #10 3.670 Selecting previously unselected package libcurl4:amd64.
+2026-Jan-25 17:50:40.269679 [DEBUG] #10 3.673 Preparing to unpack .../17-libcurl4_7.88.1-10+deb12u14_amd64.deb ...
+2026-Jan-25 17:50:40.269679 [DEBUG] #10 3.677 Unpacking libcurl4:amd64 (7.88.1-10+deb12u14) ...
+2026-Jan-25 17:50:40.370235 [DEBUG] #10 3.725 Selecting previously unselected package curl.
+2026-Jan-25 17:50:40.370235 [DEBUG] #10 3.726 Preparing to unpack .../18-curl_7.88.1-10+deb12u14_amd64.deb ...
+2026-Jan-25 17:50:40.370235 [DEBUG] #10 3.728 Unpacking curl (7.88.1-10+deb12u14) ...
+2026-Jan-25 17:50:40.370235 [DEBUG] #10 3.777 Selecting previously unselected package libldap-common.
+2026-Jan-25 17:50:40.370235 [DEBUG] #10 3.778 Preparing to unpack .../19-libldap-common_2.5.13+dfsg-5_all.deb ...
+2026-Jan-25 17:50:40.474442 [DEBUG] #10 3.782 Unpacking libldap-common (2.5.13+dfsg-5) ...
+2026-Jan-25 17:50:40.474442 [DEBUG] #10 3.807 Selecting previously unselected package libsasl2-modules:amd64.
+2026-Jan-25 17:50:40.474442 [DEBUG] #10 3.810 Preparing to unpack .../20-libsasl2-modules_2.1.28+dfsg-10_amd64.deb ...
+2026-Jan-25 17:50:40.474442 [DEBUG] #10 3.817 Unpacking libsasl2-modules:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:50:40.474442 [DEBUG] #10 3.842 Selecting previously unselected package publicsuffix.
+2026-Jan-25 17:50:40.474442 [DEBUG] #10 3.843 Preparing to unpack .../21-publicsuffix_20230209.2326-1_all.deb ...
+2026-Jan-25 17:50:40.474442 [DEBUG] #10 3.845 Unpacking publicsuffix (20230209.2326-1) ...
+2026-Jan-25 17:50:40.474442 [DEBUG] #10 3.876 Setting up libkeyutils1:amd64 (1.6.3-2) ...
+2026-Jan-25 17:50:40.474442 [DEBUG] #10 3.883 Setting up libpsl5:amd64 (0.21.2-1) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.889 Setting up libbrotli1:amd64 (1.0.9-2+b6) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.895 Setting up libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.901 Setting up libnghttp2-14:amd64 (1.52.0-1+deb12u2) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.908 Setting up krb5-locales (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.915 Setting up libldap-common (2.5.13+dfsg-5) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.922 Setting up libkrb5support0:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.929 Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.934 Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.940 Setting up libk5crypto3:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.945 Setting up libsasl2-2:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.951 Setting up libssh2-1:amd64 (1.10.0-3+b1) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.957 Setting up libkrb5-3:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.964 Setting up openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.972 Setting up publicsuffix (20230209.2326-1) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.978 Setting up libsasl2-modules:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:50:40.582382 [DEBUG] #10 3.990 Setting up libldap-2.5-0:amd64 (2.5.13+dfsg-5) ...
+2026-Jan-25 17:50:40.806007 [DEBUG] #10 3.998 Setting up ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:50:40.806007 [DEBUG] #10 4.062 debconf: unable to initialize frontend: Dialog
+2026-Jan-25 17:50:40.806007 [DEBUG] #10 4.062 debconf: (TERM is not set, so the dialog frontend is not usable.)
+2026-Jan-25 17:50:40.806007 [DEBUG] #10 4.062 debconf: falling back to frontend: Readline
+2026-Jan-25 17:50:40.806007 [DEBUG] #10 4.063 debconf: unable to initialize frontend: Readline
+2026-Jan-25 17:50:40.806007 [DEBUG] #10 4.063 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/x86_64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+2026-Jan-25 17:50:40.806007 [DEBUG] #10 4.063 debconf: falling back to frontend: Teletype
+2026-Jan-25 17:50:41.202082 [DEBUG] #10 4.609 Updating certificates in /etc/ssl/certs...
+2026-Jan-25 17:50:42.025040 [DEBUG] #10 ...
+2026-Jan-25 17:50:42.025040 [DEBUG] 
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 [deps 2/5] RUN apt-get update && apt-get install -y openssl ca-certificates libc6
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 3.989 Updating certificates in /etc/ssl/certs...
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 4.773 142 added, 0 removed; done.
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 4.797 Processing triggers for libc-bin (2.36-9+deb12u13) ...
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 4.811 Processing triggers for ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 4.820 Updating certificates in /etc/ssl/certs...
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 5.598 0 added, 0 removed; done.
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 5.598 Running hooks in /etc/ca-certificates/update.d...
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 5.600 done.
+2026-Jan-25 17:50:42.025040 [DEBUG] #8 DONE 5.7s
+2026-Jan-25 17:50:42.025040 [DEBUG] 
+2026-Jan-25 17:50:42.025040 [DEBUG] #11 [deps 3/5] WORKDIR /app
+2026-Jan-25 17:50:42.025040 [DEBUG] #11 DONE 0.0s
+2026-Jan-25 17:50:42.025040 [DEBUG] 
+2026-Jan-25 17:50:42.025040 [DEBUG] #12 [deps 4/5] COPY package.json package-lock.json* ./
+2026-Jan-25 17:50:42.025040 [DEBUG] #12 DONE 0.0s
+2026-Jan-25 17:50:42.177836 [DEBUG] #13 [deps 5/5] RUN npm ci --include=dev
+2026-Jan-25 17:50:42.951134 [DEBUG] #13 ...
+2026-Jan-25 17:50:42.951134 [DEBUG] 
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 [runner  3/12] RUN apt-get update && apt-get install -y openssl curl ca-certificates && rm -rf /var/lib/apt/lists/*
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 5.590 142 added, 0 removed; done.
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 5.609 Setting up libgssapi-krb5-2:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 5.618 Setting up libcurl4:amd64 (7.88.1-10+deb12u14) ...
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 5.624 Setting up curl (7.88.1-10+deb12u14) ...
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 5.630 Processing triggers for libc-bin (2.36-9+deb12u13) ...
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 5.648 Processing triggers for ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 5.654 Updating certificates in /etc/ssl/certs...
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 6.161 0 added, 0 removed; done.
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 6.161 Running hooks in /etc/ca-certificates/update.d...
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 6.161 done.
+2026-Jan-25 17:50:42.951134 [DEBUG] #10 DONE 6.2s
+2026-Jan-25 17:50:42.973017 [DEBUG] #14 [runner  4/12] RUN addgroup --system --gid 1001 nodejs
+2026-Jan-25 17:50:42.973017 [DEBUG] #14 0.171 Adding group `nodejs' (GID 1001) ...
+2026-Jan-25 17:50:43.186458 [DEBUG] #14 0.193 Done.
+2026-Jan-25 17:50:43.186458 [DEBUG] #14 DONE 0.2s
+2026-Jan-25 17:50:43.186458 [DEBUG] 
+2026-Jan-25 17:50:43.186458 [DEBUG] #15 [runner  5/12] RUN adduser --system --uid 1001 nextjs
+2026-Jan-25 17:50:43.216094 [DEBUG] #15 0.180 Adding system user `nextjs' (UID 1001) ...
+2026-Jan-25 17:50:43.216094 [DEBUG] #15 0.180 Adding new user `nextjs' (UID 1001) with group `nogroup' ...
+2026-Jan-25 17:50:43.407960 [DEBUG] #15 0.190 useradd warning: nextjs's uid 1001 is greater than SYS_UID_MAX 999
+2026-Jan-25 17:50:43.407960 [DEBUG] #15 0.207 Not creating `/nonexistent'.
+2026-Jan-25 17:50:43.407960 [DEBUG] #15 DONE 0.2s
+2026-Jan-25 17:50:43.407960 [DEBUG] 
+2026-Jan-25 17:50:43.407960 [DEBUG] #13 [deps 5/5] RUN npm ci --include=dev
+2026-Jan-25 17:50:46.238618 [DEBUG] #13 4.212 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-Jan-25 17:50:46.508279 [DEBUG] #13 4.480 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2026-Jan-25 17:50:46.520270 [DEBUG] 
+2026-Jan-25 17:51:01.988143 [DEBUG] #13 19.96
+2026-Jan-25 17:51:01.988143 [DEBUG] #13 19.96 added 857 packages, and audited 858 packages in 20s
+2026-Jan-25 17:51:01.988143 [DEBUG] #13 19.96
+2026-Jan-25 17:51:01.988143 [DEBUG] #13 19.96 189 packages are looking for funding
+2026-Jan-25 17:51:01.988143 [DEBUG] #13 19.96   run `npm fund` for details
+2026-Jan-25 17:51:02.141209 [DEBUG] #13 19.96
+2026-Jan-25 17:51:02.141209 [DEBUG] #13 19.96 found 0 vulnerabilities
+2026-Jan-25 17:51:02.141209 [DEBUG] #13 19.96 npm notice
+2026-Jan-25 17:51:02.141209 [DEBUG] #13 19.96 npm notice New major version of npm available! 10.8.2 -> 11.8.0
+2026-Jan-25 17:51:02.141209 [DEBUG] #13 19.96 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.8.0
+2026-Jan-25 17:51:02.141209 [DEBUG] #13 19.96 npm notice To update run: npm install -g npm@11.8.0
+2026-Jan-25 17:51:02.141209 [DEBUG] #13 19.96 npm notice
+2026-Jan-25 17:51:02.338424 ========================================
+2026-Jan-25 17:51:02.356692 Deployment failed: Command execution failed (exit code 255): docker exec pccs48scsowcw40osos8w8c8 bash -c 'COOLIFY_BRANCH=main COOLIFY_RESOURCE_UUID=i8ggkoowk4s8okc4gso8kg4w  docker compose --env-file /artifacts/build-time.env --project-name i8ggkoowk4s8okc4gso8kg4w --project-directory /artifacts/pccs48scsowcw40osos8w8c8 -f /artifacts/pccs48scsowcw40osos8w8c8/docker-compose.coolify.yaml build --pull --build-arg COOLIFY_URL --build-arg COOLIFY_FQDN --build-arg POSTGRES_DB --build-arg BRAVE_API_KEY --build-arg NEXTAUTH_SECRET --build-arg SMTP_PORT --build-arg DEEPSEEK_API_KEY --build-arg SMTP_HOST --build-arg POSTGRES_USER --build-arg EXA_API_KEY --build-arg FIREBASE_PRIVATE_KEY --build-arg SMTP_USER --build-arg AGENT_ENABLED --build-arg SMTP_PASSWORD --build-arg FIREBASE_CLIENT_EMAIL --build-arg SMTP_FROM --build-arg AGENT_MAX_ARTICLES_PER_RUN --build-arg FIREBASE_PROJECT_ID --build-arg AGENT_MIN_ARTICLES_PER_RUN --build-arg DEEPSEEK_API_URL --build-arg NEXT_PUBLIC_ADSENSE_CLIENT_ID --build-arg NEXTAUTH_URL --build-arg REDIS_URL --build-arg AGENT_MIN_INTERVAL_HOURS --build-arg SERVICE_URL_APP --build-arg NEXT_PUBLIC_VAPID_PUBLIC_KEY --build-arg UNSPLASH_ACCESS_KEY --build-arg NEXT_PUBLIC_SITE_DESCRIPTION --build-arg PEXELS_API_KEY --build-arg NEXT_PUBLIC_SITE_URL --build-arg NEXT_PUBLIC_SITE_NAME --build-arg TAVILY_API_KEY --build-arg SERVICE_FQDN_APP --build-arg POSTGRES_PASSWORD --build-arg FIREBASR_CILENT_MAIL --build-arg PORT --build-arg VAPID_PRIVATE_KEY --build-arg RESEND_API_KEY --build-arg VAPID_EMAIL --build-arg FIREBASE_SERVER_KEY --build-arg RESEND_FROM_EMAIL --build-arg TWITTER_HANDLE --build-arg CONTACT_EMAIL --build-arg DATABASE_URL --build-arg NODE_ENV --build-arg NEXT_TELEMETRY_DISABLED --build-arg APP_PORT --build-arg COOLIFY_BUILD_SECRETS_HASH=7bae9b2308a88a7adf1dac952980423e321b446815b3649c57b52d91214ee70c'
+2026-Jan-25 17:51:02.356692 Error: #1 [internal] load local bake definitions
+2026-Jan-25 17:51:02.356692 #1 reading from stdin 5.02kB done
+2026-Jan-25 17:51:02.356692 #1 DONE 0.0s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #2 [internal] load build definition from Dockerfile
+2026-Jan-25 17:51:02.356692 #2 transferring dockerfile: 5.02kB done
+2026-Jan-25 17:51:02.356692 #2 DONE 0.0s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #3 [internal] load metadata for docker.io/library/node:20-slim
+2026-Jan-25 17:51:02.356692 #3 DONE 1.5s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #4 [internal] load .dockerignore
+2026-Jan-25 17:51:02.356692 #4 transferring context: 243B done
+2026-Jan-25 17:51:02.356692 #4 DONE 0.0s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #5 [deps 1/5] FROM docker.io/library/node:20-slim@sha256:6c51af7dc83f4708aaac35991306bca8f478351cfd2bda35750a62d7efcf05bb
+2026-Jan-25 17:51:02.356692 #5 resolve docker.io/library/node:20-slim@sha256:6c51af7dc83f4708aaac35991306bca8f478351cfd2bda35750a62d7efcf05bb 0.0s done
+2026-Jan-25 17:51:02.356692 #5 sha256:a98168ca575a7f9a177a9348c0ff4ed8e5c9ca39eb648a0654dd3c29928412cf 0B / 1.71MB 0.1s
+2026-Jan-25 17:51:02.356692 #5 sha256:6c51af7dc83f4708aaac35991306bca8f478351cfd2bda35750a62d7efcf05bb 6.49kB / 6.49kB done
+2026-Jan-25 17:51:02.356692 #5 sha256:5536118f282f272dc85854180720a3b3a68e3880576da1d7304410bb4969815c 1.93kB / 1.93kB done
+2026-Jan-25 17:51:02.356692 #5 sha256:7bd7304bb01064dcd8fbfe70d5228c15b325d6a94ee567ba1b909b96c7fdfba6 6.88kB / 6.88kB done
+2026-Jan-25 17:51:02.356692 #5 sha256:024b9523dc7f8055cf2750f04c65434cae8f1b05241e73a5f0878d117366ad8a 0B / 3.31kB 0.1s
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 0B / 40.98MB 0.1s
+2026-Jan-25 17:51:02.356692 #5 ...
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #6 [internal] load build context
+2026-Jan-25 17:51:02.356692 #6 transferring context: 41.43MB 0.3s done
+2026-Jan-25 17:51:02.356692 #6 DONE 0.3s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #5 [deps 1/5] FROM docker.io/library/node:20-slim@sha256:6c51af7dc83f4708aaac35991306bca8f478351cfd2bda35750a62d7efcf05bb
+2026-Jan-25 17:51:02.356692 #5 extracting sha256:024b9523dc7f8055cf2750f04c65434cae8f1b05241e73a5f0878d117366ad8a
+2026-Jan-25 17:51:02.356692 #5 sha256:024b9523dc7f8055cf2750f04c65434cae8f1b05241e73a5f0878d117366ad8a 3.31kB / 3.31kB 0.3s done
+2026-Jan-25 17:51:02.356692 #5 extracting sha256:024b9523dc7f8055cf2750f04c65434cae8f1b05241e73a5f0878d117366ad8a done
+2026-Jan-25 17:51:02.356692 #5 sha256:7d393bf487b04ce90e509f8c13715578b3c9785f7aa2ba9bcd797b5a50c0e731 0B / 446B 0.5s
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 2.10MB / 40.98MB 0.6s
+2026-Jan-25 17:51:02.356692 #5 sha256:a98168ca575a7f9a177a9348c0ff4ed8e5c9ca39eb648a0654dd3c29928412cf 1.71MB / 1.71MB 0.6s done
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 5.24MB / 40.98MB 0.7s
+2026-Jan-25 17:51:02.356692 #5 sha256:7d393bf487b04ce90e509f8c13715578b3c9785f7aa2ba9bcd797b5a50c0e731 446B / 446B 0.7s
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 11.53MB / 40.98MB 0.9s
+2026-Jan-25 17:51:02.356692 #5 sha256:7d393bf487b04ce90e509f8c13715578b3c9785f7aa2ba9bcd797b5a50c0e731 446B / 446B 0.7s done
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 19.92MB / 40.98MB 1.1s
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 24.12MB / 40.98MB 1.2s
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 28.31MB / 40.98MB 1.3s
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 32.51MB / 40.98MB 1.5s
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 35.65MB / 40.98MB 1.6s
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 39.85MB / 40.98MB 1.7s
+2026-Jan-25 17:51:02.356692 #5 extracting sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade
+2026-Jan-25 17:51:02.356692 #5 sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 40.98MB / 40.98MB 1.8s done
+2026-Jan-25 17:51:02.356692 #5 extracting sha256:ebe53019ce11f9bf83b30d24ab04d6dc4aa05dedf8c520e04da0559608edeade 2.0s done
+2026-Jan-25 17:51:02.356692 #5 extracting sha256:a98168ca575a7f9a177a9348c0ff4ed8e5c9ca39eb648a0654dd3c29928412cf 0.1s done
+2026-Jan-25 17:51:02.356692 #5 extracting sha256:7d393bf487b04ce90e509f8c13715578b3c9785f7aa2ba9bcd797b5a50c0e731 done
+2026-Jan-25 17:51:02.356692 #5 DONE 4.1s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #7 [builder 2/7] WORKDIR /app
+2026-Jan-25 17:51:02.356692 #7 DONE 0.3s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #8 [deps 2/5] RUN apt-get update && apt-get install -y openssl ca-certificates libc6
+2026-Jan-25 17:51:02.356692 #8 0.529 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+2026-Jan-25 17:51:02.356692 #8 0.553 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+2026-Jan-25 17:51:02.356692 #8 0.558 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+2026-Jan-25 17:51:02.356692 #8 0.685 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8792 kB]
+2026-Jan-25 17:51:02.356692 #8 0.795 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+2026-Jan-25 17:51:02.356692 #8 0.916 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [292 kB]
+2026-Jan-25 17:51:02.356692 #8 1.558 Fetched 9346 kB in 1s (8917 kB/s)
+2026-Jan-25 17:51:02.356692 #8 1.558 Reading package lists...
+2026-Jan-25 17:51:02.356692 #8 1.942 Reading package lists...
+2026-Jan-25 17:51:02.356692 #8 2.317 Building dependency tree...
+2026-Jan-25 17:51:02.356692 #8 2.413 Reading state information...
+2026-Jan-25 17:51:02.356692 #8 2.576 libc6 is already the newest version (2.36-9+deb12u13).
+2026-Jan-25 17:51:02.356692 #8 2.576 The following NEW packages will be installed:
+2026-Jan-25 17:51:02.356692 #8 2.576   ca-certificates libssl3 openssl
+2026-Jan-25 17:51:02.356692 #8 2.605 0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
+2026-Jan-25 17:51:02.356692 #8 2.605 Need to get 3616 kB of archives.
+2026-Jan-25 17:51:02.356692 #8 2.605 After this operation, 8926 kB of additional disk space will be used.
+2026-Jan-25 17:51:02.356692 #8 2.605 Get:1 http://deb.debian.org/debian bookworm/main amd64 libssl3 amd64 3.0.18-1~deb12u1 [2029 kB]
+2026-Jan-25 17:51:02.356692 #8 2.654 Get:2 http://deb.debian.org/debian bookworm/main amd64 openssl amd64 3.0.18-1~deb12u1 [1432 kB]
+2026-Jan-25 17:51:02.356692 #8 2.679 Get:3 http://deb.debian.org/debian bookworm/main amd64 ca-certificates all 20230311+deb12u1 [155 kB]
+2026-Jan-25 17:51:02.356692 #8 2.903 debconf: delaying package configuration, since apt-utils is not installed
+2026-Jan-25 17:51:02.356692 #8 2.936 Fetched 3616 kB in 0s (36.0 MB/s)
+2026-Jan-25 17:51:02.356692 #8 2.981 Selecting previously unselected package libssl3:amd64.
+2026-Jan-25 17:51:02.356692 #8 2.981 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+2026-Jan-25 17:51:02.356692 #8 3.016 Preparing to unpack .../libssl3_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #8 3.021 Unpacking libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #8 3.151 Selecting previously unselected package openssl.
+2026-Jan-25 17:51:02.356692 #8 3.152 Preparing to unpack .../openssl_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #8 3.155 Unpacking openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #8 3.256 Selecting previously unselected package ca-certificates.
+2026-Jan-25 17:51:02.356692 #8 3.258 Preparing to unpack .../ca-certificates_20230311+deb12u1_all.deb ...
+2026-Jan-25 17:51:02.356692 #8 3.260 Unpacking ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:51:02.356692 #8 3.316 Setting up libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #8 3.324 Setting up openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #8 3.338 Setting up ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:51:02.356692 #8 3.410 debconf: unable to initialize frontend: Dialog
+2026-Jan-25 17:51:02.356692 #8 3.411 debconf: (TERM is not set, so the dialog frontend is not usable.)
+2026-Jan-25 17:51:02.356692 #8 3.411 debconf: falling back to frontend: Readline
+2026-Jan-25 17:51:02.356692 #8 3.411 debconf: unable to initialize frontend: Readline
+2026-Jan-25 17:51:02.356692 #8 3.411 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/x86_64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+2026-Jan-25 17:51:02.356692 #8 3.411 debconf: falling back to frontend: Teletype
+2026-Jan-25 17:51:02.356692 #8 ...
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #9 [builder 3/7] RUN apt-get update && apt-get install -y openssl
+2026-Jan-25 17:51:02.356692 #9 0.271 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+2026-Jan-25 17:51:02.356692 #9 0.298 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+2026-Jan-25 17:51:02.356692 #9 0.304 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+2026-Jan-25 17:51:02.356692 #9 0.431 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8792 kB]
+2026-Jan-25 17:51:02.356692 #9 0.587 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+2026-Jan-25 17:51:02.356692 #9 0.626 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [292 kB]
+2026-Jan-25 17:51:02.356692 #9 1.347 Fetched 9346 kB in 1s (8571 kB/s)
+2026-Jan-25 17:51:02.356692 #9 1.347 Reading package lists...
+2026-Jan-25 17:51:02.356692 #9 1.791 Reading package lists...
+2026-Jan-25 17:51:02.356692 #9 2.297 Building dependency tree...
+2026-Jan-25 17:51:02.356692 #9 2.412 Reading state information...
+2026-Jan-25 17:51:02.356692 #9 2.494 The following additional packages will be installed:
+2026-Jan-25 17:51:02.356692 #9 2.495   libssl3
+2026-Jan-25 17:51:02.356692 #9 2.495 Suggested packages:
+2026-Jan-25 17:51:02.356692 #9 2.495   ca-certificates
+2026-Jan-25 17:51:02.356692 #9 2.528 The following NEW packages will be installed:
+2026-Jan-25 17:51:02.356692 #9 2.528   libssl3 openssl
+2026-Jan-25 17:51:02.356692 #9 2.554 0 upgraded, 2 newly installed, 0 to remove and 0 not upgraded.
+2026-Jan-25 17:51:02.356692 #9 2.554 Need to get 3460 kB of archives.
+2026-Jan-25 17:51:02.356692 #9 2.554 After this operation, 8530 kB of additional disk space will be used.
+2026-Jan-25 17:51:02.356692 #9 2.554 Get:1 http://deb.debian.org/debian bookworm/main amd64 libssl3 amd64 3.0.18-1~deb12u1 [2029 kB]
+2026-Jan-25 17:51:02.356692 #9 2.614 Get:2 http://deb.debian.org/debian bookworm/main amd64 openssl amd64 3.0.18-1~deb12u1 [1432 kB]
+2026-Jan-25 17:51:02.356692 #9 2.726 debconf: delaying package configuration, since apt-utils is not installed
+2026-Jan-25 17:51:02.356692 #9 2.762 Fetched 3460 kB in 0s (39.2 MB/s)
+2026-Jan-25 17:51:02.356692 #9 2.792 Selecting previously unselected package libssl3:amd64.
+2026-Jan-25 17:51:02.356692 #9 2.792 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+2026-Jan-25 17:51:02.356692 #9 2.803 Preparing to unpack .../libssl3_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #9 2.809 Unpacking libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #9 2.971 Selecting previously unselected package openssl.
+2026-Jan-25 17:51:02.356692 #9 2.973 Preparing to unpack .../openssl_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #9 2.975 Unpacking openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #9 3.076 Setting up libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #9 3.086 Setting up openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #9 3.099 Processing triggers for libc-bin (2.36-9+deb12u13) ...
+2026-Jan-25 17:51:02.356692 #9 DONE 3.2s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #10 [runner  3/12] RUN apt-get update && apt-get install -y openssl curl ca-certificates && rm -rf /var/lib/apt/lists/*
+2026-Jan-25 17:51:02.356692 #10 0.296 Get:1 http://deb.debian.org/debian bookworm InRelease [151 kB]
+2026-Jan-25 17:51:02.356692 #10 0.321 Get:2 http://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+2026-Jan-25 17:51:02.356692 #10 0.326 Get:3 http://deb.debian.org/debian-security bookworm-security InRelease [48.0 kB]
+2026-Jan-25 17:51:02.356692 #10 0.460 Get:4 http://deb.debian.org/debian bookworm/main amd64 Packages [8792 kB]
+2026-Jan-25 17:51:02.356692 #10 0.566 Get:5 http://deb.debian.org/debian bookworm-updates/main amd64 Packages [6924 B]
+2026-Jan-25 17:51:02.356692 #10 0.636 Get:6 http://deb.debian.org/debian-security bookworm-security/main amd64 Packages [292 kB]
+2026-Jan-25 17:51:02.356692 #10 1.257 Fetched 9346 kB in 1s (9506 kB/s)
+2026-Jan-25 17:51:02.356692 #10 1.257 Reading package lists...
+2026-Jan-25 17:51:02.356692 #10 1.644 Reading package lists...
+2026-Jan-25 17:51:02.356692 #10 2.076 Building dependency tree...
+2026-Jan-25 17:51:02.356692 #10 2.171 Reading state information...
+2026-Jan-25 17:51:02.356692 #10 2.255 The following additional packages will be installed:
+2026-Jan-25 17:51:02.356692 #10 2.255   krb5-locales libbrotli1 libcurl4 libgssapi-krb5-2 libk5crypto3 libkeyutils1
+2026-Jan-25 17:51:02.356692 #10 2.255   libkrb5-3 libkrb5support0 libldap-2.5-0 libldap-common libnghttp2-14 libpsl5
+2026-Jan-25 17:51:02.356692 #10 2.255   librtmp1 libsasl2-2 libsasl2-modules libsasl2-modules-db libssh2-1 libssl3
+2026-Jan-25 17:51:02.356692 #10 2.256   publicsuffix
+2026-Jan-25 17:51:02.356692 #10 2.256 Suggested packages:
+2026-Jan-25 17:51:02.356692 #10 2.256   krb5-doc krb5-user libsasl2-modules-gssapi-mit
+2026-Jan-25 17:51:02.356692 #10 2.256   | libsasl2-modules-gssapi-heimdal libsasl2-modules-ldap libsasl2-modules-otp
+2026-Jan-25 17:51:02.356692 #10 2.256   libsasl2-modules-sql
+2026-Jan-25 17:51:02.356692 #10 2.389 The following NEW packages will be installed:
+2026-Jan-25 17:51:02.356692 #10 2.389   ca-certificates curl krb5-locales libbrotli1 libcurl4 libgssapi-krb5-2
+2026-Jan-25 17:51:02.356692 #10 2.389   libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap-2.5-0
+2026-Jan-25 17:51:02.356692 #10 2.390   libldap-common libnghttp2-14 libpsl5 librtmp1 libsasl2-2 libsasl2-modules
+2026-Jan-25 17:51:02.356692 #10 2.390   libsasl2-modules-db libssh2-1 libssl3 openssl publicsuffix
+2026-Jan-25 17:51:02.356692 #10 2.427 0 upgraded, 22 newly installed, 0 to remove and 0 not upgraded.
+2026-Jan-25 17:51:02.356692 #10 2.427 Need to get 6109 kB of archives.
+2026-Jan-25 17:51:02.356692 #10 2.427 After this operation, 15.7 MB of additional disk space will be used.
+2026-Jan-25 17:51:02.356692 #10 2.427 Get:1 http://deb.debian.org/debian bookworm/main amd64 libssl3 amd64 3.0.18-1~deb12u1 [2029 kB]
+2026-Jan-25 17:51:02.356692 #10 2.482 Get:2 http://deb.debian.org/debian bookworm/main amd64 openssl amd64 3.0.18-1~deb12u1 [1432 kB]
+2026-Jan-25 17:51:02.356692 #10 2.499 Get:3 http://deb.debian.org/debian bookworm/main amd64 ca-certificates all 20230311+deb12u1 [155 kB]
+2026-Jan-25 17:51:02.356692 #10 2.500 Get:4 http://deb.debian.org/debian bookworm/main amd64 krb5-locales all 1.20.1-2+deb12u4 [63.4 kB]
+2026-Jan-25 17:51:02.356692 #10 2.502 Get:5 http://deb.debian.org/debian bookworm/main amd64 libbrotli1 amd64 1.0.9-2+b6 [275 kB]
+2026-Jan-25 17:51:02.356692 #10 2.506 Get:6 http://deb.debian.org/debian bookworm/main amd64 libkrb5support0 amd64 1.20.1-2+deb12u4 [33.2 kB]
+2026-Jan-25 17:51:02.356692 #10 2.507 Get:7 http://deb.debian.org/debian bookworm/main amd64 libk5crypto3 amd64 1.20.1-2+deb12u4 [79.8 kB]
+2026-Jan-25 17:51:02.356692 #10 2.508 Get:8 http://deb.debian.org/debian bookworm/main amd64 libkeyutils1 amd64 1.6.3-2 [8808 B]
+2026-Jan-25 17:51:02.356692 #10 2.516 Get:9 http://deb.debian.org/debian bookworm/main amd64 libkrb5-3 amd64 1.20.1-2+deb12u4 [334 kB]
+2026-Jan-25 17:51:02.356692 #10 2.518 Get:10 http://deb.debian.org/debian bookworm/main amd64 libgssapi-krb5-2 amd64 1.20.1-2+deb12u4 [135 kB]
+2026-Jan-25 17:51:02.356692 #10 2.520 Get:11 http://deb.debian.org/debian bookworm/main amd64 libsasl2-modules-db amd64 2.1.28+dfsg-10 [20.3 kB]
+2026-Jan-25 17:51:02.356692 #10 2.521 Get:12 http://deb.debian.org/debian bookworm/main amd64 libsasl2-2 amd64 2.1.28+dfsg-10 [59.7 kB]
+2026-Jan-25 17:51:02.356692 #10 2.523 Get:13 http://deb.debian.org/debian bookworm/main amd64 libldap-2.5-0 amd64 2.5.13+dfsg-5 [183 kB]
+2026-Jan-25 17:51:02.356692 #10 2.525 Get:14 http://deb.debian.org/debian bookworm/main amd64 libnghttp2-14 amd64 1.52.0-1+deb12u2 [73.0 kB]
+2026-Jan-25 17:51:02.356692 #10 2.527 Get:15 http://deb.debian.org/debian bookworm/main amd64 libpsl5 amd64 0.21.2-1 [58.7 kB]
+2026-Jan-25 17:51:02.356692 #10 2.528 Get:16 http://deb.debian.org/debian bookworm/main amd64 librtmp1 amd64 2.4+20151223.gitfa8646d.1-2+b2 [60.8 kB]
+2026-Jan-25 17:51:02.356692 #10 2.530 Get:17 http://deb.debian.org/debian bookworm/main amd64 libssh2-1 amd64 1.10.0-3+b1 [179 kB]
+2026-Jan-25 17:51:02.356692 #10 2.532 Get:18 http://deb.debian.org/debian bookworm/main amd64 libcurl4 amd64 7.88.1-10+deb12u14 [392 kB]
+2026-Jan-25 17:51:02.356692 #10 2.537 Get:19 http://deb.debian.org/debian bookworm/main amd64 curl amd64 7.88.1-10+deb12u14 [316 kB]
+2026-Jan-25 17:51:02.356692 #10 2.541 Get:20 http://deb.debian.org/debian bookworm/main amd64 libldap-common all 2.5.13+dfsg-5 [29.3 kB]
+2026-Jan-25 17:51:02.356692 #10 2.542 Get:21 http://deb.debian.org/debian bookworm/main amd64 libsasl2-modules amd64 2.1.28+dfsg-10 [66.6 kB]
+2026-Jan-25 17:51:02.356692 #10 2.543 Get:22 http://deb.debian.org/debian bookworm/main amd64 publicsuffix all 20230209.2326-1 [126 kB]
+2026-Jan-25 17:51:02.356692 #10 2.692 debconf: delaying package configuration, since apt-utils is not installed
+2026-Jan-25 17:51:02.356692 #10 2.722 Fetched 6109 kB in 0s (40.7 MB/s)
+2026-Jan-25 17:51:02.356692 #10 2.755 Selecting previously unselected package libssl3:amd64.
+2026-Jan-25 17:51:02.356692 #10 2.755 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6096 files and directories currently installed.)
+2026-Jan-25 17:51:02.356692 #10 2.760 Preparing to unpack .../00-libssl3_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 2.765 Unpacking libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #10 2.920 Selecting previously unselected package openssl.
+2026-Jan-25 17:51:02.356692 #10 2.920 Preparing to unpack .../01-openssl_3.0.18-1~deb12u1_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 2.922 Unpacking openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #10 3.025 Selecting previously unselected package ca-certificates.
+2026-Jan-25 17:51:02.356692 #10 3.025 Preparing to unpack .../02-ca-certificates_20230311+deb12u1_all.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.028 Unpacking ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:51:02.356692 #10 3.085 Selecting previously unselected package krb5-locales.
+2026-Jan-25 17:51:02.356692 #10 3.086 Preparing to unpack .../03-krb5-locales_1.20.1-2+deb12u4_all.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.089 Unpacking krb5-locales (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 3.117 Selecting previously unselected package libbrotli1:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.118 Preparing to unpack .../04-libbrotli1_1.0.9-2+b6_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.121 Unpacking libbrotli1:amd64 (1.0.9-2+b6) ...
+2026-Jan-25 17:51:02.356692 #10 3.229 Selecting previously unselected package libkrb5support0:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.231 Preparing to unpack .../05-libkrb5support0_1.20.1-2+deb12u4_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.247 Unpacking libkrb5support0:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 3.280 Selecting previously unselected package libk5crypto3:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.281 Preparing to unpack .../06-libk5crypto3_1.20.1-2+deb12u4_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.284 Unpacking libk5crypto3:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 3.313 Selecting previously unselected package libkeyutils1:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.314 Preparing to unpack .../07-libkeyutils1_1.6.3-2_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.316 Unpacking libkeyutils1:amd64 (1.6.3-2) ...
+2026-Jan-25 17:51:02.356692 #10 3.338 Selecting previously unselected package libkrb5-3:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.339 Preparing to unpack .../08-libkrb5-3_1.20.1-2+deb12u4_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.341 Unpacking libkrb5-3:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 3.386 Selecting previously unselected package libgssapi-krb5-2:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.387 Preparing to unpack .../09-libgssapi-krb5-2_1.20.1-2+deb12u4_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.389 Unpacking libgssapi-krb5-2:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 3.416 Selecting previously unselected package libsasl2-modules-db:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.417 Preparing to unpack .../10-libsasl2-modules-db_2.1.28+dfsg-10_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.420 Unpacking libsasl2-modules-db:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:51:02.356692 #10 3.442 Selecting previously unselected package libsasl2-2:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.443 Preparing to unpack .../11-libsasl2-2_2.1.28+dfsg-10_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.445 Unpacking libsasl2-2:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:51:02.356692 #10 3.471 Selecting previously unselected package libldap-2.5-0:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.472 Preparing to unpack .../12-libldap-2.5-0_2.5.13+dfsg-5_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.475 Unpacking libldap-2.5-0:amd64 (2.5.13+dfsg-5) ...
+2026-Jan-25 17:51:02.356692 #10 3.507 Selecting previously unselected package libnghttp2-14:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.508 Preparing to unpack .../13-libnghttp2-14_1.52.0-1+deb12u2_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.510 Unpacking libnghttp2-14:amd64 (1.52.0-1+deb12u2) ...
+2026-Jan-25 17:51:02.356692 #10 3.538 Selecting previously unselected package libpsl5:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.539 Preparing to unpack .../14-libpsl5_0.21.2-1_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.542 Unpacking libpsl5:amd64 (0.21.2-1) ...
+2026-Jan-25 17:51:02.356692 #10 3.575 Selecting previously unselected package librtmp1:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.576 Preparing to unpack .../15-librtmp1_2.4+20151223.gitfa8646d.1-2+b2_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.579 Unpacking librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+2026-Jan-25 17:51:02.356692 #10 3.613 Selecting previously unselected package libssh2-1:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.616 Preparing to unpack .../16-libssh2-1_1.10.0-3+b1_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.617 Unpacking libssh2-1:amd64 (1.10.0-3+b1) ...
+2026-Jan-25 17:51:02.356692 #10 3.670 Selecting previously unselected package libcurl4:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.673 Preparing to unpack .../17-libcurl4_7.88.1-10+deb12u14_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.677 Unpacking libcurl4:amd64 (7.88.1-10+deb12u14) ...
+2026-Jan-25 17:51:02.356692 #10 3.725 Selecting previously unselected package curl.
+2026-Jan-25 17:51:02.356692 #10 3.726 Preparing to unpack .../18-curl_7.88.1-10+deb12u14_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.728 Unpacking curl (7.88.1-10+deb12u14) ...
+2026-Jan-25 17:51:02.356692 #10 3.777 Selecting previously unselected package libldap-common.
+2026-Jan-25 17:51:02.356692 #10 3.778 Preparing to unpack .../19-libldap-common_2.5.13+dfsg-5_all.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.782 Unpacking libldap-common (2.5.13+dfsg-5) ...
+2026-Jan-25 17:51:02.356692 #10 3.807 Selecting previously unselected package libsasl2-modules:amd64.
+2026-Jan-25 17:51:02.356692 #10 3.810 Preparing to unpack .../20-libsasl2-modules_2.1.28+dfsg-10_amd64.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.817 Unpacking libsasl2-modules:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:51:02.356692 #10 3.842 Selecting previously unselected package publicsuffix.
+2026-Jan-25 17:51:02.356692 #10 3.843 Preparing to unpack .../21-publicsuffix_20230209.2326-1_all.deb ...
+2026-Jan-25 17:51:02.356692 #10 3.845 Unpacking publicsuffix (20230209.2326-1) ...
+2026-Jan-25 17:51:02.356692 #10 3.876 Setting up libkeyutils1:amd64 (1.6.3-2) ...
+2026-Jan-25 17:51:02.356692 #10 3.883 Setting up libpsl5:amd64 (0.21.2-1) ...
+2026-Jan-25 17:51:02.356692 #10 3.889 Setting up libbrotli1:amd64 (1.0.9-2+b6) ...
+2026-Jan-25 17:51:02.356692 #10 3.895 Setting up libssl3:amd64 (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #10 3.901 Setting up libnghttp2-14:amd64 (1.52.0-1+deb12u2) ...
+2026-Jan-25 17:51:02.356692 #10 3.908 Setting up krb5-locales (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 3.915 Setting up libldap-common (2.5.13+dfsg-5) ...
+2026-Jan-25 17:51:02.356692 #10 3.922 Setting up libkrb5support0:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 3.929 Setting up libsasl2-modules-db:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:51:02.356692 #10 3.934 Setting up librtmp1:amd64 (2.4+20151223.gitfa8646d.1-2+b2) ...
+2026-Jan-25 17:51:02.356692 #10 3.940 Setting up libk5crypto3:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 3.945 Setting up libsasl2-2:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:51:02.356692 #10 3.951 Setting up libssh2-1:amd64 (1.10.0-3+b1) ...
+2026-Jan-25 17:51:02.356692 #10 3.957 Setting up libkrb5-3:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 3.964 Setting up openssl (3.0.18-1~deb12u1) ...
+2026-Jan-25 17:51:02.356692 #10 3.972 Setting up publicsuffix (20230209.2326-1) ...
+2026-Jan-25 17:51:02.356692 #10 3.978 Setting up libsasl2-modules:amd64 (2.1.28+dfsg-10) ...
+2026-Jan-25 17:51:02.356692 #10 3.990 Setting up libldap-2.5-0:amd64 (2.5.13+dfsg-5) ...
+2026-Jan-25 17:51:02.356692 #10 3.998 Setting up ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:51:02.356692 #10 4.062 debconf: unable to initialize frontend: Dialog
+2026-Jan-25 17:51:02.356692 #10 4.062 debconf: (TERM is not set, so the dialog frontend is not usable.)
+2026-Jan-25 17:51:02.356692 #10 4.062 debconf: falling back to frontend: Readline
+2026-Jan-25 17:51:02.356692 #10 4.063 debconf: unable to initialize frontend: Readline
+2026-Jan-25 17:51:02.356692 #10 4.063 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC contains: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.36.0 /usr/local/share/perl/5.36.0 /usr/lib/x86_64-linux-gnu/perl5/5.36 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.36 /usr/share/perl/5.36 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 7.)
+2026-Jan-25 17:51:02.356692 #10 4.063 debconf: falling back to frontend: Teletype
+2026-Jan-25 17:51:02.356692 #10 4.609 Updating certificates in /etc/ssl/certs...
+2026-Jan-25 17:51:02.356692 #10 ...
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #8 [deps 2/5] RUN apt-get update && apt-get install -y openssl ca-certificates libc6
+2026-Jan-25 17:51:02.356692 #8 3.989 Updating certificates in /etc/ssl/certs...
+2026-Jan-25 17:51:02.356692 #8 4.773 142 added, 0 removed; done.
+2026-Jan-25 17:51:02.356692 #8 4.797 Processing triggers for libc-bin (2.36-9+deb12u13) ...
+2026-Jan-25 17:51:02.356692 #8 4.811 Processing triggers for ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:51:02.356692 #8 4.820 Updating certificates in /etc/ssl/certs...
+2026-Jan-25 17:51:02.356692 #8 5.598 0 added, 0 removed; done.
+2026-Jan-25 17:51:02.356692 #8 5.598 Running hooks in /etc/ca-certificates/update.d...
+2026-Jan-25 17:51:02.356692 #8 5.600 done.
+2026-Jan-25 17:51:02.356692 #8 DONE 5.7s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #11 [deps 3/5] WORKDIR /app
+2026-Jan-25 17:51:02.356692 #11 DONE 0.0s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #12 [deps 4/5] COPY package.json package-lock.json* ./
+2026-Jan-25 17:51:02.356692 #12 DONE 0.0s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #13 [deps 5/5] RUN npm ci --include=dev
+2026-Jan-25 17:51:02.356692 #13 ...
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #10 [runner  3/12] RUN apt-get update && apt-get install -y openssl curl ca-certificates && rm -rf /var/lib/apt/lists/*
+2026-Jan-25 17:51:02.356692 #10 5.590 142 added, 0 removed; done.
+2026-Jan-25 17:51:02.356692 #10 5.609 Setting up libgssapi-krb5-2:amd64 (1.20.1-2+deb12u4) ...
+2026-Jan-25 17:51:02.356692 #10 5.618 Setting up libcurl4:amd64 (7.88.1-10+deb12u14) ...
+2026-Jan-25 17:51:02.356692 #10 5.624 Setting up curl (7.88.1-10+deb12u14) ...
+2026-Jan-25 17:51:02.356692 #10 5.630 Processing triggers for libc-bin (2.36-9+deb12u13) ...
+2026-Jan-25 17:51:02.356692 #10 5.648 Processing triggers for ca-certificates (20230311+deb12u1) ...
+2026-Jan-25 17:51:02.356692 #10 5.654 Updating certificates in /etc/ssl/certs...
+2026-Jan-25 17:51:02.356692 #10 6.161 0 added, 0 removed; done.
+2026-Jan-25 17:51:02.356692 #10 6.161 Running hooks in /etc/ca-certificates/update.d...
+2026-Jan-25 17:51:02.356692 #10 6.161 done.
+2026-Jan-25 17:51:02.356692 #10 DONE 6.2s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #14 [runner  4/12] RUN addgroup --system --gid 1001 nodejs
+2026-Jan-25 17:51:02.356692 #14 0.171 Adding group `nodejs' (GID 1001) ...
+2026-Jan-25 17:51:02.356692 #14 0.193 Done.
+2026-Jan-25 17:51:02.356692 #14 DONE 0.2s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #15 [runner  5/12] RUN adduser --system --uid 1001 nextjs
+2026-Jan-25 17:51:02.356692 #15 0.180 Adding system user `nextjs' (UID 1001) ...
+2026-Jan-25 17:51:02.356692 #15 0.180 Adding new user `nextjs' (UID 1001) with group `nogroup' ...
+2026-Jan-25 17:51:02.356692 #15 0.190 useradd warning: nextjs's uid 1001 is greater than SYS_UID_MAX 999
+2026-Jan-25 17:51:02.356692 #15 0.207 Not creating `/nonexistent'.
+2026-Jan-25 17:51:02.356692 #15 DONE 0.2s
+2026-Jan-25 17:51:02.356692 
+2026-Jan-25 17:51:02.356692 #13 [deps 5/5] RUN npm ci --include=dev
+2026-Jan-25 17:51:02.356692 #13 4.212 npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-Jan-25 17:51:02.356692 #13 4.480 npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+2026-Jan-25 17:51:02.356692 #13 19.96
+2026-Jan-25 17:51:02.356692 #13 19.96 added 857 packages, and audited 858 packages in 20s
+2026-Jan-25 17:51:02.356692 #13 19.96
+2026-Jan-25 17:51:02.356692 #13 19.96 189 packages are looking for funding
+2026-Jan-25 17:51:02.356692 #13 19.96   run `npm fund` for details
+2026-Jan-25 17:51:02.356692 #13 19.96
+2026-Jan-25 17:51:02.356692 #13 19.96 found 0 vulnerabilities
+2026-Jan-25 17:51:02.356692 #13 19.96 npm notice
+2026-Jan-25 17:51:02.356692 #13 19.96 npm notice New major version of npm available! 10.8.2 -> 11.8.0
+2026-Jan-25 17:51:02.356692 #13 19.96 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.8.0
+2026-Jan-25 17:51:02.356692 #13 19.96 npm notice To update run: npm install -g npm@11.8.0
+2026-Jan-25 17:51:02.356692 #13 19.96 npm notice
+2026-Jan-25 17:51:02.416329 [DEBUG] Error type: RuntimeException
+2026-Jan-25 17:51:02.489465 [DEBUG] Error code: 0
+2026-Jan-25 17:51:02.518212 [DEBUG] Location: /var/www/html/app/Traits/ExecuteRemoteCommand.php:243
+2026-Jan-25 17:51:02.547280 [DEBUG] Stack trace (first 5 lines):
+2026-Jan-25 17:51:02.578180 [DEBUG] #0 /var/www/html/app/Traits/ExecuteRemoteCommand.php(104): App\Jobs\ApplicationDeploymentJob->executeCommandWithProcess()
+2026-Jan-25 17:51:02.597843 [DEBUG] #1 /var/www/html/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php(271): App\Jobs\ApplicationDeploymentJob->{closure:App\Traits\ExecuteRemoteCommand::execute_remote_command():71}()
+2026-Jan-25 17:51:02.617413 [DEBUG] #2 /var/www/html/app/Traits/ExecuteRemoteCommand.php(71): Illuminate\Support\Collection->each()
+2026-Jan-25 17:51:02.628406 [DEBUG] #3 /var/www/html/app/Jobs/ApplicationDeploymentJob.php(730): App\Jobs\ApplicationDeploymentJob->execute_remote_command()
+2026-Jan-25 17:51:02.637519 [DEBUG] #4 /var/www/html/app/Jobs/ApplicationDeploymentJob.php(467): App\Jobs\ApplicationDeploymentJob->deploy_docker_compose_buildpack()
+2026-Jan-25 17:51:02.651662 ========================================
+2026-Jan-25 17:51:02.951774 Gracefully shutting down build container: pccs48scsowcw40osos8w8c8
+2026-Jan-25 17:51:03.268234 [DEBUG] [CMD]: docker stop -t 30 pccs48scsowcw40osos8w8c8
+2026-Jan-25 17:51:03.268234 [DEBUG] pccs48scsowcw40osos8w8c8

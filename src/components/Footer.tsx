@@ -110,14 +110,6 @@ export async function Footer() {
                   Gizlilik Politikası
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/admin"
-                  className="text-muted-foreground hover:text-primary transition-colors"
-                >
-                  Yönetim Paneli
-                </Link>
-              </li>
             </ul>
           </div>
 

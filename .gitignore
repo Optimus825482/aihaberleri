@@ -46,7 +46,8 @@ prisma/migrations/*_migration.sql
 *.swp
 *.swo
 *~
-
+.agent/
+.agent/
 # Logs
 logs
 *.log
