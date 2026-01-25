@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ClientProviders } from "@/components/ClientProviders";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -117,6 +118,7 @@ export default function RootLayout({
           "min-h-screen bg-background antialiased",
         )}
       >
+        <GoogleAnalytics />
         {children}
         <ClientProviders />
         <ServiceWorkerRegistration />
