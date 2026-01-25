@@ -4,11 +4,18 @@
  */
 
 import { Worker } from "bullmq";
-import redis from "@/lib/redis";
+import { getRedis } from "@/lib/redis";
 import { executeNewsAgent } from "@/services/agent.service";
 import { scheduleNewsAgentJob } from "@/lib/queue";
 
 console.log("🚀 Starting News Agent Worker...");
+
+const redis = getRedis();
+
+if (!redis) {
+  console.error("❌ Redis not available. Worker cannot start.");
+  process.exit(1);
+}
 
 // Create worker
 const worker = new Worker(
@@ -35,9 +42,15 @@ const worker = new Worker(
       // Schedule next execution
       if (process.env.AGENT_ENABLED !== "false") {
         const nextExecution = await scheduleNewsAgentJob();
-        console.log(
-          `\n⏰ Next execution: ${nextExecution.nextExecutionTime.toLocaleString()}`,
-        );
+        if (nextExecution) {
+          console.log(
+            `\n⏰ Next execution: ${nextExecution.nextExecutionTime.toLocaleString()}`,
+          );
+        } else {
+          console.log(
+            "\n⚠️  Could not schedule next execution (Queue not available)",
+          );
+        }
       }
 
       return result;
