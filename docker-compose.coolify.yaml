@@ -81,7 +81,12 @@ services:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
 
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
+    networks:
+      - aihaberleri-network
     healthcheck:
       test:
         [
