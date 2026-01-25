@@ -48,8 +48,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Install runtime dependencies including OpenSSL 3.x
-RUN apk add --no-cache openssl curl
+# Install runtime dependencies including OpenSSL 3.x and libc6-compat for native modules
+RUN apk add --no-cache openssl curl libc6-compat
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
