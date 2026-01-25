@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: aihaberleri-app
+    ports:
+      - "3000:3000"
+    environment:
+      # Database (Coolify PostgreSQL service)
+      DATABASE_URL: ${DATABASE_URL}
+
+      # Redis (Coolify Redis service)
+      REDIS_URL: ${REDIS_URL}
+
+      # NextAuth
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+
+      # AI Services
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+
+      # Search APIs
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
+
+      # Email
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+
+      # Firebase
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+
+      # Site Config
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME}
+      TWITTER_HANDLE: ${TWITTER_HANDLE}
+      CONTACT_EMAIL: ${CONTACT_EMAIL}
+
+      # Agent Config
+      AGENT_ENABLED: ${AGENT_ENABLED:-true}
+      AGENT_MIN_ARTICLES_PER_RUN: ${AGENT_MIN_ARTICLES_PER_RUN:-3}
+      AGENT_MAX_ARTICLES_PER_RUN: ${AGENT_MAX_ARTICLES_PER_RUN:-5}
+      AGENT_MIN_INTERVAL_HOURS: ${AGENT_MIN_INTERVAL_HOURS:-6}
+
+      # Production
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: 1
+
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
