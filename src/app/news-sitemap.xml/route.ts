@@ -8,10 +8,28 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
+// Force dynamic rendering (skip at build time)
+export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Revalidate every hour
+
 export async function GET() {
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
     const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "AI Haberleri";
+
+    // Skip database queries during build
+    if (process.env.SKIP_ENV_VALIDATION === "1") {
+      const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
+</urlset>`;
+
+      return new NextResponse(emptyXml, {
+        headers: {
+          "Content-Type": "application/xml; charset=utf-8",
+        },
+      });
+    }
 
     // Son 48 saatteki published article'ları al
     const twoDaysAgo = new Date();
