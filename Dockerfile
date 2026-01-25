@@ -8,7 +8,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
-RUN npm ci
+# Install ALL dependencies (including devDependencies) for build
+RUN npm ci --include=dev
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
@@ -27,9 +28,13 @@ RUN npx prisma generate
 # Build Next.js (standalone output)
 # Skip build-time checks that require external services
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=1
+# Use development mode for build to include devDependencies
+ENV NODE_ENV=development
 RUN npm run build
+
+# Set production mode after build
+ENV NODE_ENV=production
 
 # Stage 3: Runner
 FROM node:20-alpine AS runner
