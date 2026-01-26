@@ -21,6 +21,10 @@ export async function GET(request: NextRequest) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      // Capture original console methods immediately
+      const originalLog = console.log;
+      const originalError = console.error;
+
       // Helper function to send log messages
       const sendLog = (
         message: string,
@@ -31,7 +35,13 @@ export async function GET(request: NextRequest) {
           type,
           timestamp: new Date().toISOString(),
         });
-        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        try {
+          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        } catch (err) {
+          // If stream is closed (client disconnected), fallback to system log
+          // This ensures the agent continues running in the background
+          originalLog(`[Background] ${message}`);
+        }
       };
 
       try {
@@ -46,10 +56,6 @@ export async function GET(request: NextRequest) {
             "info",
           );
         }
-
-        // Override console.log to capture logs
-        const originalLog = console.log;
-        const originalError = console.error;
 
         console.log = (...args: any[]) => {
           const message = args.join(" ");
