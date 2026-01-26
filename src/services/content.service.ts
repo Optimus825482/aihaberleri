@@ -25,41 +25,10 @@ export interface ProcessedArticle {
   keywords: string[];
   metaTitle: string;
   metaDescription: string;
+  score: number | null;
 }
 
-/**
- * Process and select best articles from news results
- */
-export async function selectBestArticles(
-  articles: NewsArticle[],
-  count: number = 2,
-): Promise<Array<{ article: NewsArticle; category: string; reason: string }>> {
-  console.log(
-    `🤔 ${articles.length} haber analiz ediliyor, en iyi ${count} tanesi seçilecek...`,
-  );
-
-  try {
-    const selections = await analyzeNewsArticles(articles);
-
-    const selectedArticles = selections.slice(0, count).map((selection) => ({
-      article: articles[selection.index],
-      category: selection.category,
-      reason: selection.reason,
-    }));
-
-    console.log(`✅ ${selectedArticles.length} haber seçildi`);
-    return selectedArticles;
-  } catch (error) {
-    console.error("Haber seçme hatası:", error);
-
-    // Fallback: select first N articles with default category
-    return articles.slice(0, count).map((article) => ({
-      article,
-      category: "Yapay Zeka Haberleri",
-      reason: "Yedek seçim",
-    }));
-  }
-}
+// ... existing code ...
 
 /**
  * Process a single article: rewrite, get image, prepare for publishing
@@ -87,12 +56,26 @@ export async function processArticle(
 
     // Step 3: Rewrite article using DeepSeek
     console.log("🤖 DeepSeek ile haber yeniden yazılıyor...");
-    const rewritten = await rewriteArticle(
+
+    // Define type for rewrite result to include score
+    interface RewriteResult {
+      title: string;
+      excerpt: string;
+      content: string;
+      keywords: string[];
+      metaDescription: string;
+      score?: number;
+    }
+
+    const rewritten = (await rewriteArticle(
       article.title,
       fullContent,
       category,
       recentArticles,
-    );
+    )) as RewriteResult;
+
+    const score = rewritten.score || 0;
+    console.log(`📊 Haber Puanı: ${score}/1000`);
 
     // Step 3: Generate AI image prompt using DeepSeek
     console.log("🎨 DeepSeek ile görsel prompt oluşturuluyor...");
@@ -132,6 +115,7 @@ export async function processArticle(
       keywords: rewritten.keywords,
       metaTitle: rewritten.title,
       metaDescription: rewritten.metaDescription,
+      score,
     };
   } catch (error) {
     console.error("Haber işleme hatası:", error);
@@ -187,6 +171,10 @@ export async function publishArticle(
       processedArticle.slug = `${processedArticle.slug}-${Date.now()}`;
     }
 
+    // Determine status based on score
+    const score = processedArticle.score || 0;
+    const status = score >= 750 ? "PUBLISHED" : "DRAFT";
+
     // Create article
     const article = await db.article.create({
       data: {
@@ -197,8 +185,9 @@ export async function publishArticle(
         imageUrl: processedArticle.imageUrl,
         sourceUrl: processedArticle.sourceUrl,
         categoryId: category.id,
-        status: "PUBLISHED",
-        publishedAt: new Date(),
+        status,
+        score,
+        publishedAt: status === "PUBLISHED" ? new Date() : null,
         metaTitle: processedArticle.metaTitle,
         metaDescription: processedArticle.metaDescription,
         keywords: processedArticle.keywords,

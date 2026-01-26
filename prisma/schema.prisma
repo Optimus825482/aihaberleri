@@ -111,7 +111,8 @@ model Article {
   metaTitle       String?
   metaDescription String?
   keywords        String[]
-  indexNowStatus  IndexStatus @default(PENDING)
+  score           Int           @default(0) // Quality score (0-1000)
+  indexNowStatus  IndexStatus   @default(PENDING)
   indexedAt       DateTime?
 
   @@index([slug])
