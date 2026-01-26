@@ -1,5 +1,5 @@
 // Service Worker for AI Haberleri PWA
-const CACHE_NAME = "ai-haberleri-v1";
+const CACHE_NAME = "ai-haberleri-v2";
 const urlsToCache = [
   "/",
   "/manifest.json",
@@ -16,8 +16,9 @@ self.addEventListener("install", (event) => {
 
 // Fetch event - Network first, fallback to cache
 self.addEventListener("fetch", (event) => {
-  // Only cache GET requests
+  // Only cache GET requests, but still handle other methods
   if (event.request.method !== "GET") {
+    event.respondWith(fetch(event.request));
     return;
   }
 
@@ -28,6 +29,7 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/_next/") ||
     url.pathname.includes("extension:")
   ) {
+    event.respondWith(fetch(event.request));
     return;
   }
 
