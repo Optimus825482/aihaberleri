@@ -232,6 +232,7 @@ export async function getAgentStats() {
     totalArticles,
     lastExecution,
     enabledSetting,
+    nextRunSetting,
   ] = await Promise.all([
     db.agentLog.count(),
     db.agentLog.count({ where: { status: "SUCCESS" } }),
@@ -240,6 +241,7 @@ export async function getAgentStats() {
       orderBy: { executionTime: "desc" },
     }),
     db.setting.findUnique({ where: { key: "agent.enabled" } }),
+    db.setting.findUnique({ where: { key: "agent.nextRun" } }),
   ]);
 
   const successRate =
@@ -255,6 +257,7 @@ export async function getAgentStats() {
     lastExecution: lastExecution?.executionTime || null,
     lastStatus: lastExecution?.status || null,
     enabled: enabledSetting?.value !== "false",
+    nextRun: nextRunSetting?.value || null,
   };
 }
 

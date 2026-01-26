@@ -74,15 +74,30 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
   };
 
   const getBestTurkishVoice = (voices: SpeechSynthesisVoice[]) => {
-    const preferred = ["Google", "Natural", "Online", "Siri", "Premium"];
+    // Mobil cihazlarda genellikle "Siri", "Google" veya "Samsung" isimli sesler daha stabildir.
+    const preferred = [
+      "Google",
+      "Natural",
+      "Siri",
+      "Premium",
+      "Online",
+      "Samsung",
+      "Yelda",
+      "Tolga",
+    ];
+    const turkishVoices = voices.filter(
+      (v) => v.lang.startsWith("tr") || v.lang === "tr-TR",
+    );
+
+    if (turkishVoices.length === 0) return null;
+
     for (const p of preferred) {
-      const found = voices.find(
-        (v) =>
-          (v.lang.startsWith("tr") || v.lang === "tr-TR") && v.name.includes(p),
-      );
+      const found = turkishVoices.find((v) => v.name.includes(p));
       if (found) return found;
     }
-    return voices.find((v) => v.lang.startsWith("tr") || v.lang === "tr-TR");
+
+    // Varsayılan Türkçe ses
+    return turkishVoices.find((v) => v.default) || turkishVoices[0];
   };
 
   const startSpeaking = () => {
@@ -95,20 +110,31 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
       return;
     }
 
+    // Mevcut konuşmayı tamamen temizle
     synth.current.cancel();
+
+    // Mobil cihazlar için kısa bir sessiz ses çalarak 'audio context'i uyandırıyoruz
+    const wakeUpUtterance = new SpeechSynthesisUtterance("");
+    wakeUpUtterance.volume = 0;
+    synth.current.speak(wakeUpUtterance);
 
     const fullContent = `${title}. ${cleanText(text)}`;
     const utterance = new SpeechSynthesisUtterance(fullContent);
 
+    // Sesleri tekrar al (mobil cihazlarda dinamik yüklenebilir)
     const voices = synth.current.getVoices();
     const bestVoice = getBestTurkishVoice(voices);
+
     if (bestVoice) {
       utterance.voice = bestVoice;
+      utterance.lang = "tr-TR";
+    } else {
+      utterance.lang = "tr-TR";
     }
 
-    utterance.lang = "tr-TR";
     utterance.rate = parseFloat(speed);
     utterance.pitch = 1.0;
+    utterance.volume = 1.0;
 
     utterance.onstart = () => {
       setIsPlaying(true);
@@ -122,17 +148,19 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
       console.error("Speech error:", e);
       setIsPlaying(false);
       setIsPaused(false);
+      // Hata durumunda (örneğin mobil safari kesintisiyse) tekrar dene komutu verilebilir
     };
 
     utteranceRef.current = utterance;
-    synth.current.speak(utterance);
 
-    // iOS and Android often need a second resume to kickstart
-    if (synth.current.paused) {
-      setTimeout(() => {
-        synth.current?.resume();
-      }, 100);
-    }
+    // Mobil cihazlarda konuşmanın başlaması için kısa bir gecikme bazen yardımcı olur
+    setTimeout(() => {
+      synth.current?.speak(utterance);
+      // iOS Safari için ek bir zorlama:
+      if (synth.current?.paused) {
+        synth.current.resume();
+      }
+    }, 50);
   };
 
   const pauseSpeaking = () => {

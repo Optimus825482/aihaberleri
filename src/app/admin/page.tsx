@@ -82,6 +82,7 @@ interface AgentStats {
     lastExecution: string | null;
     lastStatus: string | null;
     enabled: boolean;
+    nextRun: string | null;
   };
   queue: {
     waiting: number;
@@ -296,17 +297,14 @@ export default function AdminDashboard() {
                     <div className="absolute inset-0 bg-primary animate-progress-indefinite" />
                   </div>
 
-                  {agentStats?.upcomingJobs &&
-                  agentStats.upcomingJobs.length > 0 ? (
+                  {agentStats?.agent.nextRun ? (
                     <div className="flex flex-col items-center">
                       <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 mb-2">
                         SIRADAKİ TARAMA
                       </span>
                       <div className="bg-primary/10 px-6 py-4 rounded-3xl border border-primary/20">
                         <CountdownTimer
-                          targetTimestamp={
-                            agentStats.upcomingJobs[0].scheduledFor
-                          }
+                          targetTimestamp={agentStats.agent.nextRun}
                           onComplete={() => fetchAllStats()}
                           className="text-4xl font-black tabular-nums text-primary"
                         />
@@ -320,7 +318,6 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                   )}
-
                   <Link href="/admin/agent-settings" className="w-full">
                     <Button
                       variant="outline"
