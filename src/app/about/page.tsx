@@ -1,4 +1,3 @@
-import { HeaderWrapper } from "@/components/HeaderWrapper";
 import { Footer } from "@/components/Footer";
 
 export const metadata = {
@@ -13,8 +12,6 @@ export const dynamic = "force-dynamic";
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col">
-      <HeaderWrapper />
-
       <main className="flex-1">
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white py-20">

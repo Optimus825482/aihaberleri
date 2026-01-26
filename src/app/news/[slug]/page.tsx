@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { HeaderWrapper } from "@/components/HeaderWrapper";
 import { Footer } from "@/components/Footer";
 import { ShareButtons } from "@/components/ShareButtons";
 import { formatDate, calculateReadingTime } from "@/lib/utils";
@@ -104,8 +103,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <HeaderWrapper />
-
       {/* Structured Data */}
       <script
         type="application/ld+json"

@@ -7,55 +7,113 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { Icons } from "@/components/icons";
+import { Logo } from "@/components/Logo";
+
+export interface NavItem {
+  title: string;
+  href: string;
+  disabled?: boolean;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 export function MainNav({
   items,
+  categories,
   children,
 }: {
-  items?: any[];
+  items?: NavItem[];
+  categories?: Category[];
   children?: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false);
 
   return (
     <div className="flex gap-6 md:gap-10">
-      <Link href="/" className="flex items-center space-x-2">
-        <div className="relative h-10 w-40">
-          <Image
-            src="/logos/brand/ai-logo-dark.png"
-            alt="AI Haberleri"
-            fill
-            className="object-contain"
-            priority
-          />
-        </div>
-      </Link>
-      {items?.length ? (
-        <nav className="hidden gap-6 md:flex">
-          {items?.map((item, index) => (
-            <Link
-              key={index}
-              href={item.disabled ? "#" : item.href}
-              className={cn(
-                "flex items-center text-lg font-medium transition-colors hover:text-foreground/80 sm:text-sm",
-                item.href.startsWith(`/${pathname?.split("/")[1]}`)
-                  ? "text-foreground"
-                  : "text-foreground/60",
-                item.disabled && "cursor-not-allowed opacity-80",
-              )}
-            >
-              {item.title}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
+      <Logo className="hidden md:flex" size="md" showText={true} />
+      <Logo className="flex md:hidden" size="sm" showText={false} />
+
+      {/* Desktop Menu */}
+      <nav className="hidden md:flex gap-6">
+        {items?.map((item, index) => (
+          <Link
+            key={index}
+            href={item.disabled ? "#" : item.href}
+            className={cn(
+              "flex items-center text-sm font-medium transition-colors hover:text-primary",
+              pathname === item.href ? "text-primary" : "text-muted-foreground",
+              item.disabled && "cursor-not-allowed opacity-80",
+            )}
+          >
+            {item.title}
+          </Link>
+        ))}
+        {/* Dynamic Categories */}
+        {categories?.map((category) => (
+          <Link
+            key={category.id}
+            href={`/category/${category.slug}`}
+            className={cn(
+              "flex items-center text-sm font-medium transition-colors hover:text-primary",
+              pathname === `/category/${category.slug}`
+                ? "text-primary"
+                : "text-muted-foreground",
+            )}
+          >
+            {category.name}
+          </Link>
+        ))}
+      </nav>
+
       <button
         className="flex items-center space-x-2 md:hidden"
-        onClick={() => false}
+        onClick={() => setShowMobileMenu(!showMobileMenu)}
       >
-        <Icons.menu className="h-6 w-6" />
-        <span className="font-bold">Menu</span>
+        {showMobileMenu ? (
+          <Icons.close className="h-6 w-6" />
+        ) : (
+          <Icons.menu className="h-6 w-6" />
+        )}
+        <span className="font-bold">Menü</span>
       </button>
+
+      {showMobileMenu && items && (
+        <div className="fixed inset-0 top-16 z-50 grid h-[calc(100vh-4rem)] grid-flow-row auto-rows-max overflow-auto p-6 pb-32 shadow-md animate-in slide-in-from-bottom-80 md:hidden bg-background">
+          <div className="relative z-20 grid gap-6 rounded-md bg-popover p-4 text-popover-foreground shadow-md border">
+            <nav className="grid grid-flow-row auto-rows-max text-sm">
+              {items.map((item, index) => (
+                <Link
+                  key={index}
+                  href={item.disabled ? "#" : item.href}
+                  className={cn(
+                    "flex w-full items-center rounded-md p-2 text-sm font-medium hover:underline",
+                    item.disabled && "cursor-not-allowed opacity-60",
+                  )}
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  {item.title}
+                </Link>
+              ))}
+              <div className="my-2 border-t" />
+              {categories?.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/category/${category.slug}`}
+                  className="flex w-full items-center rounded-md p-2 text-sm font-medium hover:underline"
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      )}
       {children}
     </div>
   );

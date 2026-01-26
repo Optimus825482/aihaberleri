@@ -1,4 +1,3 @@
-import { HeaderWrapper } from "@/components/HeaderWrapper";
 import { Footer } from "@/components/Footer";
 
 export const metadata = {
@@ -13,8 +12,6 @@ export const dynamic = "force-dynamic";
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen flex flex-col">
-      <HeaderWrapper />
-
       <main className="flex-1 py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">

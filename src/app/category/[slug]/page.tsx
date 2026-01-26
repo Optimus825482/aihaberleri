@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { HeaderWrapper } from "@/components/HeaderWrapper";
 import { Footer } from "@/components/Footer";
 import { ArticleCard } from "@/components/ArticleCard";
 import { CategoryHero } from "@/components/CategoryHero";
@@ -68,8 +67,6 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <HeaderWrapper />
-
       <main className="flex-1">
         {/* Category Hero */}
         <CategoryHero

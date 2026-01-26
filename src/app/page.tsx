@@ -135,7 +135,6 @@ export default async function HomePage() {
           "@graph": [organizationSchema, websiteSchema],
         })}
       />
-      <HeaderWrapper />
 
       <main className="flex-1">
         {/* Hero Carousel - Manşet Haberleri */}
