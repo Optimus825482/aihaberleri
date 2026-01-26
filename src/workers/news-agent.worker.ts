@@ -7,6 +7,8 @@ import { Worker } from "bullmq";
 import { getRedis } from "@/lib/redis";
 import { executeNewsAgent } from "@/services/agent.service";
 import { scheduleNewsAgentJob } from "@/lib/queue";
+import { db } from "@/lib/db";
+import { PrismaClient } from "@prisma/client";
 
 console.log("🚀 Starting News Agent Worker...");
 
@@ -26,6 +28,9 @@ const worker = new Worker(
     console.log(`${"=".repeat(60)}\n`);
 
     try {
+      // Ensure DB connection is active (prevents "Closed" error after long idle)
+      await (db as PrismaClient).$connect();
+
       // Execute the news agent
       const result = await executeNewsAgent();
 

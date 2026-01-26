@@ -30,6 +30,13 @@ export const db =
             : ["error"],
       }));
 
+// Robust cleanup and connection handling
+if (process.env.NODE_ENV === "production") {
+  process.on("beforeExit", async () => {
+    await (db as PrismaClient).$disconnect();
+  });
+}
+
 if (
   process.env.NODE_ENV !== "production" &&
   process.env.SKIP_ENV_VALIDATION !== "1"
