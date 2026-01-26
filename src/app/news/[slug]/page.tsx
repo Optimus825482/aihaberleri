@@ -16,6 +16,8 @@ import {
   generateArticleMetadata,
 } from "@/lib/seo";
 import { AdUnit } from "@/components/AdUnit";
+import { AudioPlayer } from "@/components/AudioPlayer";
+import { AudioPromo } from "@/components/AudioPromo";
 
 interface ArticlePageProps {
   params: Promise<{
@@ -185,6 +187,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 />
               </div>
 
+              {/* Audio Player Integration */}
+              <div className="mb-8">
+                <AudioPlayer title={article.title} text={article.content} />
+              </div>
+
               {/* Content Implementation */}
               <div className="prose prose-lg dark:prose-invert max-w-none">
                 <div dangerouslySetInnerHTML={{ __html: firstPart }} />
@@ -343,6 +350,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       </main>
 
       <Footer />
+      <AudioPromo />
     </div>
   );
 }
