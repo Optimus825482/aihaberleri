@@ -47,7 +47,7 @@ export function AudioPromo() {
             </h4>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
               Artık haberleri okumak yerine arkana yaslanıp dinleyebilirsin.
-              Haber başlığındaki "Sesli Dinle" butonunu dene!
+              Haber başlığındaki &quot;Sesli Dinle&quot; butonunu dene!
             </p>
 
             <div className="flex flex-col gap-2">
