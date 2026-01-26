@@ -4,9 +4,15 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ClientProviders } from "@/components/ClientProviders";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { ThemeProvider } from "@/components/theme-provider";
+import { TailwindIndicator } from "@/components/tailwind-indicator";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import {
+  GoogleTagManager,
+  GoogleTagManagerNoScript,
+} from "@/components/GoogleTagManager";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const viewport: Viewport = {
   themeColor: "#2563eb",
@@ -119,10 +125,20 @@ export default function RootLayout({
           "min-h-screen bg-background antialiased",
         )}
       >
-        <GoogleAnalytics />
-        {children}
-        <ClientProviders />
-        <ServiceWorkerRegistration />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <GoogleTagManagerNoScript />
+          <GoogleAnalytics />
+          <GoogleTagManager />
+          {children}
+          <ClientProviders />
+          <ServiceWorkerRegistration />
+          <TailwindIndicator />
+        </ThemeProvider>
       </body>
     </html>
   );

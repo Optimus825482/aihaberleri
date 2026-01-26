@@ -101,6 +101,8 @@ export function HeroCarousel({
               fill
               className="object-cover"
               priority={index === 0}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
+              quality={85}
             />
           )}
           {/* Dark Overlay with Gradient */}

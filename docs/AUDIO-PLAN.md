@@ -1,56 +1,51 @@
-# 🎙️ Sesli Haber & Akıllı Kullanıcı Deneyimi Planı (v1.0)
+# 🎙️ Server-Side Neural TTS Implementation Plan (Edge-TTS)
 
-Bu plan, AI Haberleri sitesindeki içeriklerin daha erişilebilir ve premium bir hisle dinlenmesini, mobil uyumluluğun sağlanmasını ve kullanıcıların bu özellikten akıllı bildirimlerle haberdar edilmesini hedefler.
+Bu plan, istemci taraflı (browser) sentezleme yerine, sunucu üzerinden Microsoft Edge Neural seslerini stream eden "Whisper Kalitesinde" bir ses motorunu hedefler.
 
 ## 🎯 Hedefler
 
-- **Mobil Uyumluluk:** iOS/Android tarayıcı kısıtlamalarını aşan agresif "User-Interaction" tetikleme sistemi.
-- **Neural Ses Deneyimi:** Tarayıcıda varsa Microsoft/Google Neural seslerini önceliklendiren, yoksa yüksek kaliteli yedeklere geçen akıllı spiker motoru.
-- **Hız Kontrolü:** Kullanıcının okuma hızını (0.75x - 2.0x) seçebileceği dinamik kontrol paneli.
-- **Akıllı Duyuru:** Sadece haber okumaya gelen yeni kullanıcılara şık bir "Pop-over" bildirim gösterilmesi (ve reddetme opsiyonu).
-- **UX Excellence:** @[/ui-ux-pro-max] prensiplerine uygun, sayfa layout'unu kaydırmayan şık player arayüzü.
+- **Kalite:** Microsoft "Neural" sesleri (Ahmet/Emel) ile insan doğallığında okuma.
+- **Mobil Stabilite:** HTML5 Audio Stream kullanarak iOS/Android kilit ekranında bile kesintisiz oynatma.
+- **Maliyet:** Ücretsiz Edge-TTS API kullanımı.
 
-## 🧱 Mimari Bileşenler
+## 🧱 Mimari
 
-### 1. Frontend: Advanced Audio Player (`src/components/AudioPlayer.tsx`)
+### 1. Backend: Streaming TTS Endpoint (`src/app/api/tts/route.ts`)
 
-- **Neural Voice Selector:** `window.speechSynthesis` üzerindeki "Natural", "Online" ve "Neural" etiketli Türkçe sesleri bulan algoritma.
-- **Mobile-Direct Logic:** Mobil Safari'nin ses blokajını kırmak için `onClick` anında `resume()` ve `speak()` tetiklenmesi.
-- **Visual Feedback:** Okuma sırasında animasyonlu "Live" indicator.
+- **Teknoloji:** Native WebSocket (`ws` paketi) ile Microsoft Edge sunucularına bağlantı.
+- **Protokol:** Metni al -> SSML oluştur -> WebSocket ile gönder -> Binary audioları birleştir -> Client'a stream et.
+- **Cache (Opsiyonel):** Aynı metin için tekrar istek gelirse Redis/FS cache kullanılabilir (V2).
 
-### 2. Frontend: Smart Promo Manager (`src/components/AudioPromo.tsx`)
+### 2. Frontend: Universal Audio Player (`src/components/AudioPlayer.tsx`)
 
-- **LocalStorage Integration:** `has-seen-audio-promo` anahtarı ile "Bir daha gösterme" kontrolü.
-- **Timed Display:** Sayfa yüklendikten 2 saniye sonra yumuşak bir giriş (fade-in).
-
-### 3. Page Integration (`src/app/news/[slug]/page.tsx`)
-
-- Player'ın paylaşım butonları altına stratejik yerleşimi.
-- Promo bileşeninin sayfa sonuna eklenmesi.
+- **Core:** Standart `<audio>` elementi (görünmez).
+- **UI:** Mevcut şık tasarım korunacak, sadece "Source" ve "Control" mantığı değişecek.
+- **Özellikler:**
+  - Hız ayarı (Backend'e `rate` parametresi gönderilerek veya frontend `playbackRate` ile).
+  - İndirme opsiyonu (Mp3 olarak).
 
 ## 🛠️ Uygulama Adımları
 
-### 🏗️ Aşama 1: Core Audio Engine (Implementation)
+### 🏗️ Aşama 1: Backend Service (Kiro Agent)
 
-1. `AudioPlayer.tsx` bileşeninin neural ses öncelikli ve mobil uyumlu olarak yeniden yazılması.
-2. Türkçe vurgular için `rate` ve `pitch` optimizasyonu.
+1. `npm install ws uuid` paketlerini kur.
+2. `src/lib/edge-tts.ts` servisini oluştur (MS WebSocket protokolünü implement eden utility).
+3. `src/app/api/tts/route.ts` API rotasını oluştur.
 
-### 🏗️ Aşama 2: UI/UX & Duyuru (Implementation)
+### 🏗️ Aşama 2: Frontend Player (Gemini Agent)
 
-1. `AudioPromo.tsx` bileşeninin premium kart tasarımı ile oluşturulması.
-2. "BİR DAHA GÖSTERME" mantığının test edilmesi.
+1. Mevcut `AudioPlayer.tsx` refaktör edilecek.
+2. `window.speechSynthesis` yerine `/api/tts?text=...` kaynağına bağlanan bir `<audio>` yapısı kurulacak.
+3. Hız kontrolü `<audio>.playbackRate` ile yapılacak (Pitch bozulmadan hızlandırma sağlar).
 
-### 🏗️ Aşama 3: Entegrasyon & Doğrulama (Testing)
+### 🏗️ Aşama 3: Test & Verify
 
-1. Haber sayfasına montaj.
-2. `ux_audit.py` ile tasarım kontrolü.
-3. Mobil tarayıcı test simülasyonu.
+1. Mobilde test et (Background play).
+2. Uzun metinlerde (1000+ karakter) stream performansını ölç.
 
 ---
 
-## 🚦 Onay Bekleniyor
+## 🚦 Teknik Notlar
 
-Bu planı onaylıyor musunuz? (Y/N)
-
-- **Y:** Implementation aşamasına geçilir.
-- **N:** Plan üzerinde revize istediğiniz noktaları belirtebilirsiniz.
+- **Ses Modeli:** `tr-TR-AhmetNeural` (Erkek) veya `tr-TR-EmelNeural` (Kadın). Varsayılan: **Ahmet**.
+- **Rate Limit:** Aşırı yüklenmeyi önlemek için API route'a basit bir rate limit eklenebilir.

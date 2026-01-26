@@ -29,15 +29,35 @@ export function AdUnit({
   };
 
   useEffect(() => {
-    try {
-      // @ts-ignore
-      if (typeof window !== "undefined" && window.adsbygoogle) {
-        // @ts-ignore
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      }
-    } catch (err) {
-      console.error("AdSense error:", err);
+    // Lazy load ads using IntersectionObserver
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            try {
+              // @ts-ignore
+              if (typeof window !== "undefined" && window.adsbygoogle) {
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+              }
+            } catch (err) {
+              console.error("AdSense error:", err);
+            }
+            // Stop observing once loaded
+            if (adRef.current) observer.unobserve(adRef.current);
+          }
+        });
+      },
+      { rootMargin: "200px" }, // Load 200px before scrolling into view
+    );
+
+    if (adRef.current) {
+      observer.observe(adRef.current);
     }
+
+    return () => {
+      observer.disconnect();
+    };
   }, []);
 
   if (!process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID) {

@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Play,
   Pause,
-  Square,
-  Headphones,
-  Activity,
+  RotateCcw,
   Volume2,
+  VolumeX,
+  Loader2,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -25,253 +27,218 @@ interface AudioPlayerProps {
 
 export function AudioPlayer({ text, title }: AudioPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isSupported, setIsSupported] = useState(true);
-  const [speed, setSpeed] = useState("1");
-  const [currentVoiceName, setCurrentVoiceName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1.0);
+  const [volume, setVolume] = useState(1.0);
+  const [isMuted, setIsMuted] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const synth = useRef<SpeechSynthesis | null>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      synth.current = window.speechSynthesis;
-
-      const loadVoices = () => {
-        const voices = window.speechSynthesis.getVoices();
-        const best = getBestTurkishVoice(voices);
-        if (best) setCurrentVoiceName(best.name);
-      };
-
-      loadVoices();
-      if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-      }
-    } else {
-      setIsSupported(false);
-    }
-
-    return () => {
-      if (synth.current) synth.current.cancel();
-    };
-  }, []);
-
+  // Clean text for API
   const cleanText = (html: string) => {
     if (typeof document === "undefined") return html;
     const tmp = document.createElement("DIV");
     tmp.innerHTML = html;
-
     // Remove scripts and styles
     const scripts = tmp.getElementsByTagName("script");
     let i = scripts.length;
     while (i--) scripts[i].parentNode?.removeChild(scripts[i]);
-
     const styles = tmp.getElementsByTagName("style");
     let j = styles.length;
     while (j--) styles[j].parentNode?.removeChild(styles[j]);
-
     return tmp.textContent || tmp.innerText || "";
   };
 
-  const getBestTurkishVoice = (voices: SpeechSynthesisVoice[]) => {
-    // Mobil cihazlarda genellikle "Siri", "Google" veya "Samsung" isimli sesler daha stabildir.
-    const preferred = [
-      "Google",
-      "Natural",
-      "Siri",
-      "Premium",
-      "Online",
-      "Samsung",
-      "Yelda",
-      "Tolga",
-    ];
-    const turkishVoices = voices.filter(
-      (v) => v.lang.startsWith("tr") || v.lang === "tr-TR",
-    );
+  const plainText = `${title}. ${cleanText(text)}`;
+  // Use a stable URL for the audio source
+  const audioSrc = `/api/tts?text=${encodeURIComponent(plainText)}&voice=tr-TR-AhmetNeural`;
 
-    if (turkishVoices.length === 0) return null;
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    for (const p of preferred) {
-      const found = turkishVoices.find((v) => v.name.includes(p));
-      if (found) return found;
-    }
+    audio.playbackRate = playbackRate;
+    audio.volume = isMuted ? 0 : volume;
 
-    // Varsayılan Türkçe ses
-    return turkishVoices.find((v) => v.default) || turkishVoices[0];
-  };
+    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateDuration = () => setDuration(audio.duration);
+    const onEnded = () => setIsPlaying(false);
+    const onWaiting = () => setIsLoading(true);
+    const onCanPlay = () => setIsLoading(false);
 
-  const startSpeaking = () => {
-    if (!synth.current) return;
+    audio.addEventListener("timeupdate", updateTime);
+    audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("ended", onEnded);
+    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("playing", onCanPlay);
 
-    if (isPaused) {
-      synth.current.resume();
-      setIsPaused(false);
-      setIsPlaying(true);
-      return;
-    }
+    return () => {
+      audio.removeEventListener("timeupdate", updateTime);
+      audio.removeEventListener("loadedmetadata", updateDuration);
+      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("waiting", onWaiting);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("playing", onCanPlay);
+    };
+  }, [playbackRate, volume, isMuted]);
 
-    // Mevcut konuşmayı tamamen temizle
-    synth.current.cancel();
+  const togglePlay = () => {
+    if (!audioRef.current) return;
 
-    // Mobil cihazlar için kısa bir sessiz ses çalarak 'audio context'i uyandırıyoruz
-    const wakeUpUtterance = new SpeechSynthesisUtterance("");
-    wakeUpUtterance.volume = 0;
-    synth.current.speak(wakeUpUtterance);
-
-    const fullContent = `${title}. ${cleanText(text)}`;
-    const utterance = new SpeechSynthesisUtterance(fullContent);
-
-    // Sesleri tekrar al (mobil cihazlarda dinamik yüklenebilir)
-    const voices = synth.current.getVoices();
-    const bestVoice = getBestTurkishVoice(voices);
-
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-      utterance.lang = "tr-TR";
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
     } else {
-      utterance.lang = "tr-TR";
-    }
-
-    utterance.rate = parseFloat(speed);
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    utterance.onstart = () => {
-      setIsPlaying(true);
-      setIsPaused(false);
-    };
-    utterance.onend = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
-    utterance.onerror = (e) => {
-      console.error("Speech error:", e);
-      setIsPlaying(false);
-      setIsPaused(false);
-      // Hata durumunda (örneğin mobil safari kesintisiyse) tekrar dene komutu verilebilir
-    };
-
-    utteranceRef.current = utterance;
-
-    // Mobil cihazlarda konuşmanın başlaması için kısa bir gecikme bazen yardımcı olur
-    setTimeout(() => {
-      synth.current?.speak(utterance);
-      // iOS Safari için ek bir zorlama:
-      if (synth.current?.paused) {
-        synth.current.resume();
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsPlaying(true);
+          })
+          .catch((error) => {
+            console.error("Playback failed:", error);
+            setIsPlaying(false);
+          });
       }
-    }, 50);
-  };
-
-  const pauseSpeaking = () => {
-    if (synth.current && isPlaying) {
-      synth.current.pause();
-      setIsPaused(true);
-      setIsPlaying(false);
     }
   };
 
-  const stopSpeaking = () => {
-    if (synth.current) {
-      synth.current.cancel();
-      setIsPlaying(false);
-      setIsPaused(false);
+  const handleSeek = (value: number[]) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = value[0];
+      setCurrentTime(value[0]);
     }
   };
 
-  if (!isSupported) return null;
+  const handleVolumeChange = (value: number[]) => {
+    setVolume(value[0]);
+    if (audioRef.current) {
+      audioRef.current.volume = value[0];
+    }
+    if (value[0] > 0) setIsMuted(false);
+  };
+
+  const handleDownload = () => {
+    const link = document.createElement("a");
+    link.href = audioSrc;
+    link.download = `${title.slice(0, 30)}.mp3`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return "00:00";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
 
   return (
-    <div className="group relative overflow-hidden flex flex-col sm:flex-row items-stretch sm:items-center gap-4 p-5 bg-card/40 hover:bg-card/60 backdrop-blur-md rounded-3xl border-2 border-primary/10 hover:border-primary/30 transition-all duration-500 shadow-xl shadow-primary/5">
-      <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+    <div className="bg-card rounded-xl p-4 shadow-sm border border-primary/10">
+      <audio ref={audioRef} src={audioSrc} preload="none" />
 
-      <div className="flex items-center gap-4 flex-1 relative z-10">
-        <div
-          className={`flex items-center justify-center w-14 h-14 rounded-2xl transition-all duration-500 ${isPlaying ? "bg-primary text-primary-foreground scale-105 shadow-lg shadow-primary/30" : "bg-primary/10 text-primary group-hover:bg-primary/20"}`}
+      {/* Top Controls: Play/Pause, Title, Rate */}
+      <div className="flex items-center justify-between gap-4 mb-4">
+        <button
+          onClick={togglePlay}
+          className={`flex items-center justify-center w-12 h-12 rounded-full transition-all shadow-lg ${
+            isPlaying
+              ? "bg-primary text-primary-foreground hover:scale-105"
+              : "bg-primary/10 text-primary hover:bg-primary/20"
+          }`}
+          aria-label={isPlaying ? "Duraklat" : "Oynat"}
         >
-          {isPlaying ? (
-            <Activity className="w-7 h-7" />
+          {isLoading ? (
+            <Loader2 className="w-6 h-6 animate-spin" />
+          ) : isPlaying ? (
+            <Pause className="w-6 h-6 fill-current" />
           ) : (
-            <Headphones className="w-7 h-7" />
+            <Play className="w-6 h-6 fill-current ml-1" />
           )}
-        </div>
+        </button>
 
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60">
-              Yapay Zeka Spikeri
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-primary/60">
+              YAPAY ZEKA SPİKERİ
             </span>
             {isPlaying && (
               <span className="flex items-center gap-1 text-[10px] font-bold text-green-500 animate-pulse">
-                <div className="w-1 h-1 bg-green-500 rounded-full" /> CANLI
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full" /> CANLI
               </span>
             )}
           </div>
-          <h4 className="text-base font-bold text-foreground">
-            Haberi Sesli Dinle
-          </h4>
-          <p className="text-xs text-muted-foreground line-clamp-1">
-            {currentVoiceName || "Sistem Sesi"}
-          </p>
+          <h3 className="font-bold text-sm truncate">{title}</h3>
         </div>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-3 relative z-10">
-        <div className="flex items-center bg-secondary/50 rounded-xl px-2 h-11 border border-primary/5">
-          <span className="text-[10px] font-bold text-muted-foreground mr-1 ml-1 uppercase">
-            HIZ
-          </span>
-          <Select value={speed} onValueChange={setSpeed}>
-            <SelectTrigger className="w-[75px] h-8 bg-transparent border-0 font-bold text-sm focus:ring-0 shadow-none">
-              <SelectValue placeholder="Hız" />
+        <div className="flex items-center gap-2">
+          {/* Speed Selector */}
+          <Select
+            value={playbackRate.toString()}
+            onValueChange={(v) => setPlaybackRate(parseFloat(v))}
+          >
+            <SelectTrigger className="h-8 w-[70px] text-xs font-bold bg-secondary/50 border-0">
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="0.8">0.8x</SelectItem>
+              <SelectItem value="0.75">0.75x</SelectItem>
               <SelectItem value="1">1.0x</SelectItem>
-              <SelectItem value="1.2">1.2x</SelectItem>
+              <SelectItem value="1.25">1.25x</SelectItem>
               <SelectItem value="1.5">1.5x</SelectItem>
               <SelectItem value="2">2.0x</SelectItem>
             </SelectContent>
           </Select>
-        </div>
 
-        <div className="flex items-center gap-2 flex-1 sm:flex-none">
-          {!isPlaying && !isPaused ? (
-            <Button
-              className="flex-1 sm:flex-none px-8 h-11 rounded-xl font-black bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 active:scale-95 transition-all group/btn"
-              onClick={startSpeaking}
-            >
-              <Play className="w-4 h-4 mr-2 fill-current" />
-              BAŞLAT
-            </Button>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                className={`flex-1 sm:flex-none h-11 px-5 rounded-xl font-bold border-2 active:scale-95 transition-all ${isPlaying ? "hover:bg-orange-50 text-orange-600 border-orange-200" : "border-primary text-primary hover:bg-primary/5"}`}
-                onClick={isPlaying ? pauseSpeaking : startSpeaking}
-              >
-                {isPlaying ? (
-                  <>
-                    <Pause className="w-4 h-4 mr-2 fill-current" /> DURAKLAT
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2 fill-current" /> DEVAM ET
-                  </>
-                )}
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10 active:scale-95 transition-all border border-destructive/10"
-                onClick={stopSpeaking}
-              >
-                <Square className="w-4 h-4 fill-current" />
-              </Button>
-            </>
-          )}
+          {/* Download Button */}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 rounded-full"
+            onClick={handleDownload}
+            title="İndir"
+          >
+            <Download className="w-4 h-4 text-muted-foreground" />
+          </Button>
         </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="space-y-2">
+        <Slider
+          value={[currentTime]}
+          max={duration || 100}
+          step={1}
+          onValueChange={handleSeek}
+          className="cursor-pointer"
+        />
+        <div className="flex justify-between text-xs text-muted-foreground font-medium px-1">
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      {/* Volume Control (Desktop Only) */}
+      <div className="hidden sm:flex items-center gap-2 mt-4 px-2">
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {isMuted || volume === 0 ? (
+            <VolumeX className="w-4 h-4" />
+          ) : (
+            <Volume2 className="w-4 h-4" />
+          )}
+        </button>
+        <Slider
+          value={[isMuted ? 0 : volume]}
+          max={1}
+          step={0.1}
+          onValueChange={handleVolumeChange}
+          className="w-24"
+        />
       </div>
     </div>
   );

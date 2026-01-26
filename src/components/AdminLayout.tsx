@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Share2,
+  Search,
   Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,11 @@ const menuItems = [
     title: "Push Bildirimleri",
     href: "/admin/notifications",
     icon: Bell,
+  },
+  {
+    title: "SEO Yönetimi",
+    href: "/admin/seo",
+    icon: Search,
   },
   {
     title: "Sosyal Medya",
