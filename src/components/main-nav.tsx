@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -18,9 +19,16 @@ export function MainNav({
 
   return (
     <div className="flex gap-6 md:gap-10">
-      <Link href="/" className="hidden items-center space-x-2 md:flex">
-        <Icons.logo className="h-6 w-6" />
-        <span className="hidden font-bold sm:inline-block">AI Haberleri</span>
+      <Link href="/" className="flex items-center space-x-2">
+        <div className="relative h-10 w-40">
+          <Image
+            src="/logos/brand/ai-logo-dark.png"
+            alt="AI Haberleri"
+            fill
+            className="object-contain"
+            priority
+          />
+        </div>
       </Link>
       {items?.length ? (
         <nav className="hidden gap-6 md:flex">
