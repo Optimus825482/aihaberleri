@@ -37,3 +37,32 @@ export function formatRelativeTime(date: string | Date): string {
     return `${Math.floor(diffInSeconds / 2592000)} ay önce`;
   return `${Math.floor(diffInSeconds / 31536000)} yıl önce`;
 }
+export function generateSlug(text: string): string {
+  const turkishChars: { [key: string]: string } = {
+    ğ: "g",
+    Ğ: "g",
+    ü: "u",
+    Ü: "u",
+    ş: "s",
+    Ş: "s",
+    ı: "i",
+    İ: "i",
+    ö: "o",
+    Ö: "o",
+    ç: "c",
+    Ç: "c",
+  };
+
+  let slug = text.toLowerCase();
+
+  // Replace Turkish characters
+  Object.keys(turkishChars).forEach((key) => {
+    slug = slug.replace(new RegExp(key, "g"), turkishChars[key]);
+  });
+
+  return slug
+    .replace(/[^a-z0-9\s-]/g, "") // Remove non-alphanumeric characters except spaces and hyphens
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Remove redundant hyphens
+    .trim();
+}

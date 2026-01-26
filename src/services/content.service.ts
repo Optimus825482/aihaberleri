@@ -28,7 +28,51 @@ export interface ProcessedArticle {
   score: number | null;
 }
 
-// ... existing code ...
+/**
+ * Select the best articles from a list using AI analysis
+ */
+export async function selectBestArticles(
+  articles: NewsArticle[],
+  targetCount: number = 3,
+): Promise<Array<{ article: NewsArticle; category: string }>> {
+  console.log(
+    `🎯 ${articles.length} haber arasından en iyi ${targetCount} tanesi seçiliyor...`,
+  );
+
+  if (articles.length === 0) return [];
+
+  try {
+    // Analyze only the top 15-20 articles to stay within token limits
+    const analysis = await analyzeNewsArticles(articles.slice(0, 20));
+
+    const selected = analysis
+      .slice(0, targetCount)
+      .map((item) => {
+        // analyzeNewsArticles returns 1-indexed or 0-indexed?
+        // Based on its prompt, it's 0-indexed if we follow JSON standard,
+        // but let's be safe and check both.
+        const index = item.index;
+        return {
+          article: articles[index],
+          category: item.category,
+        };
+      })
+      .filter((item) => item.article !== undefined);
+
+    if (selected.length === 0) {
+      throw new Error("AI could not select any articles");
+    }
+
+    return selected;
+  } catch (error) {
+    console.error("Haber analiz hatası, fallback uygulanıyor:", error);
+    // Fallback: Take the first few and assign a default category
+    return articles.slice(0, targetCount).map((a) => ({
+      article: a,
+      category: "Yapay Zeka",
+    }));
+  }
+}
 
 /**
  * Process a single article: rewrite, get image, prepare for publishing

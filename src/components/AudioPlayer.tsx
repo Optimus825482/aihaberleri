@@ -43,8 +43,8 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
     return tagless.replace(/\s+/g, " ").trim();
   };
 
-  const plainText = `${title}. ${cleanText(text)}`;
-  // Use a stable URL for the audio source
+  const tagless = cleanText(text);
+  const plainText = `${title}. ${tagless}`.slice(0, 1500); // URL length safety
   const audioSrc = `/api/tts?text=${encodeURIComponent(plainText)}&voice=tr-TR-AhmetNeural`;
 
   useEffect(() => {

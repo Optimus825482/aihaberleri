@@ -10,14 +10,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Text is required" }, { status: 400 });
   }
 
-  // Basic cleaning of text (remove HTML tags if any leaks through)
-  const cleanText = text.replace(/<[^>]*>/g, "").slice(0, 5000); // Higher limit
+  const cleanText = text.replace(/<[^>]*>/g, "").slice(0, 3000);
+  console.log(
+    `[TTS] Request received: "${cleanText.slice(0, 50)}..." (${cleanText.length} chars)`,
+  );
 
   try {
     const audioBuffer = await generateSpeech({
       text: cleanText,
       voice,
     });
+
+    console.log(`[TTS] Success: Generated ${audioBuffer.length} bytes`);
 
     return new Response(audioBuffer as any, {
       headers: {
@@ -27,7 +31,7 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("TTS Route Error:", error.message || error);
+    console.error(`[TTS] Critical Error:`, error.message || error);
     return NextResponse.json(
       { error: "Failed to generate speech", details: error.message },
       { status: 500 },

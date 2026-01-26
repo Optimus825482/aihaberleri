@@ -95,19 +95,19 @@ export async function analyzeNewsArticles(
 ): Promise<Array<{ index: number; reason: string; category: string }>> {
   const prompt = `Sen bir yapay zeka haber editörüsün. Bu yapay zeka ile ilgili haberleri analiz et ve yayınlanmak üzere en ilginç ve alakalı 2-3 tanesini seç.
 
-Haberler:
+Haberler (0-tabanlı index kullan):
 ${articles
   .map(
     (article, index) => `
-${index + 1}. Başlık: ${article.title}
-   Açıklama: ${article.description}
-   URL: ${article.url}
-   Yayın Tarihi: ${article.publishedDate || "Bilinmiyor"}
+Index: ${index}
+Başlık: ${article.title}
+Açıklama: ${article.description}
+URL: ${article.url}
 `,
   )
   .join("\n")}
 
-Şu formatta bir JSON dizisi ile yanıt ver:
+Şu formatta bir JSON dizisi ile yanıt ver (index alanı 0-tabanlı olmalı):
 [
   {
     "index": 0,
