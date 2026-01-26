@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   Share2,
+  Bot,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -43,6 +44,11 @@ const menuItems = [
     title: "Haberler",
     href: "/admin/articles",
     icon: FileText,
+  },
+  {
+    title: "Agent Ayarları",
+    href: "/admin/agent-settings",
+    icon: Bot,
   },
   {
     title: "Bülten Aboneleri",

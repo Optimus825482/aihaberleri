@@ -10,6 +10,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Activity,
   FileText,
@@ -18,9 +27,58 @@ import {
   Play,
   Calendar,
   Terminal,
+  Eye,
+  Edit,
+  Trash2,
+  BarChart3,
+  PieChart,
 } from "lucide-react";
+import Link from "next/link";
 
-interface Stats {
+interface DashboardStats {
+  metrics: {
+    totalArticles: number;
+    totalViews: number;
+    todayArticles: number;
+    publishedArticles: number;
+    draftArticles: number;
+  };
+  categoryStats: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    articleCount: number;
+    lastArticleDate: string | null;
+    totalViews: number;
+  }>;
+  recentArticles: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    status: string;
+    createdAt: string;
+    publishedAt: string | null;
+    views: number;
+    category: {
+      name: string;
+      slug: string;
+    };
+  }>;
+  charts: {
+    last7Days: Array<{
+      date: string;
+      count: number;
+      label: string;
+    }>;
+    categoryDistribution: Array<{
+      name: string;
+      value: number;
+      percentage: number;
+    }>;
+  };
+}
+
+interface AgentStats {
   agent: {
     totalExecutions: number;
     successfulExecutions: number;
@@ -57,7 +115,10 @@ interface LogMessage {
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
+    null,
+  );
+  const [agentStats, setAgentStats] = useState<AgentStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [executing, setExecuting] = useState(false);
   const [logs, setLogs] = useState<LogMessage[]>([]);
@@ -65,7 +126,7 @@ export default function AdminDashboard() {
   const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    fetchStats();
+    fetchAllStats();
   }, []);
 
   // Auto-scroll logs to bottom
@@ -82,12 +143,21 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  const fetchStats = async () => {
+  const fetchAllStats = async () => {
     try {
-      const response = await fetch("/api/agent/stats");
-      const data = await response.json();
-      if (data.success) {
-        setStats(data.data);
+      const [dashboardRes, agentRes] = await Promise.all([
+        fetch("/api/admin/dashboard"),
+        fetch("/api/agent/stats"),
+      ]);
+
+      const dashboardData = await dashboardRes.json();
+      const agentData = await agentRes.json();
+
+      if (dashboardData.success) {
+        setDashboardStats(dashboardData.data);
+      }
+      if (agentData.success) {
+        setAgentStats(agentData.data);
       }
     } catch (error) {
       console.error("Failed to fetch stats:", error);
@@ -111,7 +181,7 @@ export default function AdminDashboard() {
         if (data.type === "complete") {
           // Agent completed
           setExecuting(false);
-          fetchStats();
+          fetchAllStats();
           eventSource.close();
         } else {
           // Regular log message
@@ -154,7 +224,7 @@ export default function AdminDashboard() {
         alert(
           `Agent planlandı! Sonraki çalıştırma ${data.data.delayHours.toFixed(2)} saat sonra`,
         );
-        fetchStats();
+        fetchAllStats();
       } else {
         alert(`Planlama başarısız: ${data.error}`);
       }
@@ -177,9 +247,31 @@ export default function AdminDashboard() {
   }
 
   // Calculate max count for progress bars
-  const maxCategoryCount = stats?.categoryStats?.length
-    ? Math.max(...stats.categoryStats.map((c) => c.count))
+  const maxCategoryCount = dashboardStats?.categoryStats?.length
+    ? Math.max(...dashboardStats.categoryStats.map((c) => c.articleCount))
     : 1;
+
+  const maxChartValue = dashboardStats?.charts.last7Days?.length
+    ? Math.max(...dashboardStats.charts.last7Days.map((d) => d.count))
+    : 1;
+
+  const deleteArticle = async (id: string) => {
+    if (!confirm("Bu haberi silmek istediğinizden emin misiniz?")) return;
+
+    try {
+      const response = await fetch(`/api/articles/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        fetchAllStats();
+      } else {
+        alert("Haber silinemedi");
+      }
+    } catch (error) {
+      alert("Bir hata oluştu");
+    }
+  };
 
   return (
     <AdminLayout>
@@ -216,20 +308,20 @@ export default function AdminDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
           <Card className="bg-card/50 backdrop-blur border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Toplam Çalıştırma
+                Toplam Haber
               </CardTitle>
-              <Activity className="h-4 w-4 text-primary" />
+              <FileText className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {stats?.agent.totalExecutions || 0}
+                {dashboardStats?.metrics.totalArticles || 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                %{stats?.agent.successRate || 0} başarı oranı
+                Sistemdeki tüm haberler
               </p>
             </CardContent>
           </Card>
@@ -237,16 +329,17 @@ export default function AdminDashboard() {
           <Card className="bg-card/50 backdrop-blur border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Oluşturulan Haberler
+                Toplam Görüntülenme
               </CardTitle>
-              <FileText className="h-4 w-4 text-purple-500" />
+              <Eye className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {stats?.agent.totalArticles || 0}
+                {dashboardStats?.metrics.totalViews.toLocaleString("tr-TR") ||
+                  0}
               </div>
               <p className="text-xs text-muted-foreground">
-                Otonom agent tarafından
+                Tüm haberler toplamı
               </p>
             </CardContent>
           </Card>
@@ -254,51 +347,332 @@ export default function AdminDashboard() {
           <Card className="bg-card/50 backdrop-blur border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Kuyruk Durumu
+                Bugün Eklenen
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {stats?.queue.delayed || 0}
+                {dashboardStats?.metrics.todayArticles || 0}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Planlanan görevler
-              </p>
+              <p className="text-xs text-muted-foreground">Son 24 saatte</p>
             </CardContent>
           </Card>
 
           <Card className="bg-card/50 backdrop-blur border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Son Çalıştırma
-              </CardTitle>
-              <Clock className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-sm font-medium">Yayında</CardTitle>
+              <Activity className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {stats?.agent.lastStatus || "Yok"}
+                {dashboardStats?.metrics.publishedArticles || 0}
               </div>
-              <p className="text-xs text-muted-foreground">
-                {stats?.agent.lastExecution
-                  ? new Date(stats.agent.lastExecution).toLocaleString("tr-TR")
-                  : "Hiç"}
-              </p>
+              <p className="text-xs text-muted-foreground">Aktif haberler</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 backdrop-blur border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Taslak</CardTitle>
+              <Clock className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {dashboardStats?.metrics.draftArticles || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Bekleyen haberler</p>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Category Distribution Chart */}
+          {/* Category Stats Table */}
           <Card className="col-span-1">
             <CardHeader>
-              <CardTitle>Kategori Dağılımı</CardTitle>
-              <CardDescription>Hangi kategoride kaç haber var?</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Kategori İstatistikleri
+              </CardTitle>
+              <CardDescription>Her kategoride kaç haber var?</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Kategori</TableHead>
+                      <TableHead className="text-right">Haber</TableHead>
+                      <TableHead className="text-right">Görüntülenme</TableHead>
+                      <TableHead className="text-right">Son Haber</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dashboardStats?.categoryStats &&
+                    dashboardStats.categoryStats.length > 0 ? (
+                      dashboardStats.categoryStats.map((cat) => (
+                        <TableRow key={cat.id}>
+                          <TableCell className="font-medium">
+                            {cat.name}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {cat.articleCount}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {cat.totalViews.toLocaleString("tr-TR")}
+                          </TableCell>
+                          <TableCell className="text-right text-xs text-muted-foreground">
+                            {cat.lastArticleDate
+                              ? new Date(
+                                  cat.lastArticleDate,
+                                ).toLocaleDateString("tr-TR")
+                              : "Yok"}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={4}
+                          className="text-center text-muted-foreground"
+                        >
+                          Henüz kategori verisi yok.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Articles */}
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle>Son Haberler</CardTitle>
+              <CardDescription>Sisteme eklenen son 5 haber</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {dashboardStats?.recentArticles &&
+                dashboardStats.recentArticles.length > 0 ? (
+                  dashboardStats.recentArticles.map((article) => (
+                    <div
+                      key={article.id}
+                      className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0 pr-4">
+                        <h4 className="font-medium text-sm line-clamp-1 mb-1">
+                          {article.title}
+                        </h4>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <Badge variant="outline" className="text-xs">
+                            {article.category.name}
+                          </Badge>
+                          <span>•</span>
+                          <span>
+                            {new Date(article.createdAt).toLocaleDateString(
+                              "tr-TR",
+                            )}
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Eye className="h-3 w-3" />
+                            {article.views}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Badge
+                          variant={
+                            article.status === "PUBLISHED"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className="text-xs"
+                        >
+                          {article.status === "PUBLISHED"
+                            ? "Yayında"
+                            : "Taslak"}
+                        </Badge>
+                        <Link href={`/admin/articles/${article.id}/edit`}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => deleteArticle(article.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-muted-foreground py-4">
+                    Henüz haber yok.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Last 7 Days Chart */}
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Son 7 Gün
+              </CardTitle>
+              <CardDescription>Günlük eklenen haber sayısı</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {dashboardStats?.charts.last7Days &&
+                dashboardStats.charts.last7Days.length > 0 ? (
+                  dashboardStats.charts.last7Days.map((day, index) => (
+                    <div key={index} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{day.label}</span>
+                        <span className="text-muted-foreground">
+                          {day.count} haber
+                        </span>
+                      </div>
+                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
+                          style={{
+                            width: `${maxChartValue > 0 ? (day.count / maxChartValue) * 100 : 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Henüz veri yok.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Category Distribution Pie Chart */}
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChart className="h-5 w-5" />
+                Kategori Dağılımı
+              </CardTitle>
+              <CardDescription>Haber dağılımı yüzdeleri</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {dashboardStats?.charts.categoryDistribution &&
+                dashboardStats.charts.categoryDistribution.length > 0 ? (
+                  dashboardStats.charts.categoryDistribution
+                    .filter((cat) => cat.value > 0)
+                    .map((cat, index) => (
+                      <div key={index} className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">{cat.name}</span>
+                          <span className="text-muted-foreground">
+                            {cat.value} haber (%{cat.percentage})
+                          </span>
+                        </div>
+                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all duration-500"
+                            style={{
+                              width: `${cat.percentage}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Henüz kategori verisi yok.
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Agent Stats Section */}
+        <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Agent İstatistikleri
+            </CardTitle>
+            <CardDescription>
+              Otonom agent performans metrikleri
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center p-4 bg-card/50 rounded-lg">
+                <div className="text-2xl font-bold">
+                  {agentStats?.agent.totalExecutions || 0}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Toplam Çalıştırma
+                </div>
+              </div>
+              <div className="text-center p-4 bg-card/50 rounded-lg">
+                <div className="text-2xl font-bold">
+                  {agentStats?.agent.totalArticles || 0}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Oluşturulan Haber
+                </div>
+              </div>
+              <div className="text-center p-4 bg-card/50 rounded-lg">
+                <div className="text-2xl font-bold">
+                  %{agentStats?.agent.successRate || 0}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Başarı Oranı
+                </div>
+              </div>
+              <div className="text-center p-4 bg-card/50 rounded-lg">
+                <div className="text-2xl font-bold">
+                  {agentStats?.queue.delayed || 0}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Planlanan Görev
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Agent Category Distribution */}
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle>Agent Kategori Dağılımı</CardTitle>
+              <CardDescription>
+                Agent tarafından oluşturulan haberler
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {stats?.categoryStats && stats.categoryStats.length > 0 ? (
-                  stats.categoryStats.map((cat, index) => (
+                {agentStats?.categoryStats &&
+                agentStats.categoryStats.length > 0 ? (
+                  agentStats.categoryStats.map((cat, index) => (
                     <div key={index} className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span className="font-medium">{cat.name}</span>
@@ -333,7 +707,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {stats?.history.map((execution) => (
+                {agentStats?.history.map((execution) => (
                   <div
                     key={execution.id}
                     className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 border rounded-lg gap-2"
@@ -369,7 +743,7 @@ export default function AdminDashboard() {
                   </div>
                 ))}
 
-                {(!stats?.history || stats.history.length === 0) && (
+                {(!agentStats?.history || agentStats.history.length === 0) && (
                   <p className="text-center text-muted-foreground py-4">
                     Henüz işlem yok.
                   </p>
