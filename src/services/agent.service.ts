@@ -8,6 +8,7 @@ import {
   selectBestArticles,
   processAndPublishArticles,
 } from "./content.service";
+import { emailService } from "@/lib/email";
 
 export interface AgentExecutionResult {
   success: boolean;
@@ -80,12 +81,46 @@ export async function executeNewsAgent(
     publishedArticles.push(...published);
     console.log(`✅ ${articlesCreated} haber yayınlandı`);
 
-    // Update agent log - SUCCESS
     const duration = Math.floor((Date.now() - startTime) / 1000);
+    const status = articlesCreated > 0 ? "SUCCESS" : "PARTIAL";
+
+    // Get email settings
+    const emailSettings = await db.setting.findMany({
+      where: { key: { in: ["agent.emailNotifications", "agent.adminEmail"] } },
+    });
+    const emailNotify =
+      emailSettings.find((s) => s.key === "agent.emailNotifications")?.value !==
+      "false";
+    const adminEmail =
+      emailSettings.find((s) => s.key === "agent.adminEmail")?.value ||
+      "ikinciyenikitap54@gmail.com";
+
+    // Send email report
+    if (emailNotify) {
+      try {
+        const articlesWithTitles = await db.article.findMany({
+          where: { id: { in: publishedArticles.map((a) => a.id) } },
+          select: { title: true, slug: true },
+        });
+
+        await emailService.sendAgentReport(adminEmail, {
+          status,
+          articlesCreated,
+          articlesScraped,
+          duration,
+          errors,
+          publishedArticles: articlesWithTitles,
+        });
+      } catch (e) {
+        console.error("Failed to send agent success email:", e);
+      }
+    }
+
+    // Update agent log
     await db.agentLog.update({
       where: { id: agentLog.id },
       data: {
-        status: articlesCreated > 0 ? "SUCCESS" : "PARTIAL",
+        status,
         articlesCreated,
         articlesScraped,
         duration,
@@ -109,12 +144,46 @@ export async function executeNewsAgent(
     errors.push(errorMessage);
     console.error("❌ Agent çalıştırması başarısız:", error);
 
-    // Update agent log - FAILED
     const duration = Math.floor((Date.now() - startTime) / 1000);
+    const status = articlesCreated > 0 ? "PARTIAL" : "FAILED";
+
+    // Get email settings
+    const emailSettings = await db.setting.findMany({
+      where: { key: { in: ["agent.emailNotifications", "agent.adminEmail"] } },
+    });
+    const emailNotify =
+      emailSettings.find((s) => s.key === "agent.emailNotifications")?.value !==
+      "false";
+    const adminEmail =
+      emailSettings.find((s) => s.key === "agent.adminEmail")?.value ||
+      "ikinciyenikitap54@gmail.com";
+
+    // Send email report
+    if (emailNotify) {
+      try {
+        const articlesWithTitles = await db.article.findMany({
+          where: { id: { in: publishedArticles.map((a) => a.id) } },
+          select: { title: true, slug: true },
+        });
+
+        await emailService.sendAgentReport(adminEmail, {
+          status,
+          articlesCreated,
+          articlesScraped,
+          duration,
+          errors,
+          publishedArticles: articlesWithTitles,
+        });
+      } catch (e) {
+        console.error("Failed to send agent failure email:", e);
+      }
+    }
+
+    // Update agent log
     await db.agentLog.update({
       where: { id: agentLog.id },
       data: {
-        status: articlesCreated > 0 ? "PARTIAL" : "FAILED",
+        status,
         articlesCreated,
         articlesScraped,
         duration,

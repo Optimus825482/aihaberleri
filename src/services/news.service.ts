@@ -86,10 +86,16 @@ export async function fetchAINews(
     const itemsToAnalyze =
       recentItems.length > 0 ? recentItems : filteredItems.slice(0, 50);
 
-    // Step 3: Analyze trends using Tavily Search API
+    // Step 3: Analyze trends using Tavily Search API AND Google Trends
     console.log(
-      `📊 ${itemsToAnalyze.length} haber için Tavily trend analizi...`,
+      `📊 ${itemsToAnalyze.length} haber için Trend (Tavily + Google) analizi...`,
     );
+
+    // Fetch Google Trends (Parallel)
+    const googleTrends = await import("@/lib/google-trends")
+      .then((m) => m.fetchGoogleTrends())
+      .catch(() => []);
+    const { calculateGoogleTrendScore } = await import("@/lib/google-trends");
 
     const trendRankings = await rankArticlesByTrendTavily(
       itemsToAnalyze.map((item) => ({
@@ -100,14 +106,26 @@ export async function fetchAINews(
 
     // Step 4: Sort by trend score and take top articles
     const topArticles = trendRankings
-      .slice(0, 20) // Top 20 trending
+      .slice(0, 20) // Top 20 trending (initially)
       .map((ranking) => {
         const item = itemsToAnalyze[ranking.index];
+
+        // Add Google Trend Boost
+        const googleScore = calculateGoogleTrendScore(item.title, googleTrends);
+        const finalScore = ranking.score + googleScore;
+
+        if (googleScore > 0) {
+          console.log(
+            `🔥 HOT TOPIC DETECTED: ${item.title} (Boost: +${googleScore})`,
+          );
+        }
+
         return {
           ...item,
-          trendScore: ranking.score,
+          trendScore: finalScore,
         };
-      });
+      })
+      .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0)); // Re-sort after Google Boost
 
     console.log(`✅ ${topArticles.length} trend haber seçildi`);
     console.log(

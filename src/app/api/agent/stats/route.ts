@@ -5,7 +5,7 @@ import {
   getAgentHistory,
   getCategoryStats,
 } from "@/services/agent.service";
-import { getQueueStats } from "@/lib/queue";
+import { getQueueStats, getUpcomingJobs } from "@/lib/queue";
 
 export async function GET() {
   try {
@@ -16,11 +16,14 @@ export async function GET() {
     }
 
     // Get stats
-    const [agentStats, queueStats, history] = await Promise.all([
-      getAgentStats(),
-      getQueueStats(),
-      getAgentHistory(5),
-    ]);
+    const [agentStats, queueStats, history, upcomingJobs, categoryStats] =
+      await Promise.all([
+        getAgentStats(),
+        getQueueStats(),
+        getAgentHistory(5),
+        getUpcomingJobs(),
+        getCategoryStats(),
+      ]);
 
     return NextResponse.json({
       success: true,
@@ -28,7 +31,8 @@ export async function GET() {
         agent: agentStats,
         queue: queueStats,
         history,
-        categoryStats: await getCategoryStats(),
+        upcomingJobs,
+        categoryStats,
       },
     });
   } catch (error) {

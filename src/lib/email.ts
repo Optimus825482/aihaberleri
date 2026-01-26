@@ -358,6 +358,66 @@ export const emailTemplates = {
       .base(content, "Aboneliğiniz başarıyla iptal edildi.")
       .replace("{{unsubscribe_url}}", "#");
   },
+
+  /**
+   * Agent run report template
+   */
+  agentReport: (data: {
+    status: string;
+    articlesCreated: number;
+    articlesScraped: number;
+    duration: number;
+    errors: string[];
+    publishedArticles: Array<{ title: string; slug: string }>;
+  }) => {
+    const statusColor = data.status === "SUCCESS" ? "#10b981" : "#ef4444";
+    const articlesHtml = data.publishedArticles
+      .map(
+        (a) =>
+          `<li><a href="${env.NEXT_PUBLIC_SITE_URL}/news/${a.slug}">${a.title}</a></li>`,
+      )
+      .join("");
+
+    const content = `
+      <h2 style="color: #333; margin-top: 0;">🤖 Agent Çalışma Raporu</h2>
+      <div style="padding: 15px; border-radius: 8px; background-color: ${statusColor}10; border-left: 4px solid ${statusColor}; margin-bottom: 20px;">
+        <strong>Durum:</strong> <span style="color: ${statusColor}">${data.status}</span><br>
+        <strong>Oluşturulan Haber:</strong> ${data.articlesCreated}<br>
+        <strong>Taranan Haber:</strong> ${data.articlesScraped}<br>
+        <strong>Süre:</strong> ${data.duration}s
+      </div>
+
+      ${
+        data.publishedArticles.length > 0
+          ? `
+        <h3>✅ Yayınlanan Haberler:</h3>
+        <ul>${articlesHtml}</ul>
+      `
+          : ""
+      }
+
+      ${
+        data.errors.length > 0
+          ? `
+        <h3 style="color: #ef4444;">❌ Hatalar:</h3>
+        <ul style="color: #666; font-size: 14px;">
+          ${data.errors.map((e) => `<li>${e}</li>`).join("")}
+        </ul>
+      `
+          : ""
+      }
+
+      <div style="text-align: center; margin-top: 30px;">
+        <a href="${env.NEXT_PUBLIC_SITE_URL}/admin" class="button">Admin Paneline Git</a>
+      </div>
+    `;
+    return emailTemplates
+      .base(
+        content,
+        `Agent Çalışması: ${data.status} - ${data.articlesCreated} haber yayınlandı.`,
+      )
+      .replace("{{unsubscribe_url}}", "#");
+  },
 };
 
 // Email Service Functions
@@ -433,6 +493,28 @@ export const emailService = {
       subject: `Abonelik İptal Edildi - ${env.NEXT_PUBLIC_SITE_NAME}`,
       html: emailTemplates.unsubscribeConfirmation({ email }),
       tags: [{ name: "type", value: "unsubscribe" }],
+    });
+  },
+
+  /**
+   * Send agent execution report to admin
+   */
+  async sendAgentReport(
+    email: string,
+    data: {
+      status: string;
+      articlesCreated: number;
+      articlesScraped: number;
+      duration: number;
+      errors: string[];
+      publishedArticles: Array<{ title: string; slug: string }>;
+    },
+  ): Promise<{ success: boolean; error?: string }> {
+    return this.send({
+      to: email,
+      subject: `🤖 Agent Raporu: ${data.status} (${data.articlesCreated} Haber)`,
+      html: emailTemplates.agentReport(data),
+      tags: [{ name: "type", value: "agent-report" }],
     });
   },
 

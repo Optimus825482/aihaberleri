@@ -27,6 +27,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
 interface AgentSettings {
   enabled: boolean;
@@ -35,6 +36,8 @@ interface AgentSettings {
   categories: string[];
   lastRun: string | null;
   nextRun: string | null;
+  emailNotifications: boolean;
+  adminEmail: string;
 }
 
 interface Category {
@@ -51,6 +54,8 @@ export default function AgentSettingsPage() {
     categories: [],
     lastRun: null,
     nextRun: null,
+    emailNotifications: true,
+    adminEmail: "ikinciyenikitap54@gmail.com",
   });
   const [availableCategories, setAvailableCategories] = useState<Category[]>(
     [],
@@ -103,6 +108,8 @@ export default function AgentSettingsPage() {
           intervalHours: settings.intervalHours,
           articlesPerRun: settings.articlesPerRun,
           categories: settings.categories,
+          emailNotifications: settings.emailNotifications,
+          adminEmail: settings.adminEmail,
         }),
       });
 
@@ -296,9 +303,14 @@ export default function AgentSettingsPage() {
                   Kalan Süre
                 </div>
                 <div className="font-medium">
-                  {settings.nextRun && settings.enabled
-                    ? `${Math.max(0, Math.round((new Date(settings.nextRun).getTime() - Date.now()) / (1000 * 60 * 60)))} saat`
-                    : "-"}
+                  {settings.nextRun && settings.enabled ? (
+                    <CountdownTimer
+                      targetTimestamp={settings.nextRun}
+                      onComplete={() => fetchSettings()}
+                    />
+                  ) : (
+                    "-"
+                  )}
                 </div>
               </div>
             </div>
@@ -387,6 +399,47 @@ export default function AgentSettingsPage() {
                 <p className="text-xs text-muted-foreground">
                   Her çalıştırmada {settings.articlesPerRun} haber toplanacak
                 </p>
+              </div>
+
+              <hr className="my-4 border-muted" />
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">E-posta Bildirimleri</Label>
+                    <p className="text-sm text-muted-foreground">
+                      İşlem sonrası rapor gönderilsin
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.emailNotifications}
+                    onCheckedChange={(checked) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        emailNotifications: checked,
+                      }))
+                    }
+                  />
+                </div>
+
+                {settings.emailNotifications && (
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Yönetici E-posta
+                    </Label>
+                    <input
+                      className="w-full bg-background border rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                      placeholder="email@example.com"
+                      value={settings.adminEmail}
+                      onChange={(e) =>
+                        setSettings((prev) => ({
+                          ...prev,
+                          adminEmail: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

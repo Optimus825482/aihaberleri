@@ -173,6 +173,26 @@ export function generateJsonLd(schema: object) {
 }
 
 /**
+ * FAQPage Schema - Sıkça Sorulan Sorular için
+ */
+export function generateFAQSchema(
+  faqs: Array<{ question: string; answer: string }>,
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+}
+
+/**
  * Multiple schema'ları birleştir
  */
 export function combineSchemas(...schemas: object[]) {

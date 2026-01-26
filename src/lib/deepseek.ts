@@ -209,10 +209,19 @@ ${originalContent}
    - Sayıları bağlama oturt: "100 Milyon Dolar" deme, "Neredeyse bir Instagram geliri kadar" de.
    - Teknik terimleri "halk diliyle" açıkla: "LLM, yani temelde internetin tamamını ezberlemiş hiperaktif bir kütüphaneci."
 
-6. **YAPI:**
-   - Başlık: 50-70 karakter. Tık tuzağı (clickbait) olmasın ama merak uyandırsın. Soru sorabilirsin.
-   - Meta Açıklama: Haberin özeti değil, okuyucuyu içeri çekecek bir "fragman" olsun.
-   - İçerik: HTML formatında (<p>, <h2>, <ul>, <strong>, <em>). H2 başlıkları yaratıcı olsun ("Teknik Detaylar" yerine "Kaputun Altında Neler Var?" de).
+6. **YAPI (TRAFFIC MAGNET & CURIOSITY STRATEJİSİ):**
+   - **Başlık (Curiosity Gap):** Asla sıkıcı bir özet olmamalı. 50-70 karakter. İnsanları "Neden?" veya "Nasıl?" diye sordurtmalı.
+     * İyi: "Google'ın Yeni AI Modeli Neden Mühendisleri Korkutuyor?"
+     * Kötü: "Google Yeni AI Modelini Duyurdu"
+   - **FAQ Schema:** Makalenin sonuna mutlaka "Sıkça Sorulan Sorular" başlıklı bir bölüm ekle.
+     * FORMAT (Bunu aynen uygula):
+     * '<h2>Sıkça Sorulan Sorular</h2>'
+     * '<div class="faq-item"><h3>Soru 1?</h3><p>Cevap 1.</p></div>'
+     * '<div class="faq-item"><h3>Soru 2?</h3><p>Cevap 2.</p></div>'
+     * ... (En az 3 adet)
+     * Bu format hem okuyucu hem de Google Bot için kritiktir.
+   - **Meta Açıklama:** Tık tuzağı (clickbait) olmadan, okuyucunun merak damarına basan 150-160 karakterlik bir fragman.
+   - **İçerik Stili:** HTML formatında (<p>, <h2>, <ul>, <strong>, <em>). H2 başlıkları yaratıcı olsun.
 
 7. **SEO ENTEGRASYONU:**
    - Anahtar kelimeleri doğal bir şekilde metne yedir. Robotik durmasın.
@@ -220,9 +229,9 @@ ${originalContent}
 
 JSON formatında yanıt ver:
 {
-  "title": "İlgi çekici, doğal başlık",
+  "title": "İlgi çekici, doğal başlık (Curiosity Gap uyumlu)",
   "excerpt": "Blog ana sayfasında görünecek, vurucu özet (1-2 cümle)",
-  "content": "Tamamen HTML formatlı, insansı makale içeriği",
+  "content": "Tamamen HTML formatlı, insansı makale içeriği (FAQ dahil)",
   "keywords": ["anahtar1", "anahtar2"],
   "metaDescription": "SEO ve tıklama odaklı meta açıklama (150-160 karakter)"
 }`;

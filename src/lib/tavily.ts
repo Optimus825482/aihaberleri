@@ -33,7 +33,8 @@ export async function tavilySearch(
     exclude_domains?: string[];
   } = {},
 ): Promise<TavilySearchResult[]> {
-  if (!TAVILY_API_KEY) {
+  const apiKey = process.env.TAVILY_API_KEY;
+  if (!apiKey) {
     throw new Error("TAVILY_API_KEY is not configured");
   }
 
@@ -41,7 +42,7 @@ export async function tavilySearch(
     const response = await axios.post<TavilySearchResponse>(
       TAVILY_API_URL,
       {
-        api_key: TAVILY_API_KEY,
+        api_key: apiKey,
         query,
         max_results: options.max_results || 10,
         include_domains: options.include_domains,
@@ -115,6 +116,43 @@ export async function calculateTrendScoreTavily(
         } else if (hoursSince < 48) {
           score += 10;
         }
+      }
+
+      // --- NEW TRAFFIC MAGNET LOGIC ---
+
+      // 1. Social Discussion Boost (Reddit, Twitter/X, HackerNews)
+      // These domains indicate accurate human interest and "stickiness"
+      const socialDomains = [
+        "reddit.com",
+        "twitter.com",
+        "x.com",
+        "news.ycombinator.com",
+        "quora.com",
+        "medium.com",
+      ];
+      if (socialDomains.some((d) => result.url.includes(d))) {
+        score += 40; // High boost for social discussion
+      }
+
+      // 2. Video/Visual Boost (YouTube)
+      // High intent for visual explanation
+      if (
+        result.url.includes("youtube.com") ||
+        result.url.includes("vimeo.com")
+      ) {
+        score += 30;
+      }
+
+      // 3. Authority Boost (Tech Giants)
+      const authorityDomains = [
+        "techcrunch.com",
+        "theverge.com",
+        "wired.com",
+        "bloomberg.com",
+        "reuters.com",
+      ];
+      if (authorityDomains.some((d) => result.url.includes(d))) {
+        score += 15;
       }
     }
 

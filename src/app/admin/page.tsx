@@ -34,6 +34,7 @@ import {
   PieChart,
 } from "lucide-react";
 import Link from "next/link";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
 interface DashboardStats {
   metrics: {
@@ -105,6 +106,10 @@ interface AgentStats {
   categoryStats: Array<{
     name: string;
     count: number;
+  }>;
+  upcomingJobs: Array<{
+    id: string;
+    scheduledFor: number;
   }>;
 }
 
@@ -654,6 +659,21 @@ export default function AdminDashboard() {
                 <div className="text-xs text-muted-foreground mt-1">
                   Planlanan Görev
                 </div>
+                {agentStats?.upcomingJobs &&
+                  agentStats.upcomingJobs.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-primary/10 flex flex-col items-center">
+                      <span className="text-[10px] uppercase font-semibold text-primary mb-1">
+                        SIRADAKİ GÖREV
+                      </span>
+                      <CountdownTimer
+                        targetTimestamp={
+                          agentStats.upcomingJobs[0].scheduledFor
+                        }
+                        onComplete={() => fetchAllStats()}
+                        className="text-primary scale-90"
+                      />
+                    </div>
+                  )}
               </div>
             </div>
           </CardContent>

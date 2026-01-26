@@ -9,6 +9,8 @@ const settingsSchema = z.object({
   intervalHours: z.number().min(1).max(24),
   articlesPerRun: z.number().min(1).max(10),
   categories: z.array(z.string()),
+  emailNotifications: z.boolean(),
+  adminEmail: z.string().email(),
 });
 
 // Default settings
@@ -17,6 +19,8 @@ const DEFAULT_SETTINGS = {
   intervalHours: 6,
   articlesPerRun: 3,
   categories: [],
+  emailNotifications: true,
+  adminEmail: "ikinciyenikitap54@gmail.com",
 };
 
 // Get agent settings
@@ -39,6 +43,8 @@ export async function GET() {
             "agent.categories",
             "agent.lastRun",
             "agent.nextRun",
+            "agent.emailNotifications",
+            "agent.adminEmail",
           ],
         },
       },
@@ -82,6 +88,11 @@ export async function GET() {
         : DEFAULT_SETTINGS.categories,
       lastRun: settingsMap["agent.lastRun"] || null,
       nextRun: settingsMap["agent.nextRun"] || null,
+      emailNotifications:
+        settingsMap["agent.emailNotifications"] === "true" ||
+        DEFAULT_SETTINGS.emailNotifications,
+      adminEmail:
+        settingsMap["agent.adminEmail"] || DEFAULT_SETTINGS.adminEmail,
     };
 
     return NextResponse.json({
@@ -148,6 +159,22 @@ export async function PUT(request: Request) {
         create: {
           key: "agent.categories",
           value: JSON.stringify(validatedSettings.categories),
+        },
+      }),
+      db.setting.upsert({
+        where: { key: "agent.emailNotifications" },
+        update: { value: String(validatedSettings.emailNotifications) },
+        create: {
+          key: "agent.emailNotifications",
+          value: String(validatedSettings.emailNotifications),
+        },
+      }),
+      db.setting.upsert({
+        where: { key: "agent.adminEmail" },
+        update: { value: validatedSettings.adminEmail },
+        create: {
+          key: "agent.adminEmail",
+          value: validatedSettings.adminEmail,
         },
       }),
     ]);
