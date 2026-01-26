@@ -153,9 +153,14 @@ export default function AgentSettingsPage() {
       if (data.success) {
         toast({
           title: "Başarılı",
-          description: "Agent manuel olarak tetiklendi",
+          description:
+            "Agent tetiklendi, tarama ekranına yönlendiriliyorsunuz...",
         });
-        fetchSettings(); // Refresh to get updated times
+
+        // redirect to scan page after a short delay to allow toast to be seen
+        setTimeout(() => {
+          window.location.href = "/admin/scan?autoStart=true";
+        }, 1500);
       } else {
         toast({
           title: "Hata",

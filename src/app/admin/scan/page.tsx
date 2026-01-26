@@ -59,6 +59,13 @@ export default function ScanPage() {
       const data = await response.json();
       if (data.success) {
         setCategories(data.data);
+
+        // autoStart parametresi varsa taramayı başlat
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get("autoStart") === "true") {
+          // fetch bittikten hemen sonra başlat
+          startScan();
+        }
       }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
