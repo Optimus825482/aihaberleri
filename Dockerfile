@@ -1,23 +1,19 @@
-# Production-optimized Dockerfile (King Mode)
+# Production-optimized Dockerfile (King Mode v2)
 
 # Stage 1: Dependencies
 FROM node:20.18-slim AS deps
-# Install essentials for Prisma and Sharp
 RUN apt-get update && apt-get install -y openssl ca-certificates libc6 curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-# Memory & Network Optimization for NPM
-ENV NPM_CONFIG_LOGLEVEL=warn
-ENV NPM_CONFIG_PROGRESS=false
-ENV NPM_CONFIG_FUND=false
-ENV NPM_CONFIG_AUDIT=false
+# Ensure we install ALL dependencies for build
+ENV NODE_ENV=development
 
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install ALL dependencies (including devDeps for build)
-# Use legacy-peer-deps if needed, and optimize for low RAM
-RUN npm ci --network-timeout=100000 --prefer-offline
+# Install ALL dependencies
+# Using npm install instead of ci as a fallback for lockfile consistency across OS
+RUN npm install --network-timeout=100000
 
 # Stage 2: Builder
 FROM node:20.18-slim AS builder
@@ -35,12 +31,17 @@ RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
 ENV NODE_ENV=production
-# Dummy DB URL for build time
+
+# Mock environment variables for build to prevent ENOTFOUND etc.
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+ENV REDIS_URL="redis://localhost:6379"
+ENV NEXTAUTH_SECRET="dummy-secret-for-build"
+ENV NEXTAUTH_URL="http://localhost:3000"
 
 # Set Node memory limit for build process
-ENV NODE_OPTIONS="--max-old-space-size=2048"
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
+# Run build
 RUN npm run build
 
 # Stage 3: Runner
@@ -70,11 +71,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
-# If you use tsx for background workers, ensure they have access to necessary deps
-# Note: Next.js standalone bundles almost everything, but custom scripts might need more.
+# Specialized copy for tools used in scripts
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/esbuild ./node_modules/esbuild
-# Optional: if scripts need other node_modules, you might need to copy more or use a separate worker container
 
 USER nextjs
 
