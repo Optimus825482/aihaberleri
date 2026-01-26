@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Basic cleaning of text (remove HTML tags if any leaks through)
-  const cleanText = text.replace(/<[^>]*>/g, "").slice(0, 2000); // Limit length
+  const cleanText = text.replace(/<[^>]*>/g, "").slice(0, 5000); // Higher limit
 
   try {
     const audioBuffer = await generateSpeech({
@@ -19,18 +19,17 @@ export async function GET(req: NextRequest) {
       voice,
     });
 
-    return new Response(audioBuffer as unknown as BodyInit, {
+    return new Response(audioBuffer as any, {
       headers: {
         "Content-Type": "audio/mpeg",
         "Content-Length": audioBuffer.length.toString(),
-        // Cache for 1 day
-        "Cache-Control": "public, max-age=86400, s-maxage=86400",
+        "Cache-Control": "public, max-age=86400",
       },
     });
-  } catch (error) {
-    console.error("TTS Error:", error);
+  } catch (error: any) {
+    console.error("TTS Route Error:", error.message || error);
     return NextResponse.json(
-      { error: "Failed to generate speech" },
+      { error: "Failed to generate speech", details: error.message },
       { status: 500 },
     );
   }
