@@ -151,7 +151,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 {article.publishedAt && (
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    <span>{formatDate(article.publishedAt)}</span>
+                    <time dateTime={article.publishedAt.toISOString()}>
+                      {formatDate(article.publishedAt)}
+                    </time>
                   </div>
                 )}
                 <div className="flex items-center gap-1">
@@ -336,9 +338,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                       </p>
                       <div className="flex items-center text-xs text-muted-foreground mt-auto pt-4 border-t">
                         <Calendar className="w-3 h-3 mr-1" />
-                        {related.publishedAt
-                          ? formatDate(related.publishedAt)
-                          : ""}
+                        {related.publishedAt && (
+                          <time dateTime={related.publishedAt.toISOString()}>
+                            {formatDate(related.publishedAt)}
+                          </time>
+                        )}
                       </div>
                     </div>
                   </Link>

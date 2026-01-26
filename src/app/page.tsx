@@ -4,15 +4,32 @@ import { Footer } from "@/components/Footer";
 import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 
+import {
+  generateOrganizationSchema,
+  generateWebSiteSchema,
+  generateJsonLd,
+} from "@/lib/seo";
+
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
 export const revalidate = 60; // Revalidate every 60 seconds
 
 export default async function HomePage() {
+  // Structured Data
+  const organizationSchema = generateOrganizationSchema();
+  const websiteSchema = generateWebSiteSchema();
+
   // Skip database queries during build
   if (process.env.SKIP_ENV_VALIDATION === "1") {
     return (
       <div className="min-h-screen flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={generateJsonLd({
+            "@context": "https://schema.org",
+            "@graph": [organizationSchema, websiteSchema],
+          })}
+        />
         <HeaderWrapper />
         <main className="flex-1">
           <section className="container mx-auto px-4 py-12">
@@ -111,6 +128,13 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={generateJsonLd({
+          "@context": "https://schema.org",
+          "@graph": [organizationSchema, websiteSchema],
+        })}
+      />
       <HeaderWrapper />
 
       <main className="flex-1">

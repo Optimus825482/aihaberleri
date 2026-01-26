@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -7,6 +7,13 @@ import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistratio
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 
 const inter = Inter({ subsets: ["latin"] });
+
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
   title: {
@@ -30,7 +37,7 @@ export const metadata: Metadata = {
   creator: "AI Haberleri",
   publisher: "AI Haberleri",
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+    process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org",
   ),
   manifest: "/manifest.json",
   icons: {
@@ -56,7 +63,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "tr_TR",
-    url: process.env.NEXT_PUBLIC_SITE_URL,
+    url: "/",
     siteName: "AI Haberleri",
     title: "AI Haberleri - Yapay Zeka Dünyasından Güncel Haberler",
     description:
@@ -98,12 +105,6 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#2563eb" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="AI Haberleri" />
-        <link rel="manifest" href="/manifest.json" />
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
           <script
             async

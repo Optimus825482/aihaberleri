@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
 
   return {
     rules: [
@@ -9,6 +9,10 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: ["/admin/", "/api/"],
+      },
+      {
+        userAgent: "Bingbot",
+        allow: "/",
       },
       {
         userAgent: "Googlebot-News",

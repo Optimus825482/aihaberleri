@@ -12,6 +12,7 @@ import { generateSlug } from "@/lib/utils";
 import { db } from "@/lib/db";
 import type { NewsArticle } from "./news.service";
 import { fetchArticleContent } from "./news.service";
+import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 
 export interface ProcessedArticle {
   title: string;
@@ -206,6 +207,15 @@ export async function publishArticle(
     });
 
     console.log(`✅ Haber yayınlandı: ${article.slug}`);
+
+    // Post-publish tasks: IndexNow submission
+    try {
+      submitArticleToIndexNow(article.slug).catch((err) =>
+        console.error("IndexNow auto-submit error:", err),
+      );
+    } catch (e) {
+      console.error("Failed to trigger IndexNow submission:", e);
+    }
 
     return {
       id: article.id,

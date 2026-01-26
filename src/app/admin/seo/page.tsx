@@ -93,14 +93,19 @@ export default function SEODashboard() {
                 {indexNowStatus && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Son Gönderim:</span>
-                    <div className="flex items-center gap-2">
-                      {indexNowStatus.success ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-500" />
-                      )}
-                      <span className="text-sm">
-                        {indexNowStatus.count} makale
+                    <div className="flex flex-col items-end gap-1">
+                      <div className="flex items-center gap-2">
+                        {indexNowStatus.success ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <span className="text-sm font-medium">
+                          {indexNowStatus.count} makale
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date().toLocaleString("tr-TR")}
                       </span>
                     </div>
                   </div>

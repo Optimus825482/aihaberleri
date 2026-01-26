@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
+import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 
 // GET - List all articles
 export async function GET() {
@@ -81,6 +82,13 @@ export async function POST(request: Request) {
         metaDescription: excerpt,
       },
     });
+
+    // Auto-submit to IndexNow
+    if (article.status === "PUBLISHED") {
+      submitArticleToIndexNow(article.slug).catch((err) =>
+        console.error("IndexNow manual auto-submit error:", err),
+      );
+    }
 
     return NextResponse.json({
       success: true,

@@ -48,9 +48,12 @@ export async function getOrCreateIndexNowKey(): Promise<string> {
 }
 
 /**
- * Tek bir URL'i IndexNow'a gönder
+ * Tek bir URL'i IndexNow'a gönder ve DB durumunu güncelle
  */
-export async function submitUrlToIndexNow(url: string): Promise<boolean> {
+export async function submitUrlToIndexNow(
+  url: string,
+  articleId?: string,
+): Promise<boolean> {
   try {
     const apiKey = await getOrCreateIndexNowKey();
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
@@ -85,22 +88,46 @@ export async function submitUrlToIndexNow(url: string): Promise<boolean> {
 
     if (hasSuccess) {
       console.log(`✅ IndexNow: URL submitted successfully - ${url}`);
+      // DB durumunu güncelle
+      if (articleId) {
+        await db.article.update({
+          where: { id: articleId },
+          data: {
+            indexNowStatus: "SUBMITTED",
+            indexedAt: new Date(),
+          },
+        });
+      }
     } else {
       console.warn(`⚠️ IndexNow: Failed to submit URL - ${url}`);
+      if (articleId) {
+        await db.article.update({
+          where: { id: articleId },
+          data: { indexNowStatus: "FAILED" },
+        });
+      }
     }
 
     return hasSuccess;
   } catch (error) {
     console.error("❌ IndexNow submission error:", error);
+    if (articleId) {
+      await db.article.update({
+        where: { id: articleId },
+        data: { indexNowStatus: "FAILED" },
+      });
+    }
     return false;
   }
 }
 
 /**
  * Birden fazla URL'i IndexNow'a gönder (batch)
- * Max 10,000 URL per request (IndexNow limit)
  */
-export async function submitUrlsToIndexNow(urls: string[]): Promise<boolean> {
+export async function submitUrlsToIndexNow(
+  urls: string[],
+  articleIds?: string[],
+): Promise<boolean> {
   if (urls.length === 0) return false;
 
   try {
@@ -118,7 +145,6 @@ export async function submitUrlsToIndexNow(urls: string[]): Promise<boolean> {
       urlList: urlsToSubmit,
     };
 
-    // Tüm endpoint'lere paralel gönder
     const promises = INDEXNOW_ENDPOINTS.map((endpoint) =>
       fetch(endpoint, {
         method: "POST",
@@ -141,8 +167,23 @@ export async function submitUrlsToIndexNow(urls: string[]): Promise<boolean> {
       console.log(
         `✅ IndexNow: ${urlsToSubmit.length} URLs submitted successfully`,
       );
+      if (articleIds && articleIds.length > 0) {
+        await db.article.updateMany({
+          where: { id: { in: articleIds } },
+          data: {
+            indexNowStatus: "SUBMITTED",
+            indexedAt: new Date(),
+          },
+        });
+      }
     } else {
       console.warn(`⚠️ IndexNow: Failed to submit ${urlsToSubmit.length} URLs`);
+      if (articleIds && articleIds.length > 0) {
+        await db.article.updateMany({
+          where: { id: { in: articleIds } },
+          data: { indexNowStatus: "FAILED" },
+        });
+      }
     }
 
     return hasSuccess;
@@ -156,11 +197,66 @@ export async function submitUrlsToIndexNow(urls: string[]): Promise<boolean> {
  * Yeni yayınlanan makale için IndexNow submit
  */
 export async function submitArticleToIndexNow(
-  articleSlug: string,
+  slug: string,
+  articleId?: string,
 ): Promise<boolean> {
+  // Eğer articleId verilmemişse slug üzerinden bul
+  let actualId = articleId;
+  if (!actualId) {
+    const article = await db.article.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    actualId = article?.id;
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
-  const articleUrl = `${baseUrl}/news/${articleSlug}`;
-  return submitUrlToIndexNow(articleUrl);
+  const articleUrl = `${baseUrl}/news/${slug}`;
+  return submitUrlToIndexNow(articleUrl, actualId);
+}
+
+/**
+ * Gönderilmemiş (PENDING veya FAILED) tüm haberleri gönder
+ */
+export async function submitPendingArticlesToIndexNow(): Promise<{
+  success: boolean;
+  count: number;
+}> {
+  try {
+    const pendingArticles = await db.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        indexNowStatus: { in: ["PENDING", "FAILED"] },
+        publishedAt: { not: null },
+      },
+      select: { id: true, slug: true },
+      take: 100, // Reasonable batch size
+    });
+
+    if (pendingArticles.length === 0) {
+      return { success: true, count: 0 };
+    }
+
+    console.log(
+      `📤 Gönderilmemiş ${pendingArticles.length} haber IndexNow'a bildiriliyor...`,
+    );
+
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
+    const urls = pendingArticles.map(
+      (article) => `${baseUrl}/news/${article.slug}`,
+    );
+    const ids = pendingArticles.map((a) => a.id);
+
+    const success = await submitUrlsToIndexNow(urls, ids);
+
+    return {
+      success,
+      count: pendingArticles.length,
+    };
+  } catch (error) {
+    console.error("❌ submitPendingArticlesToIndexNow error:", error);
+    return { success: false, count: 0 };
+  }
 }
 
 /**
@@ -177,13 +273,14 @@ export async function submitAllArticlesToIndexNow(): Promise<{
         status: "PUBLISHED",
         publishedAt: { not: null },
       },
-      select: { slug: true },
+      select: { id: true, slug: true },
     });
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
     const urls = articles.map((article) => `${baseUrl}/news/${article.slug}`);
+    const ids = articles.map((a) => a.id);
 
-    const success = await submitUrlsToIndexNow(urls);
+    const success = await submitUrlsToIndexNow(urls, ids);
 
     return {
       success,

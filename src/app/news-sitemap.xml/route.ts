@@ -1,37 +1,14 @@
-/**
- * Google News Sitemap
- * https://developers.google.com/search/docs/crawling-indexing/sitemaps/news-sitemap
- *
- * Google News için özel sitemap - Son 48 saatteki haberler
- */
-
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-// Force dynamic rendering (skip at build time)
 export const dynamic = "force-dynamic";
-export const revalidate = 3600; // Revalidate every hour
 
 export async function GET() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+  const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "AI Haberleri";
+
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "AI Haberleri";
-
-    // Skip database queries during build
-    if (process.env.SKIP_ENV_VALIDATION === "1") {
-      const emptyXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
-</urlset>`;
-
-      return new NextResponse(emptyXml, {
-        headers: {
-          "Content-Type": "application/xml; charset=utf-8",
-        },
-      });
-    }
-
-    // Son 48 saatteki published article'ları al
+    // Get articles published in the last 48 hours (Google News requirement)
     const twoDaysAgo = new Date();
     twoDaysAgo.setHours(twoDaysAgo.getHours() - 48);
 
@@ -43,61 +20,50 @@ export async function GET() {
           gte: twoDaysAgo,
         },
       },
-      include: {
-        category: true,
+      select: {
+        title: true,
+        slug: true,
+        publishedAt: true,
       },
       orderBy: {
         publishedAt: "desc",
       },
     });
 
-    // XML oluştur
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
-${articles
-  .map((article) => {
-    const articleUrl = `${baseUrl}/news/${article.slug}`;
-    const publishDate = article.publishedAt
-      ? new Date(article.publishedAt).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0];
-
-    return `  <url>
-    <loc>${escapeXml(articleUrl)}</loc>
+  ${articles
+    .map((article) => {
+      return `
+  <url>
+    <loc>${baseUrl}/news/${article.slug}</loc>
     <news:news>
       <news:publication>
-        <news:name>${escapeXml(siteName)}</news:name>
+        <news:name>${siteName}</news:name>
         <news:language>tr</news:language>
       </news:publication>
-      <news:publication_date>${publishDate}</news:publication_date>
-      <news:title>${escapeXml(article.title)}</news:title>
-      <news:keywords>${escapeXml(article.keywords.join(", "))}</news:keywords>
+      <news:publication_date>${article.publishedAt?.toISOString()}</news:publication_date>
+      <news:title>${article.title.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;")}</news:title>
     </news:news>
   </url>`;
-  })
-  .join("\n")}
+    })
+    .join("")}
 </urlset>`;
 
-    return new NextResponse(xml, {
+    return new Response(sitemap, {
       headers: {
-        "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600, s-maxage=3600", // 1 saat cache
+        "Content-Type": "application/xml",
+        "Cache-Control": "public, s-maxage=1200, stale-while-revalidate=600",
       },
     });
   } catch (error) {
-    console.error("❌ Error generating news sitemap:", error);
-    return new NextResponse("Error generating news sitemap", { status: 500 });
+    console.error("News Sitemap error:", error);
+    return new Response(
+      '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
+      {
+        headers: { "Content-Type": "application/xml" },
+      },
+    );
   }
-}
-
-/**
- * XML special characters'ı escape et
- */
-function escapeXml(unsafe: string): string {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }

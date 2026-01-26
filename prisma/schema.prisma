@@ -111,11 +111,20 @@ model Article {
   metaTitle       String?
   metaDescription String?
   keywords        String[]
+  indexNowStatus  IndexStatus @default(PENDING)
+  indexedAt       DateTime?
 
   @@index([slug])
   @@index([status, publishedAt])
   @@index([categoryId])
   @@index([publishedAt])
+  @@index([indexNowStatus])
+}
+
+enum IndexStatus {
+  PENDING
+  SUBMITTED
+  FAILED
 }
 
 enum ArticleStatus {

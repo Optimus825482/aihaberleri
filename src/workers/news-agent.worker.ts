@@ -27,12 +27,13 @@ const worker = new Worker(
     console.log(`🤖 Processing job: ${job.name} (ID: ${job.id})`);
     console.log(`${"=".repeat(60)}\n`);
 
+    let result;
     try {
       // Ensure DB connection is active (prevents "Closed" error after long idle)
       await (db as PrismaClient).$connect();
 
       // Execute the news agent
-      const result = await executeNewsAgent();
+      result = await executeNewsAgent();
 
       console.log("\n📊 Execution Summary:");
       console.log(`   Articles Scraped: ${result.articlesScraped}`);
@@ -43,37 +44,33 @@ const worker = new Worker(
       if (result.errors.length > 0) {
         console.log(`   Errors: ${result.errors.join(", ")}`);
       }
-
-      // Schedule next execution
-      const enabledSetting = await db.setting.findUnique({
-        where: { key: "agent.enabled" },
-      });
-      const isEnabled = enabledSetting
-        ? enabledSetting.value !== "false"
-        : true;
-
-      if (isEnabled) {
-        const nextExecution = await scheduleNewsAgentJob();
-        if (nextExecution) {
-          console.log(
-            `\n⏰ Next execution: ${nextExecution.nextExecutionTime.toLocaleString()}`,
-          );
-        } else {
-          console.log(
-            "\n⚠️  Could not schedule next execution (Queue not available)",
-          );
-        }
-      } else {
-        console.log(
-          "\n⏸️  Agent is disabled in settings, skipping re-scheduling.",
-        );
-      }
-
-      return result;
     } catch (error) {
-      console.error("❌ Worker error:", error);
-      throw error;
+      console.error("❌ Agent execution error:", error);
+      // Even if failed, we should try to schedule next
+    } finally {
+      // Always attempt to schedule next execution
+      try {
+        const enabledSetting = await db.setting.findUnique({
+          where: { key: "agent.enabled" },
+        });
+        const isEnabled = enabledSetting
+          ? enabledSetting.value !== "false"
+          : true;
+
+        if (isEnabled) {
+          const nextExecution = await scheduleNewsAgentJob();
+          if (nextExecution) {
+            console.log(
+              `\n⏰ Next execution: ${nextExecution.nextExecutionTime.toLocaleString()}`,
+            );
+          }
+        }
+      } catch (schedErr) {
+        console.error("❌ Failed to schedule next job:", schedErr);
+      }
     }
+
+    return result;
   },
   {
     connection: redis,
@@ -113,24 +110,81 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-// Initial scheduling check on startup
-async function initStartupCheck() {
+// Initial scheduling check and system sync on startup
+async function initStartupSync() {
   try {
-    const enabledSetting = await db.setting.findUnique({
-      where: { key: "agent.enabled" },
-    });
+    console.log("\n🔄 Başlangıç senkronizasyonu başlatılıyor...");
+
+    // 1. IndexNow Senkronizasyonu (Gönderilmemiş haberler)
+    try {
+      const { submitPendingArticlesToIndexNow } =
+        await import("@/lib/seo/indexnow");
+      const result = await submitPendingArticlesToIndexNow();
+      if (result.count > 0) {
+        console.log(`✅ ${result.count} bekleyen haber IndexNow'a bildirildi.`);
+      } else {
+        console.log("ℹ️ IndexNow için bekleyen haber bulunmadı.");
+      }
+    } catch (seoErr) {
+      console.error("⚠️ SEO senkronizasyon hatası:", seoErr);
+    }
+
+    // 2. Agent İş Takvimi Kontrolü
+    const [enabledSetting, nextRunSetting] = await Promise.all([
+      db.setting.findUnique({ where: { key: "agent.enabled" } }),
+      db.setting.findUnique({ where: { key: "agent.nextRun" } }),
+    ]);
+
     const isEnabled = enabledSetting ? enabledSetting.value !== "false" : true;
 
     if (isEnabled) {
-      console.log("🔍 Checking for scheduled jobs...");
-      await scheduleNewsAgentJob();
+      const nextRunStr = nextRunSetting?.value;
+      const now = new Date();
+
+      // Eğer planlanan zaman geçmişse veya hiç planlanmamışsa hemen çalıştır
+      if (!nextRunStr || new Date(nextRunStr) <= now) {
+        console.log(
+          "⚡ Gecikmiş veya eksik iş tespiti. Agent hemen başlatılıyor...",
+        );
+
+        // Mevcut kuyruk işlerini temizle (jobId çakışmasını önlemek için)
+        const { newsAgentQueue } = await import("@/lib/queue");
+        if (newsAgentQueue) {
+          const jobs = await newsAgentQueue.getJobs(["delayed", "waiting"]);
+          for (const job of jobs) {
+            if (job.id === "news-agent-scheduled-run") {
+              await job.remove();
+            }
+          }
+
+          // Bekletmeden ekle
+          await newsAgentQueue.add(
+            "scrape-and-publish",
+            {},
+            {
+              jobId: "news-agent-scheduled-run",
+              removeOnComplete: true,
+            },
+          );
+
+          console.log("✅ Acil iş kuyruğa eklendi.");
+        }
+      } else {
+        console.log(
+          `📅 Sıradaki çalışma zamanı: ${new Date(nextRunStr).toLocaleString()}`,
+        );
+        // Normal planlama yap (zaten varsa BullMQ jobId sayesinde eklemez)
+        await scheduleNewsAgentJob();
+      }
+    } else {
+      console.log("⏸️ Agent devre dışı, takvim kontrolü atlandı.");
     }
   } catch (err) {
-    console.error("❌ Startup check failed:", err);
+    console.error("❌ Başlangıç senkronizasyonunda kritik hata:", err);
   }
 }
 
-initStartupCheck();
+initStartupSync();
 
 // Keep the process running
 process.stdin.resume();

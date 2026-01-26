@@ -23,19 +23,18 @@ export function generateOrganizationSchema() {
     url: baseUrl,
     logo: {
       "@type": "ImageObject",
-      url: `${baseUrl}/logos/logo-512.png`,
+      url: `${baseUrl}/logos/brand/logo-primary.png`,
       width: 512,
-      height: 512,
+      height: 128,
     },
     sameAs: [
-      // Sosyal medya linkleri buraya eklenebilir
-      // "https://twitter.com/...",
-      // "https://facebook.com/...",
+      `https://twitter.com/${process.env.TWITTER_HANDLE?.replace("@", "") || "aihaberleri"}`,
+      // Add other social links if available in env
     ],
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Customer Service",
-      email: process.env.CONTACT_EMAIL || "info@example.com",
+      email: process.env.CONTACT_EMAIL || "info@aihaberleri.org",
     },
   };
 }
@@ -98,9 +97,9 @@ export function generateNewsArticleSchema(article: ArticleWithCategory) {
       url: baseUrl,
       logo: {
         "@type": "ImageObject",
-        url: `${baseUrl}/logos/logo-512.png`,
+        url: `${baseUrl}/logos/brand/logo-primary.png`,
         width: 512,
-        height: 512,
+        height: 128,
       },
     },
     mainEntityOfPage: {

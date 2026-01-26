@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import slugify from "slugify";
+import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 
 // GET - Get single article
 export async function GET(
@@ -112,6 +113,13 @@ export async function PUT(
         publishedAt: status === "PUBLISHED" ? new Date() : null,
       },
     });
+
+    // Auto-submit to IndexNow if published
+    if (article.status === "PUBLISHED") {
+      submitArticleToIndexNow(article.slug).catch((err) =>
+        console.error("IndexNow update auto-submit error:", err),
+      );
+    }
 
     return NextResponse.json({
       success: true,
