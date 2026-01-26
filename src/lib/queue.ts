@@ -1,5 +1,6 @@
 import { Queue, Worker, QueueEvents } from "bullmq";
 import { getRedis } from "./redis";
+import { db } from "./db";
 
 // Get Redis connection (may be null during build)
 const redis = getRedis();
@@ -39,29 +40,48 @@ export async function scheduleNewsAgentJob() {
     return null;
   }
 
-  // Calculate next execution time (random between 5-8 hours from now)
-  const minHours = parseInt(process.env.AGENT_MIN_INTERVAL_HOURS || "5");
-  const maxHours = minHours + 3;
-  const randomHours = Math.random() * (maxHours - minHours) + minHours;
-  const delay = randomHours * 60 * 60 * 1000; // Convert to milliseconds
+  try {
+    // Get interval from settings (default to 6 if not found)
+    const setting = await db.setting.findUnique({
+      where: { key: "agent.intervalHours" },
+    });
 
-  await newsAgentQueue.add(
-    "scrape-and-publish",
-    {},
-    {
-      delay,
-      jobId: `news-agent-${Date.now()}`,
-    },
-  );
+    const intervalHours = setting ? parseInt(setting.value) : 6;
+    const delay = intervalHours * 60 * 60 * 1000;
 
-  console.log(
-    `📅 Sonraki haber agent çalıştırması ${randomHours.toFixed(2)} saat sonra planlandı`,
-  );
+    // Use a fixed jobId so we don't have multiple scheduled jobs at once
+    // BullMQ will ignore adding if the jobId already exists in delayed state
+    await newsAgentQueue.add(
+      "scrape-and-publish",
+      {},
+      {
+        delay,
+        jobId: "news-agent-scheduled-run",
+        removeOnComplete: true,
+      },
+    );
 
-  return {
-    nextExecutionTime: new Date(Date.now() + delay),
-    delayHours: randomHours,
-  };
+    const nextTime = new Date(Date.now() + delay);
+
+    // Update nextRun in settings for UI transparency
+    await db.setting.upsert({
+      where: { key: "agent.nextRun" },
+      update: { value: nextTime.toISOString() },
+      create: { key: "agent.nextRun", value: nextTime.toISOString() },
+    });
+
+    console.log(
+      `📅 Sonraki haber agent çalıştırması ${intervalHours} saat sonra (${nextTime.toLocaleString()}) planlandı`,
+    );
+
+    return {
+      nextExecutionTime: nextTime,
+      delayHours: intervalHours,
+    };
+  } catch (error) {
+    console.error("❌ Scheduling error:", error);
+    return null;
+  }
 }
 
 // Get queue stats

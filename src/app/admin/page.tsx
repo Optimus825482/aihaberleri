@@ -12,29 +12,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   Activity,
   FileText,
   TrendingUp,
   Clock,
-  Play,
   Calendar,
   Terminal,
   Eye,
   Edit,
   Trash2,
-  BarChart3,
   PieChart,
+  Settings as SettingsIcon,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { CountdownTimer } from "@/components/CountdownTimer";
+import { DashboardDonutChart } from "@/components/DashboardDonutChart";
 
 interface DashboardStats {
   metrics: {
@@ -87,6 +81,7 @@ interface AgentStats {
     successRate: number;
     lastExecution: string | null;
     lastStatus: string | null;
+    enabled: boolean;
   };
   queue: {
     waiting: number;
@@ -171,70 +166,21 @@ export default function AdminDashboard() {
     }
   };
 
-  const executeAgent = async () => {
-    setExecuting(true);
-    setLogs([]);
+  const deleteArticle = async (id: string) => {
+    if (!confirm("Bu haberi silmek istediğinize emin misiniz?")) return;
 
     try {
-      // Create EventSource for streaming logs
-      const eventSource = new EventSource("/api/agent/stream");
-      eventSourceRef.current = eventSource;
-
-      eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-
-        if (data.type === "complete") {
-          // Agent completed
-          setExecuting(false);
-          fetchAllStats();
-          eventSource.close();
-        } else {
-          // Regular log message
-          setLogs((prev) => [...prev, data as LogMessage]);
-        }
-      };
-
-      eventSource.onerror = () => {
-        setExecuting(false);
-        setLogs((prev) => [
-          ...prev,
-          {
-            message: "❌ Bağlantı hatası",
-            type: "error",
-            timestamp: new Date().toISOString(),
-          },
-        ]);
-        eventSource.close();
-      };
-    } catch (error) {
-      setExecuting(false);
-      setLogs((prev) => [
-        ...prev,
-        {
-          message: `❌ Hata: ${error instanceof Error ? error.message : "Bilinmeyen hata"}`,
-          type: "error",
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-    }
-  };
-
-  const scheduleAgent = async () => {
-    try {
-      const response = await fetch("/api/agent/schedule", {
-        method: "POST",
+      const response = await fetch(`/api/admin/articles/${id}`, {
+        method: "DELETE",
       });
-      const data = await response.json();
-      if (data.success) {
-        alert(
-          `Agent planlandı! Sonraki çalıştırma ${data.data.delayHours.toFixed(2)} saat sonra`,
-        );
+
+      if (response.ok) {
         fetchAllStats();
       } else {
-        alert(`Planlama başarısız: ${data.error}`);
+        alert("Haber silinemedi");
       }
     } catch (error) {
-      alert("Agent planlanamadı");
+      alert("Bir hata oluştu");
     }
   };
 
@@ -251,554 +197,378 @@ export default function AdminDashboard() {
     );
   }
 
-  // Calculate max count for progress bars
-  const maxCategoryCount = dashboardStats?.categoryStats?.length
-    ? Math.max(...dashboardStats.categoryStats.map((c) => c.articleCount))
-    : 1;
-
-  const maxChartValue = dashboardStats?.charts.last7Days?.length
-    ? Math.max(...dashboardStats.charts.last7Days.map((d) => d.count))
-    : 1;
-
-  const deleteArticle = async (id: string) => {
-    if (!confirm("Bu haberi silmek istediğinizden emin misiniz?")) return;
-
-    try {
-      const response = await fetch(`/api/articles/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        fetchAllStats();
-      } else {
-        alert("Haber silinemedi");
-      }
-    } catch (error) {
-      alert("Bir hata oluştu");
-    }
-  };
+  const isAgentEnabled = agentStats?.agent.enabled ?? false;
 
   return (
     <AdminLayout>
       <div className="space-y-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold">
-              Command Center <span className="text-primary">Pro</span>
+            <h1 className="text-3xl font-black tracking-tight text-foreground">
+              Command <span className="text-primary italic">Center</span>
             </h1>
-            <p className="text-muted-foreground mt-2">
-              Sistem durumu, otonom agent kontrolü ve içerik analizi
+            <p className="text-muted-foreground">
+              Sistem durumu ve otonom operasyon takibi
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Button
-              onClick={scheduleAgent}
-              variant="outline"
-              className="w-full sm:w-auto"
-            >
-              <Calendar className="mr-2 h-4 w-4" />
-              Görev Planla
-            </Button>
-            <Button
-              onClick={executeAgent}
-              disabled={executing}
-              className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0"
-            >
-              <Play className="mr-2 h-4 w-4" />
-              {executing
-                ? "Ghostwriter Çalışıyor..."
-                : "Agent'ı Şimdi Çalıştır"}
-            </Button>
-          </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
-          <Card className="bg-card/50 backdrop-blur border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Toplam Haber
+        {/* Stats Highlight Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[
+            {
+              label: "Toplam Haber",
+              value: dashboardStats?.metrics.totalArticles,
+              icon: FileText,
+              color: "text-blue-500",
+            },
+            {
+              label: "Görüntülenme",
+              value: dashboardStats?.metrics.totalViews.toLocaleString("tr-TR"),
+              icon: Eye,
+              color: "text-purple-500",
+            },
+            {
+              label: "Bugün Eklenen",
+              value: dashboardStats?.metrics.todayArticles,
+              icon: TrendingUp,
+              color: "text-green-500",
+            },
+            {
+              label: "Yayında",
+              value: dashboardStats?.metrics.publishedArticles,
+              icon: Activity,
+              color: "text-blue-400",
+            },
+            {
+              label: "Taslak",
+              value: dashboardStats?.metrics.draftArticles,
+              icon: Clock,
+              color: "text-orange-500",
+            },
+          ].map((stat, i) => (
+            <Card key={i} className="bg-card/40 border-primary/10 shadow-sm">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    {stat.label}
+                  </span>
+                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                </div>
+                <div className="text-2xl font-black">{stat.value || 0}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Primary Operational Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Autonomous Status Control */}
+          <Card
+            className={`lg:col-span-1 border-2 overflow-hidden ${isAgentEnabled ? "border-primary/20 bg-primary/5 shadow-primary/5 shadow-2xl" : "border-destructive/20 bg-destructive/5 shadow-destructive/5 shadow-2xl"}`}
+          >
+            <CardHeader className="pb-0">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-black flex items-center gap-2 uppercase tracking-tight">
+                  {isAgentEnabled ? (
+                    <ShieldCheck className="text-primary w-5 h-5" />
+                  ) : (
+                    <ShieldAlert className="text-destructive w-5 h-5" />
+                  )}
+                  Otonom Sistem
+                </CardTitle>
+                <Badge
+                  variant={isAgentEnabled ? "default" : "destructive"}
+                  className="font-black px-3 py-0.5 text-[10px]"
+                >
+                  {isAgentEnabled ? "AKTİF" : "KAPALI"}
+                </Badge>
+              </div>
+              <CardDescription className="text-[11px] font-bold uppercase opacity-60">
+                Sistem çalışma periyodu
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 pb-8">
+              {isAgentEnabled ? (
+                <div className="flex flex-col items-center text-center space-y-5">
+                  <div className="relative w-full h-1.5 bg-primary/20 rounded-full overflow-hidden">
+                    <div className="absolute inset-0 bg-primary animate-progress-indefinite" />
+                  </div>
+
+                  {agentStats?.upcomingJobs &&
+                  agentStats.upcomingJobs.length > 0 ? (
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/60 mb-2">
+                        SIRADAKİ TARAMA
+                      </span>
+                      <div className="bg-primary/10 px-6 py-4 rounded-3xl border border-primary/20">
+                        <CountdownTimer
+                          targetTimestamp={
+                            agentStats.upcomingJobs[0].scheduledFor
+                          }
+                          onComplete={() => fetchAllStats()}
+                          className="text-4xl font-black tabular-nums text-primary"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-6 flex flex-col items-center gap-3">
+                      <Activity className="w-8 h-8 text-primary animate-spin-slow" />
+                      <p className="text-sm font-black italic text-primary/60 uppercase tracking-widest">
+                        Görev Planlanıyor...
+                      </p>
+                    </div>
+                  )}
+
+                  <Link href="/admin/agent-settings" className="w-full">
+                    <Button
+                      variant="outline"
+                      className="w-full font-black text-xs group border-primary/20 hover:bg-primary hover:text-white transition-all duration-300"
+                    >
+                      SİSTEM AYARLARI{" "}
+                      <SettingsIcon className="ml-2 h-3.5 w-3.5 group-hover:rotate-90 transition-transform" />
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center text-center space-y-6 py-4">
+                  <div className="w-20 h-20 rounded-full bg-destructive/10 flex items-center justify-center">
+                    <ShieldAlert className="w-10 h-10 text-destructive animate-pulse" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="font-black text-xl text-destructive uppercase tracking-tight">
+                      Otonom Sistem KAPALI
+                    </h3>
+                    <p className="text-[11px] font-bold text-muted-foreground px-8 leading-relaxed opacity-70">
+                      Otomatik haber toplama ve içerik üretimi şu an pasif
+                      durumda. Tekrar başlatmak için otonom modu aktif edin.
+                    </p>
+                  </div>
+                  <Link href="/admin/agent-settings" className="w-full">
+                    <Button
+                      variant="destructive"
+                      className="w-full font-black text-xs shadow-lg shadow-destructive/20"
+                    >
+                      AGENT&apos;I AKTİF ET
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Distribution Graphics */}
+          <Card className="lg:col-span-2 bg-card/40 border-primary/10 shadow-xl overflow-hidden relative group">
+            <div className="absolute -top-12 -right-12 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-700">
+              <PieChart className="w-64 h-64" />
+            </div>
+            <CardHeader>
+              <CardTitle className="text-lg font-black flex items-center gap-2 uppercase tracking-tight">
+                <TrendingUp className="h-5 w-5 text-purple-500" />
+                İçerik Dağılım Analizi
               </CardTitle>
-              <FileText className="h-4 w-4 text-primary" />
+              <CardDescription className="text-[11px] font-bold uppercase opacity-60">
+                Kategorilere göre otonom veri dağılımı
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboardStats?.metrics.totalArticles || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Sistemdeki tüm haberler
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 backdrop-blur border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Toplam Görüntülenme
-              </CardTitle>
-              <Eye className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboardStats?.metrics.totalViews.toLocaleString("tr-TR") ||
-                  0}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Tüm haberler toplamı
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 backdrop-blur border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Bugün Eklenen
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboardStats?.metrics.todayArticles || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">Son 24 saatte</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 backdrop-blur border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Yayında</CardTitle>
-              <Activity className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboardStats?.metrics.publishedArticles || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">Aktif haberler</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/50 backdrop-blur border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Taslak</CardTitle>
-              <Clock className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboardStats?.metrics.draftArticles || 0}
-              </div>
-              <p className="text-xs text-muted-foreground">Bekleyen haberler</p>
+              {dashboardStats?.charts.categoryDistribution ? (
+                <DashboardDonutChart
+                  data={dashboardStats.charts.categoryDistribution}
+                  title="Kategori Dağılımı"
+                />
+              ) : (
+                <div className="h-64 flex items-center justify-center italic text-muted-foreground font-bold uppercase tracking-widest text-xs opacity-50">
+                  Analiz ediliyor...
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
+        {/* Secondary Info Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Category Stats Table */}
-          <Card className="col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Kategori İstatistikleri
-              </CardTitle>
-              <CardDescription>Her kategoride kaç haber var?</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Kategori</TableHead>
-                      <TableHead className="text-right">Haber</TableHead>
-                      <TableHead className="text-right">Görüntülenme</TableHead>
-                      <TableHead className="text-right">Son Haber</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dashboardStats?.categoryStats &&
-                    dashboardStats.categoryStats.length > 0 ? (
-                      dashboardStats.categoryStats.map((cat) => (
-                        <TableRow key={cat.id}>
-                          <TableCell className="font-medium">
-                            {cat.name}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {cat.articleCount}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {cat.totalViews.toLocaleString("tr-TR")}
-                          </TableCell>
-                          <TableCell className="text-right text-xs text-muted-foreground">
-                            {cat.lastArticleDate
-                              ? new Date(
-                                  cat.lastArticleDate,
-                                ).toLocaleDateString("tr-TR")
-                              : "Yok"}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={4}
-                          className="text-center text-muted-foreground"
-                        >
-                          Henüz kategori verisi yok.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Recent Articles */}
-          <Card className="col-span-1">
-            <CardHeader>
-              <CardTitle>Son Haberler</CardTitle>
-              <CardDescription>Sisteme eklenen son 5 haber</CardDescription>
+          <Card className="border-primary/5 bg-card/20">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-black uppercase tracking-tight">
+                  Son Haberler
+                </CardTitle>
+                <CardDescription className="text-[10px] font-bold uppercase opacity-50 text-sky-600">
+                  En yeni 5 içerik
+                </CardDescription>
+              </div>
+              <Link href="/admin/articles">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="font-black text-[10px] hover:bg-primary/10 hover:text-primary"
+                >
+                  TÜMÜNÜ YÖNET
+                </Button>
+              </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {dashboardStats?.recentArticles &&
                 dashboardStats.recentArticles.length > 0 ? (
                   dashboardStats.recentArticles.map((article) => (
                     <div
                       key={article.id}
-                      className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                      className="group flex items-start justify-between p-3 border-b border-primary/5 last:border-0 hover:bg-primary/5 rounded-xl transition-all duration-300"
                     >
                       <div className="flex-1 min-w-0 pr-4">
-                        <h4 className="font-medium text-sm line-clamp-1 mb-1">
+                        <h4 className="font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">
                           {article.title}
                         </h4>
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <Badge variant="outline" className="text-xs">
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
+                          <Badge
+                            variant="outline"
+                            className="font-black text-[9px] h-4 px-1.5 border-primary/20 text-primary/80 uppercase"
+                          >
                             {article.category.name}
                           </Badge>
-                          <span>•</span>
-                          <span>
+                          <span className="opacity-30">•</span>
+                          <span className="font-bold">
                             {new Date(article.createdAt).toLocaleDateString(
                               "tr-TR",
                             )}
                           </span>
-                          <span>•</span>
+                          <span className="opacity-30">•</span>
                           <span className="flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            {article.views}
+                            <Eye className="w-3 h-3" /> {article.views}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Badge
-                          variant={
-                            article.status === "PUBLISHED"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className="text-xs"
-                        >
-                          {article.status === "PUBLISHED"
-                            ? "Yayında"
-                            : "Taslak"}
-                        </Badge>
-                        <Link href={`/admin/articles/${article.id}/edit`}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                      <Link href={`/admin/articles/${article.id}/edit`}>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => deleteArticle(article.id)}
+                          className="h-9 w-9 rounded-2xl opacity-50 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary transition-all"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Edit className="h-4 w-4" />
                         </Button>
-                      </div>
+                      </Link>
                     </div>
                   ))
                 ) : (
-                  <p className="text-center text-muted-foreground py-4">
-                    Henüz haber yok.
-                  </p>
+                  <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-40 italic">
+                    <FileText className="w-8 h-8 mb-2" />
+                    <p className="font-bold text-xs uppercase">
+                      Haber Bulunmuyor
+                    </p>
+                  </div>
                 )}
               </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Last 7 Days Chart */}
-          <Card className="col-span-1">
+          {/* Operation History */}
+          <Card className="border-primary/5 bg-card/20">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Son 7 Gün
+              <CardTitle className="text-base font-black uppercase tracking-tight">
+                Operasyon Günlüğü
               </CardTitle>
-              <CardDescription>Günlük eklenen haber sayısı</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {dashboardStats?.charts.last7Days &&
-                dashboardStats.charts.last7Days.length > 0 ? (
-                  dashboardStats.charts.last7Days.map((day, index) => (
-                    <div key={index} className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{day.label}</span>
-                        <span className="text-muted-foreground">
-                          {day.count} haber
-                        </span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${maxChartValue > 0 ? (day.count / maxChartValue) * 100 : 0}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Henüz veri yok.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Category Distribution Pie Chart */}
-          <Card className="col-span-1">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <PieChart className="h-5 w-5" />
-                Kategori Dağılımı
-              </CardTitle>
-              <CardDescription>Haber dağılımı yüzdeleri</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {dashboardStats?.charts.categoryDistribution &&
-                dashboardStats.charts.categoryDistribution.length > 0 ? (
-                  dashboardStats.charts.categoryDistribution
-                    .filter((cat) => cat.value > 0)
-                    .map((cat, index) => (
-                      <div key={index} className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium">{cat.name}</span>
-                          <span className="text-muted-foreground">
-                            {cat.value} haber (%{cat.percentage})
-                          </span>
-                        </div>
-                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full transition-all duration-500"
-                            style={{
-                              width: `${cat.percentage}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Henüz kategori verisi yok.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Agent Stats Section */}
-        <Card className="bg-gradient-to-br from-primary/10 to-purple-500/10 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Agent İstatistikleri
-            </CardTitle>
-            <CardDescription>
-              Otonom agent performans metrikleri
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center p-4 bg-card/50 rounded-lg">
-                <div className="text-2xl font-bold">
-                  {agentStats?.agent.totalExecutions || 0}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Toplam Çalıştırma
-                </div>
-              </div>
-              <div className="text-center p-4 bg-card/50 rounded-lg">
-                <div className="text-2xl font-bold">
-                  {agentStats?.agent.totalArticles || 0}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Oluşturulan Haber
-                </div>
-              </div>
-              <div className="text-center p-4 bg-card/50 rounded-lg">
-                <div className="text-2xl font-bold">
-                  %{agentStats?.agent.successRate || 0}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Başarı Oranı
-                </div>
-              </div>
-              <div className="text-center p-4 bg-card/50 rounded-lg">
-                <div className="text-2xl font-bold">
-                  {agentStats?.queue.delayed || 0}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Planlanan Görev
-                </div>
-                {agentStats?.upcomingJobs &&
-                  agentStats.upcomingJobs.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-primary/10 flex flex-col items-center">
-                      <span className="text-[10px] uppercase font-semibold text-primary mb-1">
-                        SIRADAKİ GÖREV
-                      </span>
-                      <CountdownTimer
-                        targetTimestamp={
-                          agentStats.upcomingJobs[0].scheduledFor
-                        }
-                        onComplete={() => fetchAllStats()}
-                        className="text-primary scale-90"
-                      />
-                    </div>
-                  )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Agent Category Distribution */}
-          <Card className="col-span-1">
-            <CardHeader>
-              <CardTitle>Agent Kategori Dağılımı</CardTitle>
-              <CardDescription>
-                Agent tarafından oluşturulan haberler
+              <CardDescription className="text-[10px] font-bold uppercase opacity-50 text-purple-600">
+                Ghostwriter performans geçmişi
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {agentStats?.categoryStats &&
-                agentStats.categoryStats.length > 0 ? (
-                  agentStats.categoryStats.map((cat, index) => (
-                    <div key={index} className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{cat.name}</span>
-                        <span className="text-muted-foreground">
-                          {cat.count} haber
-                        </span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary/80 rounded-full transition-all duration-500"
-                          style={{
-                            width: `${(cat.count / maxCategoryCount) * 100}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Henüz kategori verisi yok.
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Execution History */}
-          <Card className="col-span-1">
-            <CardHeader>
-              <CardTitle>Son Operasyonlar</CardTitle>
-              <CardDescription>Son 5 Ghostwriter görevi</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {agentStats?.history.map((execution) => (
                   <div
                     key={execution.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 border rounded-lg gap-2"
+                    className="flex items-center justify-between p-3 bg-secondary/30 rounded-2xl border border-primary/5 hover:border-primary/20 transition-all group"
                   >
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">
-                        {new Date(execution.executionTime).toLocaleString(
-                          "tr-TR",
-                        )}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {execution.articlesCreated} haber oluşturuldu (
-                        {execution.articlesScraped} tarandı)
-                      </p>
-                    </div>
-                    <div className="self-end sm:self-auto">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          execution.status === "SUCCESS"
-                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                            : execution.status === "FAILED"
-                              ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                              : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                        }`}
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${execution.status === "SUCCESS" ? "bg-green-500/10 text-green-500" : "bg-destructive/10 text-destructive"}`}
                       >
-                        {execution.status === "SUCCESS"
-                          ? "BAŞARILI"
-                          : execution.status === "FAILED"
-                            ? "BAŞARISIZ"
-                            : "KISMİ"}
-                      </span>
+                        <Activity className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-black text-xs text-foreground/80 group-hover:text-foreground transition-colors">
+                          {new Date(execution.executionTime).toLocaleString(
+                            "tr-TR",
+                          )}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground uppercase font-black">
+                          {execution.articlesCreated} Haber Oluşturuldu •{" "}
+                          {execution.duration || 0} Saniye
+                        </p>
+                      </div>
                     </div>
+                    <Badge
+                      variant={
+                        execution.status === "SUCCESS"
+                          ? "default"
+                          : execution.status === "FAILED"
+                            ? "destructive"
+                            : "secondary"
+                      }
+                      className="font-black text-[9px] px-2 h-5 rounded-full"
+                    >
+                      {execution.status === "SUCCESS" ? "OK" : "ERR"}
+                    </Badge>
                   </div>
                 ))}
-
                 {(!agentStats?.history || agentStats.history.length === 0) && (
-                  <p className="text-center text-muted-foreground py-4">
-                    Henüz işlem yok.
-                  </p>
+                  <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-40 italic">
+                    <Clock className="w-8 h-8 mb-2" />
+                    <p className="font-bold text-xs uppercase">
+                      İşlem Kaydı Boş
+                    </p>
+                  </div>
                 )}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Real-time Logs - Embedded */}
-        <Card className="bg-zinc-950 border-zinc-800">
-          <CardHeader>
+        {/* Real-time Logs - Terminal Style */}
+        <Card className="bg-[#09090b] border-white/10 shadow-2xl rounded-[2.5rem] overflow-hidden group">
+          <CardHeader className="border-b border-white/5 bg-white/5 py-4 px-8">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Terminal className="h-5 w-5 text-green-500" />
-                <CardTitle className="text-zinc-100">Agent Terminali</CardTitle>
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                  <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                </div>
+                <div className="h-4 w-[1px] bg-white/10 mx-2" />
+                <Terminal className="h-4 w-4 text-primary" />
+                <CardTitle className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">
+                  {isAgentEnabled
+                    ? "GHOSTWRITER_SYSTEM_MONITOR"
+                    : "SYSTEM_OFFLINE"}
+                </CardTitle>
               </div>
               {executing && (
-                <div className="flex items-center gap-2 text-green-500 text-sm animate-pulse">
-                  <div className="w-2 h-2 bg-green-500 rounded-full" />
-                  CANLI
+                <div className="flex items-center gap-2 text-green-400 text-[10px] font-black bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping" />
+                  REAL-TIME STREAMING
                 </div>
               )}
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="font-mono text-sm h-64 overflow-y-auto space-y-1 pr-2">
+          <CardContent className="p-0">
+            <div className="font-mono text-[11px] h-72 overflow-y-auto p-6 space-y-2 custom-scrollbar bg-[radial-gradient(circle_at_50%_-20%,rgba(59,130,246,0.05),transparent)]">
               {logs.length === 0 && !executing ? (
-                <p className="text-zinc-500 italic">
-                  Terminal hazır. Komut bekleniyor...
-                </p>
+                <div className="flex flex-col items-center justify-center h-full text-zinc-700 gap-3 grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-50 transition-all duration-700">
+                  <Terminal className="h-10 w-10" />
+                  <p className="font-black uppercase tracking-tighter text-xs">
+                    Terminal Standby Mode
+                  </p>
+                </div>
               ) : (
                 logs.map((log, index) => (
-                  <div key={index} className="flex gap-2">
-                    <span className="text-zinc-600 shrink-0">
+                  <div
+                    key={index}
+                    className="flex gap-4 animate-in fade-in duration-300"
+                  >
+                    <span className="text-zinc-600 shrink-0 font-bold opacity-50">
                       [{new Date(log.timestamp).toLocaleTimeString("tr-TR")}]
                     </span>
                     <span
@@ -806,11 +576,11 @@ export default function AdminDashboard() {
                         log.type === "error"
                           ? "text-red-400"
                           : log.type === "success"
-                            ? "text-green-400 font-semibold"
+                            ? "text-primary font-bold"
                             : log.type === "progress"
-                              ? "text-blue-400"
-                              : "text-zinc-300"
-                      }`}
+                              ? "text-sky-400"
+                              : "text-zinc-400"
+                      } leading-relaxed`}
                     >
                       {log.message}
                     </span>
@@ -818,8 +588,8 @@ export default function AdminDashboard() {
                 ))
               )}
               {executing && (
-                <div className="flex items-center gap-2 text-green-500/50">
-                  <span>_</span>
+                <div className="text-primary animate-pulse font-black px-4">
+                  _
                 </div>
               )}
               <div ref={logsEndRef} />

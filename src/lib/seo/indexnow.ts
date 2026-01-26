@@ -53,7 +53,7 @@ export async function getOrCreateIndexNowKey(): Promise<string> {
 export async function submitUrlToIndexNow(url: string): Promise<boolean> {
   try {
     const apiKey = await getOrCreateIndexNowKey();
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
     const host = new URL(baseUrl).hostname;
 
     const payload: IndexNowSubmission = {
@@ -105,7 +105,7 @@ export async function submitUrlsToIndexNow(urls: string[]): Promise<boolean> {
 
   try {
     const apiKey = await getOrCreateIndexNowKey();
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
     const host = new URL(baseUrl).hostname;
 
     // 10,000 URL limit
@@ -158,7 +158,7 @@ export async function submitUrlsToIndexNow(urls: string[]): Promise<boolean> {
 export async function submitArticleToIndexNow(
   articleSlug: string,
 ): Promise<boolean> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
   const articleUrl = `${baseUrl}/news/${articleSlug}`;
   return submitUrlToIndexNow(articleUrl);
 }
@@ -180,7 +180,7 @@ export async function submitAllArticlesToIndexNow(): Promise<{
       select: { slug: true },
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
     const urls = articles.map((article) => `${baseUrl}/news/${article.slug}`);
 
     const success = await submitUrlsToIndexNow(urls);

@@ -7,14 +7,16 @@ echo "🚀 IndexNow initialization başlatılıyor..."
 echo ""
 
 # Next.js sunucusunun çalıştığından emin ol
-if ! curl -s http://localhost:3000/api/health > /dev/null 2>&1; then
-    echo "❌ Hata: Next.js sunucusu çalışmıyor!"
+PORT=${APP_PORT:-3001}
+if ! curl -s http://localhost:$PORT/api/health > /dev/null 2>&1; then
+    echo "❌ Hata: Next.js sunucusu çalışmıyor (Port: $PORT)!"
     echo "Önce 'npm start' ile sunucuyu başlatın."
     exit 1
 fi
 
 # API endpoint'i çağır
-response=$(curl -s http://localhost:3000/api/seo/init-indexnow)
+echo "📡 http://localhost:$PORT/api/seo/init-indexnow çağrılıyor..."
+response=$(curl -s http://localhost:$PORT/api/seo/init-indexnow)
 
 # Response'u parse et ve göster
 echo "$response" | node -e "

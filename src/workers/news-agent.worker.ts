@@ -45,7 +45,14 @@ const worker = new Worker(
       }
 
       // Schedule next execution
-      if (process.env.AGENT_ENABLED !== "false") {
+      const enabledSetting = await db.setting.findUnique({
+        where: { key: "agent.enabled" },
+      });
+      const isEnabled = enabledSetting
+        ? enabledSetting.value !== "false"
+        : true;
+
+      if (isEnabled) {
         const nextExecution = await scheduleNewsAgentJob();
         if (nextExecution) {
           console.log(
@@ -56,6 +63,10 @@ const worker = new Worker(
             "\n⚠️  Could not schedule next execution (Queue not available)",
           );
         }
+      } else {
+        console.log(
+          "\n⏸️  Agent is disabled in settings, skipping re-scheduling.",
+        );
       }
 
       return result;
@@ -102,8 +113,24 @@ process.on("SIGINT", async () => {
   process.exit(0);
 });
 
-console.log("✅ News Agent Worker is running");
-console.log("   Waiting for jobs...\n");
+// Initial scheduling check on startup
+async function initStartupCheck() {
+  try {
+    const enabledSetting = await db.setting.findUnique({
+      where: { key: "agent.enabled" },
+    });
+    const isEnabled = enabledSetting ? enabledSetting.value !== "false" : true;
+
+    if (isEnabled) {
+      console.log("🔍 Checking for scheduled jobs...");
+      await scheduleNewsAgentJob();
+    }
+  } catch (err) {
+    console.error("❌ Startup check failed:", err);
+  }
+}
+
+initStartupCheck();
 
 // Keep the process running
 process.stdin.resume();

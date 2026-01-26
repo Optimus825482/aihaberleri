@@ -181,14 +181,8 @@ export async function PUT(request: Request) {
 
     // Calculate next run time if enabled
     if (validatedSettings.enabled) {
-      const nextRun = new Date();
-      nextRun.setHours(nextRun.getHours() + validatedSettings.intervalHours);
-
-      await db.setting.upsert({
-        where: { key: "agent.nextRun" },
-        update: { value: nextRun.toISOString() },
-        create: { key: "agent.nextRun", value: nextRun.toISOString() },
-      });
+      const { scheduleNewsAgentJob } = await import("@/lib/queue");
+      await scheduleNewsAgentJob();
     }
 
     return NextResponse.json({

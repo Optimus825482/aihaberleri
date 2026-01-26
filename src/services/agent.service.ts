@@ -226,15 +226,21 @@ export async function getAgentHistory(limit: number = 10) {
  * Get agent statistics
  */
 export async function getAgentStats() {
-  const [totalExecutions, successfulExecutions, totalArticles, lastExecution] =
-    await Promise.all([
-      db.agentLog.count(),
-      db.agentLog.count({ where: { status: "SUCCESS" } }),
-      db.article.count({ where: { agentLogId: { not: null } } }),
-      db.agentLog.findFirst({
-        orderBy: { executionTime: "desc" },
-      }),
-    ]);
+  const [
+    totalExecutions,
+    successfulExecutions,
+    totalArticles,
+    lastExecution,
+    enabledSetting,
+  ] = await Promise.all([
+    db.agentLog.count(),
+    db.agentLog.count({ where: { status: "SUCCESS" } }),
+    db.article.count({ where: { agentLogId: { not: null } } }),
+    db.agentLog.findFirst({
+      orderBy: { executionTime: "desc" },
+    }),
+    db.setting.findUnique({ where: { key: "agent.enabled" } }),
+  ]);
 
   const successRate =
     totalExecutions > 0
@@ -248,6 +254,7 @@ export async function getAgentStats() {
     successRate,
     lastExecution: lastExecution?.executionTime || null,
     lastStatus: lastExecution?.status || null,
+    enabled: enabledSetting?.value !== "false",
   };
 }
 
