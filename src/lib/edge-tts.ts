@@ -26,15 +26,19 @@ export async function generateSpeech(options: TTSOptions): Promise<Buffer> {
       volume = "+0%",
     } = options;
 
-    const ws = new WebSocket(EDGE_WS_URL, {
-      headers: {
-        Pragma: "no-cache",
-        "Cache-Control": "no-cache",
-        Origin: "chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold",
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41",
+    const ws = new WebSocket(
+      "wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4",
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0",
+          "Accept-Encoding": "gzip, deflate, br",
+          "Accept-Language": "en-US,en;q=0.9",
+          Pragma: "no-cache",
+          "Cache-Control": "no-cache",
+        },
       },
-    });
+    );
 
     const audioChunks: Buffer[] = [];
     const requestId = uuidv4().replace(/-/g, "");
@@ -76,29 +80,41 @@ export async function generateSpeech(options: TTSOptions): Promise<Buffer> {
     });
 
     ws.on("message", (data: Buffer | string, isBinary) => {
-      if (!isBinary) {
-        const textData = data.toString();
-        // Check for end of turn
-        if (textData.includes("turn.end")) {
+      if (typeof data === "string") {
+        if (data.includes("turn.end")) {
           ws.close();
         }
       } else if (data instanceof Buffer) {
-        // Find the start of the audio data (skip headers)
-        // Usually headers are separated by 0x00 0x80 (for binary)
-        // Simple heuristic: look for "Path:audio" in header
-        const headerEnd = data.indexOf("\r\n\r\n") + 4;
-        if (headerEnd > 4) {
-          const audioPart = data.slice(headerEnd);
-          audioChunks.push(audioPart);
+        // Search for the binary marker which separates header from audio
+        // The header contains text like "Path:audio\r\n"
+        // We look for the sequence 0x00 0x80 (if binary) or just the end of text headers
+        const headerEnd = data.indexOf("Path:audio\r\n") + 12;
+        if (headerEnd > 11) {
+          // Skip any other headers or binary markers usually following Path:audio
+          // A robust way used in python libs is finding the first byte of binary payload
+          // For now, let's just append the whole buffer if we can't parse perfectly,
+          // but better strip text headers
+          // Finding the double CRLF might be better
+          const doubleCRLF = data.indexOf("\r\n\r\n");
+          if (doubleCRLF !== -1) {
+            const audioData = data.slice(doubleCRLF + 4);
+            audioChunks.push(audioData);
+          }
         }
       }
     });
 
     ws.on("close", () => {
-      resolve(Buffer.concat(audioChunks));
+      if (audioChunks.length > 0) {
+        resolve(Buffer.concat(audioChunks));
+      } else {
+        reject(new Error("No audio received"));
+      }
     });
 
     ws.on("error", (err) => {
+      // 403 often emits an error here
+      console.error("Link failed:", err);
       reject(err);
     });
   });

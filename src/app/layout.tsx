@@ -11,6 +11,7 @@ import {
   GoogleTagManager,
   GoogleTagManagerNoScript,
 } from "@/components/GoogleTagManager";
+import { SiteHeader } from "@/components/site-header";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -134,6 +135,7 @@ export default function RootLayout({
           <GoogleTagManagerNoScript />
           <GoogleAnalytics />
           <GoogleTagManager />
+          <SiteHeader />
           {children}
           <ClientProviders />
           <ServiceWorkerRegistration />
