@@ -1,25 +1,30 @@
-# Production-optimized Dockerfile (Debian Slim for Stability)
+# Production-optimized Dockerfile (King Mode)
 
 # Stage 1: Dependencies
-FROM node:20-slim AS deps
-RUN apt-get update && apt-get install -y openssl ca-certificates libc6
+FROM node:20.18-slim AS deps
+# Install essentials for Prisma and Sharp
+RUN apt-get update && apt-get install -y openssl ca-certificates libc6 curl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
+
+# Memory & Network Optimization for NPM
+ENV NPM_CONFIG_LOGLEVEL=warn
+ENV NPM_CONFIG_PROGRESS=false
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
 
 # Copy package files
 COPY package.json package-lock.json* ./
-# Install dependencies (Force development mode to ensure devDependencies are installed)
-ENV NODE_ENV=development
-# Install ALL dependencies
-RUN npm ci
+
+# Install ALL dependencies (including devDeps for build)
+# Use legacy-peer-deps if needed, and optimize for low RAM
+RUN npm ci --network-timeout=100000 --prefer-offline
 
 # Stage 2: Builder
-FROM node:20-slim AS builder
+FROM node:20.18-slim AS builder
 WORKDIR /app
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
-# Install OpenSSL
-RUN apt-get update && apt-get install -y openssl
-
-# Copy dependencies
+# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -29,13 +34,17 @@ RUN npx prisma generate
 # Build Next.js
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-# Mandatory for Next.js 15+ build
 ENV NODE_ENV=production
+# Dummy DB URL for build time
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
+# Set Node memory limit for build process
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 RUN npm run build
 
 # Stage 3: Runner
-FROM node:20-slim AS runner
+FROM node:20.18-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -50,25 +59,25 @@ RUN apt-get update && apt-get install -y openssl curl ca-certificates && rm -rf 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy built application
+# Copy built application (Standalone mode)
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 
-# Copy scripts and necessary node_modules for runtime scripts
+# Copy scripts and necessary node_modules for runtime scripts (Agent worker etc)
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+
+# If you use tsx for background workers, ensure they have access to necessary deps
+# Note: Next.js standalone bundles almost everything, but custom scripts might need more.
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/esbuild ./node_modules/esbuild
+# Optional: if scripts need other node_modules, you might need to copy more or use a separate worker container
 
 USER nextjs
 
 EXPOSE 3000
-
-# Health check (Disabled temporarily to prevent loop)
-# HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-#   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 CMD ["node", "server.js"]
