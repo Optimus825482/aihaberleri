@@ -8,6 +8,21 @@ import { db } from "@/lib/db";
 
 export async function SiteHeader() {
   let categories: any[] = [];
+
+  // Skip database queries during build if SKIP_ENV_VALIDATION is set
+  if (process.env.SKIP_ENV_VALIDATION === "1") {
+    return (
+      <header className="bg-background sticky top-0 z-40 w-full border-b shadow-sm">
+        <div className="container flex h-16 items-center space-x-4 sm:justify-between sm:space-x-0">
+          <MainNav items={siteConfig.mainNav} categories={[]} />
+          <div className="flex flex-1 items-center justify-end space-x-4">
+            <ThemeToggle />
+          </div>
+        </div>
+      </header>
+    );
+  }
+
   try {
     categories = await db.category.findMany({
       orderBy: { order: "asc" },

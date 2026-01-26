@@ -37,17 +37,10 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
 
   // Clean text for API
   const cleanText = (html: string) => {
-    if (typeof document === "undefined") return html;
-    const tmp = document.createElement("DIV");
-    tmp.innerHTML = html;
-    // Remove scripts and styles
-    const scripts = tmp.getElementsByTagName("script");
-    let i = scripts.length;
-    while (i--) scripts[i].parentNode?.removeChild(scripts[i]);
-    const styles = tmp.getElementsByTagName("style");
-    let j = styles.length;
-    while (j--) styles[j].parentNode?.removeChild(styles[j]);
-    return tmp.textContent || tmp.innerText || "";
+    // Remove all HTML tags and trim
+    const tagless = html.replace(/<[^>]*>/g, " ");
+    // Convert entities or just return
+    return tagless.replace(/\s+/g, " ").trim();
   };
 
   const plainText = `${title}. ${cleanText(text)}`;

@@ -64,11 +64,18 @@ export async function generateSpeech(options: TTSOptions): Promise<Buffer> {
       );
 
       // Send synthesis request (SSML)
+      const escapedText = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&apos;");
+
       const ssml = `
         <speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='tr-TR'>
           <voice name='${voice}'>
             <prosody rate='${rate}' pitch='${pitch}' volume='${volume}'>
-              ${text}
+              ${escapedText}
             </prosody>
           </voice>
         </speak>
