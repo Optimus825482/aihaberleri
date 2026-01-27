@@ -84,6 +84,7 @@ export async function callDeepSeek(
 
 /**
  * Analyze news articles and select the best ones
+ * ENHANCED: AI relevance check to filter out non-AI news
  */
 export async function analyzeNewsArticles(
   articles: Array<{
@@ -93,7 +94,9 @@ export async function analyzeNewsArticles(
     publishedDate?: string;
   }>,
 ): Promise<Array<{ index: number; reason: string; category: string }>> {
-  const prompt = `Sen bir yapay zeka haber editörüsün. Bu yapay zeka ile ilgili haberleri analiz et ve yayınlanmak üzere en ilginç ve alakalı 2-3 tanesini seç.
+  const prompt = `Sen bir yapay zeka haber editörüsün. Bu haberleri analiz et ve SADECE YAPAY ZEKA İLE DOĞRUDAN İLGİLİ olanları seç.
+
+**ÖNEMLİ: YAPAY ZEKA İLE İLGİLİ OLMAYAN HABERLERİ ASLA SEÇME!**
 
 Haberler (0-tabanlı index kullan):
 ${articles
@@ -107,27 +110,66 @@ URL: ${article.url}
   )
   .join("\n")}
 
+### YAPAY ZEKA İLE İLGİLİ HABER KRİTERLERİ:
+
+✅ **KABUL EDİLEN KONULAR:**
+- AI modelleri (GPT, Claude, Gemini, LLaMA, vb.)
+- Machine Learning / Deep Learning
+- Natural Language Processing (NLP)
+- Computer Vision
+- Robotik ve otonom sistemler
+- AI araçları ve uygulamaları
+- AI şirketleri (OpenAI, Anthropic, Google AI, vb.)
+- AI etiği ve düzenlemeleri
+- AI araştırmaları ve breakthrough'lar
+- AI ile ilgili teknolojik gelişmeler
+
+❌ **REDDEDİLEN KONULAR:**
+- Genel ekonomi haberleri (sanayiciler, piyasalar, enflasyon)
+- Genel teknoloji haberleri (AI ile ilgisi yoksa)
+- Politika haberleri (AI ile ilgisi yoksa)
+- Spor haberleri
+- Magazin haberleri
+- Genel iş dünyası haberleri
+- Sadece "dijital" veya "teknoloji" kelimesi geçen ama AI ile ilgisi olmayan haberler
+
+### ÖRNEKLER:
+
+✅ İYİ: "OpenAI GPT-5 Modelini Tanıttı"
+✅ İYİ: "Google'ın Yeni AI Asistanı Gemini 2.0"
+✅ İYİ: "Yapay Zeka Etiği Konusunda Yeni Düzenlemeler"
+✅ İYİ: "Tesla'nın Otonom Sürüş Sistemi Güncellendi"
+
+❌ KÖTÜ: "Sanayiciler 2026'ya Karamsar Bakıyor"
+❌ KÖTÜ: "Borsa İstanbul'da Yükseliş Devam Ediyor"
+❌ KÖTÜ: "Yeni iPhone Modeli Tanıtıldı" (AI özelliği yoksa)
+❌ KÖTÜ: "Elektrik Fiyatlarına Zam Geldi"
+
 Şu formatta bir JSON dizisi ile yanıt ver (index alanı 0-tabanlı olmalı):
 [
   {
     "index": 0,
-    "reason": "Bu haberin neden ilginç olduğu",
-    "category": "Şunlardan biri: Makine Öğrenmesi, Doğal Dil İşleme, Bilgisayarlı Görü, Robotik, Yapay Zeka Etiği, Yapay Zeka Araçları, Sektör Haberleri, Araştırma"
+    "reason": "Bu haberin neden ilginç olduğu VE yapay zeka ile nasıl ilgili olduğu",
+    "category": "Şunlardan biri: Makine Öğrenmesi, Doğal Dil İşleme, Bilgisayarlı Görü, Robotik, Yapay Zeka Etiği, Yapay Zeka Araçları, Sektör Haberleri, Araştırma",
+    "aiRelevance": 95
   }
 ]
 
 Şu özelliklere sahip 2-3 haber seç:
-1. En haber değeri taşıyan ve ilginç olanlar
-2. Güncel ve alakalı olanlar
-3. Konularda çeşitlilik (tekrar eden konulardan kaçın)
-4. Genel yapay zeka ile ilgilenen kitle için uygun olanlar`;
+1. **MUTLAKA yapay zeka ile DOĞRUDAN ilgili olmalı** (aiRelevance >= 70)
+2. En haber değeri taşıyan ve ilginç olanlar
+3. Güncel ve alakalı olanlar
+4. Konularda çeşitlilik (tekrar eden konulardan kaçın)
+5. Genel yapay zeka ile ilgilenen kitle için uygun olanlar
+
+**EĞER HİÇBİR HABER YAPAY ZEKA İLE İLGİLİ DEĞİLSE, BOŞ DİZİ DÖNDÜR: []**`;
 
   const response = await callDeepSeek(
     [
       {
         role: "system",
         content:
-          "Sen uzman bir yapay zeka haber editörüsün. Her zaman sadece geçerli JSON ile yanıt ver.",
+          "Sen uzman bir yapay zeka haber editörüsün. SADECE yapay zeka ile DOĞRUDAN ilgili haberleri seç. Genel ekonomi, politika veya teknoloji haberlerini ASLA seçme. Her zaman sadece geçerli JSON ile yanıt ver.",
       },
       {
         role: "user",
@@ -145,7 +187,25 @@ URL: ${article.url}
     throw new Error("Failed to parse DeepSeek response");
   }
 
-  return JSON.parse(jsonMatch[0]);
+  const results = JSON.parse(jsonMatch[0]);
+
+  // Filter by AI relevance score (must be >= 70)
+  const filtered = results.filter((item: any) => {
+    const relevance = item.aiRelevance || 0;
+    if (relevance < 70) {
+      console.log(
+        `🗑️ AI relevance too low (${relevance}%): ${articles[item.index]?.title}`,
+      );
+      return false;
+    }
+    return true;
+  });
+
+  console.log(
+    `✅ ${filtered.length}/${results.length} haber AI relevance kontrolünden geçti`,
+  );
+
+  return filtered;
 }
 
 /**
