@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useAudio } from "@/context/AudioContext";
 import {
   Play,
   Pause,
-  RotateCcw,
   Volume2,
   VolumeX,
   Loader2,
@@ -26,147 +25,31 @@ interface AudioPlayerProps {
 }
 
 export function AudioPlayer({ text, title }: AudioPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [playbackRate, setPlaybackRate] = useState(1.0);
-  const [volume, setVolume] = useState(1.0);
-  const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const {
+    isPlaying,
+    isLoading,
+    currentTime,
+    duration,
+    rate,
+    volume,
+    isMuted,
+    play,
+    pause,
+    togglePlay,
+    setRate,
+    setVolume,
+    setIsMuted,
+    seek,
+    download,
+    title: currentTitle
+  } = useAudio();
 
-  // Clean text for API
-  const cleanText = (html: string) => {
-    // Remove all HTML tags and trim
-    const tagless = html.replace(/<[^>]*>/g, " ");
-    // Convert entities or just return
-    return tagless.replace(/\s+/g, " ").trim();
-  };
-
-  useEffect(() => {
-    return () => {
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
-    };
-  }, [audioUrl]);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.playbackRate = playbackRate;
-    audio.volume = isMuted ? 0 : volume;
-
-    const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => setDuration(audio.duration);
-    const onEnded = () => setIsPlaying(false);
-    const onWaiting = () => setIsLoading(true);
-    const onPlaying = () => setIsLoading(false);
-
-    audio.addEventListener("timeupdate", updateTime);
-    audio.addEventListener("loadedmetadata", updateDuration);
-    audio.addEventListener("ended", onEnded);
-    audio.addEventListener("waiting", onWaiting);
-    audio.addEventListener("playing", onPlaying);
-    audio.addEventListener("canplay", onPlaying);
-
-    return () => {
-      audio.removeEventListener("timeupdate", updateTime);
-      audio.removeEventListener("loadedmetadata", updateDuration);
-      audio.removeEventListener("ended", onEnded);
-      audio.removeEventListener("waiting", onWaiting);
-      audio.removeEventListener("playing", onPlaying);
-      audio.removeEventListener("canplay", onPlaying);
-    };
-  }, [playbackRate, volume, isMuted]);
-
-  const fetchAudioBlob = async () => {
-    try {
-      setIsLoading(true);
-      const tagless = cleanText(text);
-      const fullText = `${title}. ${tagless}`;
-
-      const response = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: fullText, voice: "tr-TR-AhmetNeural" }),
-      });
-
-      if (!response.ok) throw new Error("TTS Request Failed");
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      setAudioUrl(url);
-      return url;
-    } catch (error) {
-      console.error("Audio fetch error:", error);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const togglePlay = async () => {
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
+  const handleToggle = () => {
+    if (currentTitle !== title) {
+      play({ title, text });
     } else {
-      let currentSrc = audioUrl;
-
-      if (!currentSrc) {
-        currentSrc = await fetchAudioBlob();
-      }
-
-      if (currentSrc && audioRef.current) {
-        // Only load if src changed
-        if (
-          audioRef.current.src !== window.location.origin + currentSrc &&
-          !audioUrl
-        ) {
-          audioRef.current.src = currentSrc;
-        }
-
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => setIsPlaying(true))
-            .catch((error) => {
-              console.error("Playback failed:", error);
-              setIsPlaying(false);
-            });
-        }
-      }
+      togglePlay();
     }
-  };
-
-  const handleSeek = (value: number[]) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = value[0];
-      setCurrentTime(value[0]);
-    }
-  };
-
-  const handleVolumeChange = (value: number[]) => {
-    setVolume(value[0]);
-    if (audioRef.current) {
-      audioRef.current.volume = value[0];
-    }
-    if (value[0] > 0) setIsMuted(false);
-  };
-
-  const handleDownload = async () => {
-    let url = audioUrl;
-    if (!url) url = await fetchAudioBlob();
-    if (!url) return;
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${title.slice(0, 30)}.mp3`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const formatTime = (time: number) => {
@@ -178,22 +61,20 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
 
   return (
     <div className="bg-card rounded-xl p-4 shadow-sm border border-primary/10">
-      <audio ref={audioRef} preload="none" />
-
       {/* Top Controls: Play/Pause, Title, Rate */}
       <div className="flex items-center justify-between gap-4 mb-4">
         <button
-          onClick={togglePlay}
+          onClick={handleToggle}
           className={`flex items-center justify-center w-12 h-12 rounded-full transition-all shadow-lg ${
-            isPlaying
+            isPlaying && currentTitle === title
               ? "bg-primary text-primary-foreground hover:scale-105"
               : "bg-primary/10 text-primary hover:bg-primary/20"
           }`}
-          aria-label={isPlaying ? "Duraklat" : "Oynat"}
+          aria-label={isPlaying && currentTitle === title ? "Duraklat" : "Oynat"}
         >
-          {isLoading ? (
+          {isLoading && currentTitle === title ? (
             <Loader2 className="w-6 h-6 animate-spin" />
-          ) : isPlaying ? (
+          ) : isPlaying && currentTitle === title ? (
             <Pause className="w-6 h-6 fill-current" />
           ) : (
             <Play className="w-6 h-6 fill-current ml-1" />
@@ -205,7 +86,7 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
             <span className="text-[10px] font-black uppercase tracking-wider text-primary/60">
               YAPAY ZEKA SPİKERİ
             </span>
-            {isPlaying && (
+            {isPlaying && currentTitle === title && (
               <span className="flex items-center gap-1 text-[10px] font-bold text-green-500 animate-pulse">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full" /> CANLI
               </span>
@@ -217,8 +98,8 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
         <div className="flex items-center gap-2">
           {/* Speed Selector */}
           <Select
-            value={playbackRate.toString()}
-            onValueChange={(v) => setPlaybackRate(parseFloat(v))}
+            value={rate.toString()}
+            onValueChange={(v) => setRate(parseFloat(v))}
           >
             <SelectTrigger className="h-8 w-[70px] text-xs font-bold bg-secondary/50 border-0">
               <SelectValue />
@@ -237,31 +118,32 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
             size="icon"
             variant="ghost"
             className="h-8 w-8 rounded-full"
-            onClick={handleDownload}
+            onClick={download}
             title="İndir"
+            disabled={currentTitle !== title}
           >
             <Download className="w-4 h-4 text-muted-foreground" />
           </Button>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="space-y-2">
+      {/* Progress Bar (Only show for current article) */}
+      <div className={`space-y-2 ${currentTitle === title ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
         <Slider
-          value={[currentTime]}
-          max={duration || 100}
+          value={[currentTitle === title ? currentTime : 0]}
+          max={currentTitle === title ? duration || 100 : 100}
           step={1}
-          onValueChange={handleSeek}
+          onValueChange={(val) => seek(val[0])}
           className="cursor-pointer"
         />
         <div className="flex justify-between text-xs text-muted-foreground font-medium px-1">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
+          <span>{formatTime(currentTitle === title ? currentTime : 0)}</span>
+          <span>{formatTime(currentTitle === title ? duration : 0)}</span>
         </div>
       </div>
 
       {/* Volume Control (Desktop Only) */}
-      <div className="hidden sm:flex items-center gap-2 mt-4 px-2">
+      <div className={`hidden sm:flex items-center gap-2 mt-4 px-2 ${currentTitle === title ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
         <button
           onClick={() => setIsMuted(!isMuted)}
           className="text-muted-foreground hover:text-foreground"
@@ -276,7 +158,7 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
           value={[isMuted ? 0 : volume]}
           max={1}
           step={0.1}
-          onValueChange={handleVolumeChange}
+          onValueChange={(val) => setVolume(val[0])}
           className="w-24"
         />
       </div>

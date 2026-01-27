@@ -12,6 +12,7 @@ import {
   GoogleTagManagerNoScript,
 } from "@/components/GoogleTagManager";
 import { SiteHeader } from "@/components/site-header";
+import { AudioProvider } from "@/context/AudioContext";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -132,14 +133,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <GoogleTagManagerNoScript />
-          <GoogleAnalytics />
-          <GoogleTagManager />
-          <SiteHeader />
-          {children}
-          <ClientProviders />
-          <ServiceWorkerRegistration />
-          <TailwindIndicator />
+          <AudioProvider>
+            <GoogleTagManagerNoScript />
+            <GoogleAnalytics />
+            <GoogleTagManager />
+            <SiteHeader />
+            {children}
+            <ClientProviders />
+            <ServiceWorkerRegistration />
+            <TailwindIndicator />
+          </AudioProvider>
         </ThemeProvider>
       </body>
     </html>
