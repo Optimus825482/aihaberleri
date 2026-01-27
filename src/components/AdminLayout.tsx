@@ -18,6 +18,7 @@ import {
   Share2,
   Search,
   Bot,
+  BarChart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -30,6 +31,11 @@ const menuItems = [
     title: "Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Okuyucu Analitiği",
+    href: "/admin/analytics",
+    icon: BarChart,
   },
   {
     title: "Haber Tarama",
