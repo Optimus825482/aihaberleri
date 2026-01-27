@@ -133,10 +133,22 @@ export async function Footer() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
                 >
-                  {socialIcons[social.platform]}
+                  {socialIcons[social.platform.toLowerCase()] || socialIcons.twitter}
                   <span className="text-sm capitalize">{social.platform}</span>
                 </a>
               ))}
+              {/* Fallback/Static Twitter Link if not in DB (Migrated from Navbar) */}
+              {!socialMedia.some(s => s.platform.toLowerCase() === 'twitter') && (
+                 <a
+                  href="https://twitter.com/aihaberleri"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <Twitter className="h-5 w-5" />
+                  <span className="text-sm capitalize">Twitter</span>
+                </a>
+              )}
             </div>
           </div>
         </div>

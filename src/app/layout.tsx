@@ -12,6 +12,7 @@ import {
   GoogleTagManagerNoScript,
 } from "@/components/GoogleTagManager";
 import { SiteHeader } from "@/components/site-header";
+import { Footer } from "@/components/Footer";
 import { AudioProvider } from "@/context/AudioContext";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
@@ -50,15 +51,11 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: [
-      { url: "/icons/Icon-16.png", sizes: "16x16", type: "image/png" },
-      { url: "/icons/Icon-32.png", sizes: "32x32", type: "image/png" },
-      { url: "/icons/Icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/Icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/logos/brand/ai-logo-dark.png", type: "image/png" },
     ],
     apple: [
       {
-        url: "/icons/Icon-180.png",
-        sizes: "180x180",
+        url: "/logos/brand/ai-logo-dark.png",
         type: "image/png",
       },
     ],
@@ -139,6 +136,7 @@ export default function RootLayout({
             <GoogleTagManager />
             <SiteHeader />
             {children}
+            <Footer />
             <ClientProviders />
             <ServiceWorkerRegistration />
             <TailwindIndicator />

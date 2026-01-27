@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { Footer } from "@/components/Footer";
 import { ShareButtons } from "@/components/ShareButtons";
 import { formatDate, calculateReadingTime } from "@/lib/utils";
 import { Clock, Eye, Calendar } from "lucide-react";
@@ -351,7 +350,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         )}
       </main>
 
-      <Footer />
       <AudioPromo />
     </div>
   );

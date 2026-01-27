@@ -1,5 +1,3 @@
-import { Footer } from "@/components/Footer";
-
 export const metadata = {
   title: "Hakkımızda | AI Haberleri",
   description:
@@ -308,8 +306,6 @@ export default function AboutPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

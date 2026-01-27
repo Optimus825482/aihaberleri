@@ -10,7 +10,7 @@ export const siteConfig = {
       href: "/",
     },
     {
-      title: "Haberler",
+      title: "Son Haberler",
       href: "/news",
     },
     {

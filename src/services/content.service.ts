@@ -13,6 +13,7 @@ import { db } from "@/lib/db";
 import type { NewsArticle } from "./news.service";
 import { fetchArticleContent } from "./news.service";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
+import { postTweet } from "@/lib/social/twitter";
 
 export interface ProcessedArticle {
   title: string;
@@ -41,19 +42,31 @@ export async function selectBestArticles(
 
   if (articles.length === 0) return [];
 
+  // Filter out duplicates BEFORE AI analysis to save tokens and avoid duplicate processing
+  const uniqueArticles: NewsArticle[] = [];
+  for (const article of articles) {
+    if (!(await isDuplicate(article))) {
+      uniqueArticles.push(article);
+    } else {
+      console.log(`🗑️ Duplicate skipped: ${article.title}`);
+    }
+  }
+
+  if (uniqueArticles.length === 0) {
+    console.log("⚠️ All articles were duplicates.");
+    return [];
+  }
+
   try {
-    // Analyze only the top 15-20 articles to stay within token limits
-    const analysis = await analyzeNewsArticles(articles.slice(0, 20));
+    // Analyze only the top 15-20 unique articles
+    const analysis = await analyzeNewsArticles(uniqueArticles.slice(0, 20));
 
     const selected = analysis
       .slice(0, targetCount)
       .map((item) => {
-        // analyzeNewsArticles returns 1-indexed or 0-indexed?
-        // Based on its prompt, it's 0-indexed if we follow JSON standard,
-        // but let's be safe and check both.
         const index = item.index;
         return {
-          article: articles[index],
+          article: uniqueArticles[index], // Use uniqueArticles array
           category: item.category,
         };
       })
@@ -66,8 +79,8 @@ export async function selectBestArticles(
     return selected;
   } catch (error) {
     console.error("Haber analiz hatası, fallback uygulanıyor:", error);
-    // Fallback: Take the first few and assign a default category
-    return articles.slice(0, targetCount).map((a) => ({
+    // Fallback: Take the first few unique ones
+    return uniqueArticles.slice(0, targetCount).map((a) => ({
       article: a,
       category: "Yapay Zeka",
     }));
@@ -248,6 +261,18 @@ export async function publishArticle(
       );
     } catch (e) {
       console.error("Failed to trigger IndexNow submission:", e);
+    }
+
+    // Post to Twitter (Async)
+    try {
+      postTweet({
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        categoryName: category.name,
+      }).catch(err => console.error("Async tweet failed:", err));
+    } catch (e) {
+      console.error("Failed to trigger Twitter post:", e);
     }
 
     return {

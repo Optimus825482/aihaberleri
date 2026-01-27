@@ -44,38 +44,26 @@ export function Logo({
     setMounted(true);
   }, []);
 
-  // Theme'i belirle
-  const currentTheme = mounted
-    ? theme === "system"
-      ? systemTheme
-      : theme
-    : "light";
-  const isDark = currentTheme === "dark";
-
   // Icon boyutu
   const iconSize = iconSizeMap[size];
   const textSize = textSizeMap[size];
 
-  // Logo source
-  let logoSrc = "/logos/brand/logo-icon.png";
-  if (variant === "secondary") {
-    logoSrc = "/logos/brand/logo-secondary.png";
-  } else {
-    logoSrc = isDark
-      ? "/logos/brand/ai-logo-white.png"
-      : "/logos/brand/ai-logo-dark.png";
-  }
+  // Logo source - Always use the main dark logo
+  // We will handle dark mode visibility using CSS filters
+  const logoSrc = "/logos/brand/ai-logo-dark.png";
 
   const logoContent = (
     <div className={`flex items-center gap-3 ${className}`}>
-      <Image
-        src={logoSrc}
-        alt="AI Haberleri Logo"
-        width={iconSize}
-        height={iconSize}
-        className="object-contain"
-        priority={priority}
-      />
+      <div className="relative">
+        <Image
+          src={logoSrc}
+          alt="AI Haberleri Logo"
+          width={iconSize}
+          height={iconSize}
+          className={`object-contain transition-all duration-300 dark:invert`} // Invert colors in dark mode
+          priority={priority}
+        />
+      </div>
       {showText && (
         <span
           className={`font-bold ${textSize} bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent`}

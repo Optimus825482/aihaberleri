@@ -23,64 +23,51 @@ interface Category {
 
 export function MainNav({
   items,
-  categories,
   children,
 }: {
   items?: NavItem[];
-  categories?: Category[];
   children?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false);
 
   return (
-    <div className="flex gap-6 md:gap-10">
-      <Logo className="hidden md:flex" size="md" showText={true} />
-      <Logo className="flex md:hidden" size="sm" showText={false} />
+    <div className="flex flex-1 items-center justify-between">
+      <div className="flex gap-6 md:gap-10 items-center">
+        <Logo className="hidden md:flex" size="md" showText={true} />
+        <Logo className="flex md:hidden" size="sm" showText={false} />
+      </div>
 
-      {/* Desktop Menu */}
-      <nav className="hidden md:flex gap-6">
-        {items?.map((item, index) => (
-          <Link
-            key={index}
-            href={item.disabled ? "#" : item.href}
-            className={cn(
-              "flex items-center text-sm font-medium transition-colors hover:text-primary",
-              pathname === item.href ? "text-primary" : "text-muted-foreground",
-              item.disabled && "cursor-not-allowed opacity-80",
-            )}
-          >
-            {item.title}
-          </Link>
-        ))}
-        {/* Dynamic Categories */}
-        {categories?.map((category) => (
-          <Link
-            key={category.id}
-            href={`/category/${category.slug}`}
-            className={cn(
-              "flex items-center text-sm font-medium transition-colors hover:text-primary",
-              pathname === `/category/${category.slug}`
-                ? "text-primary"
-                : "text-muted-foreground",
-            )}
-          >
-            {category.name}
-          </Link>
-        ))}
-      </nav>
+      <div className="flex items-center gap-6">
+        {/* Desktop Menu - Right Aligned */}
+        <nav className="hidden md:flex gap-6 items-center">
+          {items?.map((item, index) => (
+            <Link
+              key={index}
+              href={item.disabled ? "#" : item.href}
+              className={cn(
+                "flex items-center text-sm font-medium transition-colors hover:text-primary",
+                pathname === item.href ? "text-primary" : "text-muted-foreground",
+                item.disabled && "cursor-not-allowed opacity-80",
+              )}
+            >
+              {item.title}
+            </Link>
+          ))}
+        </nav>
 
-      <button
-        className="flex items-center space-x-2 md:hidden"
-        onClick={() => setShowMobileMenu(!showMobileMenu)}
-      >
-        {showMobileMenu ? (
-          <Icons.close className="h-6 w-6" />
-        ) : (
-          <Icons.menu className="h-6 w-6" />
-        )}
-        <span className="font-bold">Menü</span>
-      </button>
+        <button
+          className="flex items-center space-x-2 md:hidden"
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+        >
+          {showMobileMenu ? (
+            <Icons.close className="h-6 w-6" />
+          ) : (
+            <Icons.menu className="h-6 w-6" />
+          )}
+          <span className="font-bold">Menü</span>
+        </button>
+      </div>
 
       {showMobileMenu && items && (
         <div className="fixed inset-0 top-16 z-50 grid h-[calc(100vh-4rem)] grid-flow-row auto-rows-max overflow-auto p-6 pb-32 shadow-md animate-in slide-in-from-bottom-80 md:hidden bg-background">
@@ -97,17 +84,6 @@ export function MainNav({
                   onClick={() => setShowMobileMenu(false)}
                 >
                   {item.title}
-                </Link>
-              ))}
-              <div className="my-2 border-t" />
-              {categories?.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/category/${category.slug}`}
-                  className="flex w-full items-center rounded-md p-2 text-sm font-medium hover:underline"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  {category.name}
                 </Link>
               ))}
             </nav>

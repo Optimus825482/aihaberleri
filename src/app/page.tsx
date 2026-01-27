@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import { HeaderWrapper } from "@/components/HeaderWrapper";
-import { Footer } from "@/components/Footer";
 import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 
@@ -39,7 +38,6 @@ export default async function HomePage() {
             </div>
           </section>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -172,8 +170,6 @@ export default async function HomePage() {
           </section>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }
