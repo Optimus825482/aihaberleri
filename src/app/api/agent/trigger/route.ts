@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { executeNewsAgent } from "@/services/agent.service";
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
     // Check authentication
     const session = await auth();
@@ -24,6 +25,10 @@ export async function POST() {
         { status: 400 },
       );
     }
+
+    // Parse request body to check execution mode
+    const body = await request.json().catch(() => ({}));
+    const executeNow = body.executeNow === true;
 
     // Update last run time
     await db.setting.upsert({
@@ -48,12 +53,76 @@ export async function POST() {
       create: { key: "agent.nextRun", value: nextRun.toISOString() },
     });
 
+    // If executeNow is true, run agent directly (synchronous execution)
+    if (executeNow) {
+      console.log("🚀 Executing agent directly (manual trigger)...");
+
+      // Execute in background to avoid timeout
+      executeNewsAgent()
+        .then((result) => {
+          console.log("✅ Agent execution completed:", result);
+        })
+        .catch((error) => {
+          console.error("❌ Agent execution failed:", error);
+        });
+
+      return NextResponse.json({
+        success: true,
+        message: "Agent başlatıldı (arka planda çalışıyor)",
+        data: {
+          triggeredAt: new Date().toISOString(),
+          nextRun: nextRun.toISOString(),
+          executionMode: "direct",
+        },
+      });
+    }
+
+    // Try to add to queue if available
+    try {
+      const { newsAgentQueue } = await import("@/lib/queue");
+      if (newsAgentQueue) {
+        await newsAgentQueue.add(
+          "scrape-and-publish",
+          {},
+          {
+            priority: 1, // High priority for manual triggers
+            removeOnComplete: true,
+          },
+        );
+
+        return NextResponse.json({
+          success: true,
+          message: "Agent kuyruğa eklendi",
+          data: {
+            triggeredAt: new Date().toISOString(),
+            nextRun: nextRun.toISOString(),
+            executionMode: "queue",
+          },
+        });
+      }
+    } catch (queueError) {
+      console.warn("⚠️ Queue not available, executing directly:", queueError);
+    }
+
+    // Fallback: Execute directly if queue is not available
+    console.log("🚀 Queue not available, executing agent directly...");
+
+    // Execute in background
+    executeNewsAgent()
+      .then((result) => {
+        console.log("✅ Agent execution completed:", result);
+      })
+      .catch((error) => {
+        console.error("❌ Agent execution failed:", error);
+      });
+
     return NextResponse.json({
       success: true,
-      message: "Agent manuel olarak tetiklendi",
+      message: "Agent başlatıldı (arka planda çalışıyor)",
       data: {
         triggeredAt: new Date().toISOString(),
         nextRun: nextRun.toISOString(),
+        executionMode: "direct-fallback",
       },
     });
   } catch (error) {

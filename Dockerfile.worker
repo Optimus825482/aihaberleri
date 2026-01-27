@@ -1,0 +1,24 @@
+# Worker Dockerfile - Runs BullMQ worker for agent automation
+
+FROM node:20.18-slim AS base
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+
+# Install dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production --network-timeout=100000
+
+# Copy necessary files
+COPY prisma ./prisma
+COPY src ./src
+COPY tsconfig.json ./
+
+# Generate Prisma Client
+RUN npx prisma generate
+
+# Set environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Run worker
+CMD ["npx", "tsx", "src/workers/news-agent.worker.ts"]

@@ -15,6 +15,9 @@ import { SiteHeader } from "@/components/site-header";
 import { Footer } from "@/components/Footer";
 import { AudioProvider } from "@/context/AudioContext";
 
+// Initialize scheduler (in-process fallback if worker not available)
+import "@/lib/init-scheduler";
+
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const viewport: Viewport = {
@@ -50,9 +53,7 @@ export const metadata: Metadata = {
   ),
   manifest: "/manifest.json",
   icons: {
-    icon: [
-      { url: "/logos/brand/ai-logo-dark.png", type: "image/png" },
-    ],
+    icon: [{ url: "/logos/brand/ai-logo-dark.png", type: "image/png" }],
     apple: [
       {
         url: "/logos/brand/ai-logo-dark.png",

@@ -1,8 +1,7 @@
-// Prisma Schema for AI News Site
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
-  engineType = "library"
+  engineType    = "library"
 }
 
 datasource db {
@@ -10,29 +9,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model for admin authentication
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id        String    @id @default(cuid())
+  email     String    @unique
   password  String
   name      String?
-  role      Role     @default(ADMIN)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  articles Article[]
-  sessions Session[]
-  accounts Account[]
+  role      Role      @default(ADMIN)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  accounts  Account[]
+  articles  Article[]
+  sessions  Session[]
 
   @@index([email])
 }
 
-enum Role {
-  ADMIN
-  EDITOR
-}
-
-// NextAuth models
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -46,8 +37,7 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -68,7 +58,6 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-// Category model
 model Category {
   id          String    @id @default(cuid())
   name        String
@@ -77,50 +66,43 @@ model Category {
   order       Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
-  articles Article[]
+  articles    Article[]
 
   @@index([slug])
 }
 
-// Article model
 model Article {
-  id          String        @id @default(cuid())
-  title       String
-  slug        String        @unique
-  excerpt     String
-  content     String        @db.Text
-  imageUrl    String?
-  sourceUrl   String?
-  status      ArticleStatus @default(DRAFT)
-  views       Int           @default(0)
-  publishedAt DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
-
-  authorId String?
-  author   User?   @relation(fields: [authorId], references: [id])
-
-  agentLogId String?
-  agentLog   AgentLog? @relation(fields: [agentLogId], references: [id])
-
-  // SEO fields
+  id              String             @id @default(cuid())
+  title           String
+  slug            String             @unique
+  excerpt         String
+  content         String
+  imageUrl        String?
+  sourceUrl       String?
+  status          ArticleStatus      @default(DRAFT)
+  views           Int                @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  categoryId      String
+  authorId        String?
+  agentLogId      String?
   metaTitle       String?
   metaDescription String?
   keywords        String[]
-  score           Int           @default(0) // Quality score (0-1000)
-  indexNowStatus  IndexStatus   @default(PENDING)
+  indexNowStatus  IndexStatus        @default(PENDING)
   indexedAt       DateTime?
+  score           Int                @default(0)
+  agentLog        AgentLog?          @relation(fields: [agentLogId], references: [id])
+  author          User?              @relation(fields: [authorId], references: [id])
+  category        Category           @relation(fields: [categoryId], references: [id])
+  analytics       ArticleAnalytics[]
 
   @@index([slug])
   @@index([status, publishedAt])
   @@index([categoryId])
   @@index([publishedAt])
   @@index([indexNowStatus])
-  analytics       ArticleAnalytics[]
 }
 
 model ArticleAnalytics {
@@ -128,15 +110,87 @@ model ArticleAnalytics {
   articleId String
   ipAddress String
   userAgent String?
-  duration  Int      @default(0) // Duration in seconds
+  duration  Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@index([articleId])
   @@index([createdAt])
   @@index([ipAddress])
+}
+
+model AgentLog {
+  id              String      @id @default(cuid())
+  executionTime   DateTime    @default(now())
+  status          AgentStatus
+  articlesCreated Int         @default(0)
+  articlesScraped Int         @default(0)
+  duration        Int?
+  errors          String[]
+  metadata        Json?
+  articles        Article[]
+
+  @@index([executionTime])
+  @@index([status])
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  encrypted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+}
+
+model SocialMedia {
+  id        String   @id @default(cuid())
+  platform  String   @unique
+  url       String
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([platform])
+}
+
+model Newsletter {
+  id             String             @id @default(cuid())
+  email          String             @unique
+  status         SubscriptionStatus @default(ACTIVE)
+  token          String             @unique @default(cuid())
+  subscribedAt   DateTime           @default(now())
+  unsubscribedAt DateTime?
+  lastSentAt     DateTime?
+  frequency      EmailFrequency     @default(DAILY)
+  categories     String[]
+  source         String?
+  ipAddress      String?
+  userAgent      String?
+
+  @@index([email])
+  @@index([status])
+  @@index([token])
+}
+
+model PushSubscription {
+  id           String   @id @default(cuid())
+  endpoint     String   @unique
+  keys         Json
+  userAgent    String?
+  ipAddress    String?
+  subscribedAt DateTime @default(now())
+  lastUsedAt   DateTime @default(now())
+
+  @@index([endpoint])
+}
+
+enum Role {
+  ADMIN
+  EDITOR
 }
 
 enum IndexStatus {
@@ -151,76 +205,11 @@ enum ArticleStatus {
   ARCHIVED
 }
 
-// Agent execution log
-model AgentLog {
-  id               String    @id @default(cuid())
-  executionTime    DateTime  @default(now())
-  status           AgentStatus
-  articlesCreated  Int       @default(0)
-  articlesScraped  Int       @default(0)
-  duration         Int?      // in seconds
-  errors           String[]
-  metadata         Json?
-
-  articles Article[]
-
-  @@index([executionTime])
-  @@index([status])
-}
-
 enum AgentStatus {
   RUNNING
   SUCCESS
   FAILED
   PARTIAL
-}
-
-// Settings model for configuration
-model Setting {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  value     String   @db.Text
-  encrypted Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([key])
-}
-
-// Social media links model
-model SocialMedia {
-  id        String   @id @default(cuid())
-  platform  String   @unique // youtube, facebook, instagram, twitter
-  url       String
-  enabled   Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([platform])
-}
-
-// Newsletter subscription model
-model Newsletter {
-  id          String            @id @default(cuid())
-  email       String            @unique
-  status      SubscriptionStatus @default(ACTIVE)
-  token       String            @unique @default(cuid())
-  subscribedAt DateTime         @default(now())
-  unsubscribedAt DateTime?
-  lastSentAt  DateTime?
-  
-  // Preferences
-  frequency   EmailFrequency    @default(DAILY)
-  categories  String[]          // Category IDs user is interested in
-  
-  // Metadata
-  source      String?           // Where they subscribed from
-  ipAddress   String?
-  userAgent   String?
-  
-  @@index([email])
-  @@index([status])
-  @@index([token])
 }
 
 enum SubscriptionStatus {
@@ -231,21 +220,8 @@ enum SubscriptionStatus {
 }
 
 enum EmailFrequency {
-  REALTIME    // Immediate notifications
-  DAILY       // Daily digest
-  WEEKLY      // Weekly digest
-  MONTHLY     // Monthly digest
-}
-
-// Push notification subscription model
-model PushSubscription {
-  id          String   @id @default(cuid())
-  endpoint    String   @unique
-  keys        Json     // p256dh and auth keys
-  userAgent   String?
-  ipAddress   String?
-  subscribedAt DateTime @default(now())
-  lastUsedAt  DateTime @default(now())
-  
-  @@index([endpoint])
+  REALTIME
+  DAILY
+  WEEKLY
+  MONTHLY
 }

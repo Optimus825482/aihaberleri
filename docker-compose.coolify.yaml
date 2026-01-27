@@ -18,6 +18,59 @@ services:
     networks:
       - aihaberleri-network
 
+  # BullMQ Worker (Agent Automation)
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: aihaberleri-worker
+    environment:
+      # Database (Harici PostgreSQL container - internal URL kullan)
+      DATABASE_URL: ${DATABASE_URL}
+
+      # Redis (Local Redis container)
+      REDIS_URL: redis://redis:6379
+
+      # AI Services
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+
+      # Search APIs
+      BRAVE_API_KEY: ${BRAVE_API_KEY}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
+
+      # Email
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM:-info@aihaberleri.org}
+
+      # Site Config
+      NEXT_PUBLIC_SITE_URL: https://aihaberleri.org
+
+      # Agent Config
+      AGENT_ENABLED: ${AGENT_ENABLED:-true}
+      AGENT_MIN_ARTICLES_PER_RUN: ${AGENT_MIN_ARTICLES_PER_RUN:-3}
+      AGENT_MAX_ARTICLES_PER_RUN: ${AGENT_MAX_ARTICLES_PER_RUN:-5}
+
+      # Production
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: 1
+
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - aihaberleri-network
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "news-agent.worker"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
   # Next.js App (PostgreSQL harici container'da, Redis local)
   app:
     build:
