@@ -37,12 +37,17 @@ export default function ScanPage() {
   const [logs, setLogs] = useState<LogMessage[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [autoScroll, setAutoScroll] = useState(true);
   const logsEndRef = useRef<HTMLDivElement>(null);
+  const logsContainerRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
+  // Auto-scroll only when scanning and user hasn't manually scrolled up
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [logs]);
+    if (scanning && autoScroll && logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs, scanning, autoScroll]);
 
   useEffect(() => {
     fetchCategories();
@@ -75,6 +80,7 @@ export default function ScanPage() {
   const startScan = async () => {
     setScanning(true);
     setLogs([]);
+    setAutoScroll(true); // Re-enable auto-scroll when starting new scan
 
     try {
       // Kategori parametresi ile stream URL'i oluştur
@@ -193,7 +199,18 @@ export default function ScanPage() {
             <CardDescription>Gerçek zamanlı işlem logları</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="bg-slate-950 text-slate-50 p-4 rounded-lg min-h-[400px] max-h-[600px] overflow-y-auto font-mono text-sm">
+            <div
+              ref={logsContainerRef}
+              onScroll={(e) => {
+                // Detect if user manually scrolled up
+                const element = e.currentTarget;
+                const isAtBottom =
+                  element.scrollHeight - element.scrollTop <=
+                  element.clientHeight + 50;
+                setAutoScroll(isAtBottom);
+              }}
+              className="bg-slate-950 text-slate-50 p-4 rounded-lg min-h-[400px] max-h-[600px] overflow-y-auto font-mono text-sm"
+            >
               {logs.length === 0 && !scanning && (
                 <div className="text-slate-500 text-center py-20">
                   Tarama başlatmak için yukarıdaki butona tıklayın
