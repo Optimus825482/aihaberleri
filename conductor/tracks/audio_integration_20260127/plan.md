@@ -33,11 +33,11 @@
     - [x] Implement: Space for play/pause, M for mute, ARIA labels
 - [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md) 94fd13f
 
-## Phase 4: Optimization & Persistence
-- [~] Task: Progress Persistence
-    - [ ] Write Tests: LocalStorage sync tests
-    - [ ] Implement: Save playback position and settings to LocalStorage
-- [ ] Task: Mobile Optimization & Final Polish
-    - [ ] Write Tests: Mobile layout responsiveness tests
-    - [ ] Implement: Responsive design adjustments for small screens
-- [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
+## Phase 4: Optimization & Persistence [checkpoint: 01ca5be]
+- [x] Task: Progress Persistence 5af56a9
+    - [x] Write Tests: LocalStorage sync tests
+    - [x] Implement: Save playback position and settings to LocalStorage
+- [x] Task: Mobile Optimization & Final Polish 5af56a9
+    - [x] Write Tests: Mobile layout responsiveness tests
+    - [x] Implement: Responsive design adjustments for small screens
+- [x] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md) 01ca5be
