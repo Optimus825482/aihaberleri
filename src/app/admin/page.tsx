@@ -54,6 +54,7 @@ interface DashboardStats {
     createdAt: string;
     publishedAt: string | null;
     views: number;
+    score: number;
     category: {
       name: string;
       slug: string;
@@ -427,6 +428,18 @@ export default function AdminDashboard() {
                           >
                             {article.category.name}
                           </Badge>
+                          <span className="opacity-30">•</span>
+                          <span
+                            className={`font-black ${
+                              (article.score || 0) >= 800
+                                ? "text-green-600"
+                                : (article.score || 0) >= 500
+                                  ? "text-yellow-600"
+                                  : "text-red-600"
+                            }`}
+                          >
+                            {article.score || 0}
+                          </span>
                           <span className="opacity-30">•</span>
                           <span className="font-bold">
                             {new Date(article.createdAt).toLocaleDateString(

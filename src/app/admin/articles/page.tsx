@@ -20,6 +20,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, RefreshCw, Eye, Search, Plus } from "lucide-react";
 import Image from "next/image";
@@ -35,29 +42,48 @@ interface Article {
   publishedAt: string | null;
   category: {
     name: string;
+    slug: string;
   };
+  score: number;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
 }
 
 export default function ArticlesPage() {
   const router = useRouter();
   const [articles, setArticles] = useState<Article[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [refreshingImage, setRefreshingImage] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchArticles();
+    fetchData();
   }, []);
 
-  const fetchArticles = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch("/api/articles");
-      const data = await response.json();
-      if (data.success) {
-        setArticles(data.data);
+      const [articlesRes, categoriesRes] = await Promise.all([
+        fetch("/api/articles"),
+        fetch("/api/categories"),
+      ]);
+
+      const articlesData = await articlesRes.json();
+      const categoriesData = await categoriesRes.json();
+
+      if (articlesData.success) {
+        setArticles(articlesData.data);
+      }
+      if (categoriesData.success) {
+        setCategories(categoriesData.data);
       }
     } catch (error) {
-      console.error("Failed to fetch articles:", error);
+      console.error("Failed to fetch data:", error);
     } finally {
       setLoading(false);
     }
@@ -75,7 +101,7 @@ export default function ArticlesPage() {
 
       if (response.ok && data.success) {
         alert("Haber başarıyla silindi");
-        fetchArticles();
+        fetchData();
       } else {
         console.error("Silme hatası:", data);
         alert(`Haber silinemedi: ${data.error || "Bilinmeyen hata"}`);
@@ -95,7 +121,7 @@ export default function ArticlesPage() {
 
       if (response.ok) {
         alert("Görsel güncellendi");
-        fetchArticles();
+        fetchData();
       } else {
         alert("Görsel güncellenemedi");
       }
@@ -106,9 +132,14 @@ export default function ArticlesPage() {
     }
   };
 
-  const filteredArticles = articles.filter((article) =>
-    article.title.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filteredArticles = articles.filter((article) => {
+    const matchesSearch = article.title
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const matchesCategory =
+      categoryFilter === "all" || article.category.slug === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   if (loading) {
     return (
@@ -147,8 +178,24 @@ export default function ArticlesPage() {
                   Toplam {articles.length} haber
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <div className="relative flex-1 sm:flex-initial">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <Select
+                  value={categoryFilter}
+                  onValueChange={setCategoryFilter}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Kategori Seç" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm Kategoriler</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.slug}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="relative flex-1 sm:flex-initial w-full">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Haber ara..."
@@ -170,6 +217,7 @@ export default function ArticlesPage() {
                         <TableHead className="w-20">Görsel</TableHead>
                         <TableHead>Başlık</TableHead>
                         <TableHead>Kategori</TableHead>
+                        <TableHead>Skor</TableHead>
                         <TableHead>Durum</TableHead>
                         <TableHead className="text-right">
                           Görüntülenme
@@ -212,6 +260,24 @@ export default function ArticlesPage() {
                             <Badge variant="outline">
                               {article.category.name}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <span
+                                className={`font-bold ${
+                                  (article.score || 0) >= 800
+                                    ? "text-green-600"
+                                    : (article.score || 0) >= 500
+                                      ? "text-yellow-600"
+                                      : "text-red-600"
+                                }`}
+                              >
+                                {article.score || 0}
+                              </span>
+                              <span className="text-muted-foreground text-xs">
+                                /1000
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge

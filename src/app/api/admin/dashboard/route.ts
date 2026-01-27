@@ -106,6 +106,7 @@ export async function GET() {
           createdAt: true,
           publishedAt: true,
           views: true,
+          score: true,
           category: {
             select: {
               name: true,

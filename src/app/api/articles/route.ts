@@ -8,7 +8,16 @@ import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 export async function GET() {
   try {
     const articles = await db.article.findMany({
-      include: {
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        imageUrl: true,
+        status: true,
+        views: true,
+        publishedAt: true,
+        score: true,
         category: {
           select: {
             name: true,
