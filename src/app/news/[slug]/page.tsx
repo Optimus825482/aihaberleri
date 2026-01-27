@@ -17,6 +17,7 @@ import {
 import { AdUnit } from "@/components/AdUnit";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { AudioPromo } from "@/components/AudioPromo";
+import { HighlightedText } from "@/components/audio/HighlightedText";
 
 interface ArticlePageProps {
   params: Promise<{
@@ -193,7 +194,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
               {/* Content Implementation */}
               <div className="prose prose-lg dark:prose-invert max-w-none">
-                <div dangerouslySetInnerHTML={{ __html: firstPart }} />
+                <HighlightedText htmlContent={firstPart} articleTitle={article.title} />
 
                 {/* IN-CONTENT AD */}
                 <div className="my-8 py-4 bg-muted/10 border-y border-muted flex flex-col items-center">
@@ -207,7 +208,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   </p>
                 </div>
 
-                <div dangerouslySetInnerHTML={{ __html: secondPart }} />
+                <HighlightedText htmlContent={secondPart} articleTitle={article.title} />
               </div>
 
               {/* Tags */}

@@ -6,7 +6,10 @@ import { AudioProvider, useAudio } from '../AudioContext';
 global.fetch = jest.fn(() =>
   Promise.resolve({
     ok: true,
-    blob: () => Promise.resolve(new Blob(['audio'], { type: 'audio/mpeg' })),
+    json: () => Promise.resolve({
+      audio: Buffer.from('audio').toString('base64'),
+      metadata: [{ text: 'Test', start: 0, duration: 1 }]
+    }),
   })
 ) as jest.Mock;
 

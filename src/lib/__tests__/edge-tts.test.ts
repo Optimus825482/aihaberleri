@@ -13,7 +13,7 @@ describe('edge-tts', () => {
     jest.clearAllMocks();
   });
 
-  it('should generate speech successfully', async () => {
+  it('should generate speech and metadata successfully', async () => {
     const mockStdout = {
       on: jest.fn((event, callback) => {
         if (event === 'data') {
@@ -22,7 +22,12 @@ describe('edge-tts', () => {
       }),
     };
     const mockStderr = {
-      on: jest.fn(),
+      on: jest.fn((event, callback) => {
+        if (event === 'data') {
+          // Send metadata in one chunk, no newlines to be safe
+          callback(Buffer.from('METADATA_START[{"text":"mock","start":0,"duration":1}]METADATA_END'));
+        }
+      }),
     };
     const mockStdin = {
       write: jest.fn(),
@@ -43,12 +48,10 @@ describe('edge-tts', () => {
     mockSpawn.mockReturnValue(mockChildProcess);
 
     const result = await generateSpeech({ text: 'Hello' });
-    expect(result).toBeInstanceOf(Buffer);
-    expect(result.toString()).toBe('audio data');
-    expect(mockSpawn).toHaveBeenCalledWith(
-      expect.stringMatching(/python/),
-      expect.arrayContaining([expect.stringContaining('tts_engine.py'), 'tr-TR-AhmetNeural'])
-    );
+    expect(result.audio).toBeInstanceOf(Buffer);
+    expect(result.audio.toString()).toBe('audio data');
+    expect(result.metadata).toHaveLength(1);
+    expect(result.metadata[0].text).toBe('mock');
   });
 
   it('should handle python errors', async () => {

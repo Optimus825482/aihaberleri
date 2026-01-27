@@ -1,55 +1,70 @@
 import { spawn } from "child_process";
 import path from "path";
 
+interface WordBoundary {
+  text: string;
+  start: number;
+  duration: number;
+}
+
+interface TTSResponse {
+  audio: Buffer;
+  metadata: WordBoundary[];
+}
+
 interface TTSOptions {
   text: string;
-  voice?: string; // e.g. "tr-TR-AhmetNeural"
-  rate?: string; // e.g. "+0%", "-10%"
-  pitch?: string; // e.g. "+0Hz"
-  volume?: string; // e.g. "+0%"
+  voice?: string;
 }
 
 /**
  * Microsoft Edge TTS Service (via Python edge-tts)
  * Uses the official python library for better reliability
  */
-export async function generateSpeech(options: TTSOptions): Promise<Buffer> {
+export async function generateSpeech(options: TTSOptions): Promise<TTSResponse> {
   const { text, voice = "tr-TR-AhmetNeural" } = options;
-  // Note: rate, pitch, volume are currently ignored in this implementation
-  // but can be added to the python script if needed.
 
   return new Promise((resolve, reject) => {
     const pythonScript = path.join(process.cwd(), "src", "lib", "tts_engine.py");
-    
-    // Check if python is available, otherwise might need 'python3' on some systems
-    // On Windows 'python' is usually correct.
     const pythonCommand = process.platform === "win32" ? "python" : "python3";
     
     const pythonProcess = spawn(pythonCommand, [pythonScript, voice]);
     
-    const chunks: Buffer[] = [];
+    const audioChunks: Buffer[] = [];
     const errorChunks: Buffer[] = [];
+    let fullStderr = "";
 
     pythonProcess.stdout.on("data", (chunk) => {
-      chunks.push(chunk);
+      audioChunks.push(chunk);
     });
 
     pythonProcess.stderr.on("data", (chunk) => {
-      errorChunks.push(chunk);
+      fullStderr += chunk.toString();
     });
 
     pythonProcess.on("close", (code) => {
-      if (code !== 0) {
-        const errorMessage = Buffer.concat(errorChunks).toString();
-        // Log the full error for debugging
-        console.error(`TTS Python Error: ${errorMessage}`);
-        reject(new Error(`TTS failed with code ${code}: ${errorMessage}`));
+      if (code !== 0 && !fullStderr.includes("METADATA_START")) {
+        console.error(`TTS Python Error: ${fullStderr}`);
+        reject(new Error(`TTS failed with code ${code}: ${fullStderr}`));
       } else {
-        const buffer = Buffer.concat(chunks);
-        if (buffer.length === 0) {
+        const audio = Buffer.concat(audioChunks);
+        if (audio.length === 0) {
            reject(new Error("TTS produced no audio output"));
         } else {
-           resolve(buffer);
+           let metadata: WordBoundary[] = [];
+           try {
+             if (fullStderr.includes("METADATA_START") && fullStderr.includes("METADATA_END")) {
+               const start = fullStderr.indexOf("METADATA_START") + "METADATA_START".length;
+               const end = fullStderr.indexOf("METADATA_END");
+               const jsonStr = fullStderr.slice(start, end).trim();
+               if (jsonStr) {
+                 metadata = JSON.parse(jsonStr);
+               }
+             }
+           } catch (e) {
+             console.error("Failed to parse TTS metadata:", e);
+           }
+           resolve({ audio, metadata });
         }
       }
     });
@@ -58,7 +73,6 @@ export async function generateSpeech(options: TTSOptions): Promise<Buffer> {
       reject(new Error(`Failed to spawn python process: ${err.message}`));
     });
 
-    // Write text to stdin to avoid command line length limits
     pythonProcess.stdin.write(text);
     pythonProcess.stdin.end();
   });

@@ -2,6 +2,12 @@
 
 import React, { createContext, useContext, useState, ReactNode, useRef, useEffect } from 'react';
 
+interface WordBoundary {
+  text: string;
+  start: number;
+  duration: number;
+}
+
 type AudioState = {
   isPlaying: boolean;
   isLoading: boolean;
@@ -14,6 +20,8 @@ type AudioState = {
   volume: number;
   isMuted: boolean;
   audioUrl: string | null;
+  metadata: WordBoundary[];
+  currentWordIndex: number;
 };
 
 type AudioContextType = AudioState & {
@@ -42,11 +50,12 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
     volume: 1,
     isMuted: false,
     audioUrl: null,
+    metadata: [],
+    currentWordIndex: -1,
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Clean text helper
   const cleanText = (html: string) => {
     return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   };
@@ -64,9 +73,19 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
 
       if (!response.ok) throw new Error("TTS Request Failed");
 
-      const blob = await response.blob();
+      const data = await response.json();
+      
+      // Convert base64 to blob
+      const byteCharacters = atob(data.audio);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "audio/mpeg" });
+      
       const url = URL.createObjectURL(blob);
-      return url;
+      return { url, metadata: data.metadata };
     } catch (error) {
       console.error("Audio fetch error:", error);
       return null;
@@ -77,19 +96,21 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
 
   const play = async (article?: { title: string; text: string }) => {
     if (article) {
-      // If new article, stop current and fetch
       if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
-      const url = await fetchAudio(article.text, article.title);
-      if (url) {
+      const result = await fetchAudio(article.text, article.title);
+      if (result) {
         setState(s => ({ 
           ...s, 
-          audioUrl: url, 
+          audioUrl: result.url, 
+          metadata: result.metadata,
           title: article.title, 
           text: article.text,
-          isPlaying: true 
+          isPlaying: true,
+          currentWordIndex: -1
         }));
         if (audioRef.current) {
-          audioRef.current.src = url;
+          audioRef.current.src = result.url;
+          audioRef.current.playbackRate = state.rate;
           audioRef.current.play();
         }
       }
@@ -115,7 +136,7 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
-      setState(s => ({ ...s, isPlaying: false, currentTime: 0 }));
+      setState(s => ({ ...s, isPlaying: false, currentTime: 0, currentWordIndex: -1 }));
     }
   };
 
@@ -158,9 +179,30 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
     const audio = new Audio();
     audioRef.current = audio;
 
-    const handleTimeUpdate = () => setState(s => ({ ...s, currentTime: audio.currentTime }));
+    const handleTimeUpdate = () => {
+      const time = audio.currentTime;
+      
+      // Update current word index based on time and metadata
+      // Since we added the title at the beginning, we need to be careful with indexing
+      // but metadata from edge-tts usually matches the text exactly as sent.
+      setState(s => {
+        let newWordIndex = -1;
+        if (s.metadata.length > 0) {
+          // Binary search for efficiency if needed, but linear is fine for < 1000 words
+          for (let i = 0; i < s.metadata.length; i++) {
+            if (time >= s.metadata[i].start) {
+              newWordIndex = i;
+            } else {
+              break;
+            }
+          }
+        }
+        return { ...s, currentTime: time, currentWordIndex: newWordIndex };
+      });
+    };
+
     const handleDurationChange = () => setState(s => ({ ...s, duration: audio.duration }));
-    const handleEnded = () => setState(s => ({ ...s, isPlaying: false }));
+    const handleEnded = () => setState(s => ({ ...s, isPlaying: false, currentWordIndex: -1 }));
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('durationchange', handleDurationChange);
@@ -187,7 +229,6 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
       setIsMuted,
       seek,
       download,
-      setIsLoading: (isLoading) => setState(s => ({ ...s, isLoading }))
     }}>
       {children}
     </AudioContext.Provider>
