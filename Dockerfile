@@ -11,9 +11,9 @@ ENV NODE_ENV=development
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install ALL dependencies
-# Using npm install instead of ci as a fallback for lockfile consistency across OS
-RUN npm install --network-timeout=100000
+# Install ALL dependencies (including devDependencies) for build
+# Using npm ci for reliable, exact versions based on lockfile
+RUN npm ci --include=dev --network-timeout=100000
 
 # Stage 2: Builder
 FROM node:20.18-slim AS builder
@@ -38,8 +38,8 @@ ENV REDIS_URL="redis://localhost:6379"
 ENV NEXTAUTH_SECRET="dummy-secret-for-build"
 ENV NEXTAUTH_URL="http://localhost:3000"
 
-# Set Node memory limit for build process
-ENV NODE_OPTIONS="--max-old-space-size=4096"
+# Set Node memory limit for build process (Adjusted to 2GB for stability on smaller VPS)
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 # Run build
 RUN npm run build
