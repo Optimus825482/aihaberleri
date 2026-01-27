@@ -52,7 +52,7 @@ export async function callDeepSeek(
     const response = await axios.post<DeepSeekResponse>(
       `${DEEPSEEK_API_URL}/chat/completions`,
       {
-        model: options.model || "deepseek-reasoner",
+        model: options.model || "deepseek-chat",
         messages,
         temperature: options.temperature || 0.7,
         max_tokens: options.maxTokens || 2000,
@@ -292,7 +292,7 @@ JSON formatında yanıt ver:
       },
     ],
     {
-      model: "deepseek-reasoner",
+      model: "deepseek-chat",
       maxTokens: 4000,
       temperature: 1.0, // Maximum creativity/randomness for burstiness
     },
