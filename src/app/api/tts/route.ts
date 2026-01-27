@@ -1,40 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateSpeech } from "@/lib/edge-tts";
 
-export async function GET(req: NextRequest) {
-  const searchParams = req.nextUrl.searchParams;
-  const text = searchParams.get("text");
-  const voice = searchParams.get("voice") || "tr-TR-AhmetNeural";
-
-  if (!text) {
-    return NextResponse.json({ error: "Text is required" }, { status: 400 });
-  }
-
-  const cleanText = text.replace(/<[^>]*>/g, "").slice(0, 3000);
-  console.log(
-    `[TTS] Request received: "${cleanText.slice(0, 50)}..." (${cleanText.length} chars)`,
-  );
-
+export async function POST(req: NextRequest) {
   try {
+    const { text, voice = "tr-TR-AhmetNeural" } = await req.json();
+
+    if (!text) {
+      return NextResponse.json({ error: "Text is required" }, { status: 400 });
+    }
+
+    // High limit for POST
+    const cleanText = text.replace(/<[^>]*>/g, "").slice(0, 4000);
+    console.log(`[TTS POST] Processing ${cleanText.length} chars...`);
+
     const audioBuffer = await generateSpeech({
       text: cleanText,
       voice,
     });
 
-    console.log(`[TTS] Success: Generated ${audioBuffer.length} bytes`);
+    console.log(`[TTS POST] Success: ${audioBuffer.length} bytes`);
 
     return new Response(audioBuffer as any, {
       headers: {
         "Content-Type": "audio/mpeg",
         "Content-Length": audioBuffer.length.toString(),
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (error: any) {
+    console.error(`[TTS POST] Error:`, error.message || error);
+    return NextResponse.json(
+      { error: "Synthesis failed", details: error.message },
+      { status: 500 },
+    );
+  }
+}
+
+export async function GET(req: NextRequest) {
+  // Legacy short text support
+  const searchParams = req.nextUrl.searchParams;
+  const text = searchParams.get("text");
+
+  if (!text || text.length > 300) {
+    return NextResponse.json(
+      { error: "Please use POST for long texts" },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const audioBuffer = await generateSpeech({ text });
+    return new Response(audioBuffer as any, {
+      headers: {
+        "Content-Type": "audio/mpeg",
         "Cache-Control": "public, max-age=86400",
       },
     });
   } catch (error: any) {
-    console.error(`[TTS] Critical Error:`, error.message || error);
-    return NextResponse.json(
-      { error: "Failed to generate speech", details: error.message },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

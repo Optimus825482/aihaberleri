@@ -34,6 +34,7 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
   const [volume, setVolume] = useState(1.0);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   // Clean text for API
   const cleanText = (html: string) => {
@@ -43,9 +44,11 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
     return tagless.replace(/\s+/g, " ").trim();
   };
 
-  const tagless = cleanText(text);
-  const plainText = `${title}. ${tagless}`.slice(0, 1500); // URL length safety
-  const audioSrc = `/api/tts?text=${encodeURIComponent(plainText)}&voice=tr-TR-AhmetNeural`;
+  useEffect(() => {
+    return () => {
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+    };
+  }, [audioUrl]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -58,42 +61,82 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
     const updateDuration = () => setDuration(audio.duration);
     const onEnded = () => setIsPlaying(false);
     const onWaiting = () => setIsLoading(true);
-    const onCanPlay = () => setIsLoading(false);
+    const onPlaying = () => setIsLoading(false);
 
     audio.addEventListener("timeupdate", updateTime);
     audio.addEventListener("loadedmetadata", updateDuration);
     audio.addEventListener("ended", onEnded);
     audio.addEventListener("waiting", onWaiting);
-    audio.addEventListener("canplay", onCanPlay);
-    audio.addEventListener("playing", onCanPlay);
+    audio.addEventListener("playing", onPlaying);
+    audio.addEventListener("canplay", onPlaying);
 
     return () => {
       audio.removeEventListener("timeupdate", updateTime);
       audio.removeEventListener("loadedmetadata", updateDuration);
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("waiting", onWaiting);
-      audio.removeEventListener("canplay", onCanPlay);
-      audio.removeEventListener("playing", onCanPlay);
+      audio.removeEventListener("playing", onPlaying);
+      audio.removeEventListener("canplay", onPlaying);
     };
   }, [playbackRate, volume, isMuted]);
 
-  const togglePlay = () => {
+  const fetchAudioBlob = async () => {
+    try {
+      setIsLoading(true);
+      const tagless = cleanText(text);
+      const fullText = `${title}. ${tagless}`;
+
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: fullText, voice: "tr-TR-AhmetNeural" }),
+      });
+
+      if (!response.ok) throw new Error("TTS Request Failed");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      setAudioUrl(url);
+      return url;
+    } catch (error) {
+      console.error("Audio fetch error:", error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const togglePlay = async () => {
     if (!audioRef.current) return;
 
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            setIsPlaying(true);
-          })
-          .catch((error) => {
-            console.error("Playback failed:", error);
-            setIsPlaying(false);
-          });
+      let currentSrc = audioUrl;
+
+      if (!currentSrc) {
+        currentSrc = await fetchAudioBlob();
+      }
+
+      if (currentSrc && audioRef.current) {
+        // Only load if src changed
+        if (
+          audioRef.current.src !== window.location.origin + currentSrc &&
+          !audioUrl
+        ) {
+          audioRef.current.src = currentSrc;
+        }
+
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => setIsPlaying(true))
+            .catch((error) => {
+              console.error("Playback failed:", error);
+              setIsPlaying(false);
+            });
+        }
       }
     }
   };
@@ -113,9 +156,13 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
     if (value[0] > 0) setIsMuted(false);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
+    let url = audioUrl;
+    if (!url) url = await fetchAudioBlob();
+    if (!url) return;
+
     const link = document.createElement("a");
-    link.href = audioSrc;
+    link.href = url;
     link.download = `${title.slice(0, 30)}.mp3`;
     document.body.appendChild(link);
     link.click();
@@ -131,7 +178,7 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
 
   return (
     <div className="bg-card rounded-xl p-4 shadow-sm border border-primary/10">
-      <audio ref={audioRef} src={audioSrc} preload="none" />
+      <audio ref={audioRef} preload="none" />
 
       {/* Top Controls: Play/Pause, Title, Rate */}
       <div className="flex items-center justify-between gap-4 mb-4">
