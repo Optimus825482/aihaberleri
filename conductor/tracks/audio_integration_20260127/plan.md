@@ -9,20 +9,20 @@
     - [x] Implement: `AudioService` for handling TTS logic, voice selection, and speed
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md) afa64e8
 
-## Phase 2: Core Player UI & Controls
-- [~] Task: Base Audio Player Component
-    - [ ] Write Tests: Player UI components tests
-    - [ ] Implement: `AudioPlayer` component with Play/Pause, Stop buttons using Shadcn UI
-- [ ] Task: Settings Controls (Speed & Voice)
-    - [ ] Write Tests: Speed and voice selection logic tests
-    - [ ] Implement: Select menus for speed (0.75x - 2.0x) and voice (Male/Female)
-- [ ] Task: Integration with Article Pages
-    - [ ] Write Tests: Check if player renders on article pages
-    - [ ] Implement: Add `AudioPlayer` to `src/app/news/[slug]/page.tsx`
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+## Phase 2: Core Player UI & Controls [checkpoint: aaeb22b]
+- [x] Task: Base Audio Player Component aaeb22b
+    - [x] Write Tests: Player UI components tests
+    - [x] Implement: `AudioPlayer` component with Play/Pause, Stop buttons using Shadcn UI
+- [x] Task: Settings Controls (Speed & Voice) aaeb22b
+    - [x] Write Tests: Speed and voice selection logic tests
+    - [x] Implement: Select menus for speed (0.75x - 2.0x) and voice (Male/Female)
+- [x] Task: Integration with Article Pages aaeb22b
+    - [x] Write Tests: Check if player renders on article pages
+    - [x] Implement: Add `AudioPlayer` to `src/app/news/[slug]/page.tsx`
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md) aaeb22b
 
 ## Phase 3: Text Highlighting & Advanced Interactions
-- [ ] Task: Text Highlighting Logic
+- [~] Task: Text Highlighting Logic
     - [ ] Write Tests: Highlighting logic with mock utterances
     - [ ] Implement: Link Audio Service events to article text for visual highlighting
 - [ ] Task: Sticky Mini-Player
