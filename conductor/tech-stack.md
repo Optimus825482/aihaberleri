@@ -29,6 +29,7 @@
 - **Primary AI:** DeepSeek API (Reasoner)
 - **Search:** Brave Search API
 - **Images:** Unsplash API
+- **Audio/TTS:** Python `edge-tts` library (via Node.js spawn)
 
 ## Infrastructure
 - **Containerization:** Docker, Docker Compose

@@ -41,7 +41,12 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Install runtime dependencies including OpenSSL 3.x
-RUN apk add --no-cache openssl curl
+RUN apk add --no-cache openssl curl python3 py3-pip
+
+# Install edge-tts for Audio Suite
+RUN python3 -m venv /app/venv
+ENV PATH="/app/venv/bin:$PATH"
+RUN pip install edge-tts
 
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs
@@ -53,6 +58,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/tts_engine.py ./src/lib/tts_engine.py
 
 # Copy scripts for initialization
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
