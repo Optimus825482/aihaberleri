@@ -260,34 +260,87 @@ export async function fetchArticleContent(url: string): Promise<string> {
   try {
     console.log(`📄 Makale içeriği alınıyor: ${url}`);
 
-    // Fetch the page
+    // Randomize User-Agent to avoid detection
+    const userAgents = [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    ];
+    const randomUserAgent =
+      userAgents[Math.floor(Math.random() * userAgents.length)];
+
+    // Fetch the page with browser-like headers
     const response = await axios.get(url, {
-      timeout: 10000,
+      timeout: 15000,
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "User-Agent": randomUserAgent,
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9,tr;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br", // Axios handles decompression automatically
+        "Upgrade-Insecure-Requests": "1",
+        "Cache-Control": "max-age=0",
+        Referer: "https://www.google.com/",
+        Connection: "keep-alive",
+        "Sec-Ch-Ua":
+          '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "cross-site",
+        "Sec-Fetch-User": "?1",
       },
     });
 
     const html = response.data;
 
-    // Simple content extraction (remove HTML tags)
+    // Use JSDOM or Cheerio if available, otherwise simple regex
+    // For now, keeping the regex but making it slightly robust
     let content = html
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ")
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ")
+      .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, " ") // Remove nav
+      .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, " ") // Remove footer
+      .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, " ") // Remove header
+      .replace(/<[^>]+>/g, " ") // Remove all tags
+      .replace(/\s+/g, " ") // Collapse whitespace
       .trim();
 
     // Limit content length
-    content = content.substring(0, 5000);
+    content = content.substring(0, 10000); // Increased limit for better context
+
+    if (content.length < 200) {
+      throw new Error("Content too short, likely blocked or empty");
+    }
 
     console.log(`✅ İçerik alındı: ${content.length} karakter`);
     return content;
-  } catch (error) {
-    console.error("❌ İçerik alma hatası:", error);
-    // Return a fallback message
-    return "Article content could not be fetched. Using title and description for rewriting.";
+  } catch (error: any) {
+    console.error(
+      `❌ İçerik alma hatası (${url}):`,
+      error.message || error.code,
+    );
+
+    // Fallback: Try Jina Reader (AI-friendly reader) if direct access fails
+    try {
+      console.log("🔄 Jina Reader ile tekrar deneniyor...");
+      const jinaUrl = `https://r.jina.ai/${url}`;
+      const jinaResponse = await axios.get(jinaUrl, { timeout: 15000 });
+      let jinaContent = jinaResponse.data;
+      
+      // Clean up Jina output (markdown links etc)
+      jinaContent = jinaContent.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1"); // Remove links
+      
+      console.log(`✅ Jina ile içerik kurtarıldı: ${jinaContent.length} karakter`);
+      return jinaContent.substring(0, 10000);
+    } catch (jinaError) {
+      console.error("❌ Jina Reader da başarısız oldu.");
+    }
+
+    // Ultimate Fallback: Return a meaningful error string to allow processing based on title
+    return "Article content could not be fetched due to access restrictions. The AI will rewrite based on the title and description.";
   }
 }
 
