@@ -33,13 +33,104 @@ export interface ProcessedArticle {
  * Check if article already exists in database
  */
 async function isDuplicate(article: NewsArticle): Promise<boolean> {
-  const existing = await db.article.findFirst({
+  // 1. Normalize URL: remove query parameters
+  const normalizeUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      return `${urlObj.origin}${urlObj.pathname}`;
+    } catch {
+      return url;
+    }
+  };
+
+  const normalizedUrl = normalizeUrl(article.url);
+
+  // Check 1: Exact sourceUrl match (fastest)
+  const existingByUrl = await db.article.findFirst({
     where: {
-      sourceUrl: article.url,
+      sourceUrl: {
+        startsWith: normalizedUrl, // Flexible match for base URL
+      },
     },
     select: { id: true },
   });
-  return !!existing;
+
+  if (existingByUrl) return true;
+
+  // Check 2: Title match (exact or close)
+  // Clean title: remove extra spaces, lowercase
+  const cleanTitle = article.title.trim().toLowerCase();
+  
+  // Fetch recent articles (last 3 days) for fuzzy comparison
+  // We fetch in memory to avoid database load with complex string functions
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+  const recentArticles = await db.article.findMany({
+    where: {
+      createdAt: {
+        gte: threeDaysAgo,
+      },
+    },
+    select: {
+      title: true,
+      id: true,
+    },
+  });
+
+  // Check for exact match first
+  const exactMatch = recentArticles.find(
+    (a) => a.title.trim().toLowerCase() === cleanTitle
+  );
+  if (exactMatch) return true;
+
+  // Check 3: Fuzzy Similarity (Levenshtein-like)
+  // Threshold: 0.85 (85% similarity)
+  const SIMILARITY_THRESHOLD = 0.85;
+
+  for (const recent of recentArticles) {
+    const similarity = calculateSimilarity(article.title, recent.title);
+    if (similarity >= SIMILARITY_THRESHOLD) {
+      console.log(
+        `🗑️ Fuzzy duplicate detected (${(similarity * 100).toFixed(1)}%):`,
+        `\n   New: "${article.title}"`,
+        `\n   Old: "${recent.title}"`
+      );
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Calculate similarity between two strings using Dice Coefficient (0 to 1)
+ * Good for catching similar titles even with small typos or word swaps
+ */
+function calculateSimilarity(str1: string, str2: string): number {
+  const s1 = str1.toLowerCase().replace(/\s+/g, "");
+  const s2 = str2.toLowerCase().replace(/\s+/g, "");
+
+  if (s1 === s2) return 1;
+  if (s1.length < 2 || s2.length < 2) return 0;
+
+  const bigrams1 = new Map<string, number>();
+  for (let i = 0; i < s1.length - 1; i++) {
+    const bigram = s1.substring(i, i + 2);
+    bigrams1.set(bigram, (bigrams1.get(bigram) || 0) + 1);
+  }
+
+  let intersection = 0;
+  for (let i = 0; i < s2.length - 1; i++) {
+    const bigram = s2.substring(i, i + 2);
+    const count = bigrams1.get(bigram);
+    if (count && count > 0) {
+      bigrams1.set(bigram, count - 1);
+      intersection++;
+    }
+  }
+
+  return (2.0 * intersection) / (s1.length - 1 + s2.length - 1);
 }
 
 /**
