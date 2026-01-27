@@ -1,10 +1,10 @@
 # Implementation Plan - Audio Suite Integration
 
 ## Phase 1: Foundation & Audio Service Setup
-- [ ] Task: Create Audio Context and Provider
-    - [ ] Write Tests: Audio provider state management tests
-    - [ ] Implement: `AudioProvider` component and `useAudio` hook
-- [ ] Task: Audio Service Layer
+- [x] Task: Create Audio Context and Provider 85ee41c
+    - [x] Write Tests: Audio provider state management tests
+    - [x] Implement: `AudioProvider` component and `useAudio` hook
+- [~] Task: Audio Service Layer
     - [ ] Write Tests: Web Speech API wrapper tests
     - [ ] Implement: `AudioService` for handling TTS logic, voice selection, and speed
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
