@@ -30,6 +30,19 @@ export interface ProcessedArticle {
 }
 
 /**
+ * Check if article already exists in database
+ */
+async function isDuplicate(article: NewsArticle): Promise<boolean> {
+  const existing = await db.article.findFirst({
+    where: {
+      sourceUrl: article.url,
+    },
+    select: { id: true },
+  });
+  return !!existing;
+}
+
+/**
  * Select the best articles from a list using AI analysis
  */
 export async function selectBestArticles(
