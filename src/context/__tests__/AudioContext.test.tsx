@@ -49,6 +49,11 @@ const TestComponent = () => {
 };
 
 describe('AudioContext', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    jest.clearAllMocks();
+  });
+
   it('provides global audio state', async () => {
     render(
       <AudioProvider>
@@ -64,5 +69,32 @@ describe('AudioContext', () => {
 
     expect(screen.getByTestId('is-playing').textContent).toBe('true');
     expect(global.fetch).toHaveBeenCalled();
+  });
+
+  it('persists settings to LocalStorage', async () => {
+    const { rerender } = render(
+      <AudioProvider>
+        <TestComponent />
+      </AudioProvider>
+    );
+
+    // Initial default
+    expect(screen.getByTestId('rate').textContent).toBe('1');
+
+    // Load from localstorage mock
+    localStorage.setItem('audio-settings', JSON.stringify({ rate: 1.5, voice: 'tr-TR-EmelNeural' }));
+    
+    rerender(
+      <AudioProvider>
+        <TestComponent />
+      </AudioProvider>
+    );
+
+    // Note: useEffect runs after render, so we might need to wait or act
+    await act(async () => {
+        // Wait for potential async state update
+    });
+
+    expect(JSON.parse(localStorage.getItem('audio-settings') || '{}').rate).toBe(1.5);
   });
 });

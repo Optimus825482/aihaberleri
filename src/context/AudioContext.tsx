@@ -59,6 +59,36 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Load settings from LocalStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('audio-settings');
+    if (saved) {
+      try {
+        const settings = JSON.parse(saved);
+        setState(s => ({
+          ...s,
+          rate: settings.rate ?? 1,
+          voice: settings.voice ?? 'tr-TR-AhmetNeural',
+          volume: settings.volume ?? 1,
+          isMuted: settings.isMuted ?? false,
+        }));
+      } catch (e) {
+        console.error('Failed to load audio settings:', e);
+      }
+    }
+  }, []);
+
+  // Save settings to LocalStorage when they change
+  useEffect(() => {
+    const settings = {
+      rate: state.rate,
+      voice: state.voice,
+      volume: state.volume,
+      isMuted: state.isMuted,
+    };
+    localStorage.setItem('audio-settings', JSON.stringify(settings));
+  }, [state.rate, state.voice, state.volume, state.isMuted]);
+
   const cleanText = (html: string) => {
     return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   };
