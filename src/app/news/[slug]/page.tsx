@@ -17,6 +17,7 @@ import { AdUnit } from "@/components/AdUnit";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { AudioPromo } from "@/components/AudioPromo";
 import { HighlightedText } from "@/components/audio/HighlightedText";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 
 interface ArticlePageProps {
   params: Promise<{
@@ -103,6 +104,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Analytics Tracking */}
+      <AnalyticsTracker articleId={article.id} />
+
       {/* Structured Data */}
       <script
         type="application/ld+json"

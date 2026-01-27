@@ -19,7 +19,7 @@ export interface RSSItem {
  * AI News RSS Feed Sources
  */
 export const AI_NEWS_RSS_FEEDS = [
-  // English Sources
+  // --- MAJOR TECH NEWS (AI SECTION) ---
   {
     name: "MIT Technology Review - AI",
     url: "https://www.technologyreview.com/topic/artificial-intelligence/feed",
@@ -46,10 +46,49 @@ export const AI_NEWS_RSS_FEEDS = [
     language: "en",
   },
   {
+    name: "Wired - AI",
+    url: "https://www.wired.com/feed/tag/ai/latest/rss",
+    language: "en",
+  },
+  {
+    name: "ZDNet - Artificial Intelligence",
+    url: "https://www.zdnet.com/topic/artificial-intelligence/rss.xml",
+    language: "en",
+  },
+  {
+    name: "Engadget - AI",
+    url: "https://www.engadget.com/rss.xml", // Engadget doesn't have a specific AI feed but covers it heavily
+    language: "en",
+  },
+
+  // --- AI FOCUSED PUBLICATIONS ---
+  {
     name: "AI News",
     url: "https://www.artificialintelligence-news.com/feed/",
     language: "en",
   },
+  {
+    name: "Unite.AI",
+    url: "https://www.unite.ai/feed/",
+    language: "en",
+  },
+  {
+    name: "MarkTechPost",
+    url: "https://www.marktechpost.com/feed/",
+    language: "en",
+  },
+  {
+    name: "The AI Edge (Substack)",
+    url: "https://theaiedge.substack.com/feed",
+    language: "en",
+  },
+  {
+    name: "Last Week in AI",
+    url: "https://lastweekin.ai/feed",
+    language: "en",
+  },
+
+  // --- RESEARCH & ENGINEERING BLOGS ---
   {
     name: "Machine Learning Mastery",
     url: "https://machinelearningmastery.com/feed/",
@@ -69,6 +108,60 @@ export const AI_NEWS_RSS_FEEDS = [
     name: "DeepMind Blog",
     url: "https://deepmind.google/blog/rss.xml",
     language: "en",
+  },
+  {
+    name: "NVIDIA Blog - AI",
+    url: "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
+    language: "en",
+  },
+  {
+    name: "Microsoft Azure AI Blog",
+    url: "https://azure.microsoft.com/en-us/blog/topics/artificial-intelligence/feed/",
+    language: "en",
+  },
+  {
+    name: "AWS Machine Learning Blog",
+    url: "https://aws.amazon.com/blogs/machine-learning/feed/",
+    language: "en",
+  },
+  {
+    name: "Meta AI Blog",
+    url: "https://ai.meta.com/blog/rss.xml",
+    language: "en",
+  },
+  {
+    name: "Hugging Face Blog",
+    url: "https://huggingface.co/blog/feed.xml",
+    language: "en",
+  },
+  {
+    name: "Berkeley AI Research (BAIR)",
+    url: "https://bair.berkeley.edu/blog/feed.xml",
+    language: "en",
+  },
+
+  // --- BUSINESS & STRATEGY ---
+  {
+    name: "Forbes - AI",
+    url: "https://www.forbes.com/innovation/feed/",
+    language: "en",
+  },
+  {
+    name: "Business Insider - Enterprise Tech",
+    url: "https://feeds.businessinsider.com/custom/107",
+    language: "en",
+  },
+  {
+    name: "Harvard Business Review - AI",
+    url: "https://hbr.org/feed/topic/artificial-intelligence",
+    language: "en",
+  },
+
+  // --- TURKISH SOURCES (IF AVAILABLE) ---
+  {
+    name: "Webrazzi - Yapay Zeka",
+    url: "https://webrazzi.com/etiket/yapay-zeka/feed",
+    language: "tr",
   },
 ];
 
