@@ -203,14 +203,17 @@ ${originalContent}
    - 750 ve üzeri: Yayınlanmaya hazır, net, önemli ve hatasız.
    - 750 altı: Muğlak, spekülatif veya düzenleme gerektiriyor.
 
-5. **SEO & FAQ:**
-   - **FAQ Schema:** Makalenin sonuna "Sıkça Sorulan Sorular" bölümü ekle (HTML formatında).
+5. **SEO & METADATA (CRITICAL):**
+   - **Başlık (Title):** 50-60 karakter arası, anahtar kelimeyi içeren, tıklanma oranı yüksek ama dürüst başlık.
+   - **Meta Açıklama (Description):** 150-160 karakter arası, özgün, merak uyandıran ve özetleyen açıklama.
+   - **Anahtar Kelimeler (Keywords):** Haberin özüyle ilgili, aranma hacmi yüksek 5-8 adet long-tail anahtar kelime.
+   - **Soru-Cevap (FAQ):** ASLA "Sıkça Sorulan Sorular" veya "Soru-Cevap" bölümü ekleme. Metin akıcı bir makale olmalı.
 
 JSON formatında yanıt ver:
 {
-  "title": "Haber Sunucusu Tarzı Başlık",
+  "title": "SEO Uyumlu Başlık",
   "excerpt": "Ana sayfada görünecek, haberin özeti (1-2 cümle, tarafsız)",
-  "content": "Tamamen HTML formatlı (<p>, <h2>, <ul>), 3. şahıs anlatımlı haber metni",
+  "content": "Tamamen HTML formatlı (<p>, <h2>, <ul>), 3. şahıs anlatımlı haber metni (FAQ YOK)",
   "keywords": ["anahtar1", "anahtar2"],
   "metaDescription": "SEO uyumlu meta açıklama",
   "score": 850

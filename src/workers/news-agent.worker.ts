@@ -58,11 +58,22 @@ const worker = new Worker(
           : true;
 
         if (isEnabled) {
-          const nextExecution = await scheduleNewsAgentJob();
-          if (nextExecution) {
-            console.log(
-              `\n⏰ Next execution: ${nextExecution.nextExecutionTime.toLocaleString()}`,
-            );
+          // Check if there is already a delayed job to avoid duplicate scheduling
+          const { newsAgentQueue } = await import("@/lib/queue");
+          if (newsAgentQueue) {
+            const delayedJobs = await newsAgentQueue.getJobs(["delayed"]);
+            const existingJob = delayedJobs.find(j => j.id === "news-agent-scheduled-run");
+            
+            if (!existingJob) {
+               const nextExecution = await scheduleNewsAgentJob();
+               if (nextExecution) {
+                 console.log(
+                   `\n⏰ Next execution: ${nextExecution.nextExecutionTime.toLocaleString()}`,
+                 );
+               }
+            } else {
+               console.log(`\n⏰ Next execution already scheduled for: ${new Date(existingJob.timestamp + (existingJob.opts.delay || 0)).toLocaleString()}`);
+            }
           }
         }
       } catch (schedErr) {
@@ -142,6 +153,9 @@ async function initStartupSync() {
       const now = new Date();
 
       // Eğer planlanan zaman geçmişse veya hiç planlanmamışsa hemen çalıştır
+      // Ancak çok yakın zamanda (örn. son 1 saat içinde) çalışmışsa ve bir hata yüzünden nextRun güncellenmemişse, 
+      // sonsuz döngüye girmemek için son loglara bakmak gerekebilir. 
+      // Şimdilik basit mantık: nextRun geçmişse çalıştır.
       if (!nextRunStr || new Date(nextRunStr) <= now) {
         console.log(
           "⚡ Gecikmiş veya eksik iş tespiti. Agent hemen başlatılıyor...",
@@ -150,14 +164,14 @@ async function initStartupSync() {
         // Mevcut kuyruk işlerini temizle (jobId çakışmasını önlemek için)
         const { newsAgentQueue } = await import("@/lib/queue");
         if (newsAgentQueue) {
-          const jobs = await newsAgentQueue.getJobs(["delayed", "waiting"]);
+          const jobs = await newsAgentQueue.getJobs(["delayed", "waiting", "active"]); // Active'i de kontrol et
           for (const job of jobs) {
             if (job.id === "news-agent-scheduled-run") {
               await job.remove();
             }
           }
 
-          // Bekletmeden ekle
+          // Bekletmeden ekle (Delay: 0)
           await newsAgentQueue.add(
             "scrape-and-publish",
             {},
@@ -174,7 +188,21 @@ async function initStartupSync() {
           `📅 Sıradaki çalışma zamanı: ${new Date(nextRunStr).toLocaleString()}`,
         );
         // Normal planlama yap (zaten varsa BullMQ jobId sayesinde eklemez)
-        await scheduleNewsAgentJob();
+        // Ancak burada önemli nokta: scheduleNewsAgentJob mevcut ayara göre (örn 6 saat sonraya) atar.
+        // Eğer DB'deki nextRun ile BullMQ'daki delay uyumsuzsa sorun olabilir.
+        // En doğrusu: BullMQ'da iş var mı bak, yoksa nextRun'a göre (veya hemen) planla.
+        
+        const { newsAgentQueue } = await import("@/lib/queue");
+        if(newsAgentQueue) {
+             const jobs = await newsAgentQueue.getJobs(["delayed", "waiting", "active"]);
+             const existing = jobs.find(j => j.id === "news-agent-scheduled-run");
+             
+             if (!existing) {
+                 console.log("⚠️ BullMQ'da iş bulunamadı ama DB'de nextRun var. Tekrar planlanıyor...");
+                 // DB'deki süreye kadar beklemek yerine, standart döngüyü (interval) başlatmak daha güvenli
+                 await scheduleNewsAgentJob();
+             }
+        }
       }
     } else {
       console.log("⏸️ Agent devre dışı, takvim kontrolü atlandı.");
