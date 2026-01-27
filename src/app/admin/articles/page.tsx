@@ -40,6 +40,7 @@ interface Article {
   status: string;
   views: number;
   publishedAt: string | null;
+  createdAt: string;
   category: {
     name: string;
     slug: string;
@@ -217,6 +218,7 @@ export default function ArticlesPage() {
                         <TableHead className="w-20">Görsel</TableHead>
                         <TableHead>Başlık</TableHead>
                         <TableHead>Kategori</TableHead>
+                        <TableHead>Eklenme Tarihi</TableHead>
                         <TableHead>Skor</TableHead>
                         <TableHead>Durum</TableHead>
                         <TableHead className="text-right">
@@ -260,6 +262,23 @@ export default function ArticlesPage() {
                             <Badge variant="outline">
                               {article.category.name}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div className="font-medium">
+                                {new Date(
+                                  article.publishedAt || article.createdAt,
+                                ).toLocaleDateString("tr-TR")}
+                              </div>
+                              <div className="text-muted-foreground text-xs">
+                                {new Date(
+                                  article.publishedAt || article.createdAt,
+                                ).toLocaleTimeString("tr-TR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </div>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1">

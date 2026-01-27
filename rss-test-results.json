@@ -1,0 +1,218 @@
+[
+  {
+    "name": "MIT Technology Review - AI",
+    "url": "https://www.technologyreview.com/topic/artificial-intelligence/feed",
+    "language": "en",
+    "status": "success",
+    "itemCount": 10,
+    "responseTime": 1779
+  },
+  {
+    "name": "VentureBeat - AI",
+    "url": "https://venturebeat.com/category/ai/feed/",
+    "language": "en",
+    "status": "success",
+    "itemCount": 7,
+    "responseTime": 1974
+  },
+  {
+    "name": "The Verge - AI",
+    "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml",
+    "language": "en",
+    "status": "success",
+    "itemCount": 10,
+    "responseTime": 1156
+  },
+  {
+    "name": "TechCrunch - AI",
+    "url": "https://techcrunch.com/category/artificial-intelligence/feed/",
+    "language": "en",
+    "status": "success",
+    "itemCount": 20,
+    "responseTime": 250
+  },
+  {
+    "name": "Ars Technica - AI",
+    "url": "https://feeds.arstechnica.com/arstechnica/technology-lab",
+    "language": "en",
+    "status": "success",
+    "itemCount": 20,
+    "responseTime": 323
+  },
+  {
+    "name": "Wired - AI",
+    "url": "https://www.wired.com/feed/tag/ai/latest/rss",
+    "language": "en",
+    "status": "success",
+    "itemCount": 10,
+    "responseTime": 298
+  },
+  {
+    "name": "ZDNet - Artificial Intelligence",
+    "url": "https://www.zdnet.com/topic/artificial-intelligence/rss.xml",
+    "language": "en",
+    "status": "success",
+    "itemCount": 20,
+    "responseTime": 1040
+  },
+  {
+    "name": "Engadget - AI",
+    "url": "https://www.engadget.com/rss.xml",
+    "language": "en",
+    "status": "success",
+    "itemCount": 50,
+    "responseTime": 25660
+  },
+  {
+    "name": "AI News",
+    "url": "https://www.artificialintelligence-news.com/feed/",
+    "language": "en",
+    "status": "success",
+    "itemCount": 12,
+    "responseTime": 2304
+  },
+  {
+    "name": "Unite.AI",
+    "url": "https://www.unite.ai/feed/",
+    "language": "en",
+    "status": "failed",
+    "error": "Non-whitespace before first tag.\nLine: 0\nColumn: 1\nChar: R",
+    "responseTime": 789
+  },
+  {
+    "name": "MarkTechPost",
+    "url": "https://www.marktechpost.com/feed/",
+    "language": "en",
+    "status": "success",
+    "itemCount": 10,
+    "responseTime": 1456
+  },
+  {
+    "name": "The AI Edge (Substack)",
+    "url": "https://theaiedge.substack.com/feed",
+    "language": "en",
+    "status": "success",
+    "itemCount": 20,
+    "responseTime": 909
+  },
+  {
+    "name": "Last Week in AI",
+    "url": "https://lastweekin.ai/feed",
+    "language": "en",
+    "status": "success",
+    "itemCount": 20,
+    "responseTime": 295
+  },
+  {
+    "name": "Machine Learning Mastery",
+    "url": "https://machinelearningmastery.com/feed/",
+    "language": "en",
+    "status": "success",
+    "itemCount": 10,
+    "responseTime": 575
+  },
+  {
+    "name": "OpenAI Blog",
+    "url": "https://openai.com/blog/rss.xml",
+    "language": "en",
+    "status": "success",
+    "itemCount": 818,
+    "responseTime": 1145
+  },
+  {
+    "name": "Google AI Blog",
+    "url": "https://blog.research.google/feeds/posts/default",
+    "language": "en",
+    "status": "success",
+    "itemCount": 25,
+    "responseTime": 3469
+  },
+  {
+    "name": "DeepMind Blog",
+    "url": "https://deepmind.google/blog/rss.xml",
+    "language": "en",
+    "status": "success",
+    "itemCount": 100,
+    "responseTime": 242
+  },
+  {
+    "name": "NVIDIA Blog - AI",
+    "url": "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
+    "language": "en",
+    "status": "success",
+    "itemCount": 19,
+    "responseTime": 323
+  },
+  {
+    "name": "Microsoft Azure AI Blog",
+    "url": "https://azure.microsoft.com/en-us/blog/topics/artificial-intelligence/feed/",
+    "language": "en",
+    "status": "success",
+    "itemCount": 10,
+    "responseTime": 1020
+  },
+  {
+    "name": "AWS Machine Learning Blog",
+    "url": "https://aws.amazon.com/blogs/machine-learning/feed/",
+    "language": "en",
+    "status": "success",
+    "itemCount": 20,
+    "responseTime": 902
+  },
+  {
+    "name": "Meta AI Blog",
+    "url": "https://ai.meta.com/blog/rss.xml",
+    "language": "en",
+    "status": "failed",
+    "error": "HTTP 404",
+    "responseTime": 841
+  },
+  {
+    "name": "Hugging Face Blog",
+    "url": "https://huggingface.co/blog/feed.xml",
+    "language": "en",
+    "status": "success",
+    "itemCount": 721,
+    "responseTime": 400
+  },
+  {
+    "name": "Berkeley AI Research (BAIR)",
+    "url": "https://bair.berkeley.edu/blog/feed.xml",
+    "language": "en",
+    "status": "success",
+    "itemCount": 10,
+    "responseTime": 21650
+  },
+  {
+    "name": "Forbes - AI",
+    "url": "https://www.forbes.com/innovation/feed/",
+    "language": "en",
+    "status": "success",
+    "itemCount": 25,
+    "responseTime": 661
+  },
+  {
+    "name": "Business Insider - Enterprise Tech",
+    "url": "https://feeds.businessinsider.com/custom/107",
+    "language": "en",
+    "status": "failed",
+    "error": "HTTP 404",
+    "responseTime": 469
+  },
+  {
+    "name": "Harvard Business Review - AI",
+    "url": "https://hbr.org/feed/topic/artificial-intelligence",
+    "language": "en",
+    "status": "failed",
+    "error": "HTTP 404",
+    "responseTime": 1692
+  },
+  {
+    "name": "Webrazzi - Yapay Zeka",
+    "url": "https://webrazzi.com/etiket/yapay-zeka/feed",
+    "language": "tr",
+    "status": "success",
+    "itemCount": 15,
+    "responseTime": 3100
+  }
+]

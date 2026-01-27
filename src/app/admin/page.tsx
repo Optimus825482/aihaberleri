@@ -442,8 +442,15 @@ export default function AdminDashboard() {
                           </span>
                           <span className="opacity-30">•</span>
                           <span className="font-bold">
-                            {new Date(article.createdAt).toLocaleDateString(
+                            {new Date(article.createdAt).toLocaleString(
                               "tr-TR",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
                             )}
                           </span>
                           <span className="opacity-30">•</span>
