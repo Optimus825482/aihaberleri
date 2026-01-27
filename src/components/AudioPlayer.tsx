@@ -1,6 +1,7 @@
 "use client";
 
 import { useAudio } from "@/context/AudioContext";
+import { useEffect, useRef } from "react";
 import {
   Play,
   Pause,
@@ -41,8 +42,26 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
     setIsMuted,
     seek,
     download,
-    title: currentTitle
+    title: currentTitle,
+    setIsMainPlayerVisible
   } = useAudio();
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsMainPlayerVisible(entry.isIntersecting);
+      },
+      { threshold: 0 }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [setIsMainPlayerVisible]);
 
   const handleToggle = () => {
     if (currentTitle !== title) {
@@ -60,7 +79,7 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
   };
 
   return (
-    <div className="bg-card rounded-xl p-4 shadow-sm border border-primary/10">
+    <div ref={containerRef} className="bg-card rounded-xl p-4 shadow-sm border border-primary/10">
       {/* Top Controls: Play/Pause, Title, Rate */}
       <div className="flex items-center justify-between gap-4 mb-4">
         <button

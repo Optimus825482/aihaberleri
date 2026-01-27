@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { MiniPlayer } from "./audio/MiniPlayer";
 
 const CookieConsent = dynamic(
   () =>
@@ -30,6 +31,7 @@ export function ClientProviders() {
       <CookieConsent />
       <NotificationPrompt />
       <PWAInstallPrompt />
+      <MiniPlayer />
     </>
   );
 }

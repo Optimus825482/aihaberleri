@@ -22,6 +22,7 @@ type AudioState = {
   audioUrl: string | null;
   metadata: WordBoundary[];
   currentWordIndex: number;
+  isMainPlayerVisible: boolean;
 };
 
 type AudioContextType = AudioState & {
@@ -35,6 +36,7 @@ type AudioContextType = AudioState & {
   setIsMuted: (isMuted: boolean) => void;
   seek: (time: number) => void;
   download: () => void;
+  setIsMainPlayerVisible: (visible: boolean) => void;
 };
 
 const AudioContext = createContext<AudioContextType | undefined>(undefined);
@@ -52,6 +54,7 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
     audioUrl: null,
     metadata: [],
     currentWordIndex: -1,
+    isMainPlayerVisible: true,
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -176,6 +179,28 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault();
+          togglePlay();
+          break;
+        case 'KeyM':
+          setIsMuted(!state.isMuted);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [state.isPlaying, state.isMuted, state.audioUrl]);
+
+  useEffect(() => {
     const audio = new Audio();
     audioRef.current = audio;
 
@@ -229,6 +254,7 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
       setIsMuted,
       seek,
       download,
+      setIsMainPlayerVisible: (visible: boolean) => setState(s => ({ ...s, isMainPlayerVisible: visible }))
     }}>
       {children}
     </AudioContext.Provider>
