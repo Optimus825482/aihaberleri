@@ -10,7 +10,7 @@
 - [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md) afa64e8
 
 ## Phase 2: Core Player UI & Controls
-- [ ] Task: Base Audio Player Component
+- [~] Task: Base Audio Player Component
     - [ ] Write Tests: Player UI components tests
     - [ ] Implement: `AudioPlayer` component with Play/Pause, Stop buttons using Shadcn UI
 - [ ] Task: Settings Controls (Speed & Voice)
