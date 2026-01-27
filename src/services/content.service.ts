@@ -31,6 +31,7 @@ export interface ProcessedArticle {
 
 /**
  * Check if article already exists in database
+ * ENHANCED: Multiple layers of duplicate detection
  */
 async function isDuplicate(article: NewsArticle): Promise<boolean> {
   // 1. Normalize URL: remove query parameters
@@ -52,41 +53,66 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
         startsWith: normalizedUrl, // Flexible match for base URL
       },
     },
-    select: { id: true },
+    select: { id: true, title: true },
   });
 
-  if (existingByUrl) return true;
+  if (existingByUrl) {
+    console.log(`🗑️ Duplicate URL detected: ${existingByUrl.title}`);
+    return true;
+  }
 
-  // Check 2: Title match (exact or close)
+  // Check 2: Slug match (prevent same slug conflicts)
+  const potentialSlug = generateSlug(article.title);
+  const existingBySlug = await db.article.findFirst({
+    where: {
+      slug: {
+        startsWith: potentialSlug, // Matches "slug" or "slug-123456"
+      },
+    },
+    select: { id: true, title: true, slug: true },
+  });
+
+  if (existingBySlug) {
+    console.log(
+      `🗑️ Duplicate slug detected: ${existingBySlug.slug} (${existingBySlug.title})`,
+    );
+    return true;
+  }
+
+  // Check 3: Title match (exact or close)
   // Clean title: remove extra spaces, lowercase
   const cleanTitle = article.title.trim().toLowerCase();
-  
-  // Fetch recent articles (last 3 days) for fuzzy comparison
-  // We fetch in memory to avoid database load with complex string functions
-  const threeDaysAgo = new Date();
-  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+  // Fetch recent articles (last 7 days) for fuzzy comparison
+  // INCREASED from 3 to 7 days to catch more duplicates
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const recentArticles = await db.article.findMany({
     where: {
       createdAt: {
-        gte: threeDaysAgo,
+        gte: sevenDaysAgo,
       },
     },
     select: {
       title: true,
       id: true,
     },
+    take: 200, // Limit to avoid performance issues
   });
 
   // Check for exact match first
   const exactMatch = recentArticles.find(
-    (a) => a.title.trim().toLowerCase() === cleanTitle
+    (a) => a.title.trim().toLowerCase() === cleanTitle,
   );
-  if (exactMatch) return true;
+  if (exactMatch) {
+    console.log(`🗑️ Exact title match: ${exactMatch.title}`);
+    return true;
+  }
 
-  // Check 3: Fuzzy Similarity (Levenshtein-like)
-  // Threshold: 0.85 (85% similarity)
-  const SIMILARITY_THRESHOLD = 0.85;
+  // Check 4: Fuzzy Similarity (Dice Coefficient)
+  // LOWERED threshold from 0.85 to 0.80 to catch more similar titles
+  const SIMILARITY_THRESHOLD = 0.8;
 
   for (const recent of recentArticles) {
     const similarity = calculateSimilarity(article.title, recent.title);
@@ -94,7 +120,7 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
       console.log(
         `🗑️ Fuzzy duplicate detected (${(similarity * 100).toFixed(1)}%):`,
         `\n   New: "${article.title}"`,
-        `\n   Old: "${recent.title}"`
+        `\n   Old: "${recent.title}"`,
       );
       return true;
     }
@@ -322,14 +348,26 @@ export async function publishArticle(
       throw new Error(`Kategori bulunamadı: ${processedArticle.categorySlug}`);
     }
 
-    // Check if article with same slug already exists
-    const existing = await db.article.findUnique({
-      where: { slug: processedArticle.slug },
+    // ENHANCED: Check for existing article by slug OR sourceUrl
+    const existing = await db.article.findFirst({
+      where: {
+        OR: [
+          { slug: processedArticle.slug },
+          { sourceUrl: processedArticle.sourceUrl },
+        ],
+      },
+      select: { id: true, slug: true, title: true },
     });
 
     if (existing) {
-      // Generate unique slug by appending timestamp
-      processedArticle.slug = `${processedArticle.slug}-${Date.now()}`;
+      console.log(
+        `⚠️ Haber zaten var, atlanıyor: ${existing.title} (${existing.slug})`,
+      );
+      // Return existing article instead of creating duplicate
+      return {
+        id: existing.id,
+        slug: existing.slug,
+      };
     }
 
     // Determine status based on score
@@ -356,7 +394,7 @@ export async function publishArticle(
       },
     });
 
-    console.log(`✅ Haber yayınlandı: ${article.slug}`);
+    console.log(`✅ Haber yayınlandı: ${article.slug} (Skor: ${score})`);
 
     // Post-publish tasks: IndexNow submission
     try {
@@ -374,7 +412,7 @@ export async function publishArticle(
         slug: article.slug,
         excerpt: article.excerpt,
         categoryName: category.name,
-      }).catch(err => console.error("Async tweet failed:", err));
+      }).catch((err) => console.error("Async tweet failed:", err));
     } catch (e) {
       console.error("Failed to trigger Twitter post:", e);
     }
