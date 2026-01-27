@@ -1,12 +1,60 @@
 /**
  * Tavily Search API Integration
  * Better for trend analysis with higher rate limits
+ *
+ * OPTIMIZATIONS:
+ * - Rate limiter: 200ms between calls
+ * - Batch processing: 10 articles per batch
+ * - In-memory cache: 15 minutes TTL
  */
 
 import axios from "axios";
 
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const TAVILY_API_URL = "https://api.tavily.com/search";
+
+// ============================================
+// RATE LIMITER
+// ============================================
+let lastCallTime = 0;
+const MIN_CALL_INTERVAL = 200; // 200ms between calls (max 5 calls/second)
+
+async function rateLimitedCall<T>(fn: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  const timeSinceLastCall = now - lastCallTime;
+
+  if (timeSinceLastCall < MIN_CALL_INTERVAL) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, MIN_CALL_INTERVAL - timeSinceLastCall),
+    );
+  }
+
+  lastCallTime = Date.now();
+  return fn();
+}
+
+// ============================================
+// IN-MEMORY CACHE
+// ============================================
+interface CacheEntry {
+  score: number;
+  timestamp: number;
+}
+
+const trendCache = new Map<string, CacheEntry>();
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+function getCachedScore(cacheKey: string): number | null {
+  const cached = trendCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.score;
+  }
+  return null;
+}
+
+function setCachedScore(cacheKey: string, score: number): void {
+  trendCache.set(cacheKey, { score, timestamp: Date.now() });
+}
 
 export interface TavilySearchResult {
   title: string;
@@ -70,7 +118,7 @@ export async function tavilySearch(
 }
 
 /**
- * Calculate trend score using Tavily
+ * Calculate trend score using Tavily (with caching)
  */
 export async function calculateTrendScoreTavily(
   title: string,
@@ -78,8 +126,15 @@ export async function calculateTrendScoreTavily(
 ): Promise<number> {
   try {
     const searchQuery = extractKeywords(title, description);
+
+    // Check cache first
+    const cachedScore = getCachedScore(searchQuery);
+    if (cachedScore !== null) {
+      return cachedScore;
+    }
+
     const results = await tavilySearch(searchQuery, {
-      max_results: 10,
+      max_results: 5, // Reduced from 10 to 5 to save API calls
     });
 
     let score = 0;
@@ -156,6 +211,9 @@ export async function calculateTrendScoreTavily(
       }
     }
 
+    // Cache the result
+    setCachedScore(searchQuery, score);
+
     return score;
   } catch (error) {
     console.error("Tavily trend score error:", error);
@@ -220,28 +278,82 @@ function extractKeywords(title: string, description: string): string {
 }
 
 /**
- * Rank articles by trend using Tavily
+ * Rank articles by trend using Tavily (with smart sampling and batch processing)
  */
 export async function rankArticlesByTrendTavily(
   articles: Array<{ title: string; description: string }>,
 ): Promise<Array<{ index: number; score: number }>> {
+  // ============================================
+  // STEP 1: SMART SAMPLING
+  // ============================================
+  const MAX_ARTICLES = 100;
+  const originalCount = articles.length;
+
+  if (articles.length > MAX_ARTICLES) {
+    console.log(
+      `⚡ Smart Sampling: ${articles.length} haber → ${MAX_ARTICLES} habere düşürülüyor`,
+    );
+
+    // Take first 100 (already sorted by date in news.service.ts)
+    articles = articles.slice(0, MAX_ARTICLES);
+  }
+
   console.log(`📊 Tavily ile ${articles.length} haber analiz ediliyor...`);
 
-  const scores = await Promise.all(
-    articles.map(async (article, index) => {
-      const score = await calculateTrendScoreTavily(
-        article.title,
-        article.description,
-      );
-      return { index, score };
-    }),
-  );
+  // ============================================
+  // STEP 2: BATCH PROCESSING WITH RATE LIMITING
+  // ============================================
+  const BATCH_SIZE = 10;
+  const BATCH_DELAY = 1000; // 1 second between batches
 
+  const scores: Array<{ index: number; score: number }> = [];
+
+  for (let i = 0; i < articles.length; i += BATCH_SIZE) {
+    const batch = articles.slice(i, i + BATCH_SIZE);
+    const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+    const totalBatches = Math.ceil(articles.length / BATCH_SIZE);
+
+    console.log(
+      `📦 Batch ${batchNumber}/${totalBatches} işleniyor (${batch.length} haber)...`,
+    );
+
+    // Process batch with rate limiting
+    const batchScores = await Promise.all(
+      batch.map(async (article, batchIndex) => {
+        const globalIndex = i + batchIndex;
+
+        try {
+          const score = await rateLimitedCall(() =>
+            calculateTrendScoreTavily(article.title, article.description),
+          );
+          return { index: globalIndex, score };
+        } catch (error: any) {
+          console.warn(
+            `⚠️ Haber #${globalIndex + 1} analiz edilemedi (${error.message}), varsayılan skor: 0`,
+          );
+          return { index: globalIndex, score: 0 };
+        }
+      }),
+    );
+
+    scores.push(...batchScores);
+
+    // Delay between batches (except last batch)
+    if (i + BATCH_SIZE < articles.length) {
+      console.log(`⏳ ${BATCH_DELAY}ms bekleniyor (rate limit protection)...`);
+      await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY));
+    }
+  }
+
+  // ============================================
+  // STEP 3: SORT BY SCORE
+  // ============================================
   scores.sort((a, b) => b.score - a.score);
 
   console.log("✅ Tavily trend sıralaması tamamlandı");
+  console.log(`📊 İşlenen: ${articles.length}/${originalCount} haber`);
   console.log(
-    "Top 5:",
+    "🏆 Top 5:",
     scores
       .slice(0, 5)
       .map((s) => `#${s.index + 1} (skor: ${Math.round(s.score)})`)

@@ -82,9 +82,26 @@ export async function fetchAINews(
     const recentItems = filterRecentArticles(filteredItems, 48);
     console.log(`📅 Son 48 saatte ${recentItems.length} haber`);
 
-    // If no recent items, use all items but limit to 50
-    const itemsToAnalyze =
-      recentItems.length > 0 ? recentItems : filteredItems.slice(0, 50);
+    // SMART SAMPLING: Prioritize recent + diverse sources
+    let itemsToAnalyze = recentItems.length > 0 ? recentItems : filteredItems;
+
+    // If too many articles, sample intelligently
+    const MAX_ARTICLES_TO_ANALYZE = 100;
+    if (itemsToAnalyze.length > MAX_ARTICLES_TO_ANALYZE) {
+      console.log(
+        `⚡ Smart Sampling: ${itemsToAnalyze.length} haber → ${MAX_ARTICLES_TO_ANALYZE} habere düşürülüyor`,
+      );
+
+      // Sort by date (most recent first) and take top 100
+      itemsToAnalyze = itemsToAnalyze
+        .sort(
+          (a, b) =>
+            new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime(),
+        )
+        .slice(0, MAX_ARTICLES_TO_ANALYZE);
+
+      console.log(`✅ En güncel ${MAX_ARTICLES_TO_ANALYZE} haber seçildi`);
+    }
 
     // Step 3: Analyze trends using Tavily Search API AND Google Trends
     console.log(
@@ -329,11 +346,13 @@ export async function fetchArticleContent(url: string): Promise<string> {
       const jinaUrl = `https://r.jina.ai/${url}`;
       const jinaResponse = await axios.get(jinaUrl, { timeout: 15000 });
       let jinaContent = jinaResponse.data;
-      
+
       // Clean up Jina output (markdown links etc)
       jinaContent = jinaContent.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1"); // Remove links
-      
-      console.log(`✅ Jina ile içerik kurtarıldı: ${jinaContent.length} karakter`);
+
+      console.log(
+        `✅ Jina ile içerik kurtarıldı: ${jinaContent.length} karakter`,
+      );
       return jinaContent.substring(0, 10000);
     } catch (jinaError) {
       console.error("❌ Jina Reader da başarısız oldu.");
