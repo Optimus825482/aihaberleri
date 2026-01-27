@@ -21,20 +21,20 @@
     - [x] Implement: Add `AudioPlayer` to `src/app/news/[slug]/page.tsx`
 - [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md) aaeb22b
 
-## Phase 3: Text Highlighting & Advanced Interactions
-- [~] Task: Text Highlighting Logic
-    - [ ] Write Tests: Highlighting logic with mock utterances
-    - [ ] Implement: Link Audio Service events to article text for visual highlighting
-- [ ] Task: Sticky Mini-Player
-    - [ ] Write Tests: Scroll visibility tests for mini-player
-    - [ ] Implement: Intersection Observer based mini-player that appears when main player is out of view
-- [ ] Task: Keyboard Shortcuts & Accessibility
-    - [ ] Write Tests: Keyboard event handling tests
-    - [ ] Implement: Space for play/pause, M for mute, ARIA labels
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+## Phase 3: Text Highlighting & Advanced Interactions [checkpoint: 94fd13f]
+- [x] Task: Text Highlighting Logic 19efe44
+    - [x] Write Tests: Highlighting logic with mock utterances
+    - [x] Implement: Link Audio Service events to article text for visual highlighting
+- [x] Task: Sticky Mini-Player 51d6acd
+    - [x] Write Tests: Scroll visibility tests for mini-player
+    - [x] Implement: Intersection Observer based mini-player that appears when main player is out of view
+- [x] Task: Keyboard Shortcuts & Accessibility 51d6acd
+    - [x] Write Tests: Keyboard event handling tests
+    - [x] Implement: Space for play/pause, M for mute, ARIA labels
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md) 94fd13f
 
 ## Phase 4: Optimization & Persistence
-- [ ] Task: Progress Persistence
+- [~] Task: Progress Persistence
     - [ ] Write Tests: LocalStorage sync tests
     - [ ] Implement: Save playback position and settings to LocalStorage
 - [ ] Task: Mobile Optimization & Final Polish
