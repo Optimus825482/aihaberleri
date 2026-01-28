@@ -3,6 +3,8 @@
  * Route: /en
  */
 
+export const dynamic = "force-dynamic";
+
 import { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
@@ -46,7 +48,7 @@ async function getEnglishArticles() {
     take: 12,
   });
 
-  return translations.map((t) => ({
+  return translations.map((t: any) => ({
     id: t.article.id,
     title: t.title,
     slug: t.slug,
@@ -125,7 +127,7 @@ export default async function EnglishHomePage() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {articles.map((article) => (
+              {articles.map((article: any) => (
                 <ArticleCard
                   key={article.id}
                   article={{
@@ -149,7 +151,7 @@ export default async function EnglishHomePage() {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold mb-8">Categories</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {categories.map((category) => (
+            {categories.map((category: any) => (
               <Link
                 key={category.id}
                 href={`/en/category/${category.slug}`}
