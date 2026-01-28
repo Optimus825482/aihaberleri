@@ -16,8 +16,9 @@ COPY package.json package-lock.json* ./
 
 # Install dependencies with retry mechanism and proper flags
 # Using npm ci for reliable, exact versions based on lockfile
-RUN npm ci --include=dev --network-timeout=100000 || \
-    (npm cache clean --force && npm ci --include=dev --network-timeout=100000)
+# Added --legacy-peer-deps to handle eslint v9 peer dependency conflict
+RUN npm ci --include=dev --legacy-peer-deps --network-timeout=100000 || \
+    (npm cache clean --force && npm ci --include=dev --legacy-peer-deps --network-timeout=100000)
 
 # Stage 2: Builder
 FROM node:20.18-slim AS builder
