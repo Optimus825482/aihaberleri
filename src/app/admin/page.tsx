@@ -398,41 +398,33 @@ export default function AdminDashboard() {
                       value="5m"
                       className="bg-background text-foreground"
                     >
-                      Anlık - Son 5 Dakika
+                      Son 5 Dakika
                     </option>
                     <option
                       value="15m"
                       className="bg-background text-foreground"
                     >
-                      Anlık - Son 15 Dakika
+                      Son 15 Dakika
                     </option>
                     <option
                       value="30m"
                       className="bg-background text-foreground"
                     >
-                      Anlık - Son 30 Dakika
+                      Son 30 Dakika
                     </option>
                     <option
                       value="1h"
                       className="bg-background text-foreground"
                     >
-                      Anlık - Son 1 Saat
+                      Son 1 Saat
                     </option>
                     <option
                       value="today"
                       className="bg-background text-foreground"
                     >
-                      Anlık - Bugün
+                      Bugün
                     </option>
                   </select>
-                  <div className="text-right">
-                    <div className="text-3xl font-black text-blue-500">
-                      {dashboardStats?.metrics.activeVisitors || 0}
-                    </div>
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase">
-                      Aktif Ziyaretçi
-                    </div>
-                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -440,38 +432,6 @@ export default function AdminDashboard() {
               <RealtimeAreaChart
                 data={dashboardStats?.charts.realtimeVisitors || []}
               />
-              {/* Tespit Edilen Konumlar */}
-              <div className="mt-4 pt-4 border-t border-blue-500/10">
-                <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">
-                  Tespit Edilen Ziyaretçi Konumları
-                </h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-blue-500/5 rounded-lg p-2">
-                    <span className="text-muted-foreground">Ülke:</span>
-                    <span className="ml-2 font-bold">
-                      Türkiye, ABD, Almanya
-                    </span>
-                  </div>
-                  <div className="bg-blue-500/5 rounded-lg p-2">
-                    <span className="text-muted-foreground">Bölge:</span>
-                    <span className="ml-2 font-bold">
-                      Marmara, Ege, Akdeniz
-                    </span>
-                  </div>
-                  <div className="bg-blue-500/5 rounded-lg p-2">
-                    <span className="text-muted-foreground">Şehir:</span>
-                    <span className="ml-2 font-bold">
-                      İstanbul, Ankara, İzmir
-                    </span>
-                  </div>
-                  <div className="bg-blue-500/5 rounded-lg p-2">
-                    <span className="text-muted-foreground">İlçe:</span>
-                    <span className="ml-2 font-bold">
-                      Kadıköy, Çankaya, Karşıyaka
-                    </span>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>
