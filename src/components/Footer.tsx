@@ -118,6 +118,14 @@ export async function Footer() {
                   Hizmet Şartları
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/contact"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  İletişim
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -133,13 +141,16 @@ export async function Footer() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
                 >
-                  {socialIcons[social.platform.toLowerCase()] || socialIcons.twitter}
+                  {socialIcons[social.platform.toLowerCase()] ||
+                    socialIcons.twitter}
                   <span className="text-sm capitalize">{social.platform}</span>
                 </a>
               ))}
               {/* Fallback/Static Twitter Link if not in DB (Migrated from Navbar) */}
-              {!socialMedia.some(s => s.platform.toLowerCase() === 'twitter') && (
-                 <a
+              {!socialMedia.some(
+                (s) => s.platform.toLowerCase() === "twitter",
+              ) && (
+                <a
                   href="https://twitter.com/aihaberleri"
                   target="_blank"
                   rel="noopener noreferrer"

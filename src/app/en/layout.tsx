@@ -63,6 +63,12 @@ export default function EnglishLayout({
               >
                 Categories
               </Link>
+              <Link
+                href="/en/contact"
+                className="text-gray-600 hover:text-blue-600 dark:text-gray-300"
+              >
+                Contact
+              </Link>
             </nav>
 
             {/* Language Switcher */}
@@ -112,6 +118,11 @@ export default function EnglishLayout({
                 <li>
                   <Link href="/en/about" className="hover:text-white">
                     About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/en/contact" className="hover:text-white">
+                    Contact Us
                   </Link>
                 </li>
               </ul>

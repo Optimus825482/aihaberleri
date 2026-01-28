@@ -20,6 +20,7 @@ import {
   Bot,
   BarChart,
   Download,
+  MessageSquare,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,11 @@ const menuItems = [
     title: "Sosyal Medya",
     href: "/admin/social",
     icon: Share2,
+  },
+  {
+    title: "Gelen Mesajlar",
+    href: "/admin/messages",
+    icon: MessageSquare,
   },
   {
     title: "Ayarlar",
@@ -204,8 +210,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto pt-16 lg:pt-0">
-        <div className="container mx-auto p-4 sm:p-6 lg:p-8">{children}</div>
+      <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-16 lg:pt-0">
+        <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
+          {children}
+        </div>
       </main>
     </div>
   );

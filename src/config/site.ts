@@ -21,6 +21,10 @@ export const siteConfig = {
       title: "Hakkımızda",
       href: "/about",
     },
+    {
+      title: "İletişim",
+      href: "/contact",
+    },
   ],
   links: {
     twitter: "https://twitter.com/aihaberleri",

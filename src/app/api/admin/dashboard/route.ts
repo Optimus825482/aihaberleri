@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -20,8 +20,11 @@ interface CategoryViewData {
   _sum: { views: number | null };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const range = searchParams.get("range") || "30m"; // Default 30 min
+
     // Check authentication
     const session = await auth();
     if (!session) {
@@ -147,11 +150,48 @@ export async function GET() {
     ]);
 
     // Get last 30 minutes visitors for real-time chart
-    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+    // Unified Time Range Logic
+    let startTime: Date;
+    let intervalCount: number;
+    let intervalDurationMs: number;
+    let timeLabelFormat: "minute" | "hour";
+
+    switch (range) {
+      case "5m":
+        startTime = new Date(Date.now() - 5 * 60 * 1000);
+        intervalCount = 5;
+        intervalDurationMs = 1 * 60 * 1000;
+        timeLabelFormat = "minute";
+        break;
+      case "1h":
+        startTime = new Date(Date.now() - 60 * 60 * 1000);
+        intervalCount = 6;
+        intervalDurationMs = 10 * 60 * 1000;
+        timeLabelFormat = "minute";
+        break;
+      case "today":
+        startTime = new Date(today);
+        // Calculate hours since midnight
+        const hoursPassed = Math.floor(
+          (Date.now() - today.getTime()) / (60 * 60 * 1000),
+        );
+        intervalCount = Math.max(hoursPassed + 1, 1);
+        intervalDurationMs = 60 * 60 * 1000;
+        timeLabelFormat = "hour";
+        break;
+      case "30m":
+      default:
+        startTime = new Date(Date.now() - 30 * 60 * 1000);
+        intervalCount = 6;
+        intervalDurationMs = 5 * 60 * 1000;
+        timeLabelFormat = "minute";
+        break;
+    }
+
     const realtimeVisitors = await db.articleAnalytics.findMany({
       where: {
         createdAt: {
-          gte: thirtyMinutesAgo,
+          gte: startTime,
         },
       },
       select: {
@@ -161,14 +201,23 @@ export async function GET() {
       orderBy: { createdAt: "asc" },
     });
 
-    // Group visitors by 5-minute intervals
     const realtimeData: { time: string; visitors: number; label: string }[] =
       [];
-    for (let i = 5; i >= 0; i--) {
-      const intervalEnd = new Date(Date.now() - i * 5 * 60 * 1000);
-      const intervalStart = new Date(intervalEnd.getTime() - 5 * 60 * 1000);
+    const now = Date.now();
 
-      const count = realtimeVisitors.filter((v) => {
+    for (let i = intervalCount - 1; i >= 0; i--) {
+      const intervalEnd =
+        range === "today"
+          ? new Date(
+              startTime.getTime() + (intervalCount - i) * intervalDurationMs,
+            )
+          : new Date(now - i * intervalDurationMs);
+
+      const intervalStart = new Date(
+        intervalEnd.getTime() - intervalDurationMs,
+      );
+
+      const count = realtimeVisitors.filter((v: VisitorRecord) => {
         const vTime = new Date(v.createdAt).getTime();
         return (
           vTime >= intervalStart.getTime() && vTime < intervalEnd.getTime()
@@ -180,14 +229,15 @@ export async function GET() {
         visitors: count,
         label: intervalEnd.toLocaleTimeString("tr-TR", {
           hour: "2-digit",
-          minute: "2-digit",
+          minute: timeLabelFormat === "minute" ? "2-digit" : undefined,
         }),
       });
     }
 
-    // Get unique visitors in last 30 min
-    const uniqueVisitors30m = new Set(realtimeVisitors.map((v) => v.ipAddress))
-      .size;
+    // Get unique visitors in current range
+    const uniqueVisitorsInRange = new Set(
+      realtimeVisitors.map((v: VisitorRecord) => v.ipAddress),
+    ).size;
 
     // Get country distribution from analytics (last 24 hours)
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -203,7 +253,11 @@ export async function GET() {
 
     // GeoIP lookup for country distribution (batch)
     const uniqueIPs = [
-      ...new Set(recentAnalytics.map((a) => a.ipAddress).filter(Boolean)),
+      ...new Set(
+        recentAnalytics
+          .map((a: VisitorRecord) => a.ipAddress)
+          .filter(Boolean) as string[],
+      ),
     ].slice(0, 100);
     let countryStats: Record<string, number> = {};
 
@@ -249,8 +303,10 @@ export async function GET() {
 
     // Map category views to category stats
     const categoryStatsWithViews = await Promise.all(
-      categoryStats.map(async (cat) => {
-        const viewData = categoryViews.find((v) => v.categoryId === cat.id);
+      categoryStats.map(async (cat: CategoryStat) => {
+        const viewData = categoryViews.find(
+          (v: CategoryViewData) => v.categoryId === cat.id,
+        );
         return {
           id: cat.id,
           name: cat.name,
@@ -287,14 +343,17 @@ export async function GET() {
     }
 
     // Category distribution for pie chart
-    const categoryDistribution = categoryStatsWithViews.map((cat) => ({
-      name: cat.name,
-      value: cat.articleCount,
-      percentage:
-        totalArticles > 0
-          ? Math.round((cat.articleCount / totalArticles) * 100)
-          : 0,
-    }));
+    const categoryDistribution = categoryStatsWithViews.map(
+      (cat: { name: string; articleCount: number }) => ({
+        name: cat.name,
+        value: cat.articleCount,
+
+        percentage:
+          totalArticles > 0
+            ? Math.round((cat.articleCount / totalArticles) * 100)
+            : 0,
+      }),
+    );
 
     return NextResponse.json({
       success: true,
@@ -305,7 +364,7 @@ export async function GET() {
           todayArticles,
           publishedArticles,
           draftArticles,
-          activeVisitors: uniqueVisitors30m,
+          activeVisitors: uniqueVisitorsInRange,
         },
         categoryStats: categoryStatsWithViews,
         recentArticles,

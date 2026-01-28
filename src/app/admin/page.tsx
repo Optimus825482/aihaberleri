@@ -130,12 +130,13 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [executing, setExecuting] = useState(false);
   const [logs, setLogs] = useState<LogMessage[]>([]);
+  const [trafficRange, setTrafficRange] = useState("30m");
   const logsEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    fetchAllStats();
-  }, []);
+    fetchAllStats(trafficRange);
+  }, [trafficRange]);
 
   // Auto-scroll logs to bottom
   useEffect(() => {
@@ -151,10 +152,10 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  const fetchAllStats = async () => {
+  const fetchAllStats = async (range?: string) => {
     try {
       const [dashboardRes, agentRes] = await Promise.all([
-        fetch("/api/admin/dashboard"),
+        fetch(`/api/admin/dashboard?range=${range || trafficRange}`),
         fetch("/api/agent/stats"),
       ]);
 
@@ -400,16 +401,34 @@ export default function AdminDashboard() {
                       Anlık Trafik
                     </CardTitle>
                     <CardDescription className="text-[10px] font-bold uppercase opacity-60">
-                      Son 30 dakika
+                      {trafficRange === "5m"
+                        ? "Son 5 Dakika"
+                        : trafficRange === "1h"
+                          ? "Son 1 Saat"
+                          : trafficRange === "today"
+                            ? "Bugün"
+                            : "Son 30 Dakika"}
                     </CardDescription>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-black text-blue-500">
-                    {dashboardStats?.metrics.activeVisitors || 0}
-                  </div>
-                  <div className="text-[10px] font-bold text-muted-foreground uppercase">
-                    Aktif Ziyaretçi
+                <div className="flex flex-col items-end gap-2">
+                  <select
+                    value={trafficRange}
+                    onChange={(e) => setTrafficRange(e.target.value)}
+                    className="bg-blue-500/10 border border-blue-500/20 rounded px-2 py-0.5 text-[10px] font-bold uppercase outline-none focus:ring-1 ring-blue-500/50"
+                  >
+                    <option value="5m">5 Dakika</option>
+                    <option value="30m">30 Dakika</option>
+                    <option value="1h">1 Saat</option>
+                    <option value="today">Bugün</option>
+                  </select>
+                  <div className="text-right">
+                    <div className="text-3xl font-black text-blue-500">
+                      {dashboardStats?.metrics.activeVisitors || 0}
+                    </div>
+                    <div className="text-[10px] font-bold text-muted-foreground uppercase">
+                      Aktif Ziyaretçi
+                    </div>
                   </div>
                 </div>
               </div>

@@ -77,7 +77,7 @@ export function SystemMonitor({
                         : log.type === "progress"
                           ? "text-sky-400"
                           : "text-zinc-400"
-                  } leading-relaxed`}
+                  } leading-relaxed break-all`}
                 >
                   {log.message}
                 </span>

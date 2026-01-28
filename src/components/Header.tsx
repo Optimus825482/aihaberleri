@@ -85,6 +85,28 @@ export function Header({ categories }: HeaderProps) {
                 {category.name}
               </Link>
             ))}
+            <Link
+              href="/about"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                isActive("/about")
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground",
+              )}
+            >
+              Hakkımızda
+            </Link>
+            <Link
+              href="/contact"
+              className={cn(
+                "text-sm font-medium transition-colors hover:text-primary",
+                isActive("/contact")
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground",
+              )}
+            >
+              İletişim
+            </Link>
             {categories.length > 5 && (
               <Link
                 href="/categories"
@@ -198,6 +220,19 @@ export function Header({ categories }: HeaderProps) {
                           )}
                         >
                           Hakkımızda
+                        </Link>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <Link
+                          href="/contact"
+                          className={cn(
+                            "block py-2 text-lg font-medium transition-colors hover:text-primary",
+                            isActive("/contact")
+                              ? "text-primary"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          İletişim
                         </Link>
                       </SheetClose>
                     </div>
