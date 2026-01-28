@@ -25,9 +25,12 @@ const PWAInstallPrompt = dynamic(
   { ssr: false },
 );
 
+import { Toaster } from "react-hot-toast";
+
 export function ClientProviders() {
   return (
     <>
+      <Toaster position="bottom-center" />
       <CookieConsent />
       <NotificationPrompt />
       <PWAInstallPrompt />

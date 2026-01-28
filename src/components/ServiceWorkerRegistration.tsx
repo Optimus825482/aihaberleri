@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Bell, Download, X } from "lucide-react";
 
@@ -100,8 +101,19 @@ export function ServiceWorkerRegistration() {
               body: "Sıcak gelişmeler cebinizde.",
               icon: "/icons/icon-192x192.png",
             });
-          } catch (err) {
+          } catch (err: any) {
             console.error("Subscription failed:", err);
+            if (
+              err.name === "AbortError" ||
+              (err.message && err.message.includes("denied"))
+            ) {
+              toast.error(
+                "Gizli Sekme'de (Incognito) bildirimler çalışmaz! Lütfen normal sekmeye geçin.",
+                { duration: 5000 },
+              );
+            } else {
+              toast.error("Bildirim kaydı başarısız oldu.");
+            }
           }
         } else {
           // Fallback if no VAPID key yet (just browser permission)
@@ -111,8 +123,9 @@ export function ServiceWorkerRegistration() {
           });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Notification permission error:", error);
+      toast.error("Bildirim izni reddedildi.");
     }
   };
 
