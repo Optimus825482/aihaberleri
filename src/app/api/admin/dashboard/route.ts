@@ -117,14 +117,15 @@ export async function GET() {
       }),
 
       // Last 7 days articles for chart
-      db.article.groupBy({
-        by: ["createdAt"],
+      db.article.findMany({
         where: {
           createdAt: {
             gte: sevenDaysAgo,
           },
         },
-        _count: true,
+        select: {
+          createdAt: true,
+        },
       }),
     ]);
 
@@ -158,7 +159,7 @@ export async function GET() {
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split("T")[0];
 
-      const count = last7DaysArticles.filter((article) => {
+      const count = last7DaysArticles.filter((article: any) => {
         const articleDate = new Date(article.createdAt)
           .toISOString()
           .split("T")[0];

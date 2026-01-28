@@ -29,6 +29,7 @@ import {
 import Link from "next/link";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { DashboardDonutChart } from "@/components/DashboardDonutChart";
+import { DashboardLineChart } from "@/components/DashboardLineChart";
 
 interface DashboardStats {
   metrics: {
@@ -356,31 +357,24 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Distribution Graphics */}
+          {/* Trend Graphics */}
           <Card className="lg:col-span-2 bg-card/40 border-primary/10 shadow-xl overflow-hidden relative group">
             <div className="absolute -top-12 -right-12 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-700">
-              <PieChart className="w-64 h-64" />
+              <TrendingUp className="w-64 h-64" />
             </div>
             <CardHeader>
               <CardTitle className="text-lg font-black flex items-center gap-2 uppercase tracking-tight">
-                <TrendingUp className="h-5 w-5 text-purple-500" />
-                İçerik Dağılım Analizi
+                <Activity className="h-5 w-5 text-blue-500" />
+                Haftalık İçerik Trendi
               </CardTitle>
               <CardDescription className="text-[11px] font-bold uppercase opacity-60">
-                Kategorilere göre otonom veri dağılımı
+                Son 7 günün içerik oluşturma performansı
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {dashboardStats?.charts.categoryDistribution ? (
-                <DashboardDonutChart
-                  data={dashboardStats.charts.categoryDistribution}
-                  title="Kategori Dağılımı"
-                />
-              ) : (
-                <div className="h-64 flex items-center justify-center italic text-muted-foreground font-bold uppercase tracking-widest text-xs opacity-50">
-                  Analiz ediliyor...
-                </div>
-              )}
+              <DashboardLineChart
+                data={dashboardStats?.charts.last7Days || []}
+              />
             </CardContent>
           </Card>
         </div>
