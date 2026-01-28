@@ -20,8 +20,9 @@ export const config = {
   matcher: [
     // Match all pathnames except for
     // - ... if they start with `/api`, `/admin`, `/_next` or contain a dot (.)
-    "/((?!api|admin|_next|_vercel|.*\\..*).*)",
-    // However, match `/api/public` for potential i18n API routes
-    // "/api/public/:path*",
+    // Match only root page (/) and paths starting with /en
+    // Exclude everything else (let Next.js handle /news, /category, etc. statically)
+    "/",
+    "/en/:path*",
   ],
 };
