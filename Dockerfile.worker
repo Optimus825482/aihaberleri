@@ -48,6 +48,9 @@ RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 worker
 
+# Create and set permissions for /tmp directory for tsx
+RUN mkdir -p /tmp/tsx-1001 && chown -R worker:nodejs /tmp/tsx-1001
+
 # Copy necessary runtime files
 COPY --from=builder --chown=worker:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=worker:nodejs /app/prisma ./prisma
