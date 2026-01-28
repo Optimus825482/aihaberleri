@@ -53,46 +53,38 @@ export async function POST(request: Request) {
       create: { key: "agent.nextRun", value: nextRun.toISOString() },
     });
 
-    // If executeNow is true, run agent directly (synchronous execution)
-    if (executeNow) {
-      console.log("🚀 Executing agent directly (manual trigger)...");
-
-      // Execute in background to avoid timeout
-      executeNewsAgent()
-        .then((result) => {
-          console.log("✅ Agent execution completed:", result);
-        })
-        .catch((error) => {
-          console.error("❌ Agent execution failed:", error);
-        });
-
-      return NextResponse.json({
-        success: true,
-        message: "Agent başlatıldı (arka planda çalışıyor)",
-        data: {
-          triggeredAt: new Date().toISOString(),
-          nextRun: nextRun.toISOString(),
-          executionMode: "direct",
-        },
-      });
-    }
-
-    // Try to add to queue if available
+    // Always use queue (worker) for execution - prevents duplicate runs
     try {
       const { newsAgentQueue } = await import("@/lib/queue");
       if (newsAgentQueue) {
+        // Remove any existing delayed jobs to avoid conflicts
+        const existingJobs = await newsAgentQueue.getJobs([
+          "delayed",
+          "waiting",
+        ]);
+        for (const job of existingJobs) {
+          if (job.id === "news-agent-scheduled-run") {
+            await job.remove();
+          }
+        }
+
+        // Add immediate execution job
         await newsAgentQueue.add(
           "scrape-and-publish",
           {},
           {
-            priority: 1, // High priority for manual triggers
+            jobId: executeNow
+              ? `manual-trigger-${Date.now()}`
+              : "news-agent-scheduled-run",
+            priority: executeNow ? 1 : 10, // High priority for manual triggers
             removeOnComplete: true,
+            delay: 0, // Execute immediately
           },
         );
 
         return NextResponse.json({
           success: true,
-          message: "Agent kuyruğa eklendi",
+          message: "Agent kuyruğa eklendi ve worker tarafından işlenecek",
           data: {
             triggeredAt: new Date().toISOString(),
             nextRun: nextRun.toISOString(),
@@ -101,30 +93,26 @@ export async function POST(request: Request) {
         });
       }
     } catch (queueError) {
-      console.warn("⚠️ Queue not available, executing directly:", queueError);
+      console.error("❌ Queue error:", queueError);
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Worker kuyruğu kullanılamıyor. Lütfen worker container'ının çalıştığından emin olun.",
+        },
+        { status: 503 },
+      );
     }
 
-    // Fallback: Execute directly if queue is not available
-    console.log("🚀 Queue not available, executing agent directly...");
-
-    // Execute in background
-    executeNewsAgent()
-      .then((result) => {
-        console.log("✅ Agent execution completed:", result);
-      })
-      .catch((error) => {
-        console.error("❌ Agent execution failed:", error);
-      });
-
-    return NextResponse.json({
-      success: true,
-      message: "Agent başlatıldı (arka planda çalışıyor)",
-      data: {
-        triggeredAt: new Date().toISOString(),
-        nextRun: nextRun.toISOString(),
-        executionMode: "direct-fallback",
+    // If we reach here, queue is not available
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Worker kuyruğu bulunamadı. Sistem yapılandırmasını kontrol edin.",
       },
-    });
+      { status: 503 },
+    );
   } catch (error) {
     console.error("Trigger agent error:", error);
     return NextResponse.json(
