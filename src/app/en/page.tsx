@@ -66,39 +66,53 @@ async function getCategories() {
   });
 }
 
+import { HeroCarousel } from "@/components/HeroCarousel";
+
+async function getHeroArticles() {
+  const translations = await db.articleTranslation.findMany({
+    where: {
+      locale: "en",
+      article: {
+        status: "PUBLISHED",
+      },
+    },
+    include: {
+      article: {
+        include: {
+          category: true,
+        },
+      },
+    },
+    orderBy: {
+      article: {
+        publishedAt: "desc",
+      },
+    },
+    take: 5,
+  });
+
+  return translations.map((t: any) => ({
+    id: t.article.id,
+    title: t.title,
+    slug: t.slug,
+    excerpt: t.excerpt || "",
+    imageUrl: t.article.imageUrl,
+    publishedAt: t.article.publishedAt,
+    category: t.article.category,
+  }));
+}
+
 export default async function EnglishHomePage() {
-  const [articles, categories] = await Promise.all([
+  const [articles, categories, heroArticles] = await Promise.all([
     getEnglishArticles(),
     getCategories(),
+    getHeroArticles(),
   ]);
 
   return (
     <main className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">AI News</h1>
-            <p className="text-xl md:text-2xl text-blue-200 mb-8">
-              Latest news from artificial intelligence and technology
-            </p>
-            <div className="flex justify-center gap-4">
-              <Link
-                href="/en"
-                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition-colors"
-              >
-                Latest News
-              </Link>
-              <Link
-                href="/"
-                className="bg-transparent border border-white/30 hover:bg-white/10 px-6 py-3 rounded-lg font-semibold transition-colors"
-              >
-                🇹🇷 Türkçe
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero Carousel */}
+      <HeroCarousel articles={heroArticles} locale="en" />
 
       {/* Latest News */}
       <section className="py-16 bg-gray-50 dark:bg-gray-900">

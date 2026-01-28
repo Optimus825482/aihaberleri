@@ -20,15 +20,38 @@ interface Article {
 interface HeroCarouselProps {
   articles: Article[];
   autoPlayInterval?: number;
+  locale?: string;
 }
 
 export function HeroCarousel({
   articles,
   autoPlayInterval = 6000,
+  locale = "tr",
 }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [direction, setDirection] = useState<"left" | "right">("right");
+
+  const labels = {
+    tr: {
+      readMore: "Haberi Oku",
+      emptyTitle: "Yapay Zeka Dünyasından Son Haberler",
+      emptyDesc: "En güncel AI haberleri yakında burada",
+      prev: "Önceki haber",
+      next: "Sonraki haber",
+      goTo: (i: number) => `${i + 1}. habere git`,
+    },
+    en: {
+      readMore: "Read News",
+      emptyTitle: "Latest AI News",
+      emptyDesc: "Latest AI news coming soon",
+      prev: "Previous news",
+      next: "Next news",
+      goTo: (i: number) => `Go to news ${i + 1}`,
+    },
+  };
+
+  const t = labels[locale as keyof typeof labels] || labels.tr;
 
   // Auto-play functionality
   useEffect(() => {
@@ -69,11 +92,9 @@ export function HeroCarousel({
         <div className="container mx-auto px-4 h-full flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              Yapay Zeka Dünyasından Son Haberler
+              {t.emptyTitle}
             </h1>
-            <p className="text-xl text-white/90">
-              En güncel AI haberleri yakında burada
-            </p>
+            <p className="text-xl text-white/90">{t.emptyDesc}</p>
           </div>
         </div>
       </section>
@@ -81,6 +102,14 @@ export function HeroCarousel({
   }
 
   const currentArticle = articles[currentIndex];
+
+  // Helper for localized links
+  const getLink = (path: string) => (locale === "en" ? `/en${path}` : path);
+  // Category link is slightly different structure typically (/category/slug vs /en/category/slug)
+  const getCategoryLink = (slug: string) =>
+    locale === "en" ? `/en/category/${slug}` : `/category/${slug}`;
+  const getArticleLink = (slug: string) =>
+    locale === "en" ? `/en/news/${slug}` : `/news/${slug}`;
 
   return (
     <section className="relative bg-black text-white overflow-hidden h-[500px] md:h-[600px] group">
@@ -121,7 +150,7 @@ export function HeroCarousel({
               style={{ animationDelay: "0.1s" }}
             >
               <Link
-                href={`/category/${currentArticle.category.slug}`}
+                href={getCategoryLink(currentArticle.category.slug)}
                 className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-full text-sm font-semibold transition-all hover:scale-105 shadow-lg"
               >
                 {currentArticle.category.name}
@@ -152,10 +181,10 @@ export function HeroCarousel({
               style={{ animationDelay: "0.4s" }}
             >
               <Link
-                href={`/news/${currentArticle.slug}`}
+                href={getArticleLink(currentArticle.slug)}
                 className="inline-flex items-center gap-2 bg-white text-black px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold text-base md:text-lg hover:bg-white/90 transition-all hover:scale-105 hover:shadow-2xl shadow-xl"
               >
-                Haberi Oku
+                {t.readMore}
                 <svg
                   className="w-5 h-5 transition-transform group-hover:translate-x-1"
                   fill="none"

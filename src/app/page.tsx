@@ -139,6 +139,7 @@ export default async function HomePage() {
         <HeroCarousel
           articles={heroArticles}
           autoPlayInterval={settings.heroCarouselInterval}
+          locale="tr"
         />
 
         {/* Latest Articles */}
