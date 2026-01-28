@@ -18,11 +18,6 @@ export const config = {
   // Match only internationalized pathnames
   // Exclude: api, admin, _next, static files, etc.
   matcher: [
-    // Match all pathnames except for
-    // - ... if they start with `/api`, `/admin`, `/_next` or contain a dot (.)
-    // Match only root page (/) and paths starting with /en
-    // Exclude everything else (let Next.js handle /news, /category, etc. statically)
-    "/",
-    "/en/:path*",
+    // Middleware disabled to fix 404s on static routes
   ],
 };
