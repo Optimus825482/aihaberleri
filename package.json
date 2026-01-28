@@ -11,7 +11,8 @@
     "postinstall": "prisma generate || echo 'Prisma generate failed (schema not found?), skipping...'",
     "agent:start": "ts-node src/scripts/agent-runner.ts",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "sync:facebook": "tsx scripts/sync-facebook-share-status.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
