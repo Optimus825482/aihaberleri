@@ -42,6 +42,10 @@ ENV NEXTAUTH_URL="http://localhost:3000"
 # Set Node memory limit for build process (Adjusted to 2GB for stability on smaller VPS)
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
+# Install sharp BEFORE build (with correct architecture)
+# This prevents runtime installation issues
+RUN npm install --legacy-peer-deps sharp@0.33.5
+
 # Run build
 RUN npm run build
 
@@ -84,15 +88,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/src/lib/tts_engine.py ./src/lib/tts_engine.py
 
-# Copy package.json for sharp installation
+# Copy package.json for reference
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json* ./
 
-# Install ONLY sharp in production mode with correct architecture
-# This ensures sharp binaries match the runtime environment
-# Using --legacy-peer-deps to bypass eslint peer dependency conflicts
-RUN npm install --omit=dev --ignore-scripts --legacy-peer-deps sharp@0.33.5 && \
-    npm cache clean --force
+# Copy sharp from builder (already installed with correct architecture)
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
 
 # Copy scripts and necessary node_modules for runtime scripts (Agent worker etc)
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
