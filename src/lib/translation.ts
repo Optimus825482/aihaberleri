@@ -426,7 +426,7 @@ export async function migrateExistingArticles(): Promise<void> {
 
     // Execute batch in parallel
     await Promise.all(
-      batch.map(async ({ id }) => {
+      batch.map(async ({ id }: { id: string }) => {
         try {
           await translateAndSaveArticle(id, "tr");
         } catch (error) {
