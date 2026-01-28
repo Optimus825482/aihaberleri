@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
   Card,
@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SystemMonitor, LogMessage } from "@/components/SystemMonitor";
 import {
   Clock,
   Eye,
@@ -64,6 +65,61 @@ interface AnalyticsData {
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // System Monitor States
+  const [logs, setLogs] = useState<LogMessage[]>([]);
+  const [executing, setExecuting] = useState(false);
+  // Default to true or fetch from API. Assuming enabled for now as requested.
+  const [isAgentEnabled, setIsAgentEnabled] = useState(true);
+  const eventSourceRef = useRef<EventSource | null>(null);
+
+  useEffect(() => {
+    // Connect to Agent Stream for global monitoring
+    const connectSSE = () => {
+      if (eventSourceRef.current?.readyState === EventSource.OPEN) return;
+
+      const eventSource = new EventSource("/api/agent/stream");
+      eventSourceRef.current = eventSource;
+
+      eventSource.onopen = () => {
+        // Connection opened
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "ping") return;
+
+          if (data.status === "complete" || data.status === "failed") {
+            setExecuting(false);
+          } else if (data.status === "running") {
+            setExecuting(true);
+          }
+
+          if (data.message) {
+            setLogs((prev) => {
+              const newLogs = [...prev, data];
+              return newLogs.slice(-50); // Keep last 50 logs
+            });
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        eventSourceRef.current = null;
+        setExecuting(false);
+      };
+    };
+
+    connectSSE();
+
+    return () => {
+      eventSourceRef.current?.close();
+    };
+  }, []);
 
   useEffect(() => {
     fetchAnalytics();
@@ -332,6 +388,15 @@ export default function AnalyticsPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Real-time System Monitor */}
+        <div className="mt-8">
+          <SystemMonitor
+            logs={logs}
+            executing={executing}
+            isAgentEnabled={isAgentEnabled}
+          />
         </div>
       </div>
     </AdminLayout>
