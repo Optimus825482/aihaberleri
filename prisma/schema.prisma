@@ -135,18 +135,29 @@ model ArticleTranslation {
 }
 
 model ArticleAnalytics {
-  id        String   @id @default(cuid())
-  articleId String
-  ipAddress String
-  userAgent String?
-  duration  Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  articleId   String
+  ipAddress   String
+  userAgent   String?
+  duration    Int      @default(0)
+  
+  // GeoIP Location Data
+  country     String?
+  countryCode String?
+  region      String?
+  city        String?
+  latitude    Float?
+  longitude   Float?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@index([articleId])
   @@index([createdAt])
   @@index([ipAddress])
+  @@index([country])
+  @@index([city])
 }
 
 model AgentLog {

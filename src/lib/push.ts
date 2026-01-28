@@ -54,6 +54,14 @@ export async function sendPushNotification(
           .catch((e) => console.error("Error deleting expired sub:", e));
       }
 
+      // 401 (Unauthorized) - Expired or invalid subscription
+      if (error.statusCode === 401) {
+        console.log(`🗑️  Removing unauthorized push subscription: ${sub.id}`);
+        return db.pushSubscription
+          .delete({ where: { id: sub.id } })
+          .catch((e) => console.error("Error deleting unauthorized sub:", e));
+      }
+
       // 400 (Bad Request) - Invalid subscription format
       if (error.statusCode === 400) {
         console.log(`🗑️  Removing invalid push subscription: ${sub.id}`);

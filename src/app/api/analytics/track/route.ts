@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { headers } from "next/headers";
+import { getClientIP, getLocationFromIP } from "@/lib/geoip";
 
 export async function POST(request: Request) {
   try {
@@ -14,22 +15,34 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get client IP
+    const ip = getClientIP(request);
+
     const headersList = await headers();
-    const ip =
-      headersList.get("x-forwarded-for")?.split(",")[0] ||
-      headersList.get("x-real-ip") ||
-      "unknown";
     const userAgent = headersList.get("user-agent") || "unknown";
 
+    // Get location from IP (async, non-blocking)
+    let locationData = null;
+    try {
+      locationData = await getLocationFromIP(ip);
+    } catch (geoError) {
+      console.warn("GeoIP lookup failed:", geoError);
+      // Continue without location data
+    }
+
     // Update or create analytics record for this session
-    // For simplicity, we create a new record. In a more complex setup, 
-    // we could use a session ID to update an existing record.
     await db.articleAnalytics.create({
       data: {
         articleId,
         ipAddress: ip,
         userAgent,
         duration: duration || 0,
+        country: locationData?.country || null,
+        countryCode: locationData?.countryCode || null,
+        region: locationData?.region || null,
+        city: locationData?.city || null,
+        latitude: locationData?.lat || null,
+        longitude: locationData?.lon || null,
       },
     });
 
