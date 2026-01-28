@@ -17,7 +17,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Clock, Eye, Activity, Users, Laptop, Globe, Cpu } from "lucide-react";
+import {
+  Clock,
+  Eye,
+  Activity,
+  Users,
+  Laptop,
+  Globe,
+  Cpu,
+  MapPin,
+} from "lucide-react";
 import { DashboardDonutChart } from "@/components/DashboardDonutChart";
 import { Badge } from "@/components/ui/badge";
 
@@ -48,6 +57,7 @@ interface AnalyticsData {
     browser: Array<{ name: string; value: number; percentage: number }>;
     device: Array<{ name: string; value: number; percentage: number }>;
     os: Array<{ name: string; value: number; percentage: number }>;
+    country: Array<{ name: string; value: number; percentage: number }>;
   };
 }
 
@@ -148,7 +158,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Detailed Distribution Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="bg-card/50">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -201,6 +211,25 @@ export default function AnalyticsPage() {
               ) : (
                 <div className="h-40 flex items-center justify-center text-xs text-muted-foreground">
                   Yükleniyor...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-red-500" />
+                Coğrafi Dağılım
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data?.stats?.country && data.stats.country.length > 0 ? (
+                <DashboardDonutChart data={data.stats.country} title="Ülke" />
+              ) : (
+                <div className="h-40 flex flex-col items-center justify-center text-xs text-muted-foreground text-center px-4">
+                  <MapPin className="h-8 w-8 mb-2 opacity-20" />
+                  Veri toplanıyor...
                 </div>
               )}
             </CardContent>

@@ -58,6 +58,7 @@ export async function GET() {
     const analyticsData = await db.articleAnalytics.findMany({
       select: {
         userAgent: true,
+        ipAddress: true,
       },
       take: 1000,
       orderBy: { createdAt: "desc" },
@@ -99,6 +100,42 @@ export async function GET() {
       osStats[os] = (osStats[os] || 0) + 1;
     });
 
+    // 5. Geo Location (Via IP-API Batch)
+    const uniqueIps = Array.from(
+      new Set(
+        analyticsData
+          .map((a) => a.ipAddress)
+          .filter((ip) => ip && ip !== "::1" && ip !== "127.0.0.1"),
+      ),
+    ).slice(0, 50); // Limit 50 IPs
+
+    const countryStats: Record<string, number> = {};
+
+    if (uniqueIps.length > 0) {
+      try {
+        const geoResponse = await fetch("http://ip-api.com/batch", {
+          method: "POST",
+          body: JSON.stringify(
+            uniqueIps.map((ip) => ({ query: ip, fields: "country" })),
+          ),
+        });
+        const geoData = await geoResponse.json();
+
+        if (Array.isArray(geoData)) {
+          geoData.forEach((geo: any) => {
+            if (geo && geo.country) {
+              // Normalize country names if needed, or translate
+              const country =
+                geo.country === "Turkey" ? "Türkiye" : geo.country;
+              countryStats[country] = (countryStats[country] || 0) + 1;
+            }
+          });
+        }
+      } catch (error) {
+        console.error("GeoIP Error:", error);
+      }
+    }
+
     const totalCount = analyticsData.length;
     const formatStats = (stats: Record<string, number>) => {
       return Object.entries(stats)
@@ -128,6 +165,7 @@ export async function GET() {
           browser: formatStats(browserStats),
           device: formatStats(deviceStats),
           os: formatStats(osStats),
+          country: formatStats(countryStats),
         },
       },
     });
