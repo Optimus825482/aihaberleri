@@ -1,4 +1,5 @@
 # Production-optimized Dockerfile (King Mode v2)
+# Build timestamp: 2026-01-28 20:30
 
 # Stage 1: Dependencies
 FROM node:20.18-slim AS deps
