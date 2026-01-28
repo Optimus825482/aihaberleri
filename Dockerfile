@@ -16,6 +16,10 @@ COPY package.json package-lock.json* .npmrc* ./
 # Using npm ci for reliable, exact versions based on lockfile
 RUN npm ci --include=dev --network-timeout=100000
 
+# Install sharp separately with legacy-peer-deps (prevents dependency conflicts)
+# This ensures sharp is available for Next.js image optimization during build
+RUN npm install --legacy-peer-deps sharp@0.33.5
+
 # Stage 2: Builder
 FROM node:20.18-slim AS builder
 WORKDIR /app
@@ -41,10 +45,6 @@ ENV NEXTAUTH_URL="http://localhost:3000"
 
 # Set Node memory limit for build process (Adjusted to 2GB for stability on smaller VPS)
 ENV NODE_OPTIONS="--max-old-space-size=2048"
-
-# Install sharp BEFORE build (with correct architecture)
-# This prevents runtime installation issues
-RUN npm install --legacy-peer-deps sharp@0.33.5
 
 # Run build
 RUN npm run build
