@@ -13,6 +13,7 @@ import {
 } from "@/components/GoogleTagManager";
 import { SiteHeader } from "@/components/site-header";
 import { Footer } from "@/components/Footer";
+import { LayoutWrapper } from "@/components/layout-wrapper";
 import { AudioProvider } from "@/context/AudioContext";
 
 // Initialize scheduler (in-process fallback if worker not available)
@@ -135,9 +136,9 @@ export default function RootLayout({
             <GoogleTagManagerNoScript />
             <GoogleAnalytics />
             <GoogleTagManager />
-            <SiteHeader />
-            {children}
-            <Footer />
+            <LayoutWrapper header={<SiteHeader />} footer={<Footer />}>
+              {children}
+            </LayoutWrapper>
             <ClientProviders />
             <ServiceWorkerRegistration />
             <TailwindIndicator />
