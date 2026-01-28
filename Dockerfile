@@ -9,7 +9,7 @@ WORKDIR /app
 ENV NODE_ENV=development
 
 # Copy package files
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json* .npmrc* ./
 
 # Install ALL dependencies (including devDependencies) for build
 # Using npm ci for reliable, exact versions based on lockfile
