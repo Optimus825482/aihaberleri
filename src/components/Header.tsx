@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 interface Category {
   id: string;
@@ -63,7 +64,9 @@ export function Header({ categories }: HeaderProps) {
               href="/"
               className={cn(
                 "text-sm font-medium transition-colors hover:text-primary",
-                isActive("/") ? "text-primary font-bold" : "text-muted-foreground"
+                isActive("/")
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground",
               )}
             >
               Anasayfa
@@ -76,40 +79,54 @@ export function Header({ categories }: HeaderProps) {
                   "text-sm font-medium transition-colors hover:text-primary",
                   isActive(`/category/${category.slug}`)
                     ? "text-primary font-bold"
-                    : "text-muted-foreground"
+                    : "text-muted-foreground",
                 )}
               >
                 {category.name}
               </Link>
             ))}
             {categories.length > 5 && (
-               <Link
-               href="/categories"
-               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-             >
-               Diğer
-             </Link>
+              <Link
+                href="/categories"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                Diğer
+              </Link>
             )}
           </nav>
 
           {/* Right Actions: Search & Subscribe & Mobile Menu */}
           <div className="flex items-center gap-2">
             {/* Search Bar - Desktop Expanded / Mobile Toggle */}
-            <div className={cn("flex items-center", isSearchOpen ? "w-full absolute left-0 top-0 h-16 bg-background px-4 z-50 lg:static lg:w-auto lg:bg-transparent lg:p-0" : "")}>
-              
+            <div
+              className={cn(
+                "flex items-center",
+                isSearchOpen
+                  ? "w-full absolute left-0 top-0 h-16 bg-background px-4 z-50 lg:static lg:w-auto lg:bg-transparent lg:p-0"
+                  : "",
+              )}
+            >
               {isSearchOpen ? (
-                 <form onSubmit={handleSearch} className="flex w-full items-center gap-2 lg:w-64">
-                   <Input 
-                      autoFocus
-                      placeholder="Haber ara..." 
-                      className="h-9" 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                   />
-                   <Button size="icon" variant="ghost" type="button" onClick={() => setIsSearchOpen(false)}>
-                      <X className="h-4 w-4" />
-                   </Button>
-                 </form>
+                <form
+                  onSubmit={handleSearch}
+                  className="flex w-full items-center gap-2 lg:w-64"
+                >
+                  <Input
+                    autoFocus
+                    placeholder="Haber ara..."
+                    className="h-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    type="button"
+                    onClick={() => setIsSearchOpen(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </form>
               ) : (
                 <Button
                   variant="ghost"
@@ -122,6 +139,9 @@ export function Header({ categories }: HeaderProps) {
                 </Button>
               )}
             </div>
+
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="inline" />
 
             <div className="hidden sm:flex">
               <Button size="sm" className="hidden md:flex font-semibold">
@@ -141,10 +161,13 @@ export function Header({ categories }: HeaderProps) {
                   <span className="sr-only">Menü</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px] pr-0">
+              <SheetContent
+                side="right"
+                className="w-[300px] sm:w-[400px] pr-0"
+              >
                 <SheetHeader className="px-1 text-left">
                   <SheetTitle className="flex items-center gap-2 ml-4">
-                     <Logo size="sm" showText={true} />
+                    <Logo size="sm" showText={true} />
                   </SheetTitle>
                 </SheetHeader>
                 <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
@@ -152,11 +175,13 @@ export function Header({ categories }: HeaderProps) {
                     <div className="flex flex-col space-y-3 pt-4">
                       <h4 className="font-medium leading-none">Menü</h4>
                       <SheetClose asChild>
-                         <Link
+                        <Link
                           href="/"
                           className={cn(
                             "block py-2 text-lg font-medium transition-colors hover:text-primary",
-                            isActive("/") ? "text-primary" : "text-muted-foreground"
+                            isActive("/")
+                              ? "text-primary"
+                              : "text-muted-foreground",
                           )}
                         >
                           Anasayfa
@@ -167,14 +192,16 @@ export function Header({ categories }: HeaderProps) {
                           href="/about"
                           className={cn(
                             "block py-2 text-lg font-medium transition-colors hover:text-primary",
-                            isActive("/about") ? "text-primary" : "text-muted-foreground"
+                            isActive("/about")
+                              ? "text-primary"
+                              : "text-muted-foreground",
                           )}
                         >
                           Hakkımızda
                         </Link>
                       </SheetClose>
                     </div>
-                    
+
                     <div className="flex flex-col space-y-3 pt-4 border-t">
                       <h4 className="font-medium leading-none">Kategoriler</h4>
                       {categories.map((category) => (
@@ -185,7 +212,7 @@ export function Header({ categories }: HeaderProps) {
                               "block py-2 text-base transition-colors hover:text-primary",
                               isActive(`/category/${category.slug}`)
                                 ? "text-primary font-medium"
-                                : "text-muted-foreground"
+                                : "text-muted-foreground",
                             )}
                           >
                             {category.name}
@@ -194,8 +221,16 @@ export function Header({ categories }: HeaderProps) {
                       ))}
                     </div>
 
+                    {/* Language Switcher - Mobile */}
                     <div className="pt-4 border-t mr-6">
-                       <Button className="w-full font-semibold">Abone Ol</Button>
+                      <h4 className="font-medium leading-none mb-3">
+                        Dil / Language
+                      </h4>
+                      <LanguageSwitcher variant="inline" />
+                    </div>
+
+                    <div className="pt-4 border-t mr-6">
+                      <Button className="w-full font-semibold">Abone Ol</Button>
                     </div>
                   </div>
                 </ScrollArea>

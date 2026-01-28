@@ -16,17 +16,42 @@ interface ArticleCardProps {
     imageUrl: string | null;
     publishedAt: Date | null;
     views: number;
-    content: string;
+    content?: string;
     category: {
       name: string;
       slug: string;
     };
   };
+  locale?: "tr" | "en";
 }
 
-export function ArticleCard({ article }: ArticleCardProps) {
-  const readingTime = calculateReadingTime(article.content);
-  const articleUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/news/${article.slug}`;
+// Localized text
+const texts = {
+  tr: {
+    readingTime: "dk okuma",
+    views: "görüntülenme",
+    share: "Paylaş",
+    linkCopied: "Link kopyalandı!",
+  },
+  en: {
+    readingTime: "min read",
+    views: "views",
+    share: "Share",
+    linkCopied: "Link copied!",
+  },
+};
+
+export function ArticleCard({ article, locale = "tr" }: ArticleCardProps) {
+  const readingTime = article.content
+    ? calculateReadingTime(article.content)
+    : 3;
+  const t = texts[locale];
+
+  // Build URLs based on locale
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const newsPath = locale === "en" ? "en/news" : "news";
+  const categoryPath = locale === "en" ? "en/category" : "category";
+  const articleUrl = `${baseUrl}/${newsPath}/${article.slug}`;
 
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -40,22 +65,22 @@ export function ArticleCard({ article }: ArticleCardProps) {
           url: articleUrl,
         });
       } catch (error) {
-        console.log("Paylaşım iptal edildi");
+        console.log("Share cancelled");
       }
     } else {
       // Fallback: copy to clipboard
       try {
         await navigator.clipboard.writeText(articleUrl);
-        alert("Link kopyalandı!");
+        alert(t.linkCopied);
       } catch (error) {
-        console.error("Kopyalama hatası:", error);
+        console.error("Copy error:", error);
       }
     }
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <Link href={`/news/${article.slug}`}>
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
+      <Link href={`/${newsPath}/${article.slug}`}>
         {article.imageUrl && (
           <div className="relative h-48 w-full overflow-hidden">
             <Image
@@ -71,13 +96,13 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
       <CardContent className="p-6">
         <Link
-          href={`/category/${article.category.slug}`}
+          href={`/${categoryPath}/${article.category.slug}`}
           className="text-xs font-semibold text-primary hover:underline"
         >
           {article.category.name}
         </Link>
 
-        <Link href={`/news/${article.slug}`}>
+        <Link href={`/${newsPath}/${article.slug}`}>
           <h3 className="mt-2 text-xl font-bold line-clamp-2 hover:text-primary transition-colors">
             {article.title}
           </h3>
@@ -92,11 +117,15 @@ export function ArticleCard({ article }: ArticleCardProps) {
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1">
             <Clock className="h-3 w-3" />
-            <span>{readingTime} dk okuma</span>
+            <span>
+              {readingTime} {t.readingTime}
+            </span>
           </div>
           <div className="flex items-center space-x-1">
             <Eye className="h-3 w-3" />
-            <span>{article.views} görüntülenme</span>
+            <span>
+              {article.views} {t.views}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -108,7 +137,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             size="sm"
             onClick={handleShare}
             className="h-8 w-8 p-0 hover:bg-primary/10"
-            title="Paylaş"
+            title={t.share}
           >
             <Share2 className="h-4 w-4" />
           </Button>

@@ -1,0 +1,77 @@
+{
+  "common": {
+    "home": "Ana Sayfa",
+    "news": "Haberler",
+    "categories": "Kategoriler",
+    "about": "Hakkımızda",
+    "contact": "İletişim",
+    "search": "Ara...",
+    "searchPlaceholder": "Haber ara...",
+    "readMore": "Devamını Oku",
+    "latestNews": "Son Haberler",
+    "popularNews": "Popüler Haberler",
+    "relatedNews": "İlgili Haberler",
+    "allNews": "Tüm Haberler",
+    "moreNews": "Daha Fazla Haber",
+    "loading": "Yükleniyor...",
+    "noResults": "Sonuç bulunamadı",
+    "error": "Bir hata oluştu"
+  },
+  "navigation": {
+    "home": "Ana Sayfa",
+    "news": "Haberler",
+    "categories": "Kategoriler",
+    "about": "Hakkımızda",
+    "contact": "İletişim",
+    "subscribe": "Abone Ol"
+  },
+  "footer": {
+    "copyright": "© 2026 AI Haberleri. Tüm hakları saklıdır.",
+    "privacy": "Gizlilik Politikası",
+    "terms": "Kullanım Şartları",
+    "disclaimer": "Yasal Uyarı",
+    "description": "Yapay zeka ve teknoloji dünyasından en güncel haberler"
+  },
+  "article": {
+    "publishedAt": "Yayınlanma Tarihi",
+    "updatedAt": "Güncellenme Tarihi",
+    "author": "Yazar",
+    "views": "görüntüleme",
+    "share": "Paylaş",
+    "shareOn": "{platform}'da Paylaş",
+    "comments": "Yorumlar",
+    "readingTime": "{minutes} dk okuma",
+    "category": "Kategori",
+    "tags": "Etiketler",
+    "source": "Kaynak",
+    "relatedArticles": "İlgili Haberler"
+  },
+  "newsletter": {
+    "title": "Bültene Abone Ol",
+    "description": "En son AI haberlerini e-posta kutunuza alın",
+    "placeholder": "E-posta adresiniz",
+    "subscribe": "Abone Ol",
+    "success": "Başarıyla abone oldunuz!",
+    "error": "Abonelik sırasında bir hata oluştu",
+    "privacy": "E-postanızı asla paylaşmayız"
+  },
+  "categories": {
+    "all": "Tümü",
+    "technology": "Teknoloji",
+    "aiNews": "Yapay Zeka Haberleri",
+    "research": "Araştırma",
+    "business": "İş Dünyası",
+    "innovation": "İnovasyon"
+  },
+  "meta": {
+    "siteTitle": "AI Haberleri - Yapay Zeka ve Teknoloji Haberleri",
+    "siteDescription": "Yapay zeka, makine öğrenmesi ve teknoloji dünyasından en güncel haberler"
+  },
+  "errors": {
+    "404": "Sayfa Bulunamadı",
+    "404Description": "Aradığınız sayfa mevcut değil veya taşınmış olabilir.",
+    "500": "Sunucu Hatası",
+    "500Description": "Bir şeyler yanlış gitti. Lütfen daha sonra tekrar deneyin.",
+    "backHome": "Ana Sayfaya Dön"
+  }
+}

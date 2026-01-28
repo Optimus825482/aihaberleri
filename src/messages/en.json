@@ -1,0 +1,77 @@
+{
+  "common": {
+    "home": "Home",
+    "news": "News",
+    "categories": "Categories",
+    "about": "About",
+    "contact": "Contact",
+    "search": "Search...",
+    "searchPlaceholder": "Search news...",
+    "readMore": "Read More",
+    "latestNews": "Latest News",
+    "popularNews": "Popular News",
+    "relatedNews": "Related News",
+    "allNews": "All News",
+    "moreNews": "More News",
+    "loading": "Loading...",
+    "noResults": "No results found",
+    "error": "An error occurred"
+  },
+  "navigation": {
+    "home": "Home",
+    "news": "News",
+    "categories": "Categories",
+    "about": "About",
+    "contact": "Contact",
+    "subscribe": "Subscribe"
+  },
+  "footer": {
+    "copyright": "© 2026 AI News. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "disclaimer": "Disclaimer",
+    "description": "Latest news from the world of artificial intelligence and technology"
+  },
+  "article": {
+    "publishedAt": "Published",
+    "updatedAt": "Updated",
+    "author": "Author",
+    "views": "views",
+    "share": "Share",
+    "shareOn": "Share on {platform}",
+    "comments": "Comments",
+    "readingTime": "{minutes} min read",
+    "category": "Category",
+    "tags": "Tags",
+    "source": "Source",
+    "relatedArticles": "Related Articles"
+  },
+  "newsletter": {
+    "title": "Subscribe to Newsletter",
+    "description": "Get the latest AI news delivered to your inbox",
+    "placeholder": "Your email address",
+    "subscribe": "Subscribe",
+    "success": "Successfully subscribed!",
+    "error": "An error occurred while subscribing",
+    "privacy": "We never share your email"
+  },
+  "categories": {
+    "all": "All",
+    "technology": "Technology",
+    "aiNews": "AI News",
+    "research": "Research",
+    "business": "Business",
+    "innovation": "Innovation"
+  },
+  "meta": {
+    "siteTitle": "AI News - Artificial Intelligence & Technology News",
+    "siteDescription": "Latest news from artificial intelligence, machine learning, and technology"
+  },
+  "errors": {
+    "404": "Page Not Found",
+    "404Description": "The page you're looking for doesn't exist or has been moved.",
+    "500": "Server Error",
+    "500Description": "Something went wrong. Please try again later.",
+    "backHome": "Back to Home"
+  }
+}

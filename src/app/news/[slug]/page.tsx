@@ -31,7 +31,9 @@ export async function generateMetadata({
   const { slug } = await params;
   const article = await db.article.findUnique({
     where: { slug },
-    include: { category: true },
+    include: {
+      category: true,
+    },
   });
 
   if (!article) {
@@ -40,7 +42,32 @@ export async function generateMetadata({
     };
   }
 
-  return generateArticleMetadata(article);
+  const baseMetadata = generateArticleMetadata(article);
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+  // Find English translation for hreflang using raw query
+  const enTranslation = await db.$queryRaw<{ slug: string }[]>`
+    SELECT slug FROM "ArticleTranslation" 
+    WHERE "articleId" = ${article.id} AND locale = 'en'
+    LIMIT 1
+  `;
+
+  const hasEnglish = enTranslation.length > 0;
+
+  return {
+    ...baseMetadata,
+    alternates: {
+      canonical: `${baseUrl}/news/${article.slug}`,
+      languages: hasEnglish
+        ? {
+            tr: `${baseUrl}/news/${article.slug}`,
+            en: `${baseUrl}/en/news/${enTranslation[0].slug}`,
+          }
+        : {
+            tr: `${baseUrl}/news/${article.slug}`,
+          },
+    },
+  };
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
@@ -197,7 +224,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
               {/* Content Implementation */}
               <div className="prose prose-lg dark:prose-invert max-w-none">
-                <HighlightedText htmlContent={firstPart} articleTitle={article.title} />
+                <HighlightedText
+                  htmlContent={firstPart}
+                  articleTitle={article.title}
+                />
 
                 {/* IN-CONTENT AD */}
                 <div className="my-8 py-4 bg-muted/10 border-y border-muted flex flex-col items-center">
@@ -211,7 +241,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   </p>
                 </div>
 
-                <HighlightedText htmlContent={secondPart} articleTitle={article.title} />
+                <HighlightedText
+                  htmlContent={secondPart}
+                  articleTitle={article.title}
+                />
               </div>
 
               {/* Tags */}

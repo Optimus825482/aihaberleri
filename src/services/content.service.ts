@@ -15,6 +15,7 @@ import { fetchArticleContent } from "./news.service";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postTweet } from "@/lib/social/twitter";
 import { postToFacebook } from "@/lib/social/facebook";
+import { translateAndSaveArticle } from "@/lib/translation";
 
 export interface ProcessedArticle {
   title: string;
@@ -429,6 +430,15 @@ export async function publishArticle(
       }).catch((err) => console.error("Async Facebook post failed:", err));
     } catch (e) {
       console.error("Failed to trigger Facebook post:", e);
+    }
+
+    // Translate article to English (Async)
+    try {
+      translateAndSaveArticle(article.id, "tr").catch((err) =>
+        console.error("Async translation failed:", err),
+      );
+    } catch (e) {
+      console.error("Failed to trigger translation:", e);
     }
 
     return {
