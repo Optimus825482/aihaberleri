@@ -22,6 +22,7 @@ export const newsAgentQueue = redis
         removeOnFail: {
           count: 50,
         },
+        timeout: 600000, // 10 minutes timeout for job execution
       },
     })
   : null;

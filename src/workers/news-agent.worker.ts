@@ -32,8 +32,14 @@ const worker = new Worker(
       // Ensure DB connection is active (prevents "Closed" error after long idle)
       await (db as PrismaClient).$connect();
 
+      // Update job progress to prevent stalling
+      await job.updateProgress(10);
+
       // Execute the news agent
       result = await executeNewsAgent();
+
+      // Mark as nearly complete
+      await job.updateProgress(90);
 
       console.log("\n📊 Execution Summary:");
       console.log(`   Articles Scraped: ${result.articlesScraped}`);
@@ -62,17 +68,21 @@ const worker = new Worker(
           const { newsAgentQueue } = await import("@/lib/queue");
           if (newsAgentQueue) {
             const delayedJobs = await newsAgentQueue.getJobs(["delayed"]);
-            const existingJob = delayedJobs.find(j => j.id === "news-agent-scheduled-run");
-            
+            const existingJob = delayedJobs.find(
+              (j) => j.id === "news-agent-scheduled-run",
+            );
+
             if (!existingJob) {
-               const nextExecution = await scheduleNewsAgentJob();
-               if (nextExecution) {
-                 console.log(
-                   `\n⏰ Next execution: ${nextExecution.nextExecutionTime.toLocaleString()}`,
-                 );
-               }
+              const nextExecution = await scheduleNewsAgentJob();
+              if (nextExecution) {
+                console.log(
+                  `\n⏰ Next execution: ${nextExecution.nextExecutionTime.toLocaleString()}`,
+                );
+              }
             } else {
-               console.log(`\n⏰ Next execution already scheduled for: ${new Date(existingJob.timestamp + (existingJob.opts.delay || 0)).toLocaleString()}`);
+              console.log(
+                `\n⏰ Next execution already scheduled for: ${new Date(existingJob.timestamp + (existingJob.opts.delay || 0)).toLocaleString()}`,
+              );
             }
           }
         }
@@ -89,6 +99,11 @@ const worker = new Worker(
     limiter: {
       max: 1,
       duration: 1000, // Max 1 job per second
+    },
+    settings: {
+      stalledInterval: 60000, // Check for stalled jobs every 60 seconds
+      maxStalledCount: 2, // Allow 2 stalls before failing
+      lockDuration: 600000, // Lock job for 10 minutes (600000ms)
     },
   },
 );
@@ -153,8 +168,8 @@ async function initStartupSync() {
       const now = new Date();
 
       // Eğer planlanan zaman geçmişse veya hiç planlanmamışsa hemen çalıştır
-      // Ancak çok yakın zamanda (örn. son 1 saat içinde) çalışmışsa ve bir hata yüzünden nextRun güncellenmemişse, 
-      // sonsuz döngüye girmemek için son loglara bakmak gerekebilir. 
+      // Ancak çok yakın zamanda (örn. son 1 saat içinde) çalışmışsa ve bir hata yüzünden nextRun güncellenmemişse,
+      // sonsuz döngüye girmemek için son loglara bakmak gerekebilir.
       // Şimdilik basit mantık: nextRun geçmişse çalıştır.
       if (!nextRunStr || new Date(nextRunStr) <= now) {
         console.log(
@@ -164,7 +179,11 @@ async function initStartupSync() {
         // Mevcut kuyruk işlerini temizle (jobId çakışmasını önlemek için)
         const { newsAgentQueue } = await import("@/lib/queue");
         if (newsAgentQueue) {
-          const jobs = await newsAgentQueue.getJobs(["delayed", "waiting", "active"]); // Active'i de kontrol et
+          const jobs = await newsAgentQueue.getJobs([
+            "delayed",
+            "waiting",
+            "active",
+          ]); // Active'i de kontrol et
           for (const job of jobs) {
             if (job.id === "news-agent-scheduled-run") {
               await job.remove();
@@ -191,17 +210,25 @@ async function initStartupSync() {
         // Ancak burada önemli nokta: scheduleNewsAgentJob mevcut ayara göre (örn 6 saat sonraya) atar.
         // Eğer DB'deki nextRun ile BullMQ'daki delay uyumsuzsa sorun olabilir.
         // En doğrusu: BullMQ'da iş var mı bak, yoksa nextRun'a göre (veya hemen) planla.
-        
+
         const { newsAgentQueue } = await import("@/lib/queue");
-        if(newsAgentQueue) {
-             const jobs = await newsAgentQueue.getJobs(["delayed", "waiting", "active"]);
-             const existing = jobs.find(j => j.id === "news-agent-scheduled-run");
-             
-             if (!existing) {
-                 console.log("⚠️ BullMQ'da iş bulunamadı ama DB'de nextRun var. Tekrar planlanıyor...");
-                 // DB'deki süreye kadar beklemek yerine, standart döngüyü (interval) başlatmak daha güvenli
-                 await scheduleNewsAgentJob();
-             }
+        if (newsAgentQueue) {
+          const jobs = await newsAgentQueue.getJobs([
+            "delayed",
+            "waiting",
+            "active",
+          ]);
+          const existing = jobs.find(
+            (j) => j.id === "news-agent-scheduled-run",
+          );
+
+          if (!existing) {
+            console.log(
+              "⚠️ BullMQ'da iş bulunamadı ama DB'de nextRun var. Tekrar planlanıyor...",
+            );
+            // DB'deki süreye kadar beklemek yerine, standart döngüyü (interval) başlatmak daha güvenli
+            await scheduleNewsAgentJob();
+          }
         }
       }
     } else {
