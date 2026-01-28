@@ -11,7 +11,7 @@ export async function GET() {
 
     // 1. General Stats
     const totalVisits = await db.articleAnalytics.count();
-    
+
     const avgDurationResult = await db.articleAnalytics.aggregate({
       _avg: {
         duration: true,
@@ -23,7 +23,7 @@ export async function GET() {
     // Prisma doesn't support complex group by with relation fetching easily,
     // so we might need raw query or post-processing.
     // Let's use raw query for performance.
-    
+
     const topArticles = await db.$queryRaw`
       SELECT 
         a.id, 
@@ -54,6 +54,63 @@ export async function GET() {
       },
     });
 
+    // 4. Device & Browser Stats aggregation
+    const analyticsData = await db.articleAnalytics.findMany({
+      select: {
+        userAgent: true,
+      },
+      take: 1000,
+      orderBy: { createdAt: "desc" },
+    });
+
+    const browserStats: Record<string, number> = {};
+    const deviceStats: Record<string, number> = {};
+    const osStats: Record<string, number> = {};
+
+    analyticsData.forEach((item) => {
+      const ua = item.userAgent || "";
+
+      // Browser Detection
+      let browser = "Diğer";
+      if (ua.includes("Edg/")) browser = "Edge";
+      else if (ua.includes("Chrome/") && !ua.includes("Edg/"))
+        browser = "Chrome";
+      else if (ua.includes("Safari/") && !ua.includes("Chrome/"))
+        browser = "Safari";
+      else if (ua.includes("Firefox/")) browser = "Firefox";
+
+      browserStats[browser] = (browserStats[browser] || 0) + 1;
+
+      // Device Detection
+      let device = "Masaüstü";
+      if (/Mobile|Android|iPhone/i.test(ua)) device = "Mobil";
+      else if (/Tablet|iPad/i.test(ua)) device = "Tablet";
+
+      deviceStats[device] = (deviceStats[device] || 0) + 1;
+
+      // OS Detection
+      let os = "Diğer";
+      if (ua.includes("Win")) os = "Windows";
+      else if (ua.includes("Mac")) os = "macOS";
+      else if (ua.includes("Linux")) os = "Linux";
+      else if (ua.includes("Android")) os = "Android";
+      else if (ua.includes("iOS") || ua.includes("iPhone")) os = "iOS";
+
+      osStats[os] = (osStats[os] || 0) + 1;
+    });
+
+    const totalCount = analyticsData.length;
+    const formatStats = (stats: Record<string, number>) => {
+      return Object.entries(stats)
+        .map(([name, value]) => ({
+          name,
+          value,
+          percentage:
+            totalCount > 0 ? Math.round((value / totalCount) * 100) : 0,
+        }))
+        .sort((a, b) => b.value - a.value);
+    };
+
     return NextResponse.json({
       success: true,
       data: {
@@ -63,10 +120,15 @@ export async function GET() {
         },
         topArticles: JSON.parse(
           JSON.stringify(topArticles, (key, value) =>
-            typeof value === "bigint" ? value.toString() : value
-          )
+            typeof value === "bigint" ? value.toString() : value,
+          ),
         ),
         recentVisits,
+        stats: {
+          browser: formatStats(browserStats),
+          device: formatStats(deviceStats),
+          os: formatStats(osStats),
+        },
       },
     });
   } catch (error) {

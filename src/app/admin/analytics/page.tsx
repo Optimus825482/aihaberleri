@@ -17,7 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Clock, Eye, Activity, Users } from "lucide-react";
+import { Clock, Eye, Activity, Users, Laptop, Globe, Cpu } from "lucide-react";
+import { DashboardDonutChart } from "@/components/DashboardDonutChart";
 import { Badge } from "@/components/ui/badge";
 
 interface AnalyticsData {
@@ -43,6 +44,11 @@ interface AnalyticsData {
       slug: string;
     };
   }>;
+  stats: {
+    browser: Array<{ name: string; value: number; percentage: number }>;
+    device: Array<{ name: string; value: number; percentage: number }>;
+    os: Array<{ name: string; value: number; percentage: number }>;
+  };
 }
 
 export default function AnalyticsPage() {
@@ -141,6 +147,66 @@ export default function AnalyticsPage() {
           </Card>
         </div>
 
+        {/* Detailed Distribution Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="bg-card/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <Laptop className="h-4 w-4 text-blue-500" />
+                Cihaz Dağılımı
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data?.stats?.device ? (
+                <DashboardDonutChart data={data.stats.device} title="Cihaz" />
+              ) : (
+                <div className="h-40 flex items-center justify-center text-xs text-muted-foreground">
+                  Yükleniyor...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <Globe className="h-4 w-4 text-purple-500" />
+                Tarayıcı
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data?.stats?.browser ? (
+                <DashboardDonutChart
+                  data={data.stats.browser}
+                  title="Tarayıcı"
+                />
+              ) : (
+                <div className="h-40 flex items-center justify-center text-xs text-muted-foreground">
+                  Yükleniyor...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-bold flex items-center gap-2">
+                <Cpu className="h-4 w-4 text-green-500" />
+                İşletim Sistemi
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data?.stats?.os ? (
+                <DashboardDonutChart data={data.stats.os} title="OS" />
+              ) : (
+                <div className="h-40 flex items-center justify-center text-xs text-muted-foreground">
+                  Yükleniyor...
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Top Engaging Articles */}
           <Card>
@@ -173,7 +239,10 @@ export default function AnalyticsPage() {
                         </p>
                       </div>
                     </div>
-                    <Badge variant="outline" className="font-mono ml-2 shrink-0">
+                    <Badge
+                      variant="outline"
+                      className="font-mono ml-2 shrink-0"
+                    >
                       {formatDuration(article.avg_duration)}
                     </Badge>
                   </div>
@@ -194,9 +263,7 @@ export default function AnalyticsPage() {
                 <Users className="w-5 h-5 text-primary" />
                 Son Ziyaretler
               </CardTitle>
-              <CardDescription>
-                Gerçek zamanlı okuma kayıtları
-              </CardDescription>
+              <CardDescription>Gerçek zamanlı okuma kayıtları</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
@@ -216,7 +283,9 @@ export default function AnalyticsPage() {
                           </span>
                           <span>•</span>
                           <span>
-                            {new Date(visit.createdAt).toLocaleTimeString("tr-TR")}
+                            {new Date(visit.createdAt).toLocaleTimeString(
+                              "tr-TR",
+                            )}
                           </span>
                         </div>
                         <span className="font-bold text-foreground">
