@@ -15,21 +15,21 @@ import {
   Activity,
   FileText,
   TrendingUp,
-  Clock,
-  Calendar,
-  Terminal,
   Eye,
-  Edit,
-  Trash2,
   PieChart,
   Settings as SettingsIcon,
   ShieldCheck,
   ShieldAlert,
+  Users,
+  Globe,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { DashboardDonutChart } from "@/components/DashboardDonutChart";
 import { DashboardLineChart } from "@/components/DashboardLineChart";
+import { RealtimeAreaChart } from "@/components/RealtimeAreaChart";
+import { CountryBarChart } from "@/components/CountryBarChart";
 import { SystemMonitor, LogMessage } from "@/components/SystemMonitor";
 
 interface DashboardStats {
@@ -39,6 +39,7 @@ interface DashboardStats {
     todayArticles: number;
     publishedArticles: number;
     draftArticles: number;
+    activeVisitors: number;
   };
   categoryStats: Array<{
     id: string;
@@ -72,6 +73,15 @@ interface DashboardStats {
       name: string;
       value: number;
       percentage: number;
+    }>;
+    realtimeVisitors: Array<{
+      time: string;
+      visitors: number;
+      label: string;
+    }>;
+    countryDistribution: Array<{
+      name: string;
+      value: number;
     }>;
   };
 }
@@ -242,7 +252,7 @@ export default function AdminDashboard() {
             {
               label: "Taslak",
               value: dashboardStats?.metrics.draftArticles,
-              icon: Clock,
+              icon: FileText,
               color: "text-orange-500",
             },
           ].map((stat, i) => (
@@ -374,161 +384,90 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Secondary Info Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Articles */}
-          <Card className="border-primary/5 bg-card/20">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-black uppercase tracking-tight">
-                  Son Haberler
-                </CardTitle>
-                <CardDescription className="text-[10px] font-bold uppercase opacity-50 text-sky-600">
-                  En yeni 5 içerik
-                </CardDescription>
+        {/* Analytics Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Realtime Visitors Chart */}
+          <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl" />
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-500/10 rounded-xl">
+                    <Zap className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base font-black uppercase tracking-tight">
+                      Anlık Trafik
+                    </CardTitle>
+                    <CardDescription className="text-[10px] font-bold uppercase opacity-60">
+                      Son 30 dakika
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-black text-blue-500">
+                    {dashboardStats?.metrics.activeVisitors || 0}
+                  </div>
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase">
+                    Aktif Ziyaretçi
+                  </div>
+                </div>
               </div>
-              <Link href="/admin/articles">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="font-black text-[10px] hover:bg-primary/10 hover:text-primary"
-                >
-                  TÜMÜNÜ YÖNET
-                </Button>
-              </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {dashboardStats?.recentArticles &&
-                dashboardStats.recentArticles.length > 0 ? (
-                  dashboardStats.recentArticles.map((article) => (
-                    <div
-                      key={article.id}
-                      className="group flex items-start justify-between p-3 border-b border-primary/5 last:border-0 hover:bg-primary/5 rounded-xl transition-all duration-300"
-                    >
-                      <div className="flex-1 min-w-0 pr-4">
-                        <h4 className="font-bold text-sm line-clamp-1 group-hover:text-primary transition-colors">
-                          {article.title}
-                        </h4>
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
-                          <Badge
-                            variant="outline"
-                            className="font-black text-[9px] h-4 px-1.5 border-primary/20 text-primary/80 uppercase"
-                          >
-                            {article.category.name}
-                          </Badge>
-                          <span className="opacity-30">•</span>
-                          <span
-                            className={`font-black ${
-                              (article.score || 0) >= 800
-                                ? "text-green-600"
-                                : (article.score || 0) >= 500
-                                  ? "text-yellow-600"
-                                  : "text-red-600"
-                            }`}
-                          >
-                            {article.score || 0}
-                          </span>
-                          <span className="opacity-30">•</span>
-                          <span className="font-bold">
-                            {new Date(article.createdAt).toLocaleString(
-                              "tr-TR",
-                              {
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
-                          </span>
-                          <span className="opacity-30">•</span>
-                          <span className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" /> {article.views}
-                          </span>
-                        </div>
-                      </div>
-                      <Link href={`/admin/articles/${article.id}/edit`}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 rounded-2xl opacity-50 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary transition-all"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  ))
-                ) : (
-                  <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-40 italic">
-                    <FileText className="w-8 h-8 mb-2" />
-                    <p className="font-bold text-xs uppercase">
-                      Haber Bulunmuyor
-                    </p>
-                  </div>
-                )}
-              </div>
+              <RealtimeAreaChart
+                data={dashboardStats?.charts.realtimeVisitors || []}
+              />
             </CardContent>
           </Card>
 
-          {/* Operation History */}
-          <Card className="border-primary/5 bg-card/20">
-            <CardHeader>
-              <CardTitle className="text-base font-black uppercase tracking-tight">
-                Operasyon Günlüğü
-              </CardTitle>
-              <CardDescription className="text-[10px] font-bold uppercase opacity-50 text-purple-600">
-                Ghostwriter performans geçmişi
-              </CardDescription>
+          {/* Country Distribution */}
+          <Card className="border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl" />
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-emerald-500/10 rounded-xl">
+                  <Globe className="h-4 w-4 text-emerald-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-base font-black uppercase tracking-tight">
+                    Coğrafi Dağılım
+                  </CardTitle>
+                  <CardDescription className="text-[10px] font-bold uppercase opacity-60">
+                    Son 24 saat • Ülkelere göre
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {agentStats?.history.map((execution) => (
-                  <div
-                    key={execution.id}
-                    className="flex items-center justify-between p-3 bg-secondary/30 rounded-2xl border border-primary/5 hover:border-primary/20 transition-all group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${execution.status === "SUCCESS" ? "bg-green-500/10 text-green-500" : "bg-destructive/10 text-destructive"}`}
-                      >
-                        <Activity className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="font-black text-xs text-foreground/80 group-hover:text-foreground transition-colors">
-                          {new Date(execution.executionTime).toLocaleString(
-                            "tr-TR",
-                          )}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground uppercase font-black">
-                          {execution.articlesCreated} Haber Oluşturuldu •{" "}
-                          {execution.duration || 0} Saniye
-                        </p>
-                      </div>
-                    </div>
-                    <Badge
-                      variant={
-                        execution.status === "SUCCESS"
-                          ? "default"
-                          : execution.status === "FAILED"
-                            ? "destructive"
-                            : "secondary"
-                      }
-                      className="font-black text-[9px] px-2 h-5 rounded-full"
-                    >
-                      {execution.status === "SUCCESS" ? "OK" : "ERR"}
-                    </Badge>
-                  </div>
-                ))}
-                {(!agentStats?.history || agentStats.history.length === 0) && (
-                  <div className="py-12 flex flex-col items-center justify-center text-muted-foreground opacity-40 italic">
-                    <Clock className="w-8 h-8 mb-2" />
-                    <p className="font-bold text-xs uppercase">
-                      İşlem Kaydı Boş
-                    </p>
-                  </div>
-                )}
+              <CountryBarChart
+                data={dashboardStats?.charts.countryDistribution || []}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Category Distribution */}
+          <Card className="border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-transparent overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl" />
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-violet-500/10 rounded-xl">
+                  <PieChart className="h-4 w-4 text-violet-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-base font-black uppercase tracking-tight">
+                    Kategori Dağılımı
+                  </CardTitle>
+                  <CardDescription className="text-[10px] font-bold uppercase opacity-60">
+                    İçerik kategorileri
+                  </CardDescription>
+                </div>
               </div>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center">
+              <DashboardDonutChart
+                data={dashboardStats?.charts.categoryDistribution || []}
+              />
             </CardContent>
           </Card>
         </div>

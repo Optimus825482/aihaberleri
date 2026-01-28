@@ -267,3 +267,111 @@ Long-lived token **60 gün** geçerlidir. Takvime hatırlatma ekle:
 ---
 
 **Sorularınız için:** Gemini'ye sorun! 🤖
+
+### BÖLÜM 1: Facebook İçin "Sınırsız" (Asla Bitmeyen) Token Nasıl Alınır?
+
+Facebook API'de tokenlar normalde 1-2 saatliktir. "Sınırsız" (Page Access Token) almak için şu adımları **manuel** olarak yapman gerekiyor (Bu bir kere yapılır):
+
+1. **Meta for Developers** (developers.facebook.com) adresine git ve uygulamana gir.
+
+2. **Graph API Explorer** aracını aç: https://developers.facebook.com/tools/explorer/
+
+3. Sağ taraftan uygulamanı seç.
+
+4. "Get Token" -> "Get User Access Token"
+
+    
+
+   de. Şu izinleri mutlaka seç:
+
+   - ```
+     pages_manage_posts
+     ```
+
+   - ```
+     pages_read_engagement
+     ```
+
+   - ```
+     public_profile
+     ```
+
+5. Token oluşunca, bu "Kısa Ömürlü User Token"dır.
+
+6. Şimdi bunu "Uzun Ömürlü"ye çevireceğiz. Explorer'daki
+
+    
+
+   ```
+   i
+   ```
+
+    
+
+   (info) i butonuna bas,
+
+    
+
+   "Open in Access Token Tool"
+
+    
+
+   de.
+
+7. Açılan sayfada **"Extend Access Token"** butonuna bas. Sana yeni bir (60 günlük) token verecek. **Bunu kopyala.**
+
+8. Tekrar **Graph API Explorer**'a dön.
+
+9. Kopyaladığın uzun ömürlü token'ı yapıştır.
+
+10. Adres çubuğuna:
+
+     
+
+    ```
+    me/accounts
+    ```
+
+     
+
+    yaz ve "Submit" de.
+
+11. Sonuçlarda yönettiğin sayfaları göreceksin. Sayfanın yanındaki
+
+     
+
+    ```
+    access_token
+    ```
+
+     
+
+    değerini al.
+
+    - 🎯
+
+       
+
+      İŞTE BU!
+
+       
+
+      Bu token, sen şifreni değiştirmediğin sürece
+
+       
+
+      sonsuza kadar
+
+       
+
+      geçerlidir. Bunu
+
+       
+
+      ```
+      .env
+      ```
+
+       
+
+      dosyanı güncellemek için kullan.

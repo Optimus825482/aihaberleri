@@ -208,6 +208,7 @@ model PushSubscription {
   keys         Json
   userAgent    String?
   ipAddress    String?
+  language     String   @default("tr")
   subscribedAt DateTime @default(now())
   lastUsedAt   DateTime @default(now())
 

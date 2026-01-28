@@ -8,12 +8,13 @@ const pushSubscribeSchema = z.object({
     p256dh: z.string(),
     auth: z.string(),
   }),
+  language: z.string().default("tr").optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { endpoint, keys } = pushSubscribeSchema.parse(body);
+    const { endpoint, keys, language } = pushSubscribeSchema.parse(body);
 
     // Check if already subscribed
     const existing = await db.pushSubscription.findUnique({
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
           request.headers.get("x-forwarded-for") ||
           request.headers.get("x-real-ip") ||
           "unknown",
+        language: language || "tr",
       },
     });
 

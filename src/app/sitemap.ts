@@ -88,6 +88,66 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           },
         },
       },
+      {
+        url: `${baseUrl}/en/about`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.5,
+        alternates: {
+          languages: {
+            tr: `${baseUrl}/about`,
+            en: `${baseUrl}/en/about`,
+          },
+        },
+      },
+      {
+        url: `${baseUrl}/privacy`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.3,
+        alternates: {
+          languages: {
+            tr: `${baseUrl}/privacy`,
+            en: `${baseUrl}/en/privacy`,
+          },
+        },
+      },
+      {
+        url: `${baseUrl}/en/privacy`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.3,
+        alternates: {
+          languages: {
+            tr: `${baseUrl}/privacy`,
+            en: `${baseUrl}/en/privacy`,
+          },
+        },
+      },
+      {
+        url: `${baseUrl}/terms`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.3,
+        alternates: {
+          languages: {
+            tr: `${baseUrl}/terms`,
+            en: `${baseUrl}/en/terms`,
+          },
+        },
+      },
+      {
+        url: `${baseUrl}/en/terms`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.3,
+        alternates: {
+          languages: {
+            tr: `${baseUrl}/terms`,
+            en: `${baseUrl}/en/terms`,
+          },
+        },
+      },
     ];
 
     // Turkish article pages

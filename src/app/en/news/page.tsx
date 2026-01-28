@@ -4,6 +4,17 @@ import { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
+interface ArticleItem {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  imageUrl: string | null;
+  publishedAt: Date | null;
+  category: { id: string; name: string; slug: string } | null;
+  views: number;
+}
+
 export const metadata: Metadata = {
   title: "Latest News",
   description: "Latest artificial intelligence news and updates",
@@ -42,12 +53,16 @@ export default async function NewsPage() {
       <h1 className="text-4xl font-bold mb-8">Latest News</h1>
       {articles.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map((article) => (
+          {articles.map((article: ArticleItem) => (
             <ArticleCard
               key={article.id}
               article={{
                 ...article,
                 publishedAt: article.publishedAt || new Date(),
+                category: article.category || {
+                  name: "General",
+                  slug: "general",
+                },
               }}
               locale="en"
             />

@@ -10,10 +10,10 @@ interface DataPoint {
 
 interface DashboardDonutChartProps {
   data: DataPoint[];
-  title: string;
+  title?: string;
 }
 
-export function DashboardDonutChart({ data, title }: DashboardDonutChartProps) {
+export function DashboardDonutChart({ data }: DashboardDonutChartProps) {
   const total = data.reduce((acc, item) => acc + item.value, 0);
   let cumulativePercentage = 0;
 

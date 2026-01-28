@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
   Card,
@@ -71,54 +71,41 @@ export default function AnalyticsPage() {
   const [executing, setExecuting] = useState(false);
   // Default to true or fetch from API. Assuming enabled for now as requested.
   const [isAgentEnabled, setIsAgentEnabled] = useState(true);
-  const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    // Connect to Agent Stream for global monitoring
-    const connectSSE = () => {
-      if (eventSourceRef.current?.readyState === EventSource.OPEN) return;
-
-      const eventSource = new EventSource("/api/agent/stream");
-      eventSourceRef.current = eventSource;
-
-      eventSource.onopen = () => {
-        // Connection opened
-      };
-
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === "ping") return;
-
-          if (data.status === "complete" || data.status === "failed") {
-            setExecuting(false);
-          } else if (data.status === "running") {
-            setExecuting(true);
-          }
-
-          if (data.message) {
-            setLogs((prev) => {
-              const newLogs = [...prev, data];
-              return newLogs.slice(-50); // Keep last 50 logs
-            });
-          }
-        } catch (e) {
-          // ignore parse errors
+    // Fetch last agent execution logs (read-only, no agent trigger)
+    const fetchAgentLogs = async () => {
+      try {
+        const response = await fetch("/api/agent/stats");
+        const result = await response.json();
+        if (result.success && result.data?.history) {
+          // Convert history to log format for display
+          const historyLogs: LogMessage[] = result.data.history
+            .slice(0, 10)
+            .map(
+              (h: {
+                executionTime: string;
+                status: string;
+                articlesCreated: number;
+                duration: number;
+              }) => ({
+                message: `[${new Date(h.executionTime).toLocaleString()}] ${h.status === "SUCCESS" ? "✅" : "❌"} ${h.articlesCreated} makale, ${h.duration}s`,
+                type: h.status === "SUCCESS" ? "success" : "error",
+                timestamp: h.executionTime,
+              }),
+            );
+          setLogs(historyLogs);
+          setIsAgentEnabled(result.data.agent?.enabled ?? true);
         }
-      };
-
-      eventSource.onerror = () => {
-        eventSource.close();
-        eventSourceRef.current = null;
-        setExecuting(false);
-      };
+      } catch (error) {
+        console.error("Failed to fetch agent logs:", error);
+      }
     };
 
-    connectSSE();
-
-    return () => {
-      eventSourceRef.current?.close();
-    };
+    fetchAgentLogs();
+    // Refresh logs every 30 seconds
+    const interval = setInterval(fetchAgentLogs, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -324,10 +311,7 @@ export default function AnalyticsPage() {
                         </p>
                       </div>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className="font-mono ml-2 shrink-0"
-                    >
+                    <Badge className="font-mono ml-2 shrink-0 border">
                       {formatDuration(article.avg_duration)}
                     </Badge>
                   </div>

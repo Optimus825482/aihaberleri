@@ -241,8 +241,17 @@ export async function calculateTrendScoreBrave(
  * Extract keywords from title and description
  */
 function extractKeywords(title: string, description: string): string {
-  // Combine title and description
-  const text = `${title} ${description}`.toLowerCase();
+  // Strip HTML tags from description (RSS feeds often contain HTML)
+  const cleanDescription = (description || "")
+    .replace(/<[^>]*>/g, " ") // Remove HTML tags
+    .replace(/&[a-z]+;/gi, " ") // Remove HTML entities (&amp;, &nbsp;, etc.)
+    .replace(/https?:\/\/[^\s]+/g, " ") // Remove URLs
+    .replace(/[^a-zA-Z0-9\s]/g, " "); // Keep only alphanumeric and spaces
+
+  const cleanTitle = (title || "").replace(/[^a-zA-Z0-9\s]/g, " "); // Keep only alphanumeric and spaces
+
+  // Combine cleaned title and description
+  const text = `${cleanTitle} ${cleanDescription}`.toLowerCase();
 
   // Remove common words
   const stopWords = new Set([
