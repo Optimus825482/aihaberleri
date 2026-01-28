@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/db";
 
 /**
  * POST /api/admin/articles/[id]/share-facebook
@@ -24,7 +24,7 @@ export async function POST(
     const articleId = params.id;
 
     // Article'ı bul
-    const article = await prisma.article.findUnique({
+    const article = await db.article.findUnique({
       where: { id: articleId },
       include: {
         category: true,
@@ -104,7 +104,7 @@ export async function POST(
     }
 
     // Article'ı güncelle
-    await prisma.article.update({
+    await db.article.update({
       where: { id: articleId },
       data: {
         facebookShared: true,
