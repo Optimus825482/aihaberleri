@@ -5,10 +5,12 @@ import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Bell, Download, X } from "lucide-react";
 
+import { usePWA } from "@/context/PWAContext";
+
 export function ServiceWorkerRegistration() {
+  const { isInstallable, installApp } = usePWA();
   const [showInstall, setShowInstall] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
     // Service Worker Registration
@@ -19,14 +21,10 @@ export function ServiceWorkerRegistration() {
         .catch((err) => console.log("SW fail", err));
     }
 
-    // PWA Install Prompt logic
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    // Sync local UI state with global availability
+    if (isInstallable) {
       setShowInstall(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    }
 
     // Notification Permission logic
     if (
@@ -36,23 +34,11 @@ export function ServiceWorkerRegistration() {
     ) {
       setTimeout(() => setShowNotification(true), 3000);
     }
-
-    return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt,
-      );
-    };
-  }, []);
+  }, [isInstallable]);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === "accepted") {
-      setShowInstall(false);
-    }
-    setDeferredPrompt(null);
+    await installApp();
+    setShowInstall(false);
   };
 
   const urlBase64ToUint8Array = (base64String: string) => {

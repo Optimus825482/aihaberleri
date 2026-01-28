@@ -8,6 +8,8 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Icons } from "@/components/icons";
 import { Logo } from "@/components/Logo";
+import { usePWA } from "@/context/PWAContext";
+import { Download } from "lucide-react";
 
 export interface NavItem {
   title: string;
@@ -47,7 +49,9 @@ export function MainNav({
               href={item.disabled ? "#" : item.href}
               className={cn(
                 "flex items-center text-sm font-medium transition-colors hover:text-primary",
-                pathname === item.href ? "text-primary" : "text-muted-foreground",
+                pathname === item.href
+                  ? "text-primary"
+                  : "text-muted-foreground",
                 item.disabled && "cursor-not-allowed opacity-80",
               )}
             >
@@ -86,11 +90,32 @@ export function MainNav({
                   {item.title}
                 </Link>
               ))}
+
+              <InstallAppButton onClick={() => setShowMobileMenu(false)} />
             </nav>
           </div>
         </div>
       )}
       {children}
     </div>
+  );
+}
+
+function InstallAppButton({ onClick }: { onClick: () => void }) {
+  const { isInstallable, installApp } = usePWA();
+
+  if (!isInstallable) return null;
+
+  return (
+    <button
+      onClick={() => {
+        installApp();
+        onClick();
+      }}
+      className="flex w-full items-center gap-2 rounded-md p-2 text-sm font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors mt-4"
+    >
+      <Download className="h-4 w-4" />
+      <span>Uygulamayı Yükle / Install App</span>
+    </button>
   );
 }
