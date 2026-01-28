@@ -400,23 +400,46 @@ export async function getArticleBySlugAndLocale(
  */
 export async function migrateExistingArticles(): Promise<void> {
   // Find published articles without translations using raw query
+  // Limit increased to 100 to process more articles
   const articlesWithoutTranslations = await db.$queryRaw<{ id: string }[]>`
     SELECT a.id 
     FROM "Article" a 
-    LEFT JOIN "ArticleTranslation" at ON a.id = at."articleId"
+    LEFT JOIN "ArticleTranslation" at ON a.id = at."articleId" AND at.locale = 'en'
     WHERE a.status = 'PUBLISHED' 
     AND at.id IS NULL
-    LIMIT 10
+    LIMIT 100
   `;
 
   console.log(
-    `🔄 Migrating ${articlesWithoutTranslations.length} articles to multi-language...`,
+    `🔄 Found ${articlesWithoutTranslations.length} articles to translate...`,
   );
 
-  for (const { id } of articlesWithoutTranslations) {
-    await translateAndSaveArticle(id, "tr");
-    // Add delay to avoid rate limiting
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  // Process in batches of 2 (concurrency)
+  const BATCH_SIZE = 2;
+
+  for (let i = 0; i < articlesWithoutTranslations.length; i += BATCH_SIZE) {
+    const batch = articlesWithoutTranslations.slice(i, i + BATCH_SIZE);
+
+    console.log(
+      `🚀 Processing batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(articlesWithoutTranslations.length / BATCH_SIZE)}`,
+    );
+
+    // Execute batch in parallel
+    await Promise.all(
+      batch.map(async ({ id }) => {
+        try {
+          await translateAndSaveArticle(id, "tr");
+        } catch (error) {
+          console.error(`❌ Failed to translate article ${id}:`, error);
+        }
+      }),
+    );
+
+    // Add delay between batches to avoid rate limiting
+    if (i + BATCH_SIZE < articlesWithoutTranslations.length) {
+      console.log("⏳ Waiting 2s before next batch...");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
   }
 
   console.log(`✅ Migration batch complete`);

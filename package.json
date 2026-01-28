@@ -1,7 +1,9 @@
+```json
 {
   "name": "ai-news-site",
-  "version": "1.0.0",
-  "description": "Production-ready AI news site with autonomous agent manager",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Haberleri - Next.js App",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
