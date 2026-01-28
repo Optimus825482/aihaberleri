@@ -45,9 +45,28 @@ export async function sendFCMNotification(
     };
 
     const response = await admin.messaging().send(message);
+    console.log(`✅ FCM notification sent successfully: ${response}`);
     return { success: true, messageId: response };
-  } catch (error) {
-    console.error("FCM send error:", error);
-    return { success: false, error };
+  } catch (error: any) {
+    // Handle specific Firebase errors
+    if (
+      error.code === "messaging/invalid-registration-token" ||
+      error.code === "messaging/registration-token-not-registered"
+    ) {
+      console.log(`🗑️  Invalid FCM token, should be removed from database`);
+      return { success: false, error: "INVALID_TOKEN", shouldDelete: true };
+    }
+
+    if (error.code === "messaging/message-rate-exceeded") {
+      console.warn(`⚠️  FCM rate limit exceeded, retry later`);
+      return { success: false, error: "RATE_LIMIT" };
+    }
+
+    console.error("❌ FCM send error:", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+    });
+    return { success: false, error: error.code || "UNKNOWN_ERROR" };
   }
 }

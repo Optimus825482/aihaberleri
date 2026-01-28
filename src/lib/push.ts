@@ -48,15 +48,34 @@ export async function sendPushNotification(
     return webpush.sendNotification(pushConfig, payload).catch((error: any) => {
       // 410 (Gone) or 404 (Not Found) means the subscription is no longer valid
       if (error.statusCode === 410 || error.statusCode === 404) {
+        console.log(`🗑️  Removing expired push subscription: ${sub.id}`);
         return db.pushSubscription
           .delete({ where: { id: sub.id } })
-          .catch((e) => console.error("Error deleting expired sub", e));
+          .catch((e) => console.error("Error deleting expired sub:", e));
       }
-      // Other errors are just logged
-      console.error(
-        `Error sending push to ${sub.id}:`,
-        error instanceof Error ? error.message : error,
-      );
+
+      // 400 (Bad Request) - Invalid subscription format
+      if (error.statusCode === 400) {
+        console.log(`🗑️  Removing invalid push subscription: ${sub.id}`);
+        return db.pushSubscription
+          .delete({ where: { id: sub.id } })
+          .catch((e) => console.error("Error deleting invalid sub:", e));
+      }
+
+      // Network errors or temporary failures
+      if (error.statusCode === 500 || error.statusCode === 503) {
+        console.warn(
+          `⚠️  Temporary push error (${error.statusCode}) for ${sub.id}, will retry later`,
+        );
+        return;
+      }
+
+      // Log other unexpected errors with more details
+      console.error(`❌ Error sending push to ${sub.id}:`, {
+        statusCode: error.statusCode,
+        message: error.message,
+        body: error.body,
+      });
     });
   });
 
