@@ -2,14 +2,7 @@
 
 import { useAudio } from "@/context/AudioContext";
 import { useEffect, useRef } from "react";
-import {
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Loader2,
-  Download,
-} from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Loader2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -43,7 +36,7 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
     seek,
     download,
     title: currentTitle,
-    setIsMainPlayerVisible
+    setIsMainPlayerVisible,
   } = useAudio();
 
   const containerRef = useRef<HTMLDivElement>(null);
@@ -53,7 +46,7 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
       ([entry]) => {
         setIsMainPlayerVisible(entry.isIntersecting);
       },
-      { threshold: 0 }
+      { threshold: 0 },
     );
 
     if (containerRef.current) {
@@ -79,17 +72,25 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
   };
 
   return (
-    <div ref={containerRef} className="bg-card rounded-xl p-4 shadow-sm border border-primary/10">
+    <div
+      ref={containerRef}
+      className="bg-card rounded-xl p-4 shadow-sm border border-primary/10"
+    >
       {/* Top Controls: Play/Pause, Title, Rate */}
       <div className="flex items-center justify-between gap-4 mb-4">
         <button
           onClick={handleToggle}
+          disabled={isLoading && currentTitle === title}
           className={`flex items-center justify-center w-12 h-12 rounded-full transition-all shadow-lg ${
-            isPlaying && currentTitle === title
-              ? "bg-primary text-primary-foreground hover:scale-105"
-              : "bg-primary/10 text-primary hover:bg-primary/20"
+            isLoading && currentTitle === title
+              ? "bg-amber-500/20 text-amber-600 cursor-wait"
+              : isPlaying && currentTitle === title
+                ? "bg-primary text-primary-foreground hover:scale-105"
+                : "bg-primary/10 text-primary hover:bg-primary/20"
           }`}
-          aria-label={isPlaying && currentTitle === title ? "Duraklat" : "Oynat"}
+          aria-label={
+            isPlaying && currentTitle === title ? "Duraklat" : "Oynat"
+          }
         >
           {isLoading && currentTitle === title ? (
             <Loader2 className="w-6 h-6 animate-spin" />
@@ -105,13 +106,41 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
             <span className="text-[10px] font-black uppercase tracking-wider text-primary/60">
               YAPAY ZEKA SPİKERİ
             </span>
-            {isPlaying && currentTitle === title && (
+            {isLoading && currentTitle === title && (
+              <span className="flex items-center gap-1 text-[10px] font-bold text-amber-500 animate-pulse">
+                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping" />
+                Hazırlanıyor...
+              </span>
+            )}
+            {isPlaying && currentTitle === title && !isLoading && (
               <span className="flex items-center gap-1 text-[10px] font-bold text-green-500 animate-pulse">
                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full" /> CANLI
               </span>
             )}
           </div>
-          <h3 className="font-bold text-sm truncate">{title}</h3>
+          {isLoading && currentTitle === title ? (
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                <div
+                  className="w-1 h-3 bg-amber-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                />
+                <div
+                  className="w-1 h-3 bg-amber-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <div
+                  className="w-1 h-3 bg-amber-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                />
+              </div>
+              <span className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+                Lütfen bekleyin / Please wait...
+              </span>
+            </div>
+          ) : (
+            <h3 className="font-bold text-sm truncate">{title}</h3>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
@@ -147,7 +176,9 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
       </div>
 
       {/* Progress Bar (Only show for current article) */}
-      <div className={`space-y-2 ${currentTitle === title ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+      <div
+        className={`space-y-2 ${currentTitle === title ? "opacity-100" : "opacity-30 pointer-events-none"}`}
+      >
         <Slider
           value={[currentTitle === title ? currentTime : 0]}
           max={currentTitle === title ? duration || 100 : 100}
@@ -162,7 +193,9 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
       </div>
 
       {/* Volume Control (Desktop Only) */}
-      <div className={`hidden sm:flex items-center gap-2 mt-4 px-2 ${currentTitle === title ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
+      <div
+        className={`hidden sm:flex items-center gap-2 mt-4 px-2 ${currentTitle === title ? "opacity-100" : "opacity-30 pointer-events-none"}`}
+      >
         <button
           onClick={() => setIsMuted(!isMuted)}
           className="text-muted-foreground hover:text-foreground"

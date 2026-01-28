@@ -148,11 +148,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           },
         },
       },
+      {
+        url: `${baseUrl}/contact`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.6,
+        alternates: {
+          languages: {
+            tr: `${baseUrl}/contact`,
+            en: `${baseUrl}/en/contact`,
+          },
+        },
+      },
+      {
+        url: `${baseUrl}/en/contact`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.6,
+        alternates: {
+          languages: {
+            tr: `${baseUrl}/contact`,
+            en: `${baseUrl}/en/contact`,
+          },
+        },
+      },
     ];
 
     // Turkish article pages
     const turkishArticlePages: MetadataRoute.Sitemap = articles.map(
-      (article) => ({
+      (article: ArticleWithTranslation) => ({
         url: `${baseUrl}/news/${article.slug}`,
         lastModified: article.updatedAt,
         changeFrequency: "daily" as const,
@@ -170,8 +194,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // English article pages (only for articles with translations)
     const englishArticlePages: MetadataRoute.Sitemap = articles
-      .filter((article) => article.enSlug)
-      .map((article) => ({
+      .filter((article: ArticleWithTranslation) => article.enSlug)
+      .map((article: ArticleWithTranslation) => ({
         url: `${baseUrl}/en/news/${article.enSlug}`,
         lastModified: article.updatedAt,
         changeFrequency: "daily" as const,
