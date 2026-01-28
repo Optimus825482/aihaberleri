@@ -31,7 +31,6 @@ export function ServiceWorkerRegistration() {
       Notification.permission === "default" &&
       !localStorage.getItem("notifications-dismissed")
     ) {
-      // Delay prompt slightly
       setTimeout(() => setShowNotification(true), 3000);
     }
 
@@ -53,19 +52,65 @@ export function ServiceWorkerRegistration() {
     setDeferredPrompt(null);
   };
 
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
   const handleNotification = async () => {
     if (!("Notification" in window)) return;
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      setShowNotification(false);
-      try {
-        new Notification("Bildirimler açıldı!", {
-          body: "Artık son dakika haberlerini alacaksınız.",
-          icon: "/icons/icon-192x192.png",
-        });
-      } catch (e) {
-        // Ignore error usually caused by mobile restrictions
+
+    try {
+      const permission = await Notification.requestPermission();
+
+      if (permission === "granted") {
+        setShowNotification(false);
+
+        // Process Registration
+        const registration = await navigator.serviceWorker.ready;
+        const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+
+        if (vapidKey) {
+          try {
+            const subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(vapidKey),
+            });
+
+            // Send to backend
+            await fetch("/api/notifications/subscribe", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(subscription),
+            });
+
+            new Notification("Bildirimler aktif!", {
+              body: "Sıcak gelişmeler cebinizde.",
+              icon: "/icons/icon-192x192.png",
+            });
+          } catch (err) {
+            console.error("Subscription failed:", err);
+          }
+        } else {
+          // Fallback if no VAPID key yet (just browser permission)
+          new Notification("Bildirimler açıldı!", {
+            body: "Tarayıcı bildirimleri aktif.",
+            icon: "/icons/icon-192x192.png",
+          });
+        }
       }
+    } catch (error) {
+      console.error("Notification permission error:", error);
     }
   };
 

@@ -441,6 +441,21 @@ export async function publishArticle(
       console.error("Failed to trigger translation:", e);
     }
 
+    // Trigger Web Push Notification (Async)
+    try {
+      if (status === "PUBLISHED") {
+        import("@/lib/push").then(({ sendPushNotification }) => {
+          sendPushNotification(
+            article.title,
+            article.excerpt,
+            `https://aihaberleri.org/news/${article.slug}`,
+          ).catch((err) => console.error("Async push failed:", err));
+        });
+      }
+    } catch (e) {
+      console.error("Failed to trigger Web Push:", e);
+    }
+
     return {
       id: article.id,
       slug: article.slug,
