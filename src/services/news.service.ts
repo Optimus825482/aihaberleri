@@ -8,7 +8,7 @@ import {
   filterRecentArticles,
   type RSSItem,
 } from "@/lib/rss";
-import { rankArticlesByTrendTavily } from "@/lib/tavily";
+import { rankArticlesByTrendBrave } from "@/lib/brave";
 
 export interface NewsArticle {
   title: string;
@@ -103,9 +103,9 @@ export async function fetchAINews(
       console.log(`✅ En güncel ${MAX_ARTICLES_TO_ANALYZE} haber seçildi`);
     }
 
-    // Step 3: Analyze trends using Tavily Search API AND Google Trends
+    // Step 3: Analyze trends using Brave Search API AND Google Trends
     console.log(
-      `📊 ${itemsToAnalyze.length} haber için Trend (Tavily + Google) analizi...`,
+      `📊 ${itemsToAnalyze.length} haber için Trend (Brave + Google) analizi...`,
     );
 
     // Fetch Google Trends (Parallel)
@@ -114,7 +114,7 @@ export async function fetchAINews(
       .catch(() => []);
     const { calculateGoogleTrendScore } = await import("@/lib/google-trends");
 
-    const trendRankings = await rankArticlesByTrendTavily(
+    const trendRankings = await rankArticlesByTrendBrave(
       itemsToAnalyze.map((item) => ({
         title: item.title,
         description: item.description,

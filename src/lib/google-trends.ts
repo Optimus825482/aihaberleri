@@ -101,35 +101,34 @@ export async function fetchGoogleTrends(): Promise<TrendItem[]> {
       }));
     }
 
-    // FALLBACK PATH: Google Failed, use Tavily
+    // FALLBACK PATH: Google Failed, use Brave Search
     console.log(
-      "🔄 Google failed/blocked. Switching to Tavily for Trend Discovery...",
+      "🔄 Google failed/blocked. Switching to Brave for Trend Discovery...",
     );
 
-    // Import Tavily dynamically to avoid circular dependencies if any
-    const { tavilySearch } = await import("./tavily");
+    // Import Brave dynamically to avoid circular dependencies if any
+    const { braveSearch } = await import("./brave");
 
-    // Search for meta-trends
-    const tavilyTrends = await tavilySearch(
+    // Run a general "trending AI" search via Brave
+    const braveTrends = await braveSearch(
       "what are the top trending artificial intelligence news topics and discussions today? list specific key events.",
       {
-        max_results: 5,
-        // search_depth: "advanced" removed to fix type error, basic is fine or advanced is default for news?
-        // Actually tavilySearch types might strict.
+        count: 5,
+        freshness: "pd", // Past day
       },
     );
 
-    console.log(`✅ Tavily recovered ${tavilyTrends.length} trend signals.`);
+    console.log(`✅ Brave recovered ${braveTrends.length} trend signals.`);
 
-    return tavilyTrends.map((t) => ({
+    return braveTrends.map((t) => ({
       title: t.title,
-      approxTraffic: "High Interest", // Artificial label for Tavily items
-      description: t.content,
+      approxTraffic: "High Interest", // Artificial label for Brave items
+      description: t.description,
       pubDate: new Date().toISOString(),
       link: t.url,
     }));
   } catch (error) {
-    console.error("❌ Google Trends & Tavily Fallback error:", error);
+    console.error("❌ Google Trends & Brave Fallback error:", error);
     return []; // Fail gracefully
   }
 }
@@ -150,11 +149,11 @@ export function calculateGoogleTrendScore(
     const trendTitle = trend.title.toLowerCase();
 
     // Exact match or partial match
-    // Tavily titles might be long, so we check intersection more loosely
+    // Brave titles might be long, so we check intersection more loosely
     if (lowerTitle.includes(trendTitle) || trendTitle.includes(lowerTitle)) {
       const trafficStr = trend.approxTraffic || "";
 
-      // Tavily items get high default score
+      // Brave items get high default score
       if (trafficStr === "High Interest") {
         score = Math.max(score, 85);
       } else {

@@ -1,6 +1,11 @@
 /**
  * Brave Search API Integration
  * Used for trend analysis and popularity scoring
+ *
+ * OPTIMIZATIONS (migrated from Tavily):
+ * - Rate limiter: 50ms between calls (safe for 20 req/sec limit)
+ * - Batch processing: 10 articles per batch
+ * - In-memory cache: 15 minutes TTL
  */
 
 import axios from "axios";
@@ -10,6 +15,49 @@ const BRAVE_API_URL = "https://api.search.brave.com/res/v1/web/search";
 
 if (!BRAVE_API_KEY) {
   console.warn("⚠️  BRAVE_API_KEY is not set");
+}
+
+// ============================================
+// RATE LIMITER (20 req/sec = 50ms minimum interval)
+// ============================================
+let lastCallTime = 0;
+const MIN_CALL_INTERVAL = 50; // 50ms between calls (max 20 calls/second)
+
+async function rateLimitedCall<T>(fn: () => Promise<T>): Promise<T> {
+  const now = Date.now();
+  const timeSinceLastCall = now - lastCallTime;
+
+  if (timeSinceLastCall < MIN_CALL_INTERVAL) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, MIN_CALL_INTERVAL - timeSinceLastCall),
+    );
+  }
+
+  lastCallTime = Date.now();
+  return fn();
+}
+
+// ============================================
+// IN-MEMORY CACHE
+// ============================================
+interface CacheEntry {
+  score: number;
+  timestamp: number;
+}
+
+const trendCache = new Map<string, CacheEntry>();
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+function getCachedScore(cacheKey: string): number | null {
+  const cached = trendCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.score;
+  }
+  return null;
+}
+
+function setCachedScore(cacheKey: string, score: number): void {
+  trendCache.set(cacheKey, { score, timestamp: Date.now() });
 }
 
 export interface BraveSearchResult {
@@ -41,7 +89,8 @@ export async function braveSearch(
     country?: string;
   } = {},
 ): Promise<BraveSearchResult[]> {
-  if (!BRAVE_API_KEY) {
+  const apiKey = process.env.BRAVE_API_KEY;
+  if (!apiKey) {
     throw new Error("BRAVE_API_KEY is not configured");
   }
 
@@ -66,7 +115,7 @@ export async function braveSearch(
         headers: {
           Accept: "application/json",
           "Accept-Encoding": "gzip",
-          "X-Subscription-Token": BRAVE_API_KEY,
+          "X-Subscription-Token": apiKey,
         },
         timeout: 10000,
       },
@@ -86,34 +135,36 @@ export async function braveSearch(
 }
 
 /**
- * Calculate trend score for an article
+ * Calculate trend score for an article (with caching and rate limiting)
  * Higher score = more trending
  */
-export async function calculateTrendScore(
+export async function calculateTrendScoreBrave(
   title: string,
   description: string,
 ): Promise<number> {
   try {
-    console.log(`📊 Trend skoru hesaplanıyor: ${title.substring(0, 50)}...`);
-
-    // Search for the article topic
     const searchQuery = extractKeywords(title, description);
-    const results = await braveSearch(searchQuery, {
-      count: 20,
-      freshness: "pd", // Past day
-    });
 
-    // Calculate score based on:
-    // 1. Number of search results (popularity)
-    // 2. Recency of results
-    // 3. Title similarity
+    // Check cache first
+    const cachedScore = getCachedScore(searchQuery);
+    if (cachedScore !== null) {
+      return cachedScore;
+    }
+
+    // Rate limited API call
+    const results = await rateLimitedCall(() =>
+      braveSearch(searchQuery, {
+        count: 5, // Reduced from 10 to 5 to save API calls
+        freshness: "pd", // Past day
+      }),
+    );
 
     let score = 0;
 
     // Base score from result count
-    score += Math.min(results.length * 5, 100);
+    score += Math.min(results.length * 10, 100);
 
-    // Bonus for title matches
+    // Bonus for title matches and recency
     const titleLower = title.toLowerCase();
     const titleWords = titleLower.split(/\s+/).filter((w) => w.length > 3);
 
@@ -129,20 +180,59 @@ export async function calculateTrendScore(
       }
 
       const matchRatio = matchCount / titleWords.length;
-      score += matchRatio * 20;
+      score += matchRatio * 30;
 
       // Bonus for recent results
-      if (result.age && result.age.includes("hour")) {
-        score += 10;
-      } else if (result.age && result.age.includes("day")) {
-        score += 5;
+      if (result.age) {
+        if (result.age.includes("hour")) {
+          score += 20;
+        } else if (result.age.includes("day")) {
+          score += 10;
+        }
+      }
+
+      // --- TRAFFIC MAGNET LOGIC ---
+
+      // 1. Social Discussion Boost (Reddit, Twitter/X, HackerNews)
+      const socialDomains = [
+        "reddit.com",
+        "twitter.com",
+        "x.com",
+        "news.ycombinator.com",
+        "quora.com",
+        "medium.com",
+      ];
+      if (socialDomains.some((d) => result.url.includes(d))) {
+        score += 40; // High boost for social discussion
+      }
+
+      // 2. Video/Visual Boost (YouTube)
+      if (
+        result.url.includes("youtube.com") ||
+        result.url.includes("vimeo.com")
+      ) {
+        score += 30;
+      }
+
+      // 3. Authority Boost (Tech Giants)
+      const authorityDomains = [
+        "techcrunch.com",
+        "theverge.com",
+        "wired.com",
+        "bloomberg.com",
+        "reuters.com",
+      ];
+      if (authorityDomains.some((d) => result.url.includes(d))) {
+        score += 15;
       }
     }
 
-    console.log(`✅ Trend skoru: ${Math.round(score)}`);
+    // Cache the result
+    setCachedScore(searchQuery, score);
+
     return score;
   } catch (error) {
-    console.error("Trend skoru hesaplama hatası:", error);
+    console.error("Brave trend score error:", error);
     return 0; // Return 0 if trend analysis fails
   }
 }
@@ -207,29 +297,83 @@ function extractKeywords(title: string, description: string): string {
 }
 
 /**
- * Analyze and rank articles by trend score
+ * Rank articles by trend using Brave Search (with smart sampling and batch processing)
  */
-export async function rankArticlesByTrend(
+export async function rankArticlesByTrendBrave(
   articles: Array<{ title: string; description: string }>,
 ): Promise<Array<{ index: number; score: number }>> {
-  console.log(`📊 ${articles.length} haber trend analizi yapılıyor...`);
+  // ============================================
+  // STEP 1: SMART SAMPLING
+  // ============================================
+  const MAX_ARTICLES = 100;
+  const originalCount = articles.length;
 
-  const scores = await Promise.all(
-    articles.map(async (article, index) => {
-      const score = await calculateTrendScore(
-        article.title,
-        article.description,
-      );
-      return { index, score };
-    }),
-  );
+  if (articles.length > MAX_ARTICLES) {
+    console.log(
+      `⚡ Smart Sampling: ${articles.length} haber → ${MAX_ARTICLES} habere düşürülüyor`,
+    );
 
-  // Sort by score (highest first)
+    // Take first 100 (already sorted by date in news.service.ts)
+    articles = articles.slice(0, MAX_ARTICLES);
+  }
+
+  console.log(`📊 Brave ile ${articles.length} haber analiz ediliyor...`);
+
+  // ============================================
+  // STEP 2: BATCH PROCESSING WITH RATE LIMITING
+  // ============================================
+  const BATCH_SIZE = 10;
+  const BATCH_DELAY = 500; // 500ms between batches (conservative)
+
+  const scores: Array<{ index: number; score: number }> = [];
+
+  for (let i = 0; i < articles.length; i += BATCH_SIZE) {
+    const batch = articles.slice(i, i + BATCH_SIZE);
+    const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+    const totalBatches = Math.ceil(articles.length / BATCH_SIZE);
+
+    console.log(
+      `📦 Batch ${batchNumber}/${totalBatches} işleniyor (${batch.length} haber)...`,
+    );
+
+    // Process batch with rate limiting
+    const batchScores = await Promise.all(
+      batch.map(async (article, batchIndex) => {
+        const globalIndex = i + batchIndex;
+
+        try {
+          const score = await calculateTrendScoreBrave(
+            article.title,
+            article.description,
+          );
+          return { index: globalIndex, score };
+        } catch (error: any) {
+          console.warn(
+            `⚠️ Haber #${globalIndex + 1} analiz edilemedi (${error.message}), varsayılan skor: 0`,
+          );
+          return { index: globalIndex, score: 0 };
+        }
+      }),
+    );
+
+    scores.push(...batchScores);
+
+    // Delay between batches (except last batch)
+    if (i + BATCH_SIZE < articles.length) {
+      console.log(`⏳ ${BATCH_DELAY}ms bekleniyor (rate limit protection)...`);
+      await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY));
+    }
+  }
+
+  // ============================================
+  // STEP 3: SORT BY SCORE
+  // ============================================
   scores.sort((a, b) => b.score - a.score);
 
-  console.log("✅ Trend sıralaması tamamlandı");
+  console.log("✅ Brave trend sıralaması tamamlandı");
+  console.log(`📊 İşlenen: ${articles.length}/${originalCount} haber`);
   console.log(
-    "Top 5:",
+    "🏆 Top 5:",
     scores
       .slice(0, 5)
       .map((s) => `#${s.index + 1} (skor: ${Math.round(s.score)})`)
@@ -257,10 +401,12 @@ export async function getTrendingAITopics(): Promise<string[]> {
     const allTopics = new Set<string>();
 
     for (const query of trendingQueries) {
-      const results = await braveSearch(query, {
-        count: 5,
-        freshness: "pd",
-      });
+      const results = await rateLimitedCall(() =>
+        braveSearch(query, {
+          count: 5,
+          freshness: "pd",
+        }),
+      );
 
       for (const result of results) {
         // Extract main topic from title
@@ -283,7 +429,7 @@ export async function getTrendingAITopics(): Promise<string[]> {
 
 export default {
   braveSearch,
-  calculateTrendScore,
-  rankArticlesByTrend,
+  calculateTrendScoreBrave,
+  rankArticlesByTrendBrave,
   getTrendingAITopics,
 };
