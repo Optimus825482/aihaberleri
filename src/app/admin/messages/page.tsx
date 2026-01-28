@@ -15,6 +15,7 @@ import {
   Filter,
   Inbox,
 } from "lucide-react";
+import { AdminLayout } from "@/components/AdminLayout";
 
 interface ContactMessage {
   id: string;
@@ -119,27 +120,28 @@ export default function AdminMessagesPage() {
   const unreadCount = messages.filter((m) => !m.isRead).length;
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-3">
-            <Inbox className="w-7 h-7 text-blue-600" />
-            İletişim Mesajları
-          </h1>
-          <p className="text-gray-500 mt-1">
-            {pagination.total} mesaj • {unreadCount} okunmamış
-          </p>
-        </div>
+    <AdminLayout>
+      <div className="p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-3">
+              <Inbox className="w-7 h-7 text-blue-600" />
+              İletişim Mesajları
+            </h1>
+            <p className="text-gray-500 mt-1">
+              {pagination.total} mesaj • {unreadCount} okunmamış
+            </p>
+          </div>
 
-        <button
-          onClick={fetchMessages}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          Yenile
-        </button>
-      </div>
+          <button
+            onClick={fetchMessages}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            Yenile
+          </button>
+        </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-6">
@@ -363,6 +365,6 @@ export default function AdminMessagesPage() {
           )}
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

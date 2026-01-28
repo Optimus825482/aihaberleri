@@ -53,8 +53,17 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y openssl curl ca-certificates python3 python3-pip python3-venv && rm -rf /var/lib/apt/lists/*
+# Install runtime dependencies including sharp dependencies
+RUN apt-get update && apt-get install -y \
+    openssl \
+    curl \
+    ca-certificates \
+    python3 \
+    python3-pip \
+    python3-venv \
+    # Sharp native dependencies
+    libvips-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install edge-tts for Audio Suite
 RUN python3 -m venv /app/venv
@@ -72,6 +81,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/src/lib/tts_engine.py ./src/lib/tts_engine.py
+
+# Copy sharp native binaries for standalone mode
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
 
 # Copy scripts and necessary node_modules for runtime scripts (Agent worker etc)
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
