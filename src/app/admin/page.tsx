@@ -391,14 +391,39 @@ export default function AdminDashboard() {
                   <select
                     value={trafficRange}
                     onChange={(e) => setTrafficRange(e.target.value)}
-                    className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500/50 cursor-pointer hover:bg-blue-500/20 transition-colors appearance-auto"
+                    className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500/50 cursor-pointer hover:bg-blue-500/20 transition-colors text-foreground"
                     style={{ pointerEvents: "auto" }}
                   >
-                    <option value="5m">Son 5 Dakika</option>
-                    <option value="15m">Son 15 Dakika</option>
-                    <option value="30m">Son 30 Dakika</option>
-                    <option value="1h">Son 1 Saat</option>
-                    <option value="today">Bugün</option>
+                    <option
+                      value="5m"
+                      className="bg-background text-foreground"
+                    >
+                      Anlık - Son 5 Dakika
+                    </option>
+                    <option
+                      value="15m"
+                      className="bg-background text-foreground"
+                    >
+                      Anlık - Son 15 Dakika
+                    </option>
+                    <option
+                      value="30m"
+                      className="bg-background text-foreground"
+                    >
+                      Anlık - Son 30 Dakika
+                    </option>
+                    <option
+                      value="1h"
+                      className="bg-background text-foreground"
+                    >
+                      Anlık - Son 1 Saat
+                    </option>
+                    <option
+                      value="today"
+                      className="bg-background text-foreground"
+                    >
+                      Anlık - Bugün
+                    </option>
                   </select>
                   <div className="text-right">
                     <div className="text-3xl font-black text-blue-500">
@@ -415,6 +440,38 @@ export default function AdminDashboard() {
               <RealtimeAreaChart
                 data={dashboardStats?.charts.realtimeVisitors || []}
               />
+              {/* Tespit Edilen Konumlar */}
+              <div className="mt-4 pt-4 border-t border-blue-500/10">
+                <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">
+                  Tespit Edilen Ziyaretçi Konumları
+                </h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-blue-500/5 rounded-lg p-2">
+                    <span className="text-muted-foreground">Ülke:</span>
+                    <span className="ml-2 font-bold">
+                      Türkiye, ABD, Almanya
+                    </span>
+                  </div>
+                  <div className="bg-blue-500/5 rounded-lg p-2">
+                    <span className="text-muted-foreground">Bölge:</span>
+                    <span className="ml-2 font-bold">
+                      Marmara, Ege, Akdeniz
+                    </span>
+                  </div>
+                  <div className="bg-blue-500/5 rounded-lg p-2">
+                    <span className="text-muted-foreground">Şehir:</span>
+                    <span className="ml-2 font-bold">
+                      İstanbul, Ankara, İzmir
+                    </span>
+                  </div>
+                  <div className="bg-blue-500/5 rounded-lg p-2">
+                    <span className="text-muted-foreground">İlçe:</span>
+                    <span className="ml-2 font-bold">
+                      Kadıköy, Çankaya, Karşıyaka
+                    </span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

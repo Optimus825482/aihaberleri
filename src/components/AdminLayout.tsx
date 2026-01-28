@@ -15,6 +15,8 @@ import {
   Download,
   MessageSquare,
   Tags,
+  Mail,
+  Bell,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -38,6 +40,16 @@ const menuItems = [
     title: "Kategoriler",
     href: "/admin/settings",
     icon: Tags,
+  },
+  {
+    title: "Newsletter Aboneleri",
+    href: "/admin/newsletter",
+    icon: Mail,
+  },
+  {
+    title: "Push Mesajları",
+    href: "/admin/notifications",
+    icon: Bell,
   },
   {
     title: "Agent Ayarları",
