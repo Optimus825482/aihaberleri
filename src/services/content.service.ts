@@ -67,31 +67,20 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
   const duplicateCheck = await isDuplicateNews(
     article.title,
     article.description,
-    24 // Check last 24 hours
+    24, // Check last 24 hours
   );
 
   if (duplicateCheck.isDuplicate) {
     console.log(`🗑️ ${duplicateCheck.reason}: "${article.title}"`);
     if (duplicateCheck.similarArticleId) {
-      console.log(`   Similar to article ID: ${duplicateCheck.similarArticleId}`);
+      console.log(
+        `   Similar to article ID: ${duplicateCheck.similarArticleId}`,
+      );
     }
     return true;
   }
 
   return false;
-}
-
-  let intersection = 0;
-  for (let i = 0; i < s2.length - 1; i++) {
-    const bigram = s2.substring(i, i + 2);
-    const count = bigrams1.get(bigram);
-    if (count && count > 0) {
-      bigrams1.set(bigram, count - 1);
-      intersection++;
-    }
-  }
-
-  return (2.0 * intersection) / (s1.length - 1 + s2.length - 1);
 }
 
 /**
