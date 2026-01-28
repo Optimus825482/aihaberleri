@@ -403,13 +403,44 @@ function getCategoryKeywords(categorySlug: string): string[] {
 }
 
 /**
- * Fetch article content from URL
+ * Fetch article content from URL using Jina Reader API
  */
 export async function fetchArticleContent(url: string): Promise<string> {
   try {
     console.log(`📄 Makale içeriği alınıyor: ${url}`);
 
-    // Randomize User-Agent to avoid detection
+    // Try Jina Reader first (AI-powered content extraction)
+    if (process.env.JINA_READER_API_KEY) {
+      try {
+        console.log("🔄 Jina Reader ile içerik çekiliyor...");
+        const jinaUrl = `https://r.jina.ai/${url}`;
+        const jinaResponse = await axios.get(jinaUrl, {
+          timeout: 15000,
+          headers: {
+            Authorization: `Bearer ${process.env.JINA_READER_API_KEY}`,
+            "X-Return-Format": "text",
+          },
+        });
+
+        let jinaContent = jinaResponse.data;
+
+        // Clean up Jina output (markdown links etc)
+        jinaContent = jinaContent.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1"); // Remove links
+
+        if (jinaContent.length > 200) {
+          console.log(
+            `✅ Jina Reader ile içerik alındı: ${jinaContent.length} karakter`,
+          );
+          return jinaContent.substring(0, 10000);
+        }
+      } catch (jinaError) {
+        console.warn(
+          "⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...",
+        );
+      }
+    }
+
+    // Fallback: Direct fetch with browser-like headers
     const userAgents = [
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -419,7 +450,6 @@ export async function fetchArticleContent(url: string): Promise<string> {
     const randomUserAgent =
       userAgents[Math.floor(Math.random() * userAgents.length)];
 
-    // Fetch the page with browser-like headers
     const response = await axios.get(url, {
       timeout: 15000,
       headers: {
@@ -427,7 +457,7 @@ export async function fetchArticleContent(url: string): Promise<string> {
         Accept:
           "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9,tr;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br", // Axios handles decompression automatically
+        "Accept-Encoding": "gzip, deflate, br",
         "Upgrade-Insecure-Requests": "1",
         "Cache-Control": "max-age=0",
         Referer: "https://www.google.com/",
@@ -445,26 +475,25 @@ export async function fetchArticleContent(url: string): Promise<string> {
 
     const html = response.data;
 
-    // Use JSDOM or Cheerio if available, otherwise simple regex
-    // For now, keeping the regex but making it slightly robust
     let content = html
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ")
       .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ")
-      .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, " ") // Remove nav
-      .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, " ") // Remove footer
-      .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, " ") // Remove header
-      .replace(/<[^>]+>/g, " ") // Remove all tags
-      .replace(/\s+/g, " ") // Collapse whitespace
+      .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, " ")
+      .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, " ")
+      .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
       .trim();
 
-    // Limit content length
-    content = content.substring(0, 10000); // Increased limit for better context
+    content = content.substring(0, 10000);
 
     if (content.length < 200) {
       throw new Error("Content too short, likely blocked or empty");
     }
 
-    console.log(`✅ İçerik alındı: ${content.length} karakter`);
+    console.log(
+      `✅ Direct fetch ile içerik alındı: ${content.length} karakter`,
+    );
     return content;
   } catch (error: any) {
     console.error(
@@ -472,25 +501,7 @@ export async function fetchArticleContent(url: string): Promise<string> {
       error.message || error.code,
     );
 
-    // Fallback: Try Jina Reader (AI-friendly reader) if direct access fails
-    try {
-      console.log("🔄 Jina Reader ile tekrar deneniyor...");
-      const jinaUrl = `https://r.jina.ai/${url}`;
-      const jinaResponse = await axios.get(jinaUrl, { timeout: 15000 });
-      let jinaContent = jinaResponse.data;
-
-      // Clean up Jina output (markdown links etc)
-      jinaContent = jinaContent.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1"); // Remove links
-
-      console.log(
-        `✅ Jina ile içerik kurtarıldı: ${jinaContent.length} karakter`,
-      );
-      return jinaContent.substring(0, 10000);
-    } catch (jinaError) {
-      console.error("❌ Jina Reader da başarısız oldu.");
-    }
-
-    // Ultimate Fallback: Return a meaningful error string to allow processing based on title
+    // Ultimate Fallback: Return a meaningful error string
     return "Article content could not be fetched due to access restrictions. The AI will rewrite based on the title and description.";
   }
 }

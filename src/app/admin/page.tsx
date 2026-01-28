@@ -21,11 +21,12 @@ import {
   ShieldCheck,
   ShieldAlert,
   Globe,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { DashboardDonutChart } from "@/components/DashboardDonutChart";
-import { DashboardLineChart } from "@/components/DashboardLineChart";
+import { RealtimeAreaChart } from "@/components/RealtimeAreaChart";
 import { CountryBarChart } from "@/components/CountryBarChart";
 import { SystemMonitor, LogMessage } from "@/components/SystemMonitor";
 
@@ -268,7 +269,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Primary Operational Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Autonomous Status Control */}
           <Card
             className={`lg:col-span-1 border-2 overflow-hidden ${isAgentEnabled ? "border-primary/20 bg-primary/5 shadow-primary/5 shadow-2xl" : "border-destructive/20 bg-destructive/5 shadow-destructive/5 shadow-2xl"}`}
@@ -359,23 +360,37 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Trend Graphics */}
-          <Card className="lg:col-span-2 bg-card/40 border-primary/10 shadow-xl overflow-hidden relative group">
-            <div className="absolute -top-12 -right-12 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-700">
-              <TrendingUp className="w-64 h-64" />
-            </div>
-            <CardHeader>
-              <CardTitle className="text-lg font-black flex items-center gap-2 uppercase tracking-tight">
-                <Activity className="h-5 w-5 text-blue-500" />
-                Haftalık İçerik Trendi
-              </CardTitle>
-              <CardDescription className="text-[11px] font-bold uppercase opacity-60">
-                Son 7 günün içerik oluşturma performansı
-              </CardDescription>
+          {/* Realtime Traffic Chart */}
+          <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl" />
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-500/10 rounded-xl">
+                    <Zap className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base font-black uppercase tracking-tight">
+                      Anlık Trafik
+                    </CardTitle>
+                    <CardDescription className="text-[10px] font-bold uppercase opacity-60">
+                      Son 30 Dakika
+                    </CardDescription>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-3xl font-black text-blue-500">
+                    {dashboardStats?.metrics.activeVisitors || 0}
+                  </div>
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase">
+                    Aktif Ziyaretçi
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <DashboardLineChart
-                data={dashboardStats?.charts.last7Days || []}
+              <RealtimeAreaChart
+                data={dashboardStats?.charts.realtimeVisitors || []}
               />
             </CardContent>
           </Card>

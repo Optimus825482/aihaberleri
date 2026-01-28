@@ -1,0 +1,746 @@
+2026-Jan-28 21:15:49.231919 Starting deployment of AIHABERLERI to localhost.
+2026-Jan-28 21:15:49.562718 Preparing container with helper image: ghcr.io/coollabsio/coolify-helper:1.0.12
+2026-Jan-28 21:15:49.746474 [DEBUG] [CMD]: docker stop -t 30 p4go04gssc88sggwc0gwkcw4
+2026-Jan-28 21:15:49.746474 [DEBUG] Error response from daemon: No such container: p4go04gssc88sggwc0gwkcw4
+2026-Jan-28 21:15:49.906104 [DEBUG] [CMD]: docker run -d --network coolify --name p4go04gssc88sggwc0gwkcw4  --rm -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/coollabsio/coolify-helper:1.0.12
+2026-Jan-28 21:15:49.906104 [DEBUG] a6b5131ff62e99262216fc091a9f21d84688a6f4f9a85011db97ccc4eace81b6
+2026-Jan-28 21:15:51.101110 [DEBUG] [CMD]: docker exec p4go04gssc88sggwc0gwkcw4 bash -c 'GIT_SSH_COMMAND="ssh -o ConnectTimeout=30 -p 22 -o Port=22 -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git ls-remote https://github.com/Optimus825482/aihaberleri refs/heads/main'
+2026-Jan-28 21:15:51.101110 [DEBUG] ebfa55a7fb426875a32ee97d2d869bcbad42b5c9	refs/heads/main
+2026-Jan-28 21:15:51.123047 ----------------------------------------
+2026-Jan-28 21:15:51.134968 Importing Optimus825482/aihaberleri:main (commit sha ebfa55a7fb426875a32ee97d2d869bcbad42b5c9) to /artifacts/p4go04gssc88sggwc0gwkcw4.
+2026-Jan-28 21:15:51.402941 [DEBUG] [CMD]: docker exec p4go04gssc88sggwc0gwkcw4 bash -c 'git clone --depth=1 --recurse-submodules --shallow-submodules -b 'main' 'https://github.com/Optimus825482/aihaberleri' '/artifacts/p4go04gssc88sggwc0gwkcw4' && cd '/artifacts/p4go04gssc88sggwc0gwkcw4' && if [ -f .gitmodules ]; then sed -i "s#git@\(.*\):#https://\1/#g" '/artifacts/p4go04gssc88sggwc0gwkcw4'/.gitmodules || true && git submodule sync && GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git submodule update --init --recursive --depth=1; fi && cd '/artifacts/p4go04gssc88sggwc0gwkcw4' && GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git lfs pull'
+2026-Jan-28 21:15:51.402941 [DEBUG] Cloning into '/artifacts/p4go04gssc88sggwc0gwkcw4'...
+2026-Jan-28 21:15:53.515150 [DEBUG] [CMD]: docker exec p4go04gssc88sggwc0gwkcw4 bash -c 'cd /artifacts/p4go04gssc88sggwc0gwkcw4 && git log -1 ebfa55a7fb426875a32ee97d2d869bcbad42b5c9 --pretty=%B'
+2026-Jan-28 21:15:53.515150 [DEBUG] fix: Remove orphaned code fragment causing syntax error
+2026-Jan-28 21:15:53.515150 [DEBUG] 
+2026-Jan-28 21:15:53.515150 [DEBUG] - Removed leftover calculateSimilarity function fragment
+2026-Jan-28 21:15:53.515150 [DEBUG] - Fixed syntax error in content.service.ts
+2026-Jan-28 21:15:53.515150 [DEBUG] - Build should now succeed
+2026-Jan-28 21:15:54.035578 ----------------------------------------
+2026-Jan-28 21:15:54.045815 ⚠️ Build-time environment variable warning: NODE_ENV=production
+2026-Jan-28 21:15:54.054887 Affects: Node.js/npm/yarn/bun/pnpm
+2026-Jan-28 21:15:54.063737 Issue: Skips devDependencies installation which are often required for building (webpack, typescript, etc.)
+2026-Jan-28 21:15:54.072615 Recommendation: Uncheck "Available at Buildtime" or use "development" during build
+2026-Jan-28 21:15:54.081810 
+2026-Jan-28 21:15:54.091209 💡 Tips to resolve build issues:
+2026-Jan-28 21:15:54.100416 1. Set these variables as "Runtime only" in the environment variables settings
+2026-Jan-28 21:15:54.111495 2. Use different values for build-time (e.g., NODE_ENV=development for build)
+2026-Jan-28 21:15:54.123691 3. Consider using multi-stage Docker builds to separate build and runtime environments
+2026-Jan-28 21:15:57.562943 [DEBUG] [CMD]: docker exec p4go04gssc88sggwc0gwkcw4 bash -c 'test -f /artifacts/p4go04gssc88sggwc0gwkcw4/Dockerfile.worker && echo 'exists' || echo 'not found''
+2026-Jan-28 21:15:57.562943 [DEBUG] exists
+2026-Jan-28 21:15:57.817155 [DEBUG] [CMD]: docker exec p4go04gssc88sggwc0gwkcw4 bash -c 'cat /artifacts/p4go04gssc88sggwc0gwkcw4/Dockerfile.worker'
+2026-Jan-28 21:15:57.817155 [DEBUG] # Worker Dockerfile - Runs BullMQ worker for agent automation
+2026-Jan-28 21:15:57.817155 [DEBUG] # Multi-stage build for optimal production image
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Stage 1: Dependencies
+2026-Jan-28 21:15:57.817155 [DEBUG] FROM node:20.18-slim AS deps
+2026-Jan-28 21:15:57.817155 [DEBUG] # Set DEBIAN_FRONTEND to prevent debconf errors
+2026-Jan-28 21:15:57.817155 [DEBUG] ENV DEBIAN_FRONTEND=noninteractive
+2026-Jan-28 21:15:57.817155 [DEBUG] RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:15:57.817155 [DEBUG] WORKDIR /app
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Install ALL dependencies (including devDependencies) needed for tsx runtime
+2026-Jan-28 21:15:57.817155 [DEBUG] ENV NODE_ENV=development
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Copy package files
+2026-Jan-28 21:15:57.817155 [DEBUG] COPY package.json package-lock.json* ./
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Install dependencies with retry mechanism and proper flags
+2026-Jan-28 21:15:57.817155 [DEBUG] # Using npm ci for reliable, exact versions based on lockfile
+2026-Jan-28 21:15:57.817155 [DEBUG] # Added --legacy-peer-deps to handle eslint v9 peer dependency conflict
+2026-Jan-28 21:15:57.817155 [DEBUG] RUN npm ci --include=dev --legacy-peer-deps --network-timeout=100000 || \
+2026-Jan-28 21:15:57.817155 [DEBUG] (npm cache clean --force && npm ci --include=dev --legacy-peer-deps --network-timeout=100000)
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Stage 2: Builder
+2026-Jan-28 21:15:57.817155 [DEBUG] FROM node:20.18-slim AS builder
+2026-Jan-28 21:15:57.817155 [DEBUG] ENV DEBIAN_FRONTEND=noninteractive
+2026-Jan-28 21:15:57.817155 [DEBUG] WORKDIR /app
+2026-Jan-28 21:15:57.817155 [DEBUG] RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Copy dependencies from deps stage
+2026-Jan-28 21:15:57.817155 [DEBUG] COPY --from=deps /app/node_modules ./node_modules
+2026-Jan-28 21:15:57.817155 [DEBUG] COPY . .
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Generate Prisma Client
+2026-Jan-28 21:15:57.817155 [DEBUG] RUN npx prisma generate
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Stage 3: Runner
+2026-Jan-28 21:15:57.817155 [DEBUG] FROM node:20.18-slim AS runner
+2026-Jan-28 21:15:57.817155 [DEBUG] ENV DEBIAN_FRONTEND=noninteractive
+2026-Jan-28 21:15:57.817155 [DEBUG] WORKDIR /app
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] ENV NODE_ENV=production
+2026-Jan-28 21:15:57.817155 [DEBUG] ENV NEXT_TELEMETRY_DISABLED=1
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Install runtime dependencies
+2026-Jan-28 21:15:57.817155 [DEBUG] RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Create non-root user
+2026-Jan-28 21:15:57.817155 [DEBUG] RUN addgroup --system --gid 1001 nodejs
+2026-Jan-28 21:15:57.817155 [DEBUG] RUN adduser --system --uid 1001 worker
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Copy necessary runtime files
+2026-Jan-28 21:15:57.817155 [DEBUG] COPY --from=builder --chown=worker:nodejs /app/node_modules ./node_modules
+2026-Jan-28 21:15:57.817155 [DEBUG] COPY --from=builder --chown=worker:nodejs /app/prisma ./prisma
+2026-Jan-28 21:15:57.817155 [DEBUG] COPY --from=builder --chown=worker:nodejs /app/src ./src
+2026-Jan-28 21:15:57.817155 [DEBUG] COPY --from=builder --chown=worker:nodejs /app/tsconfig.json ./tsconfig.json
+2026-Jan-28 21:15:57.817155 [DEBUG] COPY --from=builder --chown=worker:nodejs /app/package.json ./package.json
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] USER worker
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Health check
+2026-Jan-28 21:15:57.817155 [DEBUG] HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+2026-Jan-28 21:15:57.817155 [DEBUG] CMD pgrep -f "news-agent.worker" || exit 1
+2026-Jan-28 21:15:57.817155 [DEBUG] 
+2026-Jan-28 21:15:57.817155 [DEBUG] # Run worker with tsx
+2026-Jan-28 21:15:57.817155 [DEBUG] CMD ["npx", "tsx", "src/workers/news-agent.worker.ts"]
+2026-Jan-28 21:15:58.092169 Added 174 ARG declarations to Dockerfile for service worker (multi-stage build, added to 3 stages).
+2026-Jan-28 21:15:58.306947 [DEBUG] [CMD]: docker exec p4go04gssc88sggwc0gwkcw4 bash -c 'test -f /artifacts/p4go04gssc88sggwc0gwkcw4/Dockerfile && echo 'exists' || echo 'not found''
+2026-Jan-28 21:15:58.306947 [DEBUG] exists
+2026-Jan-28 21:15:58.544891 [DEBUG] [CMD]: docker exec p4go04gssc88sggwc0gwkcw4 bash -c 'cat /artifacts/p4go04gssc88sggwc0gwkcw4/Dockerfile'
+2026-Jan-28 21:15:58.544891 [DEBUG] # Production-optimized Dockerfile (King Mode v2)
+2026-Jan-28 21:15:58.544891 [DEBUG] # Build timestamp: 2026-01-28 20:30
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Stage 1: Dependencies
+2026-Jan-28 21:15:58.544891 [DEBUG] FROM node:20.18-slim AS deps
+2026-Jan-28 21:15:58.544891 [DEBUG] RUN apt-get update && apt-get install -y openssl ca-certificates libc6 curl && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:15:58.544891 [DEBUG] WORKDIR /app
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Ensure we install ALL dependencies for build
+2026-Jan-28 21:15:58.544891 [DEBUG] ENV NODE_ENV=development
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Copy package files
+2026-Jan-28 21:15:58.544891 [DEBUG] COPY package.json package-lock.json* .npmrc* ./
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Install ALL dependencies (including devDependencies) for build
+2026-Jan-28 21:15:58.544891 [DEBUG] # Using npm ci for reliable, exact versions based on lockfile
+2026-Jan-28 21:15:58.544891 [DEBUG] RUN npm ci --include=dev --network-timeout=100000
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Stage 2: Builder
+2026-Jan-28 21:15:58.544891 [DEBUG] FROM node:20.18-slim AS builder
+2026-Jan-28 21:15:58.544891 [DEBUG] WORKDIR /app
+2026-Jan-28 21:15:58.544891 [DEBUG] RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Copy dependencies from deps stage
+2026-Jan-28 21:15:58.544891 [DEBUG] COPY --from=deps /app/node_modules ./node_modules
+2026-Jan-28 21:15:58.544891 [DEBUG] COPY . .
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Generate Prisma Client
+2026-Jan-28 21:15:58.544891 [DEBUG] RUN npx prisma generate
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Build Next.js
+2026-Jan-28 21:15:58.544891 [DEBUG] ENV NEXT_TELEMETRY_DISABLED=1
+2026-Jan-28 21:15:58.544891 [DEBUG] ENV SKIP_ENV_VALIDATION=1
+2026-Jan-28 21:15:58.544891 [DEBUG] ENV NODE_ENV=production
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Mock environment variables for build to prevent ENOTFOUND etc.
+2026-Jan-28 21:15:58.544891 [DEBUG] ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+2026-Jan-28 21:15:58.544891 [DEBUG] ENV REDIS_URL="redis://localhost:<REDACTED>@0.33.5 && \
+2026-Jan-28 21:15:58.544891 [DEBUG] npm cache clean --force
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Copy scripts and necessary node_modules for runtime scripts (Agent worker etc)
+2026-Jan-28 21:15:58.544891 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] # Specialized copy for tools used in scripts
+2026-Jan-28 21:15:58.544891 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
+2026-Jan-28 21:15:58.544891 [DEBUG] COPY --from=builder --chown=nextjs:nodejs /app/node_modules/esbuild ./node_modules/esbuild
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] USER nextjs
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] EXPOSE 3000
+2026-Jan-28 21:15:58.544891 [DEBUG] 
+2026-Jan-28 21:15:58.544891 [DEBUG] CMD ["node", "server.js"]
+2026-Jan-28 21:15:58.829286 Added 174 ARG declarations to Dockerfile for service app (multi-stage build, added to 3 stages).
+2026-Jan-28 21:15:58.841066 Pulling & building required images.
+2026-Jan-28 21:15:59.085421 [DEBUG] Creating build-time .env file in /artifacts (outside Docker context).
+2026-Jan-28 21:15:59.380847 Adding build arguments to Docker Compose build command.
+2026-Jan-28 21:16:00.164214 [DEBUG] [CMD]: docker exec p4go04gssc88sggwc0gwkcw4 bash -c 'COOLIFY_BRANCH=main COOLIFY_RESOURCE_UUID=i8ggkoowk4s8okc4gso8kg4w  docker compose --env-file /artifacts/build-time.env --project-name i8ggkoowk4s8okc4gso8kg4w --project-directory /artifacts/p4go04gssc88sggwc0gwkcw4 -f /artifacts/p4go04gssc88sggwc0gwkcw4/docker-compose.coolify.yaml build --pull --build-arg COOLIFY_URL --build-arg COOLIFY_FQDN --build-arg POSTGRES_DB --build-arg SMTP_PORT --build-arg NEXTAUTH_SECRET --build-arg SMTP_HOST --build-arg BRAVE_API_KEY --build-arg POSTGRES_USER --build-arg EXA_API_KEY --build-arg DEEPSEEK_API_KEY --build-arg FIREBASE_PRIVATE_KEY --build-arg AGENT_MIN_ARTICLES_PER_RUN --build-arg SMTP_USER --build-arg FIREBASE_CLIENT_EMAIL --build-arg SMTP_PASSWORD --build-arg SMTP_FROM --build-arg AGENT_ENABLED --build-arg FIREBASE_PROJECT_ID --build-arg AGENT_MAX_ARTICLES_PER_RUN --build-arg DEEPSEEK_API_URL --build-arg AGENT_MIN_INTERVAL_HOURS --build-arg NEXT_PUBLIC_ADSENSE_CLIENT_ID --build-arg NEXTAUTH_URL --build-arg REDIS_URL --build-arg SERVICE_URL_APP --build-arg UNSPLASH_ACCESS_KEY --build-arg SERVICE_FQDN_APP --build-arg PEXELS_API_KEY --build-arg NEXT_PUBLIC_SITE_NAME --build-arg NEXT_PUBLIC_SITE_DESCRIPTION --build-arg TAVILY_API_KEY --build-arg NEXT_PUBLIC_VAPID_PUBLIC_KEY --build-arg NEXT_PUBLIC_SITE_URL --build-arg POSTGRES_PASSWORD --build-arg PORT --build-arg VAPID_EMAIL --build-arg FIREBASE_SERVER_KEY --build-arg VAPID_PRIVATE_KEY --build-arg RESEND_API_KEY --build-arg FIREBASR_CILENT_MAIL --build-arg RESEND_FROM_EMAIL --build-arg TWITTER_API_KEY --build-arg CONTACT_EMAIL --build-arg DATABASE_URL --build-arg NODE_ENV --build-arg TWITTER_API_SECRET --build-arg NEXT_TELEMETRY_DISABLED --build-arg APP_PORT --build-arg NEXT_PUBLIC_GA_MEASUREMENT_ID --build-arg TWITTER_ACCESS_TOKEN --build-arg TWITTER_HANDLE --build-arg FACEBOOK_ENABLED --build-arg TWITTER_ENABLED --build-arg TWITTER_ACCESS_SECRET --build-arg FACEBOOK_PAGE_ACCESS_TOKEN --build-arg FACEBOOK_PAGE_ID --build-arg DEFAULT_LOCALE --build-arg SUPPORTED_LOCALES --build-arg COOLIFY_BUILD_SECRETS_HASH=c66e8302b3f2b3ecc8d6340d9250cb6e9093655e3bf1a52a1dd91df439dd9ef5'
+2026-Jan-28 21:16:00.164214 [DEBUG] #1 [internal] load local bake definitions
+2026-Jan-28 21:16:00.302233 [DEBUG] #1 reading from stdin 11.65kB done
+2026-Jan-28 21:16:00.302233 [DEBUG] #1 DONE 0.0s
+2026-Jan-28 21:16:00.510520 [DEBUG] #2 [app internal] load build definition from Dockerfile
+2026-Jan-28 21:16:00.510520 [DEBUG] #2 transferring dockerfile: 7.17kB done
+2026-Jan-28 21:16:00.510520 [DEBUG] #2 DONE 0.0s
+2026-Jan-28 21:16:00.510520 [DEBUG] 
+2026-Jan-28 21:16:00.510520 [DEBUG] #3 [worker internal] load build definition from Dockerfile.worker
+2026-Jan-28 21:16:00.510520 [DEBUG] #3 transferring dockerfile: 5.96kB done
+2026-Jan-28 21:16:00.510520 [DEBUG] #3 DONE 0.0s
+2026-Jan-28 21:16:00.510520 [DEBUG] 
+2026-Jan-28 21:16:00.510520 [DEBUG] #4 [worker internal] load metadata for docker.io/library/node:20.18-slim
+2026-Jan-28 21:16:01.258207 [DEBUG] #4 DONE 0.8s
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #5 [worker internal] load .dockerignore
+2026-Jan-28 21:16:01.258207 [DEBUG] #5 transferring context: 243B done
+2026-Jan-28 21:16:01.258207 [DEBUG] #5 DONE 0.0s
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #6 [app deps 1/5] FROM docker.io/library/node:20.18-slim@sha256:ffc11dbf16dd0abcbb7b837410601b4d5592db2d03741e13a4a5336ab74d7ccb
+2026-Jan-28 21:16:01.258207 [DEBUG] #6 DONE 0.0s
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #7 [app internal] load .dockerignore
+2026-Jan-28 21:16:01.258207 [DEBUG] #7 transferring context: 243B done
+2026-Jan-28 21:16:01.258207 [DEBUG] #7 DONE 0.0s
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #8 [app runner  4/19] RUN python3 -m venv /app/venv
+2026-Jan-28 21:16:01.258207 [DEBUG] #8 CACHED
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #9 [app runner  6/19] RUN addgroup --system --gid 1001 nodejs
+2026-Jan-28 21:16:01.258207 [DEBUG] #9 CACHED
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #10 [app builder 2/6] WORKDIR /app
+2026-Jan-28 21:16:01.258207 [DEBUG] #10 CACHED
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #11 [app runner  5/19] RUN pip install edge-tts
+2026-Jan-28 21:16:01.258207 [DEBUG] #11 CACHED
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #12 [app runner  3/19] RUN apt-get update && apt-get install -y     openssl     curl     ca-certificates     python3     python3-pip     python3-venv     libvips-dev     libvips42     && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:16:01.258207 [DEBUG] #12 CACHED
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #13 [app runner  7/19] RUN adduser --system --uid 1001 nextjs
+2026-Jan-28 21:16:01.258207 [DEBUG] #13 CACHED
+2026-Jan-28 21:16:01.258207 [DEBUG] 
+2026-Jan-28 21:16:01.258207 [DEBUG] #14 [worker internal] load build context
+2026-Jan-28 21:16:01.692963 [DEBUG] #14 transferring context: 40.42MB 0.4s done
+2026-Jan-28 21:16:01.692963 [DEBUG] #14 DONE 0.4s
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #15 [app internal] load build context
+2026-Jan-28 21:16:01.692963 [DEBUG] #15 transferring context: 40.42MB 0.3s done
+2026-Jan-28 21:16:01.692963 [DEBUG] #15 DONE 0.4s
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #16 [app deps 5/5] RUN npm ci --include=dev --network-timeout=100000
+2026-Jan-28 21:16:01.692963 [DEBUG] #16 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #17 [app deps 3/5] WORKDIR /app
+2026-Jan-28 21:16:01.692963 [DEBUG] #17 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #18 [app builder 3/7] RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:16:01.692963 [DEBUG] #18 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #19 [app deps 4/5] COPY package.json package-lock.json* .npmrc* ./
+2026-Jan-28 21:16:01.692963 [DEBUG] #19 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #20 [app deps 2/5] RUN apt-get update && apt-get install -y openssl ca-certificates libc6 curl && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:16:01.692963 [DEBUG] #20 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #21 [app builder 4/7] COPY --from=deps /app/node_modules ./node_modules
+2026-Jan-28 21:16:01.692963 [DEBUG] #21 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #22 [worker deps 2/5] RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:16:01.692963 [DEBUG] #22 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #10 [worker builder 2/6] WORKDIR /app
+2026-Jan-28 21:16:01.692963 [DEBUG] #10 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #23 [worker builder 3/6] RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:16:01.692963 [DEBUG] #23 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #24 [worker deps 4/5] COPY package.json package-lock.json* ./
+2026-Jan-28 21:16:01.692963 [DEBUG] #24 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #25 [worker deps 5/5] RUN npm ci --include=dev --legacy-peer-deps --network-timeout=100000 ||     (npm cache clean --force && npm ci --include=dev --legacy-peer-deps --network-timeout=100000)
+2026-Jan-28 21:16:01.692963 [DEBUG] #25 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #26 [worker deps 3/5] WORKDIR /app
+2026-Jan-28 21:16:01.692963 [DEBUG] #26 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #27 [worker builder 4/6] COPY --from=deps /app/node_modules ./node_modules
+2026-Jan-28 21:16:01.692963 [DEBUG] #27 CACHED
+2026-Jan-28 21:16:01.692963 [DEBUG] 
+2026-Jan-28 21:16:01.692963 [DEBUG] #28 [worker builder 5/6] COPY . .
+2026-Jan-28 21:16:01.851766 [DEBUG] #28 ...
+2026-Jan-28 21:16:01.851766 [DEBUG] 
+2026-Jan-28 21:16:01.851766 [DEBUG] #29 [app builder 5/7] COPY . .
+2026-Jan-28 21:16:01.851766 [DEBUG] #29 DONE 0.3s
+2026-Jan-28 21:16:02.013267 [DEBUG] #28 [worker builder 5/6] COPY . .
+2026-Jan-28 21:16:02.013267 [DEBUG] #28 DONE 0.3s
+2026-Jan-28 21:16:02.013267 [DEBUG] 
+2026-Jan-28 21:16:02.013267 [DEBUG] #30 [worker builder 6/6] RUN npx prisma generate
+2026-Jan-28 21:16:03.110592 [DEBUG] #30 1.249 Prisma schema loaded from prisma/schema.prisma
+2026-Jan-28 21:16:05.257864 [DEBUG] #30 ...
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 [app builder 6/7] RUN npx prisma generate
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 1.132 Prisma schema loaded from prisma/schema.prisma
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 2.981
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 2.981 ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 273ms
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 2.981
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 2.981 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 2.981
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 2.981 Tip: Easily identify and fix slow SQL queries in your app. Optimize helps you enhance your visibility: https://pris.ly/--optimize
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 2.981
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 3.193 npm notice
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 3.193 npm notice New major version of npm available! 10.8.2 -> 11.8.0
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 3.193 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.8.0
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 3.193 npm notice To update run: npm install -g npm@11.8.0
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 3.193 npm notice
+2026-Jan-28 21:16:05.260741 [DEBUG] #31 DONE 3.2s
+2026-Jan-28 21:16:05.268954 [DEBUG] #30 [worker builder 6/6] RUN npx prisma generate
+2026-Jan-28 21:16:05.268954 [DEBUG] #30 3.408
+2026-Jan-28 21:16:05.268954 [DEBUG] #30 3.408 ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 295ms
+2026-Jan-28 21:16:05.268954 [DEBUG] #30 3.408
+2026-Jan-28 21:16:05.273386 [DEBUG] #30 3.408 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+2026-Jan-28 21:16:05.273386 [DEBUG] #30 3.408
+2026-Jan-28 21:16:05.273386 [DEBUG] #30 3.408 Tip: Want real-time updates to your database without manual polling? Discover how with Pulse: https://pris.ly/tip-0-pulse
+2026-Jan-28 21:16:05.273386 [DEBUG] #30 3.408
+2026-Jan-28 21:16:05.524681 [DEBUG] #30 3.611 npm notice
+2026-Jan-28 21:16:05.524681 [DEBUG] #30 3.611 npm notice New major version of npm available! 10.8.2 -> 11.8.0
+2026-Jan-28 21:16:05.524681 [DEBUG] #30 3.611 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.8.0
+2026-Jan-28 21:16:05.524681 [DEBUG] #30 3.611 npm notice To update run: npm install -g npm@11.8.0
+2026-Jan-28 21:16:05.524681 [DEBUG] #30 3.611 npm notice
+2026-Jan-28 21:16:05.524681 [DEBUG] #30 DONE 3.7s
+2026-Jan-28 21:16:05.524681 [DEBUG] 
+2026-Jan-28 21:16:05.524681 [DEBUG] #32 [app builder 7/7] RUN npm run build
+2026-Jan-28 21:16:05.524681 [DEBUG] #32 0.298
+2026-Jan-28 21:16:05.524681 [DEBUG] #32 0.298 > ai-news-site@0.1.0 build
+2026-Jan-28 21:16:05.524681 [DEBUG] #32 0.298 > next build
+2026-Jan-28 21:16:05.524681 [DEBUG] #32 0.298
+2026-Jan-28 21:16:06.253171 [DEBUG] #32 1.145   ▲ Next.js 14.2.35
+2026-Jan-28 21:16:06.425693 [DEBUG] #32 1.146
+2026-Jan-28 21:16:06.425693 [DEBUG] #32 1.167    Creating an optimized production build ...
+2026-Jan-28 21:16:06.856504 [DEBUG] #32 1.748  ⚠ Found lockfile missing swc dependencies, patching...
+2026-Jan-28 21:16:07.171425 [DEBUG] #32 2.064    Downloading swc package @next/swc-linux-x64-gnu...
+2026-Jan-28 21:16:07.818849 [DEBUG] #32 2.712  ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
+2026-Jan-28 21:16:07.972125 [DEBUG] #32 2.712 TypeError: Cannot read properties of undefined (reading 'os')
+2026-Jan-28 21:16:07.972125 [DEBUG] #32 2.712     at fetchPkgInfo (/app/node_modules/next/dist/lib/patch-incorrect-lockfile.js:73:25)
+2026-Jan-28 21:16:07.972125 [DEBUG] #32 2.712     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-Jan-28 21:16:07.972125 [DEBUG] #32 2.712     at async Promise.all (index 7)
+2026-Jan-28 21:16:07.972125 [DEBUG] #32 2.712     at async patchIncorrectLockfile (/app/node_modules/next/dist/lib/patch-incorrect-lockfile.js:162:26)
+2026-Jan-28 21:16:09.763195 [DEBUG] #32 4.655    Downloading swc package @next/swc-linux-x64-musl...
+2026-Jan-28 21:16:20.104967 [DEBUG] #32 ...
+2026-Jan-28 21:16:20.104967 [DEBUG] 
+2026-Jan-28 21:16:20.104967 [DEBUG] #33 [worker runner  4/10] RUN addgroup --system --gid 1001 nodejs
+2026-Jan-28 21:16:20.104967 [DEBUG] #33 CACHED
+2026-Jan-28 21:16:20.104967 [DEBUG] 
+2026-Jan-28 21:16:20.104967 [DEBUG] #34 [worker runner  3/10] RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+2026-Jan-28 21:16:20.104967 [DEBUG] #34 CACHED
+2026-Jan-28 21:16:20.104967 [DEBUG] 
+2026-Jan-28 21:16:20.104967 [DEBUG] #35 [worker runner  5/10] RUN adduser --system --uid 1001 worker
+2026-Jan-28 21:16:20.255294 [DEBUG] #35 CACHED
+2026-Jan-28 21:16:20.259212 [DEBUG] #36 [worker runner  6/10] COPY --from=builder --chown=worker:nodejs /app/node_modules ./node_modules
+2026-Jan-28 21:16:27.893822 [DEBUG] #36 ...
+2026-Jan-28 21:16:27.893822 [DEBUG] 
+2026-Jan-28 21:16:27.893822 [DEBUG] #32 [app builder 7/7] RUN npm run build
+2026-Jan-28 21:16:27.893822 [DEBUG] #32 22.79  ⚠ Found lockfile missing swc dependencies, patching...
+2026-Jan-28 21:16:29.894999 [DEBUG] #32 24.79  ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
+2026-Jan-28 21:16:29.900223 [DEBUG] 
+2026-Jan-28 21:16:30.048975 [DEBUG] #32 24.79 TypeError: Cannot read properties of undefined (reading 'os')
+2026-Jan-28 21:16:30.048975 [DEBUG] #32 24.79     at fetchPkgInfo (/app/node_modules/next/dist/lib/patch-incorrect-lockfile.js:73:25)
+2026-Jan-28 21:16:30.048975 [DEBUG] #32 24.79     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-Jan-28 21:16:30.048975 [DEBUG] #32 24.79     at async Promise.all (index 7)
+2026-Jan-28 21:16:30.048975 [DEBUG] #32 24.79     at async patchIncorrectLockfile (/app/node_modules/next/dist/lib/patch-incorrect-lockfile.js:162:26)
+2026-Jan-28 21:16:31.717352 [DEBUG] #32 26.61  ⚠ Found lockfile missing swc dependencies, patching...
+2026-Jan-28 21:16:38.289881 [DEBUG] #32 33.18  ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
+2026-Jan-28 21:16:38.446788 [DEBUG] #32 33.19 TypeError: Cannot read properties of undefined (reading 'os')
+2026-Jan-28 21:16:38.446788 [DEBUG] #32 33.19     at fetchPkgInfo (/app/node_modules/next/dist/lib/patch-incorrect-lockfile.js:73:25)
+2026-Jan-28 21:16:38.446788 [DEBUG] #32 33.19     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-Jan-28 21:16:38.446788 [DEBUG] #32 33.19     at async Promise.all (index 7)
+2026-Jan-28 21:16:38.446788 [DEBUG] #32 33.19     at async patchIncorrectLockfile (/app/node_modules/next/dist/lib/patch-incorrect-lockfile.js:162:26)
+2026-Jan-28 21:16:41.595668 [DEBUG] #32 36.49  ✓ Compiled successfully
+2026-Jan-28 21:16:41.753006 [DEBUG] #32 36.49    Skipping validation of types
+2026-Jan-28 21:16:41.753006 [DEBUG] #32 36.49    Skipping linting
+2026-Jan-28 21:16:41.772894 [DEBUG] #32 ...
+2026-Jan-28 21:16:41.772894 [DEBUG] 
+2026-Jan-28 21:16:41.772894 [DEBUG] #36 [worker runner  6/10] COPY --from=builder --chown=worker:nodejs /app/node_modules ./node_modules
+2026-Jan-28 21:16:41.772894 [DEBUG] #36 DONE 21.7s
+2026-Jan-28 21:16:42.011644 [DEBUG] #37 [worker runner  7/10] COPY --from=builder --chown=worker:nodejs /app/prisma ./prisma
+2026-Jan-28 21:16:42.011644 [DEBUG] #37 DONE 0.0s
+2026-Jan-28 21:16:42.011644 [DEBUG] 
+2026-Jan-28 21:16:42.011644 [DEBUG] #38 [worker runner  8/10] COPY --from=builder --chown=worker:nodejs /app/src ./src
+2026-Jan-28 21:16:42.011644 [DEBUG] #38 DONE 0.2s
+2026-Jan-28 21:16:42.011644 [DEBUG] 
+2026-Jan-28 21:16:42.011644 [DEBUG] #32 [app builder 7/7] RUN npm run build
+2026-Jan-28 21:16:42.011644 [DEBUG] #32 36.76    Collecting page data ...
+2026-Jan-28 21:16:42.122519 [DEBUG] #32 ...
+2026-Jan-28 21:16:42.122519 [DEBUG] 
+2026-Jan-28 21:16:42.122519 [DEBUG] #39 [worker runner  9/10] COPY --from=builder --chown=worker:nodejs /app/tsconfig.json ./tsconfig.json
+2026-Jan-28 21:16:42.122519 [DEBUG] #39 DONE 0.1s
+2026-Jan-28 21:16:42.122519 [DEBUG] 
+2026-Jan-28 21:16:42.122519 [DEBUG] #40 [worker runner 10/10] COPY --from=builder --chown=worker:nodejs /app/package.json ./package.json
+2026-Jan-28 21:16:42.122519 [DEBUG] #40 DONE 0.0s
+2026-Jan-28 21:16:42.332680 [DEBUG] #41 [worker] exporting to image
+2026-Jan-28 21:16:42.332680 [DEBUG] #41 exporting layers
+2026-Jan-28 21:16:47.709418 [DEBUG] #41 ...
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 [app builder 7/7] RUN npm run build
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 37.07  ⚠ Found lockfile missing swc dependencies, patching...
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 37.38 ⚠️  Redis skipped (build time)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 37.38 ⚠️  Redis skipped (build time)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 37.40 ⚠️  Redis skipped (build time)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 37.40 ⚠️  Redis skipped (build time)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.23    Generating static pages (0/61) ...
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46 Error fetching messages: n [Error]: Dynamic server usage: Route /api/admin/messages couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at l (/app/.next/server/chunks/8948.js:1:56329)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at d (/app/.next/server/chunks/1152.js:1:22723)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at /app/.next/server/chunks/1152.js:404:60433
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at c (/app/.next/server/app/api/admin/messages/route.js:1:933)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46   description: "Route /api/admin/messages couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46   digest: 'DYNAMIC_SERVER_USAGE'
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46 }
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46 Admin analytics error: n [Error]: Dynamic server usage: Route /api/admin/analytics couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at l (/app/.next/server/chunks/8948.js:1:56329)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at d (/app/.next/server/chunks/1152.js:1:22723)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at /app/.next/server/chunks/1152.js:404:60433
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at c (/app/.next/server/app/api/admin/analytics/route.js:1:931)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46   description: "Route /api/admin/analytics couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46   digest: 'DYNAMIC_SERVER_USAGE'
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.46 }
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58 Dashboard stats error: B [Error]: Dynamic server usage: Route /api/admin/dashboard couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at V (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:21778)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at Object.get (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:29465)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at d (/app/.next/server/app/api/admin/dashboard/route.js:1:957)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58     at /app/node_modules/next/dist/server/lib/trace/tracer.js:122:103 {
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58   description: "Route /api/admin/dashboard couldn't be rendered statically because it used `request.url`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58   digest: 'DYNAMIC_SERVER_USAGE'
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.58 }
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73 Health check error: Error: PrismaClient is not available during build time. This should not be called.
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at Object.get (/app/.next/server/app/api/admin/dashboard/route.js:1:6299)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at c (/app/.next/server/app/api/agent/health/route.js:1:1786)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at /app/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.73     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74 Get settings error: n [Error]: Dynamic server usage: Route /api/agent/settings couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at l (/app/.next/server/chunks/8948.js:1:56329)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at d (/app/.next/server/chunks/1152.js:1:22723)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at /app/.next/server/chunks/1152.js:404:60433
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at m (/app/.next/server/app/api/agent/settings/route.js:1:1925)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74   description: "Route /api/agent/settings couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74   digest: 'DYNAMIC_SERVER_USAGE'
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.74 }
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80 İstatistik hatası: n [Error]: Dynamic server usage: Route /api/agent/stats couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at l (/app/.next/server/chunks/8948.js:1:56329)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at d (/app/.next/server/chunks/1152.js:1:22723)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at /app/.next/server/chunks/1152.js:404:60433
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at p (/app/.next/server/app/api/agent/stats/route.js:1:2362)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80   description: "Route /api/agent/stats couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80   digest: 'DYNAMIC_SERVER_USAGE'
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.80 }
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82 Kategori listesi hatası: Error: PrismaClient is not available during build time. This should not be called.
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at Object.get (/app/.next/server/app/api/admin/analytics/route.js:13:3624)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at u (/app/.next/server/app/api/categories/route.js:1:589)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at /app/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.82    Generating static pages (15/61)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84 Newsletter list error: n [Error]: Dynamic server usage: Route /api/newsletter/list couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at l (/app/.next/server/chunks/8948.js:1:56329)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at d (/app/.next/server/chunks/1152.js:1:22723)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at /app/.next/server/chunks/1152.js:404:60433
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at u (/app/.next/server/app/api/newsletter/list/route.js:1:932)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24) {
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84   description: "Route /api/newsletter/list couldn't be rendered statically because it used `headers`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84   digest: 'DYNAMIC_SERVER_USAGE'
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.84 }
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87 Push stats error: Error: PrismaClient is not available during build time. This should not be called.
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at Object.get (/app/.next/server/app/api/admin/analytics/route.js:13:3624)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at p (/app/.next/server/app/api/push/stats/route.js:1:590)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at /app/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.87     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90 ❌ IndexNow initialization hatası: Error: PrismaClient is not available during build time. This should not be called.
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at Object.get (/app/.next/server/app/api/admin/messages/[id]/route.js:1:3594)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at o (/app/.next/server/chunks/6223.js:199:358)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at u (/app/.next/server/chunks/6223.js:199:2766)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at c (/app/.next/server/app/api/seo/init-indexnow/route.js:1:793)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90 🚀 IndexNow initialization başlatılıyor...
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.90 📝 IndexNow key dosyası oluşturuluyor...
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92 Sosyal medya hesapları getirme hatası: Error: PrismaClient is not available during build time. This should not be called.
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at Object.get (/app/.next/server/app/api/admin/analytics/route.js:13:3624)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at c (/app/.next/server/app/api/social-media/route.js:1:941)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38417
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at /app/node_modules/next/dist/server/lib/trace/tracer.js:140:36
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at ContextAPI.with (/app/node_modules/@opentelemetry/api/build/src/api/context.js:60:46)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at NoopTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/NoopTracer.js:65:31)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at ProxyTracer.startActiveSpan (/app/node_modules/@opentelemetry/api/build/src/trace/ProxyTracer.js:36:24)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at /app/node_modules/next/dist/server/lib/trace/tracer.js:122:103
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 39.92     at NoopContextManager.with (/app/node_modules/@opentelemetry/api/build/src/context/NoopContextManager.js:25:19)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 40.04    Generating static pages (30/61)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 40.36    Generating static pages (45/61)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 40.81  ✓ Generating static pages (61/61)
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 41.55    Finalizing page optimization ...
+2026-Jan-28 21:16:47.719486 [DEBUG] #32 41.55    Collecting build traces ...
+2026-Jan-28 21:16:51.491029 [DEBUG] #32 46.38  ⨯ Failed to patch lockfile, please try uninstalling and reinstalling next in this workspace
+2026-Jan-28 21:16:51.643666 [DEBUG] #32 46.38 TypeError: Cannot read properties of undefined (reading 'os')
+2026-Jan-28 21:16:51.643666 [DEBUG] #32 46.38     at fetchPkgInfo (/app/node_modules/next/dist/lib/patch-incorrect-lockfile.js:73:25)
+2026-Jan-28 21:16:51.643666 [DEBUG] #32 46.38     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-Jan-28 21:16:51.643666 [DEBUG] #32 46.38     at async Promise.all (index 7)
+2026-Jan-28 21:16:51.643666 [DEBUG] #32 46.38     at async patchIncorrectLockfile (/app/node_modules/next/dist/lib/patch-incorrect-lockfile.js:162:26)
+2026-Jan-28 21:16:58.962292 [DEBUG] #32 ...
+2026-Jan-28 21:16:58.962292 [DEBUG] 
+2026-Jan-28 21:16:58.962292 [DEBUG] #41 [worker] exporting to image
+2026-Jan-28 21:16:58.962292 [DEBUG] #41 exporting layers 16.8s done
+2026-Jan-28 21:16:59.113813 [DEBUG] #41 writing image sha256:a73b7474563f000121ee43ec5b1235acb59dafce1a894a32e0f8c54998e77c73 done
+2026-Jan-28 21:16:59.113813 [DEBUG] #41 naming to docker.io/library/i8ggkoowk4s8okc4gso8kg4w_worker:ebfa55a7fb426875a32ee97d2d869bcbad42b5c9 done
+2026-Jan-28 21:16:59.113813 [DEBUG] #41 DONE 16.9s
+2026-Jan-28 21:16:59.113813 [DEBUG] 
+2026-Jan-28 21:16:59.113813 [DEBUG] #42 [worker] resolving provenance for metadata file
+2026-Jan-28 21:16:59.113813 [DEBUG] #42 DONE 0.1s
+2026-Jan-28 21:16:59.113813 [DEBUG] 
+2026-Jan-28 21:16:59.113813 [DEBUG] #32 [app builder 7/7] RUN npm run build
+2026-Jan-28 21:17:01.792999 [DEBUG] #32 56.68
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 Route (app)                              Size     First Load JS
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ┌ ƒ /                                    17.9 kB         156 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /_not-found                          165 B          87.8 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /about                               165 B          87.8 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin                               106 kB          225 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/agent-settings                10.4 kB         132 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/analytics                     3.48 kB         123 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/articles                      7.11 kB         155 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /admin/articles/[id]/edit            4.29 kB         155 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/articles/create               3.46 kB         149 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/create                        2.9 kB          149 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/login                         2.19 kB         102 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/messages                      368 B            88 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/newsletter                    4.43 kB         119 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/newsletter/send               4.69 kB         120 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/notifications                 2.3 kB          121 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/scan                          5.85 kB         148 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/seo                           5.32 kB         120 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/settings                      5.19 kB         120 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /admin/social                        5.24 kB         120 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/admin/analytics                 0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/admin/dashboard                 0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/admin/messages                  0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/admin/messages/[id]             0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/admin/translate-articles        0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/agent/execute                   0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/agent/health                    0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/agent/schedule                  0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/agent/settings                  0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/agent/stats                     0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/agent/stream                    0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/agent/trigger                   0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/analytics/track                 0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/articles                        0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/articles/[id]                   0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/articles/[id]/refresh-image     0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/auth/[...nextauth]              0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/categories                      0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/contact                         0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/health                          0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/newsletter/list                 0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/newsletter/send                 0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/newsletter/subscribe            0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/newsletter/unsubscribe          0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/notifications/send              0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/notifications/subscribe         0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/push/send                       0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/push/stats                      0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/push/subscribe                  0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/seo/indexnow                    0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/seo/init-indexnow               0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/settings                        0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/social-media                    0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /api/tts                             0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /categories                          189 B          96.6 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /category/[slug]                     6.37 kB         116 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /contact                             1.79 kB        89.4 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /en                                  1.08 kB         119 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /en/about                            165 B          87.8 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /en/categories                       189 B          96.6 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /en/contact                          1.75 kB        89.4 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /en/news                             3.29 kB         113 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /en/news/[slug]                      190 B           102 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /en/privacy                          164 B          87.8 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /en/terms                            165 B          87.8 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /news                                3.3 kB          113 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /news-sitemap.xml                    0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /news/[slug]                         8.72 kB         149 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /privacy                             165 B          87.8 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ○ /robots.txt                          0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ├ ƒ /sitemap.xml                         0 B                0 B
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 └ ƒ /terms                               165 B          87.8 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 + First Load JS shared by all            87.6 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70   ├ chunks/2117-b3ef893d9ae82b72.js      31.9 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70   ├ chunks/fd9d1056-d29e7d003e442815.js  53.6 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70   └ other shared chunks (total)          2.1 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ƒ Middleware                             42.9 kB
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ○  (Static)   prerendered as static content
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70 ƒ  (Dynamic)  server-rendered on demand
+2026-Jan-28 21:17:01.965863 [DEBUG] #32 56.70
+2026-Jan-28 21:17:02.036972 [DEBUG] #32 DONE 56.9s
+2026-Jan-28 21:17:05.168755 [DEBUG] #43 [app runner  8/19] COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+2026-Jan-28 21:17:05.418782 [DEBUG] #43 DONE 0.1s
+2026-Jan-28 21:17:05.544069 [DEBUG] 
+2026-Jan-28 21:17:05.552044 [DEBUG] #44 [app runner  9/19] COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+2026-Jan-28 21:17:06.011573 [DEBUG] #44 DONE 0.5s
+2026-Jan-28 21:17:06.139249 [DEBUG] #45 [app runner 10/19] COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+2026-Jan-28 21:17:06.139249 [DEBUG] #45 DONE 0.1s
+2026-Jan-28 21:17:06.139249 [DEBUG] 
+2026-Jan-28 21:17:06.139249 [DEBUG] #46 [app runner 11/19] COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+2026-Jan-28 21:17:06.139249 [DEBUG] #46 DONE 0.0s
+2026-Jan-28 21:17:06.267953 [DEBUG] #47 [app runner 12/19] COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+2026-Jan-28 21:17:06.267953 [DEBUG] #47 DONE 0.1s
+2026-Jan-28 21:17:06.504207 [DEBUG] #48 [app runner 13/19] COPY --from=builder --chown=nextjs:nodejs /app/src/lib/tts_engine.py ./src/lib/tts_engine.py
+2026-Jan-28 21:17:06.504207 [DEBUG] #48 DONE 0.0s
+2026-Jan-28 21:17:06.504207 [DEBUG] 
+2026-Jan-28 21:17:06.504207 [DEBUG] #49 [app runner 14/19] COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+2026-Jan-28 21:17:06.504207 [DEBUG] #49 DONE 0.0s
+2026-Jan-28 21:17:07.207217 [DEBUG] #50 [app runner 15/19] COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json* ./
+2026-Jan-28 21:17:08.173264 [DEBUG] #50 DONE 1.0s
+2026-Jan-28 21:17:08.328346 [DEBUG] #51 [app runner 16/19] RUN npm install --omit=dev --ignore-scripts sharp@0.33.5 &&     npm cache clean --force
+2026-Jan-28 21:17:12.245654 [DEBUG] #51 4.069 npm error code ERESOLVE
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error ERESOLVE could not resolve
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error While resolving: eslint-config-next@14.2.35
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error Found: eslint@9.39.2
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error node_modules/eslint
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error   peer eslint@"^6.0.0 || ^7.0.0 || >=8.0.0" from @eslint-community/eslint-utils@4.9.1
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error   node_modules/@eslint-community/eslint-utils
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error     @eslint-community/eslint-utils@"^4.9.1" from @typescript-eslint/utils@8.54.0
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error     node_modules/@typescript-eslint/utils
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error       @typescript-eslint/utils@"8.54.0" from @typescript-eslint/eslint-plugin@8.54.0
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error       node_modules/@typescript-eslint/eslint-plugin
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error         @typescript-eslint/eslint-plugin@"^5.4.2 || ^6.0.0 || ^7.0.0 || ^8.0.0" from eslint-config-next@14.2.35
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error         node_modules/eslint-config-next
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error       1 more (@typescript-eslint/type-utils)
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error     @eslint-community/eslint-utils@"^4.8.0" from eslint@9.39.2
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error   peer eslint@"^8.57.0 || ^9.0.0" from @typescript-eslint/eslint-plugin@8.54.0
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error   node_modules/@typescript-eslint/eslint-plugin
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error     @typescript-eslint/eslint-plugin@"^5.4.2 || ^6.0.0 || ^7.0.0 || ^8.0.0" from eslint-config-next@14.2.35
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error     node_modules/eslint-config-next
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error       dev eslint-config-next@"^14.2.35" from the root project
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error   8 more (@typescript-eslint/parser, ...)
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error Could not resolve dependency:
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error peer eslint@"^7.23.0 || ^8.0.0" from eslint-config-next@14.2.35
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error node_modules/eslint-config-next
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error   dev eslint-config-next@"^14.2.35" from the root project
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error Conflicting peer dependency: eslint@8.57.1
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error node_modules/eslint
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error   peer eslint@"^7.23.0 || ^8.0.0" from eslint-config-next@14.2.35
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error   node_modules/eslint-config-next
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error     dev eslint-config-next@"^14.2.35" from the root project
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error Fix the upstream dependency conflict, or retry
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error this command with --force or --legacy-peer-deps
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.069 npm error to accept an incorrect (and potentially broken) dependency resolution.
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.070 npm error
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.070 npm error
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.070 npm error For a full report see:
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.070 npm error /root/.npm/_logs/2026-01-28T21_17_08_599Z-eresolve-report.txt
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.075 npm notice
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.075 npm notice New major version of npm available! 10.8.2 -> 11.8.0
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.075 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.8.0
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.075 npm notice To update run: npm install -g npm@11.8.0
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.075 npm notice
+2026-Jan-28 21:17:12.356657 [DEBUG] #51 4.076 npm error A complete log of this run can be found in: /root/.npm/_logs/2026-01-28T21_17_08_599Z-debug-0.log
+2026-Jan-28 21:17:12.366952 [DEBUG] #51 ERROR: process "/bin/sh -c npm install --omit=dev --ignore-scripts sharp@0.33.5 &&     npm cache clean --force" did not complete successfully: exit code: 1
+2026-Jan-28 21:17:12.397857 [DEBUG] ------
+2026-Jan-28 21:17:12.397857 [DEBUG] > [app runner 16/19] RUN npm install --omit=dev --ignore-scripts sharp@0.33.5 &&     npm cache clean --force:
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.070 npm error
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.070 npm error
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.070 npm error For a full report see:
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.070 npm error /root/.npm/_logs/2026-01-28T21_17_08_599Z-eresolve-report.txt
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.075 npm notice
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.075 npm notice New major version of npm available! 10.8.2 -> 11.8.0
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.075 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.8.0
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.075 npm notice To update run: npm install -g npm@11.8.0
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.075 npm notice
+2026-Jan-28 21:17:12.397857 [DEBUG] 4.076 npm error A complete log of this run can be found in: /root/.npm/_logs/2026-01-28T21_17_08_599Z-debug-0.log
+2026-Jan-28 21:17:12.397857 [DEBUG] ------
+2026-Jan-28 21:17:12.408584 [DEBUG] Dockerfile:267
+2026-Jan-28 21:17:12.408584 [DEBUG] 
+2026-Jan-28 21:17:12.408584 [DEBUG] --------------------
+2026-Jan-28 21:17:12.408584 [DEBUG] 
+2026-Jan-28 21:17:12.408584 [DEBUG] 266 |     # This ensures sharp binaries match the runtime environment
+2026-Jan-28 21:17:12.408584 [DEBUG] 
+2026-Jan-28 21:17:12.408584 [DEBUG] 267 | >>> RUN npm install --omit=dev --ignore-scripts sharp@0.33.5 && \
+2026-Jan-28 21:17:12.408584 [DEBUG] 
+2026-Jan-28 21:17:12.408584 [DEBUG] 268 | >>>     npm cache clean --force
+2026-Jan-28 21:17:12.408584 [DEBUG] 
+2026-Jan-28 21:17:12.408584 [DEBUG] 269 |
+2026-Jan-28 21:17:12.408584 [DEBUG] 
+2026-Jan-28 21:17:12.408584 [DEBUG] --------------------
+2026-Jan-28 21:17:12.408584 [DEBUG] 
+2026-Jan-28 21:17:12.408584 [DEBUG] target app: failed to solve: process "/bin/sh -c npm install --omit=dev --ignore-scripts sharp@0.33.5 &&     npm cache clean --force" did not complete successfully: exit code: 1
+2026-Jan-28 21:17:12.408584 [DEBUG] 
+2026-Jan-28 21:17:12.408584 [DEBUG] exit status 1
+2026-Jan-28 21:17:12.508492 ========================================
+2026-Jan-28 21:17:12.531338 Deployment failed: Command execution failed (exit code 1): docker exec p4go04gssc88sggwc0gwkcw4 bash -c 'COOLIFY_BRANCH=main COOLIFY_RESOURCE_UUID=i8ggkoowk4s8okc4gso8kg4w  docker compose --env-file /artifacts/build-time.env --project-name i8ggkoowk4s8okc4gso8kg4w --project-directory /artifacts/p4go04gssc88sggwc0gwkcw4 -f /artifacts/p4go04gssc88sggwc0gwkcw4/docker-compose.coolify.yaml build --pull --build-arg COOLIFY_URL --build-arg COOLIFY_FQDN --build-arg POSTGRES_DB --build-arg SMTP_PORT --build-arg NEXTAUTH_SECRET --build-arg SMTP_HOST --build-arg BRAVE_API_KEY --build-arg POSTGRES_USER --build-arg EXA_API_KEY --build-arg DEEPSEEK_API_KEY --build-arg FIREBASE_PRIVATE_KEY --build-arg AGENT_MIN_ARTICLES_PER_RUN --build-arg SMTP_USER --build-arg FIREBASE_CLIENT_EMAIL --build-arg SMTP_PASSWORD --build-arg SMTP_FROM --build-arg AGENT_ENABLED --build-arg FIREBASE_PROJECT_ID --build-arg AGENT_MAX_ARTICLES_PER_RUN --build-arg DEEPSEEK_API_URL --build-arg AGENT_MIN_INTERVAL_HOURS --build-arg NEXT_PUBLIC_ADSENSE_CLIENT_ID --build-arg NEXTAUTH_URL --build-arg REDIS_URL --build-arg SERVICE_URL_APP --build-arg UNSPLASH_ACCESS_KEY --build-arg SERVICE_FQDN_APP --build-arg PEXELS_API_KEY --build-arg NEXT_PUBLIC_SITE_NAME --build-arg NEXT_PUBLIC_SITE_DESCRIPTION --build-arg TAVILY_API_KEY --build-arg NEXT_PUBLIC_VAPID_PUBLIC_KEY --build-arg NEXT_PUBLIC_SITE_URL --build-arg POSTGRES_PASSWORD --build-arg PORT --build-arg VAPID_EMAIL --build-arg FIREBASE_SERVER_KEY --build-arg VAPID_PRIVATE_KEY --build-arg RESEND_API_KEY --build-arg FIREBASR_CILENT_MAIL --build-arg RESEND_FROM_EMAIL --build-arg TWITTER_API_KEY --build-arg CONTACT_EMAIL --build-arg DATABASE_URL --build-arg NODE_ENV --build-arg TWITTER_API_SECRET --build-arg NEXT_TELEMETRY_DISABLED --build-arg APP_PORT --build-arg NEXT_PUBLIC_GA_MEASUREMENT_ID --build-arg TWITTER_ACCESS_TOKEN --build-arg TWITTER_HANDLE --build-arg FACEBOOK_ENABLED --build-arg TWITTER_ENABLED --build-arg TWITTER_ACCESS_SECRET --build-arg FACEBOOK_PAGE_ACCESS_TOKEN --build-arg FACEBOOK_PAGE_ID --build-arg DEFAULT_LOCALE --build-arg SUPPORTED_LOCALES --build-arg COOLIFY_BUILD_SECRETS_HASH=c66e8302b3f2b3ecc8d6340d9250cb6e9093655e3bf1a52a1dd91df439dd9ef5'
+2026-Jan-28 21:17:12.531338 Error: Dockerfile:267
+2026-Jan-28 21:17:12.531338 
+2026-Jan-28 21:17:12.531338 --------------------
+2026-Jan-28 21:17:12.531338 
+2026-Jan-28 21:17:12.531338 266 |     # This ensures sharp binaries match the runtime environment
+2026-Jan-28 21:17:12.531338 
+2026-Jan-28 21:17:12.531338 267 | >>> RUN npm install --omit=dev --ignore-scripts sharp@0.33.5 && \
+2026-Jan-28 21:17:12.531338 
+2026-Jan-28 21:17:12.531338 268 | >>>     npm cache clean --force
+2026-Jan-28 21:17:12.531338 
+2026-Jan-28 21:17:12.531338 269 |
+2026-Jan-28 21:17:12.531338 
+2026-Jan-28 21:17:12.531338 --------------------
+2026-Jan-28 21:17:12.531338 
+2026-Jan-28 21:17:12.531338 target app: failed to solve: process "/bin/sh -c npm install --omit=dev --ignore-scripts sharp@0.33.5 &&     npm cache clean --force" did not complete successfully: exit code: 1
+2026-Jan-28 21:17:12.531338 
+2026-Jan-28 21:17:12.531338 exit status 1
+2026-Jan-28 21:17:12.553861 [DEBUG] Error type: RuntimeException
+2026-Jan-28 21:17:12.576158 [DEBUG] Error code: 0
+2026-Jan-28 21:17:12.599272 [DEBUG] Location: /var/www/html/app/Traits/ExecuteRemoteCommand.php:243
+2026-Jan-28 21:17:12.621516 [DEBUG] Stack trace (first 5 lines):
+2026-Jan-28 21:17:12.643184 [DEBUG] #0 /var/www/html/app/Traits/ExecuteRemoteCommand.php(104): App\Jobs\ApplicationDeploymentJob->executeCommandWithProcess()
+2026-Jan-28 21:17:12.664665 [DEBUG] #1 /var/www/html/vendor/laravel/framework/src/Illuminate/Collections/Traits/EnumeratesValues.php(271): App\Jobs\ApplicationDeploymentJob->{closure:App\Traits\ExecuteRemoteCommand::execute_remote_command():71}()
+2026-Jan-28 21:17:12.687001 [DEBUG] #2 /var/www/html/app/Traits/ExecuteRemoteCommand.php(71): Illuminate\Support\Collection->each()
+2026-Jan-28 21:17:12.708581 [DEBUG] #3 /var/www/html/app/Jobs/ApplicationDeploymentJob.php(730): App\Jobs\ApplicationDeploymentJob->execute_remote_command()
+2026-Jan-28 21:17:12.729852 [DEBUG] #4 /var/www/html/app/Jobs/ApplicationDeploymentJob.php(467): App\Jobs\ApplicationDeploymentJob->deploy_docker_compose_buildpack()
+2026-Jan-28 21:17:12.751163 ========================================
+2026-Jan-28 21:17:13.311115 Gracefully shutting down build container: p4go04gssc88sggwc0gwkcw4
+2026-Jan-28 21:17:13.671824 [DEBUG] [CMD]: docker stop -t 30 p4go04gssc88sggwc0gwkcw4
+2026-Jan-28 21:17:13.671824 [DEBUG] p4go04gssc88sggwc0gwkcw4
