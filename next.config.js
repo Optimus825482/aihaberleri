@@ -21,6 +21,10 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "2mb",
     },
+    // Force include sharp and its dependencies in standalone output
+    outputFileTracingIncludes: {
+      "/": ["./node_modules/sharp/**/*"],
+    },
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if

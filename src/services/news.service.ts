@@ -9,6 +9,8 @@ import {
   type RSSItem,
 } from "@/lib/rss";
 import { rankArticlesByTrendBrave } from "@/lib/brave";
+import { distance } from "fastest-levenshtein";
+import { db } from "@/lib/db";
 
 export interface NewsArticle {
   title: string;
@@ -17,6 +19,136 @@ export interface NewsArticle {
   publishedDate?: string;
   source?: string;
   trendScore?: number;
+}
+
+/**
+ * Calculate similarity between two strings using Levenshtein distance
+ * Returns a value between 0 (completely different) and 1 (identical)
+ */
+function calculateSimilarity(str1: string, str2: string): number {
+  const maxLength = Math.max(str1.length, str2.length);
+  if (maxLength === 0) return 1.0;
+
+  const dist = distance(str1.toLowerCase(), str2.toLowerCase());
+  return 1 - dist / maxLength;
+}
+
+/**
+ * Check if a news article is duplicate based on title and content similarity
+ * @param title - Article title
+ * @param content - Article content (optional)
+ * @param timeWindowHours - Time window to check for duplicates (default: 24 hours)
+ * @returns true if duplicate found, false otherwise
+ */
+export async function isDuplicateNews(
+  title: string,
+  content?: string,
+  timeWindowHours: number = 24,
+): Promise<{
+  isDuplicate: boolean;
+  reason?: string;
+  similarArticleId?: string;
+}> {
+  try {
+    // Fetch recent articles within time window
+    const recentArticles = await db.article.findMany({
+      where: {
+        publishedAt: {
+          gte: new Date(Date.now() - timeWindowHours * 60 * 60 * 1000),
+        },
+        status: "PUBLISHED",
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        slug: true,
+      },
+    });
+
+    console.log(
+      `🔍 Checking for duplicates among ${recentArticles.length} recent articles...`,
+    );
+
+    for (const article of recentArticles) {
+      // 1. Exact Title Match
+      if (title.toLowerCase() === article.title.toLowerCase()) {
+        console.log(
+          `❌ DUPLICATE: Exact title match with article ${article.id}`,
+        );
+        return {
+          isDuplicate: true,
+          reason: "EXACT_TITLE_MATCH",
+          similarArticleId: article.id,
+        };
+      }
+
+      // 2. Title Similarity Check (80%+ similar)
+      const titleSimilarity = calculateSimilarity(title, article.title);
+      if (titleSimilarity > 0.8) {
+        console.log(
+          `❌ DUPLICATE: Title similarity ${(titleSimilarity * 100).toFixed(1)}% with article ${article.id}`,
+        );
+        console.log(`   New: "${title}"`);
+        console.log(`   Existing: "${article.title}"`);
+        return {
+          isDuplicate: true,
+          reason: `TITLE_SIMILARITY_${(titleSimilarity * 100).toFixed(0)}%`,
+          similarArticleId: article.id,
+        };
+      }
+
+      // 3. Slug Prefix Match (first 40 characters)
+      const newSlug = title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .substring(0, 40);
+
+      const existingSlugPrefix = article.slug.substring(0, 40);
+
+      if (newSlug === existingSlugPrefix && newSlug.length > 20) {
+        console.log(
+          `❌ DUPLICATE: Slug prefix match with article ${article.id}`,
+        );
+        return {
+          isDuplicate: true,
+          reason: "SLUG_PREFIX_MATCH",
+          similarArticleId: article.id,
+        };
+      }
+
+      // 4. Content Similarity Check (if content provided)
+      if (content && article.content) {
+        // Compare first 300 characters of content
+        const contentPreview1 = content.substring(0, 300).toLowerCase();
+        const contentPreview2 = article.content.substring(0, 300).toLowerCase();
+
+        const contentSimilarity = calculateSimilarity(
+          contentPreview1,
+          contentPreview2,
+        );
+
+        if (contentSimilarity > 0.7) {
+          console.log(
+            `❌ DUPLICATE: Content similarity ${(contentSimilarity * 100).toFixed(1)}% with article ${article.id}`,
+          );
+          return {
+            isDuplicate: true,
+            reason: `CONTENT_SIMILARITY_${(contentSimilarity * 100).toFixed(0)}%`,
+            similarArticleId: article.id,
+          };
+        }
+      }
+    }
+
+    console.log(`✅ No duplicates found for: "${title.substring(0, 60)}..."`);
+    return { isDuplicate: false };
+  } catch (error) {
+    console.error("❌ Error checking for duplicates:", error);
+    // On error, allow the article to be published (fail-open)
+    return { isDuplicate: false };
+  }
 }
 
 /**

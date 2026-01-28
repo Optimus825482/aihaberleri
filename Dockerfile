@@ -62,8 +62,9 @@ RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     python3-venv \
-    # Sharp native dependencies
+    # Sharp native dependencies (required for image optimization)
     libvips-dev \
+    libvips42 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install edge-tts for Audio Suite
@@ -83,12 +84,17 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/src/lib/tts_engine.py ./src/lib/tts_engine.py
 
-# Copy sharp native binaries for standalone mode
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
+# Copy package.json for sharp installation
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json* ./
+
+# Install ONLY sharp in production mode with correct architecture
+# This ensures sharp binaries match the runtime environment
+RUN npm install --omit=dev --ignore-scripts sharp@0.33.5 && \
+    npm cache clean --force
 
 # Copy scripts and necessary node_modules for runtime scripts (Agent worker etc)
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 # Specialized copy for tools used in scripts
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx

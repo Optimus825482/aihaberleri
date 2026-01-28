@@ -2,25 +2,70 @@
 
 ## Tarih: 2026-01-28
 
+## Status: ✅ SHARP FIXED | ✅ POSTGRESQL FIXED
+
 ## Sorunlar
 
-### 1. Sharp Image Optimization Hatası
+### 1. ✅ Sharp Image Optimization Hatası (FIXED)
 
 ```
 ⨯ Error: 'sharp' is required to be installed in standalone mode
 ```
 
-### 2. PostgreSQL Connection Closed
+**Çözüm:** Kalıcı çözüm uygulandı. Detaylar: `SHARP-FIX-PERMANENT.md`
+
+**Değişiklikler:**
+
+1. `next.config.js` - outputFileTracingIncludes eklendi
+2. `Dockerfile` - libvips42 runtime library eklendi
+3. `Dockerfile` - Fresh sharp installation (runtime'da)
+4. `scripts/verify-sharp.js` - Verification script eklendi
+
+### 2. ✅ PostgreSQL Connection Closed (FIXED)
 
 ```
 prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
 ```
 
+**Çözüm:** Connection pool settings eklendi
+
 ---
 
 ## Çözümler
 
-### ✅ Fix 1: DATABASE_URL Connection Pool
+### ✅ Fix 1: Sharp Image Optimization (KALICI ÇÖZÜM)
+
+**Detaylı Dokümantasyon:** `SHARP-FIX-PERMANENT.md`
+
+#### Değişiklikler:
+
+**1. next.config.js**
+
+```javascript
+experimental: {
+  outputFileTracingIncludes: {
+    "/": ["./node_modules/sharp/**/*"],
+  },
+}
+```
+
+**2. Dockerfile - Runtime Sharp Installation**
+
+```dockerfile
+# libvips runtime library
+RUN apt-get install -y libvips-dev libvips42
+
+# Fresh sharp installation in runner stage
+RUN npm install --omit=dev --ignore-scripts sharp@0.33.5
+```
+
+**3. Verification Script**
+
+```bash
+node scripts/verify-sharp.js
+```
+
+### ✅ Fix 2: DATABASE_URL Connection Pool
 
 Coolify Environment Variables'a ekle:
 
@@ -34,7 +79,21 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB?schema=public&connection_l
 - `pool_timeout=20` - Pool'dan connection alma timeout (20 saniye)
 - `connect_timeout=10` - Database'e bağlanma timeout (10 saniye)
 
-### ✅ Fix 2: Prisma Schema Update
+### ✅ Fix 2: DATABASE_URL Connection Pool
+
+Coolify Environment Variables'a ekle:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB?schema=public&connection_limit=10&pool_timeout=20&connect_timeout=10"
+```
+
+**Parametreler:**
+
+- `connection_limit=10` - Max 10 connection (default: unlimited)
+- `pool_timeout=20` - Pool'dan connection alma timeout (20 saniye)
+- `connect_timeout=10` - Database'e bağlanma timeout (10 saniye)
+
+### ✅ Fix 3: Prisma Schema Update
 
 `prisma/schema.prisma` güncellendi:
 
@@ -46,13 +105,16 @@ datasource db {
 }
 ```
 
-### ✅ Fix 3: Sharp Binary (Zaten Yapıldı)
+### ✅ Fix 3: Prisma Schema Update
 
-Dockerfile'da:
+`prisma/schema.prisma` güncellendi:
 
-```dockerfile
-# Copy sharp native binaries for standalone mode
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  relationMode = "prisma"
+}
 ```
 
 ---
@@ -62,8 +124,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules
 ### 1. Git Push
 
 ```bash
-git add prisma/schema.prisma PRODUCTION-FIX.md
-git commit -m "fix: add prisma connection pool settings"
+git add .
+git commit -m "fix(sharp): permanent solution for standalone mode + postgresql pool"
 git push
 ```
 
@@ -102,8 +164,15 @@ Coolify'da:
 ### Sharp Kontrolü
 
 ```bash
-# Logs'ta sharp hatası olmamalı
+# 1. Verification script çalıştır (container içinde)
+docker exec <container-name> node scripts/verify-sharp.js
+
+# 2. Logs'ta sharp hatası olmamalı
 docker logs -f <container-name> | grep sharp
+
+# 3. Image optimization test
+curl -I https://aihaberleri.org/_next/image?url=/hero.jpg&w=640&q=75
+# Response: 200 OK, Content-Type: image/webp
 ```
 
 ### PostgreSQL Kontrolü
@@ -124,9 +193,26 @@ docker logs -f <container-name> | grep "prisma:error"
 ## Beklenen Sonuç
 
 ✅ Sharp hataları kaybolacak
+✅ Image optimization çalışacak (WebP/AVIF)
+✅ Responsive images optimize edilecek
 ✅ PostgreSQL connection stable olacak
-✅ Resimler optimize edilecek
 ✅ Database connection pool yönetilecek
+
+---
+
+## Dosya Değişiklikleri
+
+### Yeni Dosyalar
+
+- `SHARP-FIX-PERMANENT.md` - Detaylı sharp çözüm dokümantasyonu
+- `scripts/verify-sharp.js` - Sharp verification script
+
+### Güncellenen Dosyalar
+
+- `next.config.js` - outputFileTracingIncludes eklendi
+- `Dockerfile` - libvips42 + fresh sharp installation
+- `PRODUCTION-FIX.md` - Bu dosya güncellendi
+- `prisma/schema.prisma` - relationMode eklendi (önceden)
 
 ---
 

@@ -11,7 +11,7 @@ import { fetchPollinationsImage } from "@/lib/pollinations";
 import { generateSlug } from "@/lib/utils";
 import { db } from "@/lib/db";
 import type { NewsArticle } from "./news.service";
-import { fetchArticleContent } from "./news.service";
+import { fetchArticleContent, isDuplicateNews } from "./news.service";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postTweet } from "@/lib/social/twitter";
 import { postToFacebook } from "@/lib/social/facebook";
@@ -33,7 +33,7 @@ export interface ProcessedArticle {
 
 /**
  * Check if article already exists in database
- * ENHANCED: Multiple layers of duplicate detection
+ * ENHANCED: Multiple layers of duplicate detection using new isDuplicateNews()
  */
 async function isDuplicate(article: NewsArticle): Promise<boolean> {
   // 1. Normalize URL: remove query parameters
@@ -63,90 +63,23 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
     return true;
   }
 
-  // Check 2: Slug match (prevent same slug conflicts)
-  const potentialSlug = generateSlug(article.title);
-  const existingBySlug = await db.article.findFirst({
-    where: {
-      slug: {
-        startsWith: potentialSlug, // Matches "slug" or "slug-123456"
-      },
-    },
-    select: { id: true, title: true, slug: true },
-  });
-
-  if (existingBySlug) {
-    console.log(
-      `🗑️ Duplicate slug detected: ${existingBySlug.slug} (${existingBySlug.title})`,
-    );
-    return true;
-  }
-
-  // Check 3: Title match (exact or close)
-  // Clean title: remove extra spaces, lowercase
-  const cleanTitle = article.title.trim().toLowerCase();
-
-  // Fetch recent articles (last 7 days) for fuzzy comparison
-  // INCREASED from 3 to 7 days to catch more duplicates
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const recentArticles = await db.article.findMany({
-    where: {
-      createdAt: {
-        gte: sevenDaysAgo,
-      },
-    },
-    select: {
-      title: true,
-      id: true,
-    },
-    take: 200, // Limit to avoid performance issues
-  });
-
-  // Check for exact match first
-  const exactMatch = recentArticles.find(
-    (a) => a.title.trim().toLowerCase() === cleanTitle,
+  // Check 2: Use new advanced duplicate detection (title + content similarity)
+  const duplicateCheck = await isDuplicateNews(
+    article.title,
+    article.description,
+    24 // Check last 24 hours
   );
-  if (exactMatch) {
-    console.log(`🗑️ Exact title match: ${exactMatch.title}`);
-    return true;
-  }
 
-  // Check 4: Fuzzy Similarity (Dice Coefficient)
-  // LOWERED threshold from 0.85 to 0.80 to catch more similar titles
-  const SIMILARITY_THRESHOLD = 0.8;
-
-  for (const recent of recentArticles) {
-    const similarity = calculateSimilarity(article.title, recent.title);
-    if (similarity >= SIMILARITY_THRESHOLD) {
-      console.log(
-        `🗑️ Fuzzy duplicate detected (${(similarity * 100).toFixed(1)}%):`,
-        `\n   New: "${article.title}"`,
-        `\n   Old: "${recent.title}"`,
-      );
-      return true;
+  if (duplicateCheck.isDuplicate) {
+    console.log(`🗑️ ${duplicateCheck.reason}: "${article.title}"`);
+    if (duplicateCheck.similarArticleId) {
+      console.log(`   Similar to article ID: ${duplicateCheck.similarArticleId}`);
     }
+    return true;
   }
 
   return false;
 }
-
-/**
- * Calculate similarity between two strings using Dice Coefficient (0 to 1)
- * Good for catching similar titles even with small typos or word swaps
- */
-function calculateSimilarity(str1: string, str2: string): number {
-  const s1 = str1.toLowerCase().replace(/\s+/g, "");
-  const s2 = str2.toLowerCase().replace(/\s+/g, "");
-
-  if (s1 === s2) return 1;
-  if (s1.length < 2 || s2.length < 2) return 0;
-
-  const bigrams1 = new Map<string, number>();
-  for (let i = 0; i < s1.length - 1; i++) {
-    const bigram = s1.substring(i, i + 2);
-    bigrams1.set(bigram, (bigrams1.get(bigram) || 0) + 1);
-  }
 
   let intersection = 0;
   for (let i = 0; i < s2.length - 1; i++) {
