@@ -19,7 +19,9 @@ import {
   Search,
   Bot,
   BarChart,
+  Download,
 } from "lucide-react";
+import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
 
 interface AdminLayoutProps {
@@ -88,6 +90,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isInstallable, installApp } = usePWA();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -173,6 +176,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </nav>
 
         <div className="absolute bottom-0 w-64 p-3 border-t bg-card">
+          {isInstallable && (
+            <Button
+              variant="outline"
+              className="w-full justify-start mb-2 border-primary/20 bg-primary/5 hover:bg-primary/10 text-primary"
+              onClick={() => {
+                installApp();
+                closeMobileMenu();
+              }}
+            >
+              <Download className="h-5 w-5 mr-3 flex-shrink-0" />
+              <span className="truncate">Uygulamayı Yükle</span>
+            </Button>
+          )}
           <Button
             variant="ghost"
             className="w-full justify-start"
