@@ -28,7 +28,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, RefreshCw, Eye, Search, Plus } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  RefreshCw,
+  Eye,
+  Search,
+  Plus,
+  Facebook,
+  CheckCircle,
+  Loader2,
+} from "lucide-react";
 import Image from "next/image";
 
 interface Article {
@@ -46,6 +56,7 @@ interface Article {
     slug: string;
   };
   score: number;
+  facebookShared: boolean;
 }
 
 interface Category {
@@ -62,6 +73,7 @@ export default function ArticlesPage() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [refreshingImage, setRefreshingImage] = useState<string | null>(null);
+  const [sharingFacebook, setSharingFacebook] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -130,6 +142,29 @@ export default function ArticlesPage() {
       alert("Bir hata oluştu");
     } finally {
       setRefreshingImage(null);
+    }
+  };
+
+  const shareFacebook = async (id: string) => {
+    setSharingFacebook(id);
+    try {
+      const response = await fetch(`/api/admin/articles/${id}/share-facebook`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert("Facebook'ta başarıyla paylaşıldı!");
+        fetchData();
+      } else {
+        alert(data.error || "Facebook paylaşımı başarısız");
+      }
+    } catch (error) {
+      console.error("Facebook share error:", error);
+      alert("Bir hata oluştu");
+    } finally {
+      setSharingFacebook(null);
     }
   };
 
@@ -221,6 +256,7 @@ export default function ArticlesPage() {
                         <TableHead>Eklenme Tarihi</TableHead>
                         <TableHead>Skor</TableHead>
                         <TableHead>Durum</TableHead>
+                        <TableHead className="text-center">Facebook</TableHead>
                         <TableHead className="text-right">
                           Görüntülenme
                         </TableHead>
@@ -310,6 +346,42 @@ export default function ArticlesPage() {
                                 ? "Yayında"
                                 : "Taslak"}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center justify-center">
+                              {article.facebookShared ? (
+                                <Badge
+                                  variant="default"
+                                  className="gap-1 bg-green-600 hover:bg-green-700"
+                                >
+                                  <CheckCircle className="h-3 w-3" />
+                                  Paylaşıldı
+                                </Badge>
+                              ) : (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => shareFacebook(article.id)}
+                                  disabled={
+                                    sharingFacebook === article.id ||
+                                    article.status !== "PUBLISHED"
+                                  }
+                                  className="gap-1"
+                                  title={
+                                    article.status !== "PUBLISHED"
+                                      ? "Sadece yayında olan haberler paylaşılabilir"
+                                      : "Facebook'ta paylaş"
+                                  }
+                                >
+                                  {sharingFacebook === article.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Facebook className="h-4 w-4" />
+                                  )}
+                                  Paylaş
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">

@@ -95,6 +95,7 @@ model Article {
   indexNowStatus  IndexStatus        @default(PENDING)
   indexedAt       DateTime?
   score           Int                @default(0)
+  facebookShared  Boolean            @default(false)
   agentLog        AgentLog?          @relation(fields: [agentLogId], references: [id])
   author          User?              @relation(fields: [authorId], references: [id])
   category        Category           @relation(fields: [categoryId], references: [id])

@@ -7,20 +7,14 @@ import { useSession, signOut } from "next-auth/react";
 import {
   LayoutDashboard,
   FileText,
-  PlusCircle,
   Settings,
   LogOut,
-  Newspaper,
-  Mail,
-  Bell,
   Menu,
   X,
-  Share2,
-  Search,
   Bot,
-  BarChart,
   Download,
   MessageSquare,
+  Tags,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -36,24 +30,14 @@ const menuItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Okuyucu Analitiği",
-    href: "/admin/analytics",
-    icon: BarChart,
-  },
-  {
-    title: "Haber Tarama",
-    href: "/admin/scan",
-    icon: Newspaper,
-  },
-  {
-    title: "Manuel Haber Ekle",
-    href: "/admin/create",
-    icon: PlusCircle,
-  },
-  {
     title: "Haberler",
     href: "/admin/articles",
     icon: FileText,
+  },
+  {
+    title: "Kategoriler",
+    href: "/admin/settings",
+    icon: Tags,
   },
   {
     title: "Agent Ayarları",
@@ -61,34 +45,9 @@ const menuItems = [
     icon: Bot,
   },
   {
-    title: "Bülten Aboneleri",
-    href: "/admin/newsletter",
-    icon: Mail,
-  },
-  {
-    title: "Push Bildirimleri",
-    href: "/admin/notifications",
-    icon: Bell,
-  },
-  {
-    title: "SEO Yönetimi",
-    href: "/admin/seo",
-    icon: Search,
-  },
-  {
-    title: "Sosyal Medya",
-    href: "/admin/social",
-    icon: Share2,
-  },
-  {
-    title: "Gelen Mesajlar",
+    title: "Mesajlar",
     href: "/admin/messages",
     icon: MessageSquare,
-  },
-  {
-    title: "Ayarlar",
-    href: "/admin/settings",
-    icon: Settings,
   },
 ];
 

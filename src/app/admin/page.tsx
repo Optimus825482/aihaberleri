@@ -387,11 +387,12 @@ export default function AdminDashboard() {
                     </CardDescription>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-col items-end gap-2 relative z-10">
                   <select
                     value={trafficRange}
                     onChange={(e) => setTrafficRange(e.target.value)}
-                    className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500/50 cursor-pointer hover:bg-blue-500/20 transition-colors"
+                    className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500/50 cursor-pointer hover:bg-blue-500/20 transition-colors appearance-auto"
+                    style={{ pointerEvents: "auto" }}
                   >
                     <option value="5m">Son 5 Dakika</option>
                     <option value="15m">Son 15 Dakika</option>

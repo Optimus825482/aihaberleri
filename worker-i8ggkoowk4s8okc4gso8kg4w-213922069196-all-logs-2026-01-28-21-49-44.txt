@@ -1,0 +1,667 @@
+
+2026-01-28T21:41:43.273280438Z 🚀 Starting News Agent Worker...
+2026-01-28T21:41:43.274406114Z 
+2026-01-28T21:41:43.274432274Z 🔄 Başlangıç senkronizasyonu başlatılıyor...
+2026-01-28T21:41:43.286306447Z ✅ Redis connected
+2026-01-28T21:41:43.421683772Z ℹ️ IndexNow için bekleyen haber bulunmadı.
+2026-01-28T21:41:43.438636119Z 📅 Sıradaki çalışma zamanı: 1/28/2026, 9:53:48 PM
+2026-01-28T21:41:43.448273419Z ⚠️ BullMQ'da iş bulunamadı ama DB'de nextRun var. Tekrar planlanıyor...
+2026-01-28T21:41:43.460321642Z 📅 Sonraki haber agent çalıştırması 1 saat sonra (1/28/2026, 10:41:43 PM) planlandı
+2026-01-28T21:47:59.304329435Z 
+2026-01-28T21:47:59.304375455Z ============================================================
+2026-01-28T21:47:59.304388155Z 🤖 Processing job: scrape-and-publish (ID: 55)
+2026-01-28T21:47:59.304400225Z ============================================================
+2026-01-28T21:47:59.304410695Z 
+2026-01-28T21:47:59.331954146Z 🤖 Agent çalıştırması başladı (Log ID: cmkyk3v180001t9qb2myclpnk)
+2026-01-28T21:47:59.331995156Z 📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...
+2026-01-28T21:47:59.332454825Z 📰 AI haberleri toplanıyor (RSS + Trend Analizi)...
+2026-01-28T21:47:59.332748584Z 📡 69 RSS feed okunuyor...
+2026-01-28T21:47:59.333010883Z 📡 RSS feed okunuyor: BBC News - World
+2026-01-28T21:47:59.345260563Z 📡 RSS feed okunuyor: BBC News - Technology
+2026-01-28T21:47:59.347475426Z 📡 RSS feed okunuyor: CNN - Top Stories
+2026-01-28T21:47:59.349109790Z 📡 RSS feed okunuyor: CNN - Technology
+2026-01-28T21:47:59.350512867Z 📡 RSS feed okunuyor: Al Jazeera - News
+2026-01-28T21:47:59.556073022Z ✅ 10 haber bulundu: Al Jazeera - News
+2026-01-28T21:47:59.575275630Z ✅ 10 haber bulundu: BBC News - World
+2026-01-28T21:47:59.615435190Z ✅ 10 haber bulundu: BBC News - Technology
+2026-01-28T21:47:59.717133691Z ✅ 10 haber bulundu: CNN - Technology
+2026-01-28T21:47:59.802942455Z ✅ 10 haber bulundu: CNN - Top Stories
+2026-01-28T21:48:00.303990496Z 📡 RSS feed okunuyor: Bloomberg - Technology
+2026-01-28T21:48:00.306455938Z 📡 RSS feed okunuyor: The Wall Street Journal - Technology
+2026-01-28T21:48:00.309807847Z 📡 RSS feed okunuyor: Financial Times - Technology
+2026-01-28T21:48:00.311283602Z 📡 RSS feed okunuyor: NBC News - Technology
+2026-01-28T21:48:00.313291856Z 📡 RSS feed okunuyor: ABC News - Technology
+2026-01-28T21:48:00.410585272Z ✅ 10 haber bulundu: The Wall Street Journal - Technology
+2026-01-28T21:48:00.677085191Z ✅ 10 haber bulundu: ABC News - Technology
+2026-01-28T21:48:00.737481095Z ✅ 10 haber bulundu: Bloomberg - Technology
+2026-01-28T21:48:00.834299873Z ✅ 10 haber bulundu: Financial Times - Technology
+2026-01-28T21:48:01.272629997Z ✅ 10 haber bulundu: NBC News - Technology
+2026-01-28T21:48:01.774367256Z 📡 RSS feed okunuyor: Sky News - Technology
+2026-01-28T21:48:01.778256923Z 📡 RSS feed okunuyor: Deutsche Welle - News
+2026-01-28T21:48:01.779823438Z 📡 RSS feed okunuyor: Euronews - Technology
+2026-01-28T21:48:01.781794722Z 📡 RSS feed okunuyor: MIT Technology Review - AI
+2026-01-28T21:48:01.783809635Z 📡 RSS feed okunuyor: VentureBeat - AI
+2026-01-28T21:48:01.899441162Z ✅ 10 haber bulundu: MIT Technology Review - AI
+2026-01-28T21:48:01.920823903Z ✅ 10 haber bulundu: Euronews - Technology
+2026-01-28T21:48:01.955040642Z ✅ 10 haber bulundu: Deutsche Welle - News
+2026-01-28T21:48:02.159028002Z ✅ 10 haber bulundu: Sky News - Technology
+2026-01-28T21:48:02.238409056Z ✅ 7 haber bulundu: VentureBeat - AI
+2026-01-28T21:48:02.741738940Z 📡 RSS feed okunuyor: The Verge - AI
+2026-01-28T21:48:02.741823470Z 📡 RSS feed okunuyor: TechCrunch - AI
+2026-01-28T21:48:02.741835040Z 📡 RSS feed okunuyor: Ars Technica - AI
+2026-01-28T21:48:02.742634277Z 📡 RSS feed okunuyor: Wired - AI
+2026-01-28T21:48:02.743962413Z 📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+2026-01-28T21:48:02.780351185Z ✅ 10 haber bulundu: TechCrunch - AI
+2026-01-28T21:48:02.792394956Z ✅ 10 haber bulundu: The Verge - AI
+2026-01-28T21:48:02.913867254Z ✅ 10 haber bulundu: Ars Technica - AI
+2026-01-28T21:48:02.921388479Z ✅ 10 haber bulundu: Wired - AI
+2026-01-28T21:48:03.457694146Z ✅ 10 haber bulundu: ZDNet - Artificial Intelligence
+2026-01-28T21:48:03.957765660Z 📡 RSS feed okunuyor: Engadget - Technology
+2026-01-28T21:48:03.960418802Z 📡 RSS feed okunuyor: The Next Web
+2026-01-28T21:48:03.962220055Z 📡 RSS feed okunuyor: TechRadar - News
+2026-01-28T21:48:03.963869941Z 📡 RSS feed okunuyor: CNET - News
+2026-01-28T21:48:03.965117407Z 📡 RSS feed okunuyor: Mashable - Tech
+2026-01-28T21:48:04.150224389Z ✅ 10 haber bulundu: TechRadar - News
+2026-01-28T21:48:04.178688477Z ✅ 10 haber bulundu: CNET - News
+2026-01-28T21:48:04.243373448Z ✅ 10 haber bulundu: Mashable - Tech
+2026-01-28T21:48:04.257525722Z ✅ 10 haber bulundu: The Next Web
+2026-01-28T21:48:05.025807190Z ✅ 10 haber bulundu: Engadget - Technology
+2026-01-28T21:48:05.527271568Z 📡 RSS feed okunuyor: Gizmodo
+2026-01-28T21:48:05.530306399Z 📡 RSS feed okunuyor: Lifehacker
+2026-01-28T21:48:05.531939843Z 📡 RSS feed okunuyor: Digital Trends
+2026-01-28T21:48:05.533052370Z 📡 RSS feed okunuyor: Tom's Hardware
+2026-01-28T21:48:05.534376846Z 📡 RSS feed okunuyor: 9to5Mac
+2026-01-28T21:48:05.699861482Z ✅ 10 haber bulundu: Digital Trends
+2026-01-28T21:48:05.793380470Z ✅ 10 haber bulundu: Tom's Hardware
+2026-01-28T21:48:05.907735750Z ✅ 10 haber bulundu: Lifehacker
+2026-01-28T21:48:05.942364108Z ✅ 10 haber bulundu: Gizmodo
+2026-01-28T21:48:07.008893262Z ✅ 10 haber bulundu: 9to5Mac
+2026-01-28T21:48:07.510017612Z 📡 RSS feed okunuyor: 9to5Google
+2026-01-28T21:48:07.511693126Z 📡 RSS feed okunuyor: Android Authority
+2026-01-28T21:48:07.513136942Z 📡 RSS feed okunuyor: Android Police
+2026-01-28T21:48:07.514595527Z 📡 RSS feed okunuyor: XDA Developers
+2026-01-28T21:48:07.516036942Z 📡 RSS feed okunuyor: Hacker News (YCombinator)
+2026-01-28T21:48:07.612866830Z ✅ 10 haber bulundu: 9to5Google
+2026-01-28T21:48:07.861967274Z ✅ 10 haber bulundu: Android Authority
+2026-01-28T21:48:07.981921446Z ✅ 10 haber bulundu: Android Police
+2026-01-28T21:48:08.034649736Z ✅ 10 haber bulundu: XDA Developers
+2026-01-28T21:48:08.130230367Z ✅ 10 haber bulundu: Hacker News (YCombinator)
+2026-01-28T21:48:08.630726620Z 📡 RSS feed okunuyor: Product Hunt - Tech
+2026-01-28T21:48:08.632816562Z 📡 RSS feed okunuyor: AI News
+2026-01-28T21:48:08.634252508Z 📡 RSS feed okunuyor: MarkTechPost
+2026-01-28T21:48:08.635593004Z 📡 RSS feed okunuyor: The AI Edge (Substack)
+2026-01-28T21:48:08.636723940Z 📡 RSS feed okunuyor: Last Week in AI
+2026-01-28T21:48:08.788702959Z ✅ 10 haber bulundu: Product Hunt - Tech
+2026-01-28T21:48:08.870945014Z ✅ 10 haber bulundu: The AI Edge (Substack)
+2026-01-28T21:48:08.908610171Z ✅ 10 haber bulundu: AI News
+2026-01-28T21:48:08.917845982Z ✅ 10 haber bulundu: Last Week in AI
+2026-01-28T21:48:10.812952146Z ✅ 10 haber bulundu: MarkTechPost
+2026-01-28T21:48:11.315301592Z 📡 RSS feed okunuyor: Machine Learning Mastery
+2026-01-28T21:48:11.317696084Z 📡 RSS feed okunuyor: OpenAI Blog
+2026-01-28T21:48:11.318665991Z 📡 RSS feed okunuyor: Google AI Blog
+2026-01-28T21:48:11.320057767Z 📡 RSS feed okunuyor: DeepMind Blog
+2026-01-28T21:48:11.322821497Z 📡 RSS feed okunuyor: NVIDIA Blog - AI
+2026-01-28T21:48:11.473496541Z ✅ 10 haber bulundu: DeepMind Blog
+2026-01-28T21:48:11.477275048Z ✅ 10 haber bulundu: Machine Learning Mastery
+2026-01-28T21:48:11.571225445Z ✅ 10 haber bulundu: NVIDIA Blog - AI
+2026-01-28T21:48:11.657800895Z ✅ 10 haber bulundu: OpenAI Blog
+2026-01-28T21:48:12.329336134Z ✅ 10 haber bulundu: Google AI Blog
+2026-01-28T21:48:12.829589457Z 📡 RSS feed okunuyor: Microsoft Azure AI Blog
+2026-01-28T21:48:12.831838990Z 📡 RSS feed okunuyor: AWS Machine Learning Blog
+2026-01-28T21:48:12.833233646Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-01-28T21:48:12.834795490Z 📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+2026-01-28T21:48:12.835441489Z 📡 RSS feed okunuyor: Forbes - Innovation
+2026-01-28T21:48:12.925134838Z ✅ 10 haber bulundu: Forbes - Innovation
+2026-01-28T21:48:13.165561661Z ⚠️  Hata (Microsoft Azure AI Blog), tekrar deneniyor... Cannot convert object to primitive value
+2026-01-28T21:48:13.240153680Z ✅ 10 haber bulundu: AWS Machine Learning Blog
+2026-01-28T21:48:13.266057386Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-01-28T21:48:14.165527449Z 📡 RSS feed okunuyor: Microsoft Azure AI Blog (deneme 2)
+2026-01-28T21:48:14.359538920Z ⚠️  Hata (Microsoft Azure AI Blog), tekrar deneniyor... Cannot convert object to primitive value
+2026-01-28T21:48:14.420938732Z ✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+2026-01-28T21:48:16.359860494Z 📡 RSS feed okunuyor: Microsoft Azure AI Blog (deneme 3)
+2026-01-28T21:48:16.563348955Z ❌ RSS feed hatası (Microsoft Azure AI Blog): Cannot convert object to primitive value
+2026-01-28T21:48:17.063479689Z 📡 RSS feed okunuyor: CNBC - Technology
+2026-01-28T21:48:17.065434022Z 📡 RSS feed okunuyor: The Economist - Technology
+2026-01-28T21:48:17.067290636Z 📡 RSS feed okunuyor: Fast Company - Technology
+2026-01-28T21:48:17.069053410Z 📡 RSS feed okunuyor: MIT Sloan Management Review
+2026-01-28T21:48:17.070517936Z 📡 RSS feed okunuyor: Seeking Alpha - Technology
+2026-01-28T21:48:17.223946579Z ✅ 10 haber bulundu: Fast Company - Technology
+2026-01-28T21:48:17.271837874Z ⚠️  Hata (CNBC - Technology), tekrar deneniyor... Request failed with status code 403
+2026-01-28T21:48:17.342601726Z ✅ 10 haber bulundu: The Economist - Technology
+2026-01-28T21:48:17.350021551Z ✅ 10 haber bulundu: Seeking Alpha - Technology
+2026-01-28T21:48:17.535475722Z ✅ 10 haber bulundu: MIT Sloan Management Review
+2026-01-28T21:48:18.272375669Z 📡 RSS feed okunuyor: CNBC - Technology (deneme 2)
+2026-01-28T21:48:18.374470359Z ⚠️  Hata (CNBC - Technology), tekrar deneniyor... Request failed with status code 403
+2026-01-28T21:48:20.375076680Z 📡 RSS feed okunuyor: CNBC - Technology (deneme 3)
+2026-01-28T21:48:20.506080626Z ❌ RSS feed hatası (CNBC - Technology): Request failed with status code 403
+2026-01-28T21:48:21.006424348Z 📡 RSS feed okunuyor: New Scientist - Technology
+2026-01-28T21:48:21.009399608Z 📡 RSS feed okunuyor: Popular Science
+2026-01-28T21:48:21.011994119Z 📡 RSS feed okunuyor: Popular Mechanics
+2026-01-28T21:48:21.013644545Z 📡 RSS feed okunuyor: Space.com
+2026-01-28T21:48:21.016626705Z 📡 RSS feed okunuyor: Phys.org - Technology
+2026-01-28T21:48:21.089281650Z ✅ 10 haber bulundu: New Scientist - Technology
+2026-01-28T21:48:21.162519153Z ✅ 10 haber bulundu: Popular Science
+2026-01-28T21:48:21.255744071Z ✅ 10 haber bulundu: Space.com
+2026-01-28T21:48:21.301044705Z ✅ 10 haber bulundu: Popular Mechanics
+2026-01-28T21:48:21.718311505Z ✅ 10 haber bulundu: Phys.org - Technology
+2026-01-28T21:48:22.218738606Z 📡 RSS feed okunuyor: ScienceDaily - Technology
+2026-01-28T21:48:22.220889559Z 📡 RSS feed okunuyor: Futurism
+2026-01-28T21:48:22.222568084Z 📡 RSS feed okunuyor: Singularity Hub
+2026-01-28T21:48:22.224436268Z 📡 RSS feed okunuyor: IEEE Spectrum - Technology
+2026-01-28T21:48:22.225908473Z 📡 RSS feed okunuyor: Towards Data Science
+2026-01-28T21:48:22.283601966Z ✅ 10 haber bulundu: Singularity Hub
+2026-01-28T21:48:22.316904779Z ✅ 10 haber bulundu: Futurism
+2026-01-28T21:48:22.512532486Z ✅ 10 haber bulundu: IEEE Spectrum - Technology
+2026-01-28T21:48:22.967706444Z ✅ 10 haber bulundu: ScienceDaily - Technology
+2026-01-28T21:48:23.121068328Z ✅ 10 haber bulundu: Towards Data Science
+2026-01-28T21:48:23.622163468Z 📡 RSS feed okunuyor: Analytics Vidhya
+2026-01-28T21:48:23.624206080Z 📡 RSS feed okunuyor: KDnuggets
+2026-01-28T21:48:23.625624416Z 📡 RSS feed okunuyor: Machine Learning Reddit
+2026-01-28T21:48:23.627155491Z 📡 RSS feed okunuyor: AI Trends
+2026-01-28T21:48:23.788244400Z ✅ 10 haber bulundu: KDnuggets
+2026-01-28T21:48:24.393385702Z ✅ 10 haber bulundu: Analytics Vidhya
+2026-01-28T21:48:24.566692351Z ✅ 10 haber bulundu: Machine Learning Reddit
+2026-01-28T21:48:25.104885511Z ✅ 10 haber bulundu: AI Trends
+2026-01-28T21:48:25.104923171Z ✅ Toplam 667 haber toplandı
+2026-01-28T21:48:25.132485762Z ✅ 657 benzersiz haber
+2026-01-28T21:48:25.133633268Z 📅 Son 48 saatte 422 haber
+2026-01-28T21:48:25.133653358Z ⚡ Smart Sampling: 422 haber → 100 habere düşürülüyor
+2026-01-28T21:48:25.138636472Z ✅ En güncel 100 haber seçildi
+2026-01-28T21:48:25.138666092Z 📊 100 haber için Trend (Brave + Google) analizi...
+2026-01-28T21:48:25.216327691Z 📈 Google Trends verisi çekiliyor...
+2026-01-28T21:48:25.216604089Z Trying Google Trends Source: https://trends.google.com/trends/trendingsearches/daily/rss?geo=US
+2026-01-28T21:48:25.610774974Z Trying Google Trends Source: https://trends.google.com/trends/trendingsearches/daily/atom?geo=US
+2026-01-28T21:48:25.610839084Z ⚠️ Failed https://trends.google.com/trends/trendingsearches/daily/rss?geo=US: Request failed with status code 404
+2026-01-28T21:48:25.639681760Z ⚠️ Failed https://trends.google.com/trends/trendingsearches/daily/atom?geo=US: Request failed with status code 404
+2026-01-28T21:48:25.639712470Z Trying Google Trends Source: https://trends.google.com/trends/hottrends/atom/feed?pn=p1
+2026-01-28T21:48:25.850356789Z ⚠️ Failed https://trends.google.com/trends/hottrends/atom/feed?pn=p1: Request failed with status code 404
+2026-01-28T21:48:25.850358099Z 🔄 Google failed/blocked. Switching to Brave for Trend Discovery...
+2026-01-28T21:48:26.954035799Z ✅ Brave recovered 5 trend signals.
+2026-01-28T21:48:26.956058732Z 📊 Brave ile 100 haber analiz ediliyor...
+2026-01-28T21:48:26.956083342Z 📦 Batch 1/10 işleniyor (10 haber)...
+2026-01-28T21:48:27.998535650Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-28T21:48:28.499325960Z 📦 Batch 2/10 işleniyor (10 haber)...
+2026-01-28T21:48:29.283007554Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-28T21:48:29.783775074Z 📦 Batch 3/10 işleniyor (10 haber)...
+2026-01-28T21:48:30.494047705Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-28T21:48:30.994654895Z 📦 Batch 4/10 işleniyor (10 haber)...
+2026-01-28T21:48:31.683107108Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-28T21:48:32.184116447Z 📦 Batch 5/10 işleniyor (10 haber)...
+2026-01-28T21:48:32.929707153Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-28T21:48:33.429646106Z 📦 Batch 6/10 işleniyor (10 haber)...
+2026-01-28T21:48:34.258594824Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-28T21:48:34.758651486Z 📦 Batch 7/10 işleniyor (10 haber)...
+2026-01-28T21:48:35.757838411Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-28T21:48:36.259350458Z 📦 Batch 8/10 işleniyor (10 haber)...
+2026-01-28T21:48:36.486236224Z Brave Search API Error: {
+2026-01-28T21:48:36.486277004Z   status: 429,
+2026-01-28T21:48:36.486286153Z   data: {
+2026-01-28T21:48:36.486293863Z     type: 'ErrorResponse',
+2026-01-28T21:48:36.486301063Z     error: {
+2026-01-28T21:48:36.486308613Z       id: '97f7e617-a4b2-493a-abf5-af3015ea2f23',
+2026-01-28T21:48:36.486315973Z       status: 429,
+2026-01-28T21:48:36.486323173Z       detail: 'Request rate limit exceeded for plan',
+2026-01-28T21:48:36.486330453Z       meta: [Object],
+2026-01-28T21:48:36.486337553Z       code: 'RATE_LIMITED'
+2026-01-28T21:48:36.486344683Z     },
+2026-01-28T21:48:36.486351783Z     time: 1769636916
+2026-01-28T21:48:36.486358893Z   },
+2026-01-28T21:48:36.486366603Z   message: 'Request failed with status code 429'
+2026-01-28T21:48:36.486374643Z }
+2026-01-28T21:48:36.490754919Z Brave trend score error: AxiosError: Request failed with status code 429
+2026-01-28T21:48:36.490781149Z     at settle (/app/node_modules/axios/lib/core/settle.js:19:12)
+2026-01-28T21:48:36.490789919Z     at Unzip.handleStreamEnd (/app/node_modules/axios/lib/adapters/http.js:798:11)
+2026-01-28T21:48:36.490797469Z     at Unzip.emit (node:events:518:28)
+2026-01-28T21:48:36.490804459Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-01-28T21:48:36.490836069Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-01-28T21:48:36.490841049Z     at Axios.request (/app/node_modules/axios/lib/core/Axios.js:45:41)
+2026-01-28T21:48:36.490845519Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-01-28T21:48:36.490850029Z     at async braveSearch (/app/src/lib/brave.ts:112:22)
+2026-01-28T21:48:36.490854459Z     at async calculateTrendScoreBrave (/app/src/lib/brave.ts:155:21)
+2026-01-28T21:48:36.490858839Z     at async <anonymous> (/app/src/lib/brave.ts:354:25)
+2026-01-28T21:48:36.490864039Z     at async Promise.all (index 8)
+2026-01-28T21:48:36.490868859Z     at async rankArticlesByTrendBrave (/app/src/lib/brave.ts:349:25)
+2026-01-28T21:48:36.490873609Z     at async fetchAINews (/app/src/services/news.service.ts:249:27)
+2026-01-28T21:48:36.490877909Z     at async executeNewsAgent (/app/src/services/agent.service.ts:52:26)
+2026-01-28T21:48:36.490882359Z     at async Worker.import_bullmq.Worker.connection (/app/src/workers/news-agent.worker.ts:36:16) {
+2026-01-28T21:48:36.490886849Z   isAxiosError: true,
+2026-01-28T21:48:36.490891079Z   code: 'ERR_BAD_REQUEST',
+2026-01-28T21:48:36.490895329Z   config: {
+2026-01-28T21:48:36.490899519Z     transitional: {
+2026-01-28T21:48:36.490903789Z       silentJSONParsing: true,
+2026-01-28T21:48:36.490908069Z       forcedJSONParsing: true,
+2026-01-28T21:48:36.490912379Z       clarifyTimeoutError: false
+2026-01-28T21:48:36.490916659Z     },
+2026-01-28T21:48:36.490920939Z     adapter: [ 'xhr', 'http', 'fetch' ],
+2026-01-28T21:48:36.490925269Z     transformRequest: [ [Function: transformRequest] ],
+2026-01-28T21:48:36.490929569Z     transformResponse: [ [Function: transformResponse] ],
+2026-01-28T21:48:36.490933939Z     timeout: 10000,
+2026-01-28T21:48:36.490938119Z     xsrfCookieName: 'XSRF-TOKEN',
+2026-01-28T21:48:36.490942419Z     xsrfHeaderName: 'X-XSRF-TOKEN',
+2026-01-28T21:48:36.490946669Z     maxContentLength: -1,
+2026-01-28T21:48:36.490950929Z     maxBodyLength: -1,
+2026-01-28T21:48:36.490955119Z     env: { FormData: [Function], Blob: [class Blob] },
+2026-01-28T21:48:36.490959488Z     validateStatus: [Function: validateStatus],
+2026-01-28T21:48:36.490963738Z     headers: Object [AxiosHeaders] {
+2026-01-28T21:48:36.490967978Z       Accept: 'application/json',
+2026-01-28T21:48:36.490972208Z       'Content-Type': undefined,
+2026-01-28T21:48:36.490976468Z       'Accept-Encoding': 'gzip',
+2026-01-28T21:48:36.490980718Z       'X-Subscription-Token': 'BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-',
+2026-01-28T21:48:36.490985138Z       'User-Agent': 'axios/1.13.4'
+2026-01-28T21:48:36.490989398Z     },
+2026-01-28T21:48:36.491001298Z     method: 'get',
+2026-01-28T21:48:36.491006998Z     url: 'https://api.search.brave.com/res/v1/web/search?q=electric+biology+inspires+powerful+battery+power+sources+used+devices+found&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pd',
+2026-01-28T21:48:36.491012908Z     allowAbsoluteUrls: true,
+2026-01-28T21:48:36.491017208Z     data: undefined
+2026-01-28T21:48:36.491021448Z   },
+2026-01-28T21:48:36.491025668Z   request: <ref *1> ClientRequest {
+2026-01-28T21:48:36.491030148Z     _events: [Object: null prototype] {
+2026-01-28T21:48:36.491034348Z       abort: [Function (anonymous)],
+2026-01-28T21:48:36.491038528Z       aborted: [Function (anonymous)],
+2026-01-28T21:48:36.491043018Z       connect: [Function (anonymous)],
+2026-01-28T21:48:36.491047238Z       error: [Function (anonymous)],
+2026-01-28T21:48:36.491051488Z       socket: [Function (anonymous)],
+2026-01-28T21:48:36.491055788Z       timeout: [Function (anonymous)],
+2026-01-28T21:48:36.491060028Z       finish: [Function: requestOnFinish]
+2026-01-28T21:48:36.491064298Z     },
+2026-01-28T21:48:36.491068518Z     _eventsCount: 7,
+2026-01-28T21:48:36.491072728Z     _maxListeners: undefined,
+2026-01-28T21:48:36.491076888Z     outputData: [],
+2026-01-28T21:48:36.491081178Z     outputSize: 0,
+2026-01-28T21:48:36.491085398Z     writable: true,
+2026-01-28T21:48:36.491089638Z     destroyed: true,
+2026-01-28T21:48:36.491093948Z     _last: true,
+2026-01-28T21:48:36.491098138Z     chunkedEncoding: false,
+2026-01-28T21:48:36.491102388Z     shouldKeepAlive: true,
+2026-01-28T21:48:36.491106648Z     maxRequestsOnConnectionReached: false,
+2026-01-28T21:48:36.491110968Z     _defaultKeepAlive: true,
+2026-01-28T21:48:36.491115208Z     useChunkedEncodingByDefault: false,
+2026-01-28T21:48:36.491119498Z     sendDate: false,
+2026-01-28T21:48:36.491123778Z     _removedConnection: false,
+2026-01-28T21:48:36.491128008Z     _removedContLen: false,
+2026-01-28T21:48:36.491132228Z     _removedTE: false,
+2026-01-28T21:48:36.491136428Z     strictContentLength: false,
+2026-01-28T21:48:36.491140688Z     _contentLength: 0,
+2026-01-28T21:48:36.491144878Z     _hasBody: true,
+2026-01-28T21:48:36.491149038Z     _trailer: '',
+2026-01-28T21:48:36.491153218Z     finished: true,
+2026-01-28T21:48:36.491157478Z     _headerSent: true,
+2026-01-28T21:48:36.491161678Z     _closed: true,
+2026-01-28T21:48:36.491180298Z     socket: TLSSocket {
+2026-01-28T21:48:36.491185038Z       _tlsOptions: [Object],
+2026-01-28T21:48:36.491195658Z       _secureEstablished: true,
+2026-01-28T21:48:36.491199998Z       _securePending: false,
+2026-01-28T21:48:36.491204297Z       _newSessionPending: false,
+2026-01-28T21:48:36.491208547Z       _controlReleased: true,
+2026-01-28T21:48:36.491227807Z       secureConnecting: false,
+2026-01-28T21:48:36.491242187Z       _SNICallback: null,
+2026-01-28T21:48:36.491246597Z       servername: 'api.search.brave.com',
+2026-01-28T21:48:36.491250887Z       alpnProtocol: false,
+2026-01-28T21:48:36.491255067Z       authorized: true,
+2026-01-28T21:48:36.491259187Z       authorizationError: null,
+2026-01-28T21:48:36.491263367Z       encrypted: true,
+2026-01-28T21:48:36.491267547Z       _events: [Object: null prototype],
+2026-01-28T21:48:36.491272037Z       _eventsCount: 9,
+2026-01-28T21:48:36.491276187Z       connecting: false,
+2026-01-28T21:48:36.491290707Z       _hadError: false,
+2026-01-28T21:48:36.491295298Z       _parent: null,
+2026-01-28T21:48:36.491299528Z       _host: 'api.search.brave.com',
+2026-01-28T21:48:36.491303778Z       _closeAfterHandlingError: false,
+2026-01-28T21:48:36.491307998Z       _readableState: [ReadableState],
+2026-01-28T21:48:36.491312188Z       _writableState: [WritableState],
+2026-01-28T21:48:36.491316458Z       allowHalfOpen: false,
+2026-01-28T21:48:36.491320658Z       _maxListeners: undefined,
+2026-01-28T21:48:36.491324858Z       _sockname: null,
+2026-01-28T21:48:36.491329048Z       _pendingData: null,
+2026-01-28T21:48:36.491333208Z       _pendingEncoding: '',
+2026-01-28T21:48:36.491337398Z       server: undefined,
+2026-01-28T21:48:36.491341558Z       _server: null,
+2026-01-28T21:48:36.491345748Z       ssl: [TLSWrap],
+2026-01-28T21:48:36.491349958Z       _requestCert: true,
+2026-01-28T21:48:36.491354268Z       _rejectUnauthorized: true,
+2026-01-28T21:48:36.491359268Z       timeout: 5000,
+2026-01-28T21:48:36.491363588Z       parser: null,
+2026-01-28T21:48:36.491367738Z       _httpMessage: null,
+2026-01-28T21:48:36.491372068Z       autoSelectFamilyAttemptedAddresses: [Array],
+2026-01-28T21:48:36.491376368Z       [Symbol(alpncallback)]: null,
+2026-01-28T21:48:36.491380668Z       [Symbol(res)]: [TLSWrap],
+2026-01-28T21:48:36.491384938Z       [Symbol(verified)]: true,
+2026-01-28T21:48:36.491389138Z       [Symbol(pendingSession)]: null,
+2026-01-28T21:48:36.491393398Z       [Symbol(async_id_symbol)]: -1,
+2026-01-28T21:48:36.491397678Z       [Symbol(kHandle)]: [TLSWrap],
+2026-01-28T21:48:36.491401928Z       [Symbol(lastWriteQueueSize)]: 0,
+2026-01-28T21:48:36.491413318Z       [Symbol(timeout)]: Timeout {
+2026-01-28T21:48:36.491417858Z         _idleTimeout: 5000,
+2026-01-28T21:48:36.491422098Z         _idlePrev: [TimersList],
+2026-01-28T21:48:36.491426468Z         _idleNext: [TimersList],
+2026-01-28T21:48:36.491430798Z         _idleStart: 414699,
+2026-01-28T21:48:36.491435148Z         _onTimeout: [Function: bound ],
+2026-01-28T21:48:36.491439458Z         _timerArgs: undefined,
+2026-01-28T21:48:36.491443738Z         _repeat: null,
+2026-01-28T21:48:36.491447958Z         _destroyed: false,
+2026-01-28T21:48:36.491456307Z         [Symbol(refed)]: false,
+2026-01-28T21:48:36.491460757Z         [Symbol(kHasPrimitive)]: false,
+2026-01-28T21:48:36.491465197Z         [Symbol(asyncId)]: 10610,
+2026-01-28T21:48:36.491469597Z         [Symbol(triggerId)]: 10608
+2026-01-28T21:48:36.491473967Z       },
+2026-01-28T21:48:36.491478417Z       [Symbol(kBuffer)]: null,
+2026-01-28T21:48:36.491482847Z       [Symbol(kBufferCb)]: null,
+2026-01-28T21:48:36.491487167Z       [Symbol(kBufferGen)]: null,
+2026-01-28T21:48:36.491491507Z       [Symbol(shapeMode)]: true,
+2026-01-28T21:48:36.491495807Z       [Symbol(kCapture)]: false,
+2026-01-28T21:48:36.491500087Z       [Symbol(kSetNoDelay)]: false,
+2026-01-28T21:48:36.491504457Z       [Symbol(kSetKeepAlive)]: true,
+2026-01-28T21:48:36.491508737Z       [Symbol(kSetKeepAliveInitialDelay)]: 1,
+2026-01-28T21:48:36.491513047Z       [Symbol(kBytesRead)]: 0,
+2026-01-28T21:48:36.491517267Z       [Symbol(kBytesWritten)]: 0,
+2026-01-28T21:48:36.491521487Z       [Symbol(connect-options)]: [Object]
+2026-01-28T21:48:36.491525757Z     },
+2026-01-28T21:48:36.491530097Z     _header: 'GET /res/v1/web/search?q=electric+biology+inspires+powerful+battery+power+sources+used+devices+found&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pd HTTP/1.1\r\n' +
+2026-01-28T21:48:36.491535947Z       'Accept: application/json\r\n' +
+2026-01-28T21:48:36.491540417Z       'Accept-Encoding: gzip\r\n' +
+2026-01-28T21:48:36.491595297Z       'X-Subscription-Token: BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-\r\n' +
+2026-01-28T21:48:36.491600617Z       'User-Agent: axios/1.13.4\r\n' +
+2026-01-28T21:48:36.491605047Z       'Host: api.search.brave.com\r\n' +
+2026-01-28T21:48:36.491609437Z       'Connection: keep-alive\r\n' +
+2026-01-28T21:48:36.491613807Z       '\r\n',
+2026-01-28T21:48:36.491618277Z     _keepAliveTimeout: 0,
+2026-01-28T21:48:36.491622757Z     _onPendingData: [Function: nop],
+2026-01-28T21:48:36.491627097Z     agent: Agent {
+2026-01-28T21:48:36.491638287Z       _events: [Object: null prototype],
+2026-01-28T21:48:36.491642767Z       _eventsCount: 2,
+2026-01-28T21:48:36.491646987Z       _maxListeners: undefined,
+2026-01-28T21:48:36.491651227Z       defaultPort: 443,
+2026-01-28T21:48:36.491655407Z       protocol: 'https:',
+2026-01-28T21:48:36.491659637Z       options: [Object: null prototype],
+2026-01-28T21:48:36.491663927Z       requests: [Object: null prototype] {},
+2026-01-28T21:48:36.491668297Z       sockets: [Object: null prototype],
+2026-01-28T21:48:36.491673477Z       freeSockets: [Object: null prototype],
+2026-01-28T21:48:36.491678527Z       keepAliveMsecs: 1000,
+2026-01-28T21:48:36.491682897Z       keepAlive: true,
+2026-01-28T21:48:36.491687097Z       maxSockets: Infinity,
+2026-01-28T21:48:36.491691177Z       maxFreeSockets: 256,
+2026-01-28T21:48:36.491695307Z       scheduling: 'lifo',
+2026-01-28T21:48:36.491699506Z       maxTotalSockets: Infinity,
+2026-01-28T21:48:36.491704076Z       totalSocketCount: 10,
+2026-01-28T21:48:36.491708216Z       maxCachedSessions: 100,
+2026-01-28T21:48:36.491712336Z       _sessionCache: [Object],
+2026-01-28T21:48:36.491716686Z       [Symbol(shapeMode)]: false,
+2026-01-28T21:48:36.491720886Z       [Symbol(kCapture)]: false
+2026-01-28T21:48:36.491725116Z     },
+2026-01-28T21:48:36.491729276Z     socketPath: undefined,
+2026-01-28T21:48:36.491733536Z     method: 'GET',
+2026-01-28T21:48:36.491737676Z     maxHeaderSize: undefined,
+2026-01-28T21:48:36.491741946Z     insecureHTTPParser: undefined,
+2026-01-28T21:48:36.491746246Z     joinDuplicateHeaders: undefined,
+2026-01-28T21:48:36.491750656Z     path: '/res/v1/web/search?q=electric+biology+inspires+powerful+battery+power+sources+used+devices+found&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pd',
+2026-01-28T21:48:36.491756476Z     _ended: true,
+2026-01-28T21:48:36.491760766Z     res: IncomingMessage {
+2026-01-28T21:48:36.491764926Z       _events: [Object],
+2026-01-28T21:48:36.491769186Z       _readableState: [ReadableState],
+2026-01-28T21:48:36.491773496Z       _maxListeners: undefined,
+2026-01-28T21:48:36.491777766Z       socket: null,
+2026-01-28T21:48:36.491781976Z       httpVersionMajor: 1,
+2026-01-28T21:48:36.491786176Z       httpVersionMinor: 1,
+2026-01-28T21:48:36.491790316Z       httpVersion: '1.1',
+2026-01-28T21:48:36.491794526Z       complete: true,
+2026-01-28T21:48:36.491798676Z       rawHeaders: [Array],
+2026-01-28T21:48:36.491802966Z       rawTrailers: [],
+2026-01-28T21:48:36.491813966Z       joinDuplicateHeaders: undefined,
+2026-01-28T21:48:36.491818516Z       aborted: false,
+2026-01-28T21:48:36.491822726Z       upgrade: false,
+2026-01-28T21:48:36.491826866Z       url: '',
+2026-01-28T21:48:36.491831136Z       method: null,
+2026-01-28T21:48:36.491835326Z       statusCode: 429,
+2026-01-28T21:48:36.491839656Z       statusMessage: 'Too Many Requests',
+2026-01-28T21:48:36.491843996Z       client: [TLSSocket],
+2026-01-28T21:48:36.491848186Z       _consuming: true,
+2026-01-28T21:48:36.491852336Z       _dumped: false,
+2026-01-28T21:48:36.491856476Z       req: [Circular *1],
+2026-01-28T21:48:36.491860636Z       _eventsCount: 4,
+2026-01-28T21:48:36.491864886Z       responseUrl: 'https://api.search.brave.com/res/v1/web/search?q=electric+biology+inspires+powerful+battery+power+sources+used+devices+found&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pd',
+2026-01-28T21:48:36.491870326Z       redirects: [],
+2026-01-28T21:48:36.491874496Z       [Symbol(shapeMode)]: true,
+2026-01-28T21:48:36.491878756Z       [Symbol(kCapture)]: false,
+2026-01-28T21:48:36.491882966Z       [Symbol(kHeaders)]: [Object],
+2026-01-28T21:48:36.491887206Z       [Symbol(kHeadersCount)]: 22,
+2026-01-28T21:48:36.491891366Z       [Symbol(kTrailers)]: null,
+2026-01-28T21:48:36.491895776Z       [Symbol(kTrailersCount)]: 0
+2026-01-28T21:48:36.491900086Z     },
+2026-01-28T21:48:36.491904266Z     aborted: false,
+2026-01-28T21:48:36.491908416Z     timeoutCb: null,
+2026-01-28T21:48:36.491912566Z     upgradeOrConnect: false,
+2026-01-28T21:48:36.491916826Z     parser: null,
+2026-01-28T21:48:36.491921076Z     maxHeadersCount: null,
+2026-01-28T21:48:36.491925266Z     reusedSocket: true,
+2026-01-28T21:48:36.491929806Z     host: 'api.search.brave.com',
+2026-01-28T21:48:36.491934016Z     protocol: 'https:',
+2026-01-28T21:48:36.491938766Z     _redirectable: Writable {
+2026-01-28T21:48:36.491943016Z       _events: [Object],
+2026-01-28T21:48:36.491947305Z       _writableState: [WritableState],
+2026-01-28T21:48:36.491951545Z       _maxListeners: undefined,
+2026-01-28T21:48:36.491955735Z       _options: [Object],
+2026-01-28T21:48:36.491959915Z       _ended: true,
+2026-01-28T21:48:36.491964065Z       _ending: true,
+2026-01-28T21:48:36.491968195Z       _redirectCount: 0,
+2026-01-28T21:48:36.491972365Z       _redirects: [],
+2026-01-28T21:48:36.491976505Z       _requestBodyLength: 0,
+2026-01-28T21:48:36.491980725Z       _requestBodyBuffers: [],
+2026-01-28T21:48:36.491991445Z       _eventsCount: 3,
+2026-01-28T21:48:36.491995815Z       _onNativeResponse: [Function (anonymous)],
+2026-01-28T21:48:36.492000205Z       _currentRequest: [Circular *1],
+2026-01-28T21:48:36.492004575Z       _currentUrl: 'https://api.search.brave.com/res/v1/web/search?q=electric+biology+inspires+powerful+battery+power+sources+used+devices+found&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pd',
+2026-01-28T21:48:36.492009725Z       _timeout: null,
+2026-01-28T21:48:36.492013935Z       [Symbol(shapeMode)]: true,
+2026-01-28T21:48:36.492018095Z       [Symbol(kCapture)]: false
+2026-01-28T21:48:36.492022375Z     },
+2026-01-28T21:48:36.492026555Z     [Symbol(shapeMode)]: false,
+2026-01-28T21:48:36.492030745Z     [Symbol(kCapture)]: false,
+2026-01-28T21:48:36.492034955Z     [Symbol(kBytesWritten)]: 0,
+2026-01-28T21:48:36.492039215Z     [Symbol(kNeedDrain)]: false,
+2026-01-28T21:48:36.492043395Z     [Symbol(corked)]: 0,
+2026-01-28T21:48:36.492047605Z     [Symbol(kOutHeaders)]: [Object: null prototype] {
+2026-01-28T21:48:36.492051955Z       accept: [Array],
+2026-01-28T21:48:36.492056175Z       'accept-encoding': [Array],
+2026-01-28T21:48:36.492060435Z       'x-subscription-token': [Array],
+2026-01-28T21:48:36.492064675Z       'user-agent': [Array],
+2026-01-28T21:48:36.492068885Z       host: [Array]
+2026-01-28T21:48:36.492073055Z     },
+2026-01-28T21:48:36.492077155Z     [Symbol(errored)]: null,
+2026-01-28T21:48:36.492081375Z     [Symbol(kHighWaterMark)]: 16384,
+2026-01-28T21:48:36.492085635Z     [Symbol(kRejectNonStandardBodyWrites)]: false,
+2026-01-28T21:48:36.492090015Z     [Symbol(kUniqueHeaders)]: null
+2026-01-28T21:48:36.492094285Z   },
+2026-01-28T21:48:36.492098615Z   response: {
+2026-01-28T21:48:36.492102835Z     status: 429,
+2026-01-28T21:48:36.492107025Z     statusText: 'Too Many Requests',
+2026-01-28T21:48:36.492111255Z     headers: Object [AxiosHeaders] {
+2026-01-28T21:48:36.492115465Z       date: 'Wed, 28 Jan 2026 21:48:36 GMT',
+2026-01-28T21:48:36.492119755Z       'content-type': 'application/json',
+2026-01-28T21:48:36.492124065Z       'transfer-encoding': 'chunked',
+2026-01-28T21:48:36.492128355Z       connection: 'keep-alive',
+2026-01-28T21:48:36.492132535Z       'x-ratelimit-limit': '20, 20000000',
+2026-01-28T21:48:36.492136785Z       'x-ratelimit-policy': '20;w=1, 20000000;w=2678400',
+2026-01-28T21:48:36.492141495Z       'x-ratelimit-remaining': '0, 19998436',
+2026-01-28T21:48:36.492145745Z       'x-ratelimit-reset': '1, 267082',
+2026-01-28T21:48:36.492156445Z       'server-timing': 'search-roundtrip;dur=4.805',
+2026-01-28T21:48:36.492160935Z       vary: 'Accept-Encoding'
+2026-01-28T21:48:36.492165275Z     },
+2026-01-28T21:48:36.492183485Z     config: {
+2026-01-28T21:48:36.492187785Z       transitional: [Object],
+2026-01-28T21:48:36.492192004Z       adapter: [Array],
+2026-01-28T21:48:36.492196424Z       transformRequest: [Array],
+2026-01-28T21:48:36.492200634Z       transformResponse: [Array],
+2026-01-28T21:48:36.492204834Z       timeout: 10000,
+2026-01-28T21:48:36.492208984Z       xsrfCookieName: 'XSRF-TOKEN',
+2026-01-28T21:48:36.492213304Z       xsrfHeaderName: 'X-XSRF-TOKEN',
+2026-01-28T21:48:36.492218094Z       maxContentLength: -1,
+2026-01-28T21:48:36.492222344Z       maxBodyLength: -1,
+2026-01-28T21:48:36.492226474Z       env: [Object],
+2026-01-28T21:48:36.492230664Z       validateStatus: [Function: validateStatus],
+2026-01-28T21:48:36.492234914Z       headers: [Object [AxiosHeaders]],
+2026-01-28T21:48:36.492239144Z       method: 'get',
+2026-01-28T21:48:36.492243334Z       url: 'https://api.search.brave.com/res/v1/web/search?q=electric+biology+inspires+powerful+battery+power+sources+used+devices+found&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pd',
+2026-01-28T21:48:36.492248984Z       allowAbsoluteUrls: true,
+2026-01-28T21:48:36.492253134Z       data: undefined
+2026-01-28T21:48:36.492257254Z     },
+2026-01-28T21:48:36.492261354Z     request: <ref *1> ClientRequest {
+2026-01-28T21:48:36.492265774Z       _events: [Object: null prototype],
+2026-01-28T21:48:36.492270034Z       _eventsCount: 7,
+2026-01-28T21:48:36.492274194Z       _maxListeners: undefined,
+2026-01-28T21:48:36.492278374Z       outputData: [],
+2026-01-28T21:48:36.492282544Z       outputSize: 0,
+2026-01-28T21:48:36.492286724Z       writable: true,
+2026-01-28T21:48:36.492290824Z       destroyed: true,
+2026-01-28T21:48:36.492294974Z       _last: true,
+2026-01-28T21:48:36.492299124Z       chunkedEncoding: false,
+2026-01-28T21:48:36.492303334Z       shouldKeepAlive: true,
+2026-01-28T21:48:36.492307564Z       maxRequestsOnConnectionReached: false,
+2026-01-28T21:48:36.492311804Z       _defaultKeepAlive: true,
+2026-01-28T21:48:36.492316154Z       useChunkedEncodingByDefault: false,
+2026-01-28T21:48:36.492321824Z       sendDate: false,
+2026-01-28T21:48:36.492326204Z       _removedConnection: false,
+2026-01-28T21:48:36.492330454Z       _removedContLen: false,
+2026-01-28T21:48:36.492334614Z       _removedTE: false,
+2026-01-28T21:48:36.492345374Z       strictContentLength: false,
+2026-01-28T21:48:36.492349854Z       _contentLength: 0,
+2026-01-28T21:48:36.492354074Z       _hasBody: true,
+2026-01-28T21:48:36.492358314Z       _trailer: '',
+2026-01-28T21:48:36.492362494Z       finished: true,
+2026-01-28T21:48:36.492366674Z       _headerSent: true,
+2026-01-28T21:48:36.492370874Z       _closed: true,
+2026-01-28T21:48:36.492375014Z       socket: [TLSSocket],
+2026-01-28T21:48:36.492379394Z       _header: 'GET /res/v1/web/search?q=electric+biology+inspires+powerful+battery+power+sources+used+devices+found&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pd HTTP/1.1\r\n' +
+2026-01-28T21:48:36.492384984Z         'Accept: application/json\r\n' +
+2026-01-28T21:48:36.492389394Z         'Accept-Encoding: gzip\r\n' +
+2026-01-28T21:48:36.492393854Z         'X-Subscription-Token: BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-\r\n' +
+2026-01-28T21:48:36.492398544Z         'User-Agent: axios/1.13.4\r\n' +
+2026-01-28T21:48:36.492402854Z         'Host: api.search.brave.com\r\n' +
+2026-01-28T21:48:36.492407184Z         'Connection: keep-alive\r\n' +
+2026-01-28T21:48:36.492411514Z         '\r\n',
+2026-01-28T21:48:36.492416154Z       _keepAliveTimeout: 0,
+2026-01-28T21:48:36.492420534Z       _onPendingData: [Function: nop],
+2026-01-28T21:48:36.492424884Z       agent: [Agent],
+2026-01-28T21:48:36.492429154Z       socketPath: undefined,
+2026-01-28T21:48:36.492433394Z       method: 'GET',
+2026-01-28T21:48:36.492437563Z       maxHeaderSize: undefined,
+2026-01-28T21:48:36.492441813Z       insecureHTTPParser: undefined,
+2026-01-28T21:48:36.492446113Z       joinDuplicateHeaders: undefined,
+2026-01-28T21:48:36.492451193Z       path: '/res/v1/web/search?q=electric+biology+inspires+powerful+battery+power+sources+used+devices+found&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pd',
+2026-01-28T21:48:36.492456733Z       _ended: true,
+2026-01-28T21:48:36.492460913Z       res: [IncomingMessage],
+2026-01-28T21:48:36.492465143Z       aborted: false,
+2026-01-28T21:48:36.492469313Z       timeoutCb: null,
+2026-01-28T21:48:36.492473473Z       upgradeOrConnect: false,
+2026-01-28T21:48:36.492477703Z       parser: null,
+2026-01-28T21:48:36.492481843Z       maxHeadersCount: null,
+2026-01-28T21:48:36.492486043Z       reusedSocket: true,
+2026-01-28T21:48:36.492490333Z       host: 'api.search.brave.com',
+2026-01-28T21:48:36.492494614Z       protocol: 'https:',
+2026-01-28T21:48:36.492498904Z       _redirectable: [Writable],
+2026-01-28T21:48:36.492509764Z       [Symbol(shapeMode)]: false,
+2026-01-28T21:48:36.492514344Z       [Symbol(kCapture)]: false,
+2026-01-28T21:48:36.492518644Z       [Symbol(kBytesWritten)]: 0,
+2026-01-28T21:48:36.492523014Z       [Symbol(kNeedDrain)]: false,
+2026-01-28T21:48:36.492527304Z       [Symbol(corked)]: 0,
+2026-01-28T21:48:36.492531564Z       [Symbol(kOutHeaders)]: [Object: null prototype],
+2026-01-28T21:48:36.492535974Z       [Symbol(errored)]: null,
+2026-01-28T21:48:36.492540304Z       [Symbol(kHighWaterMark)]: 16384,
+2026-01-28T21:48:36.492568394Z       [Symbol(kRejectNonStandardBodyWrites)]: false,
+2026-01-28T21:48:36.492573234Z       [Symbol(kUniqueHeaders)]: null
+2026-01-28T21:48:36.492577574Z     },
+2026-01-28T21:48:36.492581964Z     data: { type: 'ErrorResponse', error: [Object], time: 1769636916 }
+2026-01-28T21:48:36.492586484Z   },
+2026-01-28T21:48:36.492590764Z   status: 429
+2026-01-28T21:48:36.492595024Z }
+2026-01-28T21:48:37.079384414Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-28T21:48:37.579995743Z 📦 Batch 9/10 işleniyor (10 haber)...
+2026-01-28T21:48:38.276662218Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-28T21:48:38.777446217Z 📦 Batch 10/10 işleniyor (10 haber)...
+2026-01-28T21:48:39.552694138Z ✅ Brave trend sıralaması tamamlandı
+2026-01-28T21:48:39.552722648Z 📊 İşlenen: 100/100 haber
+2026-01-28T21:48:39.552807417Z 🏆 Top 5: #55 (skor: 255), #26 (skor: 251), #41 (skor: 242), #87 (skor: 230), #65 (skor: 230)
+2026-01-28T21:48:39.553590345Z ✅ 20 trend haber seçildi
+2026-01-28T21:48:39.553618195Z Top 5 Trend Haberler: 
+2026-01-28T21:48:39.553623445Z   1. Colombian lawmaker among 15 missing in plane disappearance... (skor: 255)
+2026-01-28T21:48:39.553628285Z   2. Amazon Cutting 16,000 Jobs, ASML Reports Record Bookings | B... (skor: 251)
+2026-01-28T21:48:39.553632835Z   3. Court Filing Reveals Something Very Nasty About Mark Zuckerb... (skor: 242)
+2026-01-28T21:48:39.553637425Z   4. How drone warfare has changed in Ukraine... (skor: 230)
+2026-01-28T21:48:39.553641875Z   5. Patreon creators have to switch to subscription billing by N... (skor: 230)
+2026-01-28T21:48:39.553945704Z ✅ 20 trend haber bulundu
+2026-01-28T21:48:39.553967834Z 🎯 Adım 2: En iyi haberler seçiliyor...
+2026-01-28T21:48:39.554288452Z 🎯 20 haber arasından en iyi 5 tanesi seçiliyor...
+2026-01-28T21:48:39.583250149Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.604423960Z ✅ No duplicates found for: "Colombian lawmaker among 15 missing in plane disappearance..."
+2026-01-28T21:48:39.616643111Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.620130099Z ✅ No duplicates found for: "Amazon Cutting 16,000 Jobs, ASML Reports Record Bookings | B..."
+2026-01-28T21:48:39.631032514Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.634263694Z ✅ No duplicates found for: "Court Filing Reveals Something Very Nasty About Mark Zuckerb..."
+2026-01-28T21:48:39.645362408Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.647134113Z ✅ No duplicates found for: "How drone warfare has changed in Ukraine..."
+2026-01-28T21:48:39.660129970Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.663654938Z ✅ No duplicates found for: "Patreon creators have to switch to subscription billing by N..."
+2026-01-28T21:48:39.676205058Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.679669377Z ✅ No duplicates found for: "February’s PS Plus Monthly Games include Undisputed and Subn..."
+2026-01-28T21:48:39.689795334Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.690950000Z ✅ No duplicates found for: "Deal: The new Anker Nano Charger 45W is already $10 off!..."
+2026-01-28T21:48:39.702455593Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.708226574Z ✅ No duplicates found for: "US Fed keeps rates unchanged despite Trump pressure..."
+2026-01-28T21:48:39.722690467Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.722747658Z ✅ No duplicates found for: "Everyone Really Needs to Pump the Brakes on That Viral Moltb..."
+2026-01-28T21:48:39.733470992Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.735223947Z ✅ No duplicates found for: "'Bluey,' 'Stranger Things,' 'The Pitt': Here Are Nielsen's M..."
+2026-01-28T21:48:39.748791373Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.751730174Z ✅ No duplicates found for: "The Doomsday Clock Is Now 85 Seconds to Midnight. Here’s Wha..."
+2026-01-28T21:48:39.764960391Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.764984191Z ✅ No duplicates found for: "Wall Street And Main Street Are Seeing Two Different Economi..."
+2026-01-28T21:48:39.778717226Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.779126414Z ✅ No duplicates found for: "Trump yanks permitting process from Democrats after Californ..."
+2026-01-28T21:48:39.791759144Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.795573991Z ✅ No duplicates found for: "I used Claude to vibe-code my wildly overcomplicated smart h..."
+2026-01-28T21:48:39.808528659Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.808701309Z ✅ No duplicates found for: "CGI Inc. (GIB.A:CA) Shareholder/Analyst Call Transcript..."
+2026-01-28T21:48:39.820056463Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.822234895Z ✅ No duplicates found for: "Scientists Found Human Remains That Rewrite the History of a..."
+2026-01-28T21:48:39.832523962Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.834253916Z ✅ No duplicates found for: "Universal basic income needed to cushion blow from AI job lo..."
+2026-01-28T21:48:39.845496900Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.849010299Z ✅ No duplicates found for: "Apple Watch offline map routes debut for Strava and Komoot a..."
+2026-01-28T21:48:39.859242965Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.862644694Z ✅ No duplicates found for: "Bruce Springsteen slams ICE, Trump in new song dedicated to ..."
+2026-01-28T21:48:39.872873342Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-28T21:48:39.874658685Z ✅ No duplicates found for: "Iraqi protesters burn photos of Trump amid his threats over ..."
+2026-01-28T21:48:57.671665609Z ✅ 5/5 haber AI relevance kontrolünden geçti
+2026-01-28T21:48:57.672866056Z ✅ 5 haber seçildi
+2026-01-28T21:48:57.672881236Z ⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...
+2026-01-28T21:48:57.672895505Z 📝 Haber işleniyor: Amazon Cutting 16,000 Jobs, ASML Reports Record Bookings | Bloomberg Tech 1/28/2026
+2026-01-28T21:48:57.672903315Z 📄 Makale içeriği alınıyor: https://www.bloomberg.com/news/videos/2026-01-28/bloomberg-tech-1-28-2026-video
+2026-01-28T21:48:57.672910715Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-01-28T21:48:58.666613946Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-01-28T21:48:58.779734149Z ❌ İçerik alma hatası (https://www.bloomberg.com/news/videos/2026-01-28/bloomberg-tech-1-28-2026-video): Request failed with status code 403
+2026-01-28T21:48:58.789699528Z 🤖 DeepSeek ile haber yeniden yazılıyor...
+2026-01-28T21:49:36.771478843Z 📊 Haber Puanı: 850/1000
+2026-01-28T21:49:36.771523063Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-01-28T21:49:42.384133803Z 📝 Görsel prompt: A professional digital art illustration depicting the dual nature of modern technology business. On the left side, a sleek, minimalist graph shows a downward red arrow over a stylized corporate building, representing layoffs. On the right side, a vibrant, glowing upward green arrow emerges from a complex, hyper-detailed semiconductor chip and lithography machine, symbolizing record orders. The two sides are separated by a subtle, elegant line, with a central motif of interconnected AI neural networks in blue and gold light, unifying the composition. Realistic textures, modern tech aesthetic, clean lines, corporate backdrop, high contrast lighting, 4k, ultra-detailed, photorealistic digital painting, trending on ArtStation.
+2026-01-28T21:49:42.384192043Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-01-28T21:49:42.385383859Z 🎨 Pollinations.ai isteği: A professional digital art illustration depicting the dual nature of modern technology business. On 
+2026-01-28T21:49:42.385405419Z 📝 Prompt: A professional digital art illustration depicting the dual nature of modern technology business. On 
+2026-01-28T21:49:42.385431339Z 🎨 Pollinations.ai görsel URL: https://image.pollinations.ai/prompt/A%20professional%20digital%20art%20illustration%20depicting%20the%20dual%20nature%20of%20modern%20technology%20bu
+2026-01-28T21:49:44.907541090Z ✅ Görsel URL: https://image.pollinations.ai/prompt/A%20professional%20digital%20art%20illustration%20depicting%20the%20dual%20nature%20of%20modern%20technology%20business.%20On%20the%20left%20side%2C%20a%20sleek%2C%20minimalist%20graph%20shows%20a%20downward%20red%20arrow%20over%20a%20stylized%20corporate%20building%2C%20representing%20layoffs.%20On%20the%20right%20side%2C%20a%20vibrant%2C%20glowing%20upward%20green%20arrow%20emerges%20from%20a%20complex%2C%20hyper-detailed%20semiconductor%20chip%20and%20lithography%20machine%2C%20symbolizing%20record%20orders.%20The%20two%20sides%20are%20separated%20by%20a%20subtle%2C%20elegant%20line%2C%20with%20a%20central%20motif%20of%20interconnected%20AI%20neural%20networks%20in%20blue%20and%20gold%20light%2C%20unifying%20the%20composition.%20Realistic%20textures%2C%20modern%20tech%20aesthetic%2C%20clean%20lines%2C%20corporate%20backdrop%2C%20high%20contrast%20lighting%2C%204k%2C%20ultra-detailed%2C%20photorealistic%20digital%20painting%2C%20trending%20on%20ArtStation.?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-28T21:49:44.918835443Z 📤 Haber yayınlanıyor: Amazon 16 Bin Çalışanını İşten Çıkarıyor, ASML Rekor Sipariş Aldı
+2026-01-28T21:49:44.932321210Z ✅ Haber yayınlandı: amazon-16-bin-calisanini-isten-cikariyor-asml-rekor-siparis-aldi (Skor: 850)
+2026-01-28T21:49:44.933361036Z 📘 Posting to Facebook Page...
+2026-01-28T21:49:44.937045564Z 📝 Haber işleniyor: Court Filing Reveals Something Very Nasty About Mark Zuckerberg
+2026-01-28T21:49:44.938103691Z 📄 Makale içeriği alınıyor: https://futurism.com/artificial-intelligence/lawsuit-meta-zuckerberg-chatbot-kids
+2026-01-28T21:49:44.938124841Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-01-28T21:49:45.081089647Z 💾 Translation saved: tr - Amazon 16 Bin Çalışanını İşten Çıkarıyor, ASML Rek...
+2026-01-28T21:49:45.081263456Z 🌍 Translating article from tr to en...
+2026-01-28T21:49:45.081287076Z    Title: Amazon 16 Bin Çalışanını İşten Çıkarıyor, ASML Rek...
+2026-01-28T21:49:45.241937154Z ❌ Error sending push to cmktnyrcw0000z6zbzwvi84be: {
+2026-01-28T21:49:45.241976194Z   statusCode: 401,
+2026-01-28T21:49:45.241983314Z   message: 'Received unexpected response code',
+2026-01-28T21:49:45.241989294Z   body: ''
+2026-01-28T21:49:45.241994264Z }
+2026-01-28T21:49:45.256936655Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-01-28T21:49:45.303985442Z ✅ Direct fetch ile içerik alındı: 5330 karakter
+2026-01-28T21:49:45.318306956Z 🤖 DeepSeek ile haber yeniden yazılıyor...
+2026-01-28T21:49:45.675601096Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/amazon-16-bin-calisanini-isten-cikariyor-asml-rekor-siparis-aldi
