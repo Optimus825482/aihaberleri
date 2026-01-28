@@ -74,6 +74,8 @@ export default function ArticlesPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [refreshingImage, setRefreshingImage] = useState<string | null>(null);
   const [sharingFacebook, setSharingFacebook] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   useEffect(() => {
     fetchData();
@@ -177,6 +179,18 @@ export default function ArticlesPage() {
     return matchesSearch && matchesCategory;
   });
 
+  // Pagination calculations
+  const totalArticles = filteredArticles.length;
+  const totalPages = Math.ceil(totalArticles / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedArticles = filteredArticles.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, categoryFilter, pageSize]);
+
   if (loading) {
     return (
       <AdminLayout>
@@ -211,10 +225,31 @@ export default function ArticlesPage() {
               <div>
                 <CardTitle>Haber Listesi</CardTitle>
                 <CardDescription>
-                  Toplam {articles.length} haber
+                  {totalArticles > 0 ? (
+                    <>
+                      {startIndex + 1}-{Math.min(endIndex, totalArticles)} arası
+                      gösteriliyor (Toplam {totalArticles} haber)
+                    </>
+                  ) : (
+                    "Toplam 0 haber"
+                  )}
                 </CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={(value) => setPageSize(Number(value))}
+                >
+                  <SelectTrigger className="w-full sm:w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10 / sayfa</SelectItem>
+                    <SelectItem value="25">25 / sayfa</SelectItem>
+                    <SelectItem value="50">50 / sayfa</SelectItem>
+                    <SelectItem value="100">100 / sayfa</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Select
                   value={categoryFilter}
                   onValueChange={setCategoryFilter}
@@ -264,7 +299,7 @@ export default function ArticlesPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredArticles.map((article) => (
+                      {paginatedArticles.map((article) => (
                         <TableRow key={article.id}>
                           <TableCell>
                             {article.imageUrl ? (
@@ -447,6 +482,80 @@ export default function ArticlesPage() {
                 {search
                   ? "Arama sonucu bulunamadı"
                   : "Henüz haber yok. Haber tarama veya manuel ekleme yapabilirsiniz."}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalArticles > 0 && totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Sayfa {currentPage} / {totalPages}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                  >
+                    İlk
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Önceki
+                  </Button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={
+                            currentPage === pageNum ? "default" : "outline"
+                          }
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className="w-10"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Sonraki
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Son
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
