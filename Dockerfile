@@ -90,7 +90,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json* ./
 
 # Install ONLY sharp in production mode with correct architecture
 # This ensures sharp binaries match the runtime environment
-RUN npm install --omit=dev --ignore-scripts sharp@0.33.5 && \
+# Using --legacy-peer-deps to bypass eslint peer dependency conflicts
+RUN npm install --omit=dev --ignore-scripts --legacy-peer-deps sharp@0.33.5 && \
     npm cache clean --force
 
 # Copy scripts and necessary node_modules for runtime scripts (Agent worker etc)
