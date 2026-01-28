@@ -14,6 +14,7 @@ import type { NewsArticle } from "./news.service";
 import { fetchArticleContent } from "./news.service";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postTweet } from "@/lib/social/twitter";
+import { postToFacebook } from "@/lib/social/facebook";
 
 export interface ProcessedArticle {
   title: string;
@@ -415,6 +416,19 @@ export async function publishArticle(
       }).catch((err) => console.error("Async tweet failed:", err));
     } catch (e) {
       console.error("Failed to trigger Twitter post:", e);
+    }
+
+    // Post to Facebook (Async)
+    try {
+      postToFacebook({
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        imageUrl: processedArticle.imageUrl,
+        categoryName: category.name,
+      }).catch((err) => console.error("Async Facebook post failed:", err));
+    } catch (e) {
+      console.error("Failed to trigger Facebook post:", e);
     }
 
     return {

@@ -1,6 +1,9 @@
 /**
- * Pollinations.ai - Free AI Image Generation Service
+ * Pollinations.ai - AI Image Generation Service
  * https://pollinations.ai/
+ *
+ * Supports both anonymous and authenticated usage.
+ * Set POLLINATIONS_API_KEY for higher rate limits.
  */
 
 interface PollinationsOptions {
@@ -12,8 +15,13 @@ interface PollinationsOptions {
   enhance?: boolean;
 }
 
+// API Configuration
+const POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY;
+const POLLINATIONS_IMAGE_URL = "https://image.pollinations.ai/prompt";
+const POLLINATIONS_GEN_URL = "https://gen.pollinations.ai/image";
+
 /**
- * Generate image URL from Pollinations.ai
+ * Generate image URL from Pollinations.ai (simple URL method)
  */
 export function generateImageUrl(
   prompt: string,
@@ -61,12 +69,18 @@ export function generateImageUrl(
     params.append("seed", seed.toString());
   }
 
+  // Add API key if available
+  if (POLLINATIONS_API_KEY) {
+    params.append("key", POLLINATIONS_API_KEY);
+  }
+
   console.log("🎨 Pollinations.ai isteği:", cleanPrompt.substring(0, 100));
-  return `https://image.pollinations.ai/prompt/${encodedPrompt}?${params.toString()}`;
+  return `${POLLINATIONS_IMAGE_URL}/${encodedPrompt}?${params.toString()}`;
 }
 
 /**
- * Fetch image from Pollinations.ai and return as blob
+ * Fetch image from Pollinations.ai using API endpoint (with auth)
+ * This method is preferred when API key is available for better rate limits
  */
 export async function fetchPollinationsImage(
   prompt: string,
@@ -80,23 +94,93 @@ export async function fetchPollinationsImage(
         "artificial intelligence technology, modern digital art, professional tech illustration, high quality, 4k";
     }
 
-    const imageUrl = generateImageUrl(prompt, options);
-    console.log("📝 Prompt:", prompt.substring(0, 100));
-    console.log("🎨 Pollinations.ai görsel URL:", imageUrl.substring(0, 150));
+    const {
+      width = 1200,
+      height = 630,
+      nologo = true,
+      seed,
+      model = "flux-realism",
+      enhance = true,
+    } = options;
 
-    // Fetch image to verify it exists
-    const response = await fetch(imageUrl);
+    // If we have an API key, use the authenticated endpoint for better rate limits
+    if (POLLINATIONS_API_KEY) {
+      console.log("🔑 Pollinations.ai API key ile görsel üretiliyor...");
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const encodedPrompt = encodeURIComponent(prompt.trim());
+      const params = new URLSearchParams({
+        width: width.toString(),
+        height: height.toString(),
+        nologo: nologo.toString(),
+        model,
+        enhance: enhance.toString(),
+        key: POLLINATIONS_API_KEY,
+      });
+
+      if (seed) {
+        params.append("seed", seed.toString());
+      }
+
+      const imageUrl = `${POLLINATIONS_IMAGE_URL}/${encodedPrompt}?${params.toString()}`;
+
+      console.log("📝 Prompt:", prompt.substring(0, 100));
+      console.log(
+        "🎨 Authenticated URL (key=***)",
+        imageUrl.substring(0, 120) + "...",
+      );
+
+      // Verify image is accessible
+      const response = await fetch(imageUrl, {
+        headers: {
+          Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.warn(
+          `⚠️ Pollinations API error: ${response.status}, falling back to anonymous`,
+        );
+        // Fall back to anonymous method
+        return fetchPollinationsImageAnonymous(prompt, options);
+      }
+
+      // Return the authenticated URL (without exposing key in logs)
+      return imageUrl;
     }
 
-    // Return the URL directly (Pollinations.ai provides stable URLs)
-    return imageUrl;
+    // No API key, use anonymous method
+    return fetchPollinationsImageAnonymous(prompt, options);
   } catch (error) {
     console.error("❌ Pollinations.ai görsel hatası:", error);
-    throw error;
+    // Try anonymous fallback
+    try {
+      return await fetchPollinationsImageAnonymous(prompt, options);
+    } catch {
+      throw error;
+    }
   }
+}
+
+/**
+ * Anonymous fallback for image generation (has rate limits)
+ */
+async function fetchPollinationsImageAnonymous(
+  prompt: string,
+  options: PollinationsOptions = {},
+): Promise<string> {
+  const imageUrl = generateImageUrl(prompt, options);
+  console.log("📝 Prompt:", prompt.substring(0, 100));
+  console.log("🎨 Pollinations.ai görsel URL:", imageUrl.substring(0, 150));
+
+  // Fetch image to verify it exists
+  const response = await fetch(imageUrl);
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  // Return the URL directly (Pollinations.ai provides stable URLs)
+  return imageUrl;
 }
 
 /**
@@ -194,7 +278,7 @@ export async function generateAINewsImage(
       nologo: true,
     });
 
-    console.log("✅ Görsel başarıyla oluşturuldu:", imageUrl);
+    console.log("✅ Görsel başarıyla oluşturuldu:", imageUrl.substring(0, 100));
     return imageUrl;
   } catch (error) {
     console.error("❌ Görsel oluşturma hatası:", error);
@@ -204,5 +288,34 @@ export async function generateAINewsImage(
       height: 630,
       model: "flux-realism",
     });
+  }
+}
+
+/**
+ * Check Pollinations.ai API balance (if authenticated)
+ */
+export async function checkPollinationsBalance(): Promise<number | null> {
+  if (!POLLINATIONS_API_KEY) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(
+      "https://gen.pollinations.ai/account/balance",
+      {
+        headers: {
+          Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+        },
+      },
+    );
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log(`🌸 Pollinations.ai Pollen Balance: ${data.balance}`);
+      return data.balance;
+    }
+    return null;
+  } catch {
+    return null;
   }
 }
