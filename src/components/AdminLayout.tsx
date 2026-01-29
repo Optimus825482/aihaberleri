@@ -20,9 +20,11 @@ import {
   Mail,
   Bell,
   Users,
+  Keyboard,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
+import { useAdminShortcuts } from "@/hooks/use-admin-shortcuts";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -82,6 +84,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isInstallable, installApp } = usePWA();
   const router = useRouter();
+
+  // 🚀 PHASE 1: Keyboard shortcuts activated
+  useAdminShortcuts({
+    onEscape: () => {
+      setIsMobileMenuOpen(false);
+    },
+  });
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -203,10 +212,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 className={`
                   group flex items-center gap-3 px-4 py-3 rounded-xl
                   transition-all duration-200 relative overflow-hidden
-                  ${
-                    isActive
-                      ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
-                      : "hover:bg-primary/5 hover:translate-x-1"
+                  ${isActive
+                    ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
+                    : "hover:bg-primary/5 hover:translate-x-1"
                   }
                 `}
               >
