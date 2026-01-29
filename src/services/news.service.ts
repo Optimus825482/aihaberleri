@@ -43,7 +43,7 @@ function calculateSimilarity(str1: string, str2: string): number {
 export async function isDuplicateNews(
   title: string,
   content?: string,
-  timeWindowHours: number = 24,
+  timeWindowHours: number = 48, // Increased from 24 to 48 hours
 ): Promise<{
   isDuplicate: boolean;
   reason?: string;
@@ -83,9 +83,9 @@ export async function isDuplicateNews(
         };
       }
 
-      // 2. Title Similarity Check (80%+ similar)
+      // 2. Title Similarity Check (70%+ similar - lowered from 80%)
       const titleSimilarity = calculateSimilarity(title, article.title);
-      if (titleSimilarity > 0.8) {
+      if (titleSimilarity > 0.7) {
         console.log(
           `❌ DUPLICATE: Title similarity ${(titleSimilarity * 100).toFixed(1)}% with article ${article.id}`,
         );

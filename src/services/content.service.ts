@@ -36,11 +36,13 @@ export interface ProcessedArticle {
  * ENHANCED: Multiple layers of duplicate detection using new isDuplicateNews()
  */
 async function isDuplicate(article: NewsArticle): Promise<boolean> {
-  // 1. Normalize URL: remove query parameters
+  // 1. Normalize URL: remove query parameters, fragments, trailing slashes
   const normalizeUrl = (url: string) => {
     try {
       const urlObj = new URL(url);
-      return `${urlObj.origin}${urlObj.pathname}`;
+      // Remove trailing slash and normalize path
+      const path = urlObj.pathname.replace(/\/$/, "");
+      return `${urlObj.origin}${path}`;
     } catch {
       return url;
     }
@@ -51,15 +53,19 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
   // Check 1: Exact sourceUrl match (fastest)
   const existingByUrl = await db.article.findFirst({
     where: {
-      sourceUrl: {
-        startsWith: normalizedUrl, // Flexible match for base URL
-      },
+      OR: [
+        { sourceUrl: normalizedUrl },
+        { sourceUrl: { startsWith: normalizedUrl } },
+        { sourceUrl: { endsWith: normalizedUrl.split("/").pop() || "" } }, // Match by last path segment
+      ],
     },
-    select: { id: true, title: true },
+    select: { id: true, title: true, sourceUrl: true },
   });
 
   if (existingByUrl) {
     console.log(`🗑️ Duplicate URL detected: ${existingByUrl.title}`);
+    console.log(`   Existing URL: ${existingByUrl.sourceUrl}`);
+    console.log(`   New URL: ${article.url}`);
     return true;
   }
 
@@ -67,7 +73,7 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
   const duplicateCheck = await isDuplicateNews(
     article.title,
     article.description,
-    24, // Check last 24 hours
+    48, // Check last 48 hours (increased from 24)
   );
 
   if (duplicateCheck.isDuplicate) {
