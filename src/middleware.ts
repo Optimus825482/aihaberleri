@@ -13,10 +13,16 @@ const intlMiddleware = createMiddleware({
   // TR: / → no prefix
   // EN: /en/ → with prefix
   localePrefix,
+
+  // Always return a locale (tr as default)
+  localeDetection: true,
+  
+  // Alternative locales (fallback chain)
+  alternateLinks: true,
 });
 
 export default function middleware(req: NextRequest) {
-  // Apply intl middleware
+  // Apply intl middleware with locale detection
   return intlMiddleware(req);
 }
 
