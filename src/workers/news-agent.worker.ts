@@ -21,6 +21,8 @@ if (!redis) {
 
 // Ensure Redis is connected before proceeding
 async function ensureRedisConnection() {
+  if (!redis) return false;
+  
   try {
     console.log("🔍 Checking Redis connection...");
 
@@ -44,6 +46,7 @@ async function ensureRedisConnection() {
     return false;
   }
 }
+
 
 // Test database connection before starting worker
 async function testDatabaseConnection() {
@@ -102,7 +105,7 @@ async function initializeWorker() {
 function startWorker() {
   console.log("\n🎯 Initializing BullMQ Worker...");
   console.log(`   Queue Name: news-agent`);
-  console.log(`   Redis Status: ${redis.status}`);
+  console.log(`   Redis Status: ${redis!.status}`);
   console.log(`   Concurrency: 1`);
   console.log(`   Lock Duration: 10 minutes`);
 
@@ -217,18 +220,17 @@ function startWorker() {
       return result;
     },
     {
-      connection: redis,
+      connection: redis!,
       concurrency: 1, // Process one job at a time
       limiter: {
         max: 1,
         duration: 1000, // Max 1 job per second
       },
-      settings: {
-        stalledInterval: 60000, // Check for stalled jobs every 60 seconds
-        maxStalledCount: 2, // Allow 2 stalls before failing
-        lockDuration: 600000, // Lock job for 10 minutes (600000ms)
-      },
+      lockDuration: 600000, // Lock job for 10 minutes (600000ms)
+      maxStalledCount: 2, // Allow 2 stalls before failing
+      stalledInterval: 60000, // Check for stalled jobs every 60 seconds
     },
+
   );
 
   // Worker event handlers
@@ -275,7 +277,7 @@ function startWorker() {
     console.log("\n🛑 SIGTERM received, closing worker...");
     await worker.close();
     await (db as PrismaClient).$disconnect();
-    await redis.quit();
+    await redis!.quit();
     process.exit(0);
   });
 
@@ -283,7 +285,7 @@ function startWorker() {
     console.log("\n🛑 SIGINT received, closing worker...");
     await worker.close();
     await (db as PrismaClient).$disconnect();
-    await redis.quit();
+    await redis!.quit();
     process.exit(0);
   });
 

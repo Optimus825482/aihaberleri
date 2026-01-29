@@ -4,10 +4,20 @@ import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 
-// GET - List all articles
-export async function GET() {
+// GET - List all articles with server-side pagination
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "50"); // Default 50 to maintain backward compat
+    const skip = (page - 1) * limit;
+    
+    // Get total count for pagination metadata
+    const total = await db.article.count();
+
     const articles = await db.article.findMany({
+      skip,
+      take: limit,
       select: {
         id: true,
         title: true,
@@ -18,6 +28,8 @@ export async function GET() {
         views: true,
         publishedAt: true,
         score: true,
+        createdAt: true,
+        facebookShared: true,
         category: {
           select: {
             name: true,
@@ -33,8 +45,15 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: articles,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      }
     });
   } catch (error) {
+
     console.error("Haber listesi hatası:", error);
     return NextResponse.json(
       {

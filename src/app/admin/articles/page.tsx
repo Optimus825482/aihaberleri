@@ -76,15 +76,17 @@ export default function ArticlesPage() {
   const [sharingFacebook, setSharingFacebook] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [totalArticles, setTotalArticles] = useState(0);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage, pageSize]); // Re-fetch when page or size changes
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const [articlesRes, categoriesRes] = await Promise.all([
-        fetch("/api/articles"),
+        fetch(`/api/articles?page=${currentPage}&limit=${pageSize}`),
         fetch("/api/categories"),
       ]);
 
@@ -93,6 +95,12 @@ export default function ArticlesPage() {
 
       if (articlesData.success) {
         setArticles(articlesData.data);
+        if (articlesData.pagination) {
+            setTotalArticles(articlesData.pagination.total);
+        } else {
+            // Fallback for non-paginated API response
+            setTotalArticles(articlesData.data.length);
+        }
       }
       if (categoriesData.success) {
         setCategories(categoriesData.data);
@@ -103,6 +111,7 @@ export default function ArticlesPage() {
       setLoading(false);
     }
   };
+
 
   const deleteArticle = async (id: string) => {
     if (!confirm("Bu haberi silmek istediğinizden emin misiniz?")) return;
@@ -170,6 +179,8 @@ export default function ArticlesPage() {
     }
   };
 
+  // Client-side filtering is now limited to the current page's data
+  // Ideally, search and filter should also be server-side
   const filteredArticles = articles.filter((article) => {
     const matchesSearch = article.title
       .toLowerCase()
@@ -179,12 +190,12 @@ export default function ArticlesPage() {
     return matchesSearch && matchesCategory;
   });
 
-  // Pagination calculations
-  const totalArticles = filteredArticles.length;
   const totalPages = Math.ceil(totalArticles / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedArticles = filteredArticles.slice(startIndex, endIndex);
+  
+  // Since we have server-side pagination, we display the fetched articles directly
+  // However, if we apply client-side filtering (search/category), we filter the current page results
+  const displayArticles = filteredArticles; 
+
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -227,12 +238,14 @@ export default function ArticlesPage() {
                 <CardDescription>
                   {totalArticles > 0 ? (
                     <>
-                      {startIndex + 1}-{Math.min(endIndex, totalArticles)} arası
+                      {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, totalArticles)} arası
                       gösteriliyor (Toplam {totalArticles} haber)
                     </>
                   ) : (
                     "Toplam 0 haber"
                   )}
+
+
                 </CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
@@ -299,7 +312,8 @@ export default function ArticlesPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paginatedArticles.map((article) => (
+                      {displayArticles.map((article) => (
+
                         <TableRow key={article.id}>
                           <TableCell>
                             {article.imageUrl ? (
