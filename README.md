@@ -41,7 +41,50 @@ DeepSeek Reasoner kullanarak günde iki kez yapay zeka haberlerini tarayan, yeni
 
 ## 🛠️ Kurulum
 
-### Seçenek 1: Docker (Önerilen)
+### Seçenek 1: Coolify (Production - Önerilen)
+
+Coolify ile otomatik deployment için:
+
+1. **Coolify Dashboard'a giriş yapın**
+   - URL: https://your-coolify-instance.com
+
+2. **Yeni Resource oluşturun**
+   - Resource Type: **Docker Compose**
+   - Repository: `https://github.com/Optimus825482/aihaberleri.git`
+   - Branch: `main`
+   - Compose File: `docker-compose.coolify.yaml`
+
+3. **PostgreSQL ekleyin**
+   - Coolify Dashboard → New Resource → PostgreSQL
+   - Database: `postgresainewsdb`
+   - Internal URL'i not alın: `postgresql://postgres:PASSWORD@postgres:5432/postgresainewsdb`
+
+4. **Environment Variables ekleyin**
+   - `.env.coolify.example` dosyasındaki tüm değişkenleri kopyalayın
+   - Coolify Dashboard → Environment sekmesine yapıştırın
+   - **Kritik**: `DATABASE_URL` için Internal URL kullanın!
+
+5. **Deploy edin**
+   - Save → Deploy
+   - Logs'tan deployment'ı takip edin
+
+6. **İlk kurulum komutlarını çalıştırın**
+   ```bash
+   # App container'a gir
+   docker exec -it aihaberleri-app sh
+   
+   # Migrations
+   npx prisma migrate deploy
+   
+   # Seed data
+   npx prisma db seed
+   ```
+
+📚 **Detaylı guide**: [COOLIFY-DEPLOYMENT-GUIDE.md](COOLIFY-DEPLOYMENT-GUIDE.md)
+
+---
+
+### Seçenek 2: Docker Compose (Local/Development)
 
 1. **Repository'yi klonlayın**
 
