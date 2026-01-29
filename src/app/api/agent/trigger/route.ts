@@ -57,35 +57,51 @@ export async function POST(request: Request) {
     try {
       const { newsAgentQueue } = await import("@/lib/queue");
       if (newsAgentQueue) {
+        console.log("📋 Queue available, adding job...");
+
         // Remove any existing delayed jobs to avoid conflicts
         const existingJobs = await newsAgentQueue.getJobs([
           "delayed",
           "waiting",
         ]);
+        console.log(`   Found ${existingJobs.length} existing jobs in queue`);
+
         for (const job of existingJobs) {
           if (job.id === "news-agent-scheduled-run") {
+            console.log(`   Removing existing job: ${job.id}`);
             await job.remove();
           }
         }
 
+        const jobId = executeNow
+          ? `manual-trigger-${Date.now()}`
+          : "news-agent-scheduled-run";
+
+        console.log(`   Adding new job with ID: ${jobId}`);
+
         // Add immediate execution job
-        await newsAgentQueue.add(
+        const job = await newsAgentQueue.add(
           "scrape-and-publish",
           {},
           {
-            jobId: executeNow
-              ? `manual-trigger-${Date.now()}`
-              : "news-agent-scheduled-run",
+            jobId,
             priority: executeNow ? 1 : 10, // High priority for manual triggers
             removeOnComplete: true,
             delay: 0, // Execute immediately
           },
         );
 
+        console.log(`✅ Job added successfully!`);
+        console.log(`   Job ID: ${job.id}`);
+        console.log(`   Job Name: ${job.name}`);
+        console.log(`   Priority: ${job.opts.priority}`);
+        console.log(`   State: ${await job.getState()}`);
+
         return NextResponse.json({
           success: true,
           message: "Agent kuyruğa eklendi ve worker tarafından işlenecek",
           data: {
+            jobId: job.id,
             triggeredAt: new Date().toISOString(),
             nextRun: nextRun.toISOString(),
             executionMode: "queue",
@@ -99,6 +115,10 @@ export async function POST(request: Request) {
           success: false,
           error:
             "Worker kuyruğu kullanılamıyor. Lütfen worker container'ının çalıştığından emin olun.",
+          details:
+            queueError instanceof Error
+              ? queueError.message
+              : String(queueError),
         },
         { status: 503 },
       );

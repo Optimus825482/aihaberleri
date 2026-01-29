@@ -19,6 +19,32 @@ if (!redis) {
   process.exit(1);
 }
 
+// Ensure Redis is connected before proceeding
+async function ensureRedisConnection() {
+  try {
+    console.log("🔍 Checking Redis connection...");
+
+    // If lazyConnect was true, connect now
+    if (redis.status === "wait") {
+      console.log("🔄 Connecting to Redis...");
+      await redis.connect();
+    }
+
+    // Test connection with ping
+    const pong = await redis.ping();
+    if (pong === "PONG") {
+      console.log("✅ Redis connection verified (PONG received)");
+      return true;
+    }
+
+    console.error("❌ Redis ping failed");
+    return false;
+  } catch (error) {
+    console.error("❌ Redis connection check failed:", error);
+    return false;
+  }
+}
+
 // Test database connection before starting worker
 async function testDatabaseConnection() {
   try {
@@ -55,8 +81,15 @@ async function waitForDatabase(maxRetries = 10, delayMs = 5000) {
 
 // Initialize worker only after database is ready
 async function initializeWorker() {
-  const dbReady = await waitForDatabase();
+  // First check Redis connection
+  const redisReady = await ensureRedisConnection();
+  if (!redisReady) {
+    console.error("❌ Cannot start worker without Redis connection");
+    process.exit(1);
+  }
 
+  // Then check database
+  const dbReady = await waitForDatabase();
   if (!dbReady) {
     console.error("❌ Cannot start worker without database connection");
     process.exit(1);
@@ -67,12 +100,23 @@ async function initializeWorker() {
 }
 
 function startWorker() {
+  console.log("\n🎯 Initializing BullMQ Worker...");
+  console.log(`   Queue Name: news-agent`);
+  console.log(`   Redis Status: ${redis.status}`);
+  console.log(`   Concurrency: 1`);
+  console.log(`   Lock Duration: 10 minutes`);
+
   // Create worker
   const worker = new Worker(
     "news-agent",
     async (job) => {
       console.log(`\n${"=".repeat(60)}`);
       console.log(`🤖 Processing job: ${job.name} (ID: ${job.id})`);
+      console.log(`   Priority: ${job.opts.priority || "default"}`);
+      console.log(
+        `   Attempt: ${job.attemptsMade + 1}/${job.opts.attempts || 3}`,
+      );
+      console.log(`   Timestamp: ${new Date(job.timestamp).toLocaleString()}`);
       console.log(`${"=".repeat(60)}\n`);
 
       let result;
@@ -159,6 +203,14 @@ function startWorker() {
   );
 
   // Worker event handlers
+  worker.on("ready", () => {
+    console.log("\n✅ Worker is ready and listening for jobs");
+  });
+
+  worker.on("active", (job) => {
+    console.log(`\n🔄 Job ${job.id} is now active`);
+  });
+
   worker.on("completed", (job) => {
     console.log(`\n✅ Job ${job.id} completed successfully`);
   });
@@ -170,6 +222,14 @@ function startWorker() {
   worker.on("error", (err) => {
     console.error("❌ Worker error:", err);
   });
+
+  worker.on("stalled", (jobId) => {
+    console.warn(`⚠️ Job ${jobId} has stalled`);
+  });
+
+  console.log("\n✅ Worker started successfully!");
+  console.log("👂 Listening for jobs on queue: news-agent");
+  console.log("📊 Worker stats will be logged here...\n");
 
   // Graceful shutdown
   process.on("SIGTERM", async () => {

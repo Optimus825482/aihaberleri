@@ -6,11 +6,27 @@ import { redis } from "@/lib/redis";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+// Detect if we're in build time
+const isBuildTime = process.env.NEXT_PHASE === "phase-production-build";
+
 /**
  * Health check endpoint for monitoring system status
  * GET /api/health
  */
 export async function GET() {
+  // During build time, return mock response immediately
+  if (isBuildTime) {
+    return NextResponse.json({
+      timestamp: new Date().toISOString(),
+      status: "build-time",
+      services: {
+        database: { status: "skipped", latency: 0 },
+        redis: { status: "skipped", latency: 0 },
+      },
+      message: "Health checks skipped during build",
+    });
+  }
+
   const checks = {
     timestamp: new Date().toISOString(),
     status: "healthy",

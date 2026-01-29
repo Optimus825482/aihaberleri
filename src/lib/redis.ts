@@ -34,7 +34,7 @@ export const getRedis = () => {
       redisInstance = new Redis(getRedisUrl(), {
         maxRetriesPerRequest: null, // Required for BullMQ
         enableReadyCheck: false,
-        lazyConnect: true, // Don't connect immediately
+        lazyConnect: false, // Connect immediately for worker
         retryStrategy: (times) => {
           // Exponential backoff: 1s, 2s, 4s, max 10s
           const delay = Math.min(times * 1000, 10000);
@@ -53,12 +53,20 @@ export const getRedis = () => {
         console.log("✅ Redis connected");
       });
 
+      redisInstance.on("ready", () => {
+        console.log("✅ Redis ready to accept commands");
+      });
+
       redisInstance.on("error", (err) => {
         console.error("❌ Redis error:", err);
       });
 
       redisInstance.on("reconnecting", () => {
         console.log("🔄 Redis reconnecting...");
+      });
+
+      redisInstance.on("close", () => {
+        console.log("⚠️ Redis connection closed");
       });
     } catch (error) {
       console.error("❌ Redis initialization error:", error);

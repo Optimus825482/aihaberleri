@@ -10,6 +10,8 @@
     "lint": "next lint",
     "postinstall": "prisma generate || echo 'Prisma generate failed (schema not found?), skipping...'",
     "agent:start": "ts-node src/scripts/agent-runner.ts",
+    "worker": "tsx src/workers/news-agent.worker.ts",
+    "test:queue": "tsx src/scripts/test-queue-connection.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "sync:facebook": "tsx scripts/sync-facebook-share-status.ts"

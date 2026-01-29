@@ -7,6 +7,8 @@ import {
 } from "@/services/agent.service";
 import { getQueueStats, getUpcomingJobs } from "@/lib/queue";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     // Check authentication
