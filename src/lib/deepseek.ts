@@ -329,12 +329,13 @@ Gereksinimler:
 5. Yüksek kalite (4k, high quality, detailed)
 6. Temiz, minimalist tasarım
 7. Yapay zeka/teknoloji estetiği
-8. 50-100 kelime arası
+8. MAKSIMUM 150 KARAKTER (ÇOK ÖNEMLİ!)
+9. Kısa, öz ve etkili kelimeler kullan
 
 SADECE PROMPT METNİNİ VER. Hiçbir açıklama, düşünce veya ek metin ekleme.
 
-Örnek format:
-artificial intelligence neural network visualization, futuristic technology, glowing blue circuits, modern digital art, professional tech illustration, high quality, 4k, detailed, clean design, cyberpunk aesthetic`;
+Örnek format (kısa ve öz):
+AI neural network, futuristic tech, glowing circuits, digital art, 4k, clean design`;
 
   const response = await callDeepSeek(
     [
@@ -371,11 +372,21 @@ artificial intelligence neural network visualization, futuristic technology, glo
   // Remove any remaining tags
   cleanPrompt = cleanPrompt.replace(/<[^>]+>/g, "").trim();
 
+  // CRITICAL: Enforce max length to prevent 400 errors
+  if (cleanPrompt.length > 150) {
+    console.warn(
+      `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 150`,
+    );
+    cleanPrompt = cleanPrompt.substring(0, 147) + "...";
+  }
+
   // If still empty or too short, use fallback
   if (!cleanPrompt || cleanPrompt.length < 20) {
     console.warn("⚠️  DeepSeek returned empty/short prompt, using fallback");
-    cleanPrompt = `${category.toLowerCase()} artificial intelligence technology, modern digital illustration, futuristic tech concept, professional design, high quality, 4k, detailed, clean aesthetic`;
+    cleanPrompt = `${category.toLowerCase()} AI tech, modern digital art, 4k, professional`;
   }
+
+  console.log(`📝 Final prompt (${cleanPrompt.length} chars): ${cleanPrompt}`);
 
   return cleanPrompt;
 }

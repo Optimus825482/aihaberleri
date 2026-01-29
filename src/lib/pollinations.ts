@@ -32,9 +32,19 @@ export function generateImageUrl(
     throw new Error("Prompt is required and must be a string");
   }
 
-  const cleanPrompt = prompt.trim();
+  let cleanPrompt = prompt.trim();
   if (cleanPrompt.length === 0) {
     throw new Error("Prompt cannot be empty");
+  }
+
+  // CRITICAL: Limit prompt length to avoid 400 errors
+  // Pollinations.ai has URL length limits (~2000 chars)
+  // After encoding, prompts should be max 200 chars
+  if (cleanPrompt.length > 200) {
+    console.warn(
+      `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 200`,
+    );
+    cleanPrompt = cleanPrompt.substring(0, 197) + "...";
   }
 
   const {
@@ -57,6 +67,18 @@ export function generateImageUrl(
   }
 
   const encodedPrompt = encodeURIComponent(cleanPrompt);
+
+  // Check final URL length
+  const baseUrl = `${POLLINATIONS_IMAGE_URL}/${encodedPrompt}`;
+  if (baseUrl.length > 1800) {
+    console.error(
+      `❌ URL too long even after truncation: ${baseUrl.length} chars`,
+    );
+    // Use a simple fallback prompt
+    const fallbackPrompt = "artificial intelligence technology digital art";
+    return generateImageUrl(fallbackPrompt, options);
+  }
+
   const params = new URLSearchParams({
     width: width.toString(),
     height: height.toString(),
