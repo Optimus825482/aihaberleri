@@ -84,6 +84,29 @@ export async function executeNewsAgent(
     const duration = Math.floor((Date.now() - startTime) / 1000);
     const status = articlesCreated > 0 ? "SUCCESS" : "PARTIAL";
 
+    // Update last run time
+    await db.setting.upsert({
+      where: { key: "agent.lastRun" },
+      update: { value: new Date().toISOString() },
+      create: { key: "agent.lastRun", value: new Date().toISOString() },
+    });
+
+    // Calculate and set next run time
+    const intervalSetting = await db.setting.findUnique({
+      where: { key: "agent.intervalHours" },
+    });
+    const intervalHours = parseInt(intervalSetting?.value || "6");
+    const nextRun = new Date();
+    nextRun.setHours(nextRun.getHours() + intervalHours);
+
+    await db.setting.upsert({
+      where: { key: "agent.nextRun" },
+      update: { value: nextRun.toISOString() },
+      create: { key: "agent.nextRun", value: nextRun.toISOString() },
+    });
+
+    console.log(`⏰ Bir sonraki çalışma: ${nextRun.toLocaleString("tr-TR")}`);
+
     // Get email settings
     const emailSettings = await db.setting.findMany({
       where: { key: { in: ["agent.emailNotifications", "agent.adminEmail"] } },

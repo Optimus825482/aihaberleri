@@ -44,6 +44,9 @@ export async function GET(request: NextRequest) {
         }
       };
 
+      // Track if controller is closed
+      let isClosed = false;
+
       try {
         if (categorySlug) {
           sendLog(
@@ -82,12 +85,17 @@ export async function GET(request: NextRequest) {
           sendLog(`⏱️ Süre: ${result.duration}s`, "info");
 
           // Send final result
-          const finalData = JSON.stringify({
-            type: "complete",
-            result,
-            timestamp: new Date().toISOString(),
-          });
-          controller.enqueue(encoder.encode(`data: ${finalData}\n\n`));
+          try {
+            const finalData = JSON.stringify({
+              type: "complete",
+              result,
+              timestamp: new Date().toISOString(),
+            });
+            controller.enqueue(encoder.encode(`data: ${finalData}\n\n`));
+          } catch (err) {
+            // Stream already closed, log to console
+            originalLog("[Background] Final result sent to closed stream");
+          }
         } else {
           sendLog(`❌ Agent çalıştırması başarısız`, "error");
           if (result.errors.length > 0) {
@@ -99,7 +107,16 @@ export async function GET(request: NextRequest) {
           error instanceof Error ? error.message : "Bilinmeyen hata";
         sendLog(`❌ Hata: ${errorMessage}`, "error");
       } finally {
-        controller.close();
+        // Only close if not already closed
+        if (!isClosed) {
+          try {
+            controller.close();
+            isClosed = true;
+          } catch (err) {
+            // Already closed, ignore
+            originalLog("[Background] Stream already closed");
+          }
+        }
       }
     },
   });

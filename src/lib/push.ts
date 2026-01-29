@@ -24,13 +24,20 @@ export async function sendPushNotification(
     !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ||
     !process.env.VAPID_PRIVATE_KEY
   ) {
-    console.warn("Skipping Push: VAPID keys not configured in .env");
-    return;
+    console.warn("⚠️ Push bildirimi atlandı: VAPID keys yapılandırılmamış");
+    return { sent: 0, reason: "VAPID keys missing" };
   }
 
   const subscriptions = await db.pushSubscription.findMany();
 
-  if (subscriptions.length === 0) return;
+  if (subscriptions.length === 0) {
+    console.warn("⚠️ Push bildirimi atlandı: Hiç subscription yok");
+    return { sent: 0, reason: "No subscriptions" };
+  }
+
+  console.log(
+    `📱 ${subscriptions.length} aboneye push bildirimi gönderiliyor...`,
+  );
 
   const payload = JSON.stringify({
     title,
@@ -39,13 +46,22 @@ export async function sendPushNotification(
     url,
   });
 
-  const promises = subscriptions.map((sub) => {
+  let successCount = 0;
+  let failureCount = 0;
+
+  const promises = subscriptions.map(async (sub) => {
     const pushConfig = {
       endpoint: sub.endpoint,
       keys: sub.keys as any,
     };
 
-    return webpush.sendNotification(pushConfig, payload).catch((error: any) => {
+    try {
+      await webpush.sendNotification(pushConfig, payload);
+      successCount++;
+      return { success: true, id: sub.id };
+    } catch (error: any) {
+      failureCount++;
+
       // 410 (Gone) or 404 (Not Found) means the subscription is no longer valid
       if (error.statusCode === 410 || error.statusCode === 404) {
         console.log(`🗑️  Removing expired push subscription: ${sub.id}`);
@@ -75,7 +91,7 @@ export async function sendPushNotification(
         console.warn(
           `⚠️  Temporary push error (${error.statusCode}) for ${sub.id}, will retry later`,
         );
-        return;
+        return { success: false, id: sub.id, temporary: true };
       }
 
       // Log other unexpected errors with more details
@@ -84,8 +100,16 @@ export async function sendPushNotification(
         message: error.message,
         body: error.body,
       });
-    });
+
+      return { success: false, id: sub.id };
+    }
   });
 
   await Promise.all(promises);
+
+  console.log(
+    `✅ Push bildirimi tamamlandı: ${successCount} başarılı, ${failureCount} başarısız`,
+  );
+
+  return { sent: successCount, failed: failureCount };
 }

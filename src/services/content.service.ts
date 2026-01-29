@@ -366,16 +366,21 @@ export async function publishArticle(
     // Trigger Web Push Notification (Async)
     try {
       if (status === "PUBLISHED") {
-        import("@/lib/push").then(({ sendPushNotification }) => {
-          sendPushNotification(
-            article.title,
-            article.excerpt,
-            `https://aihaberleri.org/news/${article.slug}`,
-          ).catch((err) => console.error("Async push failed:", err));
-        });
+        console.log("📱 Push bildirimi gönderiliyor...");
+        // Use direct import instead of dynamic import for better reliability
+        const { sendPushNotification } = await import("@/lib/push");
+        sendPushNotification(
+          article.title,
+          article.excerpt,
+          `https://aihaberleri.org/news/${article.slug}`,
+        )
+          .then(() => console.log("✅ Push bildirimi gönderildi"))
+          .catch((err) => {
+            console.error("❌ Push bildirimi hatası:", err);
+          });
       }
     } catch (e) {
-      console.error("Failed to trigger Web Push:", e);
+      console.error("❌ Push bildirimi başlatılamadı:", e);
     }
 
     return {
