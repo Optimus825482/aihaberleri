@@ -153,6 +153,12 @@ export default function AgentSettingsPage() {
     try {
       const response = await fetch("/api/agent/trigger", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          executeNow: true, // Manuel tetikleme için hemen çalıştır
+        }),
       });
 
       const data = await response.json();
@@ -164,9 +170,9 @@ export default function AgentSettingsPage() {
             "Agent tetiklendi, tarama ekranına yönlendiriliyorsunuz...",
         });
 
-        // redirect to scan page after a short delay to allow toast to be seen
+        // redirect to scan page with jobId parameter
         setTimeout(() => {
-          window.location.href = "/admin/scan?autoStart=true";
+          window.location.href = `/admin/scan?autoStart=true&jobId=${data.data.jobId}`;
         }, 1500);
       } else {
         toast({

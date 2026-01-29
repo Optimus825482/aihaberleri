@@ -68,8 +68,10 @@ export default function ScanPage() {
         // autoStart parametresi varsa taramayı başlat
         const searchParams = new URLSearchParams(window.location.search);
         if (searchParams.get("autoStart") === "true") {
+          // jobId parametresini al
+          const jobId = searchParams.get("jobId");
           // fetch bittikten hemen sonra başlat
-          startScan();
+          startScan(jobId || undefined);
         }
       }
     } catch (error) {
@@ -77,17 +79,19 @@ export default function ScanPage() {
     }
   };
 
-  const startScan = async () => {
+  const startScan = async (jobId?: string) => {
     setScanning(true);
     setLogs([]);
     setAutoScroll(true); // Re-enable auto-scroll when starting new scan
 
     try {
-      // Kategori parametresi ile stream URL'i oluştur
-      const url =
-        selectedCategory === "all"
-          ? "/api/agent/stream"
-          : `/api/agent/stream?category=${selectedCategory}`;
+      // jobId varsa onu kullan, yoksa kategori parametresi ile stream URL'i oluştur
+      let url = "/api/agent/stream";
+      if (jobId) {
+        url += `?jobId=${jobId}`;
+      } else if (selectedCategory !== "all") {
+        url += `?category=${selectedCategory}`;
+      }
 
       const eventSource = new EventSource(url);
       eventSourceRef.current = eventSource;
