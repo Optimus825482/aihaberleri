@@ -10,54 +10,116 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "20");
-    const filter = searchParams.get("filter") || "all";
-    const search = searchParams.get("search") || "";
+    const filter = searchParams.get("filter") || "all"; // all, unread, read
 
-    const where: Record<string, unknown> = {};
+    const where =
+      filter === "unread"
+        ? { isRead: false }
+        : filter === "read"
+          ? { isRead: true }
+          : {};
 
-    if (filter === "unread") {
-      where.isRead = false;
-    } else if (filter === "read") {
-      where.isRead = true;
-    }
+    const messages = await db.contactMessage.findMany({
+      where,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
-        { subject: { contains: search, mode: "insensitive" } },
-        { message: { contains: search, mode: "insensitive" } },
-      ];
-    }
+    const stats = await db.contactMessage.groupBy({
+      by: ["isRead"],
+      _count: true,
+    });
 
-    const [messages, total] = await Promise.all([
-      db.contactMessage.findMany({
-        where,
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      db.contactMessage.count({ where }),
-    ]);
+    const unreadCount = stats.find((s) => s.isRead === false)?._count || 0;
+    const readCount = stats.find((s) => s.isRead === true)?._count || 0;
 
     return NextResponse.json({
       success: true,
       data: {
         messages,
-        pagination: {
-          total,
-          page,
-          pageSize,
-          totalPages: Math.ceil(total / pageSize),
+        stats: {
+          total: messages.length,
+          unread: unreadCount,
+          read: readCount,
         },
       },
     });
   } catch (error) {
-    console.error("Error fetching messages:", error);
+    console.error("Messages fetch error:", error);
     return NextResponse.json(
-      { error: "Mesajlar yüklenemedi" },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Bilinmeyen hata",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { id, isRead, isReplied } = body;
+
+    const message = await db.contactMessage.update({
+      where: { id },
+      data: {
+        ...(typeof isRead === "boolean" && { isRead }),
+        ...(typeof isReplied === "boolean" && { isReplied }),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: message,
+    });
+  } catch (error) {
+    console.error("Message update error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Bilinmeyen hata",
+      },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Mesaj ID gerekli" }, { status: 400 });
+    }
+
+    await db.contactMessage.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Mesaj silindi",
+    });
+  } catch (error) {
+    console.error("Message delete error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Bilinmeyen hata",
+      },
       { status: 500 },
     );
   }

@@ -17,6 +17,7 @@ import {
   Tags,
   Mail,
   Bell,
+  Users,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -38,8 +39,13 @@ const menuItems = [
   },
   {
     title: "Kategoriler",
-    href: "/admin/settings",
+    href: "/admin/categories",
     icon: Tags,
+  },
+  {
+    title: "Mesajlar",
+    href: "/admin/messages",
+    icon: MessageSquare,
   },
   {
     title: "Newsletter Aboneleri",
@@ -52,14 +58,19 @@ const menuItems = [
     icon: Bell,
   },
   {
+    title: "Anlık Ziyaretçiler",
+    href: "/admin/visitors",
+    icon: Users,
+  },
+  {
+    title: "Ayarlar",
+    href: "/admin/settings",
+    icon: Settings,
+  },
+  {
     title: "Agent Ayarları",
     href: "/admin/agent-settings",
     icon: Bot,
-  },
-  {
-    title: "Mesajlar",
-    href: "/admin/messages",
-    icon: MessageSquare,
   },
 ];
 

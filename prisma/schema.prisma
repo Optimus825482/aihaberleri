@@ -281,3 +281,20 @@ model ContactMessage {
   @@index([isRead])
   @@index([createdAt(sort: Desc)])
 }
+
+model Visitor {
+  id           String   @id @default(cuid())
+  ipAddress    String   @unique
+  userAgent    String?
+  currentPage  String
+  country      String?
+  countryCode  String?
+  city         String?
+  region       String?
+  lastActivity DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  @@index([ipAddress])
+  @@index([lastActivity])
+  @@index([createdAt])
+}

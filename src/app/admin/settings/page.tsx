@@ -10,22 +10,65 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Save, RefreshCw } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Settings as SettingsIcon,
+  Globe,
+  Search,
+  Mail,
+  Bot,
+  Save,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Youtube,
+} from "lucide-react";
 
-interface Settings {
-  heroCarouselCount: number;
-  heroCarouselInterval: number;
+interface Setting {
+  id: string;
+  key: string;
+  value: string;
+  encrypted: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
+interface SocialMedia {
+  id: string;
+  platform: string;
+  url: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface SettingsData {
+  settings: {
+    general: Setting[];
+    seo: Setting[];
+    email: Setting[];
+    agent: Setting[];
+    other: Setting[];
+  };
+  socialMedia: SocialMedia[];
+}
+
+const socialPlatforms = [
+  { key: "facebook", label: "Facebook", icon: Facebook },
+  { key: "twitter", label: "Twitter", icon: Twitter },
+  { key: "instagram", label: "Instagram", icon: Instagram },
+  { key: "linkedin", label: "LinkedIn", icon: Linkedin },
+  { key: "youtube", label: "YouTube", icon: Youtube },
+];
+
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>({
-    heroCarouselCount: 5,
-    heroCarouselInterval: 6000,
-  });
+  const [data, setData] = useState<SettingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<
+    "general" | "seo" | "email" | "social"
+  >("general");
 
   useEffect(() => {
     fetchSettings();
@@ -33,10 +76,12 @@ export default function SettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch("/api/settings");
-      const data = await response.json();
-      if (data.success) {
-        setSettings(data.data);
+      setLoading(true);
+      const response = await fetch("/api/admin/settings");
+      const result = await response.json();
+
+      if (result.success) {
+        setData(result.data);
       }
     } catch (error) {
       console.error("Failed to fetch settings:", error);
@@ -45,24 +90,43 @@ export default function SettingsPage() {
     }
   };
 
-  const saveSettings = async () => {
-    setSaving(true);
+  const saveSetting = async (key: string, value: string) => {
     try {
-      const response = await fetch("/api/settings", {
+      setSaving(true);
+      const response = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
+        body: JSON.stringify({ key, value }),
       });
 
       if (response.ok) {
-        alert(
-          "Ayarlar kaydedildi! Değişikliklerin görünmesi için sayfayı yenileyin.",
-        );
-      } else {
-        alert("Ayarlar kaydedilemedi");
+        fetchSettings();
       }
     } catch (error) {
-      alert("Bir hata oluştu");
+      console.error("Failed to save setting:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveSocialMedia = async (
+    platform: string,
+    url: string,
+    enabled: boolean,
+  ) => {
+    try {
+      setSaving(true);
+      const response = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platform, url, enabled }),
+      });
+
+      if (response.ok) {
+        fetchSettings();
+      }
+    } catch (error) {
+      console.error("Failed to save social media:", error);
     } finally {
       setSaving(false);
     }
@@ -72,7 +136,10 @@ export default function SettingsPage() {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Yükleniyor...</p>
+          </div>
         </div>
       </AdminLayout>
     );
@@ -81,138 +148,268 @@ export default function SettingsPage() {
   return (
     <AdminLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div>
-          <h1 className="text-4xl font-bold">Site Ayarları</h1>
-          <p className="text-muted-foreground mt-2">
-            Sitenin genel ayarlarını buradan yönetin
+          <h1 className="text-3xl font-black tracking-tight">
+            Site <span className="text-primary italic">Ayarları</span>
+          </h1>
+          <p className="text-muted-foreground">
+            Genel ayarlar, SEO ve sosyal medya yönetimi
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Hero Carousel Ayarları</CardTitle>
-            <CardDescription>
-              Anasayfa manşet carousel'inin ayarlarını düzenleyin
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="heroCarouselCount">
-                Gösterilecek Haber Sayısı
-              </Label>
-              <Input
-                id="heroCarouselCount"
-                type="number"
-                min="1"
-                max="10"
-                value={settings.heroCarouselCount}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    heroCarouselCount: parseInt(e.target.value) || 5,
-                  })
-                }
-              />
-              <p className="text-sm text-muted-foreground">
-                Carousel'de kaç haber gösterileceğini belirleyin (1-10 arası)
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="heroCarouselInterval">
-                Geçiş Süresi (milisaniye)
-              </Label>
-              <Input
-                id="heroCarouselInterval"
-                type="number"
-                min="2000"
-                max="15000"
-                step="1000"
-                value={settings.heroCarouselInterval}
-                onChange={(e) =>
-                  setSettings({
-                    ...settings,
-                    heroCarouselInterval: parseInt(e.target.value) || 6000,
-                  })
-                }
-              />
-              <p className="text-sm text-muted-foreground">
-                Her slayt arasındaki bekleme süresi (2-15 saniye arası)
-                <br />
-                <span className="font-medium">
-                  Şu anki: {settings.heroCarouselInterval / 1000} saniye
-                </span>
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 pt-4">
-              <Button onClick={saveSettings} disabled={saving}>
-                {saving ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                    Kaydediliyor...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Ayarları Kaydet
-                  </>
-                )}
+        {/* Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {[
+            { key: "general", label: "Genel", icon: Globe },
+            { key: "seo", label: "SEO", icon: Search },
+            { key: "email", label: "E-posta", icon: Mail },
+            { key: "social", label: "Sosyal Medya", icon: Facebook },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <Button
+                key={tab.key}
+                variant={activeTab === tab.key ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                className="font-bold whitespace-nowrap"
+              >
+                <Icon className="h-4 w-4 mr-2" />
+                {tab.label}
               </Button>
-              <Button variant="outline" onClick={fetchSettings}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Sıfırla
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            );
+          })}
+        </div>
 
-        {/* Preview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Önizleme</CardTitle>
-            <CardDescription>
-              Mevcut ayarlarla carousel nasıl görünecek
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="bg-muted rounded-lg p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">Haber Sayısı</p>
-                  <p className="text-2xl font-bold">
-                    {settings.heroCarouselCount}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Geçiş Süresi</p>
-                  <p className="text-2xl font-bold">
-                    {settings.heroCarouselInterval / 1000}s
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Toplam Süre</p>
-                  <p className="text-2xl font-bold">
-                    {(settings.heroCarouselCount *
-                      settings.heroCarouselInterval) /
-                      1000}
-                    s
-                  </p>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Carousel tüm haberleri göstermek için yaklaşık{" "}
-                <span className="font-medium">
-                  {(settings.heroCarouselCount *
-                    settings.heroCarouselInterval) /
-                    1000}{" "}
-                  saniye
-                </span>{" "}
-                sürecek
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* General Settings */}
+        {activeTab === "general" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-black flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Genel Ayarlar
+              </CardTitle>
+              <CardDescription>
+                Site başlığı, açıklama ve temel ayarlar
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[
+                { key: "site_name", label: "Site Adı", type: "text" },
+                {
+                  key: "site_description",
+                  label: "Site Açıklaması",
+                  type: "textarea",
+                },
+                { key: "site_url", label: "Site URL", type: "url" },
+                { key: "site_language", label: "Dil", type: "text" },
+              ].map((field) => {
+                const setting = data?.settings.general.find(
+                  (s) => s.key === field.key,
+                );
+                return (
+                  <div key={field.key}>
+                    <label className="text-sm font-bold mb-2 block">
+                      {field.label}
+                    </label>
+                    {field.type === "textarea" ? (
+                      <textarea
+                        defaultValue={setting?.value || ""}
+                        onBlur={(e) => saveSetting(field.key, e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg bg-background"
+                        rows={3}
+                      />
+                    ) : (
+                      <input
+                        type={field.type}
+                        defaultValue={setting?.value || ""}
+                        onBlur={(e) => saveSetting(field.key, e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg bg-background"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* SEO Settings */}
+        {activeTab === "seo" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-black flex items-center gap-2">
+                <Search className="h-5 w-5" />
+                SEO Ayarları
+              </CardTitle>
+              <CardDescription>
+                Arama motoru optimizasyonu ayarları
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[
+                { key: "seo_title", label: "Meta Başlık", type: "text" },
+                {
+                  key: "seo_description",
+                  label: "Meta Açıklama",
+                  type: "textarea",
+                },
+                {
+                  key: "seo_keywords",
+                  label: "Anahtar Kelimeler",
+                  type: "text",
+                },
+                { key: "seo_og_image", label: "OG Image URL", type: "url" },
+              ].map((field) => {
+                const setting = data?.settings.seo.find(
+                  (s) => s.key === field.key,
+                );
+                return (
+                  <div key={field.key}>
+                    <label className="text-sm font-bold mb-2 block">
+                      {field.label}
+                    </label>
+                    {field.type === "textarea" ? (
+                      <textarea
+                        defaultValue={setting?.value || ""}
+                        onBlur={(e) => saveSetting(field.key, e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg bg-background"
+                        rows={3}
+                      />
+                    ) : (
+                      <input
+                        type={field.type}
+                        defaultValue={setting?.value || ""}
+                        onBlur={(e) => saveSetting(field.key, e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg bg-background"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Email Settings */}
+        {activeTab === "email" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-black flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                E-posta Ayarları
+              </CardTitle>
+              <CardDescription>SMTP ve e-posta bildirimleri</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {[
+                { key: "email_from", label: "Gönderen E-posta", type: "email" },
+                { key: "email_from_name", label: "Gönderen Adı", type: "text" },
+                { key: "email_smtp_host", label: "SMTP Host", type: "text" },
+                { key: "email_smtp_port", label: "SMTP Port", type: "number" },
+                {
+                  key: "email_smtp_user",
+                  label: "SMTP Kullanıcı",
+                  type: "text",
+                },
+                {
+                  key: "email_smtp_pass",
+                  label: "SMTP Şifre",
+                  type: "password",
+                },
+              ].map((field) => {
+                const setting = data?.settings.email.find(
+                  (s) => s.key === field.key,
+                );
+                return (
+                  <div key={field.key}>
+                    <label className="text-sm font-bold mb-2 block">
+                      {field.label}
+                    </label>
+                    <input
+                      type={field.type}
+                      defaultValue={setting?.value || ""}
+                      onBlur={(e) => saveSetting(field.key, e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg bg-background"
+                    />
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Social Media Settings */}
+        {activeTab === "social" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-black flex items-center gap-2">
+                <Facebook className="h-5 w-5" />
+                Sosyal Medya Bağlantıları
+              </CardTitle>
+              <CardDescription>Sosyal medya profil linkleri</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {socialPlatforms.map((platform) => {
+                const social = data?.socialMedia.find(
+                  (s) => s.platform === platform.key,
+                );
+                const Icon = platform.icon;
+
+                return (
+                  <div
+                    key={platform.key}
+                    className="flex items-center gap-4 p-4 border rounded-lg"
+                  >
+                    <Icon className="h-6 w-6 text-primary flex-shrink-0" />
+                    <div className="flex-1">
+                      <label className="text-sm font-bold mb-2 block">
+                        {platform.label}
+                      </label>
+                      <input
+                        type="url"
+                        defaultValue={social?.url || ""}
+                        onBlur={(e) =>
+                          saveSocialMedia(
+                            platform.key,
+                            e.target.value,
+                            social?.enabled ?? true,
+                          )
+                        }
+                        placeholder={`https://${platform.key}.com/...`}
+                        className="w-full px-3 py-2 border rounded-lg bg-background"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        defaultChecked={social?.enabled ?? true}
+                        onChange={(e) =>
+                          saveSocialMedia(
+                            platform.key,
+                            social?.url || "",
+                            e.target.checked,
+                          )
+                        }
+                        className="w-4 h-4"
+                      />
+                      <span className="text-xs font-bold">Aktif</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Save Indicator */}
+        {saving && (
+          <div className="fixed bottom-4 right-4 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg flex items-center gap-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <span className="font-bold">Kaydediliyor...</span>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
