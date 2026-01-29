@@ -265,7 +265,7 @@ async function ensureCategory(name: string, slug: string): Promise<void> {
 export async function publishArticle(
   processedArticle: ProcessedArticle,
   agentLogId?: string,
-): Promise<{ id: string; slug: string }> {
+): Promise<{ id: string; slug: string } | null> {
   console.log(`📤 Haber yayınlanıyor: ${processedArticle.title}`);
 
   try {
@@ -278,7 +278,9 @@ export async function publishArticle(
       throw new Error(`Kategori bulunamadı: ${processedArticle.categorySlug}`);
     }
 
-    // ENHANCED: Check for existing article by slug OR sourceUrl
+    // CRITICAL: Multi-layer duplicate check BEFORE publishing
+
+    // Layer 1: Check by slug OR sourceUrl (fastest)
     const existing = await db.article.findFirst({
       where: {
         OR: [
@@ -291,13 +293,28 @@ export async function publishArticle(
 
     if (existing) {
       console.log(
-        `⚠️ Haber zaten var, atlanıyor: ${existing.title} (${existing.slug})`,
+        `🗑️ DUPLICATE (slug/url): ${existing.title} (${existing.slug})`,
       );
-      // Return existing article instead of creating duplicate
-      return {
-        id: existing.id,
-        slug: existing.slug,
-      };
+      return null; // Return null instead of existing article
+    }
+
+    // Layer 2: Advanced duplicate detection (title + content similarity)
+    const duplicateCheck = await isDuplicateNews(
+      processedArticle.title,
+      processedArticle.content,
+      48, // 48 hour window
+    );
+
+    if (duplicateCheck.isDuplicate) {
+      console.log(
+        `🗑️ DUPLICATE (${duplicateCheck.reason}): ${processedArticle.title}`,
+      );
+      if (duplicateCheck.similarArticleId) {
+        console.log(
+          `   Similar to article ID: ${duplicateCheck.similarArticleId}`,
+        );
+      }
+      return null; // Skip publishing
     }
 
     // Determine status based on score
@@ -426,12 +443,22 @@ export async function processAndPublishArticles(
       }
 
       const result = await publishArticle(processed, agentLogId);
-      published.push(result);
+
+      // CRITICAL: Only add to published array if not duplicate (result is not null)
+      if (result) {
+        published.push(result);
+        console.log(`✅ Haber başarıyla yayınlandı: ${result.slug}`);
+      } else {
+        console.log(`🗑️ Duplicate detected, skipped: ${article.title}`);
+      }
     } catch (error) {
-      console.error(`Haber işleme başarısız: ${article.title}`, error);
+      console.error(`❌ Haber işleme başarısız: ${article.title}`, error);
     }
   }
 
+  console.log(
+    `📊 Toplam ${published.length}/${articles.length} haber yayınlandı`,
+  );
   return published;
 }
 
