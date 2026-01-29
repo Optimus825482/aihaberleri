@@ -27,10 +27,16 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Match only internationalized pathnames and admin routes
+  // Match only internationalized pathnames (exclude API and admin)
   matcher: [
-    "/admin/:path*",
-    // Exclude static files
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|robots.txt|sitemap.xml).*)",
+    // Match all pathnames except those starting with:
+    // - api (API routes)
+    // - admin (admin panel - no i18n)
+    // - _next/static (static files)
+    // - _next/image (image optimization files)
+    // - favicon.ico (favicon file)
+    // - Files with extensions (e.g., .png, .jpg, .svg)
+    // - robots.txt, sitemap.xml
+    "/((?!api|admin|_next/static|_next/image|favicon.ico|.*\\..*|robots.txt|sitemap.xml).*)",
   ],
 };
