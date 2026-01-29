@@ -81,84 +81,127 @@ export function generateImageUrl(
 /**
  * Fetch image from Pollinations.ai using API endpoint (with auth)
  * This method is preferred when API key is available for better rate limits
+ * Includes retry logic with exponential backoff and fallback strategy
  */
 export async function fetchPollinationsImage(
   prompt: string,
   options: PollinationsOptions = {},
+  maxRetries = 3,
 ): Promise<string> {
-  try {
-    // Validate prompt
-    if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
-      console.warn("⚠️  Empty prompt received, using fallback");
-      prompt =
-        "artificial intelligence technology, modern digital art, professional tech illustration, high quality, 4k";
-    }
+  // Validate prompt
+  if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
+    console.warn("⚠️  Empty prompt received, using fallback");
+    prompt =
+      "artificial intelligence technology, modern digital art, professional tech illustration, high quality, 4k";
+  }
 
-    const {
-      width = 1200,
-      height = 630,
-      nologo = true,
-      seed,
-      model = "flux-realism",
-      enhance = true,
-    } = options;
+  const {
+    width = 1200,
+    height = 630,
+    nologo = true,
+    seed,
+    model = "flux-realism",
+    enhance = true,
+  } = options;
 
-    // If we have an API key, use the authenticated endpoint for better rate limits
-    if (POLLINATIONS_API_KEY) {
-      console.log("🔑 Pollinations.ai API key ile görsel üretiliyor...");
-
-      const encodedPrompt = encodeURIComponent(prompt.trim());
-      const params = new URLSearchParams({
-        width: width.toString(),
-        height: height.toString(),
-        nologo: nologo.toString(),
-        model,
-        enhance: enhance.toString(),
-        key: POLLINATIONS_API_KEY,
-      });
-
-      if (seed) {
-        params.append("seed", seed.toString());
-      }
-
-      const imageUrl = `${POLLINATIONS_IMAGE_URL}/${encodedPrompt}?${params.toString()}`;
-
-      console.log("📝 Prompt:", prompt.substring(0, 100));
-      console.log(
-        "🎨 Authenticated URL (key=***)",
-        imageUrl.substring(0, 120) + "...",
-      );
-
-      // Verify image is accessible
-      const response = await fetch(imageUrl, {
-        headers: {
-          Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
-        },
-      });
-
-      if (!response.ok) {
-        console.warn(
-          `⚠️ Pollinations API error: ${response.status}, falling back to anonymous`,
-        );
-        // Fall back to anonymous method
-        return fetchPollinationsImageAnonymous(prompt, options);
-      }
-
-      // Return the authenticated URL (without exposing key in logs)
-      return imageUrl;
-    }
-
-    // No API key, use anonymous method
-    return fetchPollinationsImageAnonymous(prompt, options);
-  } catch (error) {
-    console.error("❌ Pollinations.ai görsel hatası:", error);
-    // Try anonymous fallback
+  // Retry loop with exponential backoff
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
+      // If we have an API key, use the authenticated endpoint for better rate limits
+      if (POLLINATIONS_API_KEY) {
+        console.log(
+          `🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt ${attempt}/${maxRetries})`,
+        );
+
+        const encodedPrompt = encodeURIComponent(prompt.trim());
+        const params = new URLSearchParams({
+          width: width.toString(),
+          height: height.toString(),
+          nologo: nologo.toString(),
+          model,
+          enhance: enhance.toString(),
+          key: POLLINATIONS_API_KEY,
+        });
+
+        if (seed) {
+          params.append("seed", seed.toString());
+        }
+
+        const imageUrl = `${POLLINATIONS_IMAGE_URL}/${encodedPrompt}?${params.toString()}`;
+
+        console.log("📝 Prompt:", prompt.substring(0, 100));
+        console.log(
+          "🎨 Authenticated URL (key=***)",
+          imageUrl.substring(0, 120) + "...",
+        );
+
+        // Verify image is accessible with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+        try {
+          const response = await fetch(imageUrl, {
+            headers: {
+              Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+            },
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            console.log("✅ Pollinations.ai görsel başarıyla oluşturuldu");
+            return imageUrl;
+          }
+
+          // Retry on 502/503, not on 400/404
+          if (response.status >= 500 && attempt < maxRetries) {
+            const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+            console.warn(
+              `⚠️ Pollinations API ${response.status}, retry ${attempt}/${maxRetries} in ${delay}ms`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            continue;
+          }
+
+          // For 4xx errors, try anonymous fallback immediately
+          if (response.status >= 400 && response.status < 500) {
+            console.warn(
+              `⚠️ Pollinations API ${response.status}, trying anonymous fallback`,
+            );
+            return await fetchPollinationsImageAnonymous(prompt, options);
+          }
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          throw fetchError;
+        }
+      }
+
+      // No API key, use anonymous method
       return await fetchPollinationsImageAnonymous(prompt, options);
-    } catch {
-      throw error;
+    } catch (error) {
+      const isLastAttempt = attempt === maxRetries;
+
+      if (isLastAttempt) {
+        console.error(
+          `❌ Pollinations.ai failed after ${maxRetries} attempts:`,
+          error,
+        );
+        // Return fallback image
+        return getFallbackImage();
+      }
+
+      const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+      console.warn(
+        `⚠️ Pollinations.ai error, retry ${attempt}/${maxRetries} in ${delay}ms:`,
+        error,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
+
+  // Should never reach here, but return fallback just in case
+  return getFallbackImage();
 }
 
 /**
@@ -172,15 +215,42 @@ async function fetchPollinationsImageAnonymous(
   console.log("📝 Prompt:", prompt.substring(0, 100));
   console.log("🎨 Pollinations.ai görsel URL:", imageUrl.substring(0, 150));
 
-  // Fetch image to verify it exists
-  const response = await fetch(imageUrl);
+  // Fetch image to verify it exists with timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  try {
+    const response = await fetch(imageUrl, {
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // Return the URL directly (Pollinations.ai provides stable URLs)
+    return imageUrl;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
+}
 
-  // Return the URL directly (Pollinations.ai provides stable URLs)
-  return imageUrl;
+/**
+ * Get fallback image when Pollinations.ai fails
+ */
+function getFallbackImage(): string {
+  // Return a generic AI news placeholder
+  // You can replace this with a static image in /public/images/
+  const fallbackPrompt = "artificial intelligence technology digital art";
+  return generateImageUrl(fallbackPrompt, {
+    width: 1200,
+    height: 630,
+    model: "flux-realism",
+    nologo: true,
+  });
 }
 
 /**

@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getQueueStats } from "@/lib/queue";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 /**
  * Agent Health Check Endpoint
  * Returns status of agent, worker, and scheduler

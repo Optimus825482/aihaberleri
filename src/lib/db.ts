@@ -28,6 +28,7 @@ export const db =
           process.env.NODE_ENV === "development"
             ? ["query", "error", "warn"]
             : ["error"],
+        errorFormat: "pretty",
       }));
 
 // Robust cleanup and connection handling
@@ -42,4 +43,51 @@ if (
   process.env.SKIP_ENV_VALIDATION !== "1"
 ) {
   globalForPrisma.prisma = db as PrismaClient;
+}
+
+/**
+ * Retry wrapper for critical database operations
+ * Handles transient connection errors with exponential backoff
+ */
+export async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries = 3,
+  baseDelay = 1000,
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      const isLastAttempt = attempt === maxRetries;
+
+      if (isLastAttempt) {
+        console.error(
+          `❌ DB operation failed after ${maxRetries} attempts:`,
+          error,
+        );
+        throw error;
+      }
+
+      const delay = Math.min(baseDelay * Math.pow(2, attempt - 1), 10000);
+      console.warn(
+        `⚠️ DB operation failed, retry ${attempt}/${maxRetries} in ${delay}ms:`,
+        error,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error("Max retries exceeded");
+}
+
+/**
+ * Check database connection health
+ */
+export async function checkDatabaseHealth(): Promise<boolean> {
+  try {
+    await (db as PrismaClient).$queryRaw`SELECT 1`;
+    return true;
+  } catch (error) {
+    console.error("❌ Database health check failed:", error);
+    return false;
+  }
 }

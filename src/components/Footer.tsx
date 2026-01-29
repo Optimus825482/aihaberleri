@@ -11,7 +11,11 @@ export const dynamic = "force-dynamic";
 export async function Footer() {
   const currentYear = new Date().getFullYear();
 
-  // Skip database queries during build
+  // Skip database queries during build or when DB is unavailable
+  const isBuildTime =
+    process.env.SKIP_ENV_VALIDATION === "1" ||
+    process.env.NEXT_PHASE === "phase-production-build";
+
   let categories: Array<{
     id: string;
     name: string;
@@ -25,7 +29,7 @@ export async function Footer() {
     enabled: boolean;
   }> = [];
 
-  if (process.env.SKIP_ENV_VALIDATION !== "1") {
+  if (!isBuildTime) {
     try {
       // Fetch all categories
       categories = await db.category.findMany({
@@ -38,6 +42,7 @@ export async function Footer() {
       });
     } catch (error) {
       console.error("Error fetching footer data:", error);
+      // Gracefully degrade - component will render with empty arrays
     }
   }
 

@@ -6,6 +6,9 @@
 import { NextResponse } from "next/server";
 import { writeIndexNowKeyFile, submitAllArticlesToIndexNow } from "@/lib/seo";
 
+// Force dynamic rendering
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     console.log("🚀 IndexNow initialization başlatılıyor...");
