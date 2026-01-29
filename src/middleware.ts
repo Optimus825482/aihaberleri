@@ -1,51 +1,47 @@
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import createMiddleware from "next-intl/middleware";
 import { locales, defaultLocale, localePrefix } from "./i18n";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
 
+// 1. Create Auth Middleware (Edge Compatible)
+const { auth } = NextAuth(authConfig);
+
+// 2. Create Intl Middleware
 const intlMiddleware = createMiddleware({
-  // A list of all locales that are supported
   locales,
-
-  // Used when no locale matches
   defaultLocale,
-
-  // Only add prefix for non-default locale
-  // TR: / → no prefix
-  // EN: /en/ → with prefix
   localePrefix,
 });
 
-export default async function middleware(req: NextRequest) {
+export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // 1. Admin Route Protection
+  // Handle Admin Routes first
   if (pathname.startsWith("/admin")) {
-    // Exclude login page from protection to prevent loop
-    if (pathname === "/admin/login") {
-      return NextResponse.next();
-    }
+    const isLoggedIn = !!req.auth;
+    const isLoginPage = pathname === "/admin/login";
 
-    const session = await auth();
-    if (!session) {
+    if (!isLoggedIn && !isLoginPage) {
       const url = new URL("/admin/login", req.url);
       url.searchParams.set("callbackUrl", encodeURI(pathname));
       return NextResponse.redirect(url);
     }
+    
+    // If logged in and on login page, redirect to dashboard
+    if (isLoggedIn && isLoginPage) {
+        return NextResponse.redirect(new URL("/admin", req.url));
+    }
+
+    return NextResponse.next();
   }
 
-  // 2. Internationalization Middleware
+  // Handle i18n for public routes
   return intlMiddleware(req);
-}
-
+});
 
 export const config = {
-  // Match only internationalized pathnames
-  // Exclude: api, admin, _next, static files, etc.
-  matcher: [
-    // Middleware disabled to fix 404s on static routes
-    "/((?!api|_next|_vercel|.*\\..*).*)",
-  ],
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
 };
+
 
