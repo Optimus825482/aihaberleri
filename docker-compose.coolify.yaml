@@ -1,18 +1,11 @@
 version: "3.8"
 
-# ========================================
-# Coolify Production Configuration
-# ========================================
-# KULLANIM: Coolify dashboard'da bu dosyayı seç
-# NOT: PostgreSQL Coolify'ın kendi container'ında çalışır
-# ========================================
-
 services:
-  # Redis (Local container - App ve Worker için paylaşımlı)
+  # Redis (Local container)
   redis:
     image: redis:7-alpine
     container_name: aihaberleri-redis
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:
@@ -24,15 +17,6 @@ services:
     restart: unless-stopped
     networks:
       - aihaberleri-network
-    # Resource limits (önerilen)
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 256M
-        reservations:
-          cpus: '0.25'
-          memory: 128M
 
   # BullMQ Worker (Agent Automation)
   worker:
@@ -41,7 +25,7 @@ services:
       dockerfile: Dockerfile.worker
     container_name: aihaberleri-worker
     environment:
-      # Database (Coolify-managed PostgreSQL - internal URL)
+      # Database (Harici PostgreSQL container - internal URL kullan)
       DATABASE_URL: ${DATABASE_URL}
 
       # Redis (Local Redis container)
@@ -52,14 +36,14 @@ services:
 
       # Search APIs
       BRAVE_API_KEY: ${BRAVE_API_KEY}
-      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
-      EXA_API_KEY: ${EXA_API_KEY:-}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
 
-      # Email (Optional)
-      SMTP_HOST: ${SMTP_HOST:-}
+      # Email
+      SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM:-info@aihaberleri.org}
 
       # Site Config
@@ -69,15 +53,6 @@ services:
       AGENT_ENABLED: ${AGENT_ENABLED:-true}
       AGENT_MIN_ARTICLES_PER_RUN: ${AGENT_MIN_ARTICLES_PER_RUN:-3}
       AGENT_MAX_ARTICLES_PER_RUN: ${AGENT_MAX_ARTICLES_PER_RUN:-5}
-      AGENT_MIN_INTERVAL_HOURS: ${AGENT_MIN_INTERVAL_HOURS:-6}
-
-      # Social Media (Optional)
-      TWITTER_APP_KEY: ${TWITTER_APP_KEY:-}
-      TWITTER_APP_SECRET: ${TWITTER_APP_SECRET:-}
-      TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN:-}
-      TWITTER_ACCESS_SECRET: ${TWITTER_ACCESS_SECRET:-}
-      FACEBOOK_PAGE_ID: ${FACEBOOK_PAGE_ID:-}
-      FACEBOOK_PAGE_ACCESS_TOKEN: ${FACEBOOK_PAGE_ACCESS_TOKEN:-}
 
       # Production
       NODE_ENV: production
@@ -91,21 +66,12 @@ services:
       - aihaberleri-network
     healthcheck:
       test: ["CMD", "pgrep", "-f", "news-agent.worker"]
-      interval: 10s  # Optimized from 30s for faster recovery
-      timeout: 5s
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 15s  # Optimized from 30s
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
+      start_period: 30s
 
-  # Next.js App
+  # Next.js App (PostgreSQL harici container'da, Redis local)
   app:
     build:
       context: .
@@ -116,15 +82,14 @@ services:
     ports:
       - "${APP_PORT:-3001}:3000"
     environment:
-      # Database (Coolify-managed PostgreSQL)
-      # ÖNEMLİ: Internal URL kullan (postgres:5432)
+      # Database (Harici PostgreSQL container - internal URL kullan)
       DATABASE_URL: ${DATABASE_URL}
 
       # Redis (Local Redis container)
       REDIS_URL: redis://redis:6379
 
       # NextAuth
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://aihaberleri.org}
+      NEXTAUTH_URL: https://aihaberleri.org
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       AUTH_TRUST_HOST: "true"
 
@@ -133,35 +98,29 @@ services:
 
       # Search APIs
       BRAVE_API_KEY: ${BRAVE_API_KEY}
-      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
-      EXA_API_KEY: ${EXA_API_KEY:-}
+      TAVILY_API_KEY: ${TAVILY_API_KEY}
+      EXA_API_KEY: ${EXA_API_KEY}
 
-      # Email (Optional)
-      SMTP_HOST: ${SMTP_HOST:-}
+      # Email
+      SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM:-info@aihaberleri.org}
 
-      # Firebase (Push Notifications - Optional)
-      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
-      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
-      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      # Firebase (Push Notifications)
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
 
       # Site Config
-      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://aihaberleri.org}
-      NEXT_PUBLIC_SITE_NAME: ${NEXT_PUBLIC_SITE_NAME:-AI Haberleri}
-      NEXT_PUBLIC_SITE_DESCRIPTION: ${NEXT_PUBLIC_SITE_DESCRIPTION:-Yapay zeka dünyasındaki gelişmeleri yakından takip edin}
+      NEXT_PUBLIC_SITE_URL: https://aihaberleri.org
+      NEXT_PUBLIC_SITE_NAME: "AI Haberleri"
+      NEXT_PUBLIC_SITE_DESCRIPTION: "Yapay zeka dünyasındaki gelişmeleri yakından takip edin"
 
-      # Social Media (Optional)
-      TWITTER_HANDLE: ${TWITTER_HANDLE:-@aihaberleriorg}
-      CONTACT_EMAIL: ${CONTACT_EMAIL:-info@aihaberleri.org}
-      TWITTER_APP_KEY: ${TWITTER_APP_KEY:-}
-      TWITTER_APP_SECRET: ${TWITTER_APP_SECRET:-}
-      TWITTER_ACCESS_TOKEN: ${TWITTER_ACCESS_TOKEN:-}
-      TWITTER_ACCESS_SECRET: ${TWITTER_ACCESS_SECRET:-}
-      FACEBOOK_PAGE_ID: ${FACEBOOK_PAGE_ID:-}
-      FACEBOOK_PAGE_ACCESS_TOKEN: ${FACEBOOK_PAGE_ACCESS_TOKEN:-}
+      # Social Media
+      TWITTER_HANDLE: "@aihaberleriorg"
+      CONTACT_EMAIL: "info@aihaberleri.org"
 
       # Agent Config
       AGENT_ENABLED: ${AGENT_ENABLED:-true}
@@ -170,8 +129,7 @@ services:
       AGENT_MIN_INTERVAL_HOURS: ${AGENT_MIN_INTERVAL_HOURS:-6}
 
       # Optional
-      NEXT_PUBLIC_ADSENSE_CLIENT_ID: ${NEXT_PUBLIC_ADSENSE_CLIENT_ID:-}
-      UNSPLASH_ACCESS_KEY: ${UNSPLASH_ACCESS_KEY:-}
+      NEXT_PUBLIC_ADSENSE_CLIENT_ID: ${NEXT_PUBLIC_ADSENSE_CLIENT_ID}
 
       # Production
       NODE_ENV: production
@@ -183,38 +141,28 @@ services:
     restart: unless-stopped
     networks:
       - aihaberleri-network
-      - coolify  # PostgreSQL erişimi için Coolify network
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    # Resource limits
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 2G
-        reservations:
-          cpus: '1.0'
-          memory: 1G
+      - coolify
+    # healthcheck:
+    #   test:
+    #     [
+    #       "CMD",
+    #       "wget",
+    #       "--no-verbose",
+    #       "--tries=1",
+    #       "--spider",
+    #       "http://localhost:3000/api/health",
+    #     ]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 60s
 
 volumes:
   redis_data:
     driver: local
-    # Redis persistence için
-    driver_opts:
-      type: none
-      o: bind
-      device: /var/lib/docker/volumes/aihaberleri-redis
 
 networks:
-  # Internal network (App ↔ Worker ↔ Redis)
   aihaberleri-network:
     driver: bridge
-    name: aihaberleri-network
-  # Coolify's external network (PostgreSQL erişimi)
   coolify:
     external: true
-    name: coolify
