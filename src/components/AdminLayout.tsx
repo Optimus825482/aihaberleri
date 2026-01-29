@@ -21,10 +21,18 @@ import {
   Bell,
   Users,
   Keyboard,
+  Shield,
+  BarChart,
+  TrendingUp,
+  Activity,
+  Calendar,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAdminShortcuts } from "@/hooks/use-admin-shortcuts";
+import { Toaster } from "@/components/ui/toaster";
+import { canAccessResource } from "@/lib/permissions";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -35,46 +43,91 @@ const menuItems = [
     title: "Dashboard",
     href: "/admin",
     icon: LayoutDashboard,
+    requiredResource: null,
   },
   {
     title: "Haberler",
     href: "/admin/articles",
     icon: FileText,
+    requiredResource: "articles" as const,
   },
   {
     title: "Kategoriler",
     href: "/admin/categories",
     icon: Tags,
+    requiredResource: "categories" as const,
   },
   {
     title: "Mesajlar",
     href: "/admin/messages",
     icon: MessageSquare,
+    requiredResource: "messages" as const,
   },
   {
     title: "Newsletter Aboneleri",
     href: "/admin/newsletter",
     icon: Mail,
+    requiredResource: "messages" as const,
   },
   {
     title: "Push Mesajları",
     href: "/admin/notifications",
     icon: Bell,
+    requiredResource: "messages" as const,
   },
   {
     title: "Anlık Ziyaretçiler",
     href: "/admin/visitors",
     icon: Users,
+    requiredResource: null,
+  },
+  {
+    title: "Analytics",
+    href: "/admin/analytics",
+    icon: BarChart,
+    requiredResource: null,
+  },
+  {
+    title: "Gelişmiş Analytics",
+    href: "/admin/analytics/advanced",
+    icon: TrendingUp,
+    requiredResource: null,
+  },
+  {
+    title: "Makale Şablonları",
+    href: "/admin/templates",
+    icon: FileText,
+    requiredResource: "articles" as const,
+  },
+  {
+    title: "İçerik Takvimi",
+    href: "/admin/calendar",
+    icon: Calendar,
+    requiredResource: null,
   },
   {
     title: "Ayarlar",
     href: "/admin/settings",
     icon: Settings,
+    requiredResource: "settings" as const,
   },
   {
     title: "Agent Ayarları",
     href: "/admin/agent-settings",
     icon: Bot,
+    requiredResource: "settings" as const,
+  },
+  {
+    title: "Kullanıcılar",
+    href: "/admin/users",
+    icon: Users,
+    requiredResource: "users" as const,
+  },
+  {
+    title: "Aktivite Geçmişi",
+    href: "/admin/audit-logs",
+    icon: Shield,
+    requiredResource: null,
   },
 ];
 
@@ -84,6 +137,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isInstallable, installApp } = usePWA();
   const router = useRouter();
+
+  const userRole = session?.user?.role || "VIEWER";
 
   // 🚀 PHASE 1: Keyboard shortcuts activated
   useAdminShortcuts({
@@ -114,9 +169,49 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
+  };
+
+  // Filter menu items based on user role
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (!item.requiredResource) return true;
+    return canAccessResource(userRole, item.requiredResource);
+  });
+
+  // Role badge colors
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case "SUPER_ADMIN":
+        return "bg-purple-500/20 text-purple-500 border-purple-500/30";
+      case "ADMIN":
+        return "bg-blue-500/20 text-blue-500 border-blue-500/30";
+      case "EDITOR":
+        return "bg-green-500/20 text-green-500 border-green-500/30";
+      case "MODERATOR":
+        return "bg-orange-500/20 text-orange-500 border-orange-500/30";
+      case "VIEWER":
+        return "bg-gray-500/20 text-gray-500 border-gray-500/30";
+      default:
+        return "bg-gray-500/20 text-gray-500 border-gray-500/30";
+    }
+  };
+
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case "SUPER_ADMIN":
+        return "Süper Admin";
+      case "ADMIN":
+        return "Admin";
+      case "EDITOR":
+        return "Editör";
+      case "MODERATOR":
+        return "Moderatör";
+      case "VIEWER":
+        return "İzleyici";
+      default:
+        return role;
+    }
   };
 
   return (
@@ -192,15 +287,22 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </div>
           </div>
           <div className="mt-4 p-3 rounded-lg bg-card/50 border border-primary/10">
-            <p className="text-xs text-muted-foreground truncate font-medium">
+            <p className="text-xs text-muted-foreground truncate font-medium mb-2">
               {session?.user?.email}
             </p>
+            <Badge
+              variant="outline"
+              className={`text-xs ${getRoleBadgeColor(userRole)}`}
+            >
+              <Shield className="h-3 w-3 mr-1" />
+              {getRoleLabel(userRole)}
+            </Badge>
           </div>
         </div>
 
         {/* Navigation */}
         <nav className="px-3 py-4 space-y-1 pb-20 overflow-y-auto max-h-[calc(100vh-280px)]">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
 
@@ -281,6 +383,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {children}
         </div>
       </main>
+
+      {/* Toast Notifications */}
+      <Toaster />
     </div>
   );
 }

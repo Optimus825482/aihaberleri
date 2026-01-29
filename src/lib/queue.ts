@@ -35,6 +35,7 @@ export const newsAgentQueueEvents = redis
   : null;
 
 // Helper to add news agent job
+// PHASE 2: Enhanced with immediate reschedule support
 export async function scheduleNewsAgentJob() {
   if (!newsAgentQueue) {
     console.warn("⚠️  Queue not available (Redis not connected)");
@@ -50,8 +51,29 @@ export async function scheduleNewsAgentJob() {
     const intervalHours = setting ? parseInt(setting.value) : 6;
     const delay = intervalHours * 60 * 60 * 1000;
 
+    // Phase 2: Remove existing jobs first to allow immediate reschedule
+    const existingJobs = await newsAgentQueue.getRepeatableJobs();
+    for (const job of existingJobs) {
+      if (job.name === "news-agent-scheduled-run" || job.id) {
+        await newsAgentQueue.removeRepeatableByKey(job.key);
+        console.log(`🗑️ Removed existing scheduled job: ${job.key}`);
+      }
+    }
+
+    // Also check for any pending/waiting jobs with the fixed ID and remove them
+    const waitingJobs = await newsAgentQueue.getJobs(["waiting", "delayed"]);
+    for (const job of waitingJobs) {
+      if (
+        job.id === "news-agent-scheduled-run" ||
+        job.name === "scrape-and-publish"
+      ) {
+        await job.remove();
+        console.log(`🗑️ Removed pending job: ${job.id}`);
+      }
+    }
+
     // Use a fixed jobId so we don't have multiple scheduled jobs at once
-    // BullMQ will ignore adding if the jobId already exists in delayed state
+    // Now this works for reschedules since we removed old jobs above
     await newsAgentQueue.add(
       "scrape-and-publish",
       {},
@@ -71,9 +93,20 @@ export async function scheduleNewsAgentJob() {
       create: { key: "agent.nextRun", value: nextTime.toISOString() },
     });
 
-    console.log(
-      `📅 Sonraki haber agent çalıştırması ${intervalHours} saat sonra (${nextTime.toLocaleString()}) planlandı`,
-    );
+    const queueLength = await newsAgentQueue.count();
+
+    console.log(`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 AGENT SCHEDULE DEBUG:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⏰ Current time:  ${new Date().toLocaleString("tr-TR")}
+⏰ Next run time: ${nextTime.toLocaleString("tr-TR")}
+⚙️  Interval:      ${intervalHours} hours
+🆔 Job ID:        news-agent-scheduled-run
+📊 Queue length:  ${queueLength}
+🔄 Reschedule:    Enabled (old job removed)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
 
     return {
       nextExecutionTime: nextTime,

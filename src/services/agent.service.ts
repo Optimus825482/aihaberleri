@@ -46,6 +46,16 @@ export async function executeNewsAgent(
     `🤖 Agent çalıştırması başladı (Log ID: ${agentLog.id}${categorySlug ? `, Kategori: ${categorySlug}` : ""})`,
   );
 
+  console.log(`
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃           🤖 AGENT EXECUTION START                ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  Log ID:       ${agentLog.id.substring(0, 12)}...                    ┃
+┃  Start Time:   ${new Date().toLocaleString("tr-TR").padEnd(25)}┃
+┃  Category:     ${(categorySlug || "All").padEnd(28)}┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+`);
+
   try {
     // Step 1: Search for AI news (RSS + Trend Analysis)
     console.log("📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...");
@@ -152,6 +162,18 @@ export async function executeNewsAgent(
     });
 
     console.log(`✅ Agent çalıştırması ${duration}s içinde tamamlandı`);
+
+    console.log(`
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃           ✅ AGENT EXECUTION SUCCESS              ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  Status:         ${status.padEnd(31)}┃
+┃  Duration:       ${duration}s${" ".repeat(31 - String(duration).length)}┃
+┃  Articles Found: ${articlesScraped}${" ".repeat(31 - String(articlesScraped).length)}┃
+┃  Articles Made:  ${articlesCreated}${" ".repeat(31 - String(articlesCreated).length)}┃
+┃  Next Run:       ${nextRun.toLocaleString("tr-TR").padEnd(25)}┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+`);
 
     return {
       success: true,

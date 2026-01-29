@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { SEOPanel } from "@/components/admin/SEOPanel";
+import { SchedulePublish } from "@/components/admin/SchedulePublish";
 
 interface Category {
   id: string;
@@ -42,6 +44,8 @@ interface Article {
   keywords: string[];
   metaTitle: string | null;
   metaDescription: string | null;
+  seoScore?: number;
+  scheduledPublishAt?: string | null;
 }
 
 export default function EditArticlePage({
@@ -372,6 +376,45 @@ export default function EditArticlePage({
                     placeholder="SEO için özel açıklama (boş bırakılırsa otomatik)"
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* SEO Analizi */}
+            <Card>
+              <CardHeader>
+                <CardTitle>SEO Analizi</CardTitle>
+                <CardDescription>
+                  Makale SEO performansını analiz edin ve önerileri görün
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SEOPanel
+                  articleId={id}
+                  initialScore={article.seoScore}
+                  initialRecommendations={[]}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Zamanlanmış Yayın */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Zamanlanmış Yayın</CardTitle>
+                <CardDescription>
+                  Makaleyi gelecek bir tarihte otomatik olarak yayınlayın
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SchedulePublish
+                  articleId={id}
+                  currentSchedule={article.scheduledPublishAt}
+                  onScheduled={() => {
+                    // Refresh article data
+                    fetch(`/api/admin/articles/${id}`)
+                      .then((res) => res.json())
+                      .then((data) => setArticle(data.article));
+                  }}
+                />
               </CardContent>
             </Card>
 

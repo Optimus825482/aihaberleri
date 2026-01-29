@@ -85,6 +85,7 @@ export async function callDeepSeek(
 /**
  * Analyze news articles and select the best ones
  * ENHANCED: AI relevance check to filter out non-AI news
+ * PHASE 3: Now accepts recent published articles for topic diversity enforcement
  */
 export async function analyzeNewsArticles(
   articles: Array<{
@@ -93,8 +94,16 @@ export async function analyzeNewsArticles(
     url: string;
     publishedDate?: string;
   }>,
+  recentPublishedArticles: Array<{ title: string; publishedAt: Date }> = [],
 ): Promise<Array<{ index: number; reason: string; category: string }>> {
-  const prompt = `Sen bir yapay zeka haber editörüsün. Bu haberleri analiz et ve SADECE YAPAY ZEKA İLE DOĞRUDAN İLGİLİ olanları seç.
+  // Build context section for diversity
+  let diversityContext = "";
+  if (recentPublishedArticles.length > 0) {
+    diversityContext = `\n\n### SON 48 SAATTE YAYINLANAN HABERLER (TEKRAR ETME!):
+‼️ **ÖNEMLİ: Bu konularla ilgili haberleri SEÇME, çeşitlilik için FARKLI konular tercih et!**\n\n${recentPublishedArticles.map((a, i) => `${i + 1}. "${a.title}" (${new Date(a.publishedAt).toLocaleDateString("tr-TR")})`).join("\n")}\n\n**SEÇİM KURALİ:** Yukarıdaki listede benzeri bir konu varsa, o haberi seçme. Örneğin:\n- Listede "Tesla" haberi varsa, yeni Tesla haberini seçme\n- Listede "ChatGPT" haberi varsa, yeni GPT haberini seçme\n- Listede "Google Gemini" varsa, yeni Gemini haberini seçme\n\n**YENİ ve FARKLI konuları öncele!**\n`;
+  }
+
+  const prompt = `Sen bir yapay zeka haber editörüsün. Bu haberleri analiz et ve SADECE YAPAY ZEKA İLE DOĞRUDAN İLGİLİ olanları seç.\n\n**ÖNEMLİ: YAPAY ZEKA İLE İLGİLİ OLMAYAN HABERLERTİ ASLA SEÇME!**${diversityContext}
 
 **ÖNEMLİ: YAPAY ZEKA İLE İLGİLİ OLMAYAN HABERLERİ ASLA SEÇME!**
 
@@ -159,8 +168,9 @@ URL: ${article.url}
 1. **MUTLAKA yapay zeka ile DOĞRUDAN ilgili olmalı** (aiRelevance >= 70)
 2. En haber değeri taşıyan ve ilginç olanlar
 3. Güncel ve alakalı olanlar
-4. Konularda çeşitlilik (tekrar eden konulardan kaçın)
-5. Genel yapay zeka ile ilgilenen kitle için uygun olanlar
+4. **ÖNEMLİ: Konularda ÇEŞİTLİLİK - son 48 saatte yayınlanan haberlerle aynı konudan SEÇME!**
+5. **YENİ ve FARKLI içerikler öncelikli olmalı**
+6. Genel yapay zeka ile ilgilenen kitle için uygun olanlar
 
 **EĞER HİÇBİR HABER YAPAY ZEKA İLE İLGİLİ DEĞİLSE, BOŞ DİZİ DÖNDÜR: []**`;
 

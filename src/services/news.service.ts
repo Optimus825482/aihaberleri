@@ -34,22 +34,116 @@ function calculateSimilarity(str1: string, str2: string): number {
 }
 
 /**
+ * Extract main keywords from text (remove stop words)
+ */
+function extractKeywords(text: string): string[] {
+  const stopWords = [
+    "haber",
+    "news",
+    "için",
+    "olan",
+    "this",
+    "that",
+    "with",
+    "from",
+    "will",
+    "new",
+    "bir",
+    "ile",
+    "the",
+    "and",
+    "için",
+    "yeni",
+  ];
+
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\sğüşıöçĞÜŞİÖÇ]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 3)
+    .filter((w) => !stopWords.includes(w));
+}
+
+/**
+ * Extract entities (company names, product names) from text
+ */
+function extractEntities(text: string): string[] {
+  const knownEntities = [
+    "openai",
+    "gpt",
+    "chatgpt",
+    "gemini",
+    "claude",
+    "anthropic",
+    "google",
+    "microsoft",
+    "meta",
+    "apple",
+    "tesla",
+    "nvidia",
+    "deepseek",
+    "midjourney",
+    "stable diffusion",
+    "llama",
+    "copilot",
+    "bard",
+    "palm",
+    "dall-e",
+    "sora",
+  ];
+
+  const lowerText = text.toLowerCase();
+  return knownEntities.filter((entity) => lowerText.includes(entity));
+}
+
+/**
+ * Popular topics that need extended duplicate check window
+ */
+const POPULAR_TOPICS = [
+  "gpt",
+  "chatgpt",
+  "openai",
+  "gemini",
+  "google ai",
+  "tesla",
+  "elon musk",
+  "meta",
+  "microsoft",
+  "apple",
+  "nvidia",
+  "sam altman",
+];
+
+/**
  * Check if a news article is duplicate based on title and content similarity
  * @param title - Article title
  * @param content - Article content (optional)
- * @param timeWindowHours - Time window to check for duplicates (default: 24 hours)
+ * @param timeWindowHours - Time window to check for duplicates (default: 96 hours)
  * @returns true if duplicate found, false otherwise
  */
 export async function isDuplicateNews(
   title: string,
   content?: string,
-  timeWindowHours: number = 48, // Increased from 24 to 48 hours
+  timeWindowHours: number = 96, // Increased from 48 to 96 hours (4 days)
 ): Promise<{
   isDuplicate: boolean;
   reason?: string;
   similarArticleId?: string;
 }> {
   try {
+    // Check if this is a popular topic - extend window to 7 days
+    const lowerTitle = title.toLowerCase();
+    const isPopularTopic = POPULAR_TOPICS.some((topic) =>
+      lowerTitle.includes(topic),
+    );
+
+    if (isPopularTopic) {
+      timeWindowHours = 168; // 7 days for popular topics
+      console.log(
+        `🔍 Popular topic detected - extending duplicate check to 7 days`,
+      );
+    }
+
     // Fetch recent articles within time window
     const recentArticles = await db.article.findMany({
       where: {
@@ -63,6 +157,7 @@ export async function isDuplicateNews(
         title: true,
         content: true,
         slug: true,
+        publishedAt: true,
       },
     });
 
@@ -83,9 +178,9 @@ export async function isDuplicateNews(
         };
       }
 
-      // 2. Title Similarity Check (70%+ similar - lowered from 80%)
+      // 2. Title Similarity Check (55%+ similar - ENHANCED from 70%)
       const titleSimilarity = calculateSimilarity(title, article.title);
-      if (titleSimilarity > 0.7) {
+      if (titleSimilarity > 0.55) {
         console.log(
           `❌ DUPLICATE: Title similarity ${(titleSimilarity * 100).toFixed(1)}% with article ${article.id}`,
         );
@@ -96,6 +191,65 @@ export async function isDuplicateNews(
           reason: `TITLE_SIMILARITY_${(titleSimilarity * 100).toFixed(0)}%`,
           similarArticleId: article.id,
         };
+      }
+
+      // 2.5. Keyword Overlap Check (NEW - 60%+ keyword overlap)
+      const newKeywords = extractKeywords(title);
+      const existingKeywords = extractKeywords(article.title);
+
+      if (newKeywords.length > 0 && existingKeywords.length > 0) {
+        const intersection = newKeywords.filter((k) =>
+          existingKeywords.includes(k),
+        );
+        const keywordOverlap =
+          intersection.length /
+          Math.max(newKeywords.length, existingKeywords.length);
+
+        if (keywordOverlap > 0.6) {
+          console.log(
+            `❌ DUPLICATE: Keyword overlap ${(keywordOverlap * 100).toFixed(1)}% with article ${article.id}`,
+          );
+          console.log(
+            `   New keywords: [${newKeywords.slice(0, 5).join(", ")}]`,
+          );
+          console.log(
+            `   Existing keywords: [${existingKeywords.slice(0, 5).join(", ")}]`,
+          );
+          console.log(`   Common: [${intersection.slice(0, 5).join(", ")}]`);
+          return {
+            isDuplicate: true,
+            reason: `KEYWORD_OVERLAP_${(keywordOverlap * 100).toFixed(0)}%`,
+            similarArticleId: article.id,
+          };
+        }
+      }
+
+      // 2.6. Entity Match Check (NEW - same entities + similar time)
+      const newEntities = extractEntities(title);
+      const existingEntities = extractEntities(article.title);
+
+      if (newEntities.length > 0 && existingEntities.length > 0) {
+        const entityIntersection = newEntities.filter((e) =>
+          existingEntities.includes(e),
+        );
+
+        if (entityIntersection.length > 0) {
+          const timeDiff = Date.now() - new Date(article.publishedAt).getTime();
+          const hoursDiff = timeDiff / (60 * 60 * 1000);
+
+          // Same entities within 72 hours + moderate title similarity = likely duplicate
+          if (hoursDiff < 72 && titleSimilarity > 0.45) {
+            console.log(
+              `❌ DUPLICATE: Entity match [${entityIntersection.join(", ")}] + ${(titleSimilarity * 100).toFixed(1)}% title similarity`,
+            );
+            console.log(`   Time difference: ${hoursDiff.toFixed(1)} hours`);
+            return {
+              isDuplicate: true,
+              reason: `ENTITY_MATCH_${entityIntersection[0].toUpperCase()}`,
+              similarArticleId: article.id,
+            };
+          }
+        }
       }
 
       // 3. Slug Prefix Match (first 40 characters)

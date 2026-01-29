@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { scheduleNewsAgentJob } from "@/lib/queue";
 
 export async function GET(request: NextRequest) {
   try {
@@ -78,6 +79,20 @@ export async function POST(request: NextRequest) {
       update: { value, encrypted },
       create: { key, value, encrypted },
     });
+
+    // PHASE 2: If agent.intervalHours changed, immediately reschedule the job
+    if (key === "agent.intervalHours") {
+      console.log(
+        `🔄 Agent interval changed to ${value} hours - rescheduling immediately...`,
+      );
+      try {
+        await scheduleNewsAgentJob();
+        console.log("✅ Agent rescheduled successfully");
+      } catch (error) {
+        console.error("⚠️  Failed to reschedule agent:", error);
+        // Don't fail the entire request if rescheduling fails
+      }
+    }
 
     return NextResponse.json({
       success: true,

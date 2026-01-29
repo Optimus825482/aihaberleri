@@ -91,10 +91,10 @@ services:
       - aihaberleri-network
     healthcheck:
       test: ["CMD", "pgrep", "-f", "news-agent.worker"]
-      interval: 30s
-      timeout: 10s
+      interval: 10s  # Optimized from 30s for faster recovery
+      timeout: 5s
       retries: 3
-      start_period: 30s
+      start_period: 15s  # Optimized from 30s
     # Resource limits
     deploy:
       resources:

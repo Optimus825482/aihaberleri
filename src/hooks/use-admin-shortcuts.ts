@@ -12,7 +12,7 @@ interface ShortcutConfig {
 
 /**
  * Admin Panel Keyboard Shortcuts Hook
- * 
+ *
  * Shortcuts:
  * - Ctrl+K: Focus search
  * - Ctrl+N: New article
@@ -50,7 +50,7 @@ export function useAdminShortcuts(options?: {
           options.onSearch();
         } else {
           const searchInput = document.getElementById(
-            "search-input"
+            "search-input",
           ) as HTMLInputElement;
           if (searchInput) {
             searchInput.focus();
@@ -83,7 +83,7 @@ export function useAdminShortcuts(options?: {
         }
         // Close any open dialogs
         const closeButtons = document.querySelectorAll(
-          '[data-radix-dialog-close]'
+          "[data-radix-dialog-close]",
         );
         if (closeButtons.length > 0) {
           (closeButtons[0] as HTMLButtonElement).click();
@@ -215,21 +215,5 @@ export function KeyboardShortcutsHelp() {
     },
   ];
 
-  return (
-    <div className="space-y-2">
-      {shortcuts.map((shortcut, index) => (
-        <div
-          key={index}
-          className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
-        >
-          <span className="text-sm text-muted-foreground">
-            {shortcut.description}
-          </span>
-          <kbd className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-100 border border-gray-200 rounded-md dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600">
-            {shortcut.key}
-          </kbd>
-        </div>
-      ))}
-    </div>
-  );
+  return { shortcuts };
 }

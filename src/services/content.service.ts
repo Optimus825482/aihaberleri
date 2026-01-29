@@ -90,7 +90,105 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
 }
 
 /**
+ * Extract topic/theme from article title
+ */
+function extractTopic(title: string): string {
+  const lowerTitle = title.toLowerCase();
+
+  // Entity-based topics
+  if (
+    lowerTitle.includes("gpt") ||
+    lowerTitle.includes("chatgpt") ||
+    lowerTitle.includes("openai")
+  )
+    return "OpenAI/GPT";
+  if (lowerTitle.includes("gemini") || lowerTitle.includes("bard"))
+    return "Google/Gemini";
+  if (lowerTitle.includes("claude") || lowerTitle.includes("anthropic"))
+    return "Anthropic/Claude";
+  if (lowerTitle.includes("tesla") || lowerTitle.includes("elon"))
+    return "Tesla/Elon Musk";
+  if (
+    lowerTitle.includes("meta") ||
+    lowerTitle.includes("facebook") ||
+    lowerTitle.includes("llama")
+  )
+    return "Meta/Facebook";
+  if (lowerTitle.includes("microsoft") || lowerTitle.includes("copilot"))
+    return "Microsoft";
+  if (lowerTitle.includes("google ai") || lowerTitle.includes("google yapay"))
+    return "Google AI";
+  if (lowerTitle.includes("nvidia")) return "NVIDIA";
+  if (lowerTitle.includes("apple")) return "Apple";
+
+  // Technology-based topics
+  if (
+    lowerTitle.includes("görüntü") ||
+    lowerTitle.includes("image") ||
+    lowerTitle.includes("vision") ||
+    lowerTitle.includes("dall-e")
+  )
+    return "Bilgisayarlı Görü";
+  if (lowerTitle.includes("video") || lowerTitle.includes("sora"))
+    return "Video AI";
+  if (
+    lowerTitle.includes("ses") ||
+    lowerTitle.includes("audio") ||
+    lowerTitle.includes("voice")
+  )
+    return "Ses AI";
+  if (lowerTitle.includes("robot")) return "Robotik";
+  if (
+    lowerTitle.includes("otonom") ||
+    lowerTitle.includes("autonomous") ||
+    lowerTitle.includes("self-driving")
+  )
+    return "Otonom Sistemler";
+
+  // Theme-based topics
+  if (
+    lowerTitle.includes("etik") ||
+    lowerTitle.includes("ethical") ||
+    lowerTitle.includes("regulation")
+  )
+    return "AI Etiği/Düzenlemeler";
+  if (
+    lowerTitle.includes("yatırım") ||
+    lowerTitle.includes("fonlama") ||
+    lowerTitle.includes("funding") ||
+    lowerTitle.includes("investment")
+  )
+    return "Yatırım";
+  if (lowerTitle.includes("model") && !lowerTitle.includes("tesla"))
+    return "AI Modelleri";
+
+  return "Genel AI"; // Default
+}
+
+/**
+ * Check if topic was recently published
+ */
+async function isTopicRecent(
+  topic: string,
+  hoursWindow: number = 24,
+): Promise<boolean> {
+  const recentArticles = await db.article.findMany({
+    where: {
+      publishedAt: {
+        gte: new Date(Date.now() - hoursWindow * 60 * 60 * 1000),
+      },
+      status: "PUBLISHED",
+    },
+    select: { title: true },
+  });
+
+  const recentTopics = recentArticles.map((a) => extractTopic(a.title));
+  return recentTopics.includes(topic);
+}
+
+/**
  * Select the best articles from a list using AI analysis
+ * ENHANCED: Now passes recent published articles to AI for diversity enforcement
  */
 export async function selectBestArticles(
   articles: NewsArticle[],
@@ -118,8 +216,34 @@ export async function selectBestArticles(
   }
 
   try {
-    // Analyze only the top 15-20 unique articles
-    const analysis = await analyzeNewsArticles(uniqueArticles.slice(0, 20));
+    // Phase 3: Fetch recently published articles for diversity control
+    const recentPublished = await db.article.findMany({
+      where: {
+        publishedAt: {
+          gte: new Date(Date.now() - 48 * 60 * 60 * 1000), // Last 48 hours
+        },
+        status: "PUBLISHED",
+      },
+      select: {
+        title: true,
+        publishedAt: true,
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 20,
+    });
+
+    console.log(
+      `📖 Recent context: ${recentPublished.length} articles from last 48h passed to AI`,
+    );
+
+    // Analyze only the top 15-20 unique articles WITH context of recent publications
+    const analysis = await analyzeNewsArticles(
+      uniqueArticles.slice(0, 20),
+      recentPublished.map((a) => ({
+        title: a.title,
+        publishedAt: a.publishedAt,
+      })),
+    );
 
     const selected = analysis
       .slice(0, targetCount)
@@ -128,15 +252,38 @@ export async function selectBestArticles(
         return {
           article: uniqueArticles[index], // Use uniqueArticles array
           category: item.category,
+          topic: extractTopic(uniqueArticles[index].title),
         };
       })
       .filter((item) => item.article !== undefined);
 
-    if (selected.length === 0) {
+    // Phase 2: Topic clustering - filter out topics published within 24 hours
+    const diverseSelected = [];
+    for (const item of selected) {
+      const isRecent = await isTopicRecent(item.topic, 24);
+      if (!isRecent) {
+        diverseSelected.push(item);
+        console.log(`✅ Topic "${item.topic}" is fresh - including`);
+      } else {
+        console.log(
+          `🚫 Topic "${item.topic}" was recently published - skipping for diversity`,
+        );
+      }
+    }
+
+    // If all were filtered, take at least one to avoid complete failure
+    if (diverseSelected.length === 0 && selected.length > 0) {
+      console.log(
+        `⚠️ All topics were recent, taking best one anyway to avoid empty result`,
+      );
+      diverseSelected.push(selected[0]);
+    }
+
+    if (diverseSelected.length === 0) {
       throw new Error("AI could not select any articles");
     }
 
-    return selected;
+    return diverseSelected;
   } catch (error) {
     console.error("Haber analiz hatası, fallback uygulanıyor:", error);
     // Fallback: Take the first few unique ones
