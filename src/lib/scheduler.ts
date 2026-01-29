@@ -14,8 +14,9 @@ let isRunning = false;
  * Checks every minute if it's time to run the agent
  */
 export function startInProcessScheduler() {
-  // Only run in production and if not already running
-  if (process.env.NODE_ENV !== "production" || schedulerInterval) {
+  // Only run if not already running
+  // Modified for debugging: Allow in dev mode
+  if (schedulerInterval) {
     return;
   }
 

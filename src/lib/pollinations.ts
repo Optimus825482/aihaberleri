@@ -135,7 +135,15 @@ export async function fetchPollinationsImage(
           `🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt ${attempt}/${maxRetries})`,
         );
 
-        const encodedPrompt = encodeURIComponent(prompt.trim());
+        // Truncate prompt to avoid 400 errors (URL length limits)
+        let cleanPrompt = prompt.trim();
+        if (cleanPrompt.length > 800) {
+          console.warn(
+            `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 800 for API`,
+          );
+          cleanPrompt = cleanPrompt.substring(0, 797) + "...";
+        }
+        const encodedPrompt = encodeURIComponent(cleanPrompt);
         const params = new URLSearchParams({
           width: width.toString(),
           height: height.toString(),
