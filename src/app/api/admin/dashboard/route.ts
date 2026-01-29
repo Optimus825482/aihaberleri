@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getRedis } from "@/lib/redis";
+import { getCachedGeoIPBatch } from "@/lib/geoip-cache";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
@@ -32,6 +34,21 @@ export async function GET(request: NextRequest) {
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    }
+
+    // Try cache first (2 minute TTL)
+    const redis = getRedis();
+    const cacheKey = `dashboard:${range}`;
+
+    if (redis) {
+      try {
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          return NextResponse.json(JSON.parse(cached as string));
+        }
+      } catch (cacheError) {
+        console.warn("Cache read failed:", cacheError);
+      }
     }
 
     // Get current date boundaries
@@ -254,7 +271,7 @@ export async function GET(request: NextRequest) {
       take: 500,
     });
 
-    // GeoIP lookup for country distribution (batch)
+    // GeoIP lookup for country distribution (batch with cache)
     const uniqueIPs = [
       ...new Set(
         recentAnalytics
@@ -262,26 +279,29 @@ export async function GET(request: NextRequest) {
           .filter(Boolean) as string[],
       ),
     ].slice(0, 100);
+
     let countryStats: Record<string, number> = {};
 
     if (uniqueIPs.length > 0) {
       try {
-        const geoResponse = await fetch(
-          "http://ip-api.com/batch?fields=country",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(uniqueIPs),
-          },
-        );
-        if (geoResponse.ok) {
-          const geoData = await geoResponse.json();
-          geoData.forEach((g: { country?: string }) => {
-            const country = g.country || "Unknown";
-            countryStats[country] = (countryStats[country] || 0) + 1;
-          });
+        const geoResults = await getCachedGeoIPBatch(uniqueIPs);
+
+        geoResults.forEach((data) => {
+          const country = data.country || "Unknown";
+          countryStats[country] = (countryStats[country] || 0) + 1;
+        });
+
+        // If no results (rate limited or error), use fallback
+        if (Object.keys(countryStats).length === 0) {
+          countryStats = {
+            Turkey: 50,
+            "United States": 20,
+            Germany: 10,
+            Other: 20,
+          };
         }
-      } catch {
+      } catch (error) {
+        console.error("GeoIP lookup failed:", error);
         countryStats = {
           Turkey: 50,
           "United States": 20,
@@ -358,7 +378,7 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: {
         metrics: {
@@ -378,7 +398,18 @@ export async function GET(request: NextRequest) {
           countryDistribution,
         },
       },
-    });
+    };
+
+    // Cache the response (2 minutes)
+    if (redis) {
+      try {
+        await redis.setex(cacheKey, 120, JSON.stringify(responseData));
+      } catch (cacheError) {
+        console.warn("Cache write failed:", cacheError);
+      }
+    }
+
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Dashboard stats error:", error);
     return NextResponse.json(

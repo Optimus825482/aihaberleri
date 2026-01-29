@@ -15,9 +15,13 @@ import { SiteHeader } from "@/components/site-header";
 import { Footer } from "@/components/Footer";
 import { LayoutWrapper } from "@/components/layout-wrapper";
 import { AudioProvider } from "@/context/AudioContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Initialize scheduler (in-process fallback if worker not available)
 import "@/lib/init-scheduler";
+
+// Initialize cron jobs (visitor cleanup, etc.)
+import "@/lib/init-cron";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -132,17 +136,19 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AudioProvider>
-            <GoogleTagManagerNoScript />
-            <GoogleAnalytics />
-            <GoogleTagManager />
-            <LayoutWrapper header={<SiteHeader />} footer={<Footer />}>
-              {children}
-            </LayoutWrapper>
-            <ClientProviders />
-            <ServiceWorkerRegistration />
-            <TailwindIndicator />
-          </AudioProvider>
+          <ErrorBoundary>
+            <AudioProvider>
+              <GoogleTagManagerNoScript />
+              <GoogleAnalytics />
+              <GoogleTagManager />
+              <LayoutWrapper header={<SiteHeader />} footer={<Footer />}>
+                {children}
+              </LayoutWrapper>
+              <ClientProviders />
+              <ServiceWorkerRegistration />
+              <TailwindIndicator />
+            </AudioProvider>
+          </ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>

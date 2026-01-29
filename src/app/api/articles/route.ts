@@ -4,18 +4,43 @@ import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 
-// GET - List all articles with server-side pagination
+// GET - List all articles with server-side pagination, search, and filtering
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50"); // Default 50 to maintain backward compat
     const skip = (page - 1) * limit;
-    
+    const search = searchParams.get("search") || "";
+    const category = searchParams.get("category") || "";
+
+    // Build where clause
+    const where: any = {};
+
+    // Search filter (title contains)
+    if (search) {
+      where.title = {
+        contains: search,
+        mode: "insensitive",
+      };
+    }
+
+    // Category filter
+    if (category) {
+      const categoryRecord = await db.category.findUnique({
+        where: { slug: category },
+      });
+
+      if (categoryRecord) {
+        where.categoryId = categoryRecord.id;
+      }
+    }
+
     // Get total count for pagination metadata
-    const total = await db.article.count();
+    const total = await db.article.count({ where });
 
     const articles = await db.article.findMany({
+      where,
       skip,
       take: limit,
       select: {
@@ -50,10 +75,9 @@ export async function GET(request: Request) {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
-      }
+      },
     });
   } catch (error) {
-
     console.error("Haber listesi hatası:", error);
     return NextResponse.json(
       {

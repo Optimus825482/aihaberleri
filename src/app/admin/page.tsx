@@ -128,11 +128,15 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [trafficRange, setTrafficRange] = useState("30m");
 
-  // System monitor states - currently not connected to real-time logs
-  // TODO: Implement EventSource connection for real-time agent logs
-  const logs: LogMessage[] = [];
-  const executing = false;
+  // System monitor states - Real-time log streaming
+  const [logs, setLogs] = useState<LogMessage[]>([]);
+  const [executing, setExecuting] = useState(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
+  // Derived state
+  const isAgentEnabled = agentStats?.agent.enabled ?? false;
+
+  // Fetch stats on mount and when traffic range changes
   useEffect(() => {
     fetchAllStats();
   }, [trafficRange]);
@@ -160,6 +164,79 @@ export default function AdminDashboard() {
     }
   };
 
+  // Real-time log streaming connection
+  useEffect(() => {
+    // Only connect if agent is enabled
+    if (!isAgentEnabled) {
+      setLogs([]);
+      setExecuting(false);
+      return;
+    }
+
+    // Check if there's an active agent execution
+    const checkActiveExecution = async () => {
+      try {
+        const response = await fetch("/api/agent/health");
+        const data = await response.json();
+
+        if (data.executing) {
+          connectToLogStream();
+        }
+      } catch (error) {
+        console.error("Failed to check agent status:", error);
+      }
+    };
+
+    checkActiveExecution();
+
+    // Cleanup on unmount
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, [isAgentEnabled]);
+
+  const connectToLogStream = () => {
+    // Close existing connection if any
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    setExecuting(true);
+    setLogs([]);
+
+    const eventSource = new EventSource("/api/agent/stream");
+    eventSourceRef.current = eventSource;
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "complete") {
+          setExecuting(false);
+          eventSource.close();
+          eventSourceRef.current = null;
+
+          // Refresh stats after completion
+          setTimeout(() => fetchAllStats(), 1000);
+        } else {
+          setLogs((prev) => [...prev, data]);
+        }
+      } catch (error) {
+        console.error("Failed to parse log message:", error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error("EventSource error:", error);
+      setExecuting(false);
+      eventSource.close();
+      eventSourceRef.current = null;
+    };
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -172,8 +249,6 @@ export default function AdminDashboard() {
       </AdminLayout>
     );
   }
-
-  const isAgentEnabled = agentStats?.agent.enabled ?? false;
 
   return (
     <AdminLayout>

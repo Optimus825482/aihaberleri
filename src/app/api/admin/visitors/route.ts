@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getLocationFromIP, getFlagEmoji } from "@/lib/geoip";
+import { getFlagEmoji } from "@/lib/geoip";
+import { getCachedGeoIP } from "@/lib/geoip-cache";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
@@ -74,8 +75,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "IP adresi gerekli" }, { status: 400 });
     }
 
-    // Get location from IP
-    const location = await getLocationFromIP(ipAddress);
+    // Get location from IP (with cache and rate limit protection)
+    const location = await getCachedGeoIP(ipAddress);
 
     // Upsert visitor (update if exists, create if not)
     const visitor = await db.visitor.upsert({
@@ -120,7 +121,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Cleanup old visitors (called periodically)
+// Cleanup old visitors (called periodically by cron or manually)
 export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
@@ -128,21 +129,25 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
 
-    // Delete visitors older than 1 hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    // Use the cron service for cleanup
+    const { triggerVisitorCleanup } = await import("@/lib/cron");
+    const result = await triggerVisitorCleanup();
 
-    const result = await db.visitor.deleteMany({
-      where: {
-        lastActivity: {
-          lt: oneHourAgo,
+    if (result.success) {
+      return NextResponse.json({
+        success: true,
+        message: `${result.count} eski ziyaretçi silindi`,
+        count: result.count,
+      });
+    } else {
+      return NextResponse.json(
+        {
+          success: false,
+          error: result.error || "Cleanup failed",
         },
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: `${result.count} eski ziyaretçi silindi`,
-    });
+        { status: 500 },
+      );
+    }
   } catch (error) {
     console.error("Visitor cleanup error:", error);
     return NextResponse.json(
