@@ -16,7 +16,7 @@ const intlMiddleware = createMiddleware({
 
   // Always return a locale (tr as default)
   localeDetection: true,
-  
+
   // Alternative locales (fallback chain)
   alternateLinks: true,
 });
