@@ -22,7 +22,7 @@ if (!redis) {
 // Ensure Redis is connected before proceeding
 async function ensureRedisConnection() {
   if (!redis) return false;
-  
+
   try {
     console.log("🔍 Checking Redis connection...");
 
@@ -46,7 +46,6 @@ async function ensureRedisConnection() {
     return false;
   }
 }
-
 
 // Test database connection before starting worker
 async function testDatabaseConnection() {
@@ -129,23 +128,47 @@ function startWorker() {
 
         // Update job progress to prevent stalling
         await job.updateProgress(10);
+        console.log("📊 Progress: 10% - Starting agent execution...");
 
         // Execute the news agent with timeout protection
-        const AGENT_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+        const AGENT_TIMEOUT = 18 * 60 * 1000; // 18 minutes (increased from 15min)
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(
-            () => reject(new Error("Agent execution timeout (15 minutes)")),
+            () => reject(new Error("Agent execution timeout (18 minutes)")),
             AGENT_TIMEOUT,
           );
         });
 
-        result = (await Promise.race([
-          executeNewsAgent(),
-          timeoutPromise,
-        ])) as any;
+        // Progress update interval (every 2 minutes)
+        const progressInterval = setInterval(
+          async () => {
+            try {
+              const currentProgress = await job.progress;
+              if (currentProgress < 80) {
+                await job.updateProgress(Math.min(currentProgress + 10, 80));
+                console.log(
+                  `📊 Progress: ${Math.min(currentProgress + 10, 80)}% - Agent still running...`,
+                );
+              }
+            } catch (err) {
+              console.warn("⚠️ Progress update failed:", err);
+            }
+          },
+          2 * 60 * 1000,
+        ); // Every 2 minutes
+
+        try {
+          result = (await Promise.race([
+            executeNewsAgent(),
+            timeoutPromise,
+          ])) as any;
+        } finally {
+          clearInterval(progressInterval);
+        }
 
         // Mark as nearly complete
         await job.updateProgress(90);
+        console.log("📊 Progress: 90% - Agent execution completed");
 
         console.log("\n📊 Execution Summary:");
         console.log(`   Articles Scraped: ${result.articlesScraped}`);
@@ -226,11 +249,10 @@ function startWorker() {
         max: 1,
         duration: 1000, // Max 1 job per second
       },
-      lockDuration: 600000, // Lock job for 10 minutes (600000ms)
+      lockDuration: 1200000, // Lock job for 20 minutes (1200000ms) - increased from 10min
       maxStalledCount: 2, // Allow 2 stalls before failing
       stalledInterval: 60000, // Check for stalled jobs every 60 seconds
     },
-
   );
 
   // Worker event handlers

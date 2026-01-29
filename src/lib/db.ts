@@ -29,6 +29,21 @@ export const db =
             ? ["query", "error", "warn"]
             : ["error"],
         errorFormat: "pretty",
+        datasources: {
+          db: {
+            url: process.env.DATABASE_URL,
+          },
+        },
+        // Connection pool settings for long-running operations
+        // Prevents "Connection closed" errors during agent execution
+        __internal: {
+          engine: {
+            // Connection timeout: 20 minutes (for long-running agent jobs)
+            connection_timeout: 1200,
+            // Pool timeout: 20 minutes
+            pool_timeout: 1200,
+          },
+        } as any,
       }));
 
 // Robust cleanup and connection handling
