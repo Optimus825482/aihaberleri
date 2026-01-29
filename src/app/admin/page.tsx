@@ -126,29 +126,16 @@ export default function AdminDashboard() {
   );
   const [agentStats, setAgentStats] = useState<AgentStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [executing, setExecuting] = useState(false);
-  const [logs, setLogs] = useState<LogMessage[]>([]);
   const [trafficRange, setTrafficRange] = useState("30m");
-  const logsEndRef = useRef<HTMLDivElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
+
+  // System monitor states - currently not connected to real-time logs
+  // TODO: Implement EventSource connection for real-time agent logs
+  const logs: LogMessage[] = [];
+  const executing = false;
 
   useEffect(() => {
     fetchAllStats();
   }, [trafficRange]);
-
-  // Auto-scroll logs to bottom
-  useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [logs]);
-
-  // Cleanup EventSource on unmount
-  useEffect(() => {
-    return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-    };
-  }, []);
 
   const fetchAllStats = async () => {
     try {
@@ -173,24 +160,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const deleteArticle = async (id: string) => {
-    if (!confirm("Bu haberi silmek istediğinize emin misiniz?")) return;
-
-    try {
-      const response = await fetch(`/api/admin/articles/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        fetchAllStats();
-      } else {
-        alert("Haber silinemedi");
-      }
-    } catch (error) {
-      alert("Bir hata oluştu");
-    }
-  };
-
   if (loading) {
     return (
       <AdminLayout>
@@ -209,61 +178,130 @@ export default function AdminDashboard() {
   return (
     <AdminLayout>
       <div className="space-y-8">
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground">
-              Command <span className="text-primary italic">Center</span>
-            </h1>
-            <p className="text-muted-foreground">
-              Sistem durumu ve otonom operasyon takibi
-            </p>
+        {/* Header Section - Enhanced */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-purple-500/5 to-transparent border border-primary/20 p-8 mb-2">
+          {/* Animated Background Elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-1 bg-gradient-to-b from-primary to-purple-500 rounded-full" />
+                <div>
+                  <h1 className="text-4xl font-black tracking-tighter text-foreground flex items-center gap-2">
+                    Command{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500 italic">
+                      Center
+                    </span>
+                  </h1>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">
+                    Sistem durumu ve otonom operasyon takibi
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="flex items-center gap-2">
+              <Link href="/admin/create">
+                <Button className="font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Yeni Haber
+                </Button>
+              </Link>
+              <Link href="/admin/settings">
+                <Button
+                  variant="outline"
+                  className="font-bold border-primary/20 hover:bg-primary/10"
+                >
+                  <SettingsIcon className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* Stats Highlight Cards */}
+        {/* Stats Highlight Cards - Enhanced with Glassmorphism */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {[
             {
               label: "Toplam Haber",
               value: dashboardStats?.metrics.totalArticles,
               icon: FileText,
-              color: "text-blue-500",
+              gradient: "from-blue-500/20 to-blue-600/10",
+              iconBg: "bg-blue-500/10",
+              iconColor: "text-blue-500",
+              border: "border-blue-500/20",
             },
             {
               label: "Görüntülenme",
               value: dashboardStats?.metrics.totalViews.toLocaleString("tr-TR"),
               icon: Eye,
-              color: "text-purple-500",
+              gradient: "from-purple-500/20 to-purple-600/10",
+              iconBg: "bg-purple-500/10",
+              iconColor: "text-purple-500",
+              border: "border-purple-500/20",
             },
             {
               label: "Bugün Eklenen",
               value: dashboardStats?.metrics.todayArticles,
               icon: TrendingUp,
-              color: "text-green-500",
+              gradient: "from-green-500/20 to-green-600/10",
+              iconBg: "bg-green-500/10",
+              iconColor: "text-green-500",
+              border: "border-green-500/20",
             },
             {
               label: "Yayında",
               value: dashboardStats?.metrics.publishedArticles,
               icon: Activity,
-              color: "text-blue-400",
+              gradient: "from-cyan-500/20 to-cyan-600/10",
+              iconBg: "bg-cyan-500/10",
+              iconColor: "text-cyan-500",
+              border: "border-cyan-500/20",
             },
             {
               label: "Taslak",
               value: dashboardStats?.metrics.draftArticles,
               icon: FileText,
-              color: "text-orange-500",
+              gradient: "from-orange-500/20 to-orange-600/10",
+              iconBg: "bg-orange-500/10",
+              iconColor: "text-orange-500",
+              border: "border-orange-500/20",
             },
           ].map((stat, i) => (
-            <Card key={i} className="bg-card/40 border-primary/10 shadow-sm">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <Card
+              key={i}
+              className={`relative overflow-hidden backdrop-blur-sm bg-gradient-to-br ${stat.gradient} border ${stat.border} hover:scale-105 transition-all duration-300 group cursor-pointer`}
+            >
+              {/* Glow Effect on Hover */}
+              <div
+                className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity blur-xl`}
+              />
+
+              <CardContent className="p-5 relative z-10">
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
                     {stat.label}
                   </span>
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                  <div
+                    className={`p-2 ${stat.iconBg} rounded-lg group-hover:scale-110 transition-transform`}
+                  >
+                    <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+                  </div>
                 </div>
-                <div className="text-2xl font-black">{stat.value || 0}</div>
+                <div className="text-3xl font-black tabular-nums">
+                  {stat.value || 0}
+                </div>
+
+                {/* Animated Progress Bar */}
+                <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full bg-gradient-to-r ${stat.gradient} animate-pulse`}
+                    style={{ width: "70%" }}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}

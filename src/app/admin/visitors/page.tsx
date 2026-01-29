@@ -110,84 +110,147 @@ export default function VisitorsPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight">
-              Anlık <span className="text-primary italic">Ziyaretçiler</span>
-            </h1>
-            <p className="text-muted-foreground">
-              Son 5 dakikadaki aktif kullanıcılar • Otomatik güncelleme: 10sn
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-sm font-bold text-green-500">CANLI</span>
+      <div className="space-y-8">
+        {/* Header - Cyberpunk Style */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-transparent border border-green-500/20 p-8">
+          {/* Animated Background */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-green-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-1 bg-gradient-to-b from-green-500 to-emerald-500 rounded-full" />
+                <div>
+                  <h1 className="text-4xl font-black tracking-tighter text-foreground flex items-center gap-2">
+                    Anlık{" "}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-500 italic">
+                      Ziyaretçiler
+                    </span>
+                  </h1>
+                  <p className="text-sm text-muted-foreground font-medium mt-1">
+                    Son 5 dakikadaki aktif kullanıcılar • Otomatik güncelleme:
+                    10sn
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Indicator */}
+            <div className="flex items-center gap-3 bg-green-500/10 px-6 py-3 rounded-full border border-green-500/20">
+              <div className="relative">
+                <div className="w-3 h-3 bg-green-500 rounded-full relative z-10" />
+                <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+              </div>
+              <span className="text-sm font-black text-green-500 uppercase tracking-wider">
+                CANLI
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Enhanced Glassmorphism */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
               label: "Aktif Ziyaretçi",
               value: data?.stats.active || 0,
               icon: Activity,
-              color: "text-green-500",
+              gradient: "from-green-500/20 to-green-600/10",
+              iconBg: "bg-green-500/10",
+              iconColor: "text-green-500",
+              border: "border-green-500/20",
             },
             {
               label: "Toplam Ziyaretçi",
               value: data?.stats.total || 0,
               icon: Users,
-              color: "text-blue-500",
+              gradient: "from-blue-500/20 to-blue-600/10",
+              iconBg: "bg-blue-500/10",
+              iconColor: "text-blue-500",
+              border: "border-blue-500/20",
             },
             {
               label: "Farklı Ülke",
               value: data?.stats.uniqueCountries || 0,
               icon: Globe,
-              color: "text-purple-500",
+              gradient: "from-purple-500/20 to-purple-600/10",
+              iconBg: "bg-purple-500/10",
+              iconColor: "text-purple-500",
+              border: "border-purple-500/20",
             },
           ].map((stat, i) => (
-            <Card key={i} className="bg-card/40 border-primary/10">
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <Card
+              key={i}
+              className={`relative overflow-hidden backdrop-blur-sm bg-gradient-to-br ${stat.gradient} border ${stat.border} hover:scale-105 transition-all duration-300 group cursor-pointer`}
+            >
+              {/* Glow Effect */}
+              <div
+                className={`absolute inset-0 ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity blur-xl`}
+              />
+
+              <CardContent className="p-5 relative z-10">
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
                     {stat.label}
                   </span>
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                  <div
+                    className={`p-2 ${stat.iconBg} rounded-lg group-hover:scale-110 transition-transform`}
+                  >
+                    <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+                  </div>
                 </div>
-                <div className="text-2xl font-black">{stat.value}</div>
+                <div className="text-3xl font-black tabular-nums">
+                  {stat.value}
+                </div>
+
+                {/* Animated Progress Bar */}
+                <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full bg-gradient-to-r ${stat.gradient} animate-pulse`}
+                    style={{ width: "70%" }}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Visitors List */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-black">
-              Aktif Ziyaretçiler
-            </CardTitle>
-            <CardDescription>
-              {data?.visitors.length || 0} aktif kullanıcı
-            </CardDescription>
+        {/* Visitors List - Enhanced */}
+        <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl" />
+          <CardHeader className="relative z-10">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-green-500/10 rounded-xl">
+                <Users className="h-4 w-4 text-green-500" />
+              </div>
+              <div>
+                <CardTitle className="text-lg font-black uppercase tracking-tight">
+                  Aktif Ziyaretçiler
+                </CardTitle>
+                <CardDescription className="text-[10px] font-bold uppercase opacity-60">
+                  {data?.visitors.length || 0} aktif kullanıcı
+                </CardDescription>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="relative z-10">
             <div className="space-y-3">
               {data?.visitors.map((visitor) => (
                 <div
                   key={visitor.id}
-                  className="flex items-center gap-4 p-4 border rounded-lg hover:border-primary/50 transition-colors"
+                  className="flex items-center gap-4 p-4 border border-white/10 rounded-xl hover:border-green-500/50 hover:bg-white/5 transition-all duration-300 group"
                 >
                   {/* Flag & Location */}
                   <div className="flex items-center gap-3 min-w-[200px]">
-                    <span className="text-3xl">{visitor.flag}</span>
+                    <span className="text-3xl group-hover:scale-110 transition-transform">
+                      {visitor.flag}
+                    </span>
                     <div>
-                      <p className="font-bold text-sm">
+                      <p className="font-bold text-sm group-hover:text-green-500 transition-colors">
                         {visitor.location || "Unknown"}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground font-mono">
                         {visitor.ipAddress}
                       </p>
                     </div>
@@ -195,29 +258,37 @@ export default function VisitorsPage() {
 
                   {/* Current Page */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold uppercase text-muted-foreground mb-1">
+                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-wider">
                       Sayfa
                     </p>
-                    <p className="text-sm truncate">{visitor.currentPage}</p>
+                    <p className="text-sm truncate font-medium">
+                      {visitor.currentPage}
+                    </p>
                   </div>
 
                   {/* Device & Browser */}
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-white/20 bg-white/5"
+                    >
                       <Monitor className="h-3 w-3 mr-1" />
                       {getDeviceType(visitor.userAgent)}
                     </Badge>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-white/20 bg-white/5"
+                    >
                       {getBrowser(visitor.userAgent)}
                     </Badge>
                   </div>
 
                   {/* Last Activity */}
                   <div className="text-right min-w-[80px]">
-                    <p className="text-xs font-bold uppercase text-muted-foreground mb-1">
+                    <p className="text-[10px] font-black uppercase text-muted-foreground mb-1 tracking-wider">
                       Son Aktivite
                     </p>
-                    <p className="text-sm font-bold text-green-500">
+                    <p className="text-sm font-black text-green-500 tabular-nums">
                       {getTimeAgo(visitor.lastActivity)}
                     </p>
                   </div>
@@ -225,10 +296,16 @@ export default function VisitorsPage() {
               ))}
 
               {data?.visitors.length === 0 && (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <p className="text-muted-foreground">
+                <div className="text-center py-16">
+                  <div className="relative inline-block">
+                    <Users className="h-16 w-16 mx-auto text-muted-foreground/20 mb-4" />
+                    <div className="absolute inset-0 bg-muted-foreground/10 blur-xl" />
+                  </div>
+                  <p className="text-muted-foreground font-bold">
                     Şu anda aktif ziyaretçi yok
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Sayfa otomatik olarak güncelleniyor...
                   </p>
                 </div>
               )}
@@ -236,18 +313,26 @@ export default function VisitorsPage() {
           </CardContent>
         </Card>
 
-        {/* Country Distribution */}
+        {/* Country Distribution - Enhanced */}
         {data && data.visitors.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-black">
-                Ülke Dağılımı
-              </CardTitle>
-              <CardDescription>
-                Aktif ziyaretçilerin ülkelere göre dağılımı
-              </CardDescription>
+          <Card className="border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-transparent overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/5 rounded-full blur-3xl" />
+            <CardHeader className="relative z-10">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-violet-500/10 rounded-xl">
+                  <Globe className="h-4 w-4 text-violet-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-black uppercase tracking-tight">
+                    Ülke Dağılımı
+                  </CardTitle>
+                  <CardDescription className="text-[10px] font-bold uppercase opacity-60">
+                    Aktif ziyaretçilerin ülkelere göre dağılımı
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="relative z-10">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {Object.entries(
                   data.visitors.reduce(
@@ -265,14 +350,16 @@ export default function VisitorsPage() {
                   .map(([country, count]) => (
                     <div
                       key={country}
-                      className="flex items-center gap-3 p-3 border rounded-lg"
+                      className="flex items-center gap-3 p-4 border border-white/10 rounded-xl hover:border-violet-500/50 hover:bg-white/5 transition-all duration-300 group"
                     >
-                      <span className="text-2xl">{country.split(" ")[0]}</span>
+                      <span className="text-3xl group-hover:scale-110 transition-transform">
+                        {country.split(" ")[0]}
+                      </span>
                       <div className="flex-1">
-                        <p className="text-sm font-bold">
+                        <p className="text-sm font-bold group-hover:text-violet-500 transition-colors">
                           {country.split(" ").slice(1).join(" ")}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground font-mono">
                           {count} ziyaretçi
                         </p>
                       </div>

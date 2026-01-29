@@ -53,14 +53,17 @@ export function CountryBarChart({ data }: CountryBarChartProps) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
-        Veri yok
+      <div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground">
+        <div className="w-16 h-16 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin mb-4" />
+        <p className="text-xs font-bold uppercase tracking-wider">
+          Veri Yükleniyor...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3.5">
       {data.slice(0, 6).map((item, index) => {
         const percentage =
           total > 0 ? Math.round((item.value / total) * 100) : 0;
@@ -68,23 +71,42 @@ export function CountryBarChart({ data }: CountryBarChartProps) {
         const flag = FLAG_MAP[item.name] || "🌍";
 
         return (
-          <div key={item.name} className="group">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{flag}</span>
-                <span className="text-sm font-semibold text-foreground/80 group-hover:text-foreground transition-colors">
+          <div
+            key={item.name}
+            className="group hover:bg-white/5 rounded-lg px-3 py-2 -mx-3 transition-all duration-300 cursor-pointer border border-transparent hover:border-emerald-500/20"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <span className="text-xl group-hover:scale-110 transition-transform">
+                  {flag}
+                </span>
+                <span className="text-sm font-bold text-foreground/70 group-hover:text-foreground transition-colors">
                   {item.name}
                 </span>
               </div>
-              <span className="text-xs font-bold text-muted-foreground">
-                {item.value} ({percentage}%)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-emerald-500 tabular-nums">
+                  {item.value}
+                </span>
+                <span className="text-[10px] font-bold text-muted-foreground">
+                  ({percentage}%)
+                </span>
+              </div>
             </div>
-            <div className="h-2 bg-secondary/50 rounded-full overflow-hidden">
+            <div className="relative h-2.5 bg-white/5 rounded-full overflow-hidden border border-white/10">
+              {/* Background glow */}
               <div
-                className={`h-full ${COLORS[index % COLORS.length]} rounded-full transition-all duration-500 ease-out`}
+                className={`absolute inset-0 ${COLORS[index % COLORS.length]} opacity-20 blur-sm`}
                 style={{ width: `${width}%` }}
               />
+              {/* Actual bar */}
+              <div
+                className={`relative h-full ${COLORS[index % COLORS.length]} rounded-full transition-all duration-700 ease-out group-hover:brightness-125`}
+                style={{ width: `${width}%` }}
+              >
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-gradient" />
+              </div>
             </div>
           </div>
         );

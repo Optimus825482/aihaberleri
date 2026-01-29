@@ -145,13 +145,25 @@ export default function AnalyticsPage() {
   return (
     <AdminLayout>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">
-            Okuyucu <span className="text-primary italic">Analitiği</span>
-          </h1>
-          <p className="text-muted-foreground">
-            Ziyaretçi davranışı ve içerik performansı
-          </p>
+        {/* Header - Cyberpunk Style */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-transparent border border-blue-500/20 p-8">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-12 w-1 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
+              <h1 className="text-4xl font-black tracking-tighter">
+                Okuyucu{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-500 italic">
+                  Analitiği
+                </span>
+              </h1>
+            </div>
+            <p className="text-sm text-muted-foreground font-medium ml-4">
+              Ziyaretçi davranışı ve içerik performansı
+            </p>
+          </div>
         </div>
 
         {/* Metrics Cards */}
