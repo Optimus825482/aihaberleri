@@ -148,6 +148,16 @@ function startWorker() {
         console.error("❌ Agent execution error:", error);
         // Even if failed, we should try to schedule next
       } finally {
+        // CRITICAL: Disconnect after each job to prevent connection leaks
+        try {
+          await (db as PrismaClient).$disconnect();
+          console.log("🔌 Database connection closed");
+        } catch (disconnectError) {
+          console.error(
+            "⚠️ Error disconnecting from database:",
+            disconnectError,
+          );
+        }
         // Always attempt to schedule next execution
         try {
           const enabledSetting = await db.setting.findUnique({
@@ -231,10 +241,21 @@ function startWorker() {
   console.log("👂 Listening for jobs on queue: news-agent");
   console.log("📊 Worker stats will be logged here...\n");
 
+  // Worker closing event
+  worker.on("closing", async () => {
+    console.log("🔄 Worker closing, disconnecting from database...");
+    try {
+      await (db as PrismaClient).$disconnect();
+    } catch (error) {
+      console.error("⚠️ Error disconnecting during worker close:", error);
+    }
+  });
+
   // Graceful shutdown
   process.on("SIGTERM", async () => {
     console.log("\n🛑 SIGTERM received, closing worker...");
     await worker.close();
+    await (db as PrismaClient).$disconnect();
     await redis.quit();
     process.exit(0);
   });
@@ -242,6 +263,7 @@ function startWorker() {
   process.on("SIGINT", async () => {
     console.log("\n🛑 SIGINT received, closing worker...");
     await worker.close();
+    await (db as PrismaClient).$disconnect();
     await redis.quit();
     process.exit(0);
   });

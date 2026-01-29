@@ -33,8 +33,24 @@ export const db =
 
 // Robust cleanup and connection handling
 if (process.env.NODE_ENV === "production") {
+  // Graceful shutdown on process exit
   process.on("beforeExit", async () => {
+    console.log("🔄 Process exiting, disconnecting from database...");
     await (db as PrismaClient).$disconnect();
+  });
+
+  // Handle SIGTERM (Docker/Kubernetes shutdown)
+  process.on("SIGTERM", async () => {
+    console.log("📛 SIGTERM received, closing database connection...");
+    await (db as PrismaClient).$disconnect();
+    process.exit(0);
+  });
+
+  // Handle SIGINT (Ctrl+C)
+  process.on("SIGINT", async () => {
+    console.log("📛 SIGINT received, closing database connection...");
+    await (db as PrismaClient).$disconnect();
+    process.exit(0);
   });
 }
 
