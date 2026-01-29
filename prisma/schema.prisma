@@ -309,12 +309,19 @@ model Visitor {
   countryCode  String?
   city         String?
   region       String?
+  isp          String?
+  latitude     Float?
+  longitude    Float?
+  timezone     String?
+  provider     String?
   lastActivity DateTime @default(now())
   createdAt    DateTime @default(now())
 
   @@index([ipAddress])
   @@index([lastActivity])
   @@index([createdAt])
+  @@index([country])
+  @@index([city])
 }
 
 model AuditLog {

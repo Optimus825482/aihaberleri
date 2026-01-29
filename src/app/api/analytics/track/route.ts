@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { headers } from "next/headers";
-import { getClientIP, getLocationFromIP } from "@/lib/geoip";
+import { getGeolocation } from "@/lib/geolocation";
 
 export async function POST(request: Request) {
   try {
@@ -16,17 +16,18 @@ export async function POST(request: Request) {
     }
 
     // Get client IP
-    const ip = getClientIP(request);
-
     const headersList = await headers();
+    const forwarded = headersList.get("x-forwarded-for");
+    const realIp = headersList.get("x-real-ip");
+    const ip = forwarded?.split(",")[0] || realIp || "127.0.0.1";
     const userAgent = headersList.get("user-agent") || "unknown";
 
-    // Get location from IP (async, non-blocking)
+    // Get location from IP (dual-provider: ipwho.is + ip-api.com)
     let locationData = null;
     try {
-      locationData = await getLocationFromIP(ip);
+      locationData = await getGeolocation(ip);
     } catch (geoError) {
-      console.warn("GeoIP lookup failed:", geoError);
+      console.warn("[TRACK] GeoIP lookup failed:", geoError);
       // Continue without location data
     }
 
@@ -41,8 +42,8 @@ export async function POST(request: Request) {
         countryCode: locationData?.countryCode || null,
         region: locationData?.region || null,
         city: locationData?.city || null,
-        latitude: locationData?.lat || null,
-        longitude: locationData?.lon || null,
+        latitude: locationData?.latitude || null,
+        longitude: locationData?.longitude || null,
       },
     });
 

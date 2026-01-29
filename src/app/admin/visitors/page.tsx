@@ -21,6 +21,11 @@ interface Visitor {
   countryCode: string | null;
   city: string | null;
   region: string | null;
+  isp: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  timezone: string | null;
+  provider: string | null;
   lastActivity: string;
   createdAt: string;
   flag: string;
@@ -207,8 +212,7 @@ export default function VisitorsPage() {
                 {/* Animated Progress Bar */}
                 <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
                   <div
-                    className={`h-full bg-gradient-to-r ${stat.gradient} animate-pulse`}
-                    style={{ width: "70%" }}
+                    className={`h-full bg-gradient-to-r ${stat.gradient} animate-pulse w-[70%]`}
                   />
                 </div>
               </CardContent>
@@ -242,7 +246,7 @@ export default function VisitorsPage() {
                   className="flex items-center gap-4 p-4 border border-white/10 rounded-xl hover:border-green-500/50 hover:bg-white/5 transition-all duration-300 group"
                 >
                   {/* Flag & Location */}
-                  <div className="flex items-center gap-3 min-w-[200px]">
+                  <div className="flex items-center gap-3 min-w-[220px]">
                     <span className="text-3xl group-hover:scale-110 transition-transform">
                       {visitor.flag}
                     </span>
@@ -253,6 +257,12 @@ export default function VisitorsPage() {
                       <p className="text-xs text-muted-foreground font-mono">
                         {visitor.ipAddress}
                       </p>
+                      {visitor.isp && (
+                        <p className="text-[10px] text-violet-500 font-medium mt-0.5 flex items-center gap-1">
+                          <Globe className="h-2.5 w-2.5" />
+                          {visitor.isp}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -264,6 +274,11 @@ export default function VisitorsPage() {
                     <p className="text-sm truncate font-medium">
                       {visitor.currentPage}
                     </p>
+                    {visitor.timezone && (
+                      <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                        🕐 {visitor.timezone}
+                      </p>
+                    )}
                   </div>
 
                   {/* Device & Browser */}
@@ -281,6 +296,15 @@ export default function VisitorsPage() {
                     >
                       {getBrowser(visitor.userAgent)}
                     </Badge>
+                    {visitor.provider && (
+                      <Badge
+                        variant="outline"
+                        className="text-xs border-green-500/30 bg-green-500/10 text-green-500"
+                        title={`Geolocation provider: ${visitor.provider}`}
+                      >
+                        {visitor.provider === "ipwho" ? "🔍 ipwho" : "⚡ ip-api"}
+                      </Badge>
+                    )}
                   </div>
 
                   {/* Last Activity */}

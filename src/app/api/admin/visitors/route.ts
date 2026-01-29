@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getFlagEmoji } from "@/lib/geoip";
-import { getCachedGeoIP } from "@/lib/geoip-cache";
+import { getGeolocation } from "@/lib/geolocation";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
+
+// Helper function to get flag emoji from country code
+function getFlagEmoji(countryCode: string): string {
+  if (!countryCode || countryCode === "XX") return "🌍";
+  const codePoints = countryCode
+    .toUpperCase()
+    .split("")
+    .map((char) => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -75,8 +84,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "IP adresi gerekli" }, { status: 400 });
     }
 
-    // Get location from IP (with cache and rate limit protection)
-    const location = await getCachedGeoIP(ipAddress);
+    // Get location from IP (dual-provider: ipwho.is + ip-api.com)
+    const location = await getGeolocation(ipAddress);
 
     // Upsert visitor (update if exists, create if not)
     const visitor = await db.visitor.upsert({
@@ -90,6 +99,11 @@ export async function POST(request: NextRequest) {
           countryCode: location.countryCode,
           city: location.city,
           region: location.region,
+          isp: location.isp,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          timezone: location.timezone,
+          provider: location.provider,
         }),
       },
       create: {
@@ -101,6 +115,11 @@ export async function POST(request: NextRequest) {
           countryCode: location.countryCode,
           city: location.city,
           region: location.region,
+          isp: location.isp,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          timezone: location.timezone,
+          provider: location.provider,
         }),
       },
     });
