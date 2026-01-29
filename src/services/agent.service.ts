@@ -170,49 +170,59 @@ export async function executeNewsAgent(
     const duration = Math.floor((Date.now() - startTime) / 1000);
     const status = articlesCreated > 0 ? "PARTIAL" : "FAILED";
 
-    // Get email settings
-    const emailSettings = await db.setting.findMany({
-      where: { key: { in: ["agent.emailNotifications", "agent.adminEmail"] } },
-    });
-    const emailNotify =
-      emailSettings.find((s) => s.key === "agent.emailNotifications")?.value !==
-      "false";
-    const adminEmail =
-      emailSettings.find((s) => s.key === "agent.adminEmail")?.value ||
-      "ikinciyenikitap54@gmail.com";
-
-    // Send email report
-    if (emailNotify) {
-      try {
-        const articlesWithTitles = await db.article.findMany({
-          where: { id: { in: publishedArticles.map((a) => a.id) } },
-          select: { title: true, slug: true },
-        });
-
-        await emailService.sendAgentReport(adminEmail, {
+    // CRITICAL: Always update agent log, even if other operations fail
+    try {
+      await db.agentLog.update({
+        where: { id: agentLog.id },
+        data: {
           status,
           articlesCreated,
           articlesScraped,
           duration,
           errors,
-          publishedArticles: articlesWithTitles,
-        });
-      } catch (e) {
-        console.error("Failed to send agent failure email:", e);
-      }
+        },
+      });
+    } catch (logError) {
+      console.error("❌ CRITICAL: Failed to update agent log:", logError);
     }
 
-    // Update agent log
-    await db.agentLog.update({
-      where: { id: agentLog.id },
-      data: {
-        status,
-        articlesCreated,
-        articlesScraped,
-        duration,
-        errors,
-      },
-    });
+    // Get email settings
+    try {
+      const emailSettings = await db.setting.findMany({
+        where: {
+          key: { in: ["agent.emailNotifications", "agent.adminEmail"] },
+        },
+      });
+      const emailNotify =
+        emailSettings.find((s) => s.key === "agent.emailNotifications")
+          ?.value !== "false";
+      const adminEmail =
+        emailSettings.find((s) => s.key === "agent.adminEmail")?.value ||
+        "ikinciyenikitap54@gmail.com";
+
+      // Send email report
+      if (emailNotify) {
+        try {
+          const articlesWithTitles = await db.article.findMany({
+            where: { id: { in: publishedArticles.map((a) => a.id) } },
+            select: { title: true, slug: true },
+          });
+
+          await emailService.sendAgentReport(adminEmail, {
+            status,
+            articlesCreated,
+            articlesScraped,
+            duration,
+            errors,
+            publishedArticles: articlesWithTitles,
+          });
+        } catch (e) {
+          console.error("Failed to send agent failure email:", e);
+        }
+      }
+    } catch (emailError) {
+      console.error("❌ Failed to send error notification:", emailError);
+    }
 
     return {
       success: false,

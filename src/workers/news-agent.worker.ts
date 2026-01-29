@@ -127,8 +127,19 @@ function startWorker() {
         // Update job progress to prevent stalling
         await job.updateProgress(10);
 
-        // Execute the news agent
-        result = await executeNewsAgent();
+        // Execute the news agent with timeout protection
+        const AGENT_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(
+            () => reject(new Error("Agent execution timeout (15 minutes)")),
+            AGENT_TIMEOUT,
+          );
+        });
+
+        result = (await Promise.race([
+          executeNewsAgent(),
+          timeoutPromise,
+        ])) as any;
 
         // Mark as nearly complete
         await job.updateProgress(90);
@@ -146,7 +157,15 @@ function startWorker() {
         }
       } catch (error) {
         console.error("❌ Agent execution error:", error);
-        // Even if failed, we should try to schedule next
+        // Create a failed result object
+        result = {
+          success: false,
+          articlesCreated: 0,
+          articlesScraped: 0,
+          duration: 0,
+          errors: [error instanceof Error ? error.message : "Unknown error"],
+          publishedArticles: [],
+        };
       } finally {
         // CRITICAL: Disconnect after each job to prevent connection leaks
         try {
@@ -380,6 +399,22 @@ function startWorker() {
   // Keep the process running
   process.stdin.resume();
 }
+
+// Global error handlers to prevent crashes
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ Unhandled Rejection at:", promise);
+  console.error("❌ Reason:", reason);
+  // Don't exit - log and continue
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("❌ Uncaught Exception:", error);
+  // Don't exit immediately - give time to log
+  setTimeout(() => {
+    console.error("❌ Exiting due to uncaught exception");
+    process.exit(1);
+  }, 1000);
+});
 
 // Start initialization
 initializeWorker().catch((error) => {
