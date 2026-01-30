@@ -98,20 +98,16 @@ COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json* ./
 # Copy sharp from builder (already installed with correct architecture)
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
 
-# Copy Socket.io dependencies for custom server.js
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/socket.io ./node_modules/socket.io
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/socket.io-client ./node_modules/socket.io-client
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/socket.io-parser ./node_modules/socket.io-parser
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/engine.io ./node_modules/engine.io
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/engine.io-parser ./node_modules/engine.io-parser
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/ws ./node_modules/ws
-
 # Copy scripts and necessary node_modules for runtime scripts (Agent worker etc)
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 
 # Specialized copy for tools used in scripts
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/esbuild ./node_modules/esbuild
+
+# Install Socket.io with all dependencies in production mode
+# This ensures all transitive dependencies are included
+RUN npm install --omit=dev socket.io@4.8.1 socket.io-client@4.8.1
 
 USER nextjs
 
