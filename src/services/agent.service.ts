@@ -8,12 +8,15 @@
 
 import { db } from "@/lib/db";
 import { fetchAINews } from "./news.service";
+import { agentLogger } from "@/lib/logger";
+import { trackAgentExecution } from "@/lib/sentry";
 import {
   selectBestArticles,
   processAndPublishArticles,
 } from "./content.service";
 import { emailService } from "@/lib/email";
 import { getRedis } from "@/lib/redis";
+import { emitToAdmin, SocketEvents } from "@/lib/socket";
 
 export interface AgentExecutionResult {
   success: boolean;
@@ -48,7 +51,9 @@ async function updateJobProgress(
     }
   } catch (error) {
     // Non-critical, just log
-    console.error("Failed to update job progress:", error);
+    agentLogger.error(agentLogId, error as Error, {
+      context: "update_job_progress",
+    });
   }
 }
 
@@ -75,9 +80,14 @@ export async function executeNewsAgent(
     },
   });
 
-  console.log(
-    `🤖 Agent çalıştırması başladı (Log ID: ${agentLog.id}${categorySlug ? `, Kategori: ${categorySlug}` : ""})`,
-  );
+  agentLogger.start(agentLog.id, categorySlug);
+
+  // Emit agent started event
+  emitToAdmin(SocketEvents.AGENT_STARTED, {
+    timestamp: new Date().toISOString(),
+    logId: agentLog.id,
+    categorySlug: categorySlug || null,
+  });
 
   console.log(`
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
@@ -91,6 +101,12 @@ export async function executeNewsAgent(
 
   try {
     // Step 1: Search for AI news (RSS + Trend Analysis)
+    agentLogger.step(
+      agentLog.id,
+      "fetch_news",
+      "Yapay zeka haberleri aranıyor (RSS + Trend)",
+      20,
+    );
     console.log("📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...");
     await updateJobProgress(
       agentLog.id,
@@ -98,6 +114,13 @@ export async function executeNewsAgent(
       "Yapay zeka haberleri toplanıyor...",
       20,
     );
+
+    // Emit progress
+    emitToAdmin(SocketEvents.AGENT_PROGRESS, {
+      step: "fetching",
+      message: "Yapay zeka haberleri toplanıyor (RSS + Trend)...",
+      progress: 20,
+    });
 
     const newsArticles = await fetchAINews(categorySlug);
     articlesScraped = newsArticles.length;
@@ -108,6 +131,12 @@ export async function executeNewsAgent(
     }
 
     // Step 2: Select best articles
+    agentLogger.step(
+      agentLog.id,
+      "analyze_articles",
+      "En iyi haberler seçiliyor (DeepSeek AI)",
+      40,
+    );
     console.log("🎯 Adım 2: En iyi haberler seçiliyor...");
     await updateJobProgress(
       agentLog.id,
@@ -115,6 +144,13 @@ export async function executeNewsAgent(
       "En iyi haberler seçiliyor (DeepSeek AI)...",
       40,
     );
+
+    // Emit progress
+    emitToAdmin(SocketEvents.AGENT_PROGRESS, {
+      step: "analyzing",
+      message: "En iyi haberler seçiliyor (DeepSeek AI)...",
+      progress: 40,
+    });
 
     const minArticles = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "2");
     const maxArticles = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "3");
@@ -128,6 +164,12 @@ export async function executeNewsAgent(
     console.log(`✅ ${selectedArticles.length} haber seçildi`);
 
     // Step 3: Process and publish articles
+    agentLogger.step(
+      agentLog.id,
+      "process_articles",
+      "Haberler yeniden yazılıyor ve görseller oluşturuluyor",
+      60,
+    );
     console.log("⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...");
     await updateJobProgress(
       agentLog.id,
@@ -135,6 +177,13 @@ export async function executeNewsAgent(
       "Haberler yeniden yazılıyor ve görseller oluşturuluyor...",
       60,
     );
+
+    // Emit progress
+    emitToAdmin(SocketEvents.AGENT_PROGRESS, {
+      step: "processing",
+      message: "Haberler yeniden yazılıyor ve görseller oluşturuluyor...",
+      progress: 60,
+    });
 
     const published = await processAndPublishArticles(
       selectedArticles,
@@ -145,12 +194,28 @@ export async function executeNewsAgent(
     publishedArticles.push(...published);
     console.log(`✅ ${articlesCreated} haber yayınlandı`);
 
+    // Emit article published events
+    for (const article of published) {
+      emitToAdmin(SocketEvents.ARTICLE_PUBLISHED, {
+        id: article.id,
+        slug: article.slug,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     await updateJobProgress(
       agentLog.id,
       "publishing",
       "Haberler veritabanına kaydediliyor...",
       80,
     );
+
+    // Emit progress
+    emitToAdmin(SocketEvents.AGENT_PROGRESS, {
+      step: "publishing",
+      message: "Haberler veritabanına kaydediliyor...",
+      progress: 80,
+    });
 
     const duration = Math.floor((Date.now() - startTime) / 1000);
     const status = articlesCreated > 0 ? "SUCCESS" : "PARTIAL";
@@ -229,6 +294,31 @@ export async function executeNewsAgent(
       100,
     );
 
+    // Emit completion event
+    emitToAdmin(SocketEvents.AGENT_COMPLETED, {
+      articlesCreated,
+      articlesScraped,
+      duration,
+      timestamp: new Date().toISOString(),
+      logId: agentLog.id,
+    });
+
+    agentLogger.complete(agentLog.id, {
+      success: true,
+      articlesCreated,
+      articlesScraped,
+      duration,
+      errors,
+    });
+
+    // Track in Sentry for monitoring
+    trackAgentExecution(agentLog.id, {
+      success: true,
+      articlesCreated,
+      duration,
+      errors,
+    });
+
     console.log(`✅ Agent çalıştırması ${duration}s içinde tamamlandı`);
 
     console.log(`
@@ -255,9 +345,34 @@ export async function executeNewsAgent(
     const errorMessage =
       error instanceof Error ? error.message : "Bilinmeyen hata";
     errors.push(errorMessage);
-    console.error("❌ Agent çalıştırması başarısız:", error);
 
     const duration = Math.floor((Date.now() - startTime) / 1000);
+
+    // Emit failure event
+    emitToAdmin(SocketEvents.AGENT_FAILED, {
+      error: errorMessage,
+      logId: agentLog.id,
+      timestamp: new Date().toISOString(),
+      articlesCreated,
+      duration,
+    });
+
+    agentLogger.error(agentLog.id, error as Error, {
+      articlesCreated,
+      articlesScraped,
+      duration,
+    });
+
+    // Track in Sentry
+    trackAgentExecution(agentLog.id, {
+      success: false,
+      articlesCreated,
+      duration,
+      errors,
+    });
+
+    console.error("❌ Agent çalıştırması başarısız:", error);
+
     const status = articlesCreated > 0 ? "PARTIAL" : "FAILED";
 
     // CRITICAL: Always update agent log, even if other operations fail
@@ -273,6 +388,9 @@ export async function executeNewsAgent(
         },
       });
     } catch (logError) {
+      agentLogger.error(agentLog.id, logError as Error, {
+        context: "critical_log_update_failed",
+      });
       console.error("❌ CRITICAL: Failed to update agent log:", logError);
     }
 

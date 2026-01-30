@@ -3,14 +3,24 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { executeNewsAgent } from "@/services/agent.service";
 import { getRedis } from "@/lib/redis";
+import { apiLogger } from "@/lib/logger";
 
 export async function POST(request: Request) {
+  const startTime = Date.now();
   try {
     // Check authentication
     const session = await auth();
     if (!session) {
+      apiLogger.response(
+        "POST",
+        "/api/agent/trigger",
+        401,
+        Date.now() - startTime,
+      );
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
+
+    apiLogger.request("POST", "/api/agent/trigger", session.user);
 
     // Rate limiting: Prevent spam clicks (30 second cooldown)
     const redis = getRedis();
@@ -82,6 +92,9 @@ export async function POST(request: Request) {
     try {
       const { newsAgentQueue } = await import("@/lib/queue");
       if (newsAgentQueue) {
+        apiLogger.info("Queue available, adding job to BullMQ", {
+          userId: session.user?.id,
+        });
         console.log("📋 Queue available, adding job...");
 
         // Remove any existing delayed jobs to avoid conflicts
@@ -122,6 +135,13 @@ export async function POST(request: Request) {
         console.log(`   Priority: ${job.opts.priority}`);
         console.log(`   State: ${await job.getState()}`);
 
+        apiLogger.response(
+          "POST",
+          "/api/agent/trigger",
+          200,
+          Date.now() - startTime,
+        );
+
         return NextResponse.json({
           success: true,
           message: "Agent kuyruğa eklendi ve worker tarafından işlenecek",
@@ -134,6 +154,7 @@ export async function POST(request: Request) {
         });
       }
     } catch (queueError) {
+      apiLogger.error("POST", "/api/agent/trigger", queueError as Error);
       console.error("❌ Queue error:", queueError);
       return NextResponse.json(
         {
@@ -150,6 +171,12 @@ export async function POST(request: Request) {
     }
 
     // If we reach here, queue is not available
+    apiLogger.response(
+      "POST",
+      "/api/agent/trigger",
+      503,
+      Date.now() - startTime,
+    );
     return NextResponse.json(
       {
         success: false,
@@ -159,6 +186,7 @@ export async function POST(request: Request) {
       { status: 503 },
     );
   } catch (error) {
+    apiLogger.error("POST", "/api/agent/trigger", error as Error);
     console.error("Trigger agent error:", error);
     return NextResponse.json(
       {

@@ -17,6 +17,8 @@ import { postTweet } from "@/lib/social/twitter";
 import { postToFacebook } from "@/lib/social/facebook";
 import { translateAndSaveArticle } from "@/lib/translation";
 import { getCache } from "@/lib/cache";
+import { contentLogger } from "@/lib/logger";
+import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 
 export interface ProcessedArticle {
   title: string;
@@ -24,6 +26,9 @@ export interface ProcessedArticle {
   excerpt: string;
   content: string;
   imageUrl: string | null;
+  imageUrlMedium: string | null;
+  imageUrlSmall: string | null;
+  imageUrlThumb: string | null;
   sourceUrl: string;
   categorySlug: string;
   keywords: string[];
@@ -64,6 +69,10 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
   });
 
   if (existingByUrl) {
+    contentLogger.duplicate(
+      existingByUrl.title,
+      `URL match: ${existingByUrl.sourceUrl}`,
+    );
     console.log(`🗑️ Duplicate URL detected: ${existingByUrl.title}`);
     console.log(`   Existing URL: ${existingByUrl.sourceUrl}`);
     console.log(`   New URL: ${article.url}`);
@@ -78,6 +87,10 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
   );
 
   if (duplicateCheck.isDuplicate) {
+    contentLogger.duplicate(
+      article.title,
+      duplicateCheck.reason || "Content similarity",
+    );
     console.log(`🗑️ ${duplicateCheck.reason}: "${article.title}"`);
     if (duplicateCheck.similarArticleId) {
       console.log(
@@ -362,6 +375,30 @@ export async function processArticle(
     });
     console.log("✅ Görsel URL:", imageUrl);
 
+    // Step 4.5: Optimize image and generate multiple sizes
+    console.log("🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...");
+    let imageSizes = {
+      large: imageUrl,
+      medium: imageUrl,
+      small: imageUrl,
+      thumb: imageUrl,
+    };
+
+    try {
+      imageSizes = await optimizeAndGenerateSizes(imageUrl, slug);
+      console.log("✅ Görsel optimizasyonu tamamlandı");
+      console.log(`   Large: ${imageSizes.large}`);
+      console.log(`   Medium: ${imageSizes.medium}`);
+      console.log(`   Small: ${imageSizes.small}`);
+      console.log(`   Thumb: ${imageSizes.thumb}`);
+    } catch (optimizeError) {
+      console.error(
+        "⚠️  Görsel optimizasyonu başarısız, orijinal kullanılacak:",
+        optimizeError,
+      );
+      // Continue with original image URL for all sizes
+    }
+
     // Step 5: Generate slug
     const slug = generateSlug(rewritten.title);
 
@@ -374,7 +411,10 @@ export async function processArticle(
       slug,
       excerpt: rewritten.excerpt,
       content: rewritten.content,
-      imageUrl,
+      imageUrl: imageSizes.large,
+      imageUrlMedium: imageSizes.medium,
+      imageUrlSmall: imageSizes.small,
+      imageUrlThumb: imageSizes.thumb,
       sourceUrl: article.url,
       categorySlug,
       keywords: rewritten.keywords,
@@ -477,6 +517,9 @@ export async function publishArticle(
         excerpt: processedArticle.excerpt,
         content: processedArticle.content,
         imageUrl: processedArticle.imageUrl,
+        imageUrlMedium: processedArticle.imageUrlMedium,
+        imageUrlSmall: processedArticle.imageUrlSmall,
+        imageUrlThumb: processedArticle.imageUrlThumb,
         sourceUrl: processedArticle.sourceUrl,
         categoryId: category.id,
         status,

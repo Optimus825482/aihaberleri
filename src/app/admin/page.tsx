@@ -29,6 +29,7 @@ import { DashboardDonutChart } from "@/components/DashboardDonutChart";
 import { RealtimeAreaChart } from "@/components/RealtimeAreaChart";
 import { CountryBarChart } from "@/components/CountryBarChart";
 import { SystemMonitor, LogMessage } from "@/components/SystemMonitor";
+import { AgentProgressBar } from "@/components/AgentProgressBar";
 
 interface DashboardStats {
   metrics: {
@@ -412,6 +413,9 @@ export default function AdminDashboard() {
             <CardContent className="pt-6 pb-8">
               {isAgentEnabled ? (
                 <div className="flex flex-col items-center text-center space-y-5">
+                  {/* Real-Time Agent Progress Bar */}
+                  <AgentProgressBar className="w-full" />
+
                   <div className="relative w-full h-1.5 bg-primary/20 rounded-full overflow-hidden">
                     <div className="absolute inset-0 bg-primary animate-progress-indefinite" />
                   </div>

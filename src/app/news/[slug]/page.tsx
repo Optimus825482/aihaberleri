@@ -18,6 +18,7 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { AudioPromo } from "@/components/AudioPromo";
 import { HighlightedText } from "@/components/audio/HighlightedText";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { ArticleImage } from "@/components/ResponsiveImage";
 
 interface ArticlePageProps {
   params: Promise<{
@@ -60,12 +61,12 @@ export async function generateMetadata({
       canonical: `${baseUrl}/news/${article.slug}`,
       languages: hasEnglish
         ? {
-            tr: `${baseUrl}/news/${article.slug}`,
-            en: `${baseUrl}/en/news/${enTranslation[0].slug}`,
-          }
+          tr: `${baseUrl}/news/${article.slug}`,
+          en: `${baseUrl}/en/news/${enTranslation[0].slug}`,
+        }
         : {
-            tr: `${baseUrl}/news/${article.slug}`,
-          },
+          tr: `${baseUrl}/news/${article.slug}`,
+        },
     },
   };
 }
@@ -194,16 +195,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </div>
               </div>
 
-              {/* Featured Image - LCP Optimized */}
+              {/* Featured Image - LCP Optimized with Responsive Sizes */}
               {article.imageUrl && (
-                <div className="relative w-full aspect-video mb-8 rounded-xl overflow-hidden shadow-lg">
-                  <Image
+                <div className="mb-8">
+                  <ArticleImage
                     src={article.imageUrl}
+                    srcMedium={article.imageUrlMedium || undefined}
+                    srcSmall={article.imageUrlSmall || undefined}
+                    srcThumb={article.imageUrlThumb || undefined}
                     alt={article.title}
-                    fill
-                    className="object-cover"
                     priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                 </div>
               )}
@@ -345,9 +346,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <Link
                     key={related.id}
                     href={`/news/${related.slug}`}
-                    className={`group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border hover:border-primary/20 flex flex-col h-full ${
-                      idx === 0 ? "md:col-span-2 lg:col-span-1" : ""
-                    }`}
+                    className={`group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border hover:border-primary/20 flex flex-col h-full ${idx === 0 ? "md:col-span-2 lg:col-span-1" : ""
+                      }`}
                   >
                     {related.imageUrl && (
                       <div className="relative h-56 w-full overflow-hidden">

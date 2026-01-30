@@ -20,12 +20,16 @@ import { executeNewsAgent } from "@/services/agent.service";
 import { scheduleNewsAgentJob } from "@/lib/queue";
 import { db } from "@/lib/db";
 import { PrismaClient } from "@prisma/client";
+import { workerLogger } from "@/lib/logger";
+import { trackWorkerError } from "@/lib/sentry";
 
+workerLogger.start();
 console.log("🚀 Starting News Agent Worker...");
 
 const redis = getRedis();
 
 if (!redis) {
+  workerLogger.connection("redis", "failed");
   console.error("❌ Redis not available. Worker cannot start.");
   process.exit(1);
 }
@@ -64,9 +68,11 @@ async function testDatabaseConnection() {
     console.log("🔍 Testing database connection...");
     await (db as PrismaClient).$connect();
     await db.$queryRaw`SELECT 1`;
+    workerLogger.connection("database", "connected");
     console.log("✅ Database connection successful");
     return true;
   } catch (error) {
+    workerLogger.connection("database", "failed");
     console.error("❌ Database connection failed:", error);
     return false;
   }
@@ -124,11 +130,13 @@ function startHeartbeat() {
     try {
       if (redis) {
         await redis.set("worker:heartbeat", Date.now().toString(), "EX", 60);
+        workerLogger.heartbeat();
         console.log(
           `💓 Heartbeat updated: ${new Date().toLocaleString("tr-TR")}`,
         );
       }
     } catch (error) {
+      workerLogger.connection("redis", "failed");
       console.error("❌ Failed to update heartbeat:", error);
     }
   };
@@ -151,6 +159,8 @@ function startWorker() {
   const worker = new Worker(
     "news-agent",
     async (job) => {
+      workerLogger.jobStart(job.id!, job.name);
+
       console.log(`\n${"=".repeat(60)}`);
       console.log(`🤖 Processing job: ${job.name} (ID: ${job.id})`);
       console.log(`   Priority: ${job.opts.priority || "default"}`);
@@ -182,11 +192,11 @@ function startWorker() {
         const progressInterval = setInterval(
           async () => {
             try {
-              const currentProgress = await job.progress;
+              const currentProgress = (await job.progress) as number;
               if (currentProgress < 80) {
                 await job.updateProgress(Math.min(currentProgress + 10, 80));
                 console.log(
-                  `📊 Progress: ${Math.min(currentProgress + 10, 80)}% - Agent still running...`,
+                  `📊Progress: ${Math.min(currentProgress + 10, 80)}% - Agent still running...`,
                 );
               }
             } catch (err) {
@@ -209,6 +219,8 @@ function startWorker() {
         await job.updateProgress(90);
         console.log("📊 Progress: 90% - Agent execution completed");
 
+        workerLogger.jobComplete(job.id!, result);
+
         console.log("\n📊 Execution Summary:");
         console.log(`   Articles Scraped: ${result.articlesScraped}`);
         console.log(`   Articles Created: ${result.articlesCreated}`);
@@ -221,6 +233,12 @@ function startWorker() {
           console.log(`   Errors: ${result.errors.join(", ")}`);
         }
       } catch (error) {
+        workerLogger.jobFailed(job.id!, error as Error);
+        trackWorkerError(job.id!, error as Error, {
+          jobName: job.name,
+          attempt: job.attemptsMade,
+        });
+
         console.error("❌ Agent execution error:", error);
         // Create a failed result object
         result = {

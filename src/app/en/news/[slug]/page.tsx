@@ -9,6 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
+import { ArticleImage } from "@/components/ResponsiveImage";
 
 interface Props {
   params: { slug: string };
@@ -52,6 +53,9 @@ async function getArticle(slug: string) {
     metaTitle: translation.metaTitle,
     metaDescription: translation.metaDescription,
     imageUrl: translation.article.imageUrl,
+    imageUrlMedium: translation.article.imageUrlMedium,
+    imageUrlSmall: translation.article.imageUrlSmall,
+    imageUrlThumb: translation.article.imageUrlThumb,
     publishedAt: translation.article.publishedAt,
     views: translation.article.views,
     category: translation.article.category,
@@ -204,14 +208,15 @@ export default async function EnglishArticlePage({ params }: Props) {
             </div>
           </header>
 
-          {/* Featured Image */}
+          {/* Featured Image with Responsive Sizes */}
           {article.imageUrl && (
-            <div className="relative aspect-video mb-8 rounded-xl overflow-hidden">
-              <Image
+            <div className="mb-8">
+              <ArticleImage
                 src={article.imageUrl}
+                srcMedium={article.imageUrlMedium || undefined}
+                srcSmall={article.imageUrlSmall || undefined}
+                srcThumb={article.imageUrlThumb || undefined}
                 alt={article.title}
-                fill
-                className="object-cover"
                 priority
               />
             </div>
