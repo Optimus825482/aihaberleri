@@ -31,17 +31,11 @@ RUN apk add --no-cache openssl openssl-dev python3 make g++ vips-dev
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy package files first
-COPY package.json package-lock.json* ./
-
-# Copy prisma schema BEFORE generate
-COPY prisma ./prisma
+# Copy all application files (includes prisma/, src/, etc.)
+COPY . .
 
 # Generate Prisma Client (locked to v5.22.0 - v7 has breaking changes)
 RUN npx prisma@5.22.0 generate
-
-# Copy rest of the application
-COPY . .
 
 # Build Next.js with dummy env vars (prevents ENOTFOUND errors)
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
