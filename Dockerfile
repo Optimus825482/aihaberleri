@@ -102,10 +102,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 # Socket.io requires deep dependency tree that standalone mode doesn't detect
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# CRITICAL: Rebuild sharp for Linux with all optional dependencies
-# Must be LAST to avoid being overwritten by other copies
+# CRITICAL: Rebuild sharp for Linux runtime with all platform-specific binaries
+# Must be LAST to avoid being overwritten by other node_modules copies
+# This ensures sharp's native addons are compiled for linux-x64
 RUN rm -rf ./node_modules/sharp && \
-    npm install --legacy-peer-deps --include=optional --os=linux --cpu=x64 sharp@0.33.5 && \
+    npm install --legacy-peer-deps --include=optional --platform=linux --arch=x64 sharp@0.33.5 && \
     chown -R nextjs:nodejs ./node_modules/sharp
 
 # Create logs directory with proper permissions for Winston logger
