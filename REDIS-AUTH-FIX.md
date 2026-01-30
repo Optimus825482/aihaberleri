@@ -34,7 +34,8 @@ redis:
   environment:
     - REDIS_PASSWORD=${REDIS_PASSWORD}
   healthcheck:
-    test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+    test: ["CMD", "sh", "-c", "redis-cli -a $$REDIS_PASSWORD ping"]
+    # Note: $$REDIS_PASSWORD (double $) for shell interpolation in docker-compose
 ```
 
 #### Worker Service
@@ -157,6 +158,19 @@ docker-compose up -d
 
 ### Issue: Redis container won't start
 
+**Error**: `container redis-xxx is unhealthy`
+
+**Cause**: Healthcheck failing - environment variable not interpolated correctly
+
+**Fix Applied**: Changed healthcheck to use shell interpolation
+```yaml
+# Before (doesn't work):
+test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+
+# After (works):
+test: ["CMD", "sh", "-c", "redis-cli -a $$REDIS_PASSWORD ping"]
+```
+
 **Check 1**: Check Redis logs
 ```bash
 docker-compose logs redis
@@ -206,9 +220,14 @@ redis://:<PASSWORD>@<HOST>:<PORT>
 ### Health Check with Password
 ```yaml
 healthcheck:
-  test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-  #                            ↑ -a flag for authentication
+  test: ["CMD", "sh", "-c", "redis-cli -a $$REDIS_PASSWORD ping"]
+  #              ↑ Shell wrapper    ↑ Double $$ for docker-compose variable interpolation
 ```
+
+**Why $$REDIS_PASSWORD?**
+- Docker Compose uses `$VAR` for its own variable substitution
+- `$$VAR` escapes to `$VAR` in the container's shell
+- Shell then expands `$REDIS_PASSWORD` using environment variable
 
 ---
 
