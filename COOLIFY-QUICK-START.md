@@ -20,6 +20,7 @@ Copy from `.env.coolify.example`:
 
 **Critical (Required)**:
 - [ ] `DATABASE_URL` (Internal URL from Coolify PostgreSQL)
+- [ ] `REDIS_PASSWORD` (Generate with `openssl rand -base64 32`)
 - [ ] `NEXTAUTH_SECRET` (Generate with `openssl rand -base64 32`)
 - [ ] `NEXTAUTH_URL` (https://aihaberleri.org)
 - [ ] `DEEPSEEK_API_KEY`
