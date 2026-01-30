@@ -98,6 +98,9 @@ COPY --from=app-builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_m
 # Reinstall sharp for Debian runtime (glibc vs musl)
 RUN npm install sharp@0.33.5 --legacy-peer-deps --os=linux --cpu=x64 2>/dev/null || true
 
+# Regenerate Prisma for Debian runtime
+RUN npx prisma@5.22.0 generate
+
 # Clean up dev-only packages to reduce image size
 RUN rm -rf ./node_modules/.cache \
     ./node_modules/typescript \
@@ -149,6 +152,9 @@ COPY --from=worker-builder --chown=worker:nodejs /app/package.json ./package.jso
 
 # Reinstall sharp for Debian runtime
 RUN npm install sharp@0.33.5 --legacy-peer-deps --os=linux --cpu=x64 2>/dev/null || true
+
+# Regenerate Prisma for Debian runtime
+RUN npx prisma@5.22.0 generate
 
 ENV NODE_ENV=production
 ENV TSX_TSCONFIG_PATH="/app/tsconfig.json"
