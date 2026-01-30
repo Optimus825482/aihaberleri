@@ -95,8 +95,14 @@ COPY --from=builder --chown=nextjs:nodejs /app/server.js ./server.js
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/package-lock.json* ./
 
-# Copy sharp from builder (already installed with correct architecture)
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
+# Copy ALL node_modules from builder for custom server.js dependencies
+# Socket.io requires deep dependency tree that standalone mode doesn't detect
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# CRITICAL: Remove Windows sharp binary and rebuild for Linux
+# This must come AFTER copying node_modules to override Windows binaries
+RUN rm -rf ./node_modules/sharp && \
+    npm install --os=linux --cpu=x64 sharp@0.33.5
 
 # Copy scripts and necessary node_modules for runtime scripts (Agent worker etc)
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
@@ -104,10 +110,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 # Specialized copy for tools used in scripts
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/esbuild ./node_modules/esbuild
-
-# Copy ALL node_modules from builder for custom server.js dependencies
-# Socket.io requires deep dependency tree that standalone mode doesn't detect
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Create logs directory with proper permissions for Winston logger
 RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
