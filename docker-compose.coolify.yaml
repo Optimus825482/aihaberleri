@@ -148,6 +148,7 @@ services:
       # Production
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
+      PORT: 3001
 
     depends_on:
       redis:

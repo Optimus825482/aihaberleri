@@ -111,14 +111,14 @@ RUN rm -rf ./node_modules/.cache \
 
 ENV NODE_ENV=production
 ENV HOSTNAME="0.0.0.0"
-ENV PORT=3000
+ENV PORT=3001
 ENV PATH="/app/venv/bin:$PATH"
 
 USER nextjs
-EXPOSE 3000
+EXPOSE 3001
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
+  CMD curl -f http://localhost:3001/api/health || exit 1
 
 CMD ["node", "server.js"]
 
