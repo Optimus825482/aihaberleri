@@ -375,7 +375,10 @@ export async function processArticle(
     });
     console.log("✅ Görsel URL:", imageUrl);
 
-    // Step 4.5: Optimize image and generate multiple sizes
+    // Step 4.5: Generate slug (needed for image optimization)
+    const slug = generateSlug(rewritten.title);
+
+    // Step 5: Optimize image and generate multiple sizes
     console.log("🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...");
     let imageSizes = {
       large: imageUrl,
@@ -398,9 +401,6 @@ export async function processArticle(
       );
       // Continue with original image URL for all sizes
     }
-
-    // Step 5: Generate slug
-    const slug = generateSlug(rewritten.title);
 
     // Step 6: Get or create category
     const categorySlug = generateSlug(category);
