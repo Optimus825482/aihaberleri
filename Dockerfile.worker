@@ -62,8 +62,12 @@ RUN addgroup --system --gid 1001 nodejs && \
     mkdir -p /home/worker/.npm /home/worker/.cache /tmp/tsx-1001 && \
     chown -R worker:nodejs /home/worker /tmp/tsx-1001
 
-# Copy worker dependencies and sharp from worker-deps stage (NO RE-INSTALLATION)
+# Copy worker dependencies from worker-deps stage
 COPY --from=worker-deps --chown=worker:nodejs /app/node_modules ./node_modules
+
+# Copy generated Prisma client from worker-builder (where prisma generate ran successfully)
+COPY --from=worker-builder --chown=worker:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=worker-builder --chown=worker:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 
 # Copy built assets from worker-builder
 COPY --from=worker-builder --chown=worker:nodejs /app/prisma ./prisma

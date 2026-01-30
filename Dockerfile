@@ -99,9 +99,15 @@ COPY --from=app-builder --chown=nextjs:nodejs /app/server.js ./server.js
 COPY --from=app-builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
 
-# Copy sharp from deps stage (NO RE-INSTALLATION)
+# Copy runtime dependencies from deps stage (NOT in standalone output)
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@img ./node_modules/@img
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/socket.io ./node_modules/socket.io
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/socket.io-parser ./node_modules/socket.io-parser
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/socket.io-adapter ./node_modules/socket.io-adapter
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/engine.io ./node_modules/engine.io
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/engine.io-parser ./node_modules/engine.io-parser
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/ws ./node_modules/ws
 
 # Set environment
 ENV NODE_ENV=production
