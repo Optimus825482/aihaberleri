@@ -14,10 +14,14 @@ WORKDIR /app
 FROM base AS worker-deps
 RUN apk add --no-cache python3 make g++ openssl vips-dev
 
+# Cache busting - change this value to force fresh npm install
+ARG CACHEBUST=2026013001
+
 COPY package.json package-lock.json* ./
 
 # Install all dependencies including tsx for TypeScript execution
-RUN npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
+RUN echo "Cache bust: $CACHEBUST" && \
+    npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
     npm install --legacy-peer-deps sharp@0.33.5
 
 # ===========================

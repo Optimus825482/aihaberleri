@@ -25,7 +25,9 @@ services:
       dockerfile: Dockerfile.worker
       target: worker-runner
       args:
-        BUILDKIT_INLINE_CACHE: "1"
+        BUILDKIT_INLINE_CACHE: "0"
+        CACHEBUST: "2026013001"
+      no_cache: true
     container_name: aihaberleri-worker
     environment:
       # Database (Harici PostgreSQL container - internal URL kullan)
@@ -89,6 +91,7 @@ services:
       args:
         BUILDKIT_INLINE_CACHE: "0"
         NODE_ENV: production
+        CACHEBUST: "2026013001"
       no_cache: true
     container_name: aihaberleri-app
     ports:
