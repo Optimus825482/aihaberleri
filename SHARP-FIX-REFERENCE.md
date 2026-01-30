@@ -47,8 +47,8 @@ RUN rm -rf ./node_modules/sharp && \
 
 USER <user>
 
-# Worker: Use direct tsx binary (not npx)
-CMD ["node_modules/.bin/tsx", "src/workers/news-agent.worker.ts"]
+# Worker: Use npx tsx (npm cache fix allows this now)
+CMD ["npx", "tsx", "src/workers/news-agent.worker.ts"]
 ```
 
 ### 2. Runtime Dependencies
@@ -66,7 +66,7 @@ libvips42     # Sharp runtime library
 | Install once | Install → Copy → Rebuild | Ensures Linux-specific binaries |
 | No `--include=optional` | With `--include=optional` | Includes all platform binaries |
 | System user without home | User with `/home/<user>` | npm cache needs writable directory |
-| `npx tsx` | `node_modules/.bin/tsx` | Avoids npx cache issues |
+| `node_modules/.bin/tsx` | `npx tsx` | With HOME set, npx works properly |
 
 ## Deployment Steps
 
@@ -152,7 +152,7 @@ docker-compose exec worker npx tsx -e "require('sharp'); console.log('Sharp OK')
 - Include `libvips-dev` + `libvips42` in production images
 - Create system users with explicit home directories (`--home /home/<user>`)
 - Set `NPM_CONFIG_CACHE` and `HOME` environment variables
-- Use direct binary paths (`node_modules/.bin/tsx`) instead of npx when possible
+- Use `npx` commands after setting proper HOME and cache directories
 - Rebuild sharp in runner stage AFTER copying node_modules
 - Test with: `docker-compose exec <service> node -e "require('sharp')"`
 
@@ -190,11 +190,11 @@ npm error EACCES: permission denied, mkdir '/nonexistent'
 ```
 **Solution**: Create user with home directory + set `NPM_CONFIG_CACHE` env var
 
-### Error 3: tsx not found
+### Error 3: tsx binary not found via node_modules/.bin
 ```
-Error: Cannot find module 'tsx'
+Error: Cannot find module '/app/node_modules/.bin/tsx'
 ```
-**Solution**: Use `node_modules/.bin/tsx` instead of `npx tsx`
+**Solution**: Use `npx tsx` after setting HOME and NPM_CONFIG_CACHE env vars
 
 ## Monitoring
 ```powershell

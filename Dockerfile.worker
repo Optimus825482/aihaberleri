@@ -86,5 +86,5 @@ USER worker
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD pgrep -f "news-agent.worker" || exit 1
 
-# Run worker with tsx (using node_modules/.bin directly to avoid npx cache issues)
-CMD ["node_modules/.bin/tsx", "src/workers/news-agent.worker.ts"]
+# Run worker with npx tsx (npm cache fix allows npx to work now)
+CMD ["npx", "tsx", "src/workers/news-agent.worker.ts"]
