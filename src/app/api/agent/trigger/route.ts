@@ -90,7 +90,9 @@ export async function POST(request: Request) {
 
     // Always use queue (worker) for execution - prevents duplicate runs
     try {
-      const { newsAgentQueue } = await import("@/lib/queue");
+      const { getNewsAgentQueue } = await import("@/lib/queue");
+      const newsAgentQueue = getNewsAgentQueue();
+
       if (newsAgentQueue) {
         apiLogger.info("Queue available, adding job to BullMQ", {
           userId: session.user?.id,
@@ -152,6 +154,23 @@ export async function POST(request: Request) {
             executionMode: "queue",
           },
         });
+      } else {
+        // Queue null - Redis bağlantısı yok
+        console.error("❌ Queue is null - Redis connection unavailable");
+        apiLogger.response(
+          "POST",
+          "/api/agent/trigger",
+          503,
+          Date.now() - startTime,
+        );
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Worker kuyruğu oluşturulamadı. Redis bağlantısını kontrol edin.",
+          },
+          { status: 503 },
+        );
       }
     } catch (queueError) {
       apiLogger.error("POST", "/api/agent/trigger", queueError as Error);
@@ -169,22 +188,6 @@ export async function POST(request: Request) {
         { status: 503 },
       );
     }
-
-    // If we reach here, queue is not available
-    apiLogger.response(
-      "POST",
-      "/api/agent/trigger",
-      503,
-      Date.now() - startTime,
-    );
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          "Worker kuyruğu bulunamadı. Sistem yapılandırmasını kontrol edin.",
-      },
-      { status: 503 },
-    );
   } catch (error) {
     apiLogger.error("POST", "/api/agent/trigger", error as Error);
     console.error("Trigger agent error:", error);

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
-import { newsAgentQueue } from "@/lib/queue";
+import { getNewsAgentQueue } from "@/lib/queue";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const jobId = searchParams.get("jobId");
 
+  const newsAgentQueue = getNewsAgentQueue();
   if (!newsAgentQueue) {
     return new Response(
       JSON.stringify({

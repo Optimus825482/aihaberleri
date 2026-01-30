@@ -2,12 +2,24 @@ import { Queue, Worker, QueueEvents } from "bullmq";
 import { getRedis } from "./redis";
 import { db } from "./db";
 
-// Get Redis connection (may be null during build)
-const redis = getRedis();
+// Lazy initialization - created on first use, not at import time
+let newsAgentQueueInstance: Queue | null = null;
+let newsAgentQueueEventsInstance: QueueEvents | null = null;
 
-// Create queue only if Redis is available
-export const newsAgentQueue = redis
-  ? new Queue("news-agent", {
+// Get or create queue (lazy initialization)
+export const getNewsAgentQueue = (): Queue | null => {
+  if (newsAgentQueueInstance) {
+    return newsAgentQueueInstance;
+  }
+
+  const redis = getRedis();
+  if (!redis) {
+    console.warn("⚠️  Redis not available, queue cannot be created");
+    return null;
+  }
+
+  try {
+    newsAgentQueueInstance = new Queue("news-agent", {
       connection: redis,
       defaultJobOptions: {
         attempts: 3,
@@ -24,31 +36,56 @@ export const newsAgentQueue = redis
         },
         timeout: 600000, // 10 minutes timeout for job execution
       },
-    })
-  : null;
+    });
+    console.log("✅ News agent queue created");
+    return newsAgentQueueInstance;
+  } catch (error) {
+    console.error("❌ Failed to create queue:", error);
+    return null;
+  }
+};
 
-// Queue events for monitoring (only if Redis is available)
-export const newsAgentQueueEvents = redis
-  ? new QueueEvents("news-agent", {
+// Get or create queue events (lazy initialization)
+export const getNewsAgentQueueEvents = (): QueueEvents | null => {
+  if (newsAgentQueueEventsInstance) {
+    return newsAgentQueueEventsInstance;
+  }
+
+  const redis = getRedis();
+  if (!redis) {
+    return null;
+  }
+
+  try {
+    newsAgentQueueEventsInstance = new QueueEvents("news-agent", {
       connection: redis,
-    })
-  : null;
+    });
 
-// Suppress NOAUTH errors in queue events (not critical for operation)
-if (newsAgentQueueEvents) {
-  newsAgentQueueEvents.on("error", (err) => {
-    if (err.message && err.message.includes("NOAUTH")) {
-      // Silent - Redis info command auth not critical
-      return;
-    }
-    console.error("❌ Queue events error:", err);
-  });
-}
+    // Suppress NOAUTH errors (not critical)
+    newsAgentQueueEventsInstance.on("error", (err) => {
+      if (err.message && err.message.includes("NOAUTH")) {
+        return;
+      }
+      console.error("❌ Queue events error:", err);
+    });
+
+    console.log("✅ Queue events listener created");
+    return newsAgentQueueEventsInstance;
+  } catch (error) {
+    console.error("❌ Failed to create queue events:", error);
+    return null;
+  }
+};
+
+// Export getter function as default export for compatibility
+export const newsAgentQueue = getNewsAgentQueue();
+export const newsAgentQueueEvents = getNewsAgentQueueEvents();
 
 // Helper to add news agent job
 // PHASE 2: Enhanced with immediate reschedule support
 export async function scheduleNewsAgentJob() {
-  if (!newsAgentQueue) {
+  const queue = getNewsAgentQueue();
+  if (!queue) {
     console.warn("⚠️  Queue not available (Redis not connected)");
     return null;
   }
@@ -63,16 +100,16 @@ export async function scheduleNewsAgentJob() {
     const delay = intervalHours * 60 * 60 * 1000;
 
     // Phase 2: Remove existing jobs first to allow immediate reschedule
-    const existingJobs = await newsAgentQueue.getRepeatableJobs();
+    const existingJobs = await queue.getRepeatableJobs();
     for (const job of existingJobs) {
       if (job.name === "news-agent-scheduled-run" || job.id) {
-        await newsAgentQueue.removeRepeatableByKey(job.key);
+        await queue.removeRepeatableByKey(job.key);
         console.log(`🗑️ Removed existing scheduled job: ${job.key}`);
       }
     }
 
     // Also check for any pending/waiting jobs with the fixed ID and remove them
-    const waitingJobs = await newsAgentQueue.getJobs(["waiting", "delayed"]);
+    const waitingJobs = await queue.getJobs(["waiting", "delayed"]);
     for (const job of waitingJobs) {
       if (
         job.id === "news-agent-scheduled-run" ||
@@ -85,7 +122,7 @@ export async function scheduleNewsAgentJob() {
 
     // Use a fixed jobId so we don't have multiple scheduled jobs at once
     // Now this works for reschedules since we removed old jobs above
-    await newsAgentQueue.add(
+    await queue.add(
       "scrape-and-publish",
       {},
       {
@@ -104,7 +141,7 @@ export async function scheduleNewsAgentJob() {
       create: { key: "agent.nextRun", value: nextTime.toISOString() },
     });
 
-    const queueLength = await newsAgentQueue.count();
+    const queueLength = await queue.count();
 
     console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -131,7 +168,8 @@ export async function scheduleNewsAgentJob() {
 
 // Get queue stats
 export async function getQueueStats() {
-  if (!newsAgentQueue) {
+  const queue = getNewsAgentQueue();
+  if (!queue) {
     return {
       waiting: 0,
       active: 0,
@@ -142,11 +180,11 @@ export async function getQueueStats() {
   }
 
   const [waiting, active, completed, failed, delayed] = await Promise.all([
-    newsAgentQueue.getWaitingCount(),
-    newsAgentQueue.getActiveCount(),
-    newsAgentQueue.getCompletedCount(),
-    newsAgentQueue.getFailedCount(),
-    newsAgentQueue.getDelayedCount(),
+    queue.getWaitingCount(),
+    queue.getActiveCount(),
+    queue.getCompletedCount(),
+    queue.getFailedCount(),
+    queue.getDelayedCount(),
   ]);
 
   return {
@@ -160,11 +198,12 @@ export async function getQueueStats() {
 
 // Get upcoming jobs
 export async function getUpcomingJobs() {
-  if (!newsAgentQueue) {
+  const queue = getNewsAgentQueue();
+  if (!queue) {
     return [];
   }
 
-  const jobs = await newsAgentQueue.getJobs(["delayed", "waiting"]);
+  const jobs = await queue.getJobs(["delayed", "waiting"]);
   return jobs.map((job) => ({
     id: job.id,
     name: job.name,
@@ -176,4 +215,4 @@ export async function getUpcomingJobs() {
   }));
 }
 
-export default newsAgentQueue;
+export default getNewsAgentQueue;

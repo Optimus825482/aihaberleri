@@ -6,7 +6,7 @@
  */
 
 import { getRedis } from "@/lib/redis";
-import { newsAgentQueue, getQueueStats, getUpcomingJobs } from "@/lib/queue";
+import { getNewsAgentQueue, getQueueStats, getUpcomingJobs } from "@/lib/queue";
 
 async function testQueueConnection() {
   console.log("🧪 Testing Queue Connection...\n");
@@ -46,8 +46,11 @@ async function testQueueConnection() {
   // Test 2: Queue Instance
   console.log("\n2️⃣ Testing Queue Instance...");
 
+  const newsAgentQueue = getNewsAgentQueue();
   if (!newsAgentQueue) {
     console.error("   ❌ Queue instance is null");
+    process.exit(1);
+  }
     process.exit(1);
   }
 

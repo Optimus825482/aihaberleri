@@ -60,7 +60,9 @@ export const getRedis = () => {
       redisInstance.on("error", (err) => {
         // Suppress NOAUTH errors (Redis info command may require auth but other commands work)
         if (err.message && err.message.includes("NOAUTH")) {
-          console.log("ℹ️ Redis info command requires auth (not critical, other commands working)");
+          console.log(
+            "ℹ️ Redis info command requires auth (not critical, other commands working)",
+          );
           return;
         }
         console.error("❌ Redis error:", err);
