@@ -22,11 +22,10 @@ services:
   worker:
     build:
       context: .
-      dockerfile: Dockerfile.worker
+      dockerfile: Dockerfile
       target: worker-runner
       args:
         BUILDKIT_INLINE_CACHE: "0"
-        CACHEBUST: "2026013001"
       no_cache: true
     container_name: aihaberleri-worker
     environment:
