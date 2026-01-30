@@ -109,6 +109,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/esbuild ./node_modul
 # Socket.io requires deep dependency tree that standalone mode doesn't detect
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
+# Create logs directory with proper permissions for Winston logger
+RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
+
 USER nextjs
 
 EXPOSE 3000
