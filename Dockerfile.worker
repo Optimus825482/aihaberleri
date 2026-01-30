@@ -1,0 +1,79 @@
+# Syntax for BuildKit features
+# syntax=docker/dockerfile:1
+
+# ===========================
+# BASE STAGE
+# ===========================
+FROM node:20-alpine AS base
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# ===========================
+# WORKER DEPENDENCIES STAGE
+# ===========================
+FROM base AS worker-deps
+RUN apk add --no-cache python3 make g++ openssl vips-dev
+
+COPY package.json package-lock.json* ./
+
+# Install all dependencies including tsx for TypeScript execution
+RUN npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
+    npm install --legacy-peer-deps sharp@0.33.5
+
+# ===========================
+# WORKER BUILDER STAGE
+# ===========================
+FROM base AS worker-builder
+WORKDIR /app
+
+RUN apk add --no-cache openssl python3 make g++
+
+# Copy worker dependencies
+COPY --from=worker-deps /app/node_modules ./node_modules
+COPY . .
+
+# Generate Prisma Client for worker
+RUN npx prisma generate
+
+# ===========================
+# WORKER RUNNER STAGE
+# ===========================
+FROM node:20-bookworm-slim AS worker-runner
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    openssl \
+    ca-certificates \
+    libvips-dev \
+    libvips42 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Create user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 --home /home/worker --shell /bin/sh worker && \
+    mkdir -p /home/worker/.npm /home/worker/.cache /tmp/tsx-1001 && \
+    chown -R worker:nodejs /home/worker /tmp/tsx-1001
+
+# Copy worker dependencies and sharp from worker-deps stage (NO RE-INSTALLATION)
+COPY --from=worker-deps --chown=worker:nodejs /app/node_modules ./node_modules
+
+# Copy built assets from worker-builder
+COPY --from=worker-builder --chown=worker:nodejs /app/prisma ./prisma
+COPY --from=worker-builder --chown=worker:nodejs /app/src ./src
+COPY --from=worker-builder --chown=worker:nodejs /app/tsconfig.json ./tsconfig.json
+COPY --from=worker-builder --chown=worker:nodejs /app/package.json ./package.json
+
+# Set environment
+ENV NODE_ENV=production
+ENV TSX_TSCONFIG_PATH="/app/tsconfig.json"
+ENV XDG_CACHE_HOME="/tmp/tsx-1001"
+
+USER worker
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD pgrep -f "news-agent.worker" || exit 1
+
+CMD ["npx", "tsx", "src/workers/news-agent.worker.ts"]
