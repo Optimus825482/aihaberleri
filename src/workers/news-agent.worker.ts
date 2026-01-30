@@ -98,7 +98,35 @@ async function initializeWorker() {
   }
 
   console.log("✅ All systems ready, starting worker...");
+
+  // Start heartbeat to indicate worker is alive
+  startHeartbeat();
+
   startWorker();
+}
+
+// Heartbeat function to indicate worker is alive
+function startHeartbeat() {
+  console.log("💓 Starting worker heartbeat...");
+
+  const updateHeartbeat = async () => {
+    try {
+      if (redis) {
+        await redis.set("worker:heartbeat", Date.now().toString(), "EX", 60);
+        console.log(
+          `💓 Heartbeat updated: ${new Date().toLocaleString("tr-TR")}`,
+        );
+      }
+    } catch (error) {
+      console.error("❌ Failed to update heartbeat:", error);
+    }
+  };
+
+  // Update immediately
+  updateHeartbeat();
+
+  // Then update every 30 seconds
+  setInterval(updateHeartbeat, 30000);
 }
 
 function startWorker() {

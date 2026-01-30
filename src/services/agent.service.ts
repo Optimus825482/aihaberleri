@@ -9,6 +9,7 @@ import {
   processAndPublishArticles,
 } from "./content.service";
 import { emailService } from "@/lib/email";
+import { getRedis } from "@/lib/redis";
 
 export interface AgentExecutionResult {
   success: boolean;
@@ -17,6 +18,34 @@ export interface AgentExecutionResult {
   duration: number;
   errors: string[];
   publishedArticles: Array<{ id: string; slug: string }>;
+}
+
+// Helper to update job progress in Redis
+async function updateJobProgress(
+  agentLogId: string,
+  step: string,
+  message: string,
+  progress: number,
+) {
+  try {
+    const redis = getRedis();
+    if (redis) {
+      await redis.set(
+        `job:${agentLogId}:progress`,
+        JSON.stringify({
+          step,
+          message,
+          progress,
+          timestamp: new Date().toISOString(),
+        }),
+        "EX",
+        3600, // Expire after 1 hour
+      );
+    }
+  } catch (error) {
+    // Non-critical, just log
+    console.error("Failed to update job progress:", error);
+  }
 }
 
 /**
@@ -59,6 +88,13 @@ export async function executeNewsAgent(
   try {
     // Step 1: Search for AI news (RSS + Trend Analysis)
     console.log("📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...");
+    await updateJobProgress(
+      agentLog.id,
+      "fetching",
+      "Yapay zeka haberleri toplanıyor...",
+      20,
+    );
+
     const newsArticles = await fetchAINews(categorySlug);
     articlesScraped = newsArticles.length;
     console.log(`✅ ${articlesScraped} trend haber bulundu`);
@@ -69,6 +105,13 @@ export async function executeNewsAgent(
 
     // Step 2: Select best articles
     console.log("🎯 Adım 2: En iyi haberler seçiliyor...");
+    await updateJobProgress(
+      agentLog.id,
+      "analyzing",
+      "En iyi haberler seçiliyor (DeepSeek AI)...",
+      40,
+    );
+
     const minArticles = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "2");
     const maxArticles = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "3");
     const targetCount =
@@ -82,6 +125,13 @@ export async function executeNewsAgent(
 
     // Step 3: Process and publish articles
     console.log("⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...");
+    await updateJobProgress(
+      agentLog.id,
+      "processing",
+      "Haberler yeniden yazılıyor ve görseller oluşturuluyor...",
+      60,
+    );
+
     const published = await processAndPublishArticles(
       selectedArticles,
       agentLog.id,
@@ -90,6 +140,13 @@ export async function executeNewsAgent(
     articlesCreated = published.length;
     publishedArticles.push(...published);
     console.log(`✅ ${articlesCreated} haber yayınlandı`);
+
+    await updateJobProgress(
+      agentLog.id,
+      "publishing",
+      "Haberler veritabanına kaydediliyor...",
+      80,
+    );
 
     const duration = Math.floor((Date.now() - startTime) / 1000);
     const status = articlesCreated > 0 ? "SUCCESS" : "PARTIAL";
@@ -160,6 +217,13 @@ export async function executeNewsAgent(
         errors,
       },
     });
+
+    await updateJobProgress(
+      agentLog.id,
+      "completed",
+      "Tamamlandı! Haberler yayında.",
+      100,
+    );
 
     console.log(`✅ Agent çalıştırması ${duration}s içinde tamamlandı`);
 

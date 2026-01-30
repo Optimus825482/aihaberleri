@@ -46,6 +46,20 @@ interface Category {
   slug: string;
 }
 
+interface WorkerStatus {
+  workerOnline: boolean;
+  lastHeartbeat: string | null;
+  timeSinceHeartbeat?: number;
+}
+
+interface RecentLog {
+  id: string;
+  status: string;
+  articlesCreated: number;
+  duration: number;
+  createdAt: string;
+}
+
 export default function AgentSettingsPage() {
   const [settings, setSettings] = useState<AgentSettings>({
     enabled: true,
@@ -60,6 +74,11 @@ export default function AgentSettingsPage() {
   const [availableCategories, setAvailableCategories] = useState<Category[]>(
     [],
   );
+  const [workerStatus, setWorkerStatus] = useState<WorkerStatus>({
+    workerOnline: false,
+    lastHeartbeat: null,
+  });
+  const [recentLogs, setRecentLogs] = useState<RecentLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [triggering, setTriggering] = useState(false);
@@ -67,6 +86,15 @@ export default function AgentSettingsPage() {
 
   useEffect(() => {
     fetchSettings();
+    fetchWorkerStatus();
+    fetchRecentLogs();
+
+    // Poll worker status every 30 seconds
+    const interval = setInterval(() => {
+      fetchWorkerStatus();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchSettings = async () => {
@@ -92,6 +120,28 @@ export default function AgentSettingsPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchWorkerStatus = async () => {
+    try {
+      const response = await fetch("/api/agent/worker-status");
+      const data = await response.json();
+      setWorkerStatus(data);
+    } catch (error) {
+      console.error("Failed to fetch worker status:", error);
+    }
+  };
+
+  const fetchRecentLogs = async () => {
+    try {
+      const response = await fetch("/api/agent/logs?limit=5");
+      const data = await response.json();
+      if (data.success) {
+        setRecentLogs(data.data.logs);
+      }
+    } catch (error) {
+      console.error("Failed to fetch recent logs:", error);
     }
   };
 
@@ -263,23 +313,36 @@ export default function AgentSettingsPage() {
           className={`border-2 ${settings.enabled ? "border-green-500/50 bg-green-500/5" : "border-red-500/50 bg-red-500/5"}`}
         >
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {settings.enabled ? (
-                <>
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  Agent Aktif
-                </>
-              ) : (
-                <>
-                  <XCircle className="h-5 w-5 text-red-500" />
-                  Agent Devre Dışı
-                </>
-              )}
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {settings.enabled ? (
+                  <>
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    Agent Aktif
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-5 w-5 text-red-500" />
+                    Agent Devre Dışı
+                  </>
+                )}
+              </div>
+              <Badge
+                variant={workerStatus.workerOnline ? "default" : "destructive"}
+                className="ml-2"
+              >
+                Worker: {workerStatus.workerOnline ? "🟢 Online" : "🔴 Offline"}
+              </Badge>
             </CardTitle>
             <CardDescription>
               {settings.enabled
                 ? "Agent otomatik olarak haber topluyor"
                 : "Agent şu anda çalışmıyor"}
+              {workerStatus.lastHeartbeat && (
+                <span className="text-xs block mt-1">
+                  Son heartbeat: {new Date(workerStatus.lastHeartbeat).toLocaleString("tr-TR")}
+                </span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -526,6 +589,63 @@ export default function AgentSettingsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Logs Card */}
+        {recentLogs.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Son Çalıştırmalar
+              </CardTitle>
+              <CardDescription>
+                Agent'ın son 5 çalıştırma geçmişi
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant={
+                          log.status === "SUCCESS"
+                            ? "default"
+                            : log.status === "PARTIAL"
+                              ? "secondary"
+                              : "destructive"
+                        }
+                      >
+                        {log.status}
+                      </Badge>
+                      <div>
+                        <div className="text-sm font-medium">
+                          {log.articlesCreated} haber oluşturuldu
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(log.createdAt).toLocaleString("tr-TR")}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-muted-foreground">
+                        {log.duration}s
+                      </div>
+                      {log.errors && log.errors.length > 0 && (
+                        <div className="text-xs text-red-500">
+                          {log.errors.length} hata
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Info Card */}
         <Card className="bg-blue-500/5 border-blue-500/20">

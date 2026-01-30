@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { executeNewsAgent } from "@/services/agent.service";
+import { getRedis } from "@/lib/redis";
 
 export async function POST(request: Request) {
   try {
@@ -9,6 +10,30 @@ export async function POST(request: Request) {
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    }
+
+    // Rate limiting: Prevent spam clicks (30 second cooldown)
+    const redis = getRedis();
+    if (redis) {
+      const cooldownKey = `trigger-cooldown:${session.user?.id || "admin"}`;
+      const lastTrigger = await redis.get(cooldownKey);
+
+      if (lastTrigger) {
+        const elapsed = Date.now() - parseInt(lastTrigger);
+        if (elapsed < 30000) {
+          const remainingSeconds = Math.ceil((30000 - elapsed) / 1000);
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Lütfen ${remainingSeconds} saniye bekleyin`,
+            },
+            { status: 429 },
+          );
+        }
+      }
+
+      // Set cooldown
+      await redis.set(cooldownKey, Date.now().toString(), "EX", 30);
     }
 
     // Get agent settings
