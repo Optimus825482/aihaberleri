@@ -68,22 +68,9 @@ const logger = isBuildTime
             new winston.transports.Console(),
           ]
         : [
-            // Production: Console + Files
+            // Production: Console only (no file writes in container)
             new winston.transports.Console({
               format: winston.format.simple(),
-            }),
-            // Error log file
-            new winston.transports.File({
-              filename: path.join(logDir, "error.log"),
-              level: "error",
-              maxsize: 10485760, // 10MB
-              maxFiles: 5,
-            }),
-            // Combined log file
-            new winston.transports.File({
-              filename: path.join(logDir, "combined.log"),
-              maxsize: 10485760, // 10MB
-              maxFiles: 10,
             }),
           ],
     });
