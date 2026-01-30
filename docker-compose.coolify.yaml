@@ -23,6 +23,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.worker
+      target: worker-runner
+      args:
+        BUILDKIT_INLINE_CACHE: "1"
     container_name: aihaberleri-worker
     environment:
       # Database (Harici PostgreSQL container - internal URL kullan)
@@ -64,20 +67,28 @@ services:
     restart: unless-stopped
     networks:
       - aihaberleri-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
     healthcheck:
       test: ["CMD", "pgrep", "-f", "news-agent.worker"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 60s
 
   # Next.js App (PostgreSQL harici container'da, Redis local)
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runner
       args:
-        - NODE_ENV=production
+        BUILDKIT_INLINE_CACHE: "1"
+        NODE_ENV: production
     container_name: aihaberleri-app
     ports:
       - "${APP_PORT:-3001}:3001"
