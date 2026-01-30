@@ -105,7 +105,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 # CRITICAL: Rebuild sharp for Linux with all optional dependencies
 # Must be LAST to avoid being overwritten by other copies
 RUN rm -rf ./node_modules/sharp && \
-    npm install --legacy-peer-deps --include=optional --os=linux --cpu=x64 sharp@0.33.5
+    npm install --legacy-peer-deps --include=optional --os=linux --cpu=x64 sharp@0.33.5 && \
+    chown -R nextjs:nodejs ./node_modules/sharp
 
 # Create logs directory with proper permissions for Winston logger
 RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
