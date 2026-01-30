@@ -14,19 +14,15 @@ WORKDIR /app
 FROM base AS deps
 RUN apk add --no-cache python3 make g++ vips-dev
 
-# Cache busting - change this value to force fresh npm install
-ARG CACHEBUST=2026013001
-
 # Copy only package files for dependency installation
 COPY package.json package-lock.json* ./
 
-# Install all dependencies including devDependencies (tailwindcss, etc.)
-# Debug: Show what's being installed
-RUN echo "Cache bust: $CACHEBUST" && \
-    npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
-    npm install --legacy-peer-deps sharp@0.33.5 && \
-    echo "Installed packages:" && \
-    ls node_modules/ | head -50
+# NUCLEAR FIX: Install deps + EXPLICITLY install tailwindcss
+# npm ci may be missing tailwindcss from corrupted package-lock.json
+RUN npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
+    npm install tailwindcss@3.4.19 postcss autoprefixer --save-dev --legacy-peer-deps && \
+    npm install sharp@0.33.5 --legacy-peer-deps && \
+    ls node_modules/tailwindcss/package.json && echo "✓ tailwindcss INSTALLED"
 
 # ===========================
 # BUILDER STAGE (APP)
