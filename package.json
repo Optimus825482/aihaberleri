@@ -1,8 +1,9 @@
 {
   "name": "ai-news-site",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "AI Haberleri - Next.js App",
+  "_cacheBust": "2026-01-30-v2",
   "scripts": {
     "dev": "node server.js",
     "build": "next build",
