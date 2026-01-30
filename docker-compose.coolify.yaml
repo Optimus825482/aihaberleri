@@ -83,7 +83,7 @@ services:
 
   # Next.js App (PostgreSQL harici container'da, Redis local)
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
       target: runner
@@ -93,7 +93,8 @@ services:
         CACHEBUST: "2026013001"
       no_cache: true
     container_name: aihaberleri-app
-    
+    ports:
+      - "${APP_PORT:-3001}:3001"
     environment:
       # Database (Harici PostgreSQL container - internal URL kullan)
       DATABASE_URL: ${DATABASE_URL}
@@ -148,9 +149,7 @@ services:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
       PORT: ${PORT:-3001}
-    ports:
-      - "${APP_PORT:-3001}:3001"  
-
+   
     depends_on:
       redis:
         condition: service_healthy
