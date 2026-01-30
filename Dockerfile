@@ -37,8 +37,8 @@ COPY package.json package-lock.json* ./
 # Copy prisma schema BEFORE generate
 COPY prisma ./prisma
 
-# Generate Prisma Client
-RUN npx prisma generate
+# Generate Prisma Client (locked to v5.22.0 - v7 has breaking changes)
+RUN npx prisma@5.22.0 generate
 
 # Copy rest of the application
 COPY . .
