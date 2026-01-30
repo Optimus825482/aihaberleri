@@ -76,9 +76,13 @@ RUN python3 -m venv /app/venv
 ENV PATH="/app/venv/bin:$PATH"
 RUN pip install edge-tts
 
-# Create non-root user
+# Create non-root user with home directory
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN adduser --system --uid 1001 --home /home/nextjs --shell /bin/sh nextjs
+
+# Create cache directories with proper permissions
+RUN mkdir -p /home/nextjs/.npm /home/nextjs/.cache && \
+    chown -R nextjs:nodejs /home/nextjs
 
 # Copy built application (Standalone mode)
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
@@ -111,6 +115,10 @@ RUN rm -rf ./node_modules/sharp && \
 
 # Create logs directory with proper permissions for Winston logger
 RUN mkdir -p /app/logs && chown -R nextjs:nodejs /app/logs
+
+# Set npm cache directory and home (prevents /nonexistent error)
+ENV NPM_CONFIG_CACHE=/home/nextjs/.npm
+ENV HOME=/home/nextjs
 
 USER nextjs
 

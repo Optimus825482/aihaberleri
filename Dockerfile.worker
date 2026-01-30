@@ -54,12 +54,13 @@ RUN apt-get update && apt-get install -y \
     libvips42 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
+# Create non-root user with home directory
 RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 worker
+RUN adduser --system --uid 1001 --home /home/worker --shell /bin/sh worker
 
-# Create and set permissions for /tmp directory for tsx
-RUN mkdir -p /tmp/tsx-1001 && chown -R worker:nodejs /tmp/tsx-1001
+# Create working directories with proper permissions
+RUN mkdir -p /home/worker/.npm /home/worker/.cache /tmp/tsx-1001 && \
+    chown -R worker:nodejs /home/worker /tmp/tsx-1001
 
 # Copy necessary runtime files
 COPY --from=builder --chown=worker:nodejs /app/node_modules ./node_modules
@@ -75,11 +76,15 @@ RUN rm -rf ./node_modules/sharp && \
     npm install --legacy-peer-deps --include=optional --platform=linux --arch=x64 sharp@0.33.5 && \
     chown -R worker:nodejs ./node_modules/sharp
 
+# Set npm cache directory (prevents /nonexistent error)
+ENV NPM_CONFIG_CACHE=/home/worker/.npm
+ENV HOME=/home/worker
+
 USER worker
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD pgrep -f "news-agent.worker" || exit 1
 
-# Run worker with tsx
-CMD ["npx", "tsx", "src/workers/news-agent.worker.ts"]
+# Run worker with tsx (using node_modules/.bin directly to avoid npx cache issues)
+CMD ["node_modules/.bin/tsx", "src/workers/news-agent.worker.ts"]
