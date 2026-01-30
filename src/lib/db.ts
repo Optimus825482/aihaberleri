@@ -46,6 +46,31 @@ export const db =
         } as any,
       }));
 
+// 🚀 PERFORMANCE MONITORING: Log slow queries (> 100ms)
+if (
+  process.env.SKIP_ENV_VALIDATION !== "1" &&
+  db &&
+  typeof (db as PrismaClient).$on === "function"
+) {
+  (db as PrismaClient).$on(
+    "query" as never,
+    ((e: any) => {
+      if (e.duration > 100) {
+        console.warn(
+          `⚠️ Slow query detected (${e.duration}ms):`,
+          e.query.substring(0, 200),
+        );
+        if (e.duration > 500) {
+          console.error(
+            `🔥 CRITICAL: Very slow query (${e.duration}ms):`,
+            e.query.substring(0, 200),
+          );
+        }
+      }
+    }) as never,
+  );
+}
+
 // Robust cleanup and connection handling
 if (process.env.NODE_ENV === "production") {
   // Graceful shutdown on process exit

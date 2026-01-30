@@ -319,7 +319,7 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
 
-    // Get category views
+    // Get category views - OPTIMIZED: No N+1, single groupBy query
     const categoryViews = await db.article.groupBy({
       by: ["categoryId"],
       _sum: {
@@ -327,22 +327,20 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Map category views to category stats
-    const categoryStatsWithViews = await Promise.all(
-      categoryStats.map(async (cat: CategoryStat) => {
-        const viewData = categoryViews.find(
-          (v: CategoryViewData) => v.categoryId === cat.id,
-        );
-        return {
-          id: cat.id,
-          name: cat.name,
-          slug: cat.slug,
-          articleCount: cat._count.articles,
-          lastArticleDate: cat.articles[0]?.createdAt || null,
-          totalViews: viewData?._sum.views || 0,
-        };
-      }),
-    );
+    // Map category views to category stats - OPTIMIZED: Synchronous mapping (no await)
+    const categoryStatsWithViews = categoryStats.map((cat: CategoryStat) => {
+      const viewData = categoryViews.find(
+        (v: CategoryViewData) => v.categoryId === cat.id,
+      );
+      return {
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        articleCount: cat._count.articles,
+        lastArticleDate: cat.articles[0]?.createdAt || null,
+        totalViews: viewData?._sum.views || 0,
+      };
+    });
 
     // Process last 7 days data for chart
     const chartData = [];
@@ -425,12 +423,5 @@ export async function GET(request: NextRequest) {
       },
       { status: 500 },
     );
-  }
-}
-    // Note: This is a simplified version - in production you'd extract the
-    // data fetching logic into a separate function
-    console.log(`✅ Background revalidation completed for ${cacheKey}`);
-  } catch (error) {
-    console.error(`❌ Background revalidation failed for ${cacheKey}:`, error);
   }
 }

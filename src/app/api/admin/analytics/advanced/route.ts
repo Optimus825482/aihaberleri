@@ -29,6 +29,7 @@ export async function GET() {
       averageScore,
       totalVisitors,
       categoryStats,
+      categoryViewsAgg,
       topArticles,
       viewsOverTime,
       trafficSources,
@@ -55,14 +56,20 @@ export async function GET() {
       // Total visitors
       prisma.visitor.count(),
 
-      // Category stats
+      // Category stats - OPTIMIZED: Use _count and separate view aggregation
       prisma.category.findMany({
         include: {
-          articles: {
-            select: {
-              views: true,
-            },
+          _count: {
+            select: { articles: true },
           },
+        },
+      }),
+
+      // Category views aggregation - OPTIMIZED: Single groupBy query
+      prisma.article.groupBy({
+        by: ["categoryId"],
+        _sum: {
+          views: true,
         },
       }),
 
@@ -99,12 +106,17 @@ export async function GET() {
       ]),
     ]);
 
-    // Process category stats
-    const processedCategoryStats = categoryStats.map((cat) => ({
-      name: cat.name,
-      count: cat.articles.length,
-      views: cat.articles.reduce((sum, article) => sum + article.views, 0),
-    }));
+    // Process category stats - OPTIMIZED: Use aggregated data
+    const processedCategoryStats = categoryStats.map((cat) => {
+      const viewData = categoryViewsAgg.find(
+        (v: any) => v.categoryId === cat.id,
+      );
+      return {
+        name: cat.name,
+        count: cat._count.articles,
+        views: viewData?._sum?.views || 0,
+      };
+    });
 
     return NextResponse.json({
       summary: {
