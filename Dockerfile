@@ -105,9 +105,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/tsx ./node_modules/tsx
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/esbuild ./node_modules/esbuild
 
-# Install Socket.io with all dependencies in production mode
-# This ensures all transitive dependencies are included
-RUN npm install --omit=dev socket.io@4.8.1 socket.io-client@4.8.1
+# Copy ALL node_modules from builder for custom server.js dependencies
+# Socket.io requires deep dependency tree that standalone mode doesn't detect
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 
