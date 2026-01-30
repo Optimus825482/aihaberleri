@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       const newsAgentQueue = getNewsAgentQueue();
 
       if (newsAgentQueue) {
-        apiLogger.info("Queue available, adding job to BullMQ", {
+        console.log("📋 Queue available, adding job to BullMQ", {
           userId: session.user?.id,
         });
         console.log("📋 Queue available, adding job...");
