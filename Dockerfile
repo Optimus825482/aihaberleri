@@ -14,12 +14,15 @@ WORKDIR /app
 FROM base AS deps
 RUN apk add --no-cache python3 make g++ vips-dev
 
-# Copy package files AND tsconfig (needed for TypeScript aliases)
-COPY package.json package-lock.json* tsconfig.json ./
+# Copy only package files for dependency installation
+COPY package.json package-lock.json* ./
 
-# Install all dependencies including sharp (single installation)
+# Install all dependencies including devDependencies (tailwindcss, etc.)
 RUN npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
     npm install --legacy-peer-deps sharp@0.33.5
+
+# Verify tailwindcss was installed
+RUN ls node_modules/tailwindcss/package.json && echo "✓ tailwindcss installed"
 
 # ===========================
 # BUILDER STAGE (APP)
@@ -30,20 +33,18 @@ WORKDIR /app
 # Install build dependencies (openssl required for Prisma)
 RUN apk add --no-cache openssl openssl-dev python3 make g++ vips-dev
 
-# Copy dependencies AND tsconfig from deps stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/tsconfig.json ./tsconfig.json
-COPY --from=deps /app/package.json ./package.json
+# CRITICAL ORDER: Copy source files FIRST, then overlay node_modules
+# This ensures deps stage node_modules is NOT overwritten by COPY . .
 
-# Copy critical config files first (bypass cache if changed)
-COPY next.config.js ./
-COPY components.json ./
-
-# Copy all application files (includes prisma/, src/, etc.)
+# Step 1: Copy ALL source files (excluding node_modules via .dockerignore)
 COPY . .
 
-# Verify src/components exists (debugging)
-RUN ls -la src/ && ls -la src/components/ || echo "components dir missing!"
+# Step 2: Overlay node_modules from deps stage (overwrites any partial copies)
+COPY --from=deps /app/node_modules ./node_modules
+
+# Verify tailwindcss exists (debugging module not found issue)
+RUN ls -la node_modules/tailwindcss/ || echo "TAILWINDCSS MISSING!"
+RUN ls -la src/components/ui/ || echo "UI COMPONENTS MISSING!"
 
 # Generate Prisma Client (locked to v5.22.0 - v7 has breaking changes)
 RUN npx prisma@5.22.0 generate
