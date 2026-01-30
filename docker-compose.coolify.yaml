@@ -1,17 +1,15 @@
 version: "3.8"
 
 services:
-  # Redis (Local container)
+  # Redis (Local container - No password for internal network)
   redis:
     image: redis:7-alpine
     container_name: aihaberleri-redis
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-    environment:
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "sh", "-c", "redis-cli -a $$REDIS_PASSWORD ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -87,8 +85,8 @@ services:
       # Database (Harici PostgreSQL container - internal URL kullan)
       DATABASE_URL: ${DATABASE_URL}
 
-      # Redis (Local Redis container with authentication)
-      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      # Redis (Local Redis container - no password, internal network only)
+      REDIS_URL: redis://redis:6379
 
       # NextAuth
       NEXTAUTH_URL: https://aihaberleri.org
