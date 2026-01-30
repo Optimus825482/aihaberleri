@@ -102,7 +102,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 # CRITICAL: Remove Windows sharp binary and rebuild for Linux
 # This must come AFTER copying node_modules to override Windows binaries
 RUN rm -rf ./node_modules/sharp && \
-    npm install --os=linux --cpu=x64 sharp@0.33.5
+    npm install --legacy-peer-deps --os=linux --cpu=x64 sharp@0.33.5
 
 # Copy scripts and necessary node_modules for runtime scripts (Agent worker etc)
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
