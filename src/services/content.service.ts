@@ -16,6 +16,7 @@ import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postTweet } from "@/lib/social/twitter";
 import { postToFacebook } from "@/lib/social/facebook";
 import { translateAndSaveArticle } from "@/lib/translation";
+import { getCache } from "@/lib/cache";
 
 export interface ProcessedArticle {
   title: string;
@@ -489,6 +490,16 @@ export async function publishArticle(
     });
 
     console.log(`✅ Haber yayınlandı: ${article.slug} (Skor: ${score})`);
+
+    // 🚀 CACHE: Invalidate articles cache when new article published
+    try {
+      const cache = getCache();
+      await cache.invalidateByTag("articles");
+      console.log("🗑️  Cache invalidated for tag: articles");
+    } catch (cacheError) {
+      console.error("❌ Cache invalidation error:", cacheError);
+      // Don't fail article creation if cache invalidation fails
+    }
 
     // Post-publish tasks: IndexNow submission
     try {

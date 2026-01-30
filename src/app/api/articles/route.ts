@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
+import { getCache } from "@/lib/cache";
 
 // GET - List all articles with server-side pagination, search, and filtering
 export async function GET(request: Request) {
@@ -13,6 +14,21 @@ export async function GET(request: Request) {
     const skip = (page - 1) * limit;
     const search = searchParams.get("search") || "";
     const category = searchParams.get("category") || "";
+
+    // 🚀 CACHE: Generate cache key based on query params
+    const cacheKey = `articles:list:p${page}:l${limit}:s${search}:c${category}`;
+    const cache = getCache();
+
+    // Try to get from cache (5 min TTL)
+    const cached = await cache.get<any>(cacheKey, {
+      tags: ["articles"],
+    });
+
+    if (cached) {
+      const response = NextResponse.json(cached);
+      response.headers.set("X-Cache", "HIT");
+      return response;
+    }
 
     // Build where clause
     const where: any = {};
@@ -67,7 +83,7 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: articles,
       pagination: {
@@ -76,7 +92,17 @@ export async function GET(request: Request) {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+    };
+
+    // 🚀 CACHE: Store in cache (5 min TTL)
+    await cache.set(cacheKey, responseData, {
+      ttl: 300, // 5 minutes
+      tags: ["articles"],
     });
+
+    const response = NextResponse.json(responseData);
+    response.headers.set("X-Cache", "MISS");
+    return response;
   } catch (error) {
     console.error("Haber listesi hatası:", error);
     return NextResponse.json(
@@ -141,6 +167,10 @@ export async function POST(request: Request) {
         console.error("IndexNow manual auto-submit error:", err),
       );
     }
+
+    // 🚀 CACHE: Invalidate articles cache when new article created
+    const cache = getCache();
+    await cache.invalidateByTag("articles");
 
     return NextResponse.json({
       success: true,

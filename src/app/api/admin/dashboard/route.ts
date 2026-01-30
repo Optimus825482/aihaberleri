@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getRedis } from "@/lib/redis";
 import { getCachedGeoIPBatch } from "@/lib/geoip-cache";
+import { getCache } from "@/lib/cache";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
@@ -36,42 +37,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
 
-    // 🚀 PHASE 1: Enhanced cache with stale-while-revalidate
-    const redis = getRedis();
-    const cacheKey = `dashboard:${range}`;
-    const CACHE_TTL = 5 * 60; // 5 minutes (increased from 2)
-    const STALE_TTL = 10 * 60; // 10 minutes (serve stale while revalidating)
+    // 🚀 ADVANCED CACHE: Use CacheManager (2 min TTL)
+    const cacheKey = `dashboard:stats:${range}`;
+    const cache = getCache();
+    const cached = await cache.get<any>(cacheKey, {
+      tags: ["analytics", "dashboard"],
+    });
 
-    if (redis) {
-      try {
-        const cached = await redis.get(cacheKey);
-        if (cached) {
-          const data = JSON.parse(cached as string);
-          const response = NextResponse.json(data);
-
-          // Add cache headers for client-side caching
-          response.headers.set(
-            "Cache-Control",
-            "public, max-age=60, stale-while-revalidate=300",
-          );
-          response.headers.set("X-Cache", "HIT");
-
-          // Check if cache is stale (older than CACHE_TTL)
-          const cacheAge = await redis.ttl(cacheKey);
-          const remaining = STALE_TTL - (STALE_TTL - cacheAge);
-
-          if (remaining < CACHE_TTL) {
-            // Cache is stale, revalidate in background (don't await)
-            revalidateDashboardCache(cacheKey, range).catch((err) => {
-              console.error("Background revalidation failed:", err);
-            });
-          }
-
-          return response;
-        }
-      } catch (cacheError) {
-        console.warn("Cache read failed:", cacheError);
-      }
+    if (cached) {
+      const response = NextResponse.json(cached);
+      response.headers.set("X-Cache", "HIT");
+      response.headers.set(
+        "Cache-Control",
+        "public, max-age=60, stale-while-revalidate=120",
+      );
+      return response;
     }
 
     // Get current date boundaries
@@ -423,23 +403,18 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // 🚀 PHASE 1: Increased cache TTL to 5 minutes
-    if (redis) {
-      try {
-        const CACHE_TTL = 5 * 60; // 5 minutes
-        await redis.setex(cacheKey, CACHE_TTL, JSON.stringify(responseData));
-      } catch (cacheError) {
-        console.warn("Cache write failed:", cacheError);
-      }
-    }
+    // 🚀 ADVANCED CACHE: Store in CacheManager (2 min TTL)
+    await cache.set(cacheKey, responseData, {
+      ttl: 120, // 2 minutes
+      tags: ["analytics", "dashboard"],
+    });
 
     const response = NextResponse.json(responseData);
+    response.headers.set("X-Cache", "MISS");
     response.headers.set(
       "Cache-Control",
-      "public, max-age=60, stale-while-revalidate=300",
+      "public, max-age=60, stale-while-revalidate=120",
     );
-    response.headers.set("X-Cache", "MISS");
-
     return response;
   } catch (error) {
     console.error("Dashboard stats error:", error);
@@ -452,18 +427,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-/**
- * 🚀 PHASE 1: Background revalidation function
- * Revalidates cache without blocking the response
- */
-async function revalidateDashboardCache(cacheKey: string, range: string) {
-  console.log(`🔄 Background revalidation started for ${cacheKey}`);
-
-  // This will be called asynchronously, so we can't access request context
-  // Instead, we'll fetch the data again and update cache
-  try {
-    // Re-fetch data (same logic as GET)
     // Note: This is a simplified version - in production you'd extract the
     // data fetching logic into a separate function
     console.log(`✅ Background revalidation completed for ${cacheKey}`);

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import slugify from "slugify";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
+import { getCache } from "@/lib/cache";
 
 // GET - Get single article
 export async function GET(
@@ -17,6 +18,19 @@ export async function GET(
     }
 
     const { id } = await params;
+
+    // 🚀 CACHE: Try to get from cache (10 min TTL)
+    const cacheKey = `article:${id}`;
+    const cache = getCache();
+    const cached = await cache.get<any>(cacheKey, {
+      tags: ["articles"],
+    });
+
+    if (cached) {
+      const response = NextResponse.json(cached);
+      response.headers.set("X-Cache", "HIT");
+      return response;
+    }
 
     const article = await db.article.findUnique({
       where: { id },
@@ -38,10 +52,20 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: article,
+    };
+
+    // 🚀 CACHE: Store in cache (10 min TTL)
+    await cache.set(cacheKey, responseData, {
+      ttl: 600, // 10 minutes
+      tags: ["articles"],
     });
+
+    const response = NextResponse.json(responseData);
+    response.headers.set("X-Cache", "MISS");
+    return response;
   } catch (error) {
     console.error("Haber getirme hatası:", error);
     return NextResponse.json(
@@ -121,6 +145,10 @@ export async function PUT(
       );
     }
 
+    // 🚀 CACHE: Invalidate article and articles list cache
+    const cache = getCache();
+    await cache.invalidateByTag("articles");
+
     return NextResponse.json({
       success: true,
       data: article,
@@ -170,6 +198,10 @@ export async function DELETE(
     await db.article.delete({
       where: { id },
     });
+
+    // 🚀 CACHE: Invalidate articles cache when deleted
+    const cache = getCache();
+    await cache.invalidateByTag("articles");
 
     return NextResponse.json({
       success: true,
