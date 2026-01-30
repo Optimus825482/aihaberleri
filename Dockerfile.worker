@@ -42,23 +42,23 @@ COPY . .
 RUN npx prisma@5.22.0 generate
 
 # ===========================
-# WORKER RUNNER STAGE
+# WORKER RUNNER STAGE (Alpine for binary compatibility with deps stage)
 # ===========================
-FROM node:20-bookworm-slim AS worker-runner
+FROM node:20-alpine AS worker-runner
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+# Install runtime dependencies (Alpine packages)
+RUN apk add --no-cache \
     openssl \
     ca-certificates \
-    libvips-dev \
-    libvips42 \
-    && rm -rf /var/lib/apt/lists/*
+    vips \
+    vips-dev \
+    libc6-compat
 
 WORKDIR /app
 
-# Create user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 --home /home/worker --shell /bin/sh worker && \
+# Create user (Alpine syntax)
+RUN addgroup -S -g 1001 nodejs && \
+    adduser -S -u 1001 -h /home/worker -s /bin/sh -G nodejs worker && \
     mkdir -p /home/worker/.npm /home/worker/.cache /tmp/tsx-1001 && \
     chown -R worker:nodejs /home/worker /tmp/tsx-1001
 

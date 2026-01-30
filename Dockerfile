@@ -60,21 +60,20 @@ ENV NODE_ENV=production
 RUN npm run build
 
 # ===========================
-# APP RUNNER STAGE
+# APP RUNNER STAGE (Alpine for binary compatibility with deps stage)
 # ===========================
-FROM node:20-bookworm-slim AS runner
+FROM node:20-alpine AS runner
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
+# Install runtime dependencies (Alpine packages)
+RUN apk add --no-cache \
     openssl \
     curl \
     ca-certificates \
     python3 \
-    python3-pip \
-    python3-venv \
-    libvips-dev \
-    libvips42 \
-    && rm -rf /var/lib/apt/lists/*
+    py3-pip \
+    vips \
+    vips-dev \
+    libc6-compat
 
 WORKDIR /app
 
@@ -82,9 +81,9 @@ WORKDIR /app
 RUN python3 -m venv /app/venv
 RUN /app/venv/bin/pip install edge-tts
 
-# Create user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 --home /home/nextjs --shell /bin/sh nextjs && \
+# Create user (Alpine syntax)
+RUN addgroup -S -g 1001 nodejs && \
+    adduser -S -u 1001 -h /home/nextjs -s /bin/sh -G nodejs nextjs && \
     mkdir -p /home/nextjs/.npm /home/nextjs/.cache && \
     chown -R nextjs:nodejs /home/nextjs
 
@@ -99,15 +98,28 @@ COPY --from=app-builder --chown=nextjs:nodejs /app/server.js ./server.js
 COPY --from=app-builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
 
-# Copy runtime dependencies from deps stage (NOT in standalone output)
+# Copy sharp and @img from deps (Alpine-compiled binaries)
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@img ./node_modules/@img
+
+# Copy ALL socket.io related modules (has many transitive deps)
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/socket.io ./node_modules/socket.io
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/socket.io-parser ./node_modules/socket.io-parser
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/socket.io-adapter ./node_modules/socket.io-adapter
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/engine.io ./node_modules/engine.io
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/engine.io-parser ./node_modules/engine.io-parser
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/ws ./node_modules/ws
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/accepts ./node_modules/accepts
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/base64id ./node_modules/base64id
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/cookie ./node_modules/cookie
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/cors ./node_modules/cors
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/debug ./node_modules/debug
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/ms ./node_modules/ms
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/mime-types ./node_modules/mime-types
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/mime-db ./node_modules/mime-db
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/negotiator ./node_modules/negotiator
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/object-assign ./node_modules/object-assign
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/vary ./node_modules/vary
 
 # Set environment
 ENV NODE_ENV=production
