@@ -87,8 +87,9 @@ services:
       dockerfile: Dockerfile
       target: runner
       args:
-        BUILDKIT_INLINE_CACHE: "1"
+        BUILDKIT_INLINE_CACHE: "0"
         NODE_ENV: production
+      no_cache: true
     container_name: aihaberleri-app
     ports:
       - "${APP_PORT:-3001}:3001"

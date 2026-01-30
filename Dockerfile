@@ -13,7 +13,9 @@ WORKDIR /app
 # ===========================
 FROM base AS deps
 RUN apk add --no-cache python3 make g++ vips-dev
-COPY package.json package-lock.json* ./
+
+# Copy package files AND tsconfig (needed for TypeScript aliases)
+COPY package.json package-lock.json* tsconfig.json ./
 
 # Install all dependencies including sharp (single installation)
 RUN npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
@@ -28,11 +30,20 @@ WORKDIR /app
 # Install build dependencies (openssl required for Prisma)
 RUN apk add --no-cache openssl openssl-dev python3 make g++ vips-dev
 
-# Copy dependencies from deps stage
+# Copy dependencies AND tsconfig from deps stage
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/tsconfig.json ./tsconfig.json
+COPY --from=deps /app/package.json ./package.json
+
+# Copy critical config files first (bypass cache if changed)
+COPY next.config.js ./
+COPY components.json ./
 
 # Copy all application files (includes prisma/, src/, etc.)
 COPY . .
+
+# Verify src/components exists (debugging)
+RUN ls -la src/ && ls -la src/components/ || echo "components dir missing!"
 
 # Generate Prisma Client (locked to v5.22.0 - v7 has breaking changes)
 RUN npx prisma@5.22.0 generate
