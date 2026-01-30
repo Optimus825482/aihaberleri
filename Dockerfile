@@ -25,15 +25,23 @@ RUN npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
 FROM base AS app-builder
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache openssl python3 make g++ vips-dev
+# Install build dependencies (openssl required for Prisma)
+RUN apk add --no-cache openssl openssl-dev python3 make g++ vips-dev
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+
+# Copy package files first
+COPY package.json package-lock.json* ./
+
+# Copy prisma schema BEFORE generate
+COPY prisma ./prisma
 
 # Generate Prisma Client
 RUN npx prisma generate
+
+# Copy rest of the application
+COPY . .
 
 # Build Next.js with dummy env vars (prevents ENOTFOUND errors)
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
