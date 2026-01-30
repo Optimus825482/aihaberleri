@@ -17,12 +17,13 @@ RUN apk add --no-cache python3 make g++ vips-dev
 # Copy only package files for dependency installation
 COPY package.json package-lock.json* ./
 
-# NUCLEAR FIX: Install deps + EXPLICITLY install tailwindcss
-# npm ci may be missing tailwindcss from corrupted package-lock.json
+# FIX: npm install without --include=dev causes devDeps to be pruned!
+# Must install ALL packages in single command OR use --include=dev on each install
 RUN npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
-    npm install tailwindcss@3.4.19 postcss autoprefixer --save-dev --legacy-peer-deps && \
-    npm install sharp@0.33.5 --legacy-peer-deps && \
-    ls node_modules/tailwindcss/package.json && echo "✓ tailwindcss INSTALLED"
+    npm install tailwindcss@3.4.19 postcss autoprefixer sharp@0.33.5 --include=dev --legacy-peer-deps && \
+    echo "Package count:" && ls -1 node_modules | wc -l && \
+    ls node_modules/tailwindcss/package.json && echo "✓ tailwindcss INSTALLED" && \
+    ls node_modules/sharp/package.json && echo "✓ sharp INSTALLED"
 
 # ===========================
 # BUILDER STAGE (APP)
