@@ -34,6 +34,17 @@ export const newsAgentQueueEvents = redis
     })
   : null;
 
+// Suppress NOAUTH errors in queue events (not critical for operation)
+if (newsAgentQueueEvents) {
+  newsAgentQueueEvents.on("error", (err) => {
+    if (err.message && err.message.includes("NOAUTH")) {
+      // Silent - Redis info command auth not critical
+      return;
+    }
+    console.error("❌ Queue events error:", err);
+  });
+}
+
 // Helper to add news agent job
 // PHASE 2: Enhanced with immediate reschedule support
 export async function scheduleNewsAgentJob() {

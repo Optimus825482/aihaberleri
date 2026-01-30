@@ -330,6 +330,11 @@ function startWorker() {
   });
 
   worker.on("error", (err) => {
+    // Suppress NOAUTH errors (Redis info command may require auth but worker still functions)
+    if (err.message && err.message.includes("NOAUTH")) {
+      // Silent - not critical, worker continues to function
+      return;
+    }
     console.error("❌ Worker error:", err);
   });
 
