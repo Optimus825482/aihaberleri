@@ -102,12 +102,15 @@ COPY --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@img ./node_modules/@img
 
-# Copy ALL socket.io related modules (has many transitive deps)
+# Copy ALL socket.io related modules including @socket.io scoped packages
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@socket.io ./node_modules/@socket.io
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/socket.io ./node_modules/socket.io
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/socket.io-parser ./node_modules/socket.io-parser
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/socket.io-adapter ./node_modules/socket.io-adapter
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/engine.io ./node_modules/engine.io
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/engine.io-parser ./node_modules/engine.io-parser
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@types/cookie ./node_modules/@types/cookie
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@types/cors ./node_modules/@types/cors
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/ws ./node_modules/ws
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/accepts ./node_modules/accepts
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules/base64id ./node_modules/base64id
