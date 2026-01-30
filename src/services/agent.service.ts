@@ -1,5 +1,9 @@
 /**
  * Agent Service - Orchestrates the autonomous news agent
+ *
+ * 🤖 AI AGENT MONITORING
+ * This service is monitored by @backend-specialist via the background worker
+ * See: WORKER-AGENT-ASSIGNMENT.md for monitoring details
  */
 
 import { db } from "@/lib/db";

@@ -1,6 +1,17 @@
 /**
  * News Agent Worker - Background job processor
  * Run this with: npm run worker
+ *
+ * 🤖 AI AGENT ASSIGNMENT
+ * Assigned Agent: @backend-specialist
+ * Skills: nodejs-best-practices, performance-profiling, database-design, api-patterns
+ * Documentation: See WORKER-AGENT-ASSIGNMENT.md for monitoring details
+ *
+ * The @backend-specialist agent automatically monitors this worker for:
+ * - Performance issues (timeout, slow execution)
+ * - Connection problems (Redis, PostgreSQL)
+ * - Memory leaks and resource usage
+ * - Job queue health and error patterns
  */
 
 import { Worker } from "bullmq";
