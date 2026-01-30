@@ -83,7 +83,7 @@ services:
 
   # Next.js App (PostgreSQL harici container'da, Redis local)
   app:
-    build:
+    build: 
       context: .
       dockerfile: Dockerfile
       target: runner
