@@ -71,6 +71,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "AI Haberleri",
   },
+  verification: {
+    yandex: "43b39db24fc89b78",
+  },
   other: {
     "mobile-web-app-capable": "yes",
   },

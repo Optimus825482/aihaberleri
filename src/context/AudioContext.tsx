@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useRef,
   useEffect,
+  useCallback,
 } from "react";
 import { TTSLoadingModal } from "@/components/audio/TTSLoadingModal";
 
@@ -66,6 +67,8 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Ref to track current audio URL for proper cleanup (prevents stale closure)
+  const currentAudioUrlRef = useRef<string | null>(null);
 
   // Load settings from LocalStorage
   useEffect(() => {
@@ -97,6 +100,20 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem("audio-settings", JSON.stringify(settings));
   }, [state.rate, state.voice, state.volume, state.isMuted]);
 
+  /**
+   * Revokes the current audio URL to prevent memory leaks
+   */
+  const revokeCurrentAudioUrl = useCallback(() => {
+    if (currentAudioUrlRef.current) {
+      try {
+        URL.revokeObjectURL(currentAudioUrlRef.current);
+      } catch (e) {
+        console.warn("Failed to revoke audio URL:", e);
+      }
+      currentAudioUrlRef.current = null;
+    }
+  }, []);
+
   const cleanText = (html: string) => {
     return html
       .replace(/<[^>]*>/g, " ")
@@ -115,23 +132,33 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
         body: JSON.stringify({ text: fullText, voice: state.voice }),
       });
 
-      if (!response.ok) throw new Error("TTS Request Failed");
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "Unknown error");
+        throw new Error(`TTS Request Failed: ${response.status} - ${errorText}`);
+      }
 
       const data = await response.json();
 
-      // Convert base64 to blob
-      const byteCharacters = atob(data.audio);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      if (!data.audio) {
+        throw new Error("TTS response missing audio data");
       }
-      const byteArray = new Uint8Array(byteNumbers);
+
+      // Revoke previous URL before creating new one
+      revokeCurrentAudioUrl();
+
+      // Optimized base64 decode using Uint8Array.from
+      const byteArray = Uint8Array.from(atob(data.audio), (c) => c.charCodeAt(0));
       const blob = new Blob([byteArray], { type: "audio/mpeg" });
 
       const url = URL.createObjectURL(blob);
-      return { url, metadata: data.metadata };
+      // Track the new URL in ref for cleanup
+      currentAudioUrlRef.current = url;
+
+      return { url, metadata: data.metadata || [] };
     } catch (error) {
       console.error("Audio fetch error:", error);
+      // Clean up any partial state
+      revokeCurrentAudioUrl();
       return null;
     } finally {
       setState((s) => ({ ...s, isLoading: false }));
@@ -140,7 +167,7 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
 
   const play = async (article?: { title: string; text: string }) => {
     if (article) {
-      if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+      // Note: revokeCurrentAudioUrl is called inside fetchAudio before creating new URL
       const result = await fetchAudio(article.text, article.title);
       if (result) {
         setState((s) => ({
@@ -155,11 +182,17 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
         if (audioRef.current) {
           audioRef.current.src = result.url;
           audioRef.current.playbackRate = state.rate;
-          audioRef.current.play();
+          audioRef.current.play().catch((e) => {
+            console.error("Audio play failed:", e);
+            setState((s) => ({ ...s, isPlaying: false }));
+          });
         }
       }
     } else if (audioRef.current && state.audioUrl) {
-      audioRef.current.play();
+      audioRef.current.play().catch((e) => {
+        console.error("Audio play failed:", e);
+        setState((s) => ({ ...s, isPlaying: false }));
+      });
       setState((s) => ({ ...s, isPlaying: true }));
     }
   };
@@ -180,11 +213,14 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      // Clean up the audio URL when stopping
+      revokeCurrentAudioUrl();
       setState((s) => ({
         ...s,
         isPlaying: false,
         currentTime: 0,
         currentWordIndex: -1,
+        audioUrl: null,
       }));
     }
   };
@@ -284,11 +320,22 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
     audio.addEventListener("durationchange", handleDurationChange);
     audio.addEventListener("ended", handleEnded);
 
+    // Cleanup function uses ref to avoid stale closure
     return () => {
       audio.removeEventListener("timeupdate", handleTimeUpdate);
       audio.removeEventListener("durationchange", handleDurationChange);
       audio.removeEventListener("ended", handleEnded);
-      if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+      audio.pause();
+      audio.src = "";
+      // Use ref for cleanup to avoid stale closure issue
+      if (currentAudioUrlRef.current) {
+        try {
+          URL.revokeObjectURL(currentAudioUrlRef.current);
+        } catch (e) {
+          console.warn("Failed to revoke audio URL on cleanup:", e);
+        }
+        currentAudioUrlRef.current = null;
+      }
     };
   }, []);
 
