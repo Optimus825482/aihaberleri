@@ -171,6 +171,7 @@ services:
     restart: unless-stopped
     networks:
       - aihaberleri-network
+      - coolify
 
 volumes:
   redis_data:
@@ -179,3 +180,5 @@ volumes:
 networks:
   aihaberleri-network:
     driver: bridge
+  coolify:
+    external: true
