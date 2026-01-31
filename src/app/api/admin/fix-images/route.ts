@@ -4,7 +4,8 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=630&fit=crop";
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&h=630&fit=crop";
 
 /**
  * Fix articles with broken local image paths
@@ -70,7 +71,7 @@ export async function POST() {
           return { id: article.id, title: article.title, fixed: true };
         }
         return { id: article.id, title: article.title, fixed: false };
-      })
+      }),
     );
 
     const fixedCount = updates.filter((u) => u.fixed).length;
@@ -84,7 +85,7 @@ export async function POST() {
     console.error("Fix images error:", error);
     return NextResponse.json(
       { error: "Failed to fix images" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -126,7 +127,7 @@ export async function GET() {
     console.error("Check images error:", error);
     return NextResponse.json(
       { error: "Failed to check images" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

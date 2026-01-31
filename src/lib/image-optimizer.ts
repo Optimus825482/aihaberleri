@@ -158,19 +158,24 @@ async function uploadToR2(buffer: Buffer, key: string): Promise<UploadResult> {
 }
 
 /**
- * Upload image buffer with automatic fallback (R2 → Local)
+ * Upload image buffer with automatic fallback (R2 → Original URL)
+ * NOTE: Local storage disabled because Worker and App are separate containers
  */
-async function uploadImage(buffer: Buffer, key: string): Promise<string> {
+async function uploadImage(
+  buffer: Buffer,
+  key: string,
+  originalUrl?: string,
+): Promise<string> {
   // Try R2 first (if configured)
   const r2Result = await uploadToR2(buffer, key);
   if (r2Result.success && r2Result.url) {
     return r2Result.url;
   }
 
-  // Fallback to local storage
-  console.log("⚠️  R2 unavailable, using local storage");
-  const filename = key.split("/").pop() || key;
-  return saveToLocal(buffer, filename);
+  // R2 not available - cannot use local storage in multi-container setup
+  // Worker saves to /app/public but App container cannot see those files
+  console.log("⚠️  R2 unavailable, skipping local storage (multi-container)");
+  throw new Error("R2_NOT_CONFIGURED");
 }
 
 /**
