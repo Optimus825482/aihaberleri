@@ -353,7 +353,7 @@ export default function ArticlesPage() {
                           alt={article.title}
                           fill
                           className="object-cover"
-                          unoptimized={article.imageUrl.includes('pollinations.ai')}
+                          unoptimized={article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev')}
                         />
                       </div>
                     ) : (
@@ -387,7 +387,7 @@ export default function ArticlesPage() {
                     </div>
                     <div className="flex items-center gap-1">
                       <span className={`font-bold ${(article.score || 0) >= 800 ? "text-green-600" :
-                          (article.score || 0) >= 500 ? "text-yellow-600" : "text-red-600"
+                        (article.score || 0) >= 500 ? "text-yellow-600" : "text-red-600"
                         }`}>
                         {article.score || 0}
                       </span>
@@ -486,7 +486,7 @@ export default function ArticlesPage() {
                               alt={article.title}
                               fill
                               className="object-cover"
-                              unoptimized={article.imageUrl.includes('pollinations.ai')}
+                              unoptimized={article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev')}
                             />
                           </div>
                         ) : (
