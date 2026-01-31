@@ -345,39 +345,102 @@ export async function isDuplicateNews(
  */
 const AI_KEYWORDS = [
   // Core AI Terms
-  "artificial intelligence", "yapay zeka", "ai ", " ai", "a.i.",
-  "machine learning", "makine öğrenmesi", "makine ogrenmesi",
-  "deep learning", "derin öğrenme", "derin ogrenme",
-  "neural network", "sinir ağı", "sinir agi",
-  
+  "artificial intelligence",
+  "yapay zeka",
+  "ai ",
+  " ai",
+  "a.i.",
+  "machine learning",
+  "makine öğrenmesi",
+  "makine ogrenmesi",
+  "deep learning",
+  "derin öğrenme",
+  "derin ogrenme",
+  "neural network",
+  "sinir ağı",
+  "sinir agi",
+
   // AI Models & Products
-  "gpt", "chatgpt", "openai", "gemini", "claude", "anthropic",
-  "llama", "mistral", "deepseek", "copilot", "bard", "palm",
-  "dall-e", "midjourney", "stable diffusion", "sora",
-  
+  "gpt",
+  "chatgpt",
+  "openai",
+  "gemini",
+  "claude",
+  "anthropic",
+  "llama",
+  "mistral",
+  "deepseek",
+  "copilot",
+  "bard",
+  "palm",
+  "dall-e",
+  "midjourney",
+  "stable diffusion",
+  "sora",
+
   // AI Techniques
-  "nlp", "natural language", "doğal dil", "dogal dil",
-  "computer vision", "bilgisayarlı görü", "bilgisayarli goru",
-  "transformer", "language model", "dil modeli",
-  "generative ai", "üretken yapay zeka", "uretken yapay zeka",
-  "large language model", "llm", "büyük dil modeli",
-  
+  "nlp",
+  "natural language",
+  "doğal dil",
+  "dogal dil",
+  "computer vision",
+  "bilgisayarlı görü",
+  "bilgisayarli goru",
+  "transformer",
+  "language model",
+  "dil modeli",
+  "generative ai",
+  "üretken yapay zeka",
+  "uretken yapay zeka",
+  "large language model",
+  "llm",
+  "büyük dil modeli",
+
   // AI Companies
-  "nvidia", "tesla autopilot", "otonom sürüş", "otonom surus",
-  "hugging face", "cohere", "stability ai", "runway",
-  "google ai", "microsoft ai", "meta ai", "amazon ai",
-  
+  "nvidia",
+  "tesla autopilot",
+  "otonom sürüş",
+  "otonom surus",
+  "hugging face",
+  "cohere",
+  "stability ai",
+  "runway",
+  "google ai",
+  "microsoft ai",
+  "meta ai",
+  "amazon ai",
+
   // AI Applications
-  "chatbot", "sohbet botu", "robot", "robotik", "robotic",
-  "autonomous", "otonom", "automation", "otomasyon",
-  "ai assistant", "ai asistan", "yapay zeka asistan",
-  "ai tool", "ai araç", "ai arac",
-  
+  "chatbot",
+  "sohbet botu",
+  "robot",
+  "robotik",
+  "robotic",
+  "autonomous",
+  "otonom",
+  "automation",
+  "otomasyon",
+  "ai assistant",
+  "ai asistan",
+  "yapay zeka asistan",
+  "ai tool",
+  "ai araç",
+  "ai arac",
+
   // AI Ethics & Regulation
-  "ai ethics", "ai etik", "yapay zeka etiği", "yapay zeka etigi",
-  "ai regulation", "ai düzenleme", "ai duzenleme",
-  "ai safety", "ai güvenlik", "ai guvenlik",
-  "ai bias", "ai önyargı", "ai onyargi",
+  "ai ethics",
+  "ai etik",
+  "yapay zeka etiği",
+  "yapay zeka etigi",
+  "ai regulation",
+  "ai düzenleme",
+  "ai duzenleme",
+  "ai safety",
+  "ai güvenlik",
+  "ai guvenlik",
+  "ai bias",
+  "ai önyargı",
+  "ai onyargi",
 ];
 
 /**
@@ -455,14 +518,24 @@ export async function fetchAINews(
     console.log(`📅 Son 48 saatte ${recentItems.length} haber`);
 
     // Step 2.5: CRITICAL - Filter by AI keywords to exclude non-AI news
-    const aiFilteredItems = filterByAIKeywords(recentItems.length > 0 ? recentItems : filteredItems);
-    console.log(`🤖 AI filtreleme: ${aiFilteredItems.length}/${recentItems.length || filteredItems.length} haber AI ile ilgili`);
+    const aiFilteredItems = filterByAIKeywords(
+      recentItems.length > 0 ? recentItems : filteredItems,
+    );
+    console.log(
+      `🤖 AI filtreleme: ${aiFilteredItems.length}/${recentItems.length || filteredItems.length} haber AI ile ilgili`,
+    );
 
     if (aiFilteredItems.length === 0) {
-      console.log("⚠️  AI ile ilgili haber bulunamadı, en az 10 haber kullanılacak");
+      console.log(
+        "⚠️  AI ile ilgili haber bulunamadı, en az 10 haber kullanılacak",
+      );
       // If no AI news found, take top 10 from recent items
-      const fallbackItems = (recentItems.length > 0 ? recentItems : filteredItems).slice(0, 10);
-      return convertRSSToNews(fallbackItems.map(item => ({ ...item, trendScore: 0 })));
+      const fallbackItems = (
+        recentItems.length > 0 ? recentItems : filteredItems
+      ).slice(0, 10);
+      return convertRSSToNews(
+        fallbackItems.map((item) => ({ ...item, trendScore: 0 })),
+      );
     }
 
     // SMART SAMPLING: Prioritize recent + diverse sources

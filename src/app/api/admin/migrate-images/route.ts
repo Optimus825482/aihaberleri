@@ -4,6 +4,23 @@ import { db } from "@/lib/db";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 
 /**
+ * Check if R2 is properly configured
+ */
+function checkR2Config(): { configured: boolean; missing: string[] } {
+  const required = [
+    "R2_ENDPOINT",
+    "R2_ACCESS_KEY_ID",
+    "R2_SECRET_ACCESS_KEY",
+    "R2_BUCKET",
+  ];
+  const missing = required.filter((key) => !process.env[key]);
+  return {
+    configured: missing.length === 0,
+    missing,
+  };
+}
+
+/**
  * POST /api/admin/migrate-images
  * Migrate Pollinations.ai images to R2 storage
  */
@@ -11,6 +28,20 @@ export async function POST(request: Request) {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Check R2 configuration BEFORE processing
+  const r2Config = checkR2Config();
+  if (!r2Config.configured) {
+    console.error("❌ R2 not configured. Missing env vars:", r2Config.missing);
+    return NextResponse.json(
+      {
+        error: "R2 storage not configured",
+        details: `Missing environment variables: ${r2Config.missing.join(", ")}`,
+        hint: "Set these in Coolify Dashboard → Environment Variables, then Redeploy",
+      },
+      { status: 503 },
+    );
   }
 
   try {
