@@ -21,33 +21,21 @@ export interface RSSItem {
  */
 export const AI_NEWS_RSS_FEEDS = [
   // ========================================
-  // MAJOR GLOBAL NEWS OUTLETS (20 feeds)
+  // MAJOR GLOBAL NEWS OUTLETS - TECHNOLOGY ONLY
   // ========================================
-  {
-    name: "BBC News - World",
-    url: "http://feeds.bbci.co.uk/news/world/rss.xml",
-    language: "en",
-  },
+  // REMOVED: BBC News - World (general news, not AI-specific)
   {
     name: "BBC News - Technology",
     url: "http://feeds.bbci.co.uk/news/technology/rss.xml",
     language: "en",
   },
-  {
-    name: "CNN - Top Stories",
-    url: "http://rss.cnn.com/rss/edition.rss",
-    language: "en",
-  },
+  // REMOVED: CNN - Top Stories (general news, not AI-specific)
   {
     name: "CNN - Technology",
     url: "http://rss.cnn.com/rss/edition_technology.rss",
     language: "en",
   },
-  {
-    name: "Al Jazeera - News",
-    url: "https://www.aljazeera.com/xml/rss/all.xml",
-    language: "en",
-  },
+  // REMOVED: Al Jazeera - News (general news, not AI-specific)
   {
     name: "Bloomberg - Technology",
     url: "https://feeds.bloomberg.com/technology/news.rss",
@@ -78,11 +66,7 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://feeds.skynews.com/feeds/rss/technology.xml",
     language: "en",
   },
-  {
-    name: "Deutsche Welle - News",
-    url: "https://rss.dw.com/xml/rss-en-all",
-    language: "en",
-  },
+  // REMOVED: Deutsche Welle - News (general news, not AI-specific)
   {
     name: "Euronews - Technology",
     url: "https://www.euronews.com/rss?level=theme&name=sci-tech",

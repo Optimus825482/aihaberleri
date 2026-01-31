@@ -199,10 +199,53 @@ URL: ${article.url}
 
   const results = JSON.parse(jsonMatch[0]);
 
-  // Filter by AI relevance score (must be >= 70)
+  // Filter by AI relevance score (must be >= 80 for strict AI filtering)
   const filtered = results.filter((item: any) => {
     const relevance = item.aiRelevance || 0;
-    if (relevance < 70) {
+    const title = articles[item.index]?.title?.toLowerCase() || "";
+
+    // Hard reject: Keywords that indicate non-AI news
+    const nonAIKeywords = [
+      "nuclear",
+      "nükleer",
+      "ukraine",
+      "ukrayna",
+      "war",
+      "savaş",
+      "election",
+      "seçim",
+      "politics",
+      "politika",
+      "military",
+      "askeri",
+      "climate",
+      "iklim",
+      "earthquake",
+      "deprem",
+      "flood",
+      "sel",
+      "sports",
+      "spor",
+      "football",
+      "futbol",
+      "basketball",
+      "celebrity",
+      "ünlü",
+      "entertainment",
+      "eğlence",
+    ];
+
+    const hasNonAIKeyword = nonAIKeywords.some((keyword) =>
+      title.includes(keyword),
+    );
+    if (hasNonAIKeyword) {
+      console.log(
+        `🚫 Hard reject (non-AI keyword): ${articles[item.index]?.title}`,
+      );
+      return false;
+    }
+
+    if (relevance < 80) {
       console.log(
         `🗑️ AI relevance too low (${relevance}%): ${articles[item.index]?.title}`,
       );
