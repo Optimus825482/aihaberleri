@@ -25,6 +25,9 @@ import {
   RefreshCw,
   CheckCircle2,
   XCircle,
+  Wrench,
+  ImageIcon,
+  Database,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CountdownTimer } from "@/components/CountdownTimer";
@@ -658,6 +661,9 @@ export default function AgentSettingsPage() {
           </Card>
         )}
 
+        {/* Maintenance Card */}
+        <MaintenanceCard />
+
         {/* Info Card */}
         <Card className="bg-blue-500/5 border-blue-500/20">
           <CardHeader>
@@ -688,5 +694,183 @@ export default function AgentSettingsPage() {
         </Card>
       </div>
     </AdminLayout>
+  );
+}
+
+// Maintenance Card Component
+function MaintenanceCard() {
+  const [dbMigrating, setDbMigrating] = useState(false);
+  const [imgMigrating, setImgMigrating] = useState(false);
+  const [dbStatus, setDbStatus] = useState<{
+    needsMigration: boolean;
+    missingColumns: string[];
+  } | null>(null);
+  const [imgStatus, setImgStatus] = useState<{
+    pendingCount: number;
+  } | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    checkDbStatus();
+    checkImageStatus();
+  }, []);
+
+  const checkDbStatus = async () => {
+    try {
+      const res = await fetch("/api/admin/db-migrate");
+      if (res.ok) {
+        const data = await res.json();
+        setDbStatus(data);
+      }
+    } catch {
+      // API might not exist yet
+    }
+  };
+
+  const checkImageStatus = async () => {
+    try {
+      const res = await fetch("/api/admin/migrate-images");
+      if (res.ok) {
+        const data = await res.json();
+        setImgStatus({ pendingCount: data.pendingCount || 0 });
+      }
+    } catch {
+      // API might not exist yet
+    }
+  };
+
+  const runDbMigration = async () => {
+    setDbMigrating(true);
+    try {
+      const res = await fetch("/api/admin/db-migrate", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        toast({
+          title: "Başarılı",
+          description: "Database kolonları eklendi",
+        });
+        checkDbStatus();
+      } else {
+        toast({
+          title: "Hata",
+          description: data.error || "Migration başarısız",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Hata",
+        description: "Migration yapılamadı",
+        variant: "destructive",
+      });
+    } finally {
+      setDbMigrating(false);
+    }
+  };
+
+  const runImageMigration = async () => {
+    setImgMigrating(true);
+    try {
+      const res = await fetch("/api/admin/migrate-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 10 }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast({
+          title: "Başarılı",
+          description: `${data.successCount} görsel R2'ye taşındı`,
+        });
+        checkImageStatus();
+      } else {
+        toast({
+          title: "Hata",
+          description: data.error || "Migration başarısız",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Hata",
+        description: "Görsel migration yapılamadı",
+        variant: "destructive",
+      });
+    } finally {
+      setImgMigrating(false);
+    }
+  };
+
+  return (
+    <Card className="bg-orange-500/5 border-orange-500/20">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+          <Wrench className="h-5 w-5" />
+          Bakım İşlemleri
+        </CardTitle>
+        <CardDescription>
+          Database ve görsel düzeltme araçları
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Database Migration */}
+        <div className="flex items-center justify-between p-3 border rounded-lg">
+          <div className="flex items-center gap-3">
+            <Database className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <div className="text-sm font-medium">Database Kolonları</div>
+              <div className="text-xs text-muted-foreground">
+                {dbStatus === null
+                  ? "Kontrol ediliyor..."
+                  : dbStatus.needsMigration
+                    ? `${dbStatus.missingColumns.length} kolon eksik`
+                    : "✓ Tüm kolonlar mevcut"}
+              </div>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={runDbMigration}
+            disabled={dbMigrating || (dbStatus && !dbStatus.needsMigration)}
+          >
+            {dbMigrating ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              "Düzelt"
+            )}
+          </Button>
+        </div>
+
+        {/* Image Migration */}
+        <div className="flex items-center justify-between p-3 border rounded-lg">
+          <div className="flex items-center gap-3">
+            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <div className="text-sm font-medium">Görsel Migration</div>
+              <div className="text-xs text-muted-foreground">
+                {imgStatus === null
+                  ? "Kontrol ediliyor..."
+                  : imgStatus.pendingCount > 0
+                    ? `${imgStatus.pendingCount} görsel Pollinations'da`
+                    : "✓ Tüm görseller R2'de"}
+              </div>
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={runImageMigration}
+            disabled={imgMigrating || (imgStatus && imgStatus.pendingCount === 0)}
+          >
+            {imgMigrating ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              "10 Taşı"
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
