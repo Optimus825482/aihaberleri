@@ -75,7 +75,7 @@ export function Logo({
   );
 
   return href ? (
-    <Link href={href} className="inline-block">
+    <Link href={href} className="inline-block" aria-label="AI Haberleri Ana Sayfa">
       {logoContent}
     </Link>
   ) : (

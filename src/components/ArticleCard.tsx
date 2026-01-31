@@ -23,6 +23,7 @@ interface ArticleCardProps {
     };
   };
   locale?: "tr" | "en";
+  priority?: boolean; // For LCP optimization - first visible cards
 }
 
 // Localized text
@@ -41,7 +42,7 @@ const texts = {
   },
 };
 
-export function ArticleCard({ article, locale = "tr" }: ArticleCardProps) {
+export function ArticleCard({ article, locale = "tr", priority = false }: ArticleCardProps) {
   const readingTime = article.content
     ? calculateReadingTime(article.content)
     : 3;
@@ -90,7 +91,8 @@ export function ArticleCard({ article, locale = "tr" }: ArticleCardProps) {
                 src={article.imageUrl}
                 alt={article.title}
                 className="w-full h-full object-cover transition-transform hover:scale-105"
-                loading="lazy"
+                loading={priority ? "eager" : "lazy"}
+                fetchPriority={priority ? "high" : "auto"}
               />
             ) : (
               <Image
@@ -99,6 +101,7 @@ export function ArticleCard({ article, locale = "tr" }: ArticleCardProps) {
                 fill
                 className="object-cover transition-transform hover:scale-105"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                priority={priority}
               />
             )}
           </div>

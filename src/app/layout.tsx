@@ -122,6 +122,11 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
+        {/* Preconnect for LCP/FCP optimization */}
+        <link rel="preconnect" href="https://images.aihaberleri.org" />
+        <link rel="preconnect" href="https://image.pollinations.ai" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
           <script
             async
