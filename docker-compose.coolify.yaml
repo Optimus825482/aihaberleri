@@ -45,7 +45,8 @@ services:
       R2_ACCESS_KEY_ID: 28a9b95872b15484627a7713c1b57998
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY}
       R2_BUCKET: aihaberleri-images
-      R2_PUBLIC_URL: https://pub-32620931b6ce48bca2549881c536b806.r2.dev
+      # Use custom domain instead of r2.dev (fixes SSL issues)
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL:-https://images.aihaberleri.org}
       AGENT_ENABLED: ${AGENT_ENABLED:-true}
       AGENT_MIN_ARTICLES_PER_RUN: ${AGENT_MIN_ARTICLES_PER_RUN:-3}
       AGENT_MAX_ARTICLES_PER_RUN: ${AGENT_MAX_ARTICLES_PER_RUN:-5}
