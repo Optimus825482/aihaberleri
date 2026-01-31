@@ -4,6 +4,7 @@ services:
   # Redis (Local container)
   redis:
     image: redis:7-alpine
+    container_name: aihaberleri-redis
     hostname: aihaberleri-redis
     command: redis-server --appendonly yes
     volumes:
@@ -18,6 +19,7 @@ services:
 
   # BullMQ Worker (Agent Automation)
   worker:
+    container_name: aihaberleri-worker
     build:
       context: .
       dockerfile: Dockerfile
@@ -53,6 +55,8 @@ services:
 
   # Next.js App
   app:
+    container_name: aihaberleri-app
+    hostname: aihaberleri-app
     build:
       context: .
       dockerfile: Dockerfile
