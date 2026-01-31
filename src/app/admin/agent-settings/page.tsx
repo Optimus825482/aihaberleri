@@ -424,22 +424,33 @@ export default function AgentSettingsPage() {
                     Çalışma Sıklığı
                   </Label>
                   <Badge variant="secondary">
-                    {settings.intervalHours} saat
+                    {settings.intervalHours < 1 
+                      ? `${Math.round(settings.intervalHours * 60)} dk` 
+                      : `${settings.intervalHours} saat`}
                   </Badge>
                 </div>
-                <Slider
+                <select
                   id="interval"
-                  min={1}
-                  max={24}
-                  step={1}
-                  value={[settings.intervalHours]}
-                  onValueChange={([value]) =>
-                    setSettings((prev) => ({ ...prev, intervalHours: value }))
+                  value={settings.intervalHours}
+                  onChange={(e) =>
+                    setSettings((prev) => ({ ...prev, intervalHours: parseFloat(e.target.value) }))
                   }
-                  className="w-full"
-                />
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-background/50 backdrop-blur-sm text-foreground"
+                >
+                  <option value="0.25">15 Dakikada Bir</option>
+                  <option value="0.5">30 Dakikada Bir</option>
+                  <option value="1">Saatte Bir</option>
+                  <option value="2">2 Saatte Bir</option>
+                  <option value="3">3 Saatte Bir</option>
+                  <option value="4">4 Saatte Bir</option>
+                  <option value="6">6 Saatte Bir</option>
+                  <option value="12">12 Saatte Bir</option>
+                  <option value="24">Günde Bir</option>
+                </select>
                 <p className="text-xs text-muted-foreground">
-                  Agent her {settings.intervalHours} saatte bir çalışacak
+                  Agent her {settings.intervalHours < 1 
+                    ? `${Math.round(settings.intervalHours * 60)} dakikada` 
+                    : `${settings.intervalHours} saatte`} bir çalışacak
                 </p>
               </div>
 

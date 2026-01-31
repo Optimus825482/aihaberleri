@@ -333,14 +333,14 @@ export async function pingSitemaps(): Promise<{
 
   // Note: Google deprecated sitemap ping in 2023, but we try anyway
   // Bing still supports it via IndexNow
-  
+
   try {
     // Bing - sitemap ping (deprecated but may still work)
     const bingResponse = await fetch(
       `https://www.bing.com/ping?sitemap=${sitemapUrl}`,
-      { method: "GET" }
+      { method: "GET" },
     );
-    
+
     if (bingResponse.ok) {
       console.log("✅ Bing sitemap ping successful");
       results.bing = true;
@@ -358,15 +358,18 @@ export async function pingSitemaps(): Promise<{
   try {
     const googleResponse = await fetch(
       `https://www.google.com/ping?sitemap=${sitemapUrl}`,
-      { method: "GET" }
+      { method: "GET" },
     );
-    
+
     if (googleResponse.ok) {
       console.log("✅ Google sitemap ping successful");
       results.google = true;
     }
   } catch (error) {
-    console.warn("⚠️ Google sitemap ping failed (expected - deprecated):", error);
+    console.warn(
+      "⚠️ Google sitemap ping failed (expected - deprecated):",
+      error,
+    );
   }
 
   return results;

@@ -216,12 +216,16 @@ export async function executeNewsAgent(
 
     // Ping search engines to update sitemaps (non-blocking)
     if (articlesCreated > 0) {
-      pingSitemaps().then((results) => {
-        const successCount = results.filter((r) => r.success).length;
-        console.log(`🔔 Sitemap ping: ${successCount}/${results.length} başarılı`);
-      }).catch((err) => {
-        console.warn("⚠️ Sitemap ping hatası:", err.message);
-      });
+      pingSitemaps()
+        .then((results) => {
+          const successCount = results.filter((r) => r.success).length;
+          console.log(
+            `🔔 Sitemap ping: ${successCount}/${results.length} başarılı`,
+          );
+        })
+        .catch((err) => {
+          console.warn("⚠️ Sitemap ping hatası:", err.message);
+        });
     }
 
     // Emit article published events
