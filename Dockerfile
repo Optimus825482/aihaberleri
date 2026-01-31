@@ -135,8 +135,8 @@ WORKDIR /app
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 --home /home/worker --shell /bin/sh worker && \
-    mkdir -p /home/worker/.npm /home/worker/.cache /tmp/tsx-1001 && \
-    chown -R worker:nodejs /home/worker /tmp/tsx-1001
+    mkdir -p /home/worker/.npm /home/worker/.cache /tmp/tsx-1001 /app/public/images/optimized && \
+    chown -R worker:nodejs /home/worker /tmp/tsx-1001 /app/public
 
 # Copy ENTIRE node_modules
 COPY --from=deps --chown=worker:nodejs /app/node_modules ./node_modules
