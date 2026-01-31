@@ -258,6 +258,43 @@ export async function GET(request: Request) {
     }
   }
 
+  // Action: Update R2 URLs to new domain
+  if (action === "update-domain") {
+    try {
+      const oldDomain = searchParams.get("old") || "pub-32620931b6ce48bca2549881c536b806.r2.dev";
+      const newDomain = searchParams.get("new") || process.env.R2_PUBLIC_URL?.replace("https://", "");
+
+      if (!newDomain) {
+        return NextResponse.json(
+          { error: "New domain not specified. Set R2_PUBLIC_URL or pass ?new=domain" },
+          { status: 400 },
+        );
+      }
+
+      // Update all articles with old R2 domain
+      const result = await db.$executeRaw`
+        UPDATE "Article" 
+        SET 
+          "imageUrl" = REPLACE("imageUrl", ${oldDomain}, ${newDomain}),
+          "imageUrlMedium" = REPLACE("imageUrlMedium", ${oldDomain}, ${newDomain}),
+          "imageUrlSmall" = REPLACE("imageUrlSmall", ${oldDomain}, ${newDomain}),
+          "imageUrlThumb" = REPLACE("imageUrlThumb", ${oldDomain}, ${newDomain})
+        WHERE "imageUrl" LIKE ${"%" + oldDomain + "%"}
+      `;
+
+      return NextResponse.json({
+        success: true,
+        updated: result,
+        message: `Updated URLs from ${oldDomain} to ${newDomain}`,
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Update failed" },
+        { status: 500 },
+      );
+    }
+  }
+
   // Default: Count pending migrations
   try {
     const pollinationsCount = await db.article.count({
