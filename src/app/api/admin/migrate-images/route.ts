@@ -261,12 +261,19 @@ export async function GET(request: Request) {
   // Action: Update R2 URLs to new domain
   if (action === "update-domain") {
     try {
-      const oldDomain = searchParams.get("old") || "pub-32620931b6ce48bca2549881c536b806.r2.dev";
-      const newDomain = searchParams.get("new") || process.env.R2_PUBLIC_URL?.replace("https://", "");
+      const oldDomain =
+        searchParams.get("old") ||
+        "pub-32620931b6ce48bca2549881c536b806.r2.dev";
+      const newDomain =
+        searchParams.get("new") ||
+        process.env.R2_PUBLIC_URL?.replace("https://", "");
 
       if (!newDomain) {
         return NextResponse.json(
-          { error: "New domain not specified. Set R2_PUBLIC_URL or pass ?new=domain" },
+          {
+            error:
+              "New domain not specified. Set R2_PUBLIC_URL or pass ?new=domain",
+          },
           { status: 400 },
         );
       }

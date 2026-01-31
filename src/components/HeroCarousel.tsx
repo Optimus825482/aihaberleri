@@ -123,7 +123,7 @@ export function HeroCarousel({
             }`}
         >
           {article.imageUrl && (
-            article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev') ? (
+            article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev') || article.imageUrl.includes('images.aihaberleri.org') ? (
               // Use native img for Pollinations and R2 to avoid Next.js optimization issues
               // eslint-disable-next-line @next/next/no-img-element
               <img

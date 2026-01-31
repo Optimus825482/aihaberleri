@@ -78,7 +78,7 @@ export function ResponsiveImage({
                 onError={() => setError(true)}
                 fill={fill}
                 sizes={sizes}
-                unoptimized={src.includes('pollinations.ai') || src.includes('r2.dev')}
+                unoptimized={src.includes('pollinations.ai') || src.includes('r2.dev') || src.includes('images.aihaberleri.org')}
             />
         );
     }
@@ -117,7 +117,7 @@ export function ResponsiveImage({
                     sizes ||
                     "(max-width: 640px) 200px, (max-width: 768px) 400px, (max-width: 1024px) 800px, 1200px"
                 }
-                unoptimized={src.includes('pollinations.ai') || src.includes('r2.dev')}
+                unoptimized={src.includes('pollinations.ai') || src.includes('r2.dev') || src.includes('images.aihaberleri.org')}
             />
         </picture>
     );

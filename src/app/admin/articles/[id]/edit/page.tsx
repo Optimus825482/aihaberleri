@@ -277,7 +277,7 @@ export default function EditArticlePage({
                         alt="Önizleme"
                         fill
                         className="object-cover"
-                        unoptimized={formData.imageUrl.includes('pollinations.ai') || formData.imageUrl.includes('r2.dev')}
+                        unoptimized={formData.imageUrl.includes('pollinations.ai') || formData.imageUrl.includes('r2.dev') || formData.imageUrl.includes('images.aihaberleri.org')}
                       />
                     </div>
                   )}

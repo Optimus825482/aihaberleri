@@ -353,7 +353,7 @@ export default function ArticlesPage() {
                           alt={article.title}
                           fill
                           className="object-cover"
-                          unoptimized={article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev')}
+                          unoptimized={article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev') || article.imageUrl.includes('images.aihaberleri.org')}
                         />
                       </div>
                     ) : (
@@ -486,7 +486,7 @@ export default function ArticlesPage() {
                               alt={article.title}
                               fill
                               className="object-cover"
-                              unoptimized={article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev')}
+                              unoptimized={article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev') || article.imageUrl.includes('images.aihaberleri.org')}
                             />
                           </div>
                         ) : (
