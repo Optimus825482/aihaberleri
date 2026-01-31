@@ -152,10 +152,29 @@ export async function executeNewsAgent(
       progress: 40,
     });
 
-    const minArticles = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "2");
-    const maxArticles = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "3");
+    // Get article count from database settings (priority) or env vars (fallback)
+    const minSetting = await db.setting.findUnique({
+      where: { key: "agent.minArticles" },
+    });
+    const maxSetting = await db.setting.findUnique({
+      where: { key: "agent.maxArticles" },
+    });
+
+    const minArticles = minSetting
+      ? parseInt(minSetting.value)
+      : parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "3");
+    const maxArticles = maxSetting
+      ? parseInt(maxSetting.value)
+      : parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "5");
+
+    console.log(
+      `📊 Haber sayısı ayarları: min=${minArticles}, max=${maxArticles}`,
+    );
+
     const targetCount =
       Math.floor(Math.random() * (maxArticles - minArticles + 1)) + minArticles;
+
+    console.log(`🎯 Hedef haber sayısı: ${targetCount}`);
 
     const selectedArticles = await selectBestArticles(
       newsArticles,
@@ -231,9 +250,10 @@ export async function executeNewsAgent(
     const intervalSetting = await db.setting.findUnique({
       where: { key: "agent.intervalHours" },
     });
-    const intervalHours = parseInt(intervalSetting?.value || "6");
+    const intervalHours = parseFloat(intervalSetting?.value || "6");
     const nextRun = new Date();
-    nextRun.setHours(nextRun.getHours() + intervalHours);
+    // Decimal hours support (0.25 = 15min, 0.5 = 30min)
+    nextRun.setTime(nextRun.getTime() + Math.round(intervalHours * 60 * 60 * 1000));
 
     await db.setting.upsert({
       where: { key: "agent.nextRun" },

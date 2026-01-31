@@ -96,8 +96,8 @@ export async function scheduleNewsAgentJob() {
       where: { key: "agent.intervalHours" },
     });
 
-    const intervalHours = setting ? parseInt(setting.value) : 6;
-    const delay = intervalHours * 60 * 60 * 1000;
+    const intervalHours = setting ? parseFloat(setting.value) : 6;
+    const delay = Math.round(intervalHours * 60 * 60 * 1000); // Support decimal hours (0.25 = 15 min)
 
     // Phase 2: Remove existing jobs first to allow immediate reschedule
     const existingJobs = await queue.getRepeatableJobs();

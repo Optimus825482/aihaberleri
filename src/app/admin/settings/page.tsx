@@ -67,7 +67,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "general" | "seo" | "email" | "social"
+    "general" | "seo" | "email" | "social" | "agent"
   >("general");
 
   useEffect(() => {
@@ -162,6 +162,7 @@ export default function SettingsPage() {
         <div className="flex gap-2 overflow-x-auto pb-2">
           {[
             { key: "general", label: "Genel", icon: Globe },
+            { key: "agent", label: "Haber Botu", icon: Bot },
             { key: "seo", label: "SEO", icon: Search },
             { key: "email", label: "E-posta", icon: Mail },
             { key: "social", label: "Sosyal Medya", icon: Facebook },
@@ -336,6 +337,156 @@ export default function SettingsPage() {
                   </div>
                 );
               })}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Agent (Haber Botu) Settings */}
+        {activeTab === "agent" && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-black flex items-center gap-2">
+                <Bot className="h-5 w-5" />
+                Haber Botu Ayarları
+              </CardTitle>
+              <CardDescription>
+                Otomatik haber toplama ve yayınlama ayarları
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Çalışma Aralığı */}
+              <div>
+                <label className="text-sm font-bold mb-2 block">
+                  Çalışma Aralığı
+                </label>
+                <select
+                  defaultValue={
+                    data?.settings.agent.find(
+                      (s) => s.key === "agent.intervalHours",
+                    )?.value || "6"
+                  }
+                  onChange={(e) =>
+                    saveSetting("agent.intervalHours", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border rounded-lg bg-background"
+                >
+                  <option value="0.25">15 Dakikada Bir</option>
+                  <option value="0.5">30 Dakikada Bir</option>
+                  <option value="1">Saatte Bir</option>
+                  <option value="2">2 Saatte Bir</option>
+                  <option value="3">3 Saatte Bir</option>
+                  <option value="4">4 Saatte Bir</option>
+                  <option value="6">6 Saatte Bir</option>
+                  <option value="12">12 Saatte Bir</option>
+                  <option value="24">Günde Bir</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Haber botunun ne sıklıkla çalışacağını belirler
+                </p>
+              </div>
+
+              {/* Minimum Haber Sayısı */}
+              <div>
+                <label className="text-sm font-bold mb-2 block">
+                  Minimum Haber Sayısı (Her Çalışmada)
+                </label>
+                <select
+                  defaultValue={
+                    data?.settings.agent.find(
+                      (s) => s.key === "agent.minArticles",
+                    )?.value || "3"
+                  }
+                  onChange={(e) =>
+                    saveSetting("agent.minArticles", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border rounded-lg bg-background"
+                >
+                  <option value="1">1 Haber</option>
+                  <option value="2">2 Haber</option>
+                  <option value="3">3 Haber</option>
+                  <option value="4">4 Haber</option>
+                  <option value="5">5 Haber</option>
+                </select>
+              </div>
+
+              {/* Maksimum Haber Sayısı */}
+              <div>
+                <label className="text-sm font-bold mb-2 block">
+                  Maksimum Haber Sayısı (Her Çalışmada)
+                </label>
+                <select
+                  defaultValue={
+                    data?.settings.agent.find(
+                      (s) => s.key === "agent.maxArticles",
+                    )?.value || "5"
+                  }
+                  onChange={(e) =>
+                    saveSetting("agent.maxArticles", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border rounded-lg bg-background"
+                >
+                  <option value="1">1 Haber</option>
+                  <option value="2">2 Haber</option>
+                  <option value="3">3 Haber</option>
+                  <option value="4">4 Haber</option>
+                  <option value="5">5 Haber</option>
+                  <option value="6">6 Haber</option>
+                  <option value="7">7 Haber</option>
+                  <option value="8">8 Haber</option>
+                  <option value="10">10 Haber</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Her çalışmada min-max arasında rastgele sayıda haber yayınlanır
+                </p>
+              </div>
+
+              {/* Durum Bilgisi */}
+              <div className="p-4 bg-muted rounded-lg">
+                <h4 className="font-bold mb-2">📊 Mevcut Durum</h4>
+                <div className="text-sm space-y-1">
+                  <p>
+                    <span className="text-muted-foreground">Sonraki Çalışma:</span>{" "}
+                    {data?.settings.agent.find((s) => s.key === "agent.nextRun")
+                      ?.value
+                      ? new Date(
+                        data.settings.agent.find(
+                          (s) => s.key === "agent.nextRun",
+                        )!.value,
+                      ).toLocaleString("tr-TR")
+                      : "Belirlenmedi"}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Aralık:</span>{" "}
+                    {(() => {
+                      const hours = parseFloat(
+                        data?.settings.agent.find(
+                          (s) => s.key === "agent.intervalHours",
+                        )?.value || "6",
+                      );
+                      if (hours < 1) return `${hours * 60} dakika`;
+                      return `${hours} saat`;
+                    })()}
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Haber Sayısı:</span>{" "}
+                    {data?.settings.agent.find((s) => s.key === "agent.minArticles")
+                      ?.value || "3"}{" "}
+                    -{" "}
+                    {data?.settings.agent.find((s) => s.key === "agent.maxArticles")
+                      ?.value || "5"}{" "}
+                    arası
+                  </p>
+                </div>
+              </div>
+
+              {/* Uyarı */}
+              <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                  ⚠️ Ayarları değiştirdikten sonra değişikliklerin etkili olması
+                  için bir sonraki çalışmayı bekleyin veya "Manuel Tetikle" ile
+                  hemen çalıştırın.
+                </p>
+              </div>
             </CardContent>
           </Card>
         )}

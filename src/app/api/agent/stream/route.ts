@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
                 // Try to find agent log ID from job data
                 const jobData = job.data as any;
                 const agentLogId = jobData?.agentLogId;
-                
+
                 // Also check for any running agent logs
                 const keys = await redis.keys("job:*:progress");
                 for (const key of keys) {

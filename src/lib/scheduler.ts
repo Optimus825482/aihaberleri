@@ -115,8 +115,12 @@ async function scheduleNextRun() {
       where: { key: "agent.intervalHours" },
     });
 
-    const intervalHours = intervalSetting ? parseInt(intervalSetting.value) : 6;
-    const nextRun = new Date(Date.now() + intervalHours * 60 * 60 * 1000);
+    const intervalHours = intervalSetting
+      ? parseFloat(intervalSetting.value)
+      : 6;
+    const nextRun = new Date(
+      Date.now() + Math.round(intervalHours * 60 * 60 * 1000),
+    );
 
     await db.setting.upsert({
       where: { key: "agent.nextRun" },
