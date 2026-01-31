@@ -1,0 +1,85 @@
+
+2026-01-31T05:16:21.623817127Z 
+2026-01-31T05:16:21.623896267Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-01-31T05:16:21.623905947Z ┃           🚀 SERVER READY                         ┃
+2026-01-31T05:16:21.623910237Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-01-31T05:16:21.623914137Z ┃  Next.js:      http://0.0.0.0:3001              ┃
+2026-01-31T05:16:21.623917747Z ┃  Socket.io:    ws://0.0.0.0:3001/api/socket     ┃
+2026-01-31T05:16:21.623921507Z ┃  Mode:         PRODUCTION                    ┃
+2026-01-31T05:16:21.623925097Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-01-31T05:16:21.623928897Z     
+2026-01-31T05:16:28.027976565Z ✅ Redis connected
+2026-01-31T05:16:28.106960171Z ✅ Redis ready to accept commands
+2026-01-31T05:16:32.984453438Z ✅ News agent queue created
+2026-01-31T05:16:32.985548274Z ✅ Queue events listener created
+2026-01-31T05:16:33.013802095Z 🚀 Starting cron jobs...
+2026-01-31T05:16:33.014062664Z ✅ Cron jobs started
+2026-01-31T05:16:33.028387099Z ❌ Cache MISS: dashboard:stats:30m
+2026-01-31T05:16:33.145058900Z 💾 Cache SET (L2): dashboard:stats:30m (TTL: 120s, Tags: [analytics, dashboard])
+2026-01-31T05:16:33.973704241Z [Socket.io] Client connected: pcQfkwUZ8gpdh7ECAAAB
+2026-01-31T05:16:34.083824767Z [Socket.io] Client pcQfkwUZ8gpdh7ECAAAB joined admin room
+2026-01-31T05:16:38.014627101Z ✅ Worker service detected, using BullMQ scheduler
+2026-01-31T05:16:38.126125522Z [Socket.io] Client pcQfkwUZ8gpdh7ECAAAB left admin room
+2026-01-31T05:16:38.128949901Z [Socket.io] Client disconnected: pcQfkwUZ8gpdh7ECAAAB (client namespace disconnect)
+2026-01-31T05:16:38.168816398Z ✅ Cache HIT (L2): articles:list:p1:l25:s:c
+2026-01-31T05:16:38.169118447Z ✅ Cache HIT (L2): categories:list
+2026-01-31T05:16:46.811623905Z 🗑️  Invalidating cache by tag: articles
+2026-01-31T05:16:46.815392921Z 🗑️  Invalidated 1 cache entries for tag: articles
+2026-01-31T05:16:48.103506266Z ✅ Cache HIT (L1): articles:list:p1:l25:s:c (age: 9935ms)
+2026-01-31T05:16:48.111444315Z ✅ Cache HIT (L1): categories:list (age: 9943ms)
+2026-01-31T05:16:52.131773000Z ✅ Cache HIT (L1): articles:list:p1:l25:s:c (age: 13963ms)
+2026-01-31T05:16:52.136313882Z ✅ Cache HIT (L1): categories:list (age: 13968ms)
+2026-01-31T05:17:12.158574342Z ❌ Cache MISS: articles:list:p1:l25:s:c
+2026-01-31T05:17:12.158613701Z ✅ Cache HIT (L2): categories:list
+2026-01-31T05:17:12.178594985Z 💾 Cache SET (L2): articles:list:p1:l25:s:c (TTL: 300s, Tags: [articles])
+2026-01-31T05:17:17.120911167Z [Socket.io] Client connected: 8SwXcCmIvA-PutEkAAAD
+2026-01-31T05:17:17.251065587Z [Socket.io] Client 8SwXcCmIvA-PutEkAAAD joined admin room
+2026-01-31T05:17:18.832597558Z [Socket.io] Client 8SwXcCmIvA-PutEkAAAD left admin room
+2026-01-31T05:17:18.835100978Z [Socket.io] Client disconnected: 8SwXcCmIvA-PutEkAAAD (client namespace disconnect)
+2026-01-31T05:17:18.846138516Z ✅ Cache HIT (L1): categories:list (age: 6687ms)
+2026-01-31T05:17:18.850155061Z ✅ Cache HIT (L1): articles:list:p1:l25:s:c (age: 6674ms)
+2026-01-31T05:17:54.713486408Z prisma:error 
+2026-01-31T05:17:54.713513818Z Invalid `prisma.$queryRaw()` invocation:
+2026-01-31T05:17:54.713522858Z 
+2026-01-31T05:17:54.713530268Z 
+2026-01-31T05:17:54.713537698Z Raw query failed. Code: `42703`. Message: `column "published_at" does not exist`
+2026-01-31T05:17:54.717854691Z [ADVANCED_ANALYTICS_ERROR] PrismaClientKnownRequestError: 
+2026-01-31T05:17:54.717928830Z Invalid `prisma.$queryRaw()` invocation:
+2026-01-31T05:17:54.717938340Z 
+2026-01-31T05:17:54.717946440Z 
+2026-01-31T05:17:54.717953530Z Raw query failed. Code: `42703`. Message: `column "published_at" does not exist`
+2026-01-31T05:17:54.717961040Z     at $n.handleRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:7315)
+2026-01-31T05:17:54.717968280Z     at $n.handleAndLogRequestError (/app/node_modules/@prisma/client/runtime/library.js:121:6623)
+2026-01-31T05:17:54.717975360Z     at $n.request (/app/node_modules/@prisma/client/runtime/library.js:121:6307)
+2026-01-31T05:17:54.717982460Z     at async l (/app/node_modules/@prisma/client/runtime/library.js:130:9633)
+2026-01-31T05:17:54.717989450Z     at async Promise.all (index 9)
+2026-01-31T05:17:54.717996460Z     at async d (/app/.next/server/app/api/admin/analytics/advanced/route.js:1:1150)
+2026-01-31T05:17:54.718003420Z     at async /app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:38411
+2026-01-31T05:17:54.718010430Z     at async e_.execute (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:27880)
+2026-01-31T05:17:54.718017520Z     at async e_.handle (/app/node_modules/next/dist/compiled/next-server/app-route.runtime.prod.js:6:39943)
+2026-01-31T05:17:54.718024560Z     at async doRender (/app/node_modules/next/dist/server/base-server.js:1366:42) {
+2026-01-31T05:17:54.718031570Z   code: 'P2010',
+2026-01-31T05:17:54.718038360Z   clientVersion: '5.22.0',
+2026-01-31T05:17:54.718045310Z   meta: { code: '42703', message: 'column "published_at" does not exist' }
+2026-01-31T05:17:54.718052540Z }
+2026-01-31T05:18:10.893574032Z info: 📥 API request {"environment":"production","method":"POST","module":"api","path":"/api/agent/trigger","service":"ai-news-agent","timestamp":"2026-01-31 05:18:10","userId":"cmktf4hxn0000msijl23u72rs"}
+2026-01-31T05:18:10.911487523Z 📋 Queue available, adding job to BullMQ { userId: 'cmktf4hxn0000msijl23u72rs' }
+2026-01-31T05:18:10.911508973Z 📋 Queue available, adding job...
+2026-01-31T05:18:10.912336199Z    Found 0 existing jobs in queue
+2026-01-31T05:18:10.912345529Z    Adding new job with ID: manual-trigger-1769836690912
+2026-01-31T05:18:10.919108413Z ✅ Job added successfully!
+2026-01-31T05:18:10.919119023Z    Job ID: manual-trigger-1769836690912
+2026-01-31T05:18:10.919162063Z    Job Name: scrape-and-publish
+2026-01-31T05:18:10.919165203Z    Priority: 1
+2026-01-31T05:18:10.920827556Z    State: active
+2026-01-31T05:18:10.921539464Z info: 📤 API response {"duration":37,"environment":"production","method":"POST","module":"api","path":"/api/agent/trigger","service":"ai-news-agent","status":200,"timestamp":"2026-01-31 05:18:10"}
+2026-01-31T05:18:12.840265749Z ✅ Cache HIT (L2): categories:list
+2026-01-31T05:19:15.536317711Z ❌ Cache MISS: dashboard:stats:30m
+2026-01-31T05:19:15.582466894Z 💾 Cache SET (L2): dashboard:stats:30m (TTL: 120s, Tags: [analytics, dashboard])
+2026-01-31T05:19:17.253524540Z [Socket.io] Client connected: 3GCkD4v7jtU4heikAAAF
+2026-01-31T05:19:17.700971135Z [Socket.io] Client 3GCkD4v7jtU4heikAAAF joined admin room
+2026-01-31T05:20:11.982659044Z ❌ Cache MISS: articles:list:p1:l25:s:c
+2026-01-31T05:20:11.983706529Z ✅ Cache HIT (L2): categories:list
+2026-01-31T05:20:11.995766793Z 💾 Cache SET (L2): articles:list:p1:l25:s:c (TTL: 300s, Tags: [articles])
+2026-01-31T05:20:23.426944899Z [GEO] Success via ipwho.is: 198.41.242.180 -> Düsseldorf, Germany
+2026-01-31T05:20:25.722478845Z [GEO] Success via ipwho.is: 108.162.246.147 -> Seattle, United States

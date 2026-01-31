@@ -1,0 +1,660 @@
+
+2026-01-31T05:29:53.357174339Z npm warn exec The following package was not found and will be installed: tsx@4.21.0
+2026-01-31T05:29:57.823781597Z ✅ News agent queue created
+2026-01-31T05:29:57.824996393Z ✅ Queue events listener created
+2026-01-31T05:29:57.829298017Z info: 🚀 Worker started {"environment":"production","module":"worker","service":"ai-news-agent","timestamp":"2026-01-31 05:29:57"}
+2026-01-31T05:29:57.829826014Z 🚀 Starting News Agent Worker...
+2026-01-31T05:29:57.830313652Z 🔍 Checking Redis connection...
+2026-01-31T05:29:57.854382880Z ✅ Redis connected
+2026-01-31T05:29:57.863367857Z ✅ Redis ready to accept commands
+2026-01-31T05:29:57.898986182Z ✅ Redis connection verified (PONG received)
+2026-01-31T05:29:57.899012742Z 🔄 Database connection attempt 1/10...
+2026-01-31T05:29:57.899019762Z 🔍 Testing database connection...
+2026-01-31T05:29:57.977055265Z info: 🔌 database connection connected {"environment":"production","module":"worker","service":"database","status":"connected","timestamp":"2026-01-31 05:29:57"}
+2026-01-31T05:29:57.977102755Z ✅ Database connection successful
+2026-01-31T05:29:57.977120505Z ✅ All systems ready, starting worker...
+2026-01-31T05:29:57.977261934Z 💓 Starting worker heartbeat...
+2026-01-31T05:29:57.978131711Z 
+2026-01-31T05:29:57.978141091Z 🎯 Initializing BullMQ Worker...
+2026-01-31T05:29:57.978144901Z    Queue Name: news-agent
+2026-01-31T05:29:57.978148051Z    Redis Status: ready
+2026-01-31T05:29:57.978150951Z    Concurrency: 1
+2026-01-31T05:29:57.978232750Z    Lock Duration: 10 minutes
+2026-01-31T05:29:57.979822714Z 
+2026-01-31T05:29:57.979830104Z ✅ Worker started successfully!
+2026-01-31T05:29:57.979833254Z 👂 Listening for jobs on queue: news-agent
+2026-01-31T05:29:57.979836404Z 📊 Worker stats will be logged here...
+2026-01-31T05:29:57.979839424Z 
+2026-01-31T05:29:57.980233352Z 
+2026-01-31T05:29:57.980249532Z 🔄 Başlangıç senkronizasyonu başlatılıyor...
+2026-01-31T05:29:58.008043116Z 💓 Heartbeat updated: 31.01.2026 05:29:57
+2026-01-31T05:29:58.016960093Z 
+2026-01-31T05:29:58.016984973Z ✅ Worker is ready and listening for jobs
+2026-01-31T05:29:58.032751873Z ℹ️ IndexNow için bekleyen haber bulunmadı.
+2026-01-31T05:29:58.040695993Z 📅 Sıradaki çalışma zamanı: 1/31/2026, 5:38:54 AM
+2026-01-31T05:29:58.052551858Z ✅ News agent queue created
+2026-01-31T05:29:58.053094105Z ✅ Queue events listener created
+2026-01-31T05:29:58.056423903Z ⚠️ BullMQ'da iş bulunamadı ama DB'de nextRun var. Tekrar planlanıyor...
+2026-01-31T05:29:58.077421593Z 
+2026-01-31T05:29:58.077451263Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-01-31T05:29:58.077481652Z 📅 AGENT SCHEDULE DEBUG:
+2026-01-31T05:29:58.077488452Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-01-31T05:29:58.077493662Z ⏰ Current time:  31.01.2026 05:29:58
+2026-01-31T05:29:58.077498322Z ⏰ Next run time: 31.01.2026 05:44:58
+2026-01-31T05:29:58.077502822Z ⚙️  Interval:      0.25 hours
+2026-01-31T05:29:58.077507232Z 🆔 Job ID:        news-agent-scheduled-run
+2026-01-31T05:29:58.077511722Z 📊 Queue length:  0
+2026-01-31T05:29:58.077516072Z 🔄 Reschedule:    Enabled (old job removed)
+2026-01-31T05:29:58.077520602Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-01-31T05:29:58.077525352Z 
+2026-01-31T05:30:27.981493935Z 💓 Heartbeat updated: 31.01.2026 05:30:27
+2026-01-31T05:30:28.479949871Z 
+2026-01-31T05:30:28.479983831Z 🔄 Job manual-trigger-1769837428472 is now active
+2026-01-31T05:30:28.480851697Z info: 🔄 Job processing started {"environment":"production","jobId":"manual-trigger-1769837428472","jobName":"scrape-and-publish","module":"worker","service":"ai-news-agent","timestamp":"2026-01-31 05:30:28"}
+2026-01-31T05:30:28.480950727Z 
+2026-01-31T05:30:28.480956637Z ============================================================
+2026-01-31T05:30:28.480959927Z 🤖 Processing job: scrape-and-publish (ID: manual-trigger-1769837428472)
+2026-01-31T05:30:28.480963367Z    Priority: 1
+2026-01-31T05:30:28.481046367Z    Attempt: 1/3
+2026-01-31T05:30:28.481504675Z    Timestamp: 1/31/2026, 5:30:28 AM
+2026-01-31T05:30:28.481509205Z ============================================================
+2026-01-31T05:30:28.481512395Z 
+2026-01-31T05:30:28.483385898Z 📊 Progress: 10% - Starting agent execution...
+2026-01-31T05:30:28.493747468Z info: 🤖 Agent execution started {"category":"all","environment":"production","logId":"cml1vibra00013zza84i0wemd","module":"agent","service":"ai-news-agent","timestamp":"2026-01-31 05:30:28"}
+2026-01-31T05:30:28.493769778Z 
+2026-01-31T05:30:28.493779098Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-01-31T05:30:28.493787408Z ┃           🤖 AGENT EXECUTION START                ┃
+2026-01-31T05:30:28.493794978Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-01-31T05:30:28.493802428Z ┃  Log ID:       cml1vibra000...                    ┃
+2026-01-31T05:30:28.493809598Z ┃  Start Time:   31.01.2026 05:30:28      ┃
+2026-01-31T05:30:28.493835718Z ┃  Category:     All                         ┃
+2026-01-31T05:30:28.493840688Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-01-31T05:30:28.493845498Z 
+2026-01-31T05:30:28.493849908Z info: 📊 Agent step: fetch_news Yapay zeka haberleri aranıyor (RSS + Trend) {"environment":"production","logId":"cml1vibra00013zza84i0wemd","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-01-31 05:30:28"}
+2026-01-31T05:30:28.493856847Z 📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...
+2026-01-31T05:30:28.493900367Z [Socket] Cannot emit 'agent:started' - Socket.io not initialized
+2026-01-31T05:30:28.494034697Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-01-31T05:30:28.494237347Z 📰 AI haberleri toplanıyor (RSS + Trend Analizi)...
+2026-01-31T05:30:28.494434526Z 📡 65 RSS feed okunuyor...
+2026-01-31T05:30:28.494643575Z 📡 RSS feed okunuyor: BBC News - Technology
+2026-01-31T05:30:28.502271695Z 📡 RSS feed okunuyor: CNN - Technology
+2026-01-31T05:30:28.502292055Z 📡 RSS feed okunuyor: Bloomberg - Technology
+2026-01-31T05:30:28.519232881Z 📡 RSS feed okunuyor: The Wall Street Journal - Technology
+2026-01-31T05:30:28.520533976Z 📡 RSS feed okunuyor: Financial Times - Technology
+2026-01-31T05:30:28.635677378Z ✅ 10 haber bulundu: The Wall Street Journal - Technology
+2026-01-31T05:30:28.694818544Z ✅ 10 haber bulundu: CNN - Technology
+2026-01-31T05:30:28.722525189Z ✅ 10 haber bulundu: BBC News - Technology
+2026-01-31T05:30:28.924491401Z ✅ 10 haber bulundu: Financial Times - Technology
+2026-01-31T05:30:29.086381796Z ✅ 10 haber bulundu: Bloomberg - Technology
+2026-01-31T05:30:29.588281878Z 📡 RSS feed okunuyor: NBC News - Technology
+2026-01-31T05:30:29.591002437Z 📡 RSS feed okunuyor: ABC News - Technology
+2026-01-31T05:30:29.594278735Z 📡 RSS feed okunuyor: Sky News - Technology
+2026-01-31T05:30:29.597967261Z 📡 RSS feed okunuyor: Euronews - Technology
+2026-01-31T05:30:29.599293346Z 📡 RSS feed okunuyor: MIT Technology Review - AI
+2026-01-31T05:30:29.668746212Z ✅ 10 haber bulundu: MIT Technology Review - AI
+2026-01-31T05:30:29.717678786Z ✅ 10 haber bulundu: Euronews - Technology
+2026-01-31T05:30:29.829739150Z ✅ 10 haber bulundu: ABC News - Technology
+2026-01-31T05:30:29.905783781Z ✅ 10 haber bulundu: Sky News - Technology
+2026-01-31T05:30:30.350750119Z ✅ 10 haber bulundu: NBC News - Technology
+2026-01-31T05:30:30.851533766Z 📡 RSS feed okunuyor: VentureBeat - AI
+2026-01-31T05:30:30.854134717Z 📡 RSS feed okunuyor: The Verge - AI
+2026-01-31T05:30:30.856731646Z 📡 RSS feed okunuyor: TechCrunch - AI
+2026-01-31T05:30:30.859332506Z 📡 RSS feed okunuyor: Ars Technica - AI
+2026-01-31T05:30:30.861350499Z 📡 RSS feed okunuyor: Wired - AI
+2026-01-31T05:30:30.912975613Z ✅ 10 haber bulundu: TechCrunch - AI
+2026-01-31T05:30:30.928626093Z ✅ 10 haber bulundu: The Verge - AI
+2026-01-31T05:30:30.955471961Z ✅ 10 haber bulundu: Wired - AI
+2026-01-31T05:30:30.995393679Z ✅ 10 haber bulundu: Ars Technica - AI
+2026-01-31T05:30:31.034131013Z ✅ 7 haber bulundu: VentureBeat - AI
+2026-01-31T05:30:31.535126298Z 📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+2026-01-31T05:30:31.537819007Z 📡 RSS feed okunuyor: Engadget - Technology
+2026-01-31T05:30:31.539693991Z 📡 RSS feed okunuyor: The Next Web
+2026-01-31T05:30:31.541418544Z 📡 RSS feed okunuyor: TechRadar - News
+2026-01-31T05:30:31.542924128Z 📡 RSS feed okunuyor: CNET - News
+2026-01-31T05:30:31.701800994Z ✅ 10 haber bulundu: TechRadar - News
+2026-01-31T05:30:31.737442028Z ✅ 10 haber bulundu: CNET - News
+2026-01-31T05:30:31.858924627Z ✅ 10 haber bulundu: ZDNet - Artificial Intelligence
+2026-01-31T05:30:31.921346800Z ✅ 10 haber bulundu: The Next Web
+2026-01-31T05:30:32.545385737Z ✅ 10 haber bulundu: Engadget - Technology
+2026-01-31T05:30:33.046493403Z 📡 RSS feed okunuyor: Mashable - Tech
+2026-01-31T05:30:33.048922184Z 📡 RSS feed okunuyor: Gizmodo
+2026-01-31T05:30:33.050420688Z 📡 RSS feed okunuyor: Lifehacker
+2026-01-31T05:30:33.051721953Z 📡 RSS feed okunuyor: Digital Trends
+2026-01-31T05:30:33.052948758Z 📡 RSS feed okunuyor: Tom's Hardware
+2026-01-31T05:30:33.195489077Z ✅ 10 haber bulundu: Tom's Hardware
+2026-01-31T05:30:33.233780671Z ✅ 10 haber bulundu: Digital Trends
+2026-01-31T05:30:33.294806759Z ✅ 10 haber bulundu: Mashable - Tech
+2026-01-31T05:30:33.483368363Z ✅ 10 haber bulundu: Lifehacker
+2026-01-31T05:30:33.519696524Z ✅ 10 haber bulundu: Gizmodo
+2026-01-31T05:30:34.019668685Z 📡 RSS feed okunuyor: 9to5Mac
+2026-01-31T05:30:34.022336174Z 📡 RSS feed okunuyor: 9to5Google
+2026-01-31T05:30:34.023935518Z 📡 RSS feed okunuyor: Android Authority
+2026-01-31T05:30:34.025230553Z 📡 RSS feed okunuyor: Android Police
+2026-01-31T05:30:34.026439858Z 📡 RSS feed okunuyor: XDA Developers
+2026-01-31T05:30:34.083004663Z ✅ 10 haber bulundu: 9to5Mac
+2026-01-31T05:30:34.097411738Z ✅ 10 haber bulundu: 9to5Google
+2026-01-31T05:30:34.420081272Z ✅ 10 haber bulundu: Android Authority
+2026-01-31T05:30:34.439632158Z ✅ 10 haber bulundu: Android Police
+2026-01-31T05:30:34.446419032Z ✅ 10 haber bulundu: XDA Developers
+2026-01-31T05:30:34.946463142Z 📡 RSS feed okunuyor: Hacker News (YCombinator)
+2026-01-31T05:30:34.948279004Z 📡 RSS feed okunuyor: Product Hunt - Tech
+2026-01-31T05:30:34.950557875Z 📡 RSS feed okunuyor: AI News
+2026-01-31T05:30:34.952525248Z 📡 RSS feed okunuyor: MarkTechPost
+2026-01-31T05:30:34.955472297Z 📡 RSS feed okunuyor: The AI Edge (Substack)
+2026-01-31T05:30:35.048795532Z ✅ 10 haber bulundu: Product Hunt - Tech
+2026-01-31T05:30:35.140800053Z ✅ 10 haber bulundu: The AI Edge (Substack)
+2026-01-31T05:30:35.172551672Z ✅ 10 haber bulundu: MarkTechPost
+2026-01-31T05:30:35.325431080Z ✅ 10 haber bulundu: AI News
+2026-01-31T05:30:35.501597561Z ✅ 10 haber bulundu: Hacker News (YCombinator)
+2026-01-31T05:30:36.002059939Z 📡 RSS feed okunuyor: Last Week in AI
+2026-01-31T05:30:36.004119591Z 📡 RSS feed okunuyor: Machine Learning Mastery
+2026-01-31T05:30:36.005620505Z 📡 RSS feed okunuyor: OpenAI Blog
+2026-01-31T05:30:36.007590168Z 📡 RSS feed okunuyor: Google AI Blog
+2026-01-31T05:30:36.009106772Z 📡 RSS feed okunuyor: DeepMind Blog
+2026-01-31T05:30:36.146148781Z ✅ 10 haber bulundu: DeepMind Blog
+2026-01-31T05:30:36.150487385Z ✅ 10 haber bulundu: Machine Learning Mastery
+2026-01-31T05:30:36.190905121Z ✅ 10 haber bulundu: Last Week in AI
+2026-01-31T05:30:36.343714541Z ✅ 10 haber bulundu: OpenAI Blog
+2026-01-31T05:30:36.960964434Z ✅ 10 haber bulundu: Google AI Blog
+2026-01-31T05:30:37.461190973Z 📡 RSS feed okunuyor: NVIDIA Blog - AI
+2026-01-31T05:30:37.463270955Z 📡 RSS feed okunuyor: Microsoft Azure AI Blog
+2026-01-31T05:30:37.464542480Z 📡 RSS feed okunuyor: AWS Machine Learning Blog
+2026-01-31T05:30:37.465714325Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-01-31T05:30:37.466813141Z 📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+2026-01-31T05:30:37.670633117Z ✅ 10 haber bulundu: NVIDIA Blog - AI
+2026-01-31T05:30:37.831036067Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-01-31T05:30:37.875919676Z ✅ 10 haber bulundu: AWS Machine Learning Blog
+2026-01-31T05:30:37.911310262Z ⚠️  Hata (Microsoft Azure AI Blog), tekrar deneniyor... Cannot convert object to primitive value
+2026-01-31T05:30:38.258336313Z ✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+2026-01-31T05:30:38.911835419Z 📡 RSS feed okunuyor: Microsoft Azure AI Blog (deneme 2)
+2026-01-31T05:30:39.076483413Z ⚠️  Hata (Microsoft Azure AI Blog), tekrar deneniyor... Cannot convert object to primitive value
+2026-01-31T05:30:41.078542483Z 📡 RSS feed okunuyor: Microsoft Azure AI Blog (deneme 3)
+2026-01-31T05:30:41.251976505Z ❌ RSS feed hatası (Microsoft Azure AI Blog): Cannot convert object to primitive value
+2026-01-31T05:30:41.751780515Z 📡 RSS feed okunuyor: Forbes - Innovation
+2026-01-31T05:30:41.753127850Z 📡 RSS feed okunuyor: CNBC - Technology
+2026-01-31T05:30:41.754234125Z 📡 RSS feed okunuyor: The Economist - Technology
+2026-01-31T05:30:41.755170422Z 📡 RSS feed okunuyor: Fast Company - Technology
+2026-01-31T05:30:41.756289528Z 📡 RSS feed okunuyor: MIT Sloan Management Review
+2026-01-31T05:30:41.837077911Z ✅ 10 haber bulundu: Fast Company - Technology
+2026-01-31T05:30:41.882476638Z ⚠️  Hata (CNBC - Technology), tekrar deneniyor... Request failed with status code 403
+2026-01-31T05:30:41.902813761Z ✅ 10 haber bulundu: The Economist - Technology
+2026-01-31T05:30:41.938928444Z ✅ 10 haber bulundu: Forbes - Innovation
+2026-01-31T05:30:42.104355635Z ✅ 10 haber bulundu: MIT Sloan Management Review
+2026-01-31T05:30:42.882644937Z 📡 RSS feed okunuyor: CNBC - Technology (deneme 2)
+2026-01-31T05:30:42.967288796Z ⚠️  Hata (CNBC - Technology), tekrar deneniyor... Request failed with status code 403
+2026-01-31T05:30:44.969119267Z 📡 RSS feed okunuyor: CNBC - Technology (deneme 3)
+2026-01-31T05:30:45.053301357Z ❌ RSS feed hatası (CNBC - Technology): Request failed with status code 403
+2026-01-31T05:30:45.554291583Z 📡 RSS feed okunuyor: Seeking Alpha - Technology
+2026-01-31T05:30:45.556332005Z 📡 RSS feed okunuyor: New Scientist - Technology
+2026-01-31T05:30:45.557896139Z 📡 RSS feed okunuyor: Popular Science
+2026-01-31T05:30:45.559369773Z 📡 RSS feed okunuyor: Popular Mechanics
+2026-01-31T05:30:45.560524389Z 📡 RSS feed okunuyor: Space.com
+2026-01-31T05:30:45.651622283Z ✅ 10 haber bulundu: Popular Science
+2026-01-31T05:30:45.661353456Z ✅ 10 haber bulundu: New Scientist - Technology
+2026-01-31T05:30:45.754352692Z ✅ 10 haber bulundu: Space.com
+2026-01-31T05:30:45.786947339Z ✅ 10 haber bulundu: Popular Mechanics
+2026-01-31T05:30:45.811798884Z ✅ 10 haber bulundu: Seeking Alpha - Technology
+2026-01-31T05:30:46.311757184Z 📡 RSS feed okunuyor: Phys.org - Technology
+2026-01-31T05:30:46.314583433Z 📡 RSS feed okunuyor: ScienceDaily - Technology
+2026-01-31T05:30:46.315626719Z 📡 RSS feed okunuyor: Futurism
+2026-01-31T05:30:46.317803811Z 📡 RSS feed okunuyor: Singularity Hub
+2026-01-31T05:30:46.318217879Z 📡 RSS feed okunuyor: IEEE Spectrum - Technology
+2026-01-31T05:30:46.372815292Z ✅ 10 haber bulundu: Singularity Hub
+2026-01-31T05:30:46.434802356Z ✅ 10 haber bulundu: Futurism
+2026-01-31T05:30:46.560156440Z ✅ 10 haber bulundu: IEEE Spectrum - Technology
+2026-01-31T05:30:46.981857058Z ✅ 10 haber bulundu: Phys.org - Technology
+2026-01-31T05:30:47.107800959Z ✅ 10 haber bulundu: ScienceDaily - Technology
+2026-01-31T05:30:47.608722705Z 📡 RSS feed okunuyor: Towards Data Science
+2026-01-31T05:30:47.610486929Z 📡 RSS feed okunuyor: Analytics Vidhya
+2026-01-31T05:30:47.611801334Z 📡 RSS feed okunuyor: KDnuggets
+2026-01-31T05:30:47.612964099Z 📡 RSS feed okunuyor: Machine Learning Reddit
+2026-01-31T05:30:47.614103195Z 📡 RSS feed okunuyor: AI Trends
+2026-01-31T05:30:47.697958176Z ✅ 10 haber bulundu: KDnuggets
+2026-01-31T05:30:48.089300629Z ✅ 10 haber bulundu: Towards Data Science
+2026-01-31T05:30:48.417003214Z ✅ 10 haber bulundu: Analytics Vidhya
+2026-01-31T05:30:48.593962100Z ✅ 10 haber bulundu: Machine Learning Reddit
+2026-01-31T05:30:49.701295093Z ✅ 10 haber bulundu: AI Trends
+2026-01-31T05:30:49.701323872Z ✅ Toplam 627 haber toplandı
+2026-01-31T05:30:49.726347436Z ✅ 624 benzersiz haber
+2026-01-31T05:30:49.727452132Z 📅 Son 48 saatte 377 haber
+2026-01-31T05:30:49.727463482Z ⚡ Smart Sampling: 377 haber → 100 habere düşürülüyor
+2026-01-31T05:30:49.731583317Z ✅ En güncel 100 haber seçildi
+2026-01-31T05:30:49.731605307Z 📊 100 haber için Trend (Brave + Google) analizi...
+2026-01-31T05:30:49.776306787Z 📈 Google Trends verisi çekiliyor...
+2026-01-31T05:30:49.776342217Z Trying Google Trends Source: https://trends.google.com/trends/trendingsearches/daily/rss?geo=US
+2026-01-31T05:30:50.231699726Z ⚠️ Failed https://trends.google.com/trends/trendingsearches/daily/rss?geo=US: Request failed with status code 404
+2026-01-31T05:30:50.231740436Z Trying Google Trends Source: https://trends.google.com/trends/trendingsearches/daily/atom?geo=US
+2026-01-31T05:30:50.261101775Z Trying Google Trends Source: https://trends.google.com/trends/hottrends/atom/feed?pn=p1
+2026-01-31T05:30:50.261144814Z ⚠️ Failed https://trends.google.com/trends/trendingsearches/daily/atom?geo=US: Request failed with status code 404
+2026-01-31T05:30:50.738790769Z 🔄 Google failed/blocked. Switching to Brave for Trend Discovery...
+2026-01-31T05:30:50.738808359Z ⚠️ Failed https://trends.google.com/trends/hottrends/atom/feed?pn=p1: Request failed with status code 404
+2026-01-31T05:30:51.442618804Z ✅ Brave recovered 5 trend signals.
+2026-01-31T05:30:51.444499768Z 📊 Brave ile 100 haber analiz ediliyor...
+2026-01-31T05:30:51.444522488Z 📦 Batch 1/10 işleniyor (10 haber)...
+2026-01-31T05:30:52.468795945Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-31T05:30:52.969479262Z 📦 Batch 2/10 işleniyor (10 haber)...
+2026-01-31T05:30:53.502725255Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-31T05:30:54.002830474Z 📦 Batch 3/10 işleniyor (10 haber)...
+2026-01-31T05:30:54.393213020Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-31T05:30:54.894407817Z 📦 Batch 4/10 işleniyor (10 haber)...
+2026-01-31T05:30:55.220238917Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-31T05:30:55.720960685Z 📦 Batch 5/10 işleniyor (10 haber)...
+2026-01-31T05:30:56.218032145Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-31T05:30:56.717985066Z 📦 Batch 6/10 işleniyor (10 haber)...
+2026-01-31T05:30:57.084434743Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-31T05:30:57.585347070Z 📦 Batch 7/10 işleniyor (10 haber)...
+2026-01-31T05:30:57.960483584Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-31T05:30:57.984054155Z 💓 Heartbeat updated: 31.01.2026 05:30:57
+2026-01-31T05:30:58.461935928Z 📦 Batch 8/10 işleniyor (10 haber)...
+2026-01-31T05:30:58.815561863Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-31T05:30:59.317605726Z 📦 Batch 9/10 işleniyor (10 haber)...
+2026-01-31T05:30:59.769444929Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-01-31T05:31:00.269564778Z 📦 Batch 10/10 işleniyor (10 haber)...
+2026-01-31T05:31:00.631118794Z ✅ Brave trend sıralaması tamamlandı
+2026-01-31T05:31:00.631151824Z 📊 İşlenen: 100/100 haber
+2026-01-31T05:31:00.631158254Z 🏆 Top 5: #49 (skor: 289), #38 (skor: 273), #21 (skor: 272), #48 (skor: 252), #25 (skor: 240)
+2026-01-31T05:31:00.633199706Z ✅ 20 trend haber seçildi
+2026-01-31T05:31:00.633227706Z Top 5 Trend Haberler: 
+2026-01-31T05:31:00.633235646Z   1. The $100B megadeal between OpenAI and Nvidia is on ice... (skor: 289)
+2026-01-31T05:31:00.633286146Z   2. The Epstein Files Reveal Jeffrey Epstein Got Banned From Xbo... (skor: 273)
+2026-01-31T05:31:00.633293256Z   3. An Agent Revolt: Moltbook Is Not A Good Idea... (skor: 272)
+2026-01-31T05:31:00.633300246Z   4. 3 million pages of Epstein documents released... (skor: 252)
+2026-01-31T05:31:00.633306936Z   5. Today’s Wordle #1687 Hints And Answer For Saturday, January ... (skor: 240)
+2026-01-31T05:31:00.633312696Z ✅ 20 trend haber bulundu
+2026-01-31T05:31:00.633697234Z info: 📊 Agent step: analyze_articles En iyi haberler seçiliyor (DeepSeek AI) {"environment":"production","logId":"cml1vibra00013zza84i0wemd","module":"agent","progress":40,"service":"ai-news-agent","step":"analyze_articles","timestamp":"2026-01-31 05:31:00"}
+2026-01-31T05:31:00.634118722Z 🎯 Adım 2: En iyi haberler seçiliyor...
+2026-01-31T05:31:00.636213944Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-01-31T05:31:00.645206860Z 📊 Haber sayısı ayarları: min=3, max=5
+2026-01-31T05:31:00.645272390Z 🎯 Hedef haber sayısı: 4
+2026-01-31T05:31:00.645494729Z 🎯 20 haber arasından en iyi 4 tanesi seçiliyor...
+2026-01-31T05:31:00.651595406Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.wsj.com/tech/ai/the-100-billion-megadeal-between-openai-and-nvidia-is-on-ice-aa3025e3","service":"ai-news-agent","timestamp":"2026-01-31 05:31:00","title":"OpenAI ve Nvidia'nın 100 Milyar Dolarlık Anlaşması Askıya Alındı"}
+2026-01-31T05:31:00.651628536Z 🗑️ Duplicate URL detected: OpenAI ve Nvidia'nın 100 Milyar Dolarlık Anlaşması Askıya Alındı
+2026-01-31T05:31:00.651658166Z    Existing URL: https://www.wsj.com/tech/ai/the-100-billion-megadeal-between-openai-and-nvidia-is-on-ice-aa3025e3
+2026-01-31T05:31:00.651665876Z    New URL: https://www.wsj.com/tech/ai/the-100-billion-megadeal-between-openai-and-nvidia-is-on-ice-aa3025e3
+2026-01-31T05:31:00.651673206Z 🗑️ Duplicate skipped: The $100B megadeal between OpenAI and Nvidia is on ice
+2026-01-31T05:31:00.664986745Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.677115799Z ✅ No duplicates found for: "The Epstein Files Reveal Jeffrey Epstein Got Banned From Xbo..."
+2026-01-31T05:31:00.680440666Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.forbes.com/sites/amirhusain/2026/01/30/an-agent-revolt-moltbook-is-not-a-good-idea/","service":"ai-news-agent","timestamp":"2026-01-31 05:31:00","title":"Moltbook: Yapay Zeka Ajanlarının İsyanı ve Etik Sorular"}
+2026-01-31T05:31:00.680471036Z 🗑️ Duplicate URL detected: Moltbook: Yapay Zeka Ajanlarının İsyanı ve Etik Sorular
+2026-01-31T05:31:00.680478156Z    Existing URL: https://www.forbes.com/sites/amirhusain/2026/01/30/an-agent-revolt-moltbook-is-not-a-good-idea/
+2026-01-31T05:31:00.680483466Z    New URL: https://www.forbes.com/sites/amirhusain/2026/01/30/an-agent-revolt-moltbook-is-not-a-good-idea/
+2026-01-31T05:31:00.680488336Z 🗑️ Duplicate skipped: An Agent Revolt: Moltbook Is Not A Good Idea
+2026-01-31T05:31:00.690384948Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.694567693Z ✅ No duplicates found for: "3 million pages of Epstein documents released..."
+2026-01-31T05:31:00.707122505Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.710211913Z ✅ No duplicates found for: "Today’s Wordle #1687 Hints And Answer For Saturday, January ..."
+2026-01-31T05:31:00.713408580Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.theverge.com/games/871348/google-project-genie-take-two-roblox-unity","service":"ai-news-agent","timestamp":"2026-01-31 05:31:00","title":"Google'ın Oyun Dünyası Üreten Yapay Zeka Aracı, Şirket Hisse Değerlerini Düşürdü"}
+2026-01-31T05:31:00.713439750Z 🗑️ Duplicate URL detected: Google'ın Oyun Dünyası Üreten Yapay Zeka Aracı, Şirket Hisse Değerlerini Düşürdü
+2026-01-31T05:31:00.713449460Z    Existing URL: https://www.theverge.com/games/871348/google-project-genie-take-two-roblox-unity
+2026-01-31T05:31:00.713457040Z    New URL: https://www.theverge.com/games/871348/google-project-genie-take-two-roblox-unity
+2026-01-31T05:31:00.713462311Z 🗑️ Duplicate skipped: Video game company stock prices dip after Google introduces an AI world-generation tool
+2026-01-31T05:31:00.725134046Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.729037131Z ✅ No duplicates found for: "Sabalenka vs Rybakina Free Streams: TV Channels, Start Times..."
+2026-01-31T05:31:00.731625422Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-01-31T05:31:00.768261082Z 🔍 Checking for duplicates among 152 recent articles...
+2026-01-31T05:31:00.780649425Z ✅ No duplicates found for: "Elon Musk expressed interest in visiting Jeffrey Epstein's i..."
+2026-01-31T05:31:00.798065869Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.800080712Z ✅ No duplicates found for: "Today's NYT Mini Crossword Answers for Saturday, Jan. 31..."
+2026-01-31T05:31:00.816961438Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.818060374Z ✅ No duplicates found for: "NASA's Artemis II Moon Mission: How to Watch and What to Kno..."
+2026-01-31T05:31:00.828292064Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.830462166Z ✅ No duplicates found for: "Today's Wordle Hints, Answer and Help for Jan. 31, #1687..."
+2026-01-31T05:31:00.839934740Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.842546720Z ✅ No duplicates found for: "The Galaxy S26 Ultra might finally get this Android feature ..."
+2026-01-31T05:31:00.852747892Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.855944619Z ✅ No duplicates found for: "3D Printing Startup VulcanForms Raises $220 Million for US M..."
+2026-01-31T05:31:00.859269057Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.fastcompany.com/91484506/what-is-clawdbot-moltbot-openclaw?partner=rss&amp;utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=rss+fastcompany&amp;utm_content=rss","service":"ai-news-agent","timestamp":"2026-01-31 05:31:00","title":"OpenClaw: Geleceğin Dijital Asistanı, Yüksek Maliyet Engeliyle Karşı Karşıya"}
+2026-01-31T05:31:00.859357506Z 🗑️ Duplicate URL detected: OpenClaw: Geleceğin Dijital Asistanı, Yüksek Maliyet Engeliyle Karşı Karşıya
+2026-01-31T05:31:00.859413606Z    Existing URL: https://www.fastcompany.com/91484506/what-is-clawdbot-moltbot-openclaw?partner=rss&amp;utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=rss+fastcompany&amp;utm_content=rss
+2026-01-31T05:31:00.859475306Z    New URL: https://www.fastcompany.com/91484506/what-is-clawdbot-moltbot-openclaw?partner=rss&amp;utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=rss+fastcompany&amp;utm_content=rss
+2026-01-31T05:31:00.859483686Z 🗑️ Duplicate skipped: Clawdbot/Moltbot/OpenClaw is cool, but it gets pricey fast
+2026-01-31T05:31:00.869738727Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.872602346Z ✅ No duplicates found for: "10 Movies Coming to Netflix in February 2026 That You Won't ..."
+2026-01-31T05:31:00.883596324Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.885050268Z ✅ No duplicates found for: "5 Years Since Meme Stock Mania..."
+2026-01-31T05:31:00.895363869Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.897962469Z ✅ No duplicates found for: "Today's NYT Strands Hints, Answers and Help for Jan. 31 #699..."
+2026-01-31T05:31:00.900821629Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.bloomberg.com/news/features/2026-01-31/elon-musk-s-ai-push-has-him-considering-mergers-in-search-for-capital","service":"ai-news-agent","timestamp":"2026-01-31 05:31:00","title":"Elon Musk, Yapay Zeka Yatırımları İçin Sermaye Arayışında"}
+2026-01-31T05:31:00.901024398Z 🗑️ Duplicate URL detected: Elon Musk, Yapay Zeka Yatırımları İçin Sermaye Arayışında
+2026-01-31T05:31:00.901037148Z    Existing URL: https://www.bloomberg.com/news/features/2026-01-31/elon-musk-s-ai-push-has-him-considering-mergers-in-search-for-capital
+2026-01-31T05:31:00.901043008Z    New URL: https://www.bloomberg.com/news/features/2026-01-31/elon-musk-s-ai-push-has-him-considering-mergers-in-search-for-capital
+2026-01-31T05:31:00.901048038Z 🗑️ Duplicate skipped: Elon Musk’s Relentless AI Pursuit Has Him on the Hunt for Capital
+2026-01-31T05:31:00.911619738Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.916038511Z ✅ No duplicates found for: "NYT Pips Today: Hints, Answers And Walkthrough For Saturday,..."
+2026-01-31T05:31:00.928107885Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:00.931283803Z ✅ No duplicates found for: "Astronauts are about to go back to the moon - here's what yo..."
+2026-01-31T05:31:00.936805092Z 📖 Recent context: 20 articles from last 48h passed to AI
+2026-01-31T05:31:02.993320407Z ✅ 0/0 haber AI relevance kontrolünden geçti
+2026-01-31T05:31:02.998173048Z Haber analiz hatası, fallback uygulanıyor: Error: AI could not select any articles
+2026-01-31T05:31:02.998200988Z     at selectBestArticles (/app/src/services/content.service.ts:297:13)
+2026-01-31T05:31:02.998209668Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-01-31T05:31:02.998217138Z     at async executeNewsAgent (/app/src/services/agent.service.ts:180:30)
+2026-01-31T05:31:02.998223628Z     at async Worker.import_bullmq.Worker.connection (/app/src/workers/news-agent.worker.ts:210:21)
+2026-01-31T05:31:02.998230138Z     at async <anonymous> (/app/node_modules/bullmq/src/classes/worker.ts:994:26)
+2026-01-31T05:31:02.998267408Z ✅ 4 haber seçildi
+2026-01-31T05:31:02.998896515Z info: 📊 Agent step: process_articles Haberler yeniden yazılıyor ve görseller oluşturuluyor {"environment":"production","logId":"cml1vibra00013zza84i0wemd","module":"agent","progress":60,"service":"ai-news-agent","step":"process_articles","timestamp":"2026-01-31 05:31:02"}
+2026-01-31T05:31:02.999001625Z ⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...
+2026-01-31T05:31:03.000637219Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-01-31T05:31:03.001488996Z 📝 Haber işleniyor: The Epstein Files Reveal Jeffrey Epstein Got Banned From Xbox Live
+2026-01-31T05:31:03.001936254Z 📄 Makale içeriği alınıyor: https://www.forbes.com/sites/paultassi/2026/01/30/the-epstein-files-reveal-jeffrey-epstein-got-banned-from-xbox-live/
+2026-01-31T05:31:03.001957934Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-01-31T05:31:03.719793816Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-01-31T05:31:03.757720712Z ❌ İçerik alma hatası (https://www.forbes.com/sites/paultassi/2026/01/30/the-epstein-files-reveal-jeffrey-epstein-got-banned-from-xbox-live/): Request failed with status code 403
+2026-01-31T05:31:03.762970632Z 🤖 DeepSeek ile haber yeniden yazılıyor...
+2026-01-31T05:31:27.988047436Z 💓 Heartbeat updated: 31.01.2026 05:31:27
+2026-01-31T05:31:32.968960701Z 📊 Haber Puanı: 820/1000
+2026-01-31T05:31:32.969030280Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-01-31T05:31:35.305091223Z 📝 Final prompt (135 chars): Jeffrey Epstein Xbox Live ban, digital evidence, AI neural network visualization, realistic tech aesthetic, 4k, high detail, minimalist
+2026-01-31T05:31:35.305136233Z 📝 Görsel prompt: Jeffrey Epstein Xbox Live ban, digital evidence, AI neural network visualization, realistic tech aesthetic, 4k, high detail, minimalist
+2026-01-31T05:31:35.305146183Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-01-31T05:31:35.305957770Z 🎨 Pollinations.ai isteği: Jeffrey Epstein Xbox Live ban, digital evidence, AI neural network visualization, realistic tech aes
+2026-01-31T05:31:35.305981270Z 📝 Prompt: Jeffrey Epstein Xbox Live ban, digital evidence, AI neural network visualization, realistic tech aes
+2026-01-31T05:31:35.305990960Z 🎨 Pollinations.ai görsel URL: https://image.pollinations.ai/prompt/Jeffrey%20Epstein%20Xbox%20Live%20ban%2C%20digital%20evidence%2C%20AI%20neural%20network%20visualization%2C%20rea
+2026-01-31T05:31:45.155064928Z ✅ Görsel URL: https://image.pollinations.ai/prompt/Jeffrey%20Epstein%20Xbox%20Live%20ban%2C%20digital%20evidence%2C%20AI%20neural%20network%20visualization%2C%20realistic%20tech%20aesthetic%2C%204k%2C%20high%20detail%2C%20minimalist?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:31:45.155096077Z 🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...
+2026-01-31T05:31:45.155105407Z 
+2026-01-31T05:31:45.155113037Z 🖼️  Image Optimization Pipeline Started
+2026-01-31T05:31:45.155120777Z    Source: https://image.pollinations.ai/prompt/Jeffrey%20Epstein%20Xbox%20Live%20ban%2C%20digital%20evidence%2C%20AI%20neural%20network%20visualization%2C%20realistic%20tech%20aesthetic%2C%204k%2C%20high%20detail%2C%20minimalist?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:31:45.155129447Z    Slug: epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti
+2026-01-31T05:31:45.155137207Z 📥 Downloading image from: https://image.pollinations.ai/prompt/Jeffrey%20Epstein%20Xbox%20Live%20ban%2C%20digital%20evidence%2C%20AI%20neural%20network%20visualization%2C%20realistic%20tech%20aesthetic%2C%204k%2C%20high%20detail%2C%20minimalist?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:31:45.344663336Z 
+2026-01-31T05:31:45.344700607Z 📊 Original Image:
+2026-01-31T05:31:45.346291531Z    Format: jpeg
+2026-01-31T05:31:45.346319281Z    Size: 1059x556
+2026-01-31T05:31:45.346346981Z    File Size: 55.6KB
+2026-01-31T05:31:45.346352690Z    Download Time: 185ms
+2026-01-31T05:31:45.346822858Z 🎨 Generating 4 image sizes for: epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti
+2026-01-31T05:31:46.268436157Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-large.webp
+2026-01-31T05:31:46.268471717Z   ✅ large: 42.1KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-large.webp
+2026-01-31T05:31:46.674453955Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-medium.webp
+2026-01-31T05:31:46.674491644Z   ✅ medium: 28.5KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-medium.webp
+2026-01-31T05:31:47.004824460Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-small.webp
+2026-01-31T05:31:47.004887700Z   ✅ small: 10.9KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-small.webp
+2026-01-31T05:31:47.357659489Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-thumb.webp
+2026-01-31T05:31:47.357698298Z   ✅ thumb: 3.0KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-thumb.webp
+2026-01-31T05:31:47.357705298Z 
+2026-01-31T05:31:47.357710998Z ✅ Optimization Complete!
+2026-01-31T05:31:47.357715718Z    Total Time: 2196ms
+2026-01-31T05:31:47.357720018Z    Storage: Cloudflare R2
+2026-01-31T05:31:47.357724298Z ✅ Görsel optimizasyonu tamamlandı
+2026-01-31T05:31:47.357728868Z    Large: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-large.webp
+2026-01-31T05:31:47.357733559Z    Medium: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-medium.webp
+2026-01-31T05:31:47.357738169Z    Small: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-small.webp
+2026-01-31T05:31:47.357742749Z    Thumb: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti-thumb.webp
+2026-01-31T05:31:47.366799694Z 📤 Haber yayınlanıyor: Epstein Dosyaları: Jeffrey Epstein'ın Xbox Live'dan Yasaklandığı Ortaya Çıktı
+2026-01-31T05:31:47.378744869Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:31:47.382254596Z ✅ No duplicates found for: "Epstein Dosyaları: Jeffrey Epstein'ın Xbox Live'dan Yasaklan..."
+2026-01-31T05:31:47.389552648Z ✅ Haber yayınlandı: epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti (Skor: 820)
+2026-01-31T05:31:47.389815157Z 🗑️  Invalidating cache by tag: articles
+2026-01-31T05:31:47.392984365Z 🗑️  Invalidated 1 cache entries for tag: articles
+2026-01-31T05:31:47.393020725Z 🗑️  Cache invalidated for tag: articles
+2026-01-31T05:31:47.393889322Z 📘 Posting to Facebook Page...
+2026-01-31T05:31:47.396848040Z 📱 Push bildirimi gönderiliyor...
+2026-01-31T05:31:47.504086632Z ✅ Haber başarıyla yayınlandı: epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti
+2026-01-31T05:31:47.504124082Z 📝 Haber işleniyor: 3 million pages of Epstein documents released
+2026-01-31T05:31:47.504130782Z 📄 Makale içeriği alınıyor: https://www.nbcnews.com/nightly-news/video/3-million-pages-of-epstein-documents-released-256926277708
+2026-01-31T05:31:47.504146012Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-01-31T05:31:47.511088636Z 📱 1 aboneye push bildirimi gönderiliyor...
+2026-01-31T05:31:47.528470460Z 💾 Translation saved: tr - Epstein Dosyaları: Jeffrey Epstein'ın Xbox Live'da...
+2026-01-31T05:31:47.528715799Z 🌍 Translating article from tr to en...
+2026-01-31T05:31:47.528734849Z    Title: Epstein Dosyaları: Jeffrey Epstein'ın Xbox Live'da...
+2026-01-31T05:31:47.579289237Z ✅ Push bildirimi tamamlandı: 1 başarılı, 0 başarısız
+2026-01-31T05:31:47.579324147Z ✅ Push bildirimi gönderildi
+2026-01-31T05:31:47.746715242Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-01-31T05:31:48.012424671Z ✅ Direct fetch ile içerik alındı: 2826 karakter
+2026-01-31T05:31:48.015946578Z 🤖 DeepSeek ile haber yeniden yazılıyor...
+2026-01-31T05:31:48.167457533Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti
+2026-01-31T05:31:50.643101556Z ✅ Facebook post successful! ID: 882602408279863_122097629379242298
+2026-01-31T05:31:57.988770959Z 💓 Heartbeat updated: 31.01.2026 05:31:57
+2026-01-31T05:31:58.612284820Z ✅ Translation complete: Epstein Files: Jeffrey Epstein Was Banned From Xbo...
+2026-01-31T05:31:58.617906369Z 💾 Translation saved: en - Epstein Files: Jeffrey Epstein Was Banned From Xbo...
+2026-01-31T05:31:58.617933279Z ✅ Article translations complete for: Epstein Dosyaları: Jeffrey Epstein'ın Xbox Live'da...
+2026-01-31T05:32:19.322147155Z 📊 Haber Puanı: 800/1000
+2026-01-31T05:32:19.322190435Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-01-31T05:32:21.303464189Z 📝 Final prompt (142 chars): A sprawling digital archive, glowing data streams, 3 million pages visualized, futuristic AI aesthetic, realistic, high detail, 4k, minimalist
+2026-01-31T05:32:21.303498439Z 📝 Görsel prompt: A sprawling digital archive, glowing data streams, 3 million pages visualized, futuristic AI aesthetic, realistic, high detail, 4k, minimalist
+2026-01-31T05:32:21.303508269Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-01-31T05:32:21.303625398Z 🎨 Pollinations.ai isteği: A sprawling digital archive, glowing data streams, 3 million pages visualized, futuristic AI aesthet
+2026-01-31T05:32:21.303632438Z 📝 Prompt: A sprawling digital archive, glowing data streams, 3 million pages visualized, futuristic AI aesthet
+2026-01-31T05:32:21.303637698Z 🎨 Pollinations.ai görsel URL: https://image.pollinations.ai/prompt/A%20sprawling%20digital%20archive%2C%20glowing%20data%20streams%2C%203%20million%20pages%20visualized%2C%20futuri
+2026-01-31T05:32:27.987467059Z 💓 Heartbeat updated: 31.01.2026 05:32:27
+2026-01-31T05:32:28.485699166Z 📊Progress: 20% - Agent still running...
+2026-01-31T05:32:57.988608540Z 💓 Heartbeat updated: 31.01.2026 05:32:57
+2026-01-31T05:33:15.044598621Z ✅ Görsel URL: https://image.pollinations.ai/prompt/A%20sprawling%20digital%20archive%2C%20glowing%20data%20streams%2C%203%20million%20pages%20visualized%2C%20futuristic%20AI%20aesthetic%2C%20realistic%2C%20high%20detail%2C%204k%2C%20minimalist?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:33:15.044765281Z 🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...
+2026-01-31T05:33:15.044777881Z 
+2026-01-31T05:33:15.044786121Z 🖼️  Image Optimization Pipeline Started
+2026-01-31T05:33:15.044793731Z    Source: https://image.pollinations.ai/prompt/A%20sprawling%20digital%20archive%2C%20glowing%20data%20streams%2C%203%20million%20pages%20visualized%2C%20futuristic%20AI%20aesthetic%2C%20realistic%2C%20high%20detail%2C%204k%2C%20minimalist?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:33:15.044803241Z    Slug: epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi
+2026-01-31T05:33:15.044824430Z 📥 Downloading image from: https://image.pollinations.ai/prompt/A%20sprawling%20digital%20archive%2C%20glowing%20data%20streams%2C%203%20million%20pages%20visualized%2C%20futuristic%20AI%20aesthetic%2C%20realistic%2C%20high%20detail%2C%204k%2C%20minimalist?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:33:15.259553815Z 
+2026-01-31T05:33:15.259589945Z 📊 Original Image:
+2026-01-31T05:33:15.259599255Z    Format: jpeg
+2026-01-31T05:33:15.259606855Z    Size: 1059x556
+2026-01-31T05:33:15.259614195Z    File Size: 114.9KB
+2026-01-31T05:33:15.259621135Z    Download Time: 213ms
+2026-01-31T05:33:15.259628075Z 🎨 Generating 4 image sizes for: epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi
+2026-01-31T05:33:15.705021373Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-large.webp
+2026-01-31T05:33:15.705061993Z   ✅ large: 101.3KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-large.webp
+2026-01-31T05:33:16.170609665Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-medium.webp
+2026-01-31T05:33:16.170647195Z   ✅ medium: 72.3KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-medium.webp
+2026-01-31T05:33:16.541081899Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-small.webp
+2026-01-31T05:33:16.541117799Z   ✅ small: 26.1KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-small.webp
+2026-01-31T05:33:16.865666305Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-thumb.webp
+2026-01-31T05:33:16.865704085Z   ✅ thumb: 6.5KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-thumb.webp
+2026-01-31T05:33:16.865710985Z 
+2026-01-31T05:33:16.865716215Z ✅ Optimization Complete!
+2026-01-31T05:33:16.865720915Z    Total Time: 1819ms
+2026-01-31T05:33:16.865725265Z    Storage: Cloudflare R2
+2026-01-31T05:33:16.865729535Z ✅ Görsel optimizasyonu tamamlandı
+2026-01-31T05:33:16.865734275Z    Large: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-large.webp
+2026-01-31T05:33:16.865739095Z    Medium: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-medium.webp
+2026-01-31T05:33:16.865743775Z    Small: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-small.webp
+2026-01-31T05:33:16.865748735Z    Thumb: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi-thumb.webp
+2026-01-31T05:33:16.871310214Z 📤 Haber yayınlanıyor: Epstein Belgeleri Açıklandı: 3 Milyon Sayfa Yayımlandı
+2026-01-31T05:33:16.882443991Z 🔍 Checking for duplicates among 34 recent articles...
+2026-01-31T05:33:16.886767996Z ✅ No duplicates found for: "Epstein Belgeleri Açıklandı: 3 Milyon Sayfa Yayımlandı..."
+2026-01-31T05:33:16.891883196Z ✅ Haber yayınlandı: epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi (Skor: 800)
+2026-01-31T05:33:16.891907926Z 🗑️  Invalidating cache by tag: articles
+2026-01-31T05:33:16.892399513Z 🗑️  Cache invalidated for tag: articles
+2026-01-31T05:33:16.893559469Z 📘 Posting to Facebook Page...
+2026-01-31T05:33:16.896656628Z 📱 Push bildirimi gönderiliyor...
+2026-01-31T05:33:16.898089222Z ✅ Haber başarıyla yayınlandı: epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi
+2026-01-31T05:33:16.898109382Z 📝 Haber işleniyor: Today’s Wordle #1687 Hints And Answer For Saturday, January 31
+2026-01-31T05:33:16.898115592Z 📄 Makale içeriği alınıyor: https://www.forbes.com/sites/erikkain/2026/01/30/nyt-wordle-saturday/
+2026-01-31T05:33:16.898120712Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-01-31T05:33:16.902231626Z 📱 1 aboneye push bildirimi gönderiliyor...
+2026-01-31T05:33:16.921037195Z 💾 Translation saved: tr - Epstein Belgeleri Açıklandı: 3 Milyon Sayfa Yayıml...
+2026-01-31T05:33:16.921077705Z 🌍 Translating article from tr to en...
+2026-01-31T05:33:16.921084265Z    Title: Epstein Belgeleri Açıklandı: 3 Milyon Sayfa Yayıml...
+2026-01-31T05:33:16.971703312Z ✅ Push bildirimi tamamlandı: 1 başarılı, 0 başarısız
+2026-01-31T05:33:16.971750022Z ✅ Push bildirimi gönderildi
+2026-01-31T05:33:17.599440878Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-01-31T05:33:17.645348074Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi
+2026-01-31T05:33:17.655632085Z ❌ İçerik alma hatası (https://www.forbes.com/sites/erikkain/2026/01/30/nyt-wordle-saturday/): Request failed with status code 403
+2026-01-31T05:33:17.658754843Z 🤖 DeepSeek ile haber yeniden yazılıyor...
+2026-01-31T05:33:20.127433198Z ✅ Facebook post successful! ID: 882602408279863_122097629979242298
+2026-01-31T05:33:27.989356461Z 💓 Heartbeat updated: 31.01.2026 05:33:27
+2026-01-31T05:33:30.505790634Z ✅ Translation complete: Epstein Documents Released: 3 Million Pages Publis...
+2026-01-31T05:33:30.510938504Z 💾 Translation saved: en - Epstein Documents Released: 3 Million Pages Publis...
+2026-01-31T05:33:30.510977554Z ✅ Article translations complete for: Epstein Belgeleri Açıklandı: 3 Milyon Sayfa Yayıml...
+2026-01-31T05:33:49.030715566Z 📊 Haber Puanı: 780/1000
+2026-01-31T05:33:49.030767616Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-01-31T05:33:51.043674642Z 📝 Final prompt (124 chars): Futuristic glowing Wordle puzzle, AI neural interface, digital art, clean minimalist design, 4k, high detail, tech aesthetic
+2026-01-31T05:33:51.043718702Z 📝 Görsel prompt: Futuristic glowing Wordle puzzle, AI neural interface, digital art, clean minimalist design, 4k, high detail, tech aesthetic
+2026-01-31T05:33:51.043728821Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-01-31T05:33:51.043736691Z 🎨 Pollinations.ai isteği: Futuristic glowing Wordle puzzle, AI neural interface, digital art, clean minimalist design, 4k, hig
+2026-01-31T05:33:51.043744251Z 📝 Prompt: Futuristic glowing Wordle puzzle, AI neural interface, digital art, clean minimalist design, 4k, hig
+2026-01-31T05:33:51.043752251Z 🎨 Pollinations.ai görsel URL: https://image.pollinations.ai/prompt/Futuristic%20glowing%20Wordle%20puzzle%2C%20AI%20neural%20interface%2C%20digital%20art%2C%20clean%20minimalist%20
+2026-01-31T05:33:57.990272785Z 💓 Heartbeat updated: 31.01.2026 05:33:57
+2026-01-31T05:34:27.989774270Z 💓 Heartbeat updated: 31.01.2026 05:34:27
+2026-01-31T05:34:28.485349388Z 📊Progress: 30% - Agent still running...
+2026-01-31T05:34:43.927197049Z ✅ Görsel URL: https://image.pollinations.ai/prompt/Futuristic%20glowing%20Wordle%20puzzle%2C%20AI%20neural%20interface%2C%20digital%20art%2C%20clean%20minimalist%20design%2C%204k%2C%20high%20detail%2C%20tech%20aesthetic?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:34:43.927264069Z 🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...
+2026-01-31T05:34:43.927271199Z 
+2026-01-31T05:34:43.927276240Z 🖼️  Image Optimization Pipeline Started
+2026-01-31T05:34:43.927281240Z    Source: https://image.pollinations.ai/prompt/Futuristic%20glowing%20Wordle%20puzzle%2C%20AI%20neural%20interface%2C%20digital%20art%2C%20clean%20minimalist%20design%2C%204k%2C%20high%20detail%2C%20tech%20aesthetic?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:34:43.927287510Z    Slug: wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi
+2026-01-31T05:34:43.927292280Z 📥 Downloading image from: https://image.pollinations.ai/prompt/Futuristic%20glowing%20Wordle%20puzzle%2C%20AI%20neural%20interface%2C%20digital%20art%2C%20clean%20minimalist%20design%2C%204k%2C%20high%20detail%2C%20tech%20aesthetic?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:34:44.152906472Z 
+2026-01-31T05:34:44.152943342Z 📊 Original Image:
+2026-01-31T05:34:44.152950453Z    Format: jpeg
+2026-01-31T05:34:44.152955483Z    Size: 1059x556
+2026-01-31T05:34:44.152960103Z    File Size: 75.7KB
+2026-01-31T05:34:44.152964883Z    Download Time: 224ms
+2026-01-31T05:34:44.152969643Z 🎨 Generating 4 image sizes for: wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi
+2026-01-31T05:34:44.608742932Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-large.webp
+2026-01-31T05:34:44.608785492Z   ✅ large: 57.1KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-large.webp
+2026-01-31T05:34:44.993400773Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-medium.webp
+2026-01-31T05:34:44.993434193Z   ✅ medium: 40.5KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-medium.webp
+2026-01-31T05:34:45.333817719Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-small.webp
+2026-01-31T05:34:45.333855009Z   ✅ small: 17.3KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-small.webp
+2026-01-31T05:34:45.652405420Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-thumb.webp
+2026-01-31T05:34:45.652446740Z   ✅ thumb: 5.7KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-thumb.webp
+2026-01-31T05:34:45.652639179Z 
+2026-01-31T05:34:45.652662809Z ✅ Optimization Complete!
+2026-01-31T05:34:45.652669889Z    Total Time: 1724ms
+2026-01-31T05:34:45.652685629Z    Storage: Cloudflare R2
+2026-01-31T05:34:45.652744499Z ✅ Görsel optimizasyonu tamamlandı
+2026-01-31T05:34:45.652823018Z    Large: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-large.webp
+2026-01-31T05:34:45.652848668Z    Medium: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-medium.webp
+2026-01-31T05:34:45.652885388Z    Small: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-small.webp
+2026-01-31T05:34:45.652974698Z    Thumb: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi-thumb.webp
+2026-01-31T05:34:45.663078890Z 📤 Haber yayınlanıyor: Wordle 1687 İpuçları ve Cevabı: 31 Ocak Cumartesi
+2026-01-31T05:34:45.681084491Z 🔍 Checking for duplicates among 35 recent articles...
+2026-01-31T05:34:45.686296611Z ✅ No duplicates found for: "Wordle 1687 İpuçları ve Cevabı: 31 Ocak Cumartesi..."
+2026-01-31T05:34:45.692245609Z ✅ Haber yayınlandı: wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi (Skor: 780)
+2026-01-31T05:34:45.692741577Z 🗑️  Invalidating cache by tag: articles
+2026-01-31T05:34:45.695129118Z 🗑️  Cache invalidated for tag: articles
+2026-01-31T05:34:45.695151797Z 📘 Posting to Facebook Page...
+2026-01-31T05:34:45.697341199Z 📱 Push bildirimi gönderiliyor...
+2026-01-31T05:34:45.700019029Z ✅ Haber başarıyla yayınlandı: wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi
+2026-01-31T05:34:45.700183468Z 📝 Haber işleniyor: Sabalenka vs Rybakina Free Streams: TV Channels, Start Times & Preview for Australian Open 2026 women's final
+2026-01-31T05:34:45.700191528Z 📄 Makale içeriği alınıyor: https://www.techradar.com/how-to-watch/tennis/aryna-sabalenka-vs-rybakina-free-australian-open-2026-womens-final
+2026-01-31T05:34:45.700197288Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-01-31T05:34:45.727850614Z 💾 Translation saved: tr - Wordle 1687 İpuçları ve Cevabı: 31 Ocak Cumartesi...
+2026-01-31T05:34:45.729164689Z 🌍 Translating article from tr to en...
+2026-01-31T05:34:45.729184199Z    Title: Wordle 1687 İpuçları ve Cevabı: 31 Ocak Cumartesi...
+2026-01-31T05:34:45.741245273Z 📱 1 aboneye push bildirimi gönderiliyor...
+2026-01-31T05:34:45.797466010Z ✅ Push bildirimi tamamlandı: 1 başarılı, 0 başarısız
+2026-01-31T05:34:45.797502970Z ✅ Push bildirimi gönderildi
+2026-01-31T05:34:46.016033280Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-01-31T05:34:46.155216771Z ✅ Direct fetch ile içerik alındı: 10000 karakter
+2026-01-31T05:34:46.185899074Z 🤖 DeepSeek ile haber yeniden yazılıyor...
+2026-01-31T05:34:46.445949777Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi
+2026-01-31T05:34:49.104947872Z ✅ Facebook post successful! ID: 882602408279863_122097630363242298
+2026-01-31T05:34:57.991039817Z 💓 Heartbeat updated: 31.01.2026 05:34:57
+2026-01-31T05:34:58.565931455Z ✅ Translation complete: Wordle 1687 Hints and Answer: Saturday, January 31...
+2026-01-31T05:34:58.576783104Z 💾 Translation saved: en - Wordle 1687 Hints and Answer: Saturday, January 31...
+2026-01-31T05:34:58.576812854Z ✅ Article translations complete for: Wordle 1687 İpuçları ve Cevabı: 31 Ocak Cumartesi...
+2026-01-31T05:35:23.258175605Z 📊 Haber Puanı: 820/1000
+2026-01-31T05:35:23.258221285Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-01-31T05:35:25.598138087Z 📝 Final prompt (138 chars): Futuristic tennis arena, AI holographic players Sabalenka vs Rybakina, digital art, 4k, clean minimalist tech design, glowing data streams
+2026-01-31T05:35:25.598186647Z 📝 Görsel prompt: Futuristic tennis arena, AI holographic players Sabalenka vs Rybakina, digital art, 4k, clean minimalist tech design, glowing data streams
+2026-01-31T05:35:25.598199477Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-01-31T05:35:25.598210137Z 🎨 Pollinations.ai isteği: Futuristic tennis arena, AI holographic players Sabalenka vs Rybakina, digital art, 4k, clean minima
+2026-01-31T05:35:25.598220227Z 📝 Prompt: Futuristic tennis arena, AI holographic players Sabalenka vs Rybakina, digital art, 4k, clean minima
+2026-01-31T05:35:25.598243477Z 🎨 Pollinations.ai görsel URL: https://image.pollinations.ai/prompt/Futuristic%20tennis%20arena%2C%20AI%20holographic%20players%20Sabalenka%20vs%20Rybakina%2C%20digital%20art%2C%204
+2026-01-31T05:35:27.990847464Z 💓 Heartbeat updated: 31.01.2026 05:35:27
+2026-01-31T05:35:57.990516798Z 💓 Heartbeat updated: 31.01.2026 05:35:57
+2026-01-31T05:36:19.179649115Z ✅ Görsel URL: https://image.pollinations.ai/prompt/Futuristic%20tennis%20arena%2C%20AI%20holographic%20players%20Sabalenka%20vs%20Rybakina%2C%20digital%20art%2C%204k%2C%20clean%20minimalist%20tech%20design%2C%20glowing%20data%20streams?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:36:19.179814615Z 🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...
+2026-01-31T05:36:19.179831255Z 
+2026-01-31T05:36:19.179842585Z 🖼️  Image Optimization Pipeline Started
+2026-01-31T05:36:19.179854445Z    Source: https://image.pollinations.ai/prompt/Futuristic%20tennis%20arena%2C%20AI%20holographic%20players%20Sabalenka%20vs%20Rybakina%2C%20digital%20art%2C%204k%2C%20clean%20minimalist%20tech%20design%2C%20glowing%20data%20streams?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:36:19.179904025Z    Slug: avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya
+2026-01-31T05:36:19.179955585Z 📥 Downloading image from: https://image.pollinations.ai/prompt/Futuristic%20tennis%20arena%2C%20AI%20holographic%20players%20Sabalenka%20vs%20Rybakina%2C%20digital%20art%2C%204k%2C%20clean%20minimalist%20tech%20design%2C%20glowing%20data%20streams?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-01-31T05:36:19.404466697Z 
+2026-01-31T05:36:19.404503477Z 📊 Original Image:
+2026-01-31T05:36:19.404513097Z    Format: jpeg
+2026-01-31T05:36:19.404520797Z    Size: 1059x556
+2026-01-31T05:36:19.404528337Z    File Size: 100.4KB
+2026-01-31T05:36:19.404554047Z    Download Time: 224ms
+2026-01-31T05:36:19.404559087Z 🎨 Generating 4 image sizes for: avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya
+2026-01-31T05:36:19.923252544Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-large.webp
+2026-01-31T05:36:19.923281424Z   ✅ large: 85.0KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-large.webp
+2026-01-31T05:36:20.331254845Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-medium.webp
+2026-01-31T05:36:20.331300164Z   ✅ medium: 58.1KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-medium.webp
+2026-01-31T05:36:20.726818969Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-small.webp
+2026-01-31T05:36:20.726912538Z   ✅ small: 22.2KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-small.webp
+2026-01-31T05:36:21.052523422Z ✅ Uploaded to R2: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-thumb.webp
+2026-01-31T05:36:21.052560312Z   ✅ thumb: 5.9KB → https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-thumb.webp
+2026-01-31T05:36:21.052567312Z 
+2026-01-31T05:36:21.052573082Z ✅ Optimization Complete!
+2026-01-31T05:36:21.052577632Z    Total Time: 1872ms
+2026-01-31T05:36:21.052581832Z    Storage: Cloudflare R2
+2026-01-31T05:36:21.052586082Z ✅ Görsel optimizasyonu tamamlandı
+2026-01-31T05:36:21.052590662Z    Large: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-large.webp
+2026-01-31T05:36:21.052618222Z    Medium: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-medium.webp
+2026-01-31T05:36:21.052657321Z    Small: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-small.webp
+2026-01-31T05:36:21.052664471Z    Thumb: https://pub-32620931b6ce48bca2549881c536b806.r2.dev/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya-thumb.webp
+2026-01-31T05:36:21.061289751Z 📤 Haber yayınlanıyor: Avustralya Açık 2026 Kadınlar Finali: Sabalenka ve Rybakina Şampiyonluk İçin Karşı Karşıya
+2026-01-31T05:36:21.078309400Z 🔍 Checking for duplicates among 36 recent articles...
+2026-01-31T05:36:21.084708328Z ✅ No duplicates found for: "Avustralya Açık 2026 Kadınlar Finali: Sabalenka ve Rybakina ..."
+2026-01-31T05:36:21.093009998Z ✅ Haber yayınlandı: avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya (Skor: 820)
+2026-01-31T05:36:21.093271127Z 🗑️  Invalidating cache by tag: articles
+2026-01-31T05:36:21.093510526Z 🗑️  Cache invalidated for tag: articles
+2026-01-31T05:36:21.093858855Z 📘 Posting to Facebook Page...
+2026-01-31T05:36:21.097364782Z 📱 Push bildirimi gönderiliyor...
+2026-01-31T05:36:21.101199129Z [Socket] Cannot emit 'article:published' - Socket.io not initialized
+2026-01-31T05:36:21.101221628Z [Socket] Cannot emit 'article:published' - Socket.io not initialized
+2026-01-31T05:36:21.101227548Z [Socket] Cannot emit 'article:published' - Socket.io not initialized
+2026-01-31T05:36:21.101232428Z [Socket] Cannot emit 'article:published' - Socket.io not initialized
+2026-01-31T05:36:21.101274718Z ✅ Haber başarıyla yayınlandı: avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya
+2026-01-31T05:36:21.101281538Z 📊 Toplam 4/4 haber yayınlandı
+2026-01-31T05:36:21.101286168Z ✅ 4 haber yayınlandı
+2026-01-31T05:36:21.103548300Z 📱 1 aboneye push bildirimi gönderiliyor...
+2026-01-31T05:36:21.112375600Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-01-31T05:36:21.116267805Z 💾 Translation saved: tr - Avustralya Açık 2026 Kadınlar Finali: Sabalenka ve...
+2026-01-31T05:36:21.116289865Z 🌍 Translating article from tr to en...
+2026-01-31T05:36:21.116296115Z    Title: Avustralya Açık 2026 Kadınlar Finali: Sabalenka ve...
+2026-01-31T05:36:21.154131070Z ⏰ Bir sonraki çalışma: 31.01.2026 05:51:21
+2026-01-31T05:36:21.166695516Z ✅ Push bildirimi tamamlandı: 1 başarılı, 0 başarısız
+2026-01-31T05:36:21.166725276Z ✅ Push bildirimi gönderildi
+2026-01-31T05:36:21.167831212Z [Socket] Cannot emit 'agent:completed' - Socket.io not initialized
+2026-01-31T05:36:21.168476419Z info: ✅ Agent execution completed {"articlesCreated":4,"articlesScraped":20,"duration":352,"environment":"production","logId":"cml1vibra00013zza84i0wemd","module":"agent","service":"ai-news-agent","success":true,"timestamp":"2026-01-31 05:36:21"}
+2026-01-31T05:36:21.169725505Z ✅ Agent çalıştırması 352s içinde tamamlandı
+2026-01-31T05:36:21.169743645Z 
+2026-01-31T05:36:21.169750035Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-01-31T05:36:21.169755505Z ┃           ✅ AGENT EXECUTION SUCCESS              ┃
+2026-01-31T05:36:21.169760245Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-01-31T05:36:21.169765585Z ┃  Status:         SUCCESS                        ┃
+2026-01-31T05:36:21.169770135Z ┃  Duration:       352s                            ┃
+2026-01-31T05:36:21.169792525Z ┃  Articles Found: 20                             ┃
+2026-01-31T05:36:21.169797425Z ┃  Articles Made:  4                              ┃
+2026-01-31T05:36:21.169801885Z ┃  Next Run:       31.01.2026 05:51:21      ┃
+2026-01-31T05:36:21.169806405Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-01-31T05:36:21.169811255Z 
+2026-01-31T05:36:21.171198831Z 📊 Progress: 90% - Agent execution completed
+2026-01-31T05:36:21.171543859Z info: ✅ Job completed {"environment":"production","jobId":"manual-trigger-1769837428472","module":"worker","result":{"articlesCreated":4,"articlesScraped":20,"duration":352,"errors":[],"publishedArticles":[{"id":"cml1vk0mv00043zzak340eaqm","slug":"epstein-dosyalari-jeffrey-epsteinin-xbox-livedan-yasaklandigi-ortaya-cikti"},{"id":"cml1vlxp300073zzaahdpvnui","slug":"epstein-belgeleri-aciklandi-3-milyon-sayfa-yayimlandi"},{"id":"cml1vnu7r000a3zza07trnufc","slug":"wordle-1687-ipuclari-ve-cevabi-31-ocak-cumartesi"},{"id":"cml1vpvtq000d3zza0mgpou0h","slug":"avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya"}],"success":true},"service":"ai-news-agent","timestamp":"2026-01-31 05:36:21"}
+2026-01-31T05:36:21.171572159Z 
+2026-01-31T05:36:21.171580169Z 📊 Execution Summary:
+2026-01-31T05:36:21.171587129Z    Articles Scraped: 20
+2026-01-31T05:36:21.171593959Z    Articles Created: 4
+2026-01-31T05:36:21.171613139Z    Duration: 352s
+2026-01-31T05:36:21.171619819Z    Status: ✅ SUCCESS
+2026-01-31T05:36:21.179078602Z 🔌 Database connection closed
+2026-01-31T05:36:21.288851382Z 
+2026-01-31T05:36:21.288913362Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-01-31T05:36:21.288923702Z 📅 AGENT SCHEDULE DEBUG:
+2026-01-31T05:36:21.288931472Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-01-31T05:36:21.288939062Z ⏰ Current time:  31.01.2026 05:36:21
+2026-01-31T05:36:21.288946452Z ⏰ Next run time: 31.01.2026 05:51:21
+2026-01-31T05:36:21.288953212Z ⚙️  Interval:      0.25 hours
+2026-01-31T05:36:21.288959682Z 🆔 Job ID:        news-agent-scheduled-run
+2026-01-31T05:36:21.288966522Z 📊 Queue length:  0
+2026-01-31T05:36:21.288973112Z 🔄 Reschedule:    Enabled (old job removed)
+2026-01-31T05:36:21.288979292Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-01-31T05:36:21.288986272Z 
+2026-01-31T05:36:21.289259711Z 
+2026-01-31T05:36:21.289272751Z ⏰ Next execution: 1/31/2026, 5:51:21 AM
+2026-01-31T05:36:21.297181783Z 
+2026-01-31T05:36:21.297210473Z ✅ Job manual-trigger-1769837428472 completed successfully
+2026-01-31T05:36:21.369415276Z 🔔 Sitemap ping: 0/2 başarılı
+2026-01-31T05:36:21.882068914Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/avustralya-acik-2026-kadinlar-finali-sabalenka-ve-rybakina-sampiyonluk-icin-karsi-karsiya
+2026-01-31T05:36:27.634629007Z ✅ Facebook post successful! ID: 882602408279863_122097630921242298
+2026-01-31T05:36:27.992471245Z 💓 Heartbeat updated: 31.01.2026 05:36:27
+2026-01-31T05:36:37.212847672Z ✅ Translation complete: Australian Open 2026 Women's Final: Sabalenka and ...
+2026-01-31T05:36:37.226638174Z 💾 Translation saved: en - Australian Open 2026 Women's Final: Sabalenka and ...
+2026-01-31T05:36:37.226687654Z ✅ Article translations complete for: Avustralya Açık 2026 Kadınlar Finali: Sabalenka ve...
+2026-01-31T05:36:57.992963595Z 💓 Heartbeat updated: 31.01.2026 05:36:57
