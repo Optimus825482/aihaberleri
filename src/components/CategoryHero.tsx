@@ -24,14 +24,23 @@ export function CategoryHero({
       {imageUrl && (
         <div className="absolute right-0 top-0 bottom-0 w-1/3 hidden lg:block">
           <div className="relative h-full opacity-20">
-            <Image
-              src={imageUrl}
-              alt={title}
-              fill
-              className="object-cover object-center"
-              priority
-              unoptimized={imageUrl.includes('pollinations.ai')}
-            />
+            {imageUrl.includes('pollinations.ai') ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl}
+                alt={title}
+                className="absolute inset-0 w-full h-full object-cover object-center"
+                loading="eager"
+              />
+            ) : (
+              <Image
+                src={imageUrl}
+                alt={title}
+                fill
+                className="object-cover object-center"
+                priority
+              />
+            )}
           </div>
         </div>
       )}

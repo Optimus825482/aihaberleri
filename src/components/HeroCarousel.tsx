@@ -118,21 +118,31 @@ export function HeroCarousel({
         <div
           key={article.id}
           className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentIndex
-              ? "opacity-100 scale-100"
-              : "opacity-0 scale-105"
+            ? "opacity-100 scale-100"
+            : "opacity-0 scale-105"
             }`}
         >
           {article.imageUrl && (
-            <Image
-              src={article.imageUrl}
-              alt={article.title}
-              fill
-              className="object-cover"
-              priority={index === 0}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
-              quality={85}
-              unoptimized={article.imageUrl.includes('pollinations.ai')}
-            />
+            article.imageUrl.includes('pollinations.ai') ? (
+              // Use native img for Pollinations to avoid Next.js optimization issues
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={article.imageUrl}
+                alt={article.title}
+                className="absolute inset-0 w-full h-full object-cover"
+                loading={index === 0 ? "eager" : "lazy"}
+              />
+            ) : (
+              <Image
+                src={article.imageUrl}
+                alt={article.title}
+                fill
+                className="object-cover"
+                priority={index === 0}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
+                quality={85}
+              />
+            )
           )}
           {/* Dark Overlay with Gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30" />
@@ -232,8 +242,8 @@ export function HeroCarousel({
               key={index}
               onClick={() => goToSlide(index)}
               className={`transition-all duration-300 ${index === currentIndex
-                  ? "w-8 bg-white scale-110"
-                  : "w-2 bg-white/50 hover:bg-white/70 hover:scale-110"
+                ? "w-8 bg-white scale-110"
+                : "w-2 bg-white/50 hover:bg-white/70 hover:scale-110"
                 } h-2 rounded-full`}
               aria-label={`${index + 1}. habere git`}
             />

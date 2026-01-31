@@ -83,14 +83,24 @@ export function ArticleCard({ article, locale = "tr" }: ArticleCardProps) {
       <Link href={`/${newsPath}/${article.slug}`}>
         {article.imageUrl && (
           <div className="relative h-48 w-full overflow-hidden">
-            <Image
-              src={article.imageUrl}
-              alt={article.title}
-              fill
-              className="object-cover transition-transform hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              unoptimized={article.imageUrl.includes('pollinations.ai')}
-            />
+            {article.imageUrl.includes('pollinations.ai') ? (
+              // Use native img for Pollinations to avoid Next.js optimization issues
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={article.imageUrl}
+                alt={article.title}
+                className="w-full h-full object-cover transition-transform hover:scale-105"
+                loading="lazy"
+              />
+            ) : (
+              <Image
+                src={article.imageUrl}
+                alt={article.title}
+                fill
+                className="object-cover transition-transform hover:scale-105"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            )}
           </div>
         )}
       </Link>
