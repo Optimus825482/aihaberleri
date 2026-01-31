@@ -172,6 +172,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           },
         },
       },
+      {
+        url: `${baseUrl}/sss`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.6,
+        alternates: {
+          languages: {
+            tr: `${baseUrl}/sss`,
+            en: `${baseUrl}/en/faq`,
+          },
+        },
+      },
+      {
+        url: `${baseUrl}/en/faq`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.6,
+        alternates: {
+          languages: {
+            tr: `${baseUrl}/sss`,
+            en: `${baseUrl}/en/faq`,
+          },
+        },
+      },
     ];
 
     // Turkish article pages
