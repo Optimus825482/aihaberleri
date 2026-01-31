@@ -18,6 +18,17 @@ import { emailService } from "@/lib/email";
 import { getRedis } from "@/lib/redis";
 import { emitToAdmin, SocketEvents } from "@/lib/socket";
 import { pingSitemaps } from "@/lib/seo";
+import { createModuleLogger } from "@/lib/agent-log-stream";
+
+// Create module-specific loggers for live streaming
+const liveLog = {
+  agent: createModuleLogger("agent"),
+  rss: createModuleLogger("rss"),
+  content: createModuleLogger("content"),
+  deepseek: createModuleLogger("deepseek"),
+  image: createModuleLogger("image"),
+  publish: createModuleLogger("publish"),
+};
 
 export interface AgentExecutionResult {
   success: boolean;
@@ -83,6 +94,14 @@ export async function executeNewsAgent(
 
   agentLogger.start(agentLog.id, categorySlug);
 
+  // Live log: Agent started
+  await liveLog.agent.info(
+    `🚀 Agent başlatıldı (ID: ${agentLog.id.substring(0, 8)}...)`,
+    {
+      categorySlug: categorySlug || "all",
+    },
+  );
+
   // Emit agent started event
   emitToAdmin(SocketEvents.AGENT_STARTED, {
     timestamp: new Date().toISOString(),
@@ -126,6 +145,11 @@ export async function executeNewsAgent(
     const newsArticles = await fetchAINews(categorySlug);
     articlesScraped = newsArticles.length;
     console.log(`✅ ${articlesScraped} trend haber bulundu`);
+
+    // Live log: Articles fetched
+    await liveLog.rss.success(
+      `📰 ${articlesScraped} haber bulundu (RSS + Trend)`,
+    );
 
     if (newsArticles.length === 0) {
       throw new Error("Haber bulunamadı");
@@ -177,11 +201,21 @@ export async function executeNewsAgent(
 
     console.log(`🎯 Hedef haber sayısı: ${targetCount}`);
 
+    // Live log: Selecting articles
+    await liveLog.deepseek.info(
+      `🎯 DeepSeek AI ile ${targetCount} haber seçiliyor...`,
+    );
+
     const selectedArticles = await selectBestArticles(
       newsArticles,
       targetCount,
     );
     console.log(`✅ ${selectedArticles.length} haber seçildi`);
+
+    // Live log: Articles selected
+    await liveLog.deepseek.success(
+      `✅ ${selectedArticles.length} haber seçildi`,
+    );
 
     // Step 3: Process and publish articles
     agentLogger.step(

@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Activity,
   Calendar,
+  Terminal,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -115,6 +116,12 @@ const menuItems = [
     title: "Agent Ayarları",
     href: "/admin/agent-settings",
     icon: Bot,
+    requiredResource: "settings" as const,
+  },
+  {
+    title: "Canlı Loglar",
+    href: "/admin/agent-logs",
+    icon: Terminal,
     requiredResource: "settings" as const,
   },
   {

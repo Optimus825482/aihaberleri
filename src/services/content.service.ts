@@ -19,6 +19,16 @@ import { translateAndSaveArticle } from "@/lib/translation";
 import { getCache } from "@/lib/cache";
 import { contentLogger } from "@/lib/logger";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
+import { createModuleLogger } from "@/lib/agent-log-stream";
+
+// Create module-specific loggers for live streaming
+const liveLog = {
+  content: createModuleLogger("content"),
+  duplicate: createModuleLogger("duplicate"),
+  deepseek: createModuleLogger("deepseek"),
+  image: createModuleLogger("image"),
+  publish: createModuleLogger("publish"),
+};
 
 export interface ProcessedArticle {
   title: string;
@@ -76,6 +86,12 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
     console.log(`🗑️ Duplicate URL detected: ${existingByUrl.title}`);
     console.log(`   Existing URL: ${existingByUrl.sourceUrl}`);
     console.log(`   New URL: ${article.url}`);
+
+    // Live log: Duplicate detected
+    await liveLog.duplicate.warn(
+      `🗑️ Duplicate URL: ${existingByUrl.title.substring(0, 50)}...`,
+    );
+
     return true;
   }
 
@@ -253,10 +269,12 @@ export async function selectBestArticles(
     // Analyze only the top 15-20 unique articles WITH context of recent publications
     const analysis = await analyzeNewsArticles(
       uniqueArticles.slice(0, 20),
-      recentPublished.map((a) => ({
-        title: a.title,
-        publishedAt: a.publishedAt,
-      })),
+      recentPublished
+        .filter((a) => a.publishedAt !== null)
+        .map((a) => ({
+          title: a.title,
+          publishedAt: a.publishedAt as Date,
+        })),
     );
 
     const selected = analysis
@@ -317,6 +335,11 @@ export async function processArticle(
 ): Promise<ProcessedArticle> {
   console.log(`📝 Haber işleniyor: ${article.title}`);
 
+  // Live log: Processing article
+  await liveLog.content.info(
+    `📝 İşleniyor: ${article.title.substring(0, 60)}...`,
+  );
+
   try {
     // Step 1: Fetch full article content
     const fullContent = await fetchArticleContent(article.url);
@@ -334,6 +357,11 @@ export async function processArticle(
 
     // Step 3: Rewrite article using DeepSeek
     console.log("🤖 DeepSeek ile haber yeniden yazılıyor...");
+
+    // Live log: Rewriting
+    await liveLog.deepseek.info(
+      `🤖 DeepSeek yeniden yazıyor: ${article.title.substring(0, 40)}...`,
+    );
 
     // Define type for rewrite result to include score
     interface RewriteResult {
@@ -354,6 +382,9 @@ export async function processArticle(
 
     const score = rewritten.score || 0;
     console.log(`📊 Haber Puanı: ${score}/1000`);
+
+    // Live log: Rewritten
+    await liveLog.deepseek.success(`✅ Yeniden yazıldı (Puan: ${score}/1000)`);
 
     // Step 3: Generate AI image prompt using DeepSeek
     console.log("🎨 DeepSeek ile görsel prompt oluşturuluyor...");
@@ -377,6 +408,9 @@ export async function processArticle(
 
     // Step 4.5: Generate slug (needed for image optimization)
     const slug = generateSlug(rewritten.title);
+    
+    // Live log: Image generated
+    await liveLog.image.success(`🖼️ Görsel oluşturuldu: ${slug}`);
 
     // Step 5: Optimize image and generate multiple sizes
     console.log("🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...");
@@ -455,6 +489,9 @@ export async function publishArticle(
   agentLogId?: string,
 ): Promise<{ id: string; slug: string } | null> {
   console.log(`📤 Haber yayınlanıyor: ${processedArticle.title}`);
+  
+  // Live log: Publishing
+  await liveLog.publish.info(`📤 Yayınlanıyor: ${processedArticle.title.substring(0, 50)}...`);
 
   try {
     // Get category
@@ -533,6 +570,9 @@ export async function publishArticle(
     });
 
     console.log(`✅ Haber yayınlandı: ${article.slug} (Skor: ${score})`);
+    
+    // Live log: Published
+    await liveLog.publish.success(`✅ Yayınlandı: ${article.title.substring(0, 50)}... (Skor: ${score})`);
 
     // 🚀 CACHE: Invalidate articles cache when new article published
     try {
