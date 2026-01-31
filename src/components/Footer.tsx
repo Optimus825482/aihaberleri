@@ -131,6 +131,14 @@ export async function Footer() {
                   İletişim
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/sss"
+                  className="text-muted-foreground hover:text-primary transition-colors"
+                >
+                  SSS
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -155,16 +163,16 @@ export async function Footer() {
               {!socialMedia.some(
                 (s) => s.platform.toLowerCase() === "twitter",
               ) && (
-                <a
-                  href="https://twitter.com/aihaberleri"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-                >
-                  <Twitter className="h-5 w-5" />
-                  <span className="text-sm capitalize">Twitter</span>
-                </a>
-              )}
+                  <a
+                    href="https://twitter.com/aihaberleri"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    <Twitter className="h-5 w-5" />
+                    <span className="text-sm capitalize">Twitter</span>
+                  </a>
+                )}
             </div>
           </div>
         </div>
