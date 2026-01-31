@@ -61,6 +61,7 @@ interface RecentLog {
   articlesCreated: number;
   duration: number;
   createdAt: string;
+  errors?: string[];
 }
 
 export default function AgentSettingsPage() {
@@ -434,6 +435,7 @@ export default function AgentSettingsPage() {
                 </div>
                 <select
                   id="interval"
+                  aria-label="Çalışma sıklığı seçin"
                   value={settings.intervalHours}
                   onChange={(e) =>
                     setSettings((prev) => ({ ...prev, intervalHours: parseFloat(e.target.value) }))
@@ -832,7 +834,7 @@ function MaintenanceCard() {
             size="sm"
             variant="outline"
             onClick={runDbMigration}
-            disabled={dbMigrating || (dbStatus && !dbStatus.needsMigration)}
+            disabled={dbMigrating || Boolean(dbStatus && !dbStatus.needsMigration)}
           >
             {dbMigrating ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -861,7 +863,7 @@ function MaintenanceCard() {
             size="sm"
             variant="outline"
             onClick={runImageMigration}
-            disabled={imgMigrating || (imgStatus && imgStatus.pendingCount === 0)}
+            disabled={imgMigrating || Boolean(imgStatus && imgStatus.pendingCount === 0)}
           >
             {imgMigrating ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
