@@ -71,6 +71,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "AI Haberleri",
   },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   openGraph: {
     type: "website",
     locale: "tr_TR",
