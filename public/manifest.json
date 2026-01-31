@@ -65,6 +65,13 @@
       "description": "Haber kategorileri",
       "url": "/#categories",
       "icons": [{ "src": "/icons/Icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Admin Panel",
+      "short_name": "Admin",
+      "description": "Yönetim paneli",
+      "url": "/admin",
+      "icons": [{ "src": "/icons/Icon-96.png", "sizes": "96x96" }]
     }
   ],
   "categories": ["news", "technology", "education"],

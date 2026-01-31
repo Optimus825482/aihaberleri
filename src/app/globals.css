@@ -63,6 +63,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -116,4 +117,51 @@
 
 .prose pre {
   @apply bg-muted p-4 rounded-lg overflow-x-auto my-4;
+}
+
+/* PWA & Mobile Optimizations */
+@supports (padding: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Touch optimization */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent pull-to-refresh on admin panel */
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
+/* Smooth scrolling for iOS */
+@supports (-webkit-overflow-scrolling: touch) {
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Dynamic viewport height for mobile browsers */
+@supports (min-height: 100dvh) {
+  .min-h-\[100dvh\] {
+    min-height: 100dvh;
+  }
+}
+
+/* Active state for mobile buttons */
+@media (hover: none) and (pointer: coarse) {
+  .active\:scale-\[0\.98\]:active {
+    transform: scale(0.98);
+  }
 }

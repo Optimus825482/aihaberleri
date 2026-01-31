@@ -215,9 +215,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Mobile Header - Enhanced */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-card/95 border-b border-primary/10 px-4 py-3 flex items-center justify-between shadow-lg">
+    <div className="min-h-screen min-h-[100dvh] bg-background flex">
+      {/* Mobile Header - Enhanced for PWA */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-card/95 border-b border-primary/10 px-4 py-3 flex items-center justify-between shadow-lg safe-area-top">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center shadow-lg shadow-primary/20">
             <LayoutDashboard className="h-4 w-4 text-white" />
@@ -234,7 +234,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           size="icon"
           onClick={toggleMobileMenu}
           aria-label="Menüyü aç"
-          className="hover:bg-primary/10"
+          className="hover:bg-primary/10 h-12 w-12 touch-manipulation"
         >
           <Menu className="h-6 w-6" />
         </Button>
@@ -300,8 +300,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="px-3 py-4 space-y-1 pb-20 overflow-y-auto max-h-[calc(100vh-280px)]">
+        {/* Navigation - Touch Optimized */}
+        <nav className="px-3 py-4 space-y-1 pb-24 overflow-y-auto max-h-[calc(100vh-280px)] overscroll-contain">
           {visibleMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -312,8 +312,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 href={item.href}
                 onClick={closeMobileMenu}
                 className={`
-                  group flex items-center gap-3 px-4 py-3 rounded-xl
+                  group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                   transition-all duration-200 relative overflow-hidden
+                  touch-manipulation active:scale-[0.98]
                   ${isActive
                     ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
                     : "hover:bg-primary/5 hover:translate-x-1"
@@ -344,12 +345,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           })}
         </nav>
 
-        {/* Bottom Actions - Enhanced */}
-        <div className="absolute bottom-0 w-72 p-3 border-t border-primary/10 bg-gradient-to-t from-card to-transparent backdrop-blur-xl">
+        {/* Bottom Actions - Enhanced for PWA */}
+        <div className="absolute bottom-0 w-72 p-3 border-t border-primary/10 bg-gradient-to-t from-card to-transparent backdrop-blur-xl safe-area-bottom">
           {isInstallable && (
             <Button
               variant="outline"
-              className="w-full justify-start mb-2 border-primary/20 bg-gradient-to-r from-primary/10 to-purple-500/10 hover:from-primary/20 hover:to-purple-500/20 text-primary font-bold shadow-lg shadow-primary/10 group"
+              className="w-full justify-start mb-2 border-primary/20 bg-gradient-to-r from-primary/10 to-purple-500/10 hover:from-primary/20 hover:to-purple-500/20 text-primary font-bold shadow-lg shadow-primary/10 group h-12 touch-manipulation"
               onClick={() => {
                 installApp();
                 closeMobileMenu();
@@ -363,7 +364,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           )}
           <Button
             variant="ghost"
-            className="w-full justify-start hover:bg-destructive/10 hover:text-destructive font-bold group"
+            className="w-full justify-start hover:bg-destructive/10 hover:text-destructive font-bold group h-12 touch-manipulation"
             onClick={() => {
               closeMobileMenu();
               signOut({ callbackUrl: "/admin/login" });
@@ -377,8 +378,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-16 lg:pt-0">
+      {/* Main Content - PWA Optimized */}
+      <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-[60px] lg:pt-0 pb-safe">
         <div className="w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8">
           {children}
         </div>

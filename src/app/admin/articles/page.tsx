@@ -337,7 +337,130 @@ export default function ArticlesPage() {
             </div>
           </CardHeader>
           <CardContent className="p-0 sm:p-6">
-            <div className="overflow-x-auto">
+            {/* Mobile Card View */}
+            <div className="block lg:hidden space-y-3 p-4">
+              {displayArticles.map((article) => (
+                <div
+                  key={article.id}
+                  className="border rounded-xl p-4 bg-card/50 space-y-3"
+                >
+                  {/* Header: Image + Title */}
+                  <div className="flex gap-3">
+                    {article.imageUrl ? (
+                      <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                        <Image
+                          src={article.imageUrl}
+                          alt={article.title}
+                          fill
+                          className="object-cover"
+                          unoptimized={article.imageUrl.includes('pollinations.ai')}
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs text-muted-foreground">Yok</span>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm line-clamp-2 leading-tight">
+                        {article.title}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          {article.category.name}
+                        </Badge>
+                        <Badge
+                          variant={article.status === "PUBLISHED" ? "default" : "secondary"}
+                          className="text-xs"
+                        >
+                          {article.status === "PUBLISHED" ? "Yayında" : "Taslak"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats Row */}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground border-t border-b py-2">
+                    <div className="flex items-center gap-1">
+                      <Eye className="h-3 w-3" />
+                      <span>{article.views}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className={`font-bold ${(article.score || 0) >= 800 ? "text-green-600" :
+                          (article.score || 0) >= 500 ? "text-yellow-600" : "text-red-600"
+                        }`}>
+                        {article.score || 0}
+                      </span>
+                      <span>/1000</span>
+                    </div>
+                    <div>
+                      {new Date(article.publishedAt || article.createdAt).toLocaleDateString("tr-TR")}
+                    </div>
+                    {article.facebookShared && (
+                      <Badge className="bg-green-600 text-xs gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        FB
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(`/news/${article.slug}`, "_blank")}
+                      className="flex-1"
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Görüntüle
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/admin/articles/${article.id}/edit`)}
+                      className="flex-1"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Düzenle
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => refreshImage(article.id)}
+                      disabled={refreshingImage === article.id}
+                    >
+                      <RefreshCw className={`h-4 w-4 ${refreshingImage === article.id ? "animate-spin" : ""}`} />
+                    </Button>
+                    {!article.facebookShared && article.status === "PUBLISHED" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => shareFacebook(article.id)}
+                        disabled={sharingFacebook === article.id}
+                      >
+                        {sharingFacebook === article.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Facebook className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => deleteArticle(article.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
               <Table className="min-w-[900px]">
                 <TableHeader>
                   <TableRow>
@@ -539,11 +662,38 @@ export default function ArticlesPage() {
 
             {/* Pagination Controls */}
             {totalArticles > 0 && totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-6 border-t">
+              <div className="flex flex-col items-center gap-4 mt-6 pt-6 border-t px-4 lg:px-0">
                 <div className="text-sm text-muted-foreground">
-                  Sayfa {currentPage} / {totalPages}
+                  Sayfa {currentPage} / {totalPages} ({totalArticles} haber)
                 </div>
-                <div className="flex items-center gap-2">
+
+                {/* Mobile Pagination */}
+                <div className="flex lg:hidden items-center gap-2 w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="flex-1"
+                  >
+                    ← Önceki
+                  </Button>
+                  <span className="px-4 py-2 bg-primary text-primary-foreground rounded-md font-medium">
+                    {currentPage}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="flex-1"
+                  >
+                    Sonraki →
+                  </Button>
+                </div>
+
+                {/* Desktop Pagination */}
+                <div className="hidden lg:flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"

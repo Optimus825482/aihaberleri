@@ -45,7 +45,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 p-4">
+    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 p-4 safe-area-top safe-area-bottom">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
@@ -66,9 +66,10 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base touch-manipulation"
                 placeholder="admin@example.com"
                 required
+                autoComplete="email"
               />
             </div>
 
@@ -81,9 +82,10 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base touch-manipulation"
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
               />
             </div>
 
@@ -93,7 +95,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-12 text-base touch-manipulation" disabled={loading}>
               {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Button>
           </form>

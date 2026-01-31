@@ -242,7 +242,10 @@ Aşağıdaki haberler sitemizde mevcut. **SADECE GERÇEKTEN İLGİLİYSE** ve **
 - Zorla link ekleme, doğal olmalı
 - Her habere link eklemeye çalışma
 - Link eklemeden de makale tamamlanabilir
-- Sadece DOĞRUDAN İLGİLİ olanları kullan\n\nMevcut haberler:\n${contextArticles.slice(0, 3).map((a) => `- ${a.title} → /news/${a.slug}`).join("\n")}`
+- Sadece DOĞRUDAN İLGİLİ olanları kullan\n\nMevcut haberler:\n${contextArticles
+          .slice(0, 3)
+          .map((a) => `- ${a.title} → /news/${a.slug}`)
+          .join("\n")}`
       : "";
 
   const prompt = `Sen profesyonel, saygın ve güvenilir bir TV Haber Sunucusu ve Editörüsün. Görevin, sana verilen ham haberi alıp, geniş kitleler için anlaşılır, akıcı ve tamamen tarafsız bir haber metnine dönüştürmek.${contextText}
