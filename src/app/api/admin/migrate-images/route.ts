@@ -140,17 +140,127 @@ export async function POST(request: Request) {
 }
 
 /**
+ * Check if an R2 URL exists (HEAD request)
+ */
+async function checkR2UrlExists(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: "HEAD" });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * GET /api/admin/migrate-images
  * Get count of articles needing migration
  */
-export async function GET() {
+export async function GET(request: Request) {
   const session = await auth();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const { searchParams } = new URL(request.url);
+  const action = searchParams.get("action");
+
+  // Action: Check for broken R2 URLs
+  if (action === "check-broken") {
+    try {
+      const r2Articles = await db.article.findMany({
+        where: {
+          imageUrl: {
+            contains: "r2.dev",
+          },
+        },
+        select: {
+          id: true,
+          slug: true,
+          imageUrl: true,
+        },
+        take: 20, // Check 20 at a time
+      });
+
+      const brokenArticles: { slug: string; imageUrl: string }[] = [];
+
+      for (const article of r2Articles) {
+        if (!article.imageUrl) continue;
+        const exists = await checkR2UrlExists(article.imageUrl);
+        if (!exists) {
+          brokenArticles.push({
+            slug: article.slug,
+            imageUrl: article.imageUrl,
+          });
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        checked: r2Articles.length,
+        broken: brokenArticles.length,
+        brokenArticles,
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Check failed" },
+        { status: 500 },
+      );
+    }
+  }
+
+  // Action: Fix broken R2 URLs (set to null so they get regenerated)
+  if (action === "fix-broken") {
+    try {
+      const r2Articles = await db.article.findMany({
+        where: {
+          imageUrl: {
+            contains: "r2.dev",
+          },
+        },
+        select: {
+          id: true,
+          slug: true,
+          imageUrl: true,
+        },
+        take: 20,
+      });
+
+      let fixedCount = 0;
+
+      for (const article of r2Articles) {
+        if (!article.imageUrl) continue;
+        const exists = await checkR2UrlExists(article.imageUrl);
+        if (!exists) {
+          // Reset to placeholder - will need manual migration later
+          await db.article.update({
+            where: { id: article.id },
+            data: {
+              imageUrl: "/images/placeholder.webp",
+              imageUrlMedium: null,
+              imageUrlSmall: null,
+              imageUrlThumb: null,
+            },
+          });
+          fixedCount++;
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        fixed: fixedCount,
+        message: `Reset ${fixedCount} broken R2 URLs to placeholder`,
+      });
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Fix failed" },
+        { status: 500 },
+      );
+    }
+  }
+
+  // Default: Count pending migrations
   try {
-    const count = await db.article.count({
+    const pollinationsCount = await db.article.count({
       where: {
         imageUrl: {
           contains: "pollinations.ai",
@@ -158,9 +268,29 @@ export async function GET() {
       },
     });
 
+    const r2Count = await db.article.count({
+      where: {
+        imageUrl: {
+          contains: "r2.dev",
+        },
+      },
+    });
+
+    const placeholderCount = await db.article.count({
+      where: {
+        OR: [
+          { imageUrl: { contains: "placeholder" } },
+          { imageUrl: null },
+        ],
+      },
+    });
+
     return NextResponse.json({
       success: true,
-      pendingMigration: count,
+      pendingMigration: pollinationsCount,
+      r2Images: r2Count,
+      placeholderImages: placeholderCount,
+      hint: "Use ?action=check-broken to find R2 URLs that don't exist, ?action=fix-broken to reset them",
     });
   } catch (error) {
     return NextResponse.json(
