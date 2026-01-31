@@ -8,7 +8,7 @@ import { getCache } from "@/lib/cache";
 // GET - Get single article
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ) {
   try {
     // Check authentication
@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = params;
 
     // 🚀 CACHE: Try to get from cache (10 min TTL)
     const cacheKey = `article:${id}`;
@@ -81,7 +81,7 @@ export async function GET(
 // PUT - Update article
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ) {
   try {
     // Check authentication
@@ -90,7 +90,7 @@ export async function PUT(
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = params;
     const body = await request.json();
 
     const {
@@ -168,7 +168,7 @@ export async function PUT(
 // DELETE - Delete article
 export async function DELETE(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ) {
   try {
     // Check authentication
@@ -180,7 +180,7 @@ export async function DELETE(
       );
     }
 
-    const { id } = await params;
+    const { id } = params;
 
     // Check if article exists
     const existingArticle = await db.article.findUnique({

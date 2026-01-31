@@ -7,7 +7,7 @@ import { fetchPollinationsImage } from "@/lib/pollinations";
 // POST - Refresh article image
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: { id: string } },
 ) {
   try {
     // Check authentication
@@ -16,7 +16,7 @@ export async function POST(
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id } = params;
 
     // Get article
     const article = await db.article.findUnique({
