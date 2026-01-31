@@ -21,6 +21,10 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "images.aihaberleri.org",
+      },
+      {
+        protocol: "https",
         hostname: "pub-32620931b6ce48bca2549881c536b806.r2.dev",
       },
     ],
