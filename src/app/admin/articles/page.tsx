@@ -168,8 +168,15 @@ export default function ArticlesPage() {
         method: "POST",
       });
 
-      if (response.ok) {
-        alert("Görsel güncellendi");
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Check if fallback was used
+        if (data.usedFallback) {
+          alert("⚠️ Görsel servisi yanıt vermedi. Varsayılan görsel kullanıldı.\nBirkaç dakika sonra tekrar deneyin.");
+        } else {
+          alert("✅ Görsel başarıyla güncellendi!");
+        }
         // Optimistic update - refresh only this article
         const updatedArticle = await fetch(`/api/articles/${id}`).then((r) =>
           r.json(),
@@ -184,10 +191,10 @@ export default function ArticlesPage() {
           );
         }
       } else {
-        alert("Görsel güncellenemedi");
+        alert("❌ Görsel güncellenemedi: " + (data.error || "Bilinmeyen hata"));
       }
     } catch (error) {
-      alert("Bir hata oluştu");
+      alert("❌ Bir hata oluştu");
     } finally {
       setRefreshingImage(null);
     }

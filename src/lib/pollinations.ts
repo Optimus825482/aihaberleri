@@ -167,7 +167,7 @@ export async function fetchPollinationsImage(
 
         // Verify image is accessible with timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout - Pollinations slow on first gen
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout - Pollinations can be very slow
 
         try {
           const response = await fetch(imageUrl, {
@@ -247,7 +247,7 @@ async function fetchPollinationsImageAnonymous(
 
   // Fetch image to verify it exists with timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout - Pollinations slow on first gen
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout - Pollinations can be very slow
 
   try {
     const response = await fetch(imageUrl, {
@@ -275,7 +275,9 @@ async function fetchPollinationsImageAnonymous(
 function getFallbackImage(): string {
   // Use static placeholder - always available, no external dependency
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-  return `${baseUrl}/logos/og-image.png`;
+  const fallbackUrl = `${baseUrl}/logos/og-image.png`;
+  console.warn("⚠️ Pollinations.ai başarısız, fallback görsel kullanılıyor:", fallbackUrl);
+  return fallbackUrl;
 }
 
 /**

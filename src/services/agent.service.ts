@@ -253,7 +253,9 @@ export async function executeNewsAgent(
     const intervalHours = parseFloat(intervalSetting?.value || "6");
     const nextRun = new Date();
     // Decimal hours support (0.25 = 15min, 0.5 = 30min)
-    nextRun.setTime(nextRun.getTime() + Math.round(intervalHours * 60 * 60 * 1000));
+    nextRun.setTime(
+      nextRun.getTime() + Math.round(intervalHours * 60 * 60 * 1000),
+    );
 
     await db.setting.upsert({
       where: { key: "agent.nextRun" },

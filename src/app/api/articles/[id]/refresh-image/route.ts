@@ -54,6 +54,12 @@ export async function POST(
     });
     console.log("✅ Yeni görsel URL:", newImageUrl);
 
+    // Check if fallback was used
+    const isFallback = newImageUrl.includes("/logos/og-image.png");
+    if (isFallback) {
+      console.warn("⚠️ Pollinations.ai başarısız, fallback kullanıldı");
+    }
+
     // Update article
     const updatedArticle = await db.article.update({
       where: { id },
@@ -62,6 +68,8 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
+      usedFallback: isFallback,
+      message: isFallback ? "Görsel servisi yanıt vermedi, varsayılan görsel kullanıldı" : "Görsel başarıyla güncellendi",
       data: updatedArticle,
     });
   } catch (error) {
