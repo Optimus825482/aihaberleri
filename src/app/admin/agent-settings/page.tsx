@@ -732,7 +732,7 @@ function MaintenanceCard() {
       const res = await fetch("/api/admin/migrate-images");
       if (res.ok) {
         const data = await res.json();
-        setImgStatus({ pendingCount: data.pendingCount || 0 });
+        setImgStatus({ pendingCount: data.pendingMigration || 0 });
       }
     } catch {
       // API might not exist yet
