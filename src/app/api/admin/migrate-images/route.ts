@@ -278,10 +278,7 @@ export async function GET(request: Request) {
 
     const placeholderCount = await db.article.count({
       where: {
-        OR: [
-          { imageUrl: { contains: "placeholder" } },
-          { imageUrl: null },
-        ],
+        OR: [{ imageUrl: { contains: "placeholder" } }, { imageUrl: null }],
       },
     });
 

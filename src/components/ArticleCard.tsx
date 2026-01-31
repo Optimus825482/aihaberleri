@@ -83,8 +83,8 @@ export function ArticleCard({ article, locale = "tr" }: ArticleCardProps) {
       <Link href={`/${newsPath}/${article.slug}`}>
         {article.imageUrl && (
           <div className="relative h-48 w-full overflow-hidden">
-            {article.imageUrl.includes('pollinations.ai') ? (
-              // Use native img for Pollinations to avoid Next.js optimization issues
+            {article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev') ? (
+              // Use native img for Pollinations and R2 to avoid Next.js optimization issues
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={article.imageUrl}

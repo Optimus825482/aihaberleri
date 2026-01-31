@@ -24,7 +24,7 @@ export function CategoryHero({
       {imageUrl && (
         <div className="absolute right-0 top-0 bottom-0 w-1/3 hidden lg:block">
           <div className="relative h-full opacity-20">
-            {imageUrl.includes('pollinations.ai') ? (
+            {imageUrl.includes('pollinations.ai') || imageUrl.includes('r2.dev') ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={imageUrl}
