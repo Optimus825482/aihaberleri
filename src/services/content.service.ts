@@ -321,14 +321,14 @@ export async function processArticle(
     // Step 1: Fetch full article content
     const fullContent = await fetchArticleContent(article.url);
 
-    // Step 2: Fetch recent articles for internal linking context
+    // Step 2: Fetch recent articles for internal linking context (max 3 to avoid over-linking)
     const recentArticles = await db.article.findMany({
       where: {
         status: "PUBLISHED",
         category: { name: category },
       },
       select: { title: true, slug: true },
-      take: 5,
+      take: 3,
       orderBy: { createdAt: "desc" },
     });
 

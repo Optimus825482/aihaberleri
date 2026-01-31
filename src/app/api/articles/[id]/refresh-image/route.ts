@@ -69,7 +69,9 @@ export async function POST(
     return NextResponse.json({
       success: true,
       usedFallback: isFallback,
-      message: isFallback ? "Görsel servisi yanıt vermedi, varsayılan görsel kullanıldı" : "Görsel başarıyla güncellendi",
+      message: isFallback
+        ? "Görsel servisi yanıt vermedi, varsayılan görsel kullanıldı"
+        : "Görsel başarıyla güncellendi",
       data: updatedArticle,
     });
   } catch (error) {

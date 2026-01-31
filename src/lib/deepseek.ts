@@ -235,7 +235,14 @@ export async function rewriteArticle(
 }> {
   const contextText =
     contextArticles.length > 0
-      ? `\n\n### İÇ LİNKLEME BAĞLAMI (SEO):\nŞu makaleler halihazırda sitemizde yayında. Yazı içinde doğal bir yerini bulursan bu haberlere link (<a href="/news/slug">başlık</a>) verebilirsin:\n${contextArticles.map((a) => `- ${a.title} (Link: /news/${a.slug})`).join("\n")}`
+      ? `\n\n### İÇ LİNKLEME (İSTEĞE BAĞLI - ABARTMA!):
+Aşağıdaki haberler sitemizde mevcut. **SADECE GERÇEKTEN İLGİLİYSE** ve **DOĞAL BİR YERİNE OTURURSA** EN FAZLA 1-2 tanesi link olarak eklenebilir.
+
+⚠️ KURALLAR:
+- Zorla link ekleme, doğal olmalı
+- Her habere link eklemeye çalışma
+- Link eklemeden de makale tamamlanabilir
+- Sadece DOĞRUDAN İLGİLİ olanları kullan\n\nMevcut haberler:\n${contextArticles.slice(0, 3).map((a) => `- ${a.title} → /news/${a.slug}`).join("\n")}`
       : "";
 
   const prompt = `Sen profesyonel, saygın ve güvenilir bir TV Haber Sunucusu ve Editörüsün. Görevin, sana verilen ham haberi alıp, geniş kitleler için anlaşılır, akıcı ve tamamen tarafsız bir haber metnine dönüştürmek.${contextText}

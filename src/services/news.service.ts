@@ -69,27 +69,47 @@ function extractKeywords(text: string): string[] {
  */
 function extractEntities(text: string): string[] {
   const knownEntities = [
+    // AI Companies
     "openai",
-    "gpt",
-    "chatgpt",
-    "gemini",
-    "claude",
     "anthropic",
+    "deepseek",
+    "mistral",
+    "cohere",
+    "hugging face",
+    "stability ai",
+    // Big Tech
     "google",
     "microsoft",
     "meta",
     "apple",
-    "tesla",
+    "amazon",
     "nvidia",
-    "deepseek",
-    "midjourney",
-    "stable diffusion",
+    "tesla",
+    "samsung",
+    // AI Models & Products
+    "gpt",
+    "gpt-4",
+    "gpt-5",
+    "chatgpt",
+    "gemini",
+    "claude",
     "llama",
     "copilot",
     "bard",
     "palm",
     "dall-e",
     "sora",
+    "midjourney",
+    "stable diffusion",
+    "whisper",
+    "grok",
+    // Key People
+    "sam altman",
+    "elon musk",
+    "sundar pichai",
+    "satya nadella",
+    "mark zuckerberg",
+    "jensen huang",
   ];
 
   const lowerText = text.toLowerCase();
@@ -97,21 +117,35 @@ function extractEntities(text: string): string[] {
 }
 
 /**
- * Popular topics that need extended duplicate check window
+ * Popular topics that need extended duplicate check window (7 days instead of 4)
  */
 const POPULAR_TOPICS = [
+  // AI Models & Products
   "gpt",
+  "gpt-4",
+  "gpt-5",
   "chatgpt",
-  "openai",
   "gemini",
+  "claude",
+  "copilot",
+  "sora",
+  "grok",
+  // Companies
+  "openai",
+  "anthropic",
+  "deepseek",
   "google ai",
-  "tesla",
-  "elon musk",
-  "meta",
   "microsoft",
+  "meta",
   "apple",
   "nvidia",
+  "tesla",
+  "amazon",
+  // Key People
   "sam altman",
+  "elon musk",
+  "sundar pichai",
+  "jensen huang",
 ];
 
 /**

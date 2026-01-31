@@ -276,7 +276,10 @@ function getFallbackImage(): string {
   // Use static placeholder - always available, no external dependency
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
   const fallbackUrl = `${baseUrl}/logos/og-image.png`;
-  console.warn("⚠️ Pollinations.ai başarısız, fallback görsel kullanılıyor:", fallbackUrl);
+  console.warn(
+    "⚠️ Pollinations.ai başarısız, fallback görsel kullanılıyor:",
+    fallbackUrl,
+  );
   return fallbackUrl;
 }
 
