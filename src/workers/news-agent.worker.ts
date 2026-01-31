@@ -260,7 +260,8 @@ function startWorker() {
             disconnectError,
           );
         }
-        // Always attempt to schedule next execution
+        // Repeatable jobs auto-reschedule - no manual scheduling needed
+        // Just log next execution info
         try {
           const enabledSetting = await db.setting.findUnique({
             where: { key: "agent.enabled" },
@@ -270,30 +271,18 @@ function startWorker() {
             : true;
 
           if (isEnabled) {
-            // Check if there is already a delayed job to avoid duplicate scheduling
-            const { newsAgentQueue } = await import("@/lib/queue");
-            if (newsAgentQueue) {
-              const delayedJobs = await newsAgentQueue.getJobs(["delayed"]);
-              const existingJob = delayedJobs.find(
-                (j) => j.id === "news-agent-scheduled-run",
+            // Get next run time from settings (updated by repeatable job system)
+            const nextRunSetting = await db.setting.findUnique({
+              where: { key: "agent.nextRun" },
+            });
+            if (nextRunSetting) {
+              console.log(
+                `\n⏰ Next execution (repeatable): ${new Date(nextRunSetting.value).toLocaleString()}`,
               );
-
-              if (!existingJob) {
-                const nextExecution = await scheduleNewsAgentJob();
-                if (nextExecution) {
-                  console.log(
-                    `\n⏰ Next execution: ${nextExecution.nextExecutionTime.toLocaleString()}`,
-                  );
-                }
-              } else {
-                console.log(
-                  `\n⏰ Next execution already scheduled for: ${new Date(existingJob.timestamp + (existingJob.opts.delay || 0)).toLocaleString()}`,
-                );
-              }
             }
           }
         } catch (schedErr) {
-          console.error("❌ Failed to schedule next job:", schedErr);
+          console.error("❌ Failed to get next execution time:", schedErr);
         }
       }
 
@@ -394,7 +383,7 @@ function startWorker() {
         console.error("⚠️ SEO senkronizasyon hatası:", seoErr);
       }
 
-      // 2. Agent İş Takvimi Kontrolü
+      // 2. Agent İş Takvimi Kontrolü - Repeatable Job Setup
       const [enabledSetting, nextRunSetting] = await Promise.all([
         db.setting.findUnique({ where: { key: "agent.enabled" } }),
         db.setting.findUnique({ where: { key: "agent.nextRun" } }),
@@ -405,70 +394,58 @@ function startWorker() {
         : true;
 
       if (isEnabled) {
-        const nextRunStr = nextRunSetting?.value;
-        const now = new Date();
+        console.log("🔧 Repeatable job sistemi başlatılıyor...");
 
-        // Eğer planlanan zaman geçmişse veya hiç planlanmamışsa hemen çalıştır
-        // Ancak çok yakın zamanda (örn. son 1 saat içinde) çalışmışsa ve bir hata yüzünden nextRun güncellenmemişse,
-        // sonsuz döngüye girmemek için son loglara bakmak gerekebilir.
-        // Şimdilik basit mantık: nextRun geçmişse çalıştır.
-        if (!nextRunStr || new Date(nextRunStr) <= now) {
-          console.log(
-            "⚡ Gecikmiş veya eksik iş tespiti. Agent hemen başlatılıyor...",
+        const { newsAgentQueue } = await import("@/lib/queue");
+        if (newsAgentQueue) {
+          // Check if repeatable job already exists
+          const repeatableJobs = await newsAgentQueue.getRepeatableJobs();
+          const hasRepeatable = repeatableJobs.some(
+            (j) => j.name === "scrape-and-publish",
           );
 
-          // Mevcut kuyruk işlerini temizle (jobId çakışmasını önlemek için)
-          const { newsAgentQueue } = await import("@/lib/queue");
-          if (newsAgentQueue) {
-            const jobs = await newsAgentQueue.getJobs([
-              "delayed",
-              "waiting",
-              "active",
-            ]); // Active'i de kontrol et
-            for (const job of jobs) {
-              if (job.id === "news-agent-scheduled-run") {
-                await job.remove();
-              }
+          // Check if there's a missed run
+          const nextRunStr = nextRunSetting?.value;
+          const now = new Date();
+          const missedRun =
+            nextRunStr && new Date(nextRunStr) <= now ? true : false;
+
+          if (!hasRepeatable || missedRun) {
+            if (missedRun) {
+              console.log(
+                "⚡ Gecikmiş iş tespiti! Önce hemen bir iş çalıştırılacak...",
+              );
+
+              // Run immediately first (one-time job)
+              await newsAgentQueue.add(
+                "scrape-and-publish",
+                {},
+                {
+                  jobId: `immediate-catchup-${Date.now()}`,
+                  removeOnComplete: true,
+                },
+              );
+
+              console.log("✅ Acil iş kuyruğa eklendi.");
             }
 
-            // Bekletmeden ekle (Delay: 0)
-            await newsAgentQueue.add(
-              "scrape-and-publish",
-              {},
-              {
-                jobId: "news-agent-scheduled-run",
-                removeOnComplete: true,
-              },
+            // Setup repeatable job for future runs
+            console.log("📅 Repeatable job kuruluyor...");
+            await scheduleNewsAgentJob();
+            console.log("✅ Repeatable job başarıyla kuruldu.");
+          } else {
+            // Repeatable job exists, just log next run
+            const setting = await db.setting.findUnique({
+              where: { key: "agent.intervalHours" },
+            });
+            const intervalHours = setting ? parseFloat(setting.value) : 6;
+            console.log(
+              `✅ Repeatable job mevcut (her ${intervalHours} saatte bir).`,
             );
-
-            console.log("✅ Acil iş kuyruğa eklendi.");
-          }
-        } else {
-          console.log(
-            `📅 Sıradaki çalışma zamanı: ${new Date(nextRunStr).toLocaleString()}`,
-          );
-          // Normal planlama yap (zaten varsa BullMQ jobId sayesinde eklemez)
-          // Ancak burada önemli nokta: scheduleNewsAgentJob mevcut ayara göre (örn 6 saat sonraya) atar.
-          // Eğer DB'deki nextRun ile BullMQ'daki delay uyumsuzsa sorun olabilir.
-          // En doğrusu: BullMQ'da iş var mı bak, yoksa nextRun'a göre (veya hemen) planla.
-
-          const { newsAgentQueue } = await import("@/lib/queue");
-          if (newsAgentQueue) {
-            const jobs = await newsAgentQueue.getJobs([
-              "delayed",
-              "waiting",
-              "active",
-            ]);
-            const existing = jobs.find(
-              (j) => j.id === "news-agent-scheduled-run",
-            );
-
-            if (!existing) {
+            if (nextRunStr) {
               console.log(
-                "⚠️ BullMQ'da iş bulunamadı ama DB'de nextRun var. Tekrar planlanıyor...",
+                `📅 Sıradaki çalışma zamanı: ${new Date(nextRunStr).toLocaleString()}`,
               );
-              // DB'deki süreye kadar beklemek yerine, standart döngüyü (interval) başlatmak daha güvenli
-              await scheduleNewsAgentJob();
             }
           }
         }

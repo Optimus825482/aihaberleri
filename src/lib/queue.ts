@@ -83,6 +83,7 @@ export const newsAgentQueueEvents = getNewsAgentQueueEvents();
 
 // Helper to add news agent job
 // PHASE 2: Enhanced with immediate reschedule support
+// PHASE 3: Use repeatable jobs for reliability
 export async function scheduleNewsAgentJob() {
   const queue = getNewsAgentQueue();
   if (!queue) {
@@ -97,42 +98,48 @@ export async function scheduleNewsAgentJob() {
     });
 
     const intervalHours = setting ? parseFloat(setting.value) : 6;
-    const delay = Math.round(intervalHours * 60 * 60 * 1000); // Support decimal hours (0.25 = 15 min)
+    const intervalMs = Math.round(intervalHours * 60 * 60 * 1000); // Support decimal hours (0.25 = 15 min)
 
-    // Phase 2: Remove existing jobs first to allow immediate reschedule
-    const existingJobs = await queue.getRepeatableJobs();
-    for (const job of existingJobs) {
-      if (job.name === "news-agent-scheduled-run" || job.id) {
-        await queue.removeRepeatableByKey(job.key);
-        console.log(`🗑️ Removed existing scheduled job: ${job.key}`);
-      }
+    // Remove all existing repeatable and delayed jobs first
+    const existingRepeatableJobs = await queue.getRepeatableJobs();
+    for (const job of existingRepeatableJobs) {
+      await queue.removeRepeatableByKey(job.key);
+      console.log(`🗑️ Removed existing repeatable job: ${job.key}`);
     }
 
-    // Also check for any pending/waiting jobs with the fixed ID and remove them
-    const waitingJobs = await queue.getJobs(["waiting", "delayed"]);
-    for (const job of waitingJobs) {
+    // Also check for any pending/waiting/delayed jobs and remove them
+    const pendingJobs = await queue.getJobs(["waiting", "delayed", "active"]);
+    for (const job of pendingJobs) {
       if (
         job.id === "news-agent-scheduled-run" ||
         job.name === "scrape-and-publish"
       ) {
-        await job.remove();
-        console.log(`🗑️ Removed pending job: ${job.id}`);
+        try {
+          await job.remove();
+          console.log(`🗑️ Removed pending job: ${job.id}`);
+        } catch (e) {
+          // Job might be active, ignore removal error
+        }
       }
     }
 
-    // Use a fixed jobId so we don't have multiple scheduled jobs at once
-    // Now this works for reschedules since we removed old jobs above
+    // Use repeatable job with 'every' pattern for reliable periodic execution
+    // This ensures the job runs even if worker restarts
     await queue.add(
       "scrape-and-publish",
       {},
       {
-        delay,
-        jobId: "news-agent-scheduled-run",
+        repeat: {
+          every: intervalMs,
+          immediately: false, // Don't run immediately, wait for first interval
+        },
+        jobId: "news-agent-repeatable",
         removeOnComplete: true,
+        removeOnFail: false, // Keep failed jobs for debugging
       },
     );
 
-    const nextTime = new Date(Date.now() + delay);
+    const nextTime = new Date(Date.now() + intervalMs);
 
     // Update nextRun in settings for UI transparency
     await db.setting.upsert({
@@ -145,14 +152,13 @@ export async function scheduleNewsAgentJob() {
 
     console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📅 AGENT SCHEDULE DEBUG:
+📅 AGENT SCHEDULE (REPEATABLE):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⏰ Current time:  ${new Date().toLocaleString("tr-TR")}
 ⏰ Next run time: ${nextTime.toLocaleString("tr-TR")}
-⚙️  Interval:      ${intervalHours} hours
-🆔 Job ID:        news-agent-scheduled-run
+⚙️  Interval:      ${intervalHours} hours (${intervalMs}ms)
+🆔 Job Type:      Repeatable (every ${intervalHours}h)
 📊 Queue length:  ${queueLength}
-🔄 Reschedule:    Enabled (old job removed)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);
 
