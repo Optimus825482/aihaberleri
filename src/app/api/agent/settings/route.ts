@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // Settings schema
 const settingsSchema = z.object({
   enabled: z.boolean(),
-  intervalHours: z.number().min(1).max(24),
+  intervalHours: z.number().min(0.25).max(24), // 0.25 = 15min, 0.5 = 30min
   articlesPerRun: z.number().min(1).max(10),
   categories: z.array(z.string()),
   emailNotifications: z.boolean(),

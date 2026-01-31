@@ -424,8 +424,8 @@ export default function AgentSettingsPage() {
                     Çalışma Sıklığı
                   </Label>
                   <Badge variant="secondary">
-                    {settings.intervalHours < 1 
-                      ? `${Math.round(settings.intervalHours * 60)} dk` 
+                    {settings.intervalHours < 1
+                      ? `${Math.round(settings.intervalHours * 60)} dk`
                       : `${settings.intervalHours} saat`}
                   </Badge>
                 </div>
@@ -448,8 +448,8 @@ export default function AgentSettingsPage() {
                   <option value="24">Günde Bir</option>
                 </select>
                 <p className="text-xs text-muted-foreground">
-                  Agent her {settings.intervalHours < 1 
-                    ? `${Math.round(settings.intervalHours * 60)} dakikada` 
+                  Agent her {settings.intervalHours < 1
+                    ? `${Math.round(settings.intervalHours * 60)} dakikada`
                     : `${settings.intervalHours} saatte`} bir çalışacak
                 </p>
               </div>
