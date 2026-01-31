@@ -17,6 +17,7 @@ import {
 import { emailService } from "@/lib/email";
 import { getRedis } from "@/lib/redis";
 import { emitToAdmin, SocketEvents } from "@/lib/socket";
+import { pingSitemaps } from "@/lib/seo";
 
 export interface AgentExecutionResult {
   success: boolean;
@@ -212,6 +213,16 @@ export async function executeNewsAgent(
     articlesCreated = published.length;
     publishedArticles.push(...published);
     console.log(`✅ ${articlesCreated} haber yayınlandı`);
+
+    // Ping search engines to update sitemaps (non-blocking)
+    if (articlesCreated > 0) {
+      pingSitemaps().then((results) => {
+        const successCount = results.filter((r) => r.success).length;
+        console.log(`🔔 Sitemap ping: ${successCount}/${results.length} başarılı`);
+      }).catch((err) => {
+        console.warn("⚠️ Sitemap ping hatası:", err.message);
+      });
+    }
 
     // Emit article published events
     for (const article of published) {

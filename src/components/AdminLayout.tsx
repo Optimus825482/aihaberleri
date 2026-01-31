@@ -370,7 +370,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               </div>
             )}
           </div>
-          
+
           {/* Desktop PWA Install */}
           {isInstallable && (
             <Button

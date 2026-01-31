@@ -21,7 +21,9 @@ export {
   submitUrlsToIndexNow,
   submitArticleToIndexNow,
   submitAllArticlesToIndexNow,
+  submitPendingArticlesToIndexNow,
   writeIndexNowKeyFile,
+  pingSitemaps,
 } from "./indexnow";
 
 // Canonical URLs

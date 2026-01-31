@@ -313,3 +313,61 @@ export async function writeIndexNowKeyFile(): Promise<void> {
     console.log(`✅ IndexNow key file created: ${apiKey}.txt`);
   }
 }
+
+/**
+ * Sitemap değişikliğini arama motorlarına bildir (Ping)
+ * Google, Bing sitemap ping endpoint'leri
+ */
+export async function pingSitemaps(): Promise<{
+  google: boolean;
+  bing: boolean;
+}> {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+  const sitemapUrl = encodeURIComponent(`${baseUrl}/sitemap.xml`);
+  const newsSitemapUrl = encodeURIComponent(`${baseUrl}/news-sitemap.xml`);
+
+  const results = {
+    google: false,
+    bing: false,
+  };
+
+  // Note: Google deprecated sitemap ping in 2023, but we try anyway
+  // Bing still supports it via IndexNow
+  
+  try {
+    // Bing - sitemap ping (deprecated but may still work)
+    const bingResponse = await fetch(
+      `https://www.bing.com/ping?sitemap=${sitemapUrl}`,
+      { method: "GET" }
+    );
+    
+    if (bingResponse.ok) {
+      console.log("✅ Bing sitemap ping successful");
+      results.bing = true;
+    }
+
+    // Also ping news sitemap
+    await fetch(`https://www.bing.com/ping?sitemap=${newsSitemapUrl}`, {
+      method: "GET",
+    });
+  } catch (error) {
+    console.warn("⚠️ Bing sitemap ping failed:", error);
+  }
+
+  // Google - try their ping endpoint (may be deprecated)
+  try {
+    const googleResponse = await fetch(
+      `https://www.google.com/ping?sitemap=${sitemapUrl}`,
+      { method: "GET" }
+    );
+    
+    if (googleResponse.ok) {
+      console.log("✅ Google sitemap ping successful");
+      results.google = true;
+    }
+  } catch (error) {
+    console.warn("⚠️ Google sitemap ping failed (expected - deprecated):", error);
+  }
+
+  return results;
+}
