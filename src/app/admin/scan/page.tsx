@@ -213,7 +213,7 @@ export default function ScanPage() {
                   element.clientHeight + 50;
                 setAutoScroll(isAtBottom);
               }}
-              className="bg-slate-950 text-slate-50 p-4 rounded-lg min-h-[400px] max-h-[600px] overflow-y-auto font-mono text-sm"
+              className="bg-slate-950 text-slate-50 p-4 rounded-lg h-[400px] overflow-y-auto font-mono text-sm"
             >
               {logs.length === 0 && !scanning && (
                 <div className="text-slate-500 text-center py-20">
@@ -224,15 +224,14 @@ export default function ScanPage() {
               {logs.map((log, index) => (
                 <div
                   key={index}
-                  className={`mb-2 ${
-                    log.type === "error"
+                  className={`mb-2 ${log.type === "error"
                       ? "text-red-400"
                       : log.type === "success"
                         ? "text-green-400"
                         : log.type === "progress"
                           ? "text-blue-400"
                           : "text-slate-300"
-                  }`}
+                    }`}
                 >
                   <span className="text-slate-500 mr-2">
                     [{new Date(log.timestamp).toLocaleTimeString("tr-TR")}]

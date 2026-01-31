@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { getNewsAgentQueue } from "@/lib/queue";
+import { getRedis } from "@/lib/redis";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,6 +20,8 @@ export async function GET(request: NextRequest) {
   const jobId = searchParams.get("jobId");
 
   const newsAgentQueue = getNewsAgentQueue();
+  const redis = getRedis();
+
   if (!newsAgentQueue) {
     return new Response(
       JSON.stringify({
@@ -92,6 +95,7 @@ export async function GET(request: NextRequest) {
 
         // Poll job status and logs
         let lastProgress = 0;
+        let lastMessage = "";
         let isComplete = false;
         const pollInterval = 2000; // 2 seconds
 
@@ -99,6 +103,34 @@ export async function GET(request: NextRequest) {
           try {
             const state = await job.getState();
             const progress = (await job.progress) as number;
+
+            // Try to get detailed progress from Redis (agent writes this)
+            if (redis) {
+              try {
+                // Try to find agent log ID from job data
+                const jobData = job.data as any;
+                const agentLogId = jobData?.agentLogId;
+                
+                // Also check for any running agent logs
+                const keys = await redis.keys("job:*:progress");
+                for (const key of keys) {
+                  const progressData = await redis.get(key);
+                  if (progressData) {
+                    try {
+                      const parsed = JSON.parse(progressData);
+                      if (parsed.message && parsed.message !== lastMessage) {
+                        sendLog(parsed.message, "progress");
+                        lastMessage = parsed.message;
+                      }
+                    } catch (e) {
+                      // Ignore parse errors
+                    }
+                  }
+                }
+              } catch (redisError) {
+                // Redis error is non-critical
+              }
+            }
 
             // Send progress updates
             if (progress > lastProgress) {

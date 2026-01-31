@@ -329,203 +329,197 @@ export default function ArticlesPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto -mx-6 sm:mx-0">
-              <div className="inline-block min-w-full align-middle">
-                <div className="overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-20">Görsel</TableHead>
-                        <TableHead>Başlık</TableHead>
-                        <TableHead>Kategori</TableHead>
-                        <TableHead>Eklenme Tarihi</TableHead>
-                        <TableHead>Skor</TableHead>
-                        <TableHead>Durum</TableHead>
-                        <TableHead className="text-center">Facebook</TableHead>
-                        <TableHead className="text-right">
-                          Görüntülenme
-                        </TableHead>
-                        <TableHead className="text-right">İşlemler</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {displayArticles.map((article) => (
-                        <TableRow key={article.id}>
-                          <TableCell>
-                            {article.imageUrl ? (
-                              <div className="relative w-16 h-16 rounded overflow-hidden">
-                                <Image
-                                  src={article.imageUrl}
-                                  alt={article.title}
-                                  fill
-                                  className="object-cover"
-                                  unoptimized={article.imageUrl.includes('pollinations.ai')}
-                                />
-                              </div>
-                            ) : (
-                              <div className="w-16 h-16 bg-muted rounded flex items-center justify-center">
-                                <span className="text-xs text-muted-foreground">
-                                  Yok
-                                </span>
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium line-clamp-1">
-                                {article.title}
-                              </p>
-                              <p className="text-sm text-muted-foreground line-clamp-1">
-                                {article.excerpt}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {article.category.name}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <div className="font-medium">
-                                {new Date(
-                                  article.publishedAt || article.createdAt,
-                                ).toLocaleDateString("tr-TR")}
-                              </div>
-                              <div className="text-muted-foreground text-xs">
-                                {new Date(
-                                  article.publishedAt || article.createdAt,
-                                ).toLocaleTimeString("tr-TR", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <span
-                                className={`font-bold ${(article.score || 0) >= 800
-                                    ? "text-green-600"
-                                    : (article.score || 0) >= 500
-                                      ? "text-yellow-600"
-                                      : "text-red-600"
-                                  }`}
-                              >
-                                {article.score || 0}
-                              </span>
-                              <span className="text-muted-foreground text-xs">
-                                /1000
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
+          <CardContent className="p-0 sm:p-6">
+            <div className="overflow-x-auto">
+              <Table className="min-w-[900px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[70px]">Görsel</TableHead>
+                    <TableHead className="min-w-[200px] max-w-[300px]">Başlık</TableHead>
+                    <TableHead className="w-[120px]">Kategori</TableHead>
+                    <TableHead className="w-[100px]">Tarih</TableHead>
+                    <TableHead className="w-[70px]">Skor</TableHead>
+                    <TableHead className="w-[80px]">Durum</TableHead>
+                    <TableHead className="w-[70px] text-center">FB</TableHead>
+                    <TableHead className="w-[80px] text-right">Görüntü</TableHead>
+                    <TableHead className="w-[120px] text-right">İşlemler</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {displayArticles.map((article) => (
+                    <TableRow key={article.id}>
+                      <TableCell>
+                        {article.imageUrl ? (
+                          <div className="relative w-16 h-16 rounded overflow-hidden">
+                            <Image
+                              src={article.imageUrl}
+                              alt={article.title}
+                              fill
+                              className="object-cover"
+                              unoptimized={article.imageUrl.includes('pollinations.ai')}
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 bg-muted rounded flex items-center justify-center">
+                            <span className="text-xs text-muted-foreground">
+                              Yok
+                            </span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium line-clamp-1">
+                            {article.title}
+                          </p>
+                          <p className="text-sm text-muted-foreground line-clamp-1">
+                            {article.excerpt}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {article.category.name}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <div className="font-medium">
+                            {new Date(
+                              article.publishedAt || article.createdAt,
+                            ).toLocaleDateString("tr-TR")}
+                          </div>
+                          <div className="text-muted-foreground text-xs">
+                            {new Date(
+                              article.publishedAt || article.createdAt,
+                            ).toLocaleTimeString("tr-TR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <span
+                            className={`font-bold ${(article.score || 0) >= 800
+                              ? "text-green-600"
+                              : (article.score || 0) >= 500
+                                ? "text-yellow-600"
+                                : "text-red-600"
+                              }`}
+                          >
+                            {article.score || 0}
+                          </span>
+                          <span className="text-muted-foreground text-xs">
+                            /1000
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            article.status === "PUBLISHED"
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {article.status === "PUBLISHED"
+                            ? "Yayında"
+                            : "Taslak"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center">
+                          {article.facebookShared ? (
                             <Badge
-                              variant={
-                                article.status === "PUBLISHED"
-                                  ? "default"
-                                  : "secondary"
+                              variant="default"
+                              className="gap-1 bg-green-600 hover:bg-green-700"
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                              Paylaşıldı
+                            </Badge>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => shareFacebook(article.id)}
+                              disabled={
+                                sharingFacebook === article.id ||
+                                article.status !== "PUBLISHED"
+                              }
+                              className="gap-1"
+                              title={
+                                article.status !== "PUBLISHED"
+                                  ? "Sadece yayında olan haberler paylaşılabilir"
+                                  : "Facebook'ta paylaş"
                               }
                             >
-                              {article.status === "PUBLISHED"
-                                ? "Yayında"
-                                : "Taslak"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center justify-center">
-                              {article.facebookShared ? (
-                                <Badge
-                                  variant="default"
-                                  className="gap-1 bg-green-600 hover:bg-green-700"
-                                >
-                                  <CheckCircle className="h-3 w-3" />
-                                  Paylaşıldı
-                                </Badge>
+                              {sharingFacebook === article.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
                               ) : (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => shareFacebook(article.id)}
-                                  disabled={
-                                    sharingFacebook === article.id ||
-                                    article.status !== "PUBLISHED"
-                                  }
-                                  className="gap-1"
-                                  title={
-                                    article.status !== "PUBLISHED"
-                                      ? "Sadece yayında olan haberler paylaşılabilir"
-                                      : "Facebook'ta paylaş"
-                                  }
-                                >
-                                  {sharingFacebook === article.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    <Facebook className="h-4 w-4" />
-                                  )}
-                                  Paylaş
-                                </Button>
+                                <Facebook className="h-4 w-4" />
                               )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <Eye className="h-4 w-4 text-muted-foreground" />
-                              <span>{article.views}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => refreshImage(article.id)}
-                                disabled={refreshingImage === article.id}
-                                title="Görseli Güncelle"
-                              >
-                                <RefreshCw
-                                  className={`h-4 w-4 ${refreshingImage === article.id ? "animate-spin" : ""}`}
-                                />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  window.open(`/news/${article.slug}`, "_blank")
-                                }
-                                title="Görüntüle"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  router.push(
-                                    `/admin/articles/${article.id}/edit`,
-                                  )
-                                }
-                                title="Düzenle"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => deleteArticle(article.id)}
-                                title="Sil"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+                              Paylaş
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                          <span>{article.views}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => refreshImage(article.id)}
+                            disabled={refreshingImage === article.id}
+                            title="Görseli Güncelle"
+                          >
+                            <RefreshCw
+                              className={`h-4 w-4 ${refreshingImage === article.id ? "animate-spin" : ""}`}
+                            />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              window.open(`/news/${article.slug}`, "_blank")
+                            }
+                            title="Görüntüle"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              router.push(
+                                `/admin/articles/${article.id}/edit`,
+                              )
+                            }
+                            title="Düzenle"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => deleteArticle(article.id)}
+                            title="Sil"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
 
             {displayArticles.length === 0 && !loading && (
@@ -610,8 +604,8 @@ export default function ArticlesPage() {
               </div>
             )}
           </CardContent>
-        </Card>
-      </div>
-    </AdminLayout>
+        </Card >
+      </div >
+    </AdminLayout >
   );
 }
