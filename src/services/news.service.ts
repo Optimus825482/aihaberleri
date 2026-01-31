@@ -65,6 +65,38 @@ function extractKeywords(text: string): string[] {
 }
 
 /**
+ * Extract numbers with units (milyar/milyon/billion/million) from text
+ * This helps detect duplicate news about same financial deals
+ */
+function extractNumbersWithUnits(text: string): string[] {
+  const lowerText = text.toLowerCase();
+  const numbers: string[] = [];
+
+  // Match patterns like "10 milyar", "500 milyon", "1.5 billion"
+  const patterns = [
+    /(\d+(?:[.,]\d+)?)\s*(milyar|milyon|trilyon|billion|million|trillion)/gi,
+    /\$(\d+(?:[.,]\d+)?)\s*(b|m|t)\b/gi, // $10B, $500M
+  ];
+
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(lowerText)) !== null) {
+      // Normalize: "10 milyar" -> "10_milyar"
+      const unit = match[2]
+        .toLowerCase()
+        .replace("billion", "milyar")
+        .replace("million", "milyon")
+        .replace("b", "milyar")
+        .replace("m", "milyon");
+      const normalized = `${match[1]}_${unit}`;
+      numbers.push(normalized);
+    }
+  }
+
+  return numbers;
+}
+
+/**
  * Extract entities (company names, product names) from text
  */
 function extractEntities(text: string): string[] {
@@ -258,7 +290,7 @@ export async function isDuplicateNews(
         }
       }
 
-      // 2.6. Entity Match Check (NEW - same entities + similar time)
+      // 2.6. Entity Match Check (ENHANCED - same entities + similar time)
       const newEntities = extractEntities(title);
       const existingEntities = extractEntities(article.title);
 
@@ -270,6 +302,45 @@ export async function isDuplicateNews(
         if (entityIntersection.length > 0) {
           const timeDiff = Date.now() - new Date(article.publishedAt).getTime();
           const hoursDiff = timeDiff / (60 * 60 * 1000);
+
+          // NEW: Check for same financial numbers (10 milyar, 500 milyon, etc.)
+          const newNumbers = extractNumbersWithUnits(title);
+          const existingNumbers = extractNumbersWithUnits(article.title);
+          const numberIntersection = newNumbers.filter((n) =>
+            existingNumbers.includes(n),
+          );
+
+          // STRONG DUPLICATE: 2+ same entities + same numbers + within 48 hours
+          if (
+            entityIntersection.length >= 2 &&
+            numberIntersection.length > 0 &&
+            hoursDiff < 48
+          ) {
+            console.log(
+              `❌ DUPLICATE: Multi-entity + number match [${entityIntersection.join(", ")}] + [${numberIntersection.join(", ")}]`,
+            );
+            console.log(`   New: "${title}"`);
+            console.log(`   Existing: "${article.title}"`);
+            return {
+              isDuplicate: true,
+              reason: `MULTI_ENTITY_NUMBER_MATCH`,
+              similarArticleId: article.id,
+            };
+          }
+
+          // STRONG DUPLICATE: 2+ same entities within 24 hours (same story, different angle)
+          if (entityIntersection.length >= 2 && hoursDiff < 24) {
+            console.log(
+              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] within 24h`,
+            );
+            console.log(`   New: "${title}"`);
+            console.log(`   Existing: "${article.title}"`);
+            return {
+              isDuplicate: true,
+              reason: `MULTI_ENTITY_SAME_DAY`,
+              similarArticleId: article.id,
+            };
+          }
 
           // Same entities within 72 hours + moderate title similarity = likely duplicate
           if (hoursDiff < 72 && titleSimilarity > 0.45) {

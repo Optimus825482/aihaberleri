@@ -408,7 +408,7 @@ export async function processArticle(
 
     // Step 4.5: Generate slug (needed for image optimization)
     const slug = generateSlug(rewritten.title);
-    
+
     // Live log: Image generated
     await liveLog.image.success(`🖼️ Görsel oluşturuldu: ${slug}`);
 
@@ -489,9 +489,11 @@ export async function publishArticle(
   agentLogId?: string,
 ): Promise<{ id: string; slug: string } | null> {
   console.log(`📤 Haber yayınlanıyor: ${processedArticle.title}`);
-  
+
   // Live log: Publishing
-  await liveLog.publish.info(`📤 Yayınlanıyor: ${processedArticle.title.substring(0, 50)}...`);
+  await liveLog.publish.info(
+    `📤 Yayınlanıyor: ${processedArticle.title.substring(0, 50)}...`,
+  );
 
   try {
     // Get category
@@ -570,9 +572,11 @@ export async function publishArticle(
     });
 
     console.log(`✅ Haber yayınlandı: ${article.slug} (Skor: ${score})`);
-    
+
     // Live log: Published
-    await liveLog.publish.success(`✅ Yayınlandı: ${article.title.substring(0, 50)}... (Skor: ${score})`);
+    await liveLog.publish.success(
+      `✅ Yayınlandı: ${article.title.substring(0, 50)}... (Skor: ${score})`,
+    );
 
     // 🚀 CACHE: Invalidate articles cache when new article published
     try {
