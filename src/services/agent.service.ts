@@ -218,7 +218,9 @@ export async function executeNewsAgent(
     if (articlesCreated > 0) {
       pingSitemaps()
         .then((results) => {
-          const successCount = [results.google, results.bing].filter(Boolean).length;
+          const successCount = [results.google, results.bing].filter(
+            Boolean,
+          ).length;
           console.log(`🔔 Sitemap ping: ${successCount}/2 başarılı`);
         })
         .catch((err) => {

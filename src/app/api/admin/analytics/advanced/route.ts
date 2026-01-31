@@ -89,11 +89,11 @@ export async function GET() {
       // Views over time (last 30 days)
       prisma.$queryRaw<Array<{ date: string; views: number }>>`
         SELECT 
-          DATE(published_at) as date,
+          DATE("publishedAt") as date,
           SUM(views) as views
         FROM "Article"
-        WHERE published_at >= NOW() - INTERVAL '30 days'
-        GROUP BY DATE(published_at)
+        WHERE "publishedAt" >= NOW() - INTERVAL '30 days'
+        GROUP BY DATE("publishedAt")
         ORDER BY date ASC
       `,
 
