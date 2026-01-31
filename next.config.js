@@ -19,6 +19,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "aihaberleri.org",
       },
+      {
+        protocol: "https",
+        hostname: "pub-32620931b6ce48bca2549881c536b806.r2.dev",
+      },
     ],
     // Pollinations.ai images are slow on first gen, cache them longer
     minimumCacheTTL: 86400, // 24 hours
