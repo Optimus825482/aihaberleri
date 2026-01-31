@@ -347,10 +347,35 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Bottom Actions - Enhanced for PWA */}
         <div className="absolute bottom-0 w-72 p-3 border-t border-primary/10 bg-gradient-to-t from-card to-transparent backdrop-blur-xl safe-area-bottom">
+          {/* PWA Install Button - Always visible on mobile */}
+          <div className="lg:hidden mb-2">
+            {isInstallable ? (
+              <Button
+                variant="outline"
+                className="w-full justify-start border-primary/20 bg-gradient-to-r from-primary/10 to-purple-500/10 hover:from-primary/20 hover:to-purple-500/20 text-primary font-bold shadow-lg shadow-primary/10 group h-12 touch-manipulation"
+                onClick={() => {
+                  installApp();
+                  closeMobileMenu();
+                }}
+              >
+                <div className="p-1.5 bg-primary/20 rounded-lg mr-3 group-hover:scale-110 transition-transform">
+                  <Download className="h-4 w-4 flex-shrink-0" />
+                </div>
+                <span className="truncate">📲 Uygulamayı Yükle</span>
+              </Button>
+            ) : (
+              <div className="w-full px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-600 text-sm font-medium flex items-center gap-2">
+                <span>✅</span>
+                <span>PWA olarak yüklendi veya tarayıcıdan kullanılıyor</span>
+              </div>
+            )}
+          </div>
+          
+          {/* Desktop PWA Install */}
           {isInstallable && (
             <Button
               variant="outline"
-              className="w-full justify-start mb-2 border-primary/20 bg-gradient-to-r from-primary/10 to-purple-500/10 hover:from-primary/20 hover:to-purple-500/20 text-primary font-bold shadow-lg shadow-primary/10 group h-12 touch-manipulation"
+              className="hidden lg:flex w-full justify-start mb-2 border-primary/20 bg-gradient-to-r from-primary/10 to-purple-500/10 hover:from-primary/20 hover:to-purple-500/20 text-primary font-bold shadow-lg shadow-primary/10 group h-12 touch-manipulation"
               onClick={() => {
                 installApp();
                 closeMobileMenu();
