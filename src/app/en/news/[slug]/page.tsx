@@ -278,6 +278,7 @@ export default async function EnglishArticlePage({ params }: Props) {
                         alt={related.title}
                         fill
                         className="object-cover"
+                        unoptimized={related.imageUrl.includes('pollinations.ai')}
                       />
                     </div>
                   )}

@@ -30,6 +30,7 @@ export function CategoryHero({
               fill
               className="object-cover object-center"
               priority
+              unoptimized={imageUrl.includes('pollinations.ai')}
             />
           </div>
         </div>

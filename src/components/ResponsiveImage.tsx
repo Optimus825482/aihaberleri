@@ -78,6 +78,7 @@ export function ResponsiveImage({
                 onError={() => setError(true)}
                 fill={fill}
                 sizes={sizes}
+                unoptimized={src.includes('pollinations.ai')}
             />
         );
     }
@@ -116,6 +117,7 @@ export function ResponsiveImage({
                     sizes ||
                     "(max-width: 640px) 200px, (max-width: 768px) 400px, (max-width: 1024px) 800px, 1200px"
                 }
+                unoptimized={src.includes('pollinations.ai')}
             />
         </picture>
     );
@@ -186,6 +188,7 @@ export function ArticleThumbnail({
             className="object-cover transition-transform group-hover:scale-105"
             sizes="(max-width: 640px) 200px, 300px"
             onError={() => setError(true)}
+            unoptimized={(srcThumb || src).includes('pollinations.ai')}
         />
     );
 }

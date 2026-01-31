@@ -303,6 +303,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                               alt={related.title}
                               fill
                               className="object-cover group-hover:scale-110 transition-transform"
+                              unoptimized={related.imageUrl.includes('pollinations.ai')}
                             />
                           </div>
                         )}
@@ -356,6 +357,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                           alt={related.title}
                           fill
                           className="object-cover transition-transform duration-700 group-hover:scale-110"
+                          unoptimized={related.imageUrl.includes('pollinations.ai')}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
                         <span className="absolute bottom-4 left-4 bg-primary text-primary-foreground text-xs px-2 py-1 rounded font-medium">

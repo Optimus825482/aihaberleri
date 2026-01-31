@@ -360,6 +360,7 @@ export default function ArticlesPage() {
                                   alt={article.title}
                                   fill
                                   className="object-cover"
+                                  unoptimized={article.imageUrl.includes('pollinations.ai')}
                                 />
                               </div>
                             ) : (
@@ -405,13 +406,12 @@ export default function ArticlesPage() {
                           <TableCell>
                             <div className="flex items-center gap-1">
                               <span
-                                className={`font-bold ${
-                                  (article.score || 0) >= 800
+                                className={`font-bold ${(article.score || 0) >= 800
                                     ? "text-green-600"
                                     : (article.score || 0) >= 500
                                       ? "text-yellow-600"
                                       : "text-red-600"
-                                }`}
+                                  }`}
                               >
                                 {article.score || 0}
                               </span>
