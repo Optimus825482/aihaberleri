@@ -1,10 +1,9 @@
 version: "3.8"
 
 services:
-  # Redis (Local container - No password for internal network)
+  # Redis (Local container)
   redis:
     image: redis:7-alpine
-    container_name: aihaberleri-redis
     hostname: aihaberleri-redis
     command: redis-server --appendonly yes
     volumes:
@@ -16,8 +15,6 @@ services:
       retries: 5
       start_period: 10s
     restart: unless-stopped
-    networks:
-      - aihaberleri-network
 
   # BullMQ Worker (Agent Automation)
   worker:
@@ -25,161 +22,85 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker-runner
-      args:
-        BUILDKIT_INLINE_CACHE: "0"
-      no_cache: true
-    container_name: aihaberleri-worker
     environment:
-      # Database (Harici PostgreSQL container - internal URL kullan)
       DATABASE_URL: ${DATABASE_URL}
-
-      # Redis (Local Redis container - using explicit hostname to avoid conflicts)
       REDIS_URL: redis://aihaberleri-redis:6379
-
-      # AI Services
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
-
-      # Search APIs
       BRAVE_API_KEY: ${BRAVE_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
-
-      # Email
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM:-info@aihaberleri.org}
-
-      # Site Config
       NEXT_PUBLIC_SITE_URL: https://aihaberleri.org
-
-      # Agent Config
       AGENT_ENABLED: ${AGENT_ENABLED:-true}
       AGENT_MIN_ARTICLES_PER_RUN: ${AGENT_MIN_ARTICLES_PER_RUN:-3}
       AGENT_MAX_ARTICLES_PER_RUN: ${AGENT_MAX_ARTICLES_PER_RUN:-5}
-
-      # Production
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
-
     depends_on:
       redis:
         condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - aihaberleri-network
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-        reservations:
-          memory: 512M
     healthcheck:
       test: ["CMD", "pgrep", "-f", "news-agent.worker"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+    restart: unless-stopped
 
-  # Next.js App (PostgreSQL harici container'da, Redis local)
+  # Next.js App
   app:
     build:
       context: .
       dockerfile: Dockerfile
       target: runner
-      args:
-        BUILDKIT_INLINE_CACHE: "0"
-        NODE_ENV: production
-        CACHEBUST: "2026013001"
-      no_cache: true
-    container_name: aihaberleri-app
-    ports:
-      - "${APP_PORT:-3001}:3001"
     environment:
-      # Database (Harici PostgreSQL container - internal URL kullan)
       DATABASE_URL: ${DATABASE_URL}
-
-      # Redis (Local Redis container - using explicit hostname to avoid conflicts)
       REDIS_URL: redis://aihaberleri-redis:6379
-
-      # NextAuth
       NEXTAUTH_URL: https://aihaberleri.org
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       AUTH_TRUST_HOST: "true"
-
-      # AI Services
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
-
-      # Search APIs
       BRAVE_API_KEY: ${BRAVE_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
-
-      # Email
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER}
       SMTP_PASSWORD: ${SMTP_PASSWORD}
       SMTP_FROM: ${SMTP_FROM:-info@aihaberleri.org}
-
-      # Firebase (Push Notifications)
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
       FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
       FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
-
-      # Site Config
       NEXT_PUBLIC_SITE_URL: https://aihaberleri.org
       NEXT_PUBLIC_SITE_NAME: "AI Haberleri"
-      NEXT_PUBLIC_SITE_DESCRIPTION: "Yapay zeka dünyasındaki gelişmeleri yakından takip edin"
-
-      # Social Media
+      NEXT_PUBLIC_SITE_DESCRIPTION: "Yapay zeka dunyasindaki gelismeleri yakindan takip edin"
       TWITTER_HANDLE: "@aihaberleriorg"
       CONTACT_EMAIL: "info@aihaberleri.org"
-
-      # Agent Config
       AGENT_ENABLED: ${AGENT_ENABLED:-true}
       AGENT_MIN_ARTICLES_PER_RUN: ${AGENT_MIN_ARTICLES_PER_RUN:-3}
       AGENT_MAX_ARTICLES_PER_RUN: ${AGENT_MAX_ARTICLES_PER_RUN:-5}
       AGENT_MIN_INTERVAL_HOURS: ${AGENT_MIN_INTERVAL_HOURS:-6}
-
-      # Optional
-      NEXT_PUBLIC_ADSENSE_CLIENT_ID: ${NEXT_PUBLIC_ADSENSE_CLIENT_ID} 
-
-      # Production
+      NEXT_PUBLIC_ADSENSE_CLIENT_ID: ${NEXT_PUBLIC_ADSENSE_CLIENT_ID}
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
-      PORT: ${PORT:-3001}
-   
+      PORT: 3001
+    ports:
+      - "3001:3001"
     depends_on:
       redis:
         condition: service_healthy
-    
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3001/api/health",
-        ]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     restart: unless-stopped
-    networks:
-      - aihaberleri-network
-      - coolify
 
 volumes:
   redis_data:
     driver: local
-
-networks:
-  aihaberleri-network:
-    driver: bridge
-  coolify:
-    external: true
