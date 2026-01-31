@@ -15,7 +15,16 @@ const nextConfig = {
         protocol: "https",
         hostname: "image.pollinations.ai",
       },
+      {
+        protocol: "https",
+        hostname: "aihaberleri.org",
+      },
     ],
+    // Pollinations.ai images are slow on first gen, cache them longer
+    minimumCacheTTL: 86400, // 24 hours
+    // Increase timeout for slow Pollinations.ai responses
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
   experimental: {
     serverActions: {

@@ -1,0 +1,31 @@
+# PERMANENT Traefik config for aihaberleri.org
+# Uses fixed container name - no more random IDs
+http:
+  routers:
+    aihaberleri-http:
+      entryPoints:
+        - http
+      service: aihaberleri
+      rule: "Host(`aihaberleri.org`) || Host(`www.aihaberleri.org`)"
+      middlewares:
+        - redirect-to-https
+
+    aihaberleri-https:
+      entryPoints:
+        - https
+      service: aihaberleri
+      rule: "Host(`aihaberleri.org`) || Host(`www.aihaberleri.org`)"
+      tls:
+        certResolver: letsencrypt
+
+  middlewares:
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+  services:
+    aihaberleri:
+      loadBalancer:
+        servers:
+          - url: "http://aihaberleri-app:3001"

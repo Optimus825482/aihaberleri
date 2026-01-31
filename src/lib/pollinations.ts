@@ -167,7 +167,7 @@ export async function fetchPollinationsImage(
 
         // Verify image is accessible with timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout - Pollinations slow on first gen
 
         try {
           const response = await fetch(imageUrl, {
@@ -247,7 +247,7 @@ async function fetchPollinationsImageAnonymous(
 
   // Fetch image to verify it exists with timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout - Pollinations slow on first gen
 
   try {
     const response = await fetch(imageUrl, {
@@ -270,17 +270,12 @@ async function fetchPollinationsImageAnonymous(
 
 /**
  * Get fallback image when Pollinations.ai fails
+ * Uses static placeholder to ensure images always display
  */
 function getFallbackImage(): string {
-  // Return a generic AI news placeholder
-  // You can replace this with a static image in /public/images/
-  const fallbackPrompt = "artificial intelligence technology digital art";
-  return generateImageUrl(fallbackPrompt, {
-    width: 1200,
-    height: 630,
-    model: "flux-realism",
-    nologo: true,
-  });
+  // Use static placeholder - always available, no external dependency
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+  return `${baseUrl}/logos/og-image.png`;
 }
 
 /**
