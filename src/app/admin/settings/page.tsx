@@ -211,11 +211,12 @@ export default function SettingsPage() {
                 );
                 return (
                   <div key={field.key}>
-                    <label className="text-sm font-bold mb-2 block">
+                    <label htmlFor={`general-${field.key}`} className="text-sm font-bold mb-2 block">
                       {field.label}
                     </label>
                     {field.type === "textarea" ? (
                       <textarea
+                        id={`general-${field.key}`}
                         defaultValue={setting?.value || ""}
                         onBlur={(e) => saveSetting(field.key, e.target.value)}
                         className="w-full px-3 py-2 border rounded-lg bg-background"
@@ -223,6 +224,7 @@ export default function SettingsPage() {
                       />
                     ) : (
                       <input
+                        id={`general-${field.key}`}
                         type={field.type}
                         defaultValue={setting?.value || ""}
                         onBlur={(e) => saveSetting(field.key, e.target.value)}
@@ -268,11 +270,12 @@ export default function SettingsPage() {
                 );
                 return (
                   <div key={field.key}>
-                    <label className="text-sm font-bold mb-2 block">
+                    <label htmlFor={field.key} className="text-sm font-bold mb-2 block">
                       {field.label}
                     </label>
                     {field.type === "textarea" ? (
                       <textarea
+                        id={field.key}
                         defaultValue={setting?.value || ""}
                         onBlur={(e) => saveSetting(field.key, e.target.value)}
                         className="w-full px-3 py-2 border rounded-lg bg-background"
@@ -280,6 +283,7 @@ export default function SettingsPage() {
                       />
                     ) : (
                       <input
+                        id={field.key}
                         type={field.type}
                         defaultValue={setting?.value || ""}
                         onBlur={(e) => saveSetting(field.key, e.target.value)}
@@ -325,10 +329,11 @@ export default function SettingsPage() {
                 );
                 return (
                   <div key={field.key}>
-                    <label className="text-sm font-bold mb-2 block">
+                    <label htmlFor={field.key} className="text-sm font-bold mb-2 block">
                       {field.label}
                     </label>
                     <input
+                      id={field.key}
                       type={field.type}
                       defaultValue={setting?.value || ""}
                       onBlur={(e) => saveSetting(field.key, e.target.value)}
@@ -356,10 +361,11 @@ export default function SettingsPage() {
             <CardContent className="space-y-6">
               {/* Çalışma Aralığı */}
               <div>
-                <label className="text-sm font-bold mb-2 block">
+                <label htmlFor="agent-interval" className="text-sm font-bold mb-2 block">
                   Çalışma Aralığı
                 </label>
                 <select
+                  id="agent-interval"
                   defaultValue={
                     data?.settings.agent.find(
                       (s) => s.key === "agent.intervalHours",
@@ -387,10 +393,11 @@ export default function SettingsPage() {
 
               {/* Minimum Haber Sayısı */}
               <div>
-                <label className="text-sm font-bold mb-2 block">
+                <label htmlFor="agent-min-articles" className="text-sm font-bold mb-2 block">
                   Minimum Haber Sayısı (Her Çalışmada)
                 </label>
                 <select
+                  id="agent-min-articles"
                   defaultValue={
                     data?.settings.agent.find(
                       (s) => s.key === "agent.minArticles",
@@ -411,10 +418,11 @@ export default function SettingsPage() {
 
               {/* Maksimum Haber Sayısı */}
               <div>
-                <label className="text-sm font-bold mb-2 block">
+                <label htmlFor="agent-max-articles" className="text-sm font-bold mb-2 block">
                   Maksimum Haber Sayısı (Her Çalışmada)
                 </label>
                 <select
+                  id="agent-max-articles"
                   defaultValue={
                     data?.settings.agent.find(
                       (s) => s.key === "agent.maxArticles",
@@ -515,10 +523,11 @@ export default function SettingsPage() {
                   >
                     <Icon className="h-6 w-6 text-primary flex-shrink-0" />
                     <div className="flex-1">
-                      <label className="text-sm font-bold mb-2 block">
+                      <label htmlFor={`social-${platform.key}`} className="text-sm font-bold mb-2 block">
                         {platform.label}
                       </label>
                       <input
+                        id={`social-${platform.key}`}
                         type="url"
                         defaultValue={social?.url || ""}
                         onBlur={(e) =>
@@ -534,6 +543,7 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <input
+                        id={`social-${platform.key}-enabled`}
                         type="checkbox"
                         defaultChecked={social?.enabled ?? true}
                         onChange={(e) =>
@@ -544,6 +554,7 @@ export default function SettingsPage() {
                           )
                         }
                         className="w-4 h-4"
+                        aria-label={`${platform.label} aktif/pasif`}
                       />
                       <span className="text-xs font-bold">Aktif</span>
                     </div>

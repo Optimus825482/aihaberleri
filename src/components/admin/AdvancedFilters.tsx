@@ -327,6 +327,7 @@ export function AdvancedFilters({
                             <button
                                 className="ml-2 hover:text-destructive"
                                 onClick={() => updateFilter("search", "")}
+                                aria-label="Arama filtresini kaldır"
                             >
                                 <X className="h-3 w-3" />
                             </button>
@@ -338,6 +339,7 @@ export function AdvancedFilters({
                             <button
                                 className="ml-2 hover:text-destructive"
                                 onClick={() => updateFilter("category", "all")}
+                                aria-label="Kategori filtresini kaldır"
                             >
                                 <X className="h-3 w-3" />
                             </button>
@@ -349,6 +351,7 @@ export function AdvancedFilters({
                             <button
                                 className="ml-2 hover:text-destructive"
                                 onClick={() => updateFilter("status", "all")}
+                                aria-label="Durum filtresini kaldır"
                             >
                                 <X className="h-3 w-3" />
                             </button>
@@ -362,6 +365,7 @@ export function AdvancedFilters({
                                 onClick={() =>
                                     updateFilter("dateRange", { from: undefined, to: undefined })
                                 }
+                                aria-label="Tarih filtresini kaldır"
                             >
                                 <X className="h-3 w-3" />
                             </button>

@@ -508,8 +508,8 @@ export default function AdminDashboard() {
                   <select
                     value={trafficRange}
                     onChange={(e) => setTrafficRange(e.target.value)}
+                    aria-label="Trafik zaman aralığı seçin"
                     className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-1.5 text-xs font-bold uppercase outline-none focus:ring-2 ring-blue-500/50 cursor-pointer hover:bg-blue-500/20 transition-colors text-foreground"
-                    style={{ pointerEvents: "auto" }}
                   >
                     <option
                       value="5m"
