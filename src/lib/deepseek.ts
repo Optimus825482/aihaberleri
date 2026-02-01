@@ -375,9 +375,12 @@ JSON formatında yanıt ver:
  */
 const ENTITY_VISUAL_STYLES: Record<string, string> = {
   // Company-specific styles
-  openai: "green holographic interface, ChatGPT style, emerald glow, dark background",
-  nvidia: "green and black theme, GPU chips, gaming aesthetic, neon green accents",
-  google: "colorful Google colors (blue red yellow green), clean material design",
+  openai:
+    "green holographic interface, ChatGPT style, emerald glow, dark background",
+  nvidia:
+    "green and black theme, GPU chips, gaming aesthetic, neon green accents",
+  google:
+    "colorful Google colors (blue red yellow green), clean material design",
   microsoft: "blue corporate theme, Windows style, azure cloud elements",
   meta: "blue infinity symbol, VR headset, metaverse portal, purple-blue gradient",
   apple: "minimalist white, sleek curves, premium aesthetic, silver metallic",
@@ -392,9 +395,11 @@ const ENTITY_VISUAL_STYLES: Record<string, string> = {
   quantum: "quantum computer, blue cryogenic chamber, superconducting qubits",
   // Category-specific styles
   healthcare: "medical AI, DNA helix, hospital technology, blue-white clean",
-  finance: "trading algorithms, stock charts, digital currency, gold-blue theme",
+  finance:
+    "trading algorithms, stock charts, digital currency, gold-blue theme",
   gaming: "gaming setup, RGB lighting, esports arena, neon purple-cyan",
-  security: "cyber security, digital lock, matrix code, red-black warning theme",
+  security:
+    "cyber security, digital lock, matrix code, red-black warning theme",
 };
 
 /**
@@ -403,22 +408,24 @@ const ENTITY_VISUAL_STYLES: Record<string, string> = {
 function detectEntityForVisual(title: string): string | null {
   const lowerTitle = title.toLowerCase();
   const entities = Object.keys(ENTITY_VISUAL_STYLES);
-  
+
   for (const entity of entities) {
     if (lowerTitle.includes(entity)) {
       return entity;
     }
   }
-  
+
   // Check for common keywords
-  if (lowerTitle.includes("gpt") || lowerTitle.includes("chatgpt")) return "openai";
-  if (lowerTitle.includes("gemini") || lowerTitle.includes("bard")) return "google";
+  if (lowerTitle.includes("gpt") || lowerTitle.includes("chatgpt"))
+    return "openai";
+  if (lowerTitle.includes("gemini") || lowerTitle.includes("bard"))
+    return "google";
   if (lowerTitle.includes("claude")) return "anthropic";
   if (lowerTitle.includes("copilot")) return "microsoft";
   if (lowerTitle.includes("llama")) return "meta";
   if (lowerTitle.includes("siri")) return "apple";
   if (lowerTitle.includes("alexa")) return "amazon";
-  
+
   return null;
 }
 
@@ -434,8 +441,8 @@ export async function generateImagePrompt(
   // Detect entity for visual style hints
   const entity = detectEntityForVisual(title);
   const entityStyle = entity ? ENTITY_VISUAL_STYLES[entity] : null;
-  
-  const styleHint = entityStyle 
+
+  const styleHint = entityStyle
     ? `\n\nÖNEMLİ STİL İPUCU: Bu haber ${entity.toUpperCase()} ile ilgili. Şu görsel elementleri kullan: ${entityStyle}`
     : "";
 

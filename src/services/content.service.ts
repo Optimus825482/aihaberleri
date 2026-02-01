@@ -441,31 +441,50 @@ export async function selectBestArticles(
     // Check for topic clusters with 2+ sources - these become aggregated articles
     // ═══════════════════════════════════════════════════════════════════
     const clusters = clusterArticlesByTopic(uniqueArticles);
-    const aggregatedResults: Array<{ article: NewsArticle; category: string; aggregated?: ProcessedArticle }> = [];
+    const aggregatedResults: Array<{
+      article: NewsArticle;
+      category: string;
+      aggregated?: ProcessedArticle;
+    }> = [];
     const usedArticleUrls = new Set<string>();
 
     // Process clusters with 2+ articles for aggregation
     for (const cluster of clusters) {
-      if (cluster.articles.length >= 2 && aggregatedResults.length < Math.ceil(targetCount / 2)) {
-        console.log(`📦 Processing cluster: ${cluster.topic} with ${cluster.articles.length} sources`);
-        
+      if (
+        cluster.articles.length >= 2 &&
+        aggregatedResults.length < Math.ceil(targetCount / 2)
+      ) {
+        console.log(
+          `📦 Processing cluster: ${cluster.topic} with ${cluster.articles.length} sources`,
+        );
+
         // Check if this topic was recently published
         const isRecent = await isTopicRecent(cluster.topic, 24);
         if (isRecent) {
-          console.log(`🚫 Cluster topic "${cluster.topic}" was recently published - skipping`);
+          console.log(
+            `🚫 Cluster topic "${cluster.topic}" was recently published - skipping`,
+          );
           continue;
         }
 
         // Determine category based on topic
-        const clusterCategory = cluster.topic.includes("Google") ? "Google AI" :
-                               cluster.topic.includes("OpenAI") ? "OpenAI" :
-                               cluster.topic.includes("Microsoft") ? "Microsoft" :
-                               cluster.topic.includes("NVIDIA") ? "Donanım" :
-                               cluster.topic.includes("Robotik") ? "Robotik" :
-                               "Yapay Zeka";
+        const clusterCategory = cluster.topic.includes("Google")
+          ? "Google AI"
+          : cluster.topic.includes("OpenAI")
+            ? "OpenAI"
+            : cluster.topic.includes("Microsoft")
+              ? "Microsoft"
+              : cluster.topic.includes("NVIDIA")
+                ? "Donanım"
+                : cluster.topic.includes("Robotik")
+                  ? "Robotik"
+                  : "Yapay Zeka";
 
         try {
-          const aggregatedArticle = await processAggregatedCluster(cluster, clusterCategory);
+          const aggregatedArticle = await processAggregatedCluster(
+            cluster,
+            clusterCategory,
+          );
           if (aggregatedArticle) {
             // Add first article as reference, with aggregated content
             aggregatedResults.push({
@@ -473,23 +492,32 @@ export async function selectBestArticles(
               category: clusterCategory,
               aggregated: aggregatedArticle,
             });
-            
+
             // Mark all cluster articles as used
-            cluster.articles.forEach(a => usedArticleUrls.add(a.url));
-            console.log(`✅ Aggregated ${cluster.articles.length} sources into: ${aggregatedArticle.title}`);
+            cluster.articles.forEach((a) => usedArticleUrls.add(a.url));
+            console.log(
+              `✅ Aggregated ${cluster.articles.length} sources into: ${aggregatedArticle.title}`,
+            );
           }
         } catch (aggError) {
-          console.error(`❌ Aggregation failed for ${cluster.topic}:`, aggError);
+          console.error(
+            `❌ Aggregation failed for ${cluster.topic}:`,
+            aggError,
+          );
           // Continue with individual article selection
         }
       }
     }
 
     // Filter out already-used articles from individual selection
-    const remainingArticles = uniqueArticles.filter(a => !usedArticleUrls.has(a.url));
+    const remainingArticles = uniqueArticles.filter(
+      (a) => !usedArticleUrls.has(a.url),
+    );
     const remainingTargetCount = targetCount - aggregatedResults.length;
 
-    console.log(`📊 Aggregation complete: ${aggregatedResults.length} aggregated, ${remainingTargetCount} individual slots remaining`);
+    console.log(
+      `📊 Aggregation complete: ${aggregatedResults.length} aggregated, ${remainingTargetCount} individual slots remaining`,
+    );
 
     // If we have enough aggregated articles, return them
     if (remainingTargetCount <= 0 || remainingArticles.length === 0) {
@@ -568,8 +596,10 @@ export async function selectBestArticles(
 
     // Combine aggregated results with individual selections
     const finalResults = [...aggregatedResults, ...diverseSelected];
-    
-    console.log(`🎯 Final selection: ${finalResults.length} articles (${aggregatedResults.length} aggregated, ${diverseSelected.length} individual)`);
+
+    console.log(
+      `🎯 Final selection: ${finalResults.length} articles (${aggregatedResults.length} aggregated, ${diverseSelected.length} individual)`,
+    );
 
     if (finalResults.length === 0) {
       throw new Error("AI could not select any articles");
@@ -926,7 +956,11 @@ export async function publishArticle(
  * ENHANCED: Now supports pre-aggregated articles from multi-source clustering
  */
 export async function processAndPublishArticles(
-  articles: Array<{ article: NewsArticle; category: string; aggregated?: ProcessedArticle }>,
+  articles: Array<{
+    article: NewsArticle;
+    category: string;
+    aggregated?: ProcessedArticle;
+  }>,
   agentLogId?: string,
   forceCategorySlug?: string,
 ): Promise<Array<{ id: string; slug: string }>> {
@@ -940,7 +974,7 @@ export async function processAndPublishArticles(
       if (aggregated) {
         console.log(`📦 Using pre-aggregated article: ${aggregated.title}`);
         processed = aggregated;
-        
+
         // Override category slug if forced
         if (forceCategorySlug) {
           processed.categorySlug = forceCategorySlug;
@@ -967,7 +1001,9 @@ export async function processAndPublishArticles(
       // CRITICAL: Only add to published array if not duplicate (result is not null)
       if (result) {
         published.push(result);
-        console.log(`✅ Haber başarıyla yayınlandı: ${result.slug}${aggregated ? " (AGGREGATED)" : ""}`);
+        console.log(
+          `✅ Haber başarıyla yayınlandı: ${result.slug}${aggregated ? " (AGGREGATED)" : ""}`,
+        );
       } else {
         console.log(`🗑️ Duplicate detected, skipped: ${article.title}`);
       }

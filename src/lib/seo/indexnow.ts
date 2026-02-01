@@ -316,61 +316,142 @@ export async function writeIndexNowKeyFile(): Promise<void> {
 
 /**
  * Sitemap değişikliğini arama motorlarına bildir (Ping)
- * Google, Bing sitemap ping endpoint'leri
+ * ENHANCED: Multiple fallback methods for faster indexing
+ * 
+ * Methods used:
+ * 1. IndexNow API (Bing, Yandex) - Most reliable
+ * 2. WebSub/PubSubHubbub (Google) - For RSS/Atom feeds
+ * 3. Legacy sitemap ping (fallback)
  */
 export async function pingSitemaps(): Promise<{
   google: boolean;
   bing: boolean;
+  indexNow: boolean;
+  webSub: boolean;
 }> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-  const sitemapUrl = encodeURIComponent(`${baseUrl}/sitemap.xml`);
-  const newsSitemapUrl = encodeURIComponent(`${baseUrl}/news-sitemap.xml`);
+  const sitemapUrl = `${baseUrl}/sitemap.xml`;
+  const newsSitemapUrl = `${baseUrl}/news-sitemap.xml`;
+  const rssFeedUrl = `${baseUrl}/feed.xml`;
 
   const results = {
     google: false,
     bing: false,
+    indexNow: false,
+    webSub: false,
   };
 
-  // Note: Google deprecated sitemap ping in 2023, but we try anyway
-  // Bing still supports it via IndexNow
-
+  // ═══════════════════════════════════════════════════════════════════════════
+  // METHOD 1: IndexNow - Most reliable for Bing/Yandex
+  // ═══════════════════════════════════════════════════════════════════════════
   try {
-    // Bing - sitemap ping (deprecated but may still work)
-    const bingResponse = await fetch(
-      `https://www.bing.com/ping?sitemap=${sitemapUrl}`,
-      { method: "GET" },
-    );
-
-    if (bingResponse.ok) {
-      console.log("✅ Bing sitemap ping successful");
-      results.bing = true;
-    }
-
-    // Also ping news sitemap
-    await fetch(`https://www.bing.com/ping?sitemap=${newsSitemapUrl}`, {
-      method: "GET",
-    });
-  } catch (error) {
-    console.warn("⚠️ Bing sitemap ping failed:", error);
-  }
-
-  // Google - try their ping endpoint (may be deprecated)
-  try {
-    const googleResponse = await fetch(
-      `https://www.google.com/ping?sitemap=${sitemapUrl}`,
-      { method: "GET" },
-    );
-
-    if (googleResponse.ok) {
-      console.log("✅ Google sitemap ping successful");
-      results.google = true;
+    const indexNowResult = await submitUrlsToIndexNow([
+      sitemapUrl,
+      newsSitemapUrl,
+      `${baseUrl}/`,
+    ]);
+    results.indexNow = indexNowResult;
+    if (indexNowResult) {
+      console.log("✅ IndexNow: Sitemap URLs submitted successfully");
+      results.bing = true; // IndexNow covers Bing
     }
   } catch (error) {
-    console.warn(
-      "⚠️ Google sitemap ping failed (expected - deprecated):",
-      error,
-    );
+    console.warn("⚠️ IndexNow sitemap submission failed:", error);
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // METHOD 2: WebSub/PubSubHubbub - Google's preferred method for feeds
+  // ═══════════════════════════════════════════════════════════════════════════
+  try {
+    const webSubHubs = [
+      "https://pubsubhubbub.appspot.com/",
+      "https://pubsubhubbub.superfeedr.com/",
+    ];
+
+    for (const hub of webSubHubs) {
+      const formData = new URLSearchParams();
+      formData.append("hub.mode", "publish");
+      formData.append("hub.url", rssFeedUrl);
+
+      const response = await fetch(hub, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: formData.toString(),
+      });
+
+      if (response.ok || response.status === 204) {
+        console.log(`✅ WebSub ping successful: ${hub}`);
+        results.webSub = true;
+        results.google = true; // WebSub notifies Google
+        break;
+      }
+    }
+  } catch (error) {
+    console.warn("⚠️ WebSub ping failed:", error);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // METHOD 3: Legacy Sitemap Ping (fallback - may be deprecated)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const encodedSitemap = encodeURIComponent(sitemapUrl);
+  const encodedNewsSitemap = encodeURIComponent(newsSitemapUrl);
+
+  // Bing legacy ping (if IndexNow failed)
+  if (!results.bing) {
+    try {
+      const bingResponse = await fetch(
+        `https://www.bing.com/ping?sitemap=${encodedSitemap}`,
+        { 
+          method: "GET",
+          signal: AbortSignal.timeout(10000), // 10s timeout
+        },
+      );
+
+      if (bingResponse.ok) {
+        console.log("✅ Bing legacy sitemap ping successful");
+        results.bing = true;
+      }
+
+      // Also ping news sitemap
+      await fetch(`https://www.bing.com/ping?sitemap=${encodedNewsSitemap}`, {
+        method: "GET",
+        signal: AbortSignal.timeout(10000),
+      });
+    } catch (error) {
+      console.warn("⚠️ Bing legacy sitemap ping failed:", error);
+    }
+  }
+
+  // Google legacy ping (deprecated but try anyway if WebSub failed)
+  if (!results.google) {
+    try {
+      const googleResponse = await fetch(
+        `https://www.google.com/ping?sitemap=${encodedSitemap}`,
+        { 
+          method: "GET",
+          signal: AbortSignal.timeout(10000),
+        },
+      );
+
+      if (googleResponse.ok) {
+        console.log("✅ Google legacy sitemap ping successful");
+        results.google = true;
+      }
+    } catch (error) {
+      // Expected to fail - Google deprecated this in 2023
+      console.log("ℹ️ Google legacy ping not available (expected)");
+    }
+  }
+
+  // Log summary
+  const successCount = Object.values(results).filter(Boolean).length;
+  console.log(`📊 Sitemap ping summary: ${successCount}/4 methods successful`);
+  console.log(`   - IndexNow: ${results.indexNow ? "✅" : "❌"}`);
+  console.log(`   - WebSub: ${results.webSub ? "✅" : "❌"}`);
+  console.log(`   - Google: ${results.google ? "✅" : "❌"}`);
+  console.log(`   - Bing: ${results.bing ? "✅" : "❌"}`);
 
   return results;
 }

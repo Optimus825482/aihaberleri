@@ -249,13 +249,19 @@ export async function executeNewsAgent(
     console.log(`✅ ${articlesCreated} haber yayınlandı`);
 
     // Ping search engines to update sitemaps (non-blocking)
+    // Uses multiple methods: IndexNow, WebSub, legacy ping
     if (articlesCreated > 0) {
       pingSitemaps()
         .then((results) => {
-          const successCount = [results.google, results.bing].filter(
-            Boolean,
-          ).length;
-          console.log(`🔔 Sitemap ping: ${successCount}/2 başarılı`);
+          const successCount = [
+            results.google, 
+            results.bing, 
+            results.indexNow, 
+            results.webSub
+          ].filter(Boolean).length;
+          console.log(`🔔 Sitemap ping: ${successCount}/4 yöntem başarılı`);
+          if (results.indexNow) console.log("   ✅ IndexNow: Bing/Yandex bildirildi");
+          if (results.webSub) console.log("   ✅ WebSub: Google bildirildi");
         })
         .catch((err) => {
           console.warn("⚠️ Sitemap ping hatası:", err.message);
