@@ -10,28 +10,19 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get today's start and end in Turkey timezone
-    const now = new Date();
-    const turkeyOffset = 3 * 60 * 60 * 1000; // UTC+3
-    const turkeyNow = new Date(now.getTime() + turkeyOffset);
-    
-    // Start of today in Turkey
-    const todayStart = new Date(turkeyNow);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayStartUTC = new Date(todayStart.getTime() - turkeyOffset);
-    
-    // End of today in Turkey
-    const todayEnd = new Date(turkeyNow);
-    todayEnd.setHours(23, 59, 59, 999);
-    const todayEndUTC = new Date(todayEnd.getTime() - turkeyOffset);
+    // Get today's date range (same logic as send-daily API)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Fetch today's published articles
     const articles = await prisma.article.findMany({
       where: {
         status: "PUBLISHED",
         publishedAt: {
-          gte: todayStartUTC,
-          lte: todayEndUTC,
+          gte: today,
+          lt: tomorrow,
         },
       },
       select: {
@@ -52,23 +43,25 @@ export async function GET() {
       take: 10, // Limit to 10 articles for newsletter
     });
 
-    // Get subscriber count
-    const subscriberCount = await prisma.subscriber.count({
+    // Get subscriber count (newsletter table with ACTIVE status)
+    const subscriberCount = await prisma.newsletter.count({
       where: {
-        status: "active",
+        status: "ACTIVE",
       },
     });
 
     // Generate subject line
-    const dateStr = turkeyNow.toLocaleDateString("tr-TR", {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("tr-TR", {
       day: "numeric",
       month: "long",
       year: "numeric",
     });
-    
-    const subject = articles.length > 0
-      ? `🤖 AI Haberleri - ${dateStr} | ${articles.length} Yeni Haber`
-      : `🤖 AI Haberleri - ${dateStr}`;
+
+    const subject =
+      articles.length > 0
+        ? `🤖 AI Haberleri - ${dateStr} | ${articles.length} Yeni Haber`
+        : `🤖 AI Haberleri - ${dateStr}`;
 
     // Format articles for preview
     const formattedArticles = articles.map((article) => ({
@@ -94,7 +87,7 @@ export async function GET() {
     console.error("Newsletter preview error:", error);
     return NextResponse.json(
       { success: false, error: "Failed to fetch newsletter preview" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

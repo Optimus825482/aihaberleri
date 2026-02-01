@@ -355,11 +355,11 @@ export default function NotificationsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Preview */}
               <NewsletterPreviewSection />
-              
+
               {/* Status & Controls */}
               <div className="space-y-6">
                 <NewsletterCard />
-                
+
                 {/* Info Card */}
                 <Card className="border-blue-500/20 bg-blue-500/5">
                   <CardHeader className="pb-2">
