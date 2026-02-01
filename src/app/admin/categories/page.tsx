@@ -230,11 +230,11 @@ export default function CategoriesPage() {
               <div className="text-2xl font-black">
                 {categories.length > 0
                   ? Math.round(
-                      categories.reduce(
-                        (sum, cat) => sum + cat._count.articles,
-                        0,
-                      ) / categories.length,
-                    )
+                    categories.reduce(
+                      (sum, cat) => sum + cat._count.articles,
+                      0,
+                    ) / categories.length,
+                  )
                   : 0}
               </div>
             </CardContent>
