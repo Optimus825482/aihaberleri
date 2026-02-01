@@ -12,6 +12,82 @@ Her yeni sohbette bu dosyayı kontrol et.
 
 ---
 
+## 🔴 ZORUNLU ORCHESTRATION KURALLARI
+
+### ⚠️ KRITIK: Bu kurallar ASLA atlanamaz!
+
+**HER YENİ GÖREV BAŞINDA** şu kontrolleri yap:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  GÖREV TİPİ TESPİTİ (ZORUNLU)                              │
+├─────────────────────────────────────────────────────────────┤
+│  □ Yeni servis/modül oluşturma?          → ORCHESTRATION   │
+│  □ API endpoint ekleme/değiştirme?       → ORCHESTRATION   │
+│  □ Database schema değişikliği?          → ORCHESTRATION   │
+│  □ 3+ dosya değişikliği gerektiriyor?    → ORCHESTRATION   │
+│  □ Frontend + Backend birlikte?          → ORCHESTRATION   │
+│  □ Queue/Worker değişikliği?             → ORCHESTRATION   │
+│  □ Auth/Security ile ilgili?             → ORCHESTRATION   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Orchestration Tetikleme Matrisi
+
+| Görev Tipi | Minimum Agent Sayısı | Zorunlu Agentlar |
+|------------|---------------------|------------------|
+| **Yeni Servis** | 4 | backend, database, test, security |
+| **API Değişikliği** | 3 | backend, security, test |
+| **Full Stack Feature** | 4 | frontend, backend, database, test |
+| **Database Change** | 3 | database, backend, security |
+| **UI + State** | 3 | frontend, test, performance |
+
+### 🚨 UYARI SİSTEMİ
+
+Görev başında şunu YÜKSEK SESLE ilan et:
+
+```markdown
+## 🎯 Görev Analizi
+- **Tip:** [Trivial/Minor/Major/Breaking]
+- **Etkilenen Alanlar:** [Frontend/Backend/Database/etc.]
+- **Dosya Sayısı (Tahmini):** X
+- **Orchestration:** ✅ GEREKLİ / ❌ Gerekli Değil
+
+### Eğer Major/Breaking ise:
+🔴 **ORCHESTRATION AKTİF**
+Çağrılacak Agentlar:
+1. @agent-name → görev
+2. @agent-name → görev
+3. @agent-name → görev
+```
+
+### Orchestration Atlandığında
+
+Eğer Major görev için orchestration ATLANIRSA:
+
+1. ❌ Kod yazmaya BAŞLAMA
+2. ⚠️ Kullanıcıya sor: "Bu görev orchestration gerektiriyor. Devam edeyim mi?"
+3. 📋 Agent listesini göster
+
+### Örnek: Newsletter Sistemi Ekleme
+
+```markdown
+## 🎯 Görev Analizi
+- **Tip:** 🔴 MAJOR (Yeni servis oluşturma)
+- **Etkilenen Alanlar:** Backend, Database, Queue, Frontend
+- **Dosya Sayısı:** ~8-10
+- **Orchestration:** ✅ GEREKLİ
+
+🔴 **ORCHESTRATION AKTİF**
+Çağrılacak Agentlar:
+1. @backend-specialist → Newsletter service, queue jobs
+2. @database-architect → Schema review, loglama stratejisi
+3. @frontend-specialist → Admin UI kartları
+4. @test-engineer → Queue ve email testleri
+```
+
+---
+
 An autonomous AI news aggregation platform built with Next.js 14, featuring automated content generation via DeepSeek AI and multi-container architecture with worker-based job processing.
 
 ## Architecture Overview
