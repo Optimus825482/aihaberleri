@@ -172,6 +172,129 @@ export async function scheduleNewsAgentJob() {
   }
 }
 
+// =====================================================
+// NEWSLETTER SCHEDULER - Daily at 19:00 Turkey Time
+// =====================================================
+
+let newsletterQueueInstance: Queue | null = null;
+
+export const getNewsletterQueue = (): Queue | null => {
+  if (newsletterQueueInstance) {
+    return newsletterQueueInstance;
+  }
+
+  const redis = getRedis();
+  if (!redis) {
+    console.warn("⚠️  Redis not available, newsletter queue cannot be created");
+    return null;
+  }
+
+  try {
+    newsletterQueueInstance = new Queue("newsletter", {
+      connection: redis,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: "exponential",
+          delay: 10000,
+        },
+        removeOnComplete: {
+          count: 50,
+          age: 24 * 3600,
+        },
+        removeOnFail: {
+          count: 20,
+        },
+        timeout: 300000, // 5 minutes timeout
+      },
+    });
+    console.log("✅ Newsletter queue created");
+    return newsletterQueueInstance;
+  } catch (error) {
+    console.error("❌ Failed to create newsletter queue:", error);
+    return null;
+  }
+};
+
+/**
+ * Schedule daily newsletter job at 19:00 Turkey time
+ * Uses cron pattern for reliable daily execution
+ */
+export async function scheduleNewsletterJob() {
+  const queue = getNewsletterQueue();
+  if (!queue) {
+    console.warn("⚠️  Newsletter queue not available");
+    return null;
+  }
+
+  try {
+    // Remove existing repeatable jobs
+    const existingJobs = await queue.getRepeatableJobs();
+    for (const job of existingJobs) {
+      await queue.removeRepeatableByKey(job.key);
+      console.log(`🗑️ Removed existing newsletter job: ${job.key}`);
+    }
+
+    // Schedule newsletter at 19:00 Turkey time (UTC+3)
+    // Cron: minute hour * * * (0 19 * * * = 19:00 every day)
+    await queue.add(
+      "daily-digest",
+      {},
+      {
+        repeat: {
+          pattern: "0 19 * * *", // Every day at 19:00
+          tz: "Europe/Istanbul", // Turkey timezone
+        },
+        jobId: "newsletter-daily-digest",
+        removeOnComplete: true,
+        removeOnFail: false,
+      },
+    );
+
+    console.log(`
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 NEWSLETTER SCHEDULE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⏰ Time: Every day at 19:00 (Turkey)
+🆔 Job Type: Cron (daily-digest)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`);
+
+    return { scheduled: true, time: "19:00 Europe/Istanbul" };
+  } catch (error) {
+    console.error("❌ Newsletter scheduling error:", error);
+    return null;
+  }
+}
+
+/**
+ * Trigger newsletter immediately (manual trigger)
+ */
+export async function triggerNewsletterNow() {
+  const queue = getNewsletterQueue();
+  if (!queue) {
+    console.warn("⚠️  Newsletter queue not available");
+    return null;
+  }
+
+  try {
+    const job = await queue.add(
+      "daily-digest",
+      { manual: true },
+      {
+        jobId: `newsletter-manual-${Date.now()}`,
+        removeOnComplete: true,
+      },
+    );
+
+    console.log(`📧 Manual newsletter triggered: ${job.id}`);
+    return { jobId: job.id };
+  } catch (error) {
+    console.error("❌ Manual newsletter trigger failed:", error);
+    return null;
+  }
+}
+
 // Get queue stats
 export async function getQueueStats() {
   const queue = getNewsAgentQueue();

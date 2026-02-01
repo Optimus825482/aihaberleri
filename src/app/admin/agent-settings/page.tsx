@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
   Card,
@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Settings,
   Clock,
@@ -25,12 +26,24 @@ import {
   RefreshCw,
   CheckCircle2,
   XCircle,
-  Wrench,
-  ImageIcon,
-  Database,
+  Pause,
+  Trash2,
+  Download,
+  Info,
+  AlertTriangle,
+  Bug,
+  Wifi,
+  WifiOff,
+  Terminal,
+  ArrowDown,
+  Mail,
+  Bell,
+  Send,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { CountdownTimer } from "@/components/CountdownTimer";
+import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
 
 interface AgentSettings {
   enabled: boolean;
@@ -606,6 +619,12 @@ export default function AgentSettingsPage() {
           </Card>
         </div>
 
+        {/* Newsletter & Push Notifications Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <NewsletterCard />
+          <PushNotificationCard />
+        </div>
+
         {/* Recent Logs Card */}
         {recentLogs.length > 0 && (
           <Card>
@@ -663,215 +682,577 @@ export default function AgentSettingsPage() {
           </Card>
         )}
 
-        {/* Maintenance Card */}
-        <MaintenanceCard />
-
-        {/* Info Card */}
-        <Card className="bg-blue-500/5 border-blue-500/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-              <RefreshCw className="h-5 w-5" />
-              Nasıl Çalışır?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>
-              • Agent belirlediğiniz sıklıkta otomatik olarak çalışır ve haber
-              toplar
-            </p>
-            <p>• Her çalıştırmada belirlediğiniz sayıda haber oluşturulur</p>
-            <p>
-              • Seçili kategorilerden haber toplanır (hiçbiri seçili değilse
-              tümünden)
-            </p>
-            <p>
-              • Manuel tetikleme ile istediğiniz zaman agent'ı
-              çalıştırabilirsiniz
-            </p>
-            <p>
-              • Ayarları değiştirdikten sonra "Kaydet" butonuna tıklamayı
-              unutmayın
-            </p>
-          </CardContent>
-        </Card>
+        {/* Live Logs Section */}
+        <LiveLogsSection />
       </div>
     </AdminLayout>
   );
 }
 
-// Maintenance Card Component
-function MaintenanceCard() {
-  const [dbMigrating, setDbMigrating] = useState(false);
-  const [imgMigrating, setImgMigrating] = useState(false);
-  const [dbStatus, setDbStatus] = useState<{
-    needsMigration: boolean;
-    missingColumns: string[];
+// =====================================================
+// LIVE LOGS COMPONENT - Integrated from agent-logs page
+// =====================================================
+
+interface LogEntry {
+  timestamp: string;
+  level: "info" | "success" | "warn" | "error" | "debug";
+  message: string;
+  module?: string;
+  data?: Record<string, unknown>;
+}
+
+const levelConfig = {
+  info: {
+    icon: Info,
+    color: "text-blue-400",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/30",
+  },
+  success: {
+    icon: CheckCircle2,
+    color: "text-green-400",
+    bg: "bg-green-500/10",
+    border: "border-green-500/30",
+  },
+  warn: {
+    icon: AlertTriangle,
+    color: "text-yellow-400",
+    bg: "bg-yellow-500/10",
+    border: "border-yellow-500/30",
+  },
+  error: {
+    icon: XCircle,
+    color: "text-red-400",
+    bg: "bg-red-500/10",
+    border: "border-red-500/30",
+  },
+  debug: {
+    icon: Bug,
+    color: "text-purple-400",
+    bg: "bg-purple-500/10",
+    border: "border-purple-500/30",
+  },
+};
+
+function LiveLogsSection() {
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
+  const [showDebug, setShowDebug] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const logsEndRef = useRef<HTMLDivElement>(null);
+
+  const connect = useCallback(() => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    const eventSource = new EventSource("/api/agent/live-logs");
+    eventSourceRef.current = eventSource;
+
+    eventSource.onopen = () => {
+      setIsConnected(true);
+    };
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.type === "connected") {
+          setIsConnected(true);
+        } else if (data.type === "log" && !isPaused) {
+          setLogs((prev) => {
+            const newLogs = [...prev, data as LogEntry];
+            return newLogs.slice(-200); // Keep last 200 logs
+          });
+        }
+      } catch (e) {
+        console.error("Failed to parse log:", e);
+      }
+    };
+
+    eventSource.onerror = () => {
+      setIsConnected(false);
+      eventSource.close();
+      setTimeout(connect, 5000);
+    };
+  }, [isPaused]);
+
+  useEffect(() => {
+    if (isExpanded) {
+      connect();
+    }
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, [connect, isExpanded]);
+
+  useEffect(() => {
+    if (autoScroll && logsEndRef.current) {
+      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [logs, autoScroll]);
+
+  const clearLogs = () => setLogs([]);
+
+  const downloadLogs = () => {
+    const content = logs
+      .map(
+        (log) =>
+          `[${log.timestamp}] [${log.level.toUpperCase()}]${log.module ? ` [${log.module}]` : ""} ${log.message}`
+      )
+      .join("\n");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `agent-logs-${new Date().toISOString().split("T")[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const formatTime = (timestamp: string) => {
+    return new Date(timestamp).toLocaleTimeString("tr-TR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
+
+  const filteredLogs = logs.filter((log) => {
+    if (!showDebug && log.level === "debug") return false;
+    return true;
+  });
+
+  const stats = {
+    total: logs.length,
+    success: logs.filter((l) => l.level === "success").length,
+    error: logs.filter((l) => l.level === "error").length,
+  };
+
+  return (
+    <Card className="border-cyan-500/20">
+      <CardHeader
+        className="cursor-pointer hover:bg-muted/50 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+            <Terminal className="h-5 w-5" />
+            Canlı Agent Logları
+          </div>
+          <div className="flex items-center gap-2">
+            {isExpanded && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "gap-1",
+                  isConnected
+                    ? "border-green-500/50 text-green-400"
+                    : "border-red-500/50 text-red-400"
+                )}
+              >
+                {isConnected ? (
+                  <>
+                    <Wifi className="h-3 w-3" />
+                    Bağlı
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="h-3 w-3" />
+                    Bağlantı Kesildi
+                  </>
+                )}
+              </Badge>
+            )}
+            <Badge variant="secondary">
+              {isExpanded ? "Daralt" : "Genişlet"}
+            </Badge>
+          </div>
+        </CardTitle>
+        <CardDescription>
+          News Agent işlem akışını gerçek zamanlı izleyin
+        </CardDescription>
+      </CardHeader>
+
+      {isExpanded && (
+        <CardContent className="space-y-4">
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+              <div className="text-lg font-bold text-white">{stats.total}</div>
+              <div className="text-xs text-gray-500">Toplam</div>
+            </div>
+            <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+              <div className="text-lg font-bold text-green-400">{stats.success}</div>
+              <div className="text-xs text-gray-500">Başarılı</div>
+            </div>
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+              <div className="text-lg font-bold text-red-400">{stats.error}</div>
+              <div className="text-xs text-gray-500">Hata</div>
+            </div>
+          </div>
+
+          {/* Controls */}
+          <div className="flex flex-wrap items-center justify-between gap-2 p-3 border rounded-lg bg-muted/30">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsPaused(!isPaused)}
+                className={cn(isPaused && "border-yellow-500/50 text-yellow-400")}
+              >
+                {isPaused ? (
+                  <>
+                    <Play className="h-4 w-4 mr-1" />
+                    Devam
+                  </>
+                ) : (
+                  <>
+                    <Pause className="h-4 w-4 mr-1" />
+                    Duraklat
+                  </>
+                )}
+              </Button>
+              <Button variant="outline" size="sm" onClick={clearLogs}>
+                <Trash2 className="h-4 w-4 mr-1" />
+                Temizle
+              </Button>
+              <Button variant="outline" size="sm" onClick={downloadLogs}>
+                <Download className="h-4 w-4 mr-1" />
+                İndir
+              </Button>
+              <Button variant="outline" size="sm" onClick={connect}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="auto-scroll-live"
+                  checked={autoScroll}
+                  onCheckedChange={setAutoScroll}
+                />
+                <Label htmlFor="auto-scroll-live" className="text-xs">Otomatik Kaydır</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="show-debug-live"
+                  checked={showDebug}
+                  onCheckedChange={setShowDebug}
+                />
+                <Label htmlFor="show-debug-live" className="text-xs">Debug</Label>
+              </div>
+            </div>
+          </div>
+
+          {/* Log Viewer */}
+          <div className="h-[400px] overflow-y-auto bg-black/50 rounded-lg border border-gray-800 font-mono text-xs">
+            {filteredLogs.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <Info className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                  <p>Henüz log yok</p>
+                  <p className="text-xs mt-1">Agent çalıştığında loglar burada görünecek</p>
+                </div>
+              </div>
+            ) : (
+              <div className="p-2 space-y-1">
+                {filteredLogs.map((log, index) => {
+                  const config = levelConfig[log.level];
+                  const Icon = config.icon;
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        "flex items-start gap-2 px-2 py-1 rounded border",
+                        config.bg,
+                        config.border
+                      )}
+                    >
+                      <Icon className={cn("h-3 w-3 mt-0.5 shrink-0", config.color)} />
+                      <span className="text-gray-500 shrink-0">{formatTime(log.timestamp)}</span>
+                      {log.module && (
+                        <Badge variant="outline" className="text-[10px] px-1 py-0 shrink-0">
+                          {log.module}
+                        </Badge>
+                      )}
+                      <span className={cn("text-gray-300 break-all", config.color)}>
+                        {log.message}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div ref={logsEndRef} />
+              </div>
+            )}
+          </div>
+
+          {!autoScroll && filteredLogs.length > 10 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => logsEndRef.current?.scrollIntoView({ behavior: "smooth" })}
+              className="w-full gap-2"
+            >
+              <ArrowDown className="h-4 w-4" />
+              En Alta Git
+            </Button>
+          )}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+// =====================================================
+// NEWSLETTER CARD COMPONENT
+// =====================================================
+
+function NewsletterCard() {
+  const [status, setStatus] = useState<{
+    lastSent: string | null;
+    subscriberCount: number;
+    todayArticleCount: number;
   } | null>(null);
-  const [imgStatus, setImgStatus] = useState<{
-    pendingCount: number;
-  } | null>(null);
+  const [sending, setSending] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    checkDbStatus();
-    checkImageStatus();
+    fetchStatus();
   }, []);
 
-  const checkDbStatus = async () => {
+  const fetchStatus = async () => {
     try {
-      const res = await fetch("/api/admin/db-migrate");
-      if (res.ok) {
-        const data = await res.json();
-        setDbStatus(data);
-      }
-    } catch {
-      // API might not exist yet
-    }
-  };
-
-  const checkImageStatus = async () => {
-    try {
-      const res = await fetch("/api/admin/migrate-images");
-      if (res.ok) {
-        const data = await res.json();
-        setImgStatus({ pendingCount: data.pendingMigration || 0 });
-      }
-    } catch {
-      // API might not exist yet
-    }
-  };
-
-  const runDbMigration = async () => {
-    setDbMigrating(true);
-    try {
-      const res = await fetch("/api/admin/db-migrate", { method: "POST" });
+      const res = await fetch("/api/admin/newsletter/send-daily");
       const data = await res.json();
       if (data.success) {
-        toast({
-          title: "Başarılı",
-          description: "Database kolonları eklendi",
-        });
-        checkDbStatus();
-      } else {
-        toast({
-          title: "Hata",
-          description: data.error || "Migration başarısız",
-          variant: "destructive",
-        });
+        setStatus(data.data);
       }
-    } catch {
-      toast({
-        title: "Hata",
-        description: "Migration yapılamadı",
-        variant: "destructive",
-      });
-    } finally {
-      setDbMigrating(false);
+    } catch (error) {
+      console.error("Failed to fetch newsletter status:", error);
     }
   };
 
-  const runImageMigration = async () => {
-    setImgMigrating(true);
+  const triggerNewsletter = async () => {
+    setSending(true);
     try {
-      const res = await fetch("/api/admin/migrate-images", {
+      const res = await fetch("/api/admin/newsletter/send-daily", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ limit: 10 }),
+        body: JSON.stringify({ useQueue: true }),
       });
       const data = await res.json();
+
       if (data.success) {
         toast({
           title: "Başarılı",
-          description: `${data.successCount} görsel R2'ye taşındı`,
+          description: "Newsletter kuyruğa eklendi",
         });
-        checkImageStatus();
+        fetchStatus();
       } else {
         toast({
           title: "Hata",
-          description: data.error || "Migration başarısız",
+          description: data.error || "Newsletter gönderilemedi",
           variant: "destructive",
         });
       }
-    } catch {
+    } catch (error) {
       toast({
         title: "Hata",
-        description: "Görsel migration yapılamadı",
+        description: "Bir hata oluştu",
         variant: "destructive",
       });
     } finally {
-      setImgMigrating(false);
+      setSending(false);
     }
   };
 
   return (
-    <Card className="bg-orange-500/5 border-orange-500/20">
+    <Card className="border-purple-500/20">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
-          <Wrench className="h-5 w-5" />
-          Bakım İşlemleri
+        <CardTitle className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
+          <Mail className="h-5 w-5" />
+          Newsletter Sistemi
         </CardTitle>
         <CardDescription>
-          Database ve görsel düzeltme araçları
+          Her gün saat 19:00'da otomatik günlük bülten
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Database Migration */}
-        <div className="flex items-center justify-between p-3 border rounded-lg">
-          <div className="flex items-center gap-3">
-            <Database className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <div className="text-sm font-medium">Database Kolonları</div>
-              <div className="text-xs text-muted-foreground">
-                {dbStatus === null
-                  ? "Kontrol ediliyor..."
-                  : dbStatus.needsMigration
-                    ? `${dbStatus.missingColumns.length} kolon eksik`
-                    : "✓ Tüm kolonlar mevcut"}
-              </div>
-            </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+            <div className="text-lg font-bold">{status?.subscriberCount || 0}</div>
+            <div className="text-xs text-muted-foreground">Abone</div>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={runDbMigration}
-            disabled={dbMigrating || Boolean(dbStatus && !dbStatus.needsMigration)}
-          >
-            {dbMigrating ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              "Düzelt"
-            )}
-          </Button>
+          <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+            <div className="text-lg font-bold">{status?.todayArticleCount || 0}</div>
+            <div className="text-xs text-muted-foreground">Bugünkü Haber</div>
+          </div>
         </div>
 
-        {/* Image Migration */}
-        <div className="flex items-center justify-between p-3 border rounded-lg">
-          <div className="flex items-center gap-3">
-            <ImageIcon className="h-5 w-5 text-muted-foreground" />
-            <div>
-              <div className="text-sm font-medium">Görsel Migration</div>
-              <div className="text-xs text-muted-foreground">
-                {imgStatus === null
-                  ? "Kontrol ediliyor..."
-                  : imgStatus.pendingCount > 0
-                    ? `${imgStatus.pendingCount} görsel Pollinations'da`
-                    : "✓ Tüm görseller R2'de"}
-              </div>
+        <div className="p-3 border rounded-lg bg-muted/30">
+          <div className="text-sm text-muted-foreground">Planlanan Gönderim</div>
+          <div className="font-medium">Her gün 19:00 (Türkiye)</div>
+          {status?.lastSent && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Son: {new Date(status.lastSent).toLocaleString("tr-TR")}
             </div>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={runImageMigration}
-            disabled={imgMigrating || Boolean(imgStatus && imgStatus.pendingCount === 0)}
-          >
-            {imgMigrating ? (
-              <RefreshCw className="h-4 w-4 animate-spin" />
-            ) : (
-              "10 Taşı"
-            )}
-          </Button>
+          )}
         </div>
+
+        <Button
+          onClick={triggerNewsletter}
+          disabled={sending}
+          className="w-full"
+          variant="outline"
+        >
+          <Send className="h-4 w-4 mr-2" />
+          {sending ? "Gönderiliyor..." : "Şimdi Gönder"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// =====================================================
+// PUSH NOTIFICATION CARD COMPONENT
+// =====================================================
+
+function PushNotificationCard() {
+  const [status, setStatus] = useState<{
+    subscriberCount: number;
+    lastSent: string | null;
+    lastTitle: string | null;
+  } | null>(null);
+  const [sending, setSending] = useState(false);
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchStatus();
+  }, []);
+
+  const fetchStatus = async () => {
+    try {
+      const res = await fetch("/api/notifications/send");
+      const data = await res.json();
+      if (data.success) {
+        setStatus(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch push status:", error);
+    }
+  };
+
+  const sendPush = async () => {
+    if (!title.trim() || !message.trim()) {
+      toast({
+        title: "Uyarı",
+        description: "Başlık ve mesaj gerekli",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSending(true);
+    try {
+      const res = await fetch("/api/notifications/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, message, url: "/" }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        toast({
+          title: "Başarılı",
+          description: `${data.sent} aboneye bildirim gönderildi`,
+        });
+        setTitle("");
+        setMessage("");
+        fetchStatus();
+      } else {
+        toast({
+          title: "Hata",
+          description: data.error || "Bildirim gönderilemedi",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <Card className="border-orange-500/20">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+          <Bell className="h-5 w-5" />
+          Push Bildirimler
+        </CardTitle>
+        <CardDescription>
+          Manuel push bildirimi gönder
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
+          <div className="text-lg font-bold">{status?.subscriberCount || 0}</div>
+          <div className="text-xs text-muted-foreground">Push Abonesi</div>
+          {status?.lastSent && (
+            <div className="text-xs text-muted-foreground mt-1">
+              Son: {new Date(status.lastSent).toLocaleString("tr-TR")}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <Label htmlFor="push-title" className="text-xs">Başlık</Label>
+            <Input
+              id="push-title"
+              placeholder="Bildirim başlığı"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="push-message" className="text-xs">Mesaj</Label>
+            <Input
+              id="push-message"
+              placeholder="Bildirim mesajı"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        <Button
+          onClick={sendPush}
+          disabled={sending || !title.trim() || !message.trim()}
+          className="w-full"
+          variant="outline"
+        >
+          <Bell className="h-4 w-4 mr-2" />
+          {sending ? "Gönderiliyor..." : "Bildirim Gönder"}
+        </Button>
+
+        <p className="text-xs text-muted-foreground">
+          💡 Yeni haberler yayınlandığında otomatik push gönderilir
+        </p>
       </CardContent>
     </Card>
   );

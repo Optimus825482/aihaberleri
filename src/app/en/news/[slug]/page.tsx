@@ -10,6 +10,11 @@ import Image from "next/image";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
 import { ArticleImage } from "@/components/ResponsiveImage";
+import {
+  generateBreadcrumbSchema,
+  generateJsonLd,
+  combineSchemas,
+} from "@/lib/seo";
 
 interface Props {
   params: { slug: string };
@@ -119,11 +124,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       images: article.imageUrl ? [article.imageUrl] : [],
       type: "article",
       publishedTime: article.publishedAt?.toISOString(),
+      locale: "en_US",
+      alternateLocale: ["tr_TR"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.excerpt || "",
+      images: article.imageUrl ? [article.imageUrl] : [],
     },
     alternates: {
       canonical: `https://aihaberleri.org/en/news/${article.slug}`,
       languages: {
-        tr: `https://aihaberleri.org/haber/${article.originalSlug}`,
+        tr: `https://aihaberleri.org/news/${article.originalSlug}`,
         en: `https://aihaberleri.org/en/news/${article.slug}`,
       },
     },
@@ -142,8 +155,68 @@ export default async function EnglishArticlePage({ params }: Props) {
     article.id,
   );
 
+  const baseUrl = "https://aihaberleri.org";
+  const articleUrl = `${baseUrl}/en/news/${article.slug}`;
+
+  // Structured Data (JSON-LD) for English article
+  const newsArticleSchema = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    headline: article.title,
+    description: article.excerpt,
+    image: article.imageUrl
+      ? {
+        "@type": "ImageObject",
+        url: article.imageUrl,
+        width: 1200,
+        height: 630,
+      }
+      : undefined,
+    datePublished: article.publishedAt?.toISOString(),
+    author: {
+      "@type": "Organization",
+      name: "AI News",
+      url: baseUrl,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "AI News",
+      url: baseUrl,
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/logos/brand/logo-primary.png`,
+        width: 512,
+        height: 128,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": articleUrl,
+    },
+    articleSection: article.category.name,
+    url: articleUrl,
+    inLanguage: "en-US",
+  };
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: `${baseUrl}/en` },
+    {
+      name: article.category.name,
+      url: `${baseUrl}/en/category/${article.category.slug}`,
+    },
+    { name: article.title, url: articleUrl },
+  ]);
+
+  const combinedSchema = combineSchemas(newsArticleSchema, breadcrumbSchema);
+
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={generateJsonLd(combinedSchema)}
+      />
+
       {/* Breadcrumb */}
       <div className="bg-white dark:bg-gray-800 border-b">
         <div className="container mx-auto px-4 py-3">

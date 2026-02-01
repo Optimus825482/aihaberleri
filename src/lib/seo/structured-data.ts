@@ -65,11 +65,45 @@ export function generateWebSiteSchema() {
 /**
  * NewsArticle Schema - Haber sayfaları için
  * Google News için optimize edilmiş
+ * E-E-A-T uyumlu - AI tarafından oluşturulduğu belirtilir
  */
 export function generateNewsArticleSchema(article: ArticleWithCategory) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "AI Haberleri";
   const articleUrl = `${baseUrl}/news/${article.slug}`;
+
+  // Publisher Organization (sabit)
+  const publisherOrg = {
+    "@type": "Organization",
+    "@id": `${baseUrl}/#organization`,
+    name: siteName,
+    url: baseUrl,
+    logo: {
+      "@type": "ImageObject",
+      url: `${baseUrl}/logos/brand/logo-primary.png`,
+      width: 512,
+      height: 128,
+    },
+    sameAs: [
+      `https://twitter.com/${process.env.TWITTER_HANDLE?.replace("@", "") || "aihaberleri"}`,
+    ],
+  };
+
+  // Author - Person + Organization (E-E-A-T için)
+  // AI tarafından oluşturulduğu "description" ile belirtilir
+  const authorInfo = [
+    {
+      "@type": "Person",
+      name: "AI Haberleri Editörü",
+      url: `${baseUrl}/hakkimizda`,
+      description: "Yapay zeka destekli içerik editörü",
+      worksFor: {
+        "@type": "Organization",
+        name: siteName,
+      },
+    },
+    publisherOrg,
+  ];
 
   return {
     "@context": "https://schema.org",
@@ -86,22 +120,9 @@ export function generateNewsArticleSchema(article: ArticleWithCategory) {
       : undefined,
     datePublished: article.publishedAt?.toISOString(),
     dateModified: article.updatedAt.toISOString(),
-    author: {
-      "@type": "Organization",
-      name: siteName,
-      url: baseUrl,
-    },
-    publisher: {
-      "@type": "Organization",
-      name: siteName,
-      url: baseUrl,
-      logo: {
-        "@type": "ImageObject",
-        url: `${baseUrl}/logos/brand/logo-primary.png`,
-        width: 512,
-        height: 128,
-      },
-    },
+    // E-E-A-T: Çoklu author desteği (Person + Organization)
+    author: authorInfo,
+    publisher: publisherOrg,
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": articleUrl,
@@ -113,10 +134,18 @@ export function generateNewsArticleSchema(article: ArticleWithCategory) {
     inLanguage: "tr-TR",
     copyrightYear:
       article.publishedAt?.getFullYear() || new Date().getFullYear(),
-    copyrightHolder: {
-      "@type": "Organization",
-      name: siteName,
-    },
+    copyrightHolder: publisherOrg,
+    // AI tarafından oluşturulduğunu belirten ek meta
+    // Schema.org'da resmi bir "AI generated" alanı yok,
+    // ancak "creativeWorkStatus" ile belirtilebilir
+    creativeWorkStatus: "AI-Assisted Content",
+    // Orijinal kaynak varsa belirt
+    ...(article.sourceUrl && {
+      isBasedOn: {
+        "@type": "WebPage",
+        url: article.sourceUrl,
+      },
+    }),
   };
 }
 

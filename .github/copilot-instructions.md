@@ -1,5 +1,17 @@
 # AI Haberleri - Copilot Instructions
 
+---
+## 🧠 HAFIZA SİSTEMİ
+
+**TETİKLEME KELİMESİ**: "HATIRLA"
+
+Kullanıcı "HATIRLA" dediğinde MUTLAKA şu dosyayı oku: `.github/memory.md`
+
+Bu dosya kullanıcının profilini, tercihlerini, aktif projeleri ve son kararları içerir.
+Her yeni sohbette bu dosyayı kontrol et.
+
+---
+
 An autonomous AI news aggregation platform built with Next.js 14, featuring automated content generation via DeepSeek AI and multi-container architecture with worker-based job processing.
 
 ## Architecture Overview

@@ -418,6 +418,85 @@ export const emailTemplates = {
       )
       .replace("{{unsubscribe_url}}", "#");
   },
+
+  /**
+   * Daily digest newsletter template
+   * Shows all articles published today with titles, excerpts and links
+   */
+  dailyDigest: (
+    data: {
+      articles: Array<{
+        title: string;
+        excerpt: string;
+        slug: string;
+        category: string;
+        imageUrl?: string;
+      }>;
+      date: string;
+    },
+    unsubscribeUrl: string,
+  ) => {
+    const articlesHtml = data.articles
+      .map(
+        (article) => `
+        <div style="margin-bottom: 25px; padding: 20px; border-radius: 12px; background-color: #f8f9fa; border-left: 4px solid #667eea;">
+          <h3 style="margin: 0 0 10px 0; color: #333;">
+            <a href="${env.NEXT_PUBLIC_SITE_URL}/news/${article.slug}" style="color: #333; text-decoration: none;">
+              ${article.title}
+            </a>
+          </h3>
+          <span style="display: inline-block; padding: 3px 8px; background-color: #667eea20; color: #667eea; border-radius: 4px; font-size: 12px; margin-bottom: 10px;">
+            ${article.category}
+          </span>
+          <p style="color: #555; margin: 10px 0; line-height: 1.6;">
+            ${article.excerpt}
+          </p>
+          <a href="${env.NEXT_PUBLIC_SITE_URL}/news/${article.slug}" style="color: #667eea; font-weight: 600; text-decoration: none;">
+            Devamını Oku →
+          </a>
+        </div>
+      `,
+      )
+      .join("");
+
+    const content = `
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="color: #333; margin-top: 0;">📰 Günün AI Haberleri</h2>
+        <p style="color: #666; font-size: 14px;">${data.date} • ${data.articles.length} yeni haber</p>
+      </div>
+      
+      ${
+        data.articles.length > 0
+          ? articlesHtml
+          : `
+        <div style="text-align: center; padding: 40px; color: #666;">
+          <p>Bugün yayınlanan haber bulunmuyor.</p>
+          <p>Yarın tekrar bekleriz! 👋</p>
+        </div>
+      `
+      }
+      
+      <hr style="border: 0; border-top: 1px solid #e9ecef; margin: 30px 0;">
+      
+      <div style="text-align: center;">
+        <a href="${env.NEXT_PUBLIC_SITE_URL}" class="button">
+          Tüm Haberleri Gör
+        </a>
+      </div>
+      
+      <p style="text-align: center; color: #6c757d; font-size: 14px; margin-top: 30px;">
+        Bu e-postayı almak istemiyorsanız, 
+        <a href="${unsubscribeUrl}" style="color: #667eea;">abonelikten çıkabilirsiniz</a>.
+      </p>
+    `;
+
+    return emailTemplates
+      .base(
+        content,
+        `${data.date} - ${data.articles.length} yeni AI haberi yayınlandı`,
+      )
+      .replace("{{unsubscribe_url}}", unsubscribeUrl);
+  },
 };
 
 // Email Service Functions
@@ -516,6 +595,47 @@ export const emailService = {
       html: emailTemplates.agentReport(data),
       tags: [{ name: "type", value: "agent-report" }],
     });
+  },
+
+  /**
+   * Send daily digest newsletter to all active subscribers
+   * Called automatically at 19:00 every day
+   */
+  async sendDailyDigest(
+    recipients: Array<{ email: string; token: string }>,
+    articles: Array<{
+      title: string;
+      excerpt: string;
+      slug: string;
+      category: string;
+      imageUrl?: string;
+    }>,
+  ): Promise<{ sent: number; failed: number; errors: string[] }> {
+    const today = new Date().toLocaleDateString("tr-TR", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const emails: EmailOptions[] = recipients.map((recipient) => {
+      const unsubscribeUrl = `${env.NEXT_PUBLIC_SITE_URL}/api/newsletter/unsubscribe?token=${recipient.token}`;
+
+      return {
+        to: recipient.email,
+        subject: `📰 ${today} - ${articles.length} Yeni AI Haberi`,
+        html: emailTemplates.dailyDigest(
+          { articles, date: today },
+          unsubscribeUrl,
+        ),
+        tags: [
+          { name: "type", value: "daily-digest" },
+          { name: "date", value: new Date().toISOString().split("T")[0] },
+        ],
+      };
+    });
+
+    return resendClient.sendBatch(emails);
   },
 
   /**

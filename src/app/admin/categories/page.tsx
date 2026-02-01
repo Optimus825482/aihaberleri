@@ -253,10 +253,11 @@ export default function CategoriesPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-bold mb-2 block">
+                    <label htmlFor="category-name" className="text-sm font-bold mb-2 block">
                       Kategori Adı *
                     </label>
                     <input
+                      id="category-name"
                       type="text"
                       value={formData.name}
                       onChange={(e) => {
@@ -267,45 +268,51 @@ export default function CategoriesPage() {
                         });
                       }}
                       className="w-full px-3 py-2 border rounded-lg bg-background"
+                      placeholder="Kategori adı girin"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-sm font-bold mb-2 block">
+                    <label htmlFor="category-slug" className="text-sm font-bold mb-2 block">
                       Slug *
                     </label>
                     <input
+                      id="category-slug"
                       type="text"
                       value={formData.slug}
                       onChange={(e) =>
                         setFormData({ ...formData, slug: e.target.value })
                       }
                       className="w-full px-3 py-2 border rounded-lg bg-background"
+                      placeholder="kategori-slug"
                       required
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold mb-2 block">
+                  <label htmlFor="category-description" className="text-sm font-bold mb-2 block">
                     Açıklama
                   </label>
                   <textarea
+                    id="category-description"
                     value={formData.description}
                     onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
                     className="w-full px-3 py-2 border rounded-lg bg-background"
+                    placeholder="Kategori açıklaması"
                     rows={3}
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-bold mb-2 block">
+                  <label htmlFor="category-order" className="text-sm font-bold mb-2 block">
                     Sıralama
                   </label>
                   <input
+                    id="category-order"
                     type="number"
                     value={formData.order}
                     onChange={(e) =>
@@ -315,6 +322,7 @@ export default function CategoriesPage() {
                       })
                     }
                     className="w-full px-3 py-2 border rounded-lg bg-background"
+                    placeholder="0"
                   />
                 </div>
 

@@ -17,7 +17,12 @@
 import { Worker } from "bullmq";
 import { getRedis } from "@/lib/redis";
 import { executeNewsAgent } from "@/services/agent.service";
-import { scheduleNewsAgentJob } from "@/lib/queue";
+import {
+  scheduleNewsAgentJob,
+  scheduleNewsletterJob,
+  getNewsletterQueue,
+} from "@/lib/queue";
+import { sendDailyDigest } from "@/services/newsletter.service";
 import { db } from "@/lib/db";
 import { PrismaClient } from "@prisma/client";
 import { workerLogger } from "@/lib/logger";
@@ -458,6 +463,69 @@ function startWorker() {
   }
 
   initStartupSync();
+
+  // =====================================================
+  // NEWSLETTER WORKER - Daily at 19:00 Turkey Time
+  // =====================================================
+  const newsletterQueue = getNewsletterQueue();
+  if (newsletterQueue) {
+    console.log("\n📧 Initializing Newsletter Worker...");
+
+    const newsletterWorker = new Worker(
+      "newsletter",
+      async (job) => {
+        console.log(`\n${"=".repeat(60)}`);
+        console.log(
+          `📧 Processing newsletter job: ${job.name} (ID: ${job.id})`,
+        );
+        console.log(`   Manual: ${job.data?.manual ? "Yes" : "No"}`);
+        console.log(
+          `   Timestamp: ${new Date(job.timestamp).toLocaleString("tr-TR")}`,
+        );
+        console.log(`${"=".repeat(60)}\n`);
+
+        try {
+          const result = await sendDailyDigest();
+
+          console.log(`\n📧 Newsletter result:`);
+          console.log(`   Articles: ${result.articlesCount}`);
+          console.log(`   Subscribers: ${result.subscribersCount}`);
+          console.log(`   Sent: ${result.sent}`);
+          console.log(`   Failed: ${result.failed}`);
+          console.log(`   Push sent: ${result.pushSent}`);
+
+          return result;
+        } catch (error) {
+          console.error("❌ Newsletter job failed:", error);
+          throw error;
+        }
+      },
+      {
+        connection: redis!,
+        concurrency: 1,
+        lockDuration: 300000, // 5 minutes
+      },
+    );
+
+    newsletterWorker.on("completed", (job, result) => {
+      console.log(
+        `✅ Newsletter job ${job.id} completed: ${result?.sent || 0} emails sent`,
+      );
+    });
+
+    newsletterWorker.on("failed", (job, error) => {
+      console.error(`❌ Newsletter job ${job?.id} failed:`, error.message);
+    });
+
+    // Schedule daily newsletter
+    scheduleNewsletterJob().then(() => {
+      console.log("✅ Newsletter scheduler initialized");
+    });
+
+    console.log("✅ Newsletter worker started");
+  } else {
+    console.warn("⚠️ Newsletter queue not available");
+  }
 
   // Keep the process running
   process.stdin.resume();

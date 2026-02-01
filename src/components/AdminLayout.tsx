@@ -17,16 +17,10 @@ import {
   Download,
   MessageSquare,
   Tags,
-  Mail,
-  Bell,
   Users,
   Keyboard,
-  Shield,
   BarChart,
-  TrendingUp,
   Activity,
-  Calendar,
-  Terminal,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -59,28 +53,10 @@ const menuItems = [
     requiredResource: "categories" as const,
   },
   {
-    title: "Mesajlar",
+    title: "İletişim",
     href: "/admin/messages",
     icon: MessageSquare,
     requiredResource: "messages" as const,
-  },
-  {
-    title: "Newsletter Aboneleri",
-    href: "/admin/newsletter",
-    icon: Mail,
-    requiredResource: "messages" as const,
-  },
-  {
-    title: "Push Mesajları",
-    href: "/admin/notifications",
-    icon: Bell,
-    requiredResource: "messages" as const,
-  },
-  {
-    title: "Anlık Ziyaretçiler",
-    href: "/admin/visitors",
-    icon: Users,
-    requiredResource: null,
   },
   {
     title: "Analytics",
@@ -89,28 +65,10 @@ const menuItems = [
     requiredResource: null,
   },
   {
-    title: "Gelişmiş Analytics",
-    href: "/admin/analytics/advanced",
-    icon: TrendingUp,
+    title: "Ziyaretçiler",
+    href: "/admin/visitors",
+    icon: Activity,
     requiredResource: null,
-  },
-  {
-    title: "Makale Şablonları",
-    href: "/admin/templates",
-    icon: FileText,
-    requiredResource: "articles" as const,
-  },
-  {
-    title: "İçerik Takvimi",
-    href: "/admin/calendar",
-    icon: Calendar,
-    requiredResource: null,
-  },
-  {
-    title: "Ayarlar",
-    href: "/admin/settings",
-    icon: Settings,
-    requiredResource: "settings" as const,
   },
   {
     title: "Agent Ayarları",
@@ -119,9 +77,9 @@ const menuItems = [
     requiredResource: "settings" as const,
   },
   {
-    title: "Canlı Loglar",
-    href: "/admin/agent-logs",
-    icon: Terminal,
+    title: "Ayarlar",
+    href: "/admin/settings",
+    icon: Settings,
     requiredResource: "settings" as const,
   },
   {
@@ -129,12 +87,6 @@ const menuItems = [
     href: "/admin/users",
     icon: Users,
     requiredResource: "users" as const,
-  },
-  {
-    title: "Aktivite Geçmişi",
-    href: "/admin/audit-logs",
-    icon: Shield,
-    requiredResource: null,
   },
 ];
 
@@ -222,7 +174,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-background flex">
+    <div className="min-h-[100dvh] bg-background flex">
       {/* Mobile Header - Enhanced for PWA */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-card/95 border-b border-primary/10 px-4 py-3 flex items-center justify-between shadow-lg safe-area-top">
         <div className="flex items-center gap-2">

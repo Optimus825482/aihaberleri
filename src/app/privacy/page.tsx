@@ -1,7 +1,35 @@
-export const metadata = {
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Gizlilik Politikası | AI Haberleri",
   description:
-    "AI Haberleri gizlilik politikası ve kişisel veri koruma uygulamaları.",
+    "AI Haberleri gizlilik politikası. Kişisel verilerinizin nasıl toplandığını, kullanıldığını ve korunduğunu öğrenin.",
+  keywords: ["gizlilik politikası", "KVKK", "kişisel veri", "çerez politikası", "AI Haberleri"],
+  alternates: {
+    canonical: "https://aihaberleri.org/privacy",
+    languages: {
+      "tr-TR": "https://aihaberleri.org/privacy",
+      "en-US": "https://aihaberleri.org/en/privacy",
+    },
+  },
+  openGraph: {
+    title: "Gizlilik Politikası | AI Haberleri",
+    description: "AI Haberleri gizlilik politikası ve kişisel veri koruma uygulamaları.",
+    url: "https://aihaberleri.org/privacy",
+    siteName: "AI Haberleri",
+    locale: "tr_TR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Gizlilik Politikası | AI Haberleri",
+    description: "AI Haberleri gizlilik politikası ve kişisel veri koruma uygulamaları.",
+    site: "@AiHaberleri",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 // Force dynamic rendering to avoid SSR issues

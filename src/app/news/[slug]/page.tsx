@@ -19,6 +19,7 @@ import { AudioPromo } from "@/components/AudioPromo";
 import { HighlightedText } from "@/components/audio/HighlightedText";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ArticleImage } from "@/components/ResponsiveImage";
+import { AIDisclaimer } from "@/components/AIDisclaimer";
 
 interface ArticlePageProps {
   params: Promise<{
@@ -176,7 +177,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 {article.title}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-8 border-b pb-6">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6 border-b pb-6">
                 {article.publishedAt && (
                   <div className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
@@ -193,6 +194,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <Eye className="h-4 w-4" />
                   <span>{article.views} görüntülenme</span>
                 </div>
+              </div>
+
+              {/* AI Disclaimer Badge - E-E-A-T Compliance */}
+              <div className="mb-8">
+                <AIDisclaimer sourceUrl={article.sourceUrl} />
               </div>
 
               {/* Featured Image - LCP Optimized with Responsive Sizes */}

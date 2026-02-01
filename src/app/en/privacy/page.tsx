@@ -1,8 +1,35 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy - AI News",
-  description: "Privacy Policy for AI News platform.",
+  title: "Privacy Policy | AI News - Data Protection",
+  description:
+    "AI News privacy policy. Learn how we collect, use, and protect your personal data in compliance with privacy regulations.",
+  keywords: ["privacy policy", "data protection", "cookies", "personal data", "AI News"],
+  alternates: {
+    canonical: "https://aihaberleri.org/en/privacy",
+    languages: {
+      "tr-TR": "https://aihaberleri.org/privacy",
+      "en-US": "https://aihaberleri.org/en/privacy",
+    },
+  },
+  openGraph: {
+    title: "Privacy Policy | AI News",
+    description: "AI News privacy policy and data protection practices.",
+    url: "https://aihaberleri.org/en/privacy",
+    siteName: "AI News",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Privacy Policy | AI News",
+    description: "AI News privacy policy and data protection practices.",
+    site: "@AiHaberleri",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function PrivacyPage() {

@@ -22,16 +22,22 @@ async def main():
         
         # We'll collect metadata and stream audio
         async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                sys.stdout.buffer.write(chunk["data"])
-                sys.stdout.buffer.flush()
-            elif chunk["type"] == "WordBoundary":
+            chunk_type = chunk.get("type", "")
+            if chunk_type == "audio":
+                audio_data = chunk.get("data")
+                if audio_data:
+                    sys.stdout.buffer.write(audio_data)
+                    sys.stdout.buffer.flush()
+            elif chunk_type == "WordBoundary":
                 # offset is in ticks (100ns), duration is in ticks
                 # Convert to seconds for easier use in JS
+                text_val = chunk.get("text", "")
+                offset_val = chunk.get("offset", 0)
+                duration_val = chunk.get("duration", 0)
                 metadata.append({
-                    "text": chunk["text"],
-                    "start": chunk["offset"] / 10000000,
-                    "duration": chunk["duration"] / 10000000
+                    "text": text_val,
+                    "start": offset_val / 10000000,
+                    "duration": duration_val / 10000000
                 })
         
         # After audio stream is done, we can't write to stdout anymore if it's binary

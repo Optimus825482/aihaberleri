@@ -145,6 +145,7 @@ export default function SocialMediaPage() {
                     checked={social.enabled}
                     onChange={() => handleToggle(social.platform)}
                     className="h-4 w-4"
+                    aria-label={`${social.platform} footer'da göster`}
                   />
                   <Label htmlFor={`enabled-${social.platform}`}>
                     Footer'da göster
