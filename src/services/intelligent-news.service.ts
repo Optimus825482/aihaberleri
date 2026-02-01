@@ -70,19 +70,19 @@ export interface SelectionResult {
 }
 
 // ============================================
-// JINA READER - İçerik okuma
+// CONTENT EXTRACTION - Multi-provider fallback
 // ============================================
 
 const JINA_READER_URL = "https://r.jina.ai";
-const JINA_TIMEOUT = 15000; // 15 seconds
+const JINA_TIMEOUT = 10000; // 10 seconds (reduced from 15)
+const TAVILY_EXTRACT_URL = "https://api.tavily.com/extract";
+const TAVILY_TIMEOUT = 12000; // 12 seconds
 
 /**
  * Jina Reader ile URL içeriğini oku
  */
-async function readUrlContent(url: string): Promise<string> {
+async function readWithJina(url: string): Promise<string | null> {
   try {
-    console.log(`📖 Jina Reader ile okuma: ${url.substring(0, 60)}...`);
-
     const response = await axios.get(`${JINA_READER_URL}/${url}`, {
       headers: {
         Accept: "text/plain",
@@ -92,17 +92,83 @@ async function readUrlContent(url: string): Promise<string> {
     });
 
     const content = response.data;
-
-    // İçerik çok uzunsa kısalt (token limiti için)
-    if (content.length > 5000) {
-      return content.substring(0, 5000) + "...";
+    if (content && content.length > 100) {
+      return content;
     }
-
-    return content;
+    return null;
   } catch (error: any) {
-    console.warn(`⚠️ Jina Reader hatası (${url}): ${error.message}`);
-    return "";
+    // Silent fail - will try fallback
+    return null;
   }
+}
+
+/**
+ * Tavily Extract API ile URL içeriğini oku (fallback)
+ */
+async function readWithTavily(url: string): Promise<string | null> {
+  const apiKey = process.env.TAVILY_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+
+  try {
+    const response = await axios.post(
+      TAVILY_EXTRACT_URL,
+      {
+        urls: [url],
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        timeout: TAVILY_TIMEOUT,
+      },
+    );
+
+    const results = response.data?.results;
+    if (results && results.length > 0 && results[0].raw_content) {
+      return results[0].raw_content;
+    }
+    return null;
+  } catch (error: any) {
+    // Silent fail
+    return null;
+  }
+}
+
+/**
+ * URL içeriğini oku - Multi-provider fallback
+ * 1. Jina Reader (free, fast)
+ * 2. Tavily Extract (paid, reliable)
+ */
+async function readUrlContent(url: string): Promise<string> {
+  console.log(`📖 İçerik okuma: ${url.substring(0, 60)}...`);
+
+  // Try Jina Reader first (free)
+  let content = await readWithJina(url);
+
+  if (content) {
+    console.log(`   ✅ Jina Reader başarılı`);
+  } else {
+    // Fallback to Tavily
+    console.log(`   ⚠️ Jina başarısız, Tavily deneniyor...`);
+    content = await readWithTavily(url);
+
+    if (content) {
+      console.log(`   ✅ Tavily başarılı`);
+    } else {
+      console.log(`   ❌ İçerik okunamadı`);
+      return "";
+    }
+  }
+
+  // Truncate if too long (token limit)
+  if (content.length > 5000) {
+    return content.substring(0, 5000) + "...";
+  }
+
+  return content;
 }
 
 // ============================================
