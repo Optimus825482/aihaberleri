@@ -1,0 +1,914 @@
+
+2026-02-01T20:52:48.484078083Z npm warn exec The following package was not found and will be installed: tsx@4.21.0
+2026-02-01T20:52:53.495846511Z ✅ News agent queue created
+2026-02-01T20:52:53.496750390Z ✅ Queue events listener created
+2026-02-01T20:52:53.571182749Z info: 🚀 Worker started {"environment":"production","module":"worker","service":"ai-news-agent","timestamp":"2026-02-01 20:52:53"}
+2026-02-01T20:52:53.573114227Z 🚀 Starting News Agent Worker...
+2026-02-01T20:52:53.573135287Z 🔍 Checking Redis connection...
+2026-02-01T20:52:53.609820336Z ✅ Redis connected
+2026-02-01T20:52:53.676191602Z ✅ Redis ready to accept commands
+2026-02-01T20:52:53.677910670Z ✅ Redis connection verified (PONG received)
+2026-02-01T20:52:53.678028980Z 🔄 Database connection attempt 1/10...
+2026-02-01T20:52:53.678131689Z 🔍 Testing database connection...
+2026-02-01T20:52:53.720661595Z info: 🔌 database connection connected {"environment":"production","module":"worker","service":"database","status":"connected","timestamp":"2026-02-01 20:52:53"}
+2026-02-01T20:52:53.720678195Z ✅ Database connection successful
+2026-02-01T20:52:53.720681815Z ✅ All systems ready, starting worker...
+2026-02-01T20:52:53.720684955Z 💓 Starting worker heartbeat...
+2026-02-01T20:52:53.721213814Z 
+2026-02-01T20:52:53.721225714Z 🎯 Initializing BullMQ Worker...
+2026-02-01T20:52:53.721229504Z    Queue Name: news-agent
+2026-02-01T20:52:53.721232554Z    Redis Status: ready
+2026-02-01T20:52:53.721236054Z    Concurrency: 1
+2026-02-01T20:52:53.721244804Z    Lock Duration: 10 minutes
+2026-02-01T20:52:53.722174303Z 
+2026-02-01T20:52:53.722183493Z ✅ Worker started successfully!
+2026-02-01T20:52:53.722186863Z 👂 Listening for jobs on queue: news-agent
+2026-02-01T20:52:53.722189853Z 📊 Worker stats will be logged here...
+2026-02-01T20:52:53.722192793Z 
+2026-02-01T20:52:53.722356523Z 
+2026-02-01T20:52:53.722361793Z 🔄 Başlangıç senkronizasyonu başlatılıyor...
+2026-02-01T20:52:53.722729252Z ✅ Newsletter queue created
+2026-02-01T20:52:53.722736572Z 
+2026-02-01T20:52:53.722739622Z 📧 Initializing Newsletter Worker...
+2026-02-01T20:52:53.723959691Z ✅ Newsletter worker started
+2026-02-01T20:52:53.739269049Z 💓 Heartbeat updated: 01.02.2026 20:52:53
+2026-02-01T20:52:53.745660423Z 
+2026-02-01T20:52:53.745674233Z ✅ Worker is ready and listening for jobs
+2026-02-01T20:52:53.749035031Z 🗑️ Removed existing newsletter job: 8397d10618ce9a6d653c11b6052e6192
+2026-02-01T20:52:53.757410444Z ℹ️ IndexNow için bekleyen haber bulunmadı.
+2026-02-01T20:52:53.760935261Z 
+2026-02-01T20:52:53.760956381Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-01T20:52:53.760959641Z 📧 NEWSLETTER SCHEDULE:
+2026-02-01T20:52:53.760961761Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-01T20:52:53.760963941Z ⏰ Time: Every day at 19:00 (Turkey)
+2026-02-01T20:52:53.760965791Z 🆔 Job Type: Cron (daily-digest)
+2026-02-01T20:52:53.760967561Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-01T20:52:53.760969381Z 
+2026-02-01T20:52:53.760971061Z ✅ Newsletter scheduler initialized
+2026-02-01T20:52:53.761554741Z 🔧 Repeatable job sistemi başlatılıyor...
+2026-02-01T20:52:53.769571833Z ✅ News agent queue created
+2026-02-01T20:52:53.769816084Z ✅ Queue events listener created
+2026-02-01T20:52:53.773735730Z ✅ Repeatable job mevcut (her 0.25 saatte bir).
+2026-02-01T20:52:53.773948420Z 📅 Sıradaki çalışma zamanı: 2/1/2026, 9:01:06 PM
+2026-02-01T20:53:23.795722153Z 💓 Heartbeat updated: 01.02.2026 20:53:23
+2026-02-01T20:53:53.741593250Z 💓 Heartbeat updated: 01.02.2026 20:53:53
+2026-02-01T20:54:23.748659627Z 💓 Heartbeat updated: 01.02.2026 20:54:23
+2026-02-01T20:54:53.755407815Z 💓 Heartbeat updated: 01.02.2026 20:54:53
+2026-02-01T20:55:23.755697522Z 💓 Heartbeat updated: 01.02.2026 20:55:23
+2026-02-01T20:55:53.764150600Z 💓 Heartbeat updated: 01.02.2026 20:55:53
+2026-02-01T20:56:23.769930613Z 💓 Heartbeat updated: 01.02.2026 20:56:23
+2026-02-01T20:56:53.772924977Z 💓 Heartbeat updated: 01.02.2026 20:56:53
+2026-02-01T20:57:23.780007556Z 💓 Heartbeat updated: 01.02.2026 20:57:23
+2026-02-01T20:57:53.779176729Z 💓 Heartbeat updated: 01.02.2026 20:57:53
+2026-02-01T20:58:23.786735142Z 💓 Heartbeat updated: 01.02.2026 20:58:23
+2026-02-01T20:58:53.786474731Z 💓 Heartbeat updated: 01.02.2026 20:58:53
+2026-02-01T20:59:23.789388729Z 💓 Heartbeat updated: 01.02.2026 20:59:23
+2026-02-01T20:59:53.788268461Z 💓 Heartbeat updated: 01.02.2026 20:59:53
+2026-02-01T21:00:00.087276303Z 
+2026-02-01T21:00:00.087322223Z 🔄 Job repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769979600000 is now active
+2026-02-01T21:00:00.088130930Z info: 🔄 Job processing started {"environment":"production","jobId":"repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769979600000","jobName":"scrape-and-publish","module":"worker","service":"ai-news-agent","timestamp":"2026-02-01 21:00:00"}
+2026-02-01T21:00:00.088306240Z 
+2026-02-01T21:00:00.088317280Z ============================================================
+2026-02-01T21:00:00.088325420Z 🤖 Processing job: scrape-and-publish (ID: repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769979600000)
+2026-02-01T21:00:00.088350150Z    Priority: default
+2026-02-01T21:00:00.088400171Z    Attempt: 1/3
+2026-02-01T21:00:00.088824109Z    Timestamp: 2/1/2026, 8:45:00 PM
+2026-02-01T21:00:00.088833559Z ============================================================
+2026-02-01T21:00:00.088839169Z 
+2026-02-01T21:00:00.091721193Z 📊 Progress: 10% - Starting agent execution...
+2026-02-01T21:00:00.121276633Z info: 🤖 Agent execution started {"category":"all","environment":"production","logId":"cml485k35000014cwsnncr8f8","module":"agent","service":"ai-news-agent","timestamp":"2026-02-01 21:00:00"}
+2026-02-01T21:00:00.123637098Z [Socket] Cannot emit 'agent:started' - Socket.io not initialized
+2026-02-01T21:00:00.124148407Z 
+2026-02-01T21:00:00.124175387Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-01T21:00:00.124182787Z ┃           🤖 AGENT EXECUTION START                ┃
+2026-02-01T21:00:00.124188037Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-01T21:00:00.124193627Z ┃  Log ID:       cml485k35000...                    ┃
+2026-02-01T21:00:00.124198477Z ┃  Start Time:   01.02.2026 21:00:00      ┃
+2026-02-01T21:00:00.124203067Z ┃  Category:     All                         ┃
+2026-02-01T21:00:00.124207747Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-01T21:00:00.124212607Z 
+2026-02-01T21:00:00.124617376Z info: 📊 Agent step: fetch_news Yapay zeka haberleri aranıyor (RSS + Trend) {"environment":"production","logId":"cml485k35000014cwsnncr8f8","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-02-01 21:00:00"}
+2026-02-01T21:00:00.124923696Z 📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...
+2026-02-01T21:00:00.125595205Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-01T21:00:00.126093913Z 📰 AI haberleri toplanıyor (RSS + Trend Analizi)...
+2026-02-01T21:00:00.126408952Z 📡 63 RSS feed okunuyor...
+2026-02-01T21:00:00.126752851Z 📡 RSS feed okunuyor: BBC News - Technology
+2026-02-01T21:00:00.142974939Z 📡 RSS feed okunuyor: CNN - Technology
+2026-02-01T21:00:00.143297798Z 📡 RSS feed okunuyor: Bloomberg - Technology
+2026-02-01T21:00:00.189147364Z 📡 RSS feed okunuyor: The Wall Street Journal - Technology
+2026-02-01T21:00:00.191402139Z 📡 RSS feed okunuyor: Financial Times - Technology
+2026-02-01T21:00:00.300858606Z ✅ 10 haber bulundu: The Wall Street Journal - Technology
+2026-02-01T21:00:00.351952871Z ✅ 10 haber bulundu: CNN - Technology
+2026-02-01T21:00:00.382443728Z ✅ 10 haber bulundu: BBC News - Technology
+2026-02-01T21:00:00.524454508Z ✅ 10 haber bulundu: Bloomberg - Technology
+2026-02-01T21:00:00.748014770Z ✅ 10 haber bulundu: Financial Times - Technology
+2026-02-01T21:00:01.248180987Z 📡 RSS feed okunuyor: NBC News - Technology
+2026-02-01T21:00:01.253024727Z 📡 RSS feed okunuyor: ABC News - Technology
+2026-02-01T21:00:01.253038127Z 📡 RSS feed okunuyor: Sky News - Technology
+2026-02-01T21:00:01.254663083Z 📡 RSS feed okunuyor: Euronews - Technology
+2026-02-01T21:00:01.257275177Z 📡 RSS feed okunuyor: MIT Technology Review - AI
+2026-02-01T21:00:01.317923234Z ✅ 10 haber bulundu: MIT Technology Review - AI
+2026-02-01T21:00:01.374046039Z ✅ 10 haber bulundu: Euronews - Technology
+2026-02-01T21:00:01.422302300Z ✅ 10 haber bulundu: NBC News - Technology
+2026-02-01T21:00:01.467282697Z ✅ 10 haber bulundu: ABC News - Technology
+2026-02-01T21:00:01.591289704Z ✅ 10 haber bulundu: Sky News - Technology
+2026-02-01T21:00:02.092251947Z 📡 RSS feed okunuyor: VentureBeat - AI
+2026-02-01T21:00:02.094398393Z 📡 RSS feed okunuyor: The Verge - AI
+2026-02-01T21:00:02.095608511Z 📡 RSS feed okunuyor: TechCrunch - AI
+2026-02-01T21:00:02.097421086Z 📡 RSS feed okunuyor: Ars Technica - AI
+2026-02-01T21:00:02.098254095Z 📡 RSS feed okunuyor: Wired - AI
+2026-02-01T21:00:02.134969379Z ✅ 10 haber bulundu: TechCrunch - AI
+2026-02-01T21:00:02.145743927Z ✅ 10 haber bulundu: The Verge - AI
+2026-02-01T21:00:02.210946904Z ✅ 7 haber bulundu: VentureBeat - AI
+2026-02-01T21:00:02.230981232Z ✅ 10 haber bulundu: Wired - AI
+2026-02-01T21:00:02.369009109Z ✅ 10 haber bulundu: Ars Technica - AI
+2026-02-01T21:00:02.869273044Z 📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+2026-02-01T21:00:02.872307648Z 📡 RSS feed okunuyor: Engadget - Technology
+2026-02-01T21:00:02.874319453Z 📡 RSS feed okunuyor: The Next Web
+2026-02-01T21:00:02.876193540Z 📡 RSS feed okunuyor: TechRadar - News
+2026-02-01T21:00:02.877793726Z 📡 RSS feed okunuyor: CNET - News
+2026-02-01T21:00:02.984649017Z ✅ 10 haber bulundu: TechRadar - News
+2026-02-01T21:00:03.064998743Z ✅ 10 haber bulundu: CNET - News
+2026-02-01T21:00:03.130272389Z ✅ 10 haber bulundu: The Next Web
+2026-02-01T21:00:03.353417331Z ✅ 10 haber bulundu: Engadget - Technology
+2026-02-01T21:00:03.542347923Z ✅ 10 haber bulundu: ZDNet - Artificial Intelligence
+2026-02-01T21:00:04.043432055Z 📡 RSS feed okunuyor: Mashable - Tech
+2026-02-01T21:00:04.045796500Z 📡 RSS feed okunuyor: Gizmodo
+2026-02-01T21:00:04.047392947Z 📡 RSS feed okunuyor: Lifehacker
+2026-02-01T21:00:04.048672564Z 📡 RSS feed okunuyor: Digital Trends
+2026-02-01T21:00:04.049856202Z 📡 RSS feed okunuyor: Tom's Hardware
+2026-02-01T21:00:04.201022982Z ✅ 10 haber bulundu: Tom's Hardware
+2026-02-01T21:00:04.307993282Z ✅ 10 haber bulundu: Mashable - Tech
+2026-02-01T21:00:04.405810571Z ✅ 10 haber bulundu: Digital Trends
+2026-02-01T21:00:04.548511228Z ✅ 10 haber bulundu: Lifehacker
+2026-02-01T21:00:04.581503170Z ✅ 10 haber bulundu: Gizmodo
+2026-02-01T21:00:05.082959840Z 📡 RSS feed okunuyor: 9to5Mac
+2026-02-01T21:00:05.084678257Z 📡 RSS feed okunuyor: 9to5Google
+2026-02-01T21:00:05.086229993Z 📡 RSS feed okunuyor: Android Authority
+2026-02-01T21:00:05.087524890Z 📡 RSS feed okunuyor: Android Police
+2026-02-01T21:00:05.088810898Z 📡 RSS feed okunuyor: XDA Developers
+2026-02-01T21:00:05.152070088Z ✅ 10 haber bulundu: 9to5Mac
+2026-02-01T21:00:05.177352366Z ✅ 10 haber bulundu: 9to5Google
+2026-02-01T21:00:05.493722146Z ✅ 10 haber bulundu: XDA Developers
+2026-02-01T21:00:05.496594960Z ✅ 10 haber bulundu: Android Police
+2026-02-01T21:00:05.528296344Z ✅ 10 haber bulundu: Android Authority
+2026-02-01T21:00:06.029462304Z 📡 RSS feed okunuyor: Hacker News (YCombinator)
+2026-02-01T21:00:06.031547610Z 📡 RSS feed okunuyor: Product Hunt - Tech
+2026-02-01T21:00:06.033296586Z 📡 RSS feed okunuyor: AI News
+2026-02-01T21:00:06.034789823Z 📡 RSS feed okunuyor: MarkTechPost
+2026-02-01T21:00:06.036161580Z 📡 RSS feed okunuyor: The AI Edge (Substack)
+2026-02-01T21:00:06.131909553Z ✅ 10 haber bulundu: Product Hunt - Tech
+2026-02-01T21:00:06.226979528Z ✅ 10 haber bulundu: MarkTechPost
+2026-02-01T21:00:06.276390587Z ✅ 10 haber bulundu: The AI Edge (Substack)
+2026-02-01T21:00:06.319982827Z ✅ 10 haber bulundu: AI News
+2026-02-01T21:00:14.313454477Z ✅ 10 haber bulundu: Hacker News (YCombinator)
+2026-02-01T21:00:14.814597618Z 📡 RSS feed okunuyor: Last Week in AI
+2026-02-01T21:00:14.817726402Z 📡 RSS feed okunuyor: Machine Learning Mastery
+2026-02-01T21:00:14.819380728Z 📡 RSS feed okunuyor: OpenAI Blog
+2026-02-01T21:00:14.820882686Z 📡 RSS feed okunuyor: Google AI Blog
+2026-02-01T21:00:14.822443902Z 📡 RSS feed okunuyor: DeepMind Blog
+2026-02-01T21:00:14.946428715Z ✅ 10 haber bulundu: Machine Learning Mastery
+2026-02-01T21:00:15.072813724Z ✅ 10 haber bulundu: DeepMind Blog
+2026-02-01T21:00:15.221512014Z ✅ 10 haber bulundu: OpenAI Blog
+2026-02-01T21:00:15.267916358Z ✅ 10 haber bulundu: Last Week in AI
+2026-02-01T21:00:15.649160858Z ✅ 10 haber bulundu: Google AI Blog
+2026-02-01T21:00:16.150483228Z 📡 RSS feed okunuyor: NVIDIA Blog - AI
+2026-02-01T21:00:16.153338743Z 📡 RSS feed okunuyor: AWS Machine Learning Blog
+2026-02-01T21:00:16.154728830Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-01T21:00:16.156026257Z 📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+2026-02-01T21:00:16.157195185Z 📡 RSS feed okunuyor: Forbes - Innovation
+2026-02-01T21:00:16.200177636Z ✅ 10 haber bulundu: Forbes - Innovation
+2026-02-01T21:00:16.315692465Z ✅ 10 haber bulundu: NVIDIA Blog - AI
+2026-02-01T21:00:16.461618123Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-01T21:00:16.819933059Z ✅ 10 haber bulundu: AWS Machine Learning Blog
+2026-02-01T21:00:16.897070778Z ✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+2026-02-01T21:00:17.398123448Z 📡 RSS feed okunuyor: The Economist - Technology
+2026-02-01T21:00:17.399742385Z 📡 RSS feed okunuyor: Fast Company - Technology
+2026-02-01T21:00:17.401054692Z 📡 RSS feed okunuyor: MIT Sloan Management Review
+2026-02-01T21:00:17.402259580Z 📡 RSS feed okunuyor: Seeking Alpha - Technology
+2026-02-01T21:00:17.403356657Z 📡 RSS feed okunuyor: New Scientist - Technology
+2026-02-01T21:00:17.533296307Z ✅ 10 haber bulundu: Fast Company - Technology
+2026-02-01T21:00:17.562212327Z ✅ 10 haber bulundu: New Scientist - Technology
+2026-02-01T21:00:17.614091370Z ✅ 10 haber bulundu: The Economist - Technology
+2026-02-01T21:00:17.693935674Z ✅ 10 haber bulundu: Seeking Alpha - Technology
+2026-02-01T21:00:17.720749269Z ✅ 10 haber bulundu: MIT Sloan Management Review
+2026-02-01T21:00:18.220965698Z 📡 RSS feed okunuyor: Popular Science
+2026-02-01T21:00:18.222486475Z 📡 RSS feed okunuyor: Popular Mechanics
+2026-02-01T21:00:18.224205652Z 📡 RSS feed okunuyor: Space.com
+2026-02-01T21:00:18.225376340Z 📡 RSS feed okunuyor: Phys.org - Technology
+2026-02-01T21:00:18.226647157Z 📡 RSS feed okunuyor: ScienceDaily - Technology
+2026-02-01T21:00:18.334538053Z ✅ 10 haber bulundu: Popular Science
+2026-02-01T21:00:18.353404184Z ✅ 10 haber bulundu: Space.com
+2026-02-01T21:00:18.510073788Z ✅ 10 haber bulundu: Popular Mechanics
+2026-02-01T21:00:18.884930068Z ✅ 10 haber bulundu: Phys.org - Technology
+2026-02-01T21:00:19.088164636Z ✅ 10 haber bulundu: ScienceDaily - Technology
+2026-02-01T21:00:19.589542733Z 📡 RSS feed okunuyor: Futurism
+2026-02-01T21:00:19.591631088Z 📡 RSS feed okunuyor: Singularity Hub
+2026-02-01T21:00:19.593586995Z 📡 RSS feed okunuyor: IEEE Spectrum - Technology
+2026-02-01T21:00:19.595195051Z 📡 RSS feed okunuyor: Towards Data Science
+2026-02-01T21:00:19.596662278Z 📡 RSS feed okunuyor: Analytics Vidhya
+2026-02-01T21:00:19.661079064Z ✅ 10 haber bulundu: Singularity Hub
+2026-02-01T21:00:19.735652549Z ✅ 10 haber bulundu: Futurism
+2026-02-01T21:00:19.958028546Z ✅ 10 haber bulundu: IEEE Spectrum - Technology
+2026-02-01T21:00:20.189760663Z ✅ 10 haber bulundu: Towards Data Science
+2026-02-01T21:00:20.534175416Z ✅ 10 haber bulundu: Analytics Vidhya
+2026-02-01T21:00:21.035279503Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-01T21:00:21.037544958Z 📡 RSS feed okunuyor: Machine Learning Reddit
+2026-02-01T21:00:21.039487284Z 📡 RSS feed okunuyor: AI Trends
+2026-02-01T21:00:21.142843768Z ✅ 10 haber bulundu: KDnuggets
+2026-02-01T21:00:21.346099155Z ✅ 10 haber bulundu: AI Trends
+2026-02-01T21:00:22.163528501Z ✅ 10 haber bulundu: Machine Learning Reddit
+2026-02-01T21:00:22.163564681Z ✅ Toplam 627 haber toplandı
+2026-02-01T21:00:22.189591946Z ✅ 625 benzersiz haber
+2026-02-01T21:00:22.190788884Z 📅 Son 48 saatte 293 haber
+2026-02-01T21:00:22.205126754Z 🤖 AI filtreleme: 84/293 haber AI ile ilgili
+2026-02-01T21:00:22.205175264Z 📊 84 haber için Trend analizi (Brave API)...
+2026-02-01T21:00:22.205519074Z 📊 Brave ile 84 haber analiz ediliyor...
+2026-02-01T21:00:22.205539854Z 📦 Batch 1/9 işleniyor (10 haber)...
+2026-02-01T21:00:23.272179048Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:00:23.772994952Z 📦 Batch 2/9 işleniyor (10 haber)...
+2026-02-01T21:00:23.790057627Z 💓 Heartbeat updated: 01.02.2026 21:00:23
+2026-02-01T21:00:24.620389562Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:00:25.121326156Z 📦 Batch 3/9 işleniyor (10 haber)...
+2026-02-01T21:00:25.951794190Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:00:26.451738683Z 📦 Batch 4/9 işleniyor (10 haber)...
+2026-02-01T21:00:27.120053624Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:00:27.620331987Z 📦 Batch 5/9 işleniyor (10 haber)...
+2026-02-01T21:00:28.280773763Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:00:28.781151094Z 📦 Batch 6/9 işleniyor (10 haber)...
+2026-02-01T21:00:29.625079954Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:00:30.126173972Z 📦 Batch 7/9 işleniyor (10 haber)...
+2026-02-01T21:00:31.081622626Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:00:31.582592263Z 📦 Batch 8/9 işleniyor (10 haber)...
+2026-02-01T21:00:32.238905104Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:00:32.739801930Z 📦 Batch 9/9 işleniyor (4 haber)...
+2026-02-01T21:00:33.326159237Z ✅ Brave trend sıralaması tamamlandı
+2026-02-01T21:00:33.326201387Z 📊 İşlenen: 84/84 haber
+2026-02-01T21:00:33.326320707Z 🏆 Top 5: #6 (skor: 293), #23 (skor: 290), #64 (skor: 290), #2 (skor: 265), #61 (skor: 260)
+2026-02-01T21:00:33.326371457Z ✅ 20 trend haber seçildi
+2026-02-01T21:00:33.326500486Z Top 5 Trend Haberler: 
+2026-02-01T21:00:33.326506636Z   1. Indonesia Permits Elon Musk’s Grok to Resume Service After B... (skor: 293)
+2026-02-01T21:00:33.326511996Z   2. AI agents now have their own Reddit-style social network, an... (skor: 290)
+2026-02-01T21:00:33.326517336Z   3. Nvidia boss insists 'huge' investment in OpenAI on track... (skor: 290)
+2026-02-01T21:00:33.326521996Z   4. Waymo Seeking About $16 Billion Near $110 Billion Valuation... (skor: 265)
+2026-02-01T21:00:33.326526616Z   5. Clawdbot/Moltbot/OpenClaw is cool, but it gets pricey fast... (skor: 260)
+2026-02-01T21:00:33.326773445Z ✅ 20 trend haber bulundu
+2026-02-01T21:00:33.330045319Z info: 📊 Agent step: analyze_articles En iyi haberler seçiliyor (DeepSeek AI) {"environment":"production","logId":"cml485k35000014cwsnncr8f8","module":"agent","progress":40,"service":"ai-news-agent","step":"analyze_articles","timestamp":"2026-02-01 21:00:33"}
+2026-02-01T21:00:33.330085558Z 🎯 Adım 2: En iyi haberler seçiliyor...
+2026-02-01T21:00:33.331110846Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-01T21:00:33.341008495Z 📊 Haber sayısı ayarları: min=3, max=5
+2026-02-01T21:00:33.341036725Z 🎯 Hedef haber sayısı: 5
+2026-02-01T21:00:33.343015421Z 🎯 20 haber arasından en iyi 5 tanesi seçiliyor...
+2026-02-01T21:00:33.353410440Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.bloomberg.com/news/articles/2026-02-01/indonesia-permits-elon-musk-s-grok-to-resume-service-after-ban","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Endonezya, Elon Musk'ın Grok Yapay Zekasına Yasağı Kaldırdı"}
+2026-02-01T21:00:33.353437890Z 🗑️ Duplicate URL detected: Endonezya, Elon Musk'ın Grok Yapay Zekasına Yasağı Kaldırdı
+2026-02-01T21:00:33.353444960Z    Existing URL: https://www.bloomberg.com/news/articles/2026-02-01/indonesia-permits-elon-musk-s-grok-to-resume-service-after-ban
+2026-02-01T21:00:33.353450500Z    New URL: https://www.bloomberg.com/news/articles/2026-02-01/indonesia-permits-elon-musk-s-grok-to-resume-service-after-ban
+2026-02-01T21:00:33.354750127Z 🗑️ Duplicate skipped: Indonesia Permits Elon Musk’s Grok to Resume Service After Ban
+2026-02-01T21:00:33.358532619Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://arstechnica.com/information-technology/2026/01/ai-agents-now-have-their-own-reddit-style-social-network-and-its-getting-weird-fast/","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Yapay Zeka Ajanları Artık Kendi Sosyal Ağına Sahip: Moltbook"}
+2026-02-01T21:00:33.358556639Z 🗑️ Duplicate URL detected: Yapay Zeka Ajanları Artık Kendi Sosyal Ağına Sahip: Moltbook
+2026-02-01T21:00:33.358661568Z    Existing URL: https://arstechnica.com/information-technology/2026/01/ai-agents-now-have-their-own-reddit-style-social-network-and-its-getting-weird-fast/
+2026-02-01T21:00:33.358694808Z    New URL: https://arstechnica.com/information-technology/2026/01/ai-agents-now-have-their-own-reddit-style-social-network-and-its-getting-weird-fast/
+2026-02-01T21:00:33.359994216Z 🗑️ Duplicate skipped: AI agents now have their own Reddit-style social network, and it's getting weird fast
+2026-02-01T21:00:33.363248789Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://techxplore.com/news/2026-02-nvidia-boss-insists-huge-investment.html","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Planlandığı Gibi İlerliyor"}
+2026-02-01T21:00:33.363532268Z 🗑️ Duplicate URL detected: Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Planlandığı Gibi İlerliyor
+2026-02-01T21:00:33.363540608Z    Existing URL: https://techxplore.com/news/2026-02-nvidia-boss-insists-huge-investment.html
+2026-02-01T21:00:33.363545978Z    New URL: https://techxplore.com/news/2026-02-nvidia-boss-insists-huge-investment.html
+2026-02-01T21:00:33.364717446Z 🗑️ Duplicate skipped: Nvidia boss insists 'huge' investment in OpenAI on track
+2026-02-01T21:00:33.369193416Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.bloomberg.com/news/articles/2026-01-31/waymo-seeking-about-16-billion-near-110-billion-valuation","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Waymo, 110 Milyar Dolarlık Değerleme ile 16 Milyar Dolar Fon Arıyor"}
+2026-02-01T21:00:33.369217366Z 🗑️ Duplicate URL detected: Waymo, 110 Milyar Dolarlık Değerleme ile 16 Milyar Dolar Fon Arıyor
+2026-02-01T21:00:33.369223906Z    Existing URL: https://www.bloomberg.com/news/articles/2026-01-31/waymo-seeking-about-16-billion-near-110-billion-valuation
+2026-02-01T21:00:33.369394966Z    New URL: https://www.bloomberg.com/news/articles/2026-01-31/waymo-seeking-about-16-billion-near-110-billion-valuation
+2026-02-01T21:00:33.370973472Z 🗑️ Duplicate skipped: Waymo Seeking About $16 Billion Near $110 Billion Valuation
+2026-02-01T21:00:33.374493775Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.fastcompany.com/91484506/what-is-clawdbot-moltbot-openclaw?partner=rss&amp;utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=rss+fastcompany&amp;utm_content=rss","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"OpenClaw: Geleceğin Dijital Asistanı, Yüksek Maliyet Engeliyle Karşı Karşıya"}
+2026-02-01T21:00:33.374520545Z 🗑️ Duplicate URL detected: OpenClaw: Geleceğin Dijital Asistanı, Yüksek Maliyet Engeliyle Karşı Karşıya
+2026-02-01T21:00:33.374659194Z    Existing URL: https://www.fastcompany.com/91484506/what-is-clawdbot-moltbot-openclaw?partner=rss&amp;utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=rss+fastcompany&amp;utm_content=rss
+2026-02-01T21:00:33.374667374Z    New URL: https://www.fastcompany.com/91484506/what-is-clawdbot-moltbot-openclaw?partner=rss&amp;utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=rss+fastcompany&amp;utm_content=rss
+2026-02-01T21:00:33.375997612Z 🗑️ Duplicate skipped: Clawdbot/Moltbot/OpenClaw is cool, but it gets pricey fast
+2026-02-01T21:00:33.380726432Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://techxplore.com/news/2026-02-chatbot-powered-humans-artificial-intelligence.html","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Şili'de İnsan Gücüyle Çalışan Sohbet Robotu: Yapay Zekaya Alternatif"}
+2026-02-01T21:00:33.380770521Z 🗑️ Duplicate URL detected: Şili'de İnsan Gücüyle Çalışan Sohbet Robotu: Yapay Zekaya Alternatif
+2026-02-01T21:00:33.380779661Z    Existing URL: https://techxplore.com/news/2026-02-chatbot-powered-humans-artificial-intelligence.html
+2026-02-01T21:00:33.380786571Z    New URL: https://techxplore.com/news/2026-02-chatbot-powered-humans-artificial-intelligence.html
+2026-02-01T21:00:33.382330129Z 🗑️ Duplicate skipped: A chatbot entirely powered by humans, not artificial intelligence? This Chilean community shows why
+2026-02-01T21:00:33.386508990Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:00:33.446143844Z 🔍 Checking for duplicates among 199 recent articles...
+2026-02-01T21:00:33.493346195Z ✅ No duplicates found for: "French tech giant Capgemini to sell US subsidiary accused of..."
+2026-02-01T21:00:33.496805628Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://techcrunch.com/2026/02/01/indonesia-conditionally-lifts-ban-on-grok/","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Endonezya, Grok Yasağını Koşullu Olarak Kaldırdı"}
+2026-02-01T21:00:33.496919777Z 🗑️ Duplicate URL detected: Endonezya, Grok Yasağını Koşullu Olarak Kaldırdı
+2026-02-01T21:00:33.496943957Z    Existing URL: https://techcrunch.com/2026/02/01/indonesia-conditionally-lifts-ban-on-grok/
+2026-02-01T21:00:33.496950747Z    New URL: https://techcrunch.com/2026/02/01/indonesia-conditionally-lifts-ban-on-grok/
+2026-02-01T21:00:33.498415524Z 🗑️ Duplicate skipped: Indonesia ‘conditionally’ lifts ban on Grok
+2026-02-01T21:00:33.501170529Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://towardsdatascience.com/run-claude-code-for-free-with-local-and-cloud-models-from-ollama/","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Claude Code Artık Ücretsiz: Ollama ile Yerel ve Bulut Modelleri Kullanma Rehberi"}
+2026-02-01T21:00:33.501304858Z 🗑️ Duplicate URL detected: Claude Code Artık Ücretsiz: Ollama ile Yerel ve Bulut Modelleri Kullanma Rehberi
+2026-02-01T21:00:33.501312748Z    Existing URL: https://towardsdatascience.com/run-claude-code-for-free-with-local-and-cloud-models-from-ollama/
+2026-02-01T21:00:33.501318128Z    New URL: https://towardsdatascience.com/run-claude-code-for-free-with-local-and-cloud-models-from-ollama/
+2026-02-01T21:00:33.502626136Z 🗑️ Duplicate skipped: How to Run Claude Code for Free with Local and Cloud Models from Ollama
+2026-02-01T21:00:33.505140260Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:00:33.545200385Z 🔍 Checking for duplicates among 199 recent articles...
+2026-02-01T21:00:33.572072739Z ✅ No duplicates found for: "Indonesia is lifting its ban on Grok, but with some conditio..."
+2026-02-01T21:00:33.586702509Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.reddit.com/r/MachineLearning/comments/1qsy793/we_ran_a_live_redteam_vs_blueteam_test_on/","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Otonom Yapay Zeka Ajanları Kırmızı ve Mavi Takım Testine Tabi Tutuldu"}
+2026-02-01T21:00:33.586936028Z 🗑️ Duplicate URL detected: Otonom Yapay Zeka Ajanları Kırmızı ve Mavi Takım Testine Tabi Tutuldu
+2026-02-01T21:00:33.587069047Z    Existing URL: https://www.reddit.com/r/MachineLearning/comments/1qsy793/we_ran_a_live_redteam_vs_blueteam_test_on/
+2026-02-01T21:00:33.588984074Z    New URL: https://www.reddit.com/r/MachineLearning/comments/1qsy793/we_ran_a_live_redteam_vs_blueteam_test_on/
+2026-02-01T21:00:33.593767004Z 🗑️ Duplicate skipped: We ran a live red-team vs blue-team test on autonomous OpenClaw agents [R]
+2026-02-01T21:00:33.599263842Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.bloomberg.com/news/articles/2026-02-01/openai-investment-was-never-a-commitment-nvidia-s-huang-says","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt Değildi'"}
+2026-02-01T21:00:33.599655321Z 🗑️ Duplicate URL detected: Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt Değildi'
+2026-02-01T21:00:33.599674381Z    Existing URL: https://www.bloomberg.com/news/articles/2026-02-01/openai-investment-was-never-a-commitment-nvidia-s-huang-says
+2026-02-01T21:00:33.599731081Z    New URL: https://www.bloomberg.com/news/articles/2026-02-01/openai-investment-was-never-a-commitment-nvidia-s-huang-says
+2026-02-01T21:00:33.609643440Z 🗑️ Duplicate skipped: OpenAI Investment Wasn’t ‘a Commitment,’ Nvidia’s Huang Says
+2026-02-01T21:00:33.612573105Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.wired.com/story/security-news-this-week-jeffrey-epstein-had-a-personal-hacker-informant-claims/","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Epstein'ın 'Kişisel Hackeri' Olduğu İddiası ve Haftanın Güvenlik Gündemi"}
+2026-02-01T21:00:33.612971673Z 🗑️ Duplicate URL detected: Epstein'ın 'Kişisel Hackeri' Olduğu İddiası ve Haftanın Güvenlik Gündemi
+2026-02-01T21:00:33.612985073Z    Existing URL: https://www.wired.com/story/security-news-this-week-jeffrey-epstein-had-a-personal-hacker-informant-claims/
+2026-02-01T21:00:33.613343722Z    New URL: https://www.wired.com/story/security-news-this-week-jeffrey-epstein-had-a-personal-hacker-informant-claims/
+2026-02-01T21:00:33.615857217Z 🗑️ Duplicate skipped: Jeffrey Epstein Had a ‘Personal Hacker,’ Informant Claims
+2026-02-01T21:00:33.618172592Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:00:33.650641714Z 🔍 Checking for duplicates among 199 recent articles...
+2026-02-01T21:00:33.671965379Z ✅ No duplicates found for: "NVIDIA is still planning to make a 'huge' investment in Open..."
+2026-02-01T21:00:33.674124125Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:00:33.717256684Z 🔍 Checking for duplicates among 199 recent articles...
+2026-02-01T21:00:33.742164971Z ✅ No duplicates found for: "Nvidia CEO denies he’s ‘unhappy’ with OpenAI..."
+2026-02-01T21:00:33.744928006Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.tomshardware.com/tech-industry/spacex-formalizes-plan-to-build-1-million-satellite-orbital-data-center-system-fcc-filing-sketches-out-plans-but-over-packed-orbits-could-be-limiting-factor","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"SpaceX, Yörüngede 1 Milyon Uydu ile Veri Merkezi Kurmayı Planlıyor"}
+2026-02-01T21:00:33.744949026Z 🗑️ Duplicate URL detected: SpaceX, Yörüngede 1 Milyon Uydu ile Veri Merkezi Kurmayı Planlıyor
+2026-02-01T21:00:33.744954776Z    Existing URL: https://www.tomshardware.com/tech-industry/spacex-formalizes-plan-to-build-1-million-satellite-orbital-data-center-system-fcc-filing-sketches-out-plans-but-over-packed-orbits-could-be-limiting-factor
+2026-02-01T21:00:33.744959316Z    New URL: https://www.tomshardware.com/tech-industry/spacex-formalizes-plan-to-build-1-million-satellite-orbital-data-center-system-fcc-filing-sketches-out-plans-but-over-packed-orbits-could-be-limiting-factor
+2026-02-01T21:00:33.746274163Z 🗑️ Duplicate skipped: SpaceX formalizes plan to build 1 million satellite Orbital Data Center System — FCC filing sketches out plans, but over-packed orbits could be limiting factor
+2026-02-01T21:00:33.748479458Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.ft.com/content/594b2ca9-a501-48bd-8996-e018e2ffc813","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Capgemini, ABD Göçmen Takip Birimini Satışa Çıkarıyor"}
+2026-02-01T21:00:33.748501268Z 🗑️ Duplicate URL detected: Capgemini, ABD Göçmen Takip Birimini Satışa Çıkarıyor
+2026-02-01T21:00:33.748507958Z    Existing URL: https://www.ft.com/content/594b2ca9-a501-48bd-8996-e018e2ffc813
+2026-02-01T21:00:33.748513168Z    New URL: https://www.ft.com/content/594b2ca9-a501-48bd-8996-e018e2ffc813
+2026-02-01T21:00:33.749580636Z 🗑️ Duplicate skipped: Capgemini to sell unit linked to US immigration tracking
+2026-02-01T21:00:33.751694551Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:00:33.786287888Z 🔍 Checking for duplicates among 199 recent articles...
+2026-02-01T21:00:33.789825781Z ❌ DUPLICATE: Multi-entity + number match [openai, nvidia] + [100_milyonilyar]
+2026-02-01T21:00:33.789837201Z    New: "Nvidia CEO pushes back against report that his company’s $100B OpenAI investment has stalled"
+2026-02-01T21:00:33.789842001Z    Existing: "Nvidia'ın OpenAI Yatırımı 100 Milyar Dolar Değil"
+2026-02-01T21:00:33.790198790Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"MULTI_ENTITY_NUMBER_MATCH","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Nvidia CEO pushes back against report that his company’s $100B OpenAI investment has stalled"}
+2026-02-01T21:00:33.790209050Z 🗑️ MULTI_ENTITY_NUMBER_MATCH: "Nvidia CEO pushes back against report that his company’s $100B OpenAI investment has stalled"
+2026-02-01T21:00:33.790227491Z    Similar to article ID: cml2cp6nf000hopr73u4gim9d
+2026-02-01T21:00:33.790244781Z 🗑️ Duplicate skipped: Nvidia CEO pushes back against report that his company’s $100B OpenAI investment has stalled
+2026-02-01T21:00:33.792726695Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://techcrunch.com/2026/02/01/india-offers-zero-taxes-through-2047-to-lure-global-ai-workloads/","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Hindistan, Küresel AI Yatırımları İçin 2047'ye Kadar Sıfır Vergi Teklif Ediyor"}
+2026-02-01T21:00:33.792751315Z 🗑️ Duplicate URL detected: Hindistan, Küresel AI Yatırımları İçin 2047'ye Kadar Sıfır Vergi Teklif Ediyor
+2026-02-01T21:00:33.792758695Z    Existing URL: https://techcrunch.com/2026/02/01/india-offers-zero-taxes-through-2047-to-lure-global-ai-workloads/
+2026-02-01T21:00:33.792764035Z    New URL: https://techcrunch.com/2026/02/01/india-offers-zero-taxes-through-2047-to-lure-global-ai-workloads/
+2026-02-01T21:00:33.794286312Z 🗑️ Duplicate skipped: India offers zero taxes through 2047 to lure global AI workloads
+2026-02-01T21:00:33.796617577Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.nbcnews.com/tech/tech-news/ai-agents-social-media-platform-moltbook-rcna256738","service":"ai-news-agent","timestamp":"2026-02-01 21:00:33","title":"Moltbook: Sadece Yapay Zeka Ajanlarına Özel Sosyal Ağ"}
+2026-02-01T21:00:33.796639837Z 🗑️ Duplicate URL detected: Moltbook: Sadece Yapay Zeka Ajanlarına Özel Sosyal Ağ
+2026-02-01T21:00:33.796646297Z    Existing URL: https://www.nbcnews.com/tech/tech-news/ai-agents-social-media-platform-moltbook-rcna256738
+2026-02-01T21:00:33.796651407Z    New URL: https://www.nbcnews.com/tech/tech-news/ai-agents-social-media-platform-moltbook-rcna256738
+2026-02-01T21:00:33.797846174Z 🗑️ Duplicate skipped: Humans welcome to observe: This social network is for AI agents only
+2026-02-01T21:00:33.798473512Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "NVIDIA is still planning to make a 'huge' investme..."
+2026-02-01T21:00:33.798484822Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO denies he’s ‘unhappy’ with OpenAI..."
+2026-02-01T21:00:33.798975512Z 📦 Cluster found: "NVIDIA+OpenAI" with 2 articles from different sources
+2026-02-01T21:00:33.798998012Z 📦 Processing cluster: NVIDIA+OpenAI with 2 sources
+2026-02-01T21:00:33.802652444Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Plan..."
+2026-02-01T21:00:33.802675024Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt D..."
+2026-02-01T21:00:33.802794244Z 🚫 Cluster topic "NVIDIA+OpenAI" was recently published - skipping
+2026-02-01T21:00:33.802801134Z 📊 Aggregation complete: 0 aggregated, 5 individual slots remaining
+2026-02-01T21:00:33.807799933Z 📖 Recent context: 20 articles from last 48h passed to AI
+2026-02-01T21:00:44.629055203Z ✅ 2/2 haber AI relevance kontrolünden geçti
+2026-02-01T21:00:44.629255682Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "NVIDIA is still planning to make a 'huge' investme..."
+2026-02-01T21:00:44.632360556Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Plan..."
+2026-02-01T21:00:44.632389116Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt D..."
+2026-02-01T21:00:44.632396176Z 🚫 Topic "Genel AI" was recently published - skipping for diversity
+2026-02-01T21:00:44.634798651Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Plan..."
+2026-02-01T21:00:44.634812571Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt D..."
+2026-02-01T21:00:44.634818301Z 🚫 Topic "NVIDIA+OpenAI" was recently published - skipping for diversity
+2026-02-01T21:00:44.634823351Z ⚠️ All topics were recent, taking best one anyway to avoid empty result
+2026-02-01T21:00:44.634894141Z 🎯 Final selection: 1 articles (0 aggregated, 1 individual)
+2026-02-01T21:00:44.635048980Z ✅ 1 haber seçildi
+2026-02-01T21:00:44.637571345Z info: 📊 Agent step: process_articles Haberler yeniden yazılıyor ve görseller oluşturuluyor {"environment":"production","logId":"cml485k35000014cwsnncr8f8","module":"agent","progress":60,"service":"ai-news-agent","step":"process_articles","timestamp":"2026-02-01 21:00:44"}
+2026-02-01T21:00:44.637588384Z ⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...
+2026-02-01T21:00:44.638111054Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-01T21:00:44.638419753Z 🔍 Pre-processing duplicate check: Indonesia is lifting its ban on Grok, but with some conditio...
+2026-02-01T21:00:44.640944588Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:00:44.677052041Z 🔍 Checking for duplicates among 199 recent articles...
+2026-02-01T21:00:44.706569689Z ✅ No duplicates found for: "Indonesia is lifting its ban on Grok, but with some conditio..."
+2026-02-01T21:00:44.707205087Z 📝 Haber işleniyor: Indonesia is lifting its ban on Grok, but with some conditions
+2026-02-01T21:00:44.709278173Z 📄 Makale içeriği alınıyor: https://www.engadget.com/ai/indonesia-is-lifting-its-ban-on-grok-but-with-some-conditions-175305634.html?src=rss
+2026-02-01T21:00:44.709301403Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-02-01T21:00:45.863090231Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-02-01T21:00:46.268076340Z ✅ Direct fetch ile içerik alındı: 2207 karakter
+2026-02-01T21:00:46.268112749Z 🔬 Deep research yapılıyor...
+2026-02-01T21:00:46.295769362Z 🔬 Deep research başlatılıyor: "Indonesia is lifting its ban on Grok, but with som..."
+2026-02-01T21:00:48.533697208Z ✅ Deep research tamamlandı:
+2026-02-01T21:00:48.533739778Z    📊 0 istatistik
+2026-02-01T21:00:48.533768228Z    💬 0 alıntı
+2026-02-01T21:00:48.533773778Z    📚 8 kaynak
+2026-02-01T21:00:48.533778558Z    📝 1 ek bağlam
+2026-02-01T21:00:48.533823008Z ✅ Deep research tamamlandı: 8 ek kaynak bulundu
+2026-02-01T21:00:48.543804517Z 🤖 DeepSeek ile zenginleştirilmiş içerik yeniden yazılıyor...
+2026-02-01T21:00:53.791708926Z 💓 Heartbeat updated: 01.02.2026 21:00:53
+2026-02-01T21:01:13.974713571Z 📊 Haber Puanı: 850/1000
+2026-02-01T21:01:13.977030306Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-02-01T21:01:15.716788535Z 📝 Final prompt (133 chars): Holographic neural network, Indonesian batik circuit patterns, blue volumetric light, futuristic Jakarta skyline, cinematic 8k render
+2026-02-01T21:01:15.716836605Z 📝 Görsel prompt: Holographic neural network, Indonesian batik circuit patterns, blue volumetric light, futuristic Jakarta skyline, cinematic 8k render
+2026-02-01T21:01:15.716845845Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-02-01T21:01:15.717824703Z 🎨 Pollinations.ai isteği: Holographic neural network, Indonesian batik circuit patterns, blue volumetric light, futuristic Jak
+2026-02-01T21:01:15.717852343Z 📝 Prompt: Holographic neural network, Indonesian batik circuit patterns, blue volumetric light, futuristic Jak
+2026-02-01T21:01:15.717860943Z 🎨 Pollinations.ai görsel URL: https://image.pollinations.ai/prompt/Holographic%20neural%20network%2C%20Indonesian%20batik%20circuit%20patterns%2C%20blue%20volumetric%20light%2C%20f
+2026-02-01T21:01:23.790044225Z 💓 Heartbeat updated: 01.02.2026 21:01:23
+2026-02-01T21:01:23.906081642Z ✅ Görsel URL: https://image.pollinations.ai/prompt/Holographic%20neural%20network%2C%20Indonesian%20batik%20circuit%20patterns%2C%20blue%20volumetric%20light%2C%20futuristic%20Jakarta%20skyline%2C%20cinematic%208k%20render?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-01T21:01:23.909920633Z 🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...
+2026-02-01T21:01:23.910276502Z 
+2026-02-01T21:01:23.910289892Z 🖼️  Image Optimization Pipeline Started
+2026-02-01T21:01:23.910298612Z    Source: https://image.pollinations.ai/prompt/Holographic%20neural%20network%2C%20Indonesian%20batik%20circuit%20patterns%2C%20blue%20volumetric%20light%2C%20futuristic%20Jakarta%20skyline%2C%20cinematic%208k%20render?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-01T21:01:23.910681081Z    Slug: endonezya-grok-yasagini-kosullu-olarak-kaldirdi
+2026-02-01T21:01:23.910703771Z 📥 Downloading image from: https://image.pollinations.ai/prompt/Holographic%20neural%20network%2C%20Indonesian%20batik%20circuit%20patterns%2C%20blue%20volumetric%20light%2C%20futuristic%20Jakarta%20skyline%2C%20cinematic%208k%20render?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-01T21:01:24.158220940Z 
+2026-02-01T21:01:24.158272350Z 📊 Original Image:
+2026-02-01T21:01:24.158283660Z    Format: jpeg
+2026-02-01T21:01:24.158293810Z    Size: 1059x556
+2026-02-01T21:01:24.158329840Z    File Size: 121.6KB
+2026-02-01T21:01:24.158336170Z    Download Time: 242ms
+2026-02-01T21:01:24.158507409Z 🎨 Generating 4 image sizes for: endonezya-grok-yasagini-kosullu-olarak-kaldirdi
+2026-02-01T21:01:25.224699366Z ✅ Uploaded to R2: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-large.webp
+2026-02-01T21:01:25.224741296Z   ✅ large: 112.1KB → https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-large.webp
+2026-02-01T21:01:25.903648930Z ✅ Uploaded to R2: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-medium.webp
+2026-02-01T21:01:25.903692460Z   ✅ medium: 79.1KB → https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-medium.webp
+2026-02-01T21:01:26.362195266Z ✅ Uploaded to R2: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-small.webp
+2026-02-01T21:01:26.362238846Z   ✅ small: 27.7KB → https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-small.webp
+2026-02-01T21:01:26.762581958Z ✅ Uploaded to R2: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-thumb.webp
+2026-02-01T21:01:26.762627817Z   ✅ thumb: 6.6KB → https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-thumb.webp
+2026-02-01T21:01:26.762634887Z 
+2026-02-01T21:01:26.762640217Z ✅ Optimization Complete!
+2026-02-01T21:01:26.762645057Z    Total Time: 2846ms
+2026-02-01T21:01:26.762649617Z    Storage: Cloudflare R2
+2026-02-01T21:01:26.762654197Z ✅ Görsel optimizasyonu tamamlandı
+2026-02-01T21:01:26.762659577Z    Large: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-large.webp
+2026-02-01T21:01:26.762664637Z    Medium: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-medium.webp
+2026-02-01T21:01:26.762669497Z    Small: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-small.webp
+2026-02-01T21:01:26.762674377Z    Thumb: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-thumb.webp
+2026-02-01T21:01:26.772896906Z 📤 Haber yayınlanıyor: Endonezya, Grok Yasağını Koşullu Olarak Kaldırdı
+2026-02-01T21:01:26.781076548Z 🗑️ DUPLICATE (slug/url): Endonezya, Grok Yasağını Koşullu Olarak Kaldırdı (endonezya-grok-yasagini-kosullu-olarak-kaldirdi)
+2026-02-01T21:01:26.781106708Z 🗑️ Duplicate detected, skipped: Indonesia is lifting its ban on Grok, but with some conditions
+2026-02-01T21:01:26.781113658Z 📊 Toplam 0/1 haber yayınlandı
+2026-02-01T21:01:26.781118888Z ✅ 0 haber yayınlandı
+2026-02-01T21:01:26.781924525Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-01T21:01:26.795917745Z ⏰ Bir sonraki çalışma: 01.02.2026 21:16:26
+2026-02-01T21:01:26.804737846Z [Socket] Cannot emit 'agent:completed' - Socket.io not initialized
+2026-02-01T21:01:26.805226605Z info: ✅ Agent execution completed {"articlesCreated":0,"articlesScraped":20,"duration":86,"environment":"production","logId":"cml485k35000014cwsnncr8f8","module":"agent","service":"ai-news-agent","success":true,"timestamp":"2026-02-01 21:01:26"}
+2026-02-01T21:01:26.806472102Z ✅ Agent çalıştırması 86s içinde tamamlandı
+2026-02-01T21:01:26.806576502Z 
+2026-02-01T21:01:26.806591112Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-01T21:01:26.806598422Z ┃           ✅ AGENT EXECUTION SUCCESS              ┃
+2026-02-01T21:01:26.806607422Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-01T21:01:26.806612682Z ┃  Status:         PARTIAL                        ┃
+2026-02-01T21:01:26.806617322Z ┃  Duration:       86s                             ┃
+2026-02-01T21:01:26.806621812Z ┃  Articles Found: 20                             ┃
+2026-02-01T21:01:26.806626152Z ┃  Articles Made:  0                              ┃
+2026-02-01T21:01:26.806630812Z ┃  Next Run:       01.02.2026 21:16:26      ┃
+2026-02-01T21:01:26.806635352Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-01T21:01:26.806640112Z 
+2026-02-01T21:01:26.808178448Z 📊 Progress: 90% - Agent execution completed
+2026-02-01T21:01:26.808548147Z info: ✅ Job completed {"environment":"production","jobId":"repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769979600000","module":"worker","result":{"articlesCreated":0,"articlesScraped":20,"duration":86,"errors":[],"publishedArticles":[],"success":true},"service":"ai-news-agent","timestamp":"2026-02-01 21:01:26"}
+2026-02-01T21:01:26.808557227Z 
+2026-02-01T21:01:26.808562007Z 📊 Execution Summary:
+2026-02-01T21:01:26.808566707Z    Articles Scraped: 20
+2026-02-01T21:01:26.808570957Z    Articles Created: 0
+2026-02-01T21:01:26.808575278Z    Duration: 86s
+2026-02-01T21:01:26.808586238Z    Status: ✅ SUCCESS
+2026-02-01T21:01:26.815760001Z 🔌 Database connection closed
+2026-02-01T21:01:26.888513302Z 
+2026-02-01T21:01:26.888549682Z ⏰ Next execution (repeatable): 2/1/2026, 9:16:26 PM
+2026-02-01T21:01:26.894483279Z 
+2026-02-01T21:01:26.894506839Z ✅ Job repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769979600000 completed successfully
+2026-02-01T21:01:53.794888416Z 💓 Heartbeat updated: 01.02.2026 21:01:53
+2026-02-01T21:02:23.795574881Z 💓 Heartbeat updated: 01.02.2026 21:02:23
+2026-02-01T21:02:53.796082443Z 💓 Heartbeat updated: 01.02.2026 21:02:53
+2026-02-01T21:03:23.798792255Z 💓 Heartbeat updated: 01.02.2026 21:03:23
+2026-02-01T21:03:53.802188504Z 💓 Heartbeat updated: 01.02.2026 21:03:53
+2026-02-01T21:04:23.805445615Z 💓 Heartbeat updated: 01.02.2026 21:04:23
+2026-02-01T21:04:53.807335732Z 💓 Heartbeat updated: 01.02.2026 21:04:53
+2026-02-01T21:05:23.806775618Z 💓 Heartbeat updated: 01.02.2026 21:05:23
+2026-02-01T21:05:53.809504468Z 💓 Heartbeat updated: 01.02.2026 21:05:53
+2026-02-01T21:06:23.811764302Z 💓 Heartbeat updated: 01.02.2026 21:06:23
+2026-02-01T21:06:53.813453707Z 💓 Heartbeat updated: 01.02.2026 21:06:53
+2026-02-01T21:07:23.816160563Z 💓 Heartbeat updated: 01.02.2026 21:07:23
+2026-02-01T21:07:53.815728068Z 💓 Heartbeat updated: 01.02.2026 21:07:53
+2026-02-01T21:08:23.817991613Z 💓 Heartbeat updated: 01.02.2026 21:08:23
+2026-02-01T21:08:53.818716789Z 💓 Heartbeat updated: 01.02.2026 21:08:53
+2026-02-01T21:09:23.820251316Z 💓 Heartbeat updated: 01.02.2026 21:09:23
+2026-02-01T21:09:53.821385854Z 💓 Heartbeat updated: 01.02.2026 21:09:53
+2026-02-01T21:10:23.821015387Z 💓 Heartbeat updated: 01.02.2026 21:10:23
+2026-02-01T21:10:53.820903584Z 💓 Heartbeat updated: 01.02.2026 21:10:53
+2026-02-01T21:11:23.821358404Z 💓 Heartbeat updated: 01.02.2026 21:11:23
+2026-02-01T21:11:26.887432181Z prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
+2026-02-01T21:11:53.822236969Z 💓 Heartbeat updated: 01.02.2026 21:11:53
+2026-02-01T21:12:23.823593524Z 💓 Heartbeat updated: 01.02.2026 21:12:23
+2026-02-01T21:12:53.824119268Z 💓 Heartbeat updated: 01.02.2026 21:12:53
+2026-02-01T21:13:23.824569650Z 💓 Heartbeat updated: 01.02.2026 21:13:23
+2026-02-01T21:13:53.825325164Z 💓 Heartbeat updated: 01.02.2026 21:13:53
+2026-02-01T21:14:23.825951020Z 💓 Heartbeat updated: 01.02.2026 21:14:23
+2026-02-01T21:14:53.827032855Z 💓 Heartbeat updated: 01.02.2026 21:14:53
+2026-02-01T21:15:00.104236514Z 
+2026-02-01T21:15:00.104271024Z 🔄 Job repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769980500000 is now active
+2026-02-01T21:15:00.104763272Z info: 🔄 Job processing started {"environment":"production","jobId":"repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769980500000","jobName":"scrape-and-publish","module":"worker","service":"ai-news-agent","timestamp":"2026-02-01 21:15:00"}
+2026-02-01T21:15:00.106062409Z 
+2026-02-01T21:15:00.106081538Z ============================================================
+2026-02-01T21:15:00.106090468Z 🤖 Processing job: scrape-and-publish (ID: repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769980500000)
+2026-02-01T21:15:00.106098848Z    Priority: default
+2026-02-01T21:15:00.106106658Z    Attempt: 1/3
+2026-02-01T21:15:00.106114148Z    Timestamp: 2/1/2026, 9:00:00 PM
+2026-02-01T21:15:00.106121678Z ============================================================
+2026-02-01T21:15:00.106146368Z 
+2026-02-01T21:15:00.107687585Z 📊 Progress: 10% - Starting agent execution...
+2026-02-01T21:15:00.134723708Z info: 🤖 Agent execution started {"category":"all","environment":"production","logId":"cml48oujj000414cwsj4gexoe","module":"agent","service":"ai-news-agent","timestamp":"2026-02-01 21:15:00"}
+2026-02-01T21:15:00.136073504Z [Socket] Cannot emit 'agent:started' - Socket.io not initialized
+2026-02-01T21:15:00.136364464Z 
+2026-02-01T21:15:00.136376524Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-01T21:15:00.136383444Z ┃           🤖 AGENT EXECUTION START                ┃
+2026-02-01T21:15:00.136388814Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-01T21:15:00.136393964Z ┃  Log ID:       cml48oujj000...                    ┃
+2026-02-01T21:15:00.136398794Z ┃  Start Time:   01.02.2026 21:15:00      ┃
+2026-02-01T21:15:00.136403404Z ┃  Category:     All                         ┃
+2026-02-01T21:15:00.136408484Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-01T21:15:00.136413554Z 
+2026-02-01T21:15:00.136670723Z info: 📊 Agent step: fetch_news Yapay zeka haberleri aranıyor (RSS + Trend) {"environment":"production","logId":"cml48oujj000414cwsj4gexoe","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-02-01 21:15:00"}
+2026-02-01T21:15:00.136680603Z 📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...
+2026-02-01T21:15:00.137355350Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-01T21:15:00.137539201Z 📰 AI haberleri toplanıyor (RSS + Trend Analizi)...
+2026-02-01T21:15:00.137548311Z 📡 63 RSS feed okunuyor...
+2026-02-01T21:15:00.137653420Z 📡 RSS feed okunuyor: BBC News - Technology
+2026-02-01T21:15:00.142986205Z 📡 RSS feed okunuyor: CNN - Technology
+2026-02-01T21:15:00.143009205Z 📡 RSS feed okunuyor: Bloomberg - Technology
+2026-02-01T21:15:00.144566780Z 📡 RSS feed okunuyor: The Wall Street Journal - Technology
+2026-02-01T21:15:00.147367903Z 📡 RSS feed okunuyor: Financial Times - Technology
+2026-02-01T21:15:00.245529566Z ✅ 10 haber bulundu: The Wall Street Journal - Technology
+2026-02-01T21:15:00.296179183Z ✅ 10 haber bulundu: CNN - Technology
+2026-02-01T21:15:00.358470338Z ✅ 10 haber bulundu: BBC News - Technology
+2026-02-01T21:15:00.481319871Z ✅ 10 haber bulundu: Bloomberg - Technology
+2026-02-01T21:15:00.654972252Z ✅ 10 haber bulundu: Financial Times - Technology
+2026-02-01T21:15:01.153991535Z 📡 RSS feed okunuyor: NBC News - Technology
+2026-02-01T21:15:01.156049290Z 📡 RSS feed okunuyor: ABC News - Technology
+2026-02-01T21:15:01.159103432Z 📡 RSS feed okunuyor: Sky News - Technology
+2026-02-01T21:15:01.162493021Z 📡 RSS feed okunuyor: Euronews - Technology
+2026-02-01T21:15:01.165503573Z 📡 RSS feed okunuyor: MIT Technology Review - AI
+2026-02-01T21:15:01.235096747Z ✅ 10 haber bulundu: MIT Technology Review - AI
+2026-02-01T21:15:01.268970842Z ✅ 10 haber bulundu: NBC News - Technology
+2026-02-01T21:15:01.305148429Z ✅ 10 haber bulundu: Euronews - Technology
+2026-02-01T21:15:01.441215737Z ✅ 10 haber bulundu: Sky News - Technology
+2026-02-01T21:15:01.713710228Z ✅ 10 haber bulundu: ABC News - Technology
+2026-02-01T21:15:02.213285470Z 📡 RSS feed okunuyor: VentureBeat - AI
+2026-02-01T21:15:02.214586197Z 📡 RSS feed okunuyor: The Verge - AI
+2026-02-01T21:15:02.216100152Z 📡 RSS feed okunuyor: TechCrunch - AI
+2026-02-01T21:15:02.217268719Z 📡 RSS feed okunuyor: Ars Technica - AI
+2026-02-01T21:15:02.217638627Z 📡 RSS feed okunuyor: Wired - AI
+2026-02-01T21:15:02.250371446Z ✅ 10 haber bulundu: TechCrunch - AI
+2026-02-01T21:15:02.279371384Z ✅ 10 haber bulundu: The Verge - AI
+2026-02-01T21:15:02.296484245Z ✅ 10 haber bulundu: Ars Technica - AI
+2026-02-01T21:15:02.326658970Z ✅ 7 haber bulundu: VentureBeat - AI
+2026-02-01T21:15:02.364407014Z ✅ 10 haber bulundu: Wired - AI
+2026-02-01T21:15:02.865511222Z 📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+2026-02-01T21:15:02.868082584Z 📡 RSS feed okunuyor: Engadget - Technology
+2026-02-01T21:15:02.870257888Z 📡 RSS feed okunuyor: The Next Web
+2026-02-01T21:15:02.872239623Z 📡 RSS feed okunuyor: TechRadar - News
+2026-02-01T21:15:02.874191887Z 📡 RSS feed okunuyor: CNET - News
+2026-02-01T21:15:03.009533016Z ✅ 10 haber bulundu: TechRadar - News
+2026-02-01T21:15:03.101437677Z ✅ 10 haber bulundu: CNET - News
+2026-02-01T21:15:03.173332954Z ✅ 10 haber bulundu: The Next Web
+2026-02-01T21:15:03.177776231Z ✅ 10 haber bulundu: ZDNet - Artificial Intelligence
+2026-02-01T21:15:03.891997478Z ✅ 10 haber bulundu: Engadget - Technology
+2026-02-01T21:15:04.392412507Z 📡 RSS feed okunuyor: Mashable - Tech
+2026-02-01T21:15:04.395573269Z 📡 RSS feed okunuyor: Gizmodo
+2026-02-01T21:15:04.398147092Z 📡 RSS feed okunuyor: Lifehacker
+2026-02-01T21:15:04.399952667Z 📡 RSS feed okunuyor: Digital Trends
+2026-02-01T21:15:04.402130850Z 📡 RSS feed okunuyor: Tom's Hardware
+2026-02-01T21:15:04.505633739Z ✅ 10 haber bulundu: Tom's Hardware
+2026-02-01T21:15:04.636038821Z ✅ 10 haber bulundu: Mashable - Tech
+2026-02-01T21:15:04.724148933Z ✅ 10 haber bulundu: Lifehacker
+2026-02-01T21:15:04.870534960Z ✅ 10 haber bulundu: Gizmodo
+2026-02-01T21:15:05.868775795Z ✅ 10 haber bulundu: Digital Trends
+2026-02-01T21:15:06.369306414Z 📡 RSS feed okunuyor: 9to5Mac
+2026-02-01T21:15:06.372640845Z 📡 RSS feed okunuyor: 9to5Google
+2026-02-01T21:15:06.374934228Z 📡 RSS feed okunuyor: Android Authority
+2026-02-01T21:15:06.377159562Z 📡 RSS feed okunuyor: Android Police
+2026-02-01T21:15:06.379455286Z 📡 RSS feed okunuyor: XDA Developers
+2026-02-01T21:15:06.432148266Z ✅ 10 haber bulundu: 9to5Mac
+2026-02-01T21:15:06.447616523Z ✅ 10 haber bulundu: 9to5Google
+2026-02-01T21:15:06.711686328Z ✅ 10 haber bulundu: Android Authority
+2026-02-01T21:15:06.828264629Z ✅ 10 haber bulundu: Android Police
+2026-02-01T21:15:06.848513532Z ✅ 10 haber bulundu: XDA Developers
+2026-02-01T21:15:07.348606893Z 📡 RSS feed okunuyor: Hacker News (YCombinator)
+2026-02-01T21:15:07.350319628Z 📡 RSS feed okunuyor: Product Hunt - Tech
+2026-02-01T21:15:07.351457524Z 📡 RSS feed okunuyor: AI News
+2026-02-01T21:15:07.352652801Z 📡 RSS feed okunuyor: MarkTechPost
+2026-02-01T21:15:07.353733528Z 📡 RSS feed okunuyor: The AI Edge (Substack)
+2026-02-01T21:15:07.465052544Z ✅ 10 haber bulundu: Product Hunt - Tech
+2026-02-01T21:15:07.525731104Z ✅ 10 haber bulundu: MarkTechPost
+2026-02-01T21:15:07.621196444Z ✅ 10 haber bulundu: AI News
+2026-02-01T21:15:07.877119322Z ✅ 10 haber bulundu: The AI Edge (Substack)
+2026-02-01T21:15:07.901621434Z ✅ 10 haber bulundu: Hacker News (YCombinator)
+2026-02-01T21:15:08.402399661Z 📡 RSS feed okunuyor: Last Week in AI
+2026-02-01T21:15:08.405569572Z 📡 RSS feed okunuyor: Machine Learning Mastery
+2026-02-01T21:15:08.407257157Z 📡 RSS feed okunuyor: OpenAI Blog
+2026-02-01T21:15:08.411560285Z 📡 RSS feed okunuyor: Google AI Blog
+2026-02-01T21:15:08.411594155Z 📡 RSS feed okunuyor: DeepMind Blog
+2026-02-01T21:15:08.548423939Z ✅ 10 haber bulundu: DeepMind Blog
+2026-02-01T21:15:08.566112369Z ✅ 10 haber bulundu: Last Week in AI
+2026-02-01T21:15:08.771145551Z ✅ 10 haber bulundu: OpenAI Blog
+2026-02-01T21:15:09.151372649Z ✅ 10 haber bulundu: Google AI Blog
+2026-02-01T21:15:09.537093961Z ✅ 10 haber bulundu: Machine Learning Mastery
+2026-02-01T21:15:10.038085477Z 📡 RSS feed okunuyor: NVIDIA Blog - AI
+2026-02-01T21:15:10.040790060Z 📡 RSS feed okunuyor: AWS Machine Learning Blog
+2026-02-01T21:15:10.043736251Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-01T21:15:10.045773796Z 📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+2026-02-01T21:15:10.048409578Z 📡 RSS feed okunuyor: Forbes - Innovation
+2026-02-01T21:15:10.087709488Z ✅ 10 haber bulundu: Forbes - Innovation
+2026-02-01T21:15:10.234314014Z ✅ 10 haber bulundu: NVIDIA Blog - AI
+2026-02-01T21:15:10.410540397Z ✅ 10 haber bulundu: AWS Machine Learning Blog
+2026-02-01T21:15:10.439917814Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-01T21:15:10.997941159Z ✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+2026-02-01T21:15:11.497473640Z 📡 RSS feed okunuyor: The Economist - Technology
+2026-02-01T21:15:11.499151866Z 📡 RSS feed okunuyor: Fast Company - Technology
+2026-02-01T21:15:11.500090522Z 📡 RSS feed okunuyor: MIT Sloan Management Review
+2026-02-01T21:15:11.501000650Z 📡 RSS feed okunuyor: Seeking Alpha - Technology
+2026-02-01T21:15:11.502635236Z 📡 RSS feed okunuyor: New Scientist - Technology
+2026-02-01T21:15:11.567383012Z ✅ 10 haber bulundu: Fast Company - Technology
+2026-02-01T21:15:11.595360794Z ✅ 10 haber bulundu: New Scientist - Technology
+2026-02-01T21:15:11.708365665Z ✅ 10 haber bulundu: The Economist - Technology
+2026-02-01T21:15:11.723095733Z ✅ 10 haber bulundu: Seeking Alpha - Technology
+2026-02-01T21:15:11.794356113Z ✅ 10 haber bulundu: MIT Sloan Management Review
+2026-02-01T21:15:12.295363079Z 📡 RSS feed okunuyor: Popular Science
+2026-02-01T21:15:12.297991891Z 📡 RSS feed okunuyor: Popular Mechanics
+2026-02-01T21:15:12.300078706Z 📡 RSS feed okunuyor: Space.com
+2026-02-01T21:15:12.302008950Z 📡 RSS feed okunuyor: Phys.org - Technology
+2026-02-01T21:15:12.303951305Z 📡 RSS feed okunuyor: ScienceDaily - Technology
+2026-02-01T21:15:12.380787678Z ✅ 10 haber bulundu: Popular Mechanics
+2026-02-01T21:15:12.413606905Z ✅ 10 haber bulundu: Popular Science
+2026-02-01T21:15:12.503705892Z ✅ 10 haber bulundu: Space.com
+2026-02-01T21:15:12.847956859Z ✅ 10 haber bulundu: ScienceDaily - Technology
+2026-02-01T21:15:13.001681746Z ✅ 10 haber bulundu: Phys.org - Technology
+2026-02-01T21:15:13.502561993Z 📡 RSS feed okunuyor: Futurism
+2026-02-01T21:15:13.505508354Z 📡 RSS feed okunuyor: Singularity Hub
+2026-02-01T21:15:13.507637549Z 📡 RSS feed okunuyor: IEEE Spectrum - Technology
+2026-02-01T21:15:13.509805543Z 📡 RSS feed okunuyor: Towards Data Science
+2026-02-01T21:15:13.512016316Z 📡 RSS feed okunuyor: Analytics Vidhya
+2026-02-01T21:15:13.554171807Z ✅ 10 haber bulundu: Singularity Hub
+2026-02-01T21:15:13.609034732Z ✅ 10 haber bulundu: Futurism
+2026-02-01T21:15:13.750582553Z ✅ 10 haber bulundu: IEEE Spectrum - Technology
+2026-02-01T21:15:14.017312670Z ✅ 10 haber bulundu: Towards Data Science
+2026-02-01T21:15:14.330819346Z ✅ 10 haber bulundu: Analytics Vidhya
+2026-02-01T21:15:14.831159513Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-01T21:15:14.833807157Z 📡 RSS feed okunuyor: Machine Learning Reddit
+2026-02-01T21:15:14.836005920Z 📡 RSS feed okunuyor: AI Trends
+2026-02-01T21:15:14.888548402Z ✅ 10 haber bulundu: KDnuggets
+2026-02-01T21:15:15.090139642Z ✅ 10 haber bulundu: AI Trends
+2026-02-01T21:15:15.844956252Z ✅ 10 haber bulundu: Machine Learning Reddit
+2026-02-01T21:15:15.844999482Z ✅ Toplam 627 haber toplandı
+2026-02-01T21:15:15.872638464Z ✅ 625 benzersiz haber
+2026-02-01T21:15:15.873714181Z 📅 Son 48 saatte 291 haber
+2026-02-01T21:15:15.891514651Z 🤖 AI filtreleme: 82/291 haber AI ile ilgili
+2026-02-01T21:15:15.891547830Z 📊 82 haber için Trend analizi (Brave API)...
+2026-02-01T21:15:15.891570530Z 📊 Brave ile 82 haber analiz ediliyor...
+2026-02-01T21:15:15.891654480Z 📦 Batch 1/9 işleniyor (10 haber)...
+2026-02-01T21:15:15.892141478Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:15:16.393096055Z 📦 Batch 2/9 işleniyor (10 haber)...
+2026-02-01T21:15:16.393465974Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:15:16.893984451Z 📦 Batch 3/9 işleniyor (10 haber)...
+2026-02-01T21:15:16.894391909Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:15:17.395293476Z 📦 Batch 4/9 işleniyor (10 haber)...
+2026-02-01T21:15:17.395778454Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:15:17.896060232Z 📦 Batch 5/9 işleniyor (10 haber)...
+2026-02-01T21:15:17.896569990Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:15:18.397301546Z 📦 Batch 6/9 işleniyor (10 haber)...
+2026-02-01T21:15:18.399014272Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:15:18.899998457Z 📦 Batch 7/9 işleniyor (10 haber)...
+2026-02-01T21:15:18.900451846Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:15:19.400576293Z 📦 Batch 8/9 işleniyor (10 haber)...
+2026-02-01T21:15:19.402292499Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-01T21:15:19.902943036Z 📦 Batch 9/9 işleniyor (2 haber)...
+2026-02-01T21:15:19.903467684Z ✅ Brave trend sıralaması tamamlandı
+2026-02-01T21:15:19.903482604Z 📊 İşlenen: 82/82 haber
+2026-02-01T21:15:19.903949832Z 🏆 Top 5: #6 (skor: 293), #23 (skor: 290), #62 (skor: 290), #2 (skor: 265), #59 (skor: 260)
+2026-02-01T21:15:19.904154862Z ✅ 20 trend haber seçildi
+2026-02-01T21:15:19.904683740Z Top 5 Trend Haberler: 
+2026-02-01T21:15:19.904697430Z   1. Indonesia Permits Elon Musk’s Grok to Resume Service After B... (skor: 293)
+2026-02-01T21:15:19.904704100Z   2. AI agents now have their own Reddit-style social network, an... (skor: 290)
+2026-02-01T21:15:19.904709310Z   3. Nvidia boss insists 'huge' investment in OpenAI on track... (skor: 290)
+2026-02-01T21:15:19.904732780Z   4. Waymo Seeking About $16 Billion Near $110 Billion Valuation... (skor: 265)
+2026-02-01T21:15:19.904737800Z   5. Clawdbot/Moltbot/OpenClaw is cool, but it gets pricey fast... (skor: 260)
+2026-02-01T21:15:19.904742530Z ✅ 20 trend haber bulundu
+2026-02-01T21:15:19.907367342Z info: 📊 Agent step: analyze_articles En iyi haberler seçiliyor (DeepSeek AI) {"environment":"production","logId":"cml48oujj000414cwsj4gexoe","module":"agent","progress":40,"service":"ai-news-agent","step":"analyze_articles","timestamp":"2026-02-01 21:15:19"}
+2026-02-01T21:15:19.907462242Z 🎯 Adım 2: En iyi haberler seçiliyor...
+2026-02-01T21:15:19.908206440Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-01T21:15:19.915890808Z 📊 Haber sayısı ayarları: min=3, max=5
+2026-02-01T21:15:19.915915508Z 🎯 Hedef haber sayısı: 3
+2026-02-01T21:15:19.917900023Z 🎯 20 haber arasından en iyi 3 tanesi seçiliyor...
+2026-02-01T21:15:19.927435876Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.bloomberg.com/news/articles/2026-02-01/indonesia-permits-elon-musk-s-grok-to-resume-service-after-ban","service":"ai-news-agent","timestamp":"2026-02-01 21:15:19","title":"Endonezya, Elon Musk'ın Grok Yapay Zekasına Yasağı Kaldırdı"}
+2026-02-01T21:15:19.927471226Z 🗑️ Duplicate URL detected: Endonezya, Elon Musk'ın Grok Yapay Zekasına Yasağı Kaldırdı
+2026-02-01T21:15:19.927481315Z    Existing URL: https://www.bloomberg.com/news/articles/2026-02-01/indonesia-permits-elon-musk-s-grok-to-resume-service-after-ban
+2026-02-01T21:15:19.927489795Z    New URL: https://www.bloomberg.com/news/articles/2026-02-01/indonesia-permits-elon-musk-s-grok-to-resume-service-after-ban
+2026-02-01T21:15:19.929971938Z 🗑️ Duplicate skipped: Indonesia Permits Elon Musk’s Grok to Resume Service After Ban
+2026-02-01T21:15:19.933077190Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://arstechnica.com/information-technology/2026/01/ai-agents-now-have-their-own-reddit-style-social-network-and-its-getting-weird-fast/","service":"ai-news-agent","timestamp":"2026-02-01 21:15:19","title":"Yapay Zeka Ajanları Artık Kendi Sosyal Ağına Sahip: Moltbook"}
+2026-02-01T21:15:19.933268979Z 🗑️ Duplicate URL detected: Yapay Zeka Ajanları Artık Kendi Sosyal Ağına Sahip: Moltbook
+2026-02-01T21:15:19.933282369Z    Existing URL: https://arstechnica.com/information-technology/2026/01/ai-agents-now-have-their-own-reddit-style-social-network-and-its-getting-weird-fast/
+2026-02-01T21:15:19.933290929Z    New URL: https://arstechnica.com/information-technology/2026/01/ai-agents-now-have-their-own-reddit-style-social-network-and-its-getting-weird-fast/
+2026-02-01T21:15:19.934898924Z 🗑️ Duplicate skipped: AI agents now have their own Reddit-style social network, and it's getting weird fast
+2026-02-01T21:15:19.938302065Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://techxplore.com/news/2026-02-nvidia-boss-insists-huge-investment.html","service":"ai-news-agent","timestamp":"2026-02-01 21:15:19","title":"Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Planlandığı Gibi İlerliyor"}
+2026-02-01T21:15:19.938431154Z 🗑️ Duplicate URL detected: Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Planlandığı Gibi İlerliyor
+2026-02-01T21:15:19.938443054Z    Existing URL: https://techxplore.com/news/2026-02-nvidia-boss-insists-huge-investment.html
+2026-02-01T21:15:19.938476774Z    New URL: https://techxplore.com/news/2026-02-nvidia-boss-insists-huge-investment.html
+2026-02-01T21:15:19.939795990Z 🗑️ Duplicate skipped: Nvidia boss insists 'huge' investment in OpenAI on track
+2026-02-01T21:15:19.942637753Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.bloomberg.com/news/articles/2026-01-31/waymo-seeking-about-16-billion-near-110-billion-valuation","service":"ai-news-agent","timestamp":"2026-02-01 21:15:19","title":"Waymo, 110 Milyar Dolarlık Değerleme ile 16 Milyar Dolar Fon Arıyor"}
+2026-02-01T21:15:19.942666043Z 🗑️ Duplicate URL detected: Waymo, 110 Milyar Dolarlık Değerleme ile 16 Milyar Dolar Fon Arıyor
+2026-02-01T21:15:19.942739303Z    Existing URL: https://www.bloomberg.com/news/articles/2026-01-31/waymo-seeking-about-16-billion-near-110-billion-valuation
+2026-02-01T21:15:19.942744963Z    New URL: https://www.bloomberg.com/news/articles/2026-01-31/waymo-seeking-about-16-billion-near-110-billion-valuation
+2026-02-01T21:15:19.943806280Z 🗑️ Duplicate skipped: Waymo Seeking About $16 Billion Near $110 Billion Valuation
+2026-02-01T21:15:19.946983440Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.fastcompany.com/91484506/what-is-clawdbot-moltbot-openclaw?partner=rss&amp;utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=rss+fastcompany&amp;utm_content=rss","service":"ai-news-agent","timestamp":"2026-02-01 21:15:19","title":"OpenClaw: Geleceğin Dijital Asistanı, Yüksek Maliyet Engeliyle Karşı Karşıya"}
+2026-02-01T21:15:19.947081930Z 🗑️ Duplicate URL detected: OpenClaw: Geleceğin Dijital Asistanı, Yüksek Maliyet Engeliyle Karşı Karşıya
+2026-02-01T21:15:19.947089540Z    Existing URL: https://www.fastcompany.com/91484506/what-is-clawdbot-moltbot-openclaw?partner=rss&amp;utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=rss+fastcompany&amp;utm_content=rss
+2026-02-01T21:15:19.947095810Z    New URL: https://www.fastcompany.com/91484506/what-is-clawdbot-moltbot-openclaw?partner=rss&amp;utm_source=rss&amp;utm_medium=feed&amp;utm_campaign=rss+fastcompany&amp;utm_content=rss
+2026-02-01T21:15:19.948159847Z 🗑️ Duplicate skipped: Clawdbot/Moltbot/OpenClaw is cool, but it gets pricey fast
+2026-02-01T21:15:19.951439428Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://techxplore.com/news/2026-02-chatbot-powered-humans-artificial-intelligence.html","service":"ai-news-agent","timestamp":"2026-02-01 21:15:19","title":"Şili'de İnsan Gücüyle Çalışan Sohbet Robotu: Yapay Zekaya Alternatif"}
+2026-02-01T21:15:19.951467048Z 🗑️ Duplicate URL detected: Şili'de İnsan Gücüyle Çalışan Sohbet Robotu: Yapay Zekaya Alternatif
+2026-02-01T21:15:19.951476658Z    Existing URL: https://techxplore.com/news/2026-02-chatbot-powered-humans-artificial-intelligence.html
+2026-02-01T21:15:19.951501688Z    New URL: https://techxplore.com/news/2026-02-chatbot-powered-humans-artificial-intelligence.html
+2026-02-01T21:15:19.952635294Z 🗑️ Duplicate skipped: A chatbot entirely powered by humans, not artificial intelligence? This Chilean community shows why
+2026-02-01T21:15:19.955113647Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:15:20.015384927Z 🔍 Checking for duplicates among 198 recent articles...
+2026-02-01T21:15:20.042263292Z ✅ No duplicates found for: "French tech giant Capgemini to sell US subsidiary accused of..."
+2026-02-01T21:15:20.055440725Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://techcrunch.com/2026/02/01/indonesia-conditionally-lifts-ban-on-grok/","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"Endonezya, Grok Yasağını Koşullu Olarak Kaldırdı"}
+2026-02-01T21:15:20.055971703Z 🗑️ Duplicate URL detected: Endonezya, Grok Yasağını Koşullu Olarak Kaldırdı
+2026-02-01T21:15:20.055988443Z    Existing URL: https://techcrunch.com/2026/02/01/indonesia-conditionally-lifts-ban-on-grok/
+2026-02-01T21:15:20.055993843Z    New URL: https://techcrunch.com/2026/02/01/indonesia-conditionally-lifts-ban-on-grok/
+2026-02-01T21:15:20.060699099Z 🗑️ Duplicate skipped: Indonesia ‘conditionally’ lifts ban on Grok
+2026-02-01T21:15:20.062702214Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://towardsdatascience.com/run-claude-code-for-free-with-local-and-cloud-models-from-ollama/","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"Claude Code Artık Ücretsiz: Ollama ile Yerel ve Bulut Modelleri Kullanma Rehberi"}
+2026-02-01T21:15:20.062769584Z 🗑️ Duplicate URL detected: Claude Code Artık Ücretsiz: Ollama ile Yerel ve Bulut Modelleri Kullanma Rehberi
+2026-02-01T21:15:20.062787524Z    Existing URL: https://towardsdatascience.com/run-claude-code-for-free-with-local-and-cloud-models-from-ollama/
+2026-02-01T21:15:20.062879483Z    New URL: https://towardsdatascience.com/run-claude-code-for-free-with-local-and-cloud-models-from-ollama/
+2026-02-01T21:15:20.073029364Z 🗑️ Duplicate skipped: How to Run Claude Code for Free with Local and Cloud Models from Ollama
+2026-02-01T21:15:20.075008059Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:15:20.105482413Z 🔍 Checking for duplicates among 198 recent articles...
+2026-02-01T21:15:20.128743487Z ✅ No duplicates found for: "Indonesia is lifting its ban on Grok, but with some conditio..."
+2026-02-01T21:15:20.131396930Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.reddit.com/r/MachineLearning/comments/1qsy793/we_ran_a_live_redteam_vs_blueteam_test_on/","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"Otonom Yapay Zeka Ajanları Kırmızı ve Mavi Takım Testine Tabi Tutuldu"}
+2026-02-01T21:15:20.131414100Z 🗑️ Duplicate URL detected: Otonom Yapay Zeka Ajanları Kırmızı ve Mavi Takım Testine Tabi Tutuldu
+2026-02-01T21:15:20.131433630Z    Existing URL: https://www.reddit.com/r/MachineLearning/comments/1qsy793/we_ran_a_live_redteam_vs_blueteam_test_on/
+2026-02-01T21:15:20.131435940Z    New URL: https://www.reddit.com/r/MachineLearning/comments/1qsy793/we_ran_a_live_redteam_vs_blueteam_test_on/
+2026-02-01T21:15:20.132533607Z 🗑️ Duplicate skipped: We ran a live red-team vs blue-team test on autonomous OpenClaw agents [R]
+2026-02-01T21:15:20.134097432Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.bloomberg.com/news/articles/2026-02-01/openai-investment-was-never-a-commitment-nvidia-s-huang-says","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt Değildi'"}
+2026-02-01T21:15:20.134119202Z 🗑️ Duplicate URL detected: Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt Değildi'
+2026-02-01T21:15:20.134126672Z    Existing URL: https://www.bloomberg.com/news/articles/2026-02-01/openai-investment-was-never-a-commitment-nvidia-s-huang-says
+2026-02-01T21:15:20.134132972Z    New URL: https://www.bloomberg.com/news/articles/2026-02-01/openai-investment-was-never-a-commitment-nvidia-s-huang-says
+2026-02-01T21:15:20.135034179Z 🗑️ Duplicate skipped: OpenAI Investment Wasn’t ‘a Commitment,’ Nvidia’s Huang Says
+2026-02-01T21:15:20.137056434Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.wired.com/story/security-news-this-week-jeffrey-epstein-had-a-personal-hacker-informant-claims/","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"Epstein'ın 'Kişisel Hackeri' Olduğu İddiası ve Haftanın Güvenlik Gündemi"}
+2026-02-01T21:15:20.137079144Z 🗑️ Duplicate URL detected: Epstein'ın 'Kişisel Hackeri' Olduğu İddiası ve Haftanın Güvenlik Gündemi
+2026-02-01T21:15:20.137089554Z    Existing URL: https://www.wired.com/story/security-news-this-week-jeffrey-epstein-had-a-personal-hacker-informant-claims/
+2026-02-01T21:15:20.137095924Z    New URL: https://www.wired.com/story/security-news-this-week-jeffrey-epstein-had-a-personal-hacker-informant-claims/
+2026-02-01T21:15:20.137992331Z 🗑️ Duplicate skipped: Jeffrey Epstein Had a ‘Personal Hacker,’ Informant Claims
+2026-02-01T21:15:20.139352518Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:15:20.160245268Z 🔍 Checking for duplicates among 198 recent articles...
+2026-02-01T21:15:20.184393950Z ✅ No duplicates found for: "NVIDIA is still planning to make a 'huge' investment in Open..."
+2026-02-01T21:15:20.186273475Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:15:20.203541326Z 🔍 Checking for duplicates among 198 recent articles...
+2026-02-01T21:15:20.212385711Z ✅ No duplicates found for: "Nvidia CEO denies he’s ‘unhappy’ with OpenAI..."
+2026-02-01T21:15:20.214718554Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.tomshardware.com/tech-industry/spacex-formalizes-plan-to-build-1-million-satellite-orbital-data-center-system-fcc-filing-sketches-out-plans-but-over-packed-orbits-could-be-limiting-factor","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"SpaceX, Yörüngede 1 Milyon Uydu ile Veri Merkezi Kurmayı Planlıyor"}
+2026-02-01T21:15:20.215190813Z 🗑️ Duplicate URL detected: SpaceX, Yörüngede 1 Milyon Uydu ile Veri Merkezi Kurmayı Planlıyor
+2026-02-01T21:15:20.215199043Z    Existing URL: https://www.tomshardware.com/tech-industry/spacex-formalizes-plan-to-build-1-million-satellite-orbital-data-center-system-fcc-filing-sketches-out-plans-but-over-packed-orbits-could-be-limiting-factor
+2026-02-01T21:15:20.215202023Z    New URL: https://www.tomshardware.com/tech-industry/spacex-formalizes-plan-to-build-1-million-satellite-orbital-data-center-system-fcc-filing-sketches-out-plans-but-over-packed-orbits-could-be-limiting-factor
+2026-02-01T21:15:20.216702069Z 🗑️ Duplicate skipped: SpaceX formalizes plan to build 1 million satellite Orbital Data Center System — FCC filing sketches out plans, but over-packed orbits could be limiting factor
+2026-02-01T21:15:20.217941635Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.ft.com/content/594b2ca9-a501-48bd-8996-e018e2ffc813","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"Capgemini, ABD Göçmen Takip Birimini Satışa Çıkarıyor"}
+2026-02-01T21:15:20.217964985Z 🗑️ Duplicate URL detected: Capgemini, ABD Göçmen Takip Birimini Satışa Çıkarıyor
+2026-02-01T21:15:20.217971775Z    Existing URL: https://www.ft.com/content/594b2ca9-a501-48bd-8996-e018e2ffc813
+2026-02-01T21:15:20.217977005Z    New URL: https://www.ft.com/content/594b2ca9-a501-48bd-8996-e018e2ffc813
+2026-02-01T21:15:20.219269111Z 🗑️ Duplicate skipped: Capgemini to sell unit linked to US immigration tracking
+2026-02-01T21:15:20.222743982Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:15:20.243214024Z 🔍 Checking for duplicates among 198 recent articles...
+2026-02-01T21:15:20.244796909Z ❌ DUPLICATE: Multi-entity + number match [openai, nvidia] + [100_milyonilyar]
+2026-02-01T21:15:20.244808189Z    New: "Nvidia CEO pushes back against report that his company’s $100B OpenAI investment has stalled"
+2026-02-01T21:15:20.244811139Z    Existing: "Nvidia'ın OpenAI Yatırımı 100 Milyar Dolar Değil"
+2026-02-01T21:15:20.245075119Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"MULTI_ENTITY_NUMBER_MATCH","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"Nvidia CEO pushes back against report that his company’s $100B OpenAI investment has stalled"}
+2026-02-01T21:15:20.245101009Z 🗑️ MULTI_ENTITY_NUMBER_MATCH: "Nvidia CEO pushes back against report that his company’s $100B OpenAI investment has stalled"
+2026-02-01T21:15:20.245139729Z    Similar to article ID: cml2cp6nf000hopr73u4gim9d
+2026-02-01T21:15:20.245173309Z 🗑️ Duplicate skipped: Nvidia CEO pushes back against report that his company’s $100B OpenAI investment has stalled
+2026-02-01T21:15:20.247524992Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://techcrunch.com/2026/02/01/india-offers-zero-taxes-through-2047-to-lure-global-ai-workloads/","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"Hindistan, Küresel AI Yatırımları İçin 2047'ye Kadar Sıfır Vergi Teklif Ediyor"}
+2026-02-01T21:15:20.247548632Z 🗑️ Duplicate URL detected: Hindistan, Küresel AI Yatırımları İçin 2047'ye Kadar Sıfır Vergi Teklif Ediyor
+2026-02-01T21:15:20.247551482Z    Existing URL: https://techcrunch.com/2026/02/01/india-offers-zero-taxes-through-2047-to-lure-global-ai-workloads/
+2026-02-01T21:15:20.247557422Z    New URL: https://techcrunch.com/2026/02/01/india-offers-zero-taxes-through-2047-to-lure-global-ai-workloads/
+2026-02-01T21:15:20.248811578Z 🗑️ Duplicate skipped: India offers zero taxes through 2047 to lure global AI workloads
+2026-02-01T21:15:20.250761512Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.nbcnews.com/tech/tech-news/ai-agents-social-media-platform-moltbook-rcna256738","service":"ai-news-agent","timestamp":"2026-02-01 21:15:20","title":"Moltbook: Sadece Yapay Zeka Ajanlarına Özel Sosyal Ağ"}
+2026-02-01T21:15:20.250839962Z 🗑️ Duplicate URL detected: Moltbook: Sadece Yapay Zeka Ajanlarına Özel Sosyal Ağ
+2026-02-01T21:15:20.250843582Z    Existing URL: https://www.nbcnews.com/tech/tech-news/ai-agents-social-media-platform-moltbook-rcna256738
+2026-02-01T21:15:20.250845552Z    New URL: https://www.nbcnews.com/tech/tech-news/ai-agents-social-media-platform-moltbook-rcna256738
+2026-02-01T21:15:20.252081808Z 🗑️ Duplicate skipped: Humans welcome to observe: This social network is for AI agents only
+2026-02-01T21:15:20.252353708Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "NVIDIA is still planning to make a 'huge' investme..."
+2026-02-01T21:15:20.252358068Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO denies he’s ‘unhappy’ with OpenAI..."
+2026-02-01T21:15:20.252508558Z 📦 Cluster found: "NVIDIA+OpenAI" with 2 articles from different sources
+2026-02-01T21:15:20.252630387Z 📦 Processing cluster: NVIDIA+OpenAI with 2 sources
+2026-02-01T21:15:20.255172700Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Plan..."
+2026-02-01T21:15:20.255286280Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt D..."
+2026-02-01T21:15:20.255381669Z 🚫 Cluster topic "NVIDIA+OpenAI" was recently published - skipping
+2026-02-01T21:15:20.255482479Z 📊 Aggregation complete: 0 aggregated, 3 individual slots remaining
+2026-02-01T21:15:20.261490082Z 📖 Recent context: 20 articles from last 48h passed to AI
+2026-02-01T21:15:23.827652469Z 💓 Heartbeat updated: 01.02.2026 21:15:23
+2026-02-01T21:15:29.542770558Z ✅ 2/2 haber AI relevance kontrolünden geçti
+2026-02-01T21:15:29.542920087Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "NVIDIA is still planning to make a 'huge' investme..."
+2026-02-01T21:15:29.546327888Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Plan..."
+2026-02-01T21:15:29.546375417Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt D..."
+2026-02-01T21:15:29.546382457Z 🚫 Topic "Genel AI" was recently published - skipping for diversity
+2026-02-01T21:15:29.549100180Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Plan..."
+2026-02-01T21:15:29.549123250Z 🔗 Multi-entity topic detected: NVIDIA+OpenAI from "Nvidia CEO'su: OpenAI Yatırımı 'Asla Bir Taahhüt D..."
+2026-02-01T21:15:29.549130580Z 🚫 Topic "NVIDIA+OpenAI" was recently published - skipping for diversity
+2026-02-01T21:15:29.549136290Z ⚠️ All topics were recent, taking best one anyway to avoid empty result
+2026-02-01T21:15:29.549152000Z 🎯 Final selection: 1 articles (0 aggregated, 1 individual)
+2026-02-01T21:15:29.549158020Z ✅ 1 haber seçildi
+2026-02-01T21:15:29.551578403Z info: 📊 Agent step: process_articles Haberler yeniden yazılıyor ve görseller oluşturuluyor {"environment":"production","logId":"cml48oujj000414cwsj4gexoe","module":"agent","progress":60,"service":"ai-news-agent","step":"process_articles","timestamp":"2026-02-01 21:15:29"}
+2026-02-01T21:15:29.551620173Z ⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...
+2026-02-01T21:15:29.552084422Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-01T21:15:29.552147591Z 🔍 Pre-processing duplicate check: Indonesia is lifting its ban on Grok, but with some conditio...
+2026-02-01T21:15:29.554789294Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-01T21:15:29.591089592Z 🔍 Checking for duplicates among 198 recent articles...
+2026-02-01T21:15:29.615972561Z ✅ No duplicates found for: "Indonesia is lifting its ban on Grok, but with some conditio..."
+2026-02-01T21:15:29.616003341Z 📝 Haber işleniyor: Indonesia is lifting its ban on Grok, but with some conditions
+2026-02-01T21:15:29.618321774Z 📄 Makale içeriği alınıyor: https://www.engadget.com/ai/indonesia-is-lifting-its-ban-on-grok-but-with-some-conditions-175305634.html?src=rss
+2026-02-01T21:15:29.618348614Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-02-01T21:15:30.312081523Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-02-01T21:15:30.442735014Z ✅ Direct fetch ile içerik alındı: 2207 karakter
+2026-02-01T21:15:30.442778034Z 🔬 Deep research yapılıyor...
+2026-02-01T21:15:30.446171044Z 🔬 Deep research başlatılıyor: "Indonesia is lifting its ban on Grok, but with som..."
+2026-02-01T21:15:31.865467171Z ✅ Deep research tamamlandı:
+2026-02-01T21:15:31.865506621Z    📊 0 istatistik
+2026-02-01T21:15:31.865513481Z    💬 0 alıntı
+2026-02-01T21:15:31.865518421Z    📚 8 kaynak
+2026-02-01T21:15:31.865522891Z    📝 1 ek bağlam
+2026-02-01T21:15:31.865650201Z ✅ Deep research tamamlandı: 8 ek kaynak bulundu
+2026-02-01T21:15:31.875732073Z 🤖 DeepSeek ile zenginleştirilmiş içerik yeniden yazılıyor...
+2026-02-01T21:15:52.523789898Z 📊 Haber Puanı: 850/1000
+2026-02-01T21:15:52.525635344Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-02-01T21:15:53.827980244Z 💓 Heartbeat updated: 01.02.2026 21:15:53
+2026-02-01T21:15:54.372940839Z 📝 Final prompt (149 chars): Holographic AI brain with neural connections, blue volumetric lighting, futuristic circuit board background, reflective surfaces, cinematic 8k render
+2026-02-01T21:15:54.372981919Z 📝 Görsel prompt: Holographic AI brain with neural connections, blue volumetric lighting, futuristic circuit board background, reflective surfaces, cinematic 8k render
+2026-02-01T21:15:54.372988869Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-02-01T21:15:54.373461448Z 🎨 Pollinations.ai isteği: Holographic AI brain with neural connections, blue volumetric lighting, futuristic circuit board bac
+2026-02-01T21:15:54.373479667Z 📝 Prompt: Holographic AI brain with neural connections, blue volumetric lighting, futuristic circuit board bac
+2026-02-01T21:15:54.373486807Z 🎨 Pollinations.ai görsel URL: https://image.pollinations.ai/prompt/Holographic%20AI%20brain%20with%20neural%20connections%2C%20blue%20volumetric%20lighting%2C%20futuristic%20circui
+2026-02-01T21:15:55.070424652Z ✅ Görsel URL: https://image.pollinations.ai/prompt/Holographic%20AI%20brain%20with%20neural%20connections%2C%20blue%20volumetric%20lighting%2C%20futuristic%20circuit%20board%20background%2C%20reflective%20surfaces%2C%20cinematic%208k%20render?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-01T21:15:55.073344204Z 🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...
+2026-02-01T21:15:55.073362834Z 
+2026-02-01T21:15:55.073369234Z 🖼️  Image Optimization Pipeline Started
+2026-02-01T21:15:55.073470703Z    Source: https://image.pollinations.ai/prompt/Holographic%20AI%20brain%20with%20neural%20connections%2C%20blue%20volumetric%20lighting%2C%20futuristic%20circuit%20board%20background%2C%20reflective%20surfaces%2C%20cinematic%208k%20render?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-01T21:15:55.073477933Z    Slug: endonezya-grok-yasagini-kosullu-olarak-kaldirdi
+2026-02-01T21:15:55.073482753Z 📥 Downloading image from: https://image.pollinations.ai/prompt/Holographic%20AI%20brain%20with%20neural%20connections%2C%20blue%20volumetric%20lighting%2C%20futuristic%20circuit%20board%20background%2C%20reflective%20surfaces%2C%20cinematic%208k%20render?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-01T21:15:55.393003217Z 
+2026-02-01T21:15:55.393034997Z 📊 Original Image:
+2026-02-01T21:15:55.393041717Z    Format: jpeg
+2026-02-01T21:15:55.393046547Z    Size: 1059x556
+2026-02-01T21:15:55.393050937Z    File Size: 100.0KB
+2026-02-01T21:15:55.393055537Z    Download Time: 318ms
+2026-02-01T21:15:55.393060047Z 🎨 Generating 4 image sizes for: endonezya-grok-yasagini-kosullu-olarak-kaldirdi
+2026-02-01T21:15:55.939993777Z ✅ Uploaded to R2: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-large.webp
+2026-02-01T21:15:55.940235436Z   ✅ large: 83.6KB → https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-large.webp
+2026-02-01T21:15:56.494230197Z ✅ Uploaded to R2: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-medium.webp
+2026-02-01T21:15:56.494275927Z   ✅ medium: 60.7KB → https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-medium.webp
+2026-02-01T21:15:56.899572947Z ✅ Uploaded to R2: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-small.webp
+2026-02-01T21:15:56.899608057Z   ✅ small: 24.9KB → https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-small.webp
+2026-02-01T21:15:57.259620927Z ✅ Uploaded to R2: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-thumb.webp
+2026-02-01T21:15:57.259661357Z   ✅ thumb: 7.0KB → https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-thumb.webp
+2026-02-01T21:15:57.259668117Z 
+2026-02-01T21:15:57.259673427Z ✅ Optimization Complete!
+2026-02-01T21:15:57.259678027Z    Total Time: 2185ms
+2026-02-01T21:15:57.259682337Z    Storage: Cloudflare R2
+2026-02-01T21:15:57.259686577Z ✅ Görsel optimizasyonu tamamlandı
+2026-02-01T21:15:57.259691127Z    Large: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-large.webp
+2026-02-01T21:15:57.259695707Z    Medium: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-medium.webp
+2026-02-01T21:15:57.259700317Z    Small: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-small.webp
+2026-02-01T21:15:57.259705287Z    Thumb: https://images.aihaberleri.org/endonezya-grok-yasagini-kosullu-olarak-kaldirdi-thumb.webp
+2026-02-01T21:15:57.267963493Z 📤 Haber yayınlanıyor: Endonezya, Grok Yasağını Koşullu Olarak Kaldırdı
+2026-02-01T21:15:57.275728302Z 🗑️ DUPLICATE (slug/url): Endonezya, Grok Yasağını Koşullu Olarak Kaldırdı (endonezya-grok-yasagini-kosullu-olarak-kaldirdi)
+2026-02-01T21:15:57.275771881Z 🗑️ Duplicate detected, skipped: Indonesia is lifting its ban on Grok, but with some conditions
+2026-02-01T21:15:57.275780811Z 📊 Toplam 0/1 haber yayınlandı
+2026-02-01T21:15:57.275788241Z ✅ 0 haber yayınlandı
+2026-02-01T21:15:57.276630209Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-01T21:15:57.291275177Z ⏰ Bir sonraki çalışma: 01.02.2026 21:30:57
+2026-02-01T21:15:57.299703504Z [Socket] Cannot emit 'agent:completed' - Socket.io not initialized
+2026-02-01T21:15:57.300091592Z info: ✅ Agent execution completed {"articlesCreated":0,"articlesScraped":20,"duration":57,"environment":"production","logId":"cml48oujj000414cwsj4gexoe","module":"agent","service":"ai-news-agent","success":true,"timestamp":"2026-02-01 21:15:57"}
+2026-02-01T21:15:57.300328291Z ✅ Agent çalıştırması 57s içinde tamamlandı
+2026-02-01T21:15:57.300370241Z 
+2026-02-01T21:15:57.300376731Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-01T21:15:57.300382681Z ┃           ✅ AGENT EXECUTION SUCCESS              ┃
+2026-02-01T21:15:57.300387991Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-01T21:15:57.300393461Z ┃  Status:         PARTIAL                        ┃
+2026-02-01T21:15:57.300398061Z ┃  Duration:       57s                             ┃
+2026-02-01T21:15:57.300402611Z ┃  Articles Found: 20                             ┃
+2026-02-01T21:15:57.300407111Z ┃  Articles Made:  0                              ┃
+2026-02-01T21:15:57.300411621Z ┃  Next Run:       01.02.2026 21:30:57      ┃
+2026-02-01T21:15:57.300416161Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-01T21:15:57.300421391Z 
+2026-02-01T21:15:57.301799567Z 📊 Progress: 90% - Agent execution completed
+2026-02-01T21:15:57.301950977Z info: ✅ Job completed {"environment":"production","jobId":"repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769980500000","module":"worker","result":{"articlesCreated":0,"articlesScraped":20,"duration":57,"errors":[],"publishedArticles":[],"success":true},"service":"ai-news-agent","timestamp":"2026-02-01 21:15:57"}
+2026-02-01T21:15:57.302067487Z 
+2026-02-01T21:15:57.302073437Z 📊 Execution Summary:
+2026-02-01T21:15:57.302078287Z    Articles Scraped: 20
+2026-02-01T21:15:57.302082767Z    Articles Created: 0
+2026-02-01T21:15:57.302087137Z    Duration: 57s
+2026-02-01T21:15:57.302091837Z    Status: ✅ SUCCESS
+2026-02-01T21:15:57.309096657Z 🔌 Database connection closed
+2026-02-01T21:15:57.384005454Z 
+2026-02-01T21:15:57.384036404Z ⏰ Next execution (repeatable): 2/1/2026, 9:30:57 PM
+2026-02-01T21:15:57.385911459Z 
+2026-02-01T21:15:57.385929769Z ✅ Job repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1769980500000 completed successfully
+2026-02-01T21:16:23.829347490Z 💓 Heartbeat updated: 01.02.2026 21:16:23
+2026-02-01T21:16:53.828993273Z 💓 Heartbeat updated: 01.02.2026 21:16:53
+2026-02-01T21:17:23.829796195Z 💓 Heartbeat updated: 01.02.2026 21:17:23
+2026-02-01T21:17:53.829415657Z 💓 Heartbeat updated: 01.02.2026 21:17:53
+2026-02-01T21:18:23.830618233Z 💓 Heartbeat updated: 01.02.2026 21:18:23
+2026-02-01T21:18:53.831445691Z 💓 Heartbeat updated: 01.02.2026 21:18:53
+2026-02-01T21:19:23.831076452Z 💓 Heartbeat updated: 01.02.2026 21:19:23
