@@ -21,6 +21,7 @@ import {
   Keyboard,
   BarChart,
   Activity,
+  Shield,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
