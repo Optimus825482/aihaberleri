@@ -70,7 +70,7 @@ interface RecentLog {
   status: string;
   articlesCreated: number;
   duration: number;
-  createdAt: string;
+  executionTime: string;
   errors?: string[];
 }
 
@@ -652,7 +652,7 @@ export default function AgentSettingsPage() {
                           {log.articlesCreated} haber oluşturuldu
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {new Date(log.createdAt).toLocaleString("tr-TR")}
+                          {new Date(log.executionTime).toLocaleString("tr-TR")}
                         </div>
                       </div>
                     </div>
