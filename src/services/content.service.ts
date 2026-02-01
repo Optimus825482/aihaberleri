@@ -335,7 +335,7 @@ async function processAggregatedCluster(
         return {
           title: article.title,
           content,
-          source: article.source,
+          source: article.source || "Unknown",
           url: article.url,
         };
       }),
