@@ -6,6 +6,7 @@ import {
   analyzeNewsArticles,
   rewriteArticle,
   generateImagePrompt,
+  aggregateMultiSourceArticles,
 } from "@/lib/deepseek";
 import { fetchPollinationsImage } from "@/lib/pollinations";
 import { generateSlug } from "@/lib/utils";
@@ -217,13 +218,202 @@ async function isTopicRecent(
 }
 
 /**
+ * Cluster articles by topic - groups similar stories from different sources
+ * Returns clusters with 2+ articles covering the same story
+ */
+interface ArticleCluster {
+  topic: string;
+  articles: NewsArticle[];
+  keywords: string[];
+}
+
+function clusterArticlesByTopic(articles: NewsArticle[]): ArticleCluster[] {
+  const clusters = new Map<string, NewsArticle[]>();
+
+  // Group by extracted topic
+  for (const article of articles) {
+    const topic = extractTopic(article.title);
+    if (!clusters.has(topic)) {
+      clusters.set(topic, []);
+    }
+    clusters.get(topic)!.push(article);
+  }
+
+  // Filter clusters with 2+ articles (aggregation candidates)
+  const result: ArticleCluster[] = [];
+  for (const [topic, arts] of clusters) {
+    if (arts.length >= 2) {
+      // Extract common keywords from cluster
+      const allWords = arts.flatMap((a) => a.title.toLowerCase().split(/\s+/));
+      const wordCounts = new Map<string, number>();
+      for (const word of allWords) {
+        if (word.length > 3) {
+          // Skip short words
+          wordCounts.set(word, (wordCounts.get(word) || 0) + 1);
+        }
+      }
+      // Keywords appearing in 50%+ of articles
+      const threshold = arts.length * 0.5;
+      const keywords = Array.from(wordCounts.entries())
+        .filter(([, count]) => count >= threshold)
+        .map(([word]) => word);
+
+      result.push({ topic, articles: arts, keywords });
+      console.log(
+        `📦 Cluster found: "${topic}" with ${arts.length} articles from different sources`,
+      );
+    }
+  }
+
+  // Sort by cluster size (largest first)
+  return result.sort((a, b) => b.articles.length - a.articles.length);
+}
+
+/**
+ * Process a cluster of articles into a single aggregated article
+ * Uses DeepSeek to synthesize multiple sources into one comprehensive piece
+ */
+async function processAggregatedCluster(
+  cluster: ArticleCluster,
+  category: string,
+): Promise<ProcessedArticle | null> {
+  console.log(
+    `🔗 Processing aggregated cluster: ${cluster.topic} (${cluster.articles.length} sources)`,
+  );
+
+  await liveLog.content.info(
+    `🔗 Aggregating ${cluster.articles.length} sources: ${cluster.topic}`,
+  );
+
+  try {
+    // Fetch full content for each article in cluster
+    const articlesWithContent = await Promise.all(
+      cluster.articles.slice(0, 5).map(async (article) => {
+        // Max 5 sources
+        let content = article.description;
+        try {
+          const fullContent = await fetchArticleContent(article.url);
+          if (fullContent && fullContent.length > content.length) {
+            content = fullContent;
+          }
+        } catch (e) {
+          console.warn(`⚠️ Could not fetch full content for ${article.url}`);
+        }
+        return {
+          title: article.title,
+          content,
+          source: article.source,
+          url: article.url,
+        };
+      }),
+    );
+
+    // Use DeepSeek to aggregate sources
+    const aggregated = await aggregateMultiSourceArticles(
+      articlesWithContent,
+      cluster.topic,
+    );
+
+    await liveLog.deepseek.success(
+      `✅ Aggregated: ${aggregated.title.substring(0, 50)}...`,
+    );
+
+    // Generate AI image for aggregated article
+    console.log("🎨 Generating image for aggregated article...");
+    const imagePrompt = await generateImagePrompt(
+      aggregated.title,
+      aggregated.content,
+      category,
+    );
+
+    const { fetchPollinationsImage } = await import("@/lib/pollinations");
+    const imageUrl = await fetchPollinationsImage(imagePrompt, {
+      width: 1200,
+      height: 630,
+      model: "flux-realism",
+      enhance: true,
+      nologo: true,
+    });
+
+    const slug = generateSlug(aggregated.title);
+
+    // Optimize image
+    let imageSizes = {
+      large: imageUrl,
+      medium: imageUrl,
+      small: imageUrl,
+      thumb: imageUrl,
+    };
+
+    try {
+      imageSizes = await optimizeAndGenerateSizes(imageUrl, slug);
+    } catch (e) {
+      console.warn("⚠️ Image optimization failed, using original");
+    }
+
+    // Get category slug
+    const categorySlug = generateSlug(category);
+    await ensureCategory(category, categorySlug);
+
+    // Create source references for content footer
+    const sourcesList = aggregated.sources
+      .map(
+        (s) =>
+          `<li><a href="${s.url}" target="_blank" rel="noopener">${s.name}</a></li>`,
+      )
+      .join("");
+
+    const contentWithSources = `${aggregated.content}
+    <div class="sources-box" style="margin-top: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px;">
+      <h3 style="margin-bottom: 0.5rem;">📚 Kaynaklar</h3>
+      <ul style="margin: 0; padding-left: 1.5rem;">${sourcesList}</ul>
+    </div>`;
+
+    await liveLog.image.success(`🖼️ Image generated for: ${slug}`);
+
+    return {
+      title: aggregated.title,
+      slug,
+      excerpt: aggregated.excerpt,
+      content: contentWithSources,
+      imageUrl: imageSizes.large,
+      imageUrlMedium: imageSizes.medium,
+      imageUrlSmall: imageSizes.small,
+      imageUrlThumb: imageSizes.thumb,
+      sourceUrl: cluster.articles[0].url, // Primary source
+      categorySlug,
+      keywords: aggregated.keywords,
+      metaTitle: aggregated.title,
+      metaDescription: aggregated.metaDescription,
+      score: 850, // Aggregated articles get high score
+    };
+  } catch (error) {
+    console.error(`❌ Aggregation failed for cluster ${cluster.topic}:`, error);
+    await liveLog.content.error(`❌ Aggregation failed: ${cluster.topic}`);
+    return null;
+  }
+}
+
+/**
  * Select the best articles from a list using AI analysis
- * ENHANCED: Now passes recent published articles to AI for diversity enforcement
+ * ENHANCED: Now with multi-source aggregation support
+ *
+ * WORKFLOW:
+ * 1. Filter duplicates
+ * 2. Cluster similar articles by topic
+ * 3. If cluster has 2+ sources → aggregate into single comprehensive article
+ * 4. Remaining articles → select best individually via AI
  */
 export async function selectBestArticles(
   articles: NewsArticle[],
   targetCount: number = 3,
-): Promise<Array<{ article: NewsArticle; category: string }>> {
+): Promise<
+  Array<{
+    article: NewsArticle;
+    category: string;
+    aggregated?: ProcessedArticle;
+  }>
+> {
   console.log(
     `🎯 ${articles.length} haber arasından en iyi ${targetCount} tanesi seçiliyor...`,
   );
@@ -246,7 +436,72 @@ export async function selectBestArticles(
   }
 
   try {
-    // Phase 3: Fetch recently published articles for diversity control
+    // ═══════════════════════════════════════════════════════════════════
+    // PHASE 1: MULTI-SOURCE AGGREGATION
+    // Check for topic clusters with 2+ sources - these become aggregated articles
+    // ═══════════════════════════════════════════════════════════════════
+    const clusters = clusterArticlesByTopic(uniqueArticles);
+    const aggregatedResults: Array<{ article: NewsArticle; category: string; aggregated?: ProcessedArticle }> = [];
+    const usedArticleUrls = new Set<string>();
+
+    // Process clusters with 2+ articles for aggregation
+    for (const cluster of clusters) {
+      if (cluster.articles.length >= 2 && aggregatedResults.length < Math.ceil(targetCount / 2)) {
+        console.log(`📦 Processing cluster: ${cluster.topic} with ${cluster.articles.length} sources`);
+        
+        // Check if this topic was recently published
+        const isRecent = await isTopicRecent(cluster.topic, 24);
+        if (isRecent) {
+          console.log(`🚫 Cluster topic "${cluster.topic}" was recently published - skipping`);
+          continue;
+        }
+
+        // Determine category based on topic
+        const clusterCategory = cluster.topic.includes("Google") ? "Google AI" :
+                               cluster.topic.includes("OpenAI") ? "OpenAI" :
+                               cluster.topic.includes("Microsoft") ? "Microsoft" :
+                               cluster.topic.includes("NVIDIA") ? "Donanım" :
+                               cluster.topic.includes("Robotik") ? "Robotik" :
+                               "Yapay Zeka";
+
+        try {
+          const aggregatedArticle = await processAggregatedCluster(cluster, clusterCategory);
+          if (aggregatedArticle) {
+            // Add first article as reference, with aggregated content
+            aggregatedResults.push({
+              article: cluster.articles[0],
+              category: clusterCategory,
+              aggregated: aggregatedArticle,
+            });
+            
+            // Mark all cluster articles as used
+            cluster.articles.forEach(a => usedArticleUrls.add(a.url));
+            console.log(`✅ Aggregated ${cluster.articles.length} sources into: ${aggregatedArticle.title}`);
+          }
+        } catch (aggError) {
+          console.error(`❌ Aggregation failed for ${cluster.topic}:`, aggError);
+          // Continue with individual article selection
+        }
+      }
+    }
+
+    // Filter out already-used articles from individual selection
+    const remainingArticles = uniqueArticles.filter(a => !usedArticleUrls.has(a.url));
+    const remainingTargetCount = targetCount - aggregatedResults.length;
+
+    console.log(`📊 Aggregation complete: ${aggregatedResults.length} aggregated, ${remainingTargetCount} individual slots remaining`);
+
+    // If we have enough aggregated articles, return them
+    if (remainingTargetCount <= 0 || remainingArticles.length === 0) {
+      return aggregatedResults;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PHASE 2: INDIVIDUAL ARTICLE SELECTION
+    // For remaining slots, select best individual articles
+    // ═══════════════════════════════════════════════════════════════════
+
+    // Phase 2.1: Fetch recently published articles for diversity control
     const recentPublished = await db.article.findMany({
       where: {
         publishedAt: {
@@ -266,9 +521,9 @@ export async function selectBestArticles(
       `📖 Recent context: ${recentPublished.length} articles from last 48h passed to AI`,
     );
 
-    // Analyze only the top 15-20 unique articles WITH context of recent publications
+    // Analyze only remaining articles (not used in aggregation) WITH context of recent publications
     const analysis = await analyzeNewsArticles(
-      uniqueArticles.slice(0, 20),
+      remainingArticles.slice(0, 20),
       recentPublished
         .filter((a) => a.publishedAt !== null)
         .map((a) => ({
@@ -278,18 +533,18 @@ export async function selectBestArticles(
     );
 
     const selected = analysis
-      .slice(0, targetCount)
+      .slice(0, remainingTargetCount)
       .map((item) => {
         const index = item.index;
         return {
-          article: uniqueArticles[index], // Use uniqueArticles array
+          article: remainingArticles[index], // Use remainingArticles array
           category: item.category,
-          topic: extractTopic(uniqueArticles[index].title),
+          topic: extractTopic(remainingArticles[index]?.title || ""),
         };
       })
       .filter((item) => item.article !== undefined);
 
-    // Phase 2: Topic clustering - filter out topics published within 24 hours
+    // Phase 2.2: Topic clustering - filter out topics published within 24 hours
     const diverseSelected = [];
     for (const item of selected) {
       const isRecent = await isTopicRecent(item.topic, 24);
@@ -311,11 +566,16 @@ export async function selectBestArticles(
       diverseSelected.push(selected[0]);
     }
 
-    if (diverseSelected.length === 0) {
+    // Combine aggregated results with individual selections
+    const finalResults = [...aggregatedResults, ...diverseSelected];
+    
+    console.log(`🎯 Final selection: ${finalResults.length} articles (${aggregatedResults.length} aggregated, ${diverseSelected.length} individual)`);
+
+    if (finalResults.length === 0) {
       throw new Error("AI could not select any articles");
     }
 
-    return diverseSelected;
+    return finalResults;
   } catch (error) {
     console.error("Haber analiz hatası, fallback uygulanıyor:", error);
     // Fallback: Take the first few unique ones
@@ -663,28 +923,43 @@ export async function publishArticle(
 
 /**
  * Process and publish multiple articles
+ * ENHANCED: Now supports pre-aggregated articles from multi-source clustering
  */
 export async function processAndPublishArticles(
-  articles: Array<{ article: NewsArticle; category: string }>,
+  articles: Array<{ article: NewsArticle; category: string; aggregated?: ProcessedArticle }>,
   agentLogId?: string,
   forceCategorySlug?: string,
 ): Promise<Array<{ id: string; slug: string }>> {
   const published = [];
 
-  for (const { article, category } of articles) {
+  for (const { article, category, aggregated } of articles) {
     try {
-      // If forceCategorySlug is provided, use it instead of DeepSeek's category
-      const targetCategory = forceCategorySlug
-        ? await db.category.findUnique({ where: { slug: forceCategorySlug } })
-        : null;
+      let processed: ProcessedArticle;
 
-      const categoryToUse = targetCategory ? targetCategory.name : category;
+      // Check if this is a pre-aggregated article (from multi-source clustering)
+      if (aggregated) {
+        console.log(`📦 Using pre-aggregated article: ${aggregated.title}`);
+        processed = aggregated;
+        
+        // Override category slug if forced
+        if (forceCategorySlug) {
+          processed.categorySlug = forceCategorySlug;
+        }
+      } else {
+        // Normal single-source article processing
+        // If forceCategorySlug is provided, use it instead of DeepSeek's category
+        const targetCategory = forceCategorySlug
+          ? await db.category.findUnique({ where: { slug: forceCategorySlug } })
+          : null;
 
-      const processed = await processArticle(article, categoryToUse);
+        const categoryToUse = targetCategory ? targetCategory.name : category;
 
-      // Override category slug if forced
-      if (forceCategorySlug) {
-        processed.categorySlug = forceCategorySlug;
+        processed = await processArticle(article, categoryToUse);
+
+        // Override category slug if forced
+        if (forceCategorySlug) {
+          processed.categorySlug = forceCategorySlug;
+        }
       }
 
       const result = await publishArticle(processed, agentLogId);
@@ -692,7 +967,7 @@ export async function processAndPublishArticles(
       // CRITICAL: Only add to published array if not duplicate (result is not null)
       if (result) {
         published.push(result);
-        console.log(`✅ Haber başarıyla yayınlandı: ${result.slug}`);
+        console.log(`✅ Haber başarıyla yayınlandı: ${result.slug}${aggregated ? " (AGGREGATED)" : ""}`);
       } else {
         console.log(`🗑️ Duplicate detected, skipped: ${article.title}`);
       }

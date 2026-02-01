@@ -371,34 +371,108 @@ JSON formatında yanıt ver:
 }
 
 /**
+ * Entity-based visual style mappings for consistent brand imagery
+ */
+const ENTITY_VISUAL_STYLES: Record<string, string> = {
+  // Company-specific styles
+  openai: "green holographic interface, ChatGPT style, emerald glow, dark background",
+  nvidia: "green and black theme, GPU chips, gaming aesthetic, neon green accents",
+  google: "colorful Google colors (blue red yellow green), clean material design",
+  microsoft: "blue corporate theme, Windows style, azure cloud elements",
+  meta: "blue infinity symbol, VR headset, metaverse portal, purple-blue gradient",
+  apple: "minimalist white, sleek curves, premium aesthetic, silver metallic",
+  tesla: "electric blue, futuristic car silhouette, Elon Musk style innovation",
+  anthropic: "warm orange-brown tones, Claude AI style, safe AI symbolism",
+  amazon: "orange and black, AWS cloud icons, e-commerce futuristic",
+  // Technology-specific styles
+  robot: "humanoid robot, mechanical joints, glowing eyes, industrial setting",
+  autonomous: "self-driving car sensors, LIDAR visualization, road mapping",
+  drone: "aerial drone swarm, sky background, delivery or surveillance theme",
+  chip: "semiconductor close-up, silicon wafer, golden circuits, macro photography",
+  quantum: "quantum computer, blue cryogenic chamber, superconducting qubits",
+  // Category-specific styles
+  healthcare: "medical AI, DNA helix, hospital technology, blue-white clean",
+  finance: "trading algorithms, stock charts, digital currency, gold-blue theme",
+  gaming: "gaming setup, RGB lighting, esports arena, neon purple-cyan",
+  security: "cyber security, digital lock, matrix code, red-black warning theme",
+};
+
+/**
+ * Extract entity from title for visual style matching
+ */
+function detectEntityForVisual(title: string): string | null {
+  const lowerTitle = title.toLowerCase();
+  const entities = Object.keys(ENTITY_VISUAL_STYLES);
+  
+  for (const entity of entities) {
+    if (lowerTitle.includes(entity)) {
+      return entity;
+    }
+  }
+  
+  // Check for common keywords
+  if (lowerTitle.includes("gpt") || lowerTitle.includes("chatgpt")) return "openai";
+  if (lowerTitle.includes("gemini") || lowerTitle.includes("bard")) return "google";
+  if (lowerTitle.includes("claude")) return "anthropic";
+  if (lowerTitle.includes("copilot")) return "microsoft";
+  if (lowerTitle.includes("llama")) return "meta";
+  if (lowerTitle.includes("siri")) return "apple";
+  if (lowerTitle.includes("alexa")) return "amazon";
+  
+  return null;
+}
+
+/**
  * Generate AI image prompt from article content
+ * ENHANCED: Entity-aware prompts with consistent visual branding
  */
 export async function generateImagePrompt(
   title: string,
   content: string,
   category: string,
 ): Promise<string> {
-  const prompt = `Sen bir AI görsel prompt uzmanısın. Bu yapay zeka haberi için Pollinations.ai'da kullanılacak mükemmel bir görsel prompt oluştur.
+  // Detect entity for visual style hints
+  const entity = detectEntityForVisual(title);
+  const entityStyle = entity ? ENTITY_VISUAL_STYLES[entity] : null;
+  
+  const styleHint = entityStyle 
+    ? `\n\nÖNEMLİ STİL İPUCU: Bu haber ${entity.toUpperCase()} ile ilgili. Şu görsel elementleri kullan: ${entityStyle}`
+    : "";
+
+  const prompt = `Sen dünya çapında ödüllü bir AI görsel prompt uzmanısın. Bu yapay zeka haberi için Pollinations.ai'da kullanılacak MÜKEMMEL ve ETKİLEYİCİ bir görsel prompt oluştur.
 
 Haber Başlığı: ${title}
 Kategori: ${category}
-İçerik Özeti: ${content.substring(0, 500)}
+İçerik Özeti: ${content.substring(0, 400)}${styleHint}
 
-Gereksinimler:
-1. İngilizce prompt oluştur (Pollinations.ai için)
-2. Haberin ana temasını yansıtsın
-3. Profesyonel, modern, teknolojik görsel
-4. Gerçekçi (realistic) veya dijital sanat (digital art) stili
-5. Yüksek kalite (4k, high quality, detailed)
-6. Temiz, minimalist tasarım
-7. Yapay zeka/teknoloji estetiği
-8. MAKSIMUM 150 KARAKTER (ÇOK ÖNEMLİ!)
-9. Kısa, öz ve etkili kelimeler kullan
+### PROMPT OLUŞTURMA KURALLARI:
 
-SADECE PROMPT METNİNİ VER. Hiçbir açıklama, düşünce veya ek metin ekleme.
+1. **DİL:** İngilizce prompt (Pollinations.ai için)
 
-Örnek format (kısa ve öz):
-AI neural network, futuristic tech, glowing circuits, digital art, 4k, clean design`;
+2. **GÖRSEL UNSURLAR (en az 3 tane kullan):**
+   - Işık efektleri: holographic, neon glow, volumetric lighting, lens flare
+   - Teknoloji: neural networks, circuit boards, data streams, holograms
+   - Atmosfer: futuristic cityscape, dark tech lab, clean studio
+   - Detaylar: reflective surfaces, particle effects, depth of field
+
+3. **STİL MODİFİYERLERİ (1-2 tane ekle):**
+   - Kalite: 8k, hyperrealistic, cinematic, award-winning
+   - Sanat: digital art, concept art, 3D render, photorealistic
+   - Mood: dramatic lighting, moody, vibrant, ethereal
+
+4. **YASAKLAR:**
+   - ❌ İnsan yüzü veya portre KULLANMA
+   - ❌ Metin veya yazı ekleme
+   - ❌ Gerçek marka logoları
+
+5. **UZUNLUK:** MAKSIMUM 150 KARAKTER (ÇOK KRİTİK!)
+
+SADECE PROMPT METNİNİ VER. Açıklama veya düşünce YAZMA.
+
+ÖRNEK FORMATLAR:
+- "Holographic AI brain, neural connections, blue neon glow, dark tech lab, 8k cinematic"
+- "Futuristic GPU chip, green matrix data, NVIDIA style, hyperrealistic 3D render"
+- "Quantum computer core, blue cryogenic mist, sci-fi laboratory, volumetric light"`;
 
   const response = await callDeepSeek(
     [
@@ -454,9 +528,132 @@ AI neural network, futuristic tech, glowing circuits, digital art, 4k, clean des
   return cleanPrompt;
 }
 
+/**
+ * Aggregate multiple source articles about the same topic into one comprehensive article
+ * This synthesizes information from 3+ sources covering the same story
+ */
+export async function aggregateMultiSourceArticles(
+  articles: Array<{
+    title: string;
+    content: string;
+    source: string;
+    url: string;
+  }>,
+  topic: string,
+): Promise<{
+  title: string;
+  excerpt: string;
+  content: string;
+  keywords: string[];
+  metaDescription: string;
+  sources: Array<{ name: string; url: string }>;
+}> {
+  if (articles.length < 2) {
+    throw new Error("Aggregation requires at least 2 articles");
+  }
+
+  const sourcesText = articles
+    .map(
+      (a, i) =>
+        `--- KAYNAK ${i + 1}: ${a.source} ---\nBaşlık: ${a.title}\nURL: ${a.url}\n\nİçerik:\n${a.content.substring(0, 2000)}`,
+    )
+    .join("\n\n");
+
+  const prompt = `Sen deneyimli bir haber editörüsün. Aşağıda AYNI KONU hakkında ${articles.length} FARKLI KAYNAKTAN haberler var.
+
+Görevin: Bu haberleri BİRLEŞTİREREK tek bir kapsamlı, özgün ve derin analiz içeren haber makalesi oluştur.
+
+KONU: ${topic}
+
+${sourcesText}
+
+### AGGREGATION KURALLARI:
+
+1. **SENTEZ YAP, KOPYALAMA:**
+   - Her kaynaktaki benzersiz bilgileri birleştir
+   - Çelişen bilgileri "X kaynağına göre... ancak Y kaynağı..." şeklinde sun
+   - Ortak noktaları pekiştir, farklı bakış açılarını zenginleştir
+
+2. **KAYNAK ATFİ:**
+   - Önemli bilgilerde kaynağı belirt: "Reuters'a göre...", "TechCrunch'ın haberine göre..."
+   - Tüm kaynakların katkısını içeriğe yansıt
+
+3. **DERINLIK EKLE:**
+   - Sadece haberleri birleştirme, ANALIZ ekle
+   - "Bu gelişmenin sektöre etkisi...", "Uzmanlar bu adımın..." gibi yorumlar
+   - Bağlam sağla: Geçmiş gelişmeler, gelecek beklentiler
+
+4. **YAPI:**
+   - Güçlü, merak uyandıran başlık (60-70 karakter)
+   - Piramit tekniği: En önemli bilgi en üstte
+   - H2 alt başlıklarla organize et
+   - "Kaynaklardan Derleme" veya "Çoklu Kaynak" gibi ifadeler KULLANMA
+
+5. **SEO:**
+   - Ana anahtar kelimeyi başlık ve ilk paragrafta kullan
+   - Long-tail keywords üret
+   - Meta açıklama 150-160 karakter
+
+6. **UZUNLUK:**
+   - Minimum 500 kelime (daha fazla kaynak = daha uzun makale)
+   - Tek kaynak haberinden EN AZ 1.5x daha kapsamlı olmalı
+
+JSON formatında yanıt ver:
+{
+  "title": "Birleştirilmiş haber başlığı",
+  "excerpt": "Ana sayfada görünecek 2-3 cümlelik özet",
+  "content": "HTML formatlı (<p>, <h2>, <ul>) tam makale metni",
+  "keywords": ["anahtar1", "anahtar2", "anahtar3", "anahtar4", "anahtar5"],
+  "metaDescription": "SEO uyumlu meta açıklama (150-160 karakter)"
+}`;
+
+  console.log(`🔗 Aggregating ${articles.length} sources about: ${topic}`);
+
+  const response = await callDeepSeek(
+    [
+      {
+        role: "system",
+        content:
+          "Sen dünyanın en iyi investigative journalism editörüsün. Birden fazla kaynağı harmanlayarak derin, kapsamlı ve özgün haberler üretirsin. Sadece geçerli JSON yanıtı ver.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    {
+      model: "deepseek-chat",
+      maxTokens: 6000, // Larger for comprehensive articles
+      temperature: 0.9,
+    },
+  );
+
+  // Extract JSON from response
+  const jsonMatch = response.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error("Failed to parse DeepSeek aggregation response");
+  }
+
+  const result = JSON.parse(jsonMatch[0]);
+
+  // Add source references
+  result.sources = articles.map((a) => ({
+    name: a.source,
+    url: a.url,
+  }));
+
+  console.log(`✅ Aggregated article: ${result.title}`);
+  console.log(
+    `   Sources: ${result.sources.map((s: { name: string }) => s.name).join(", ")}`,
+  );
+
+  return result;
+}
+
 export default {
   callDeepSeek,
   analyzeNewsArticles,
   rewriteArticle,
   generateImagePrompt,
+  aggregateMultiSourceArticles,
 };
