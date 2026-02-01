@@ -787,7 +787,7 @@ export async function processArticle(
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8a4 4 0 0 1 0 8"/><path d="M12 8a4 4 0 0 0 0 8"/></svg>
     <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">Yapay Zeka Destekli İçerik</span>
   </div>
-  <p style="font-size: 0.7rem; color: #64748b; margin: 0 0 0.75rem 0; line-height: 1.4;">Bu haber, yapay zeka teknolojisi kullanılarak orijinal kaynaklardan derlenmiş ve Türkçe'ye uyarlanmıştır.</p>
+  
   <div style="font-size: 0.65rem; color: #94a3b8;">
     <strong style="color: #64748b;">Kaynaklar:</strong> ${sourcesHtml}
   </div>
