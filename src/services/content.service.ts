@@ -650,7 +650,8 @@ export async function selectBestArticles(
 }
 
 /**
- * Process a single article: rewrite, get image, prepare for publishing
+ * Process a single article: deep research, rewrite, get image, prepare for publishing
+ * ENHANCED: Now includes deep research step for richer, more comprehensive content
  */
 export async function processArticle(
   article: NewsArticle,
@@ -667,6 +668,41 @@ export async function processArticle(
     // Step 1: Fetch full article content
     const fullContent = await fetchArticleContent(article.url);
 
+    // Step 1.5: 🆕 DEEP RESEARCH - Gather additional context
+    console.log("🔬 Deep research yapılıyor...");
+    await liveLog.content.info(`🔬 Ek araştırma yapılıyor...`);
+    
+    const { deepResearchArticle } = await import("@/lib/brave");
+    const researchData = await deepResearchArticle(article.title, article.description);
+    
+    // Build enriched content with research findings
+    let enrichedContent = fullContent;
+    const additionalSources: Array<{ title: string; url: string }> = [];
+    
+    // Add statistics if found
+    if (researchData.statistics.length > 0) {
+      enrichedContent += "\n\n[ADDITIONAL STATISTICS FROM RESEARCH]:\n";
+      enrichedContent += researchData.statistics.map(s => `- ${s}`).join("\n");
+    }
+    
+    // Add expert quotes if found
+    if (researchData.expertQuotes.length > 0) {
+      enrichedContent += "\n\n[EXPERT QUOTES FROM RESEARCH]:\n";
+      enrichedContent += researchData.expertQuotes.map(q => `"${q}"`).join("\n");
+    }
+    
+    // Add related context
+    if (researchData.relatedContext.length > 0) {
+      enrichedContent += "\n\n[ADDITIONAL CONTEXT FROM RESEARCH]:\n";
+      enrichedContent += researchData.relatedContext.slice(0, 3).map(c => `- ${c}`).join("\n");
+    }
+    
+    // Collect sources for footer
+    additionalSources.push(...researchData.sources);
+    
+    console.log(`✅ Deep research tamamlandı: ${researchData.sources.length} ek kaynak bulundu`);
+    await liveLog.content.success(`✅ ${researchData.sources.length} ek kaynak ile zenginleştirildi`);
+
     // Step 2: Fetch recent articles for internal linking context (max 3 to avoid over-linking)
     const recentArticles = await db.article.findMany({
       where: {
@@ -678,8 +714,8 @@ export async function processArticle(
       orderBy: { createdAt: "desc" },
     });
 
-    // Step 3: Rewrite article using DeepSeek
-    console.log("🤖 DeepSeek ile haber yeniden yazılıyor...");
+    // Step 3: Rewrite article using DeepSeek with ENRICHED content
+    console.log("🤖 DeepSeek ile zenginleştirilmiş içerik yeniden yazılıyor...");
 
     // Live log: Rewriting
     await liveLog.deepseek.info(
@@ -698,7 +734,7 @@ export async function processArticle(
 
     const rewritten = (await rewriteArticle(
       article.title,
-      fullContent,
+      enrichedContent, // 🆕 Use enriched content instead of plain fullContent
       category,
       recentArticles,
     )) as RewriteResult;
@@ -709,7 +745,33 @@ export async function processArticle(
     // Live log: Rewritten
     await liveLog.deepseek.success(`✅ Yeniden yazıldı (Puan: ${score}/1000)`);
 
-    // Step 3: Generate AI image prompt using DeepSeek
+    // 🆕 Add sources footer to content
+    let finalContent = rewritten.content;
+    
+    // Build sources list (original + research sources)
+    const allSources = [
+      { title: new URL(article.url).hostname.replace("www.", ""), url: article.url },
+      ...additionalSources.slice(0, 4), // Limit to 4 additional sources
+    ];
+    
+    // Create compact AI disclosure + sources footer
+    const sourcesHtml = allSources
+      .map(s => `<a href="${s.url}" target="_blank" rel="noopener nofollow" class="source-link">${s.title}</a>`)
+      .join(" • ");
+    
+    finalContent += `
+<div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
+  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8a4 4 0 0 1 0 8"/><path d="M12 8a4 4 0 0 0 0 8"/></svg>
+    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">Yapay Zeka Destekli İçerik</span>
+  </div>
+  <p style="font-size: 0.7rem; color: #64748b; margin: 0 0 0.75rem 0; line-height: 1.4;">Bu haber, yapay zeka teknolojisi kullanılarak orijinal kaynaklardan derlenmiş ve Türkçe'ye uyarlanmıştır.</p>
+  <div style="font-size: 0.65rem; color: #94a3b8;">
+    <strong style="color: #64748b;">Kaynaklar:</strong> ${sourcesHtml}
+  </div>
+</div>`;
+
+    // Step 4: Generate AI image prompt using DeepSeek
     console.log("🎨 DeepSeek ile görsel prompt oluşturuluyor...");
     const imagePrompt = await generateImagePrompt(
       rewritten.title,
@@ -718,7 +780,7 @@ export async function processArticle(
     );
     console.log("📝 Görsel prompt:", imagePrompt);
 
-    // Step 4: Get image from Pollinations.ai
+    // Step 5: Get image from Pollinations.ai
     console.log("🖼️  Pollinations.ai'dan görsel alınıyor...");
     const imageUrl = await fetchPollinationsImage(imagePrompt, {
       width: 1200,
@@ -729,13 +791,13 @@ export async function processArticle(
     });
     console.log("✅ Görsel URL:", imageUrl);
 
-    // Step 4.5: Generate slug (needed for image optimization)
+    // Step 5.5: Generate slug (needed for image optimization)
     const slug = generateSlug(rewritten.title);
 
     // Live log: Image generated
     await liveLog.image.success(`🖼️ Görsel oluşturuldu: ${slug}`);
 
-    // Step 5: Optimize image and generate multiple sizes
+    // Step 6: Optimize image and generate multiple sizes
     console.log("🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...");
     let imageSizes = {
       large: imageUrl,
@@ -759,7 +821,7 @@ export async function processArticle(
       // Continue with original image URL for all sizes
     }
 
-    // Step 6: Get or create category
+    // Step 7: Get or create category
     const categorySlug = generateSlug(category);
     await ensureCategory(category, categorySlug);
 
@@ -767,7 +829,7 @@ export async function processArticle(
       title: rewritten.title,
       slug,
       excerpt: rewritten.excerpt,
-      content: rewritten.content,
+      content: finalContent, // 🆕 Use content with AI disclosure footer
       imageUrl: imageSizes.large,
       imageUrlMedium: imageSizes.medium,
       imageUrlSmall: imageSizes.small,

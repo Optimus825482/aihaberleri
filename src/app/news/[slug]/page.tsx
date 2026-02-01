@@ -19,7 +19,7 @@ import { AudioPromo } from "@/components/AudioPromo";
 import { HighlightedText } from "@/components/audio/HighlightedText";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ArticleImage } from "@/components/ResponsiveImage";
-import { AIDisclaimer } from "@/components/AIDisclaimer";
+// AI Disclaimer is now embedded in article content footer (see content.service.ts)
 
 interface ArticlePageProps {
   params: Promise<{
@@ -194,11 +194,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <Eye className="h-4 w-4" />
                   <span>{article.views} görüntülenme</span>
                 </div>
-              </div>
-
-              {/* AI Disclaimer Badge - E-E-A-T Compliance */}
-              <div className="mb-8">
-                <AIDisclaimer sourceUrl={article.sourceUrl} />
               </div>
 
               {/* Featured Image - LCP Optimized with Responsive Sizes */}

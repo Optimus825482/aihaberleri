@@ -436,9 +436,182 @@ export async function getTrendingAITopics(): Promise<string[]> {
   }
 }
 
+/**
+ * Deep Research - Gather additional context and details for an article
+ * This enriches the article content before rewriting for more comprehensive coverage
+ *
+ * @param title - Article title to research
+ * @param description - Article description/summary
+ * @returns Enriched context with additional facts, quotes, and details
+ */
+export interface DeepResearchResult {
+  additionalFacts: string[];
+  relatedContext: string[];
+  expertQuotes: string[];
+  statistics: string[];
+  timeline: string[];
+  sources: Array<{ title: string; url: string }>;
+}
+
+export async function deepResearchArticle(
+  title: string,
+  description: string,
+): Promise<DeepResearchResult> {
+  console.log(`🔬 Deep research başlatılıyor: "${title.substring(0, 50)}..."`);
+
+  const result: DeepResearchResult = {
+    additionalFacts: [],
+    relatedContext: [],
+    expertQuotes: [],
+    statistics: [],
+    timeline: [],
+    sources: [],
+  };
+
+  try {
+    // Extract key entities and topics from title
+    const keywords = extractKeywords(title, description);
+
+    // Search for additional context with different queries
+    const searchQueries = [
+      keywords, // Main topic search
+      `${keywords} details facts`, // Detailed facts
+      `${keywords} expert opinion analysis`, // Expert opinions
+    ];
+
+    const seenUrls = new Set<string>();
+
+    for (const query of searchQueries) {
+      try {
+        const searchResults = await rateLimitedCall(() =>
+          braveSearch(query, {
+            count: 5,
+            freshness: "pw", // Past week for more context
+          }),
+        );
+
+        for (const item of searchResults) {
+          // Skip if already seen
+          if (seenUrls.has(item.url)) continue;
+          seenUrls.add(item.url);
+
+          // Add to sources
+          result.sources.push({
+            title: item.title,
+            url: item.url,
+          });
+
+          // Extract useful information from description
+          const desc = item.description || "";
+
+          // Look for statistics (numbers with %, $, million, billion etc.)
+          const statPattern =
+            /\d+(?:\.\d+)?(?:\s*(?:%|percent|million|billion|milyar|milyon|\$|€|£))/gi;
+          const stats = desc.match(statPattern);
+          if (stats) {
+            stats.forEach((stat) => {
+              const context = extractStatContext(desc, stat);
+              if (context && !result.statistics.includes(context)) {
+                result.statistics.push(context);
+              }
+            });
+          }
+
+          // Look for quotes (text in quotation marks)
+          const quotePattern = /"([^"]{20,150})"/g;
+          let match;
+          while ((match = quotePattern.exec(desc)) !== null) {
+            if (!result.expertQuotes.includes(match[1])) {
+              result.expertQuotes.push(match[1]);
+            }
+          }
+
+          // Add general facts from descriptions (if relevant)
+          if (desc.length > 50 && isRelevantToTopic(desc, title)) {
+            // Clean and add as additional context
+            const cleanDesc = desc.replace(/<[^>]*>/g, "").trim();
+            if (
+              cleanDesc.length > 30 &&
+              !result.relatedContext.includes(cleanDesc)
+            ) {
+              result.relatedContext.push(cleanDesc);
+            }
+          }
+        }
+      } catch (searchError) {
+        console.warn(`⚠️ Search failed for query "${query}":`, searchError);
+        // Continue with other queries
+      }
+    }
+
+    // Limit results to prevent token overflow
+    result.additionalFacts = result.additionalFacts.slice(0, 5);
+    result.relatedContext = result.relatedContext.slice(0, 5);
+    result.expertQuotes = result.expertQuotes.slice(0, 3);
+    result.statistics = result.statistics.slice(0, 5);
+    result.sources = result.sources.slice(0, 8);
+
+    console.log(`✅ Deep research tamamlandı:`);
+    console.log(`   📊 ${result.statistics.length} istatistik`);
+    console.log(`   💬 ${result.expertQuotes.length} alıntı`);
+    console.log(`   📚 ${result.sources.length} kaynak`);
+    console.log(`   📝 ${result.relatedContext.length} ek bağlam`);
+
+    return result;
+  } catch (error) {
+    console.error("❌ Deep research hatası:", error);
+    return result; // Return empty result on error
+  }
+}
+
+/**
+ * Extract context around a statistic
+ */
+function extractStatContext(text: string, stat: string): string {
+  const index = text.indexOf(stat);
+  if (index === -1) return stat;
+
+  // Get 50 chars before and after the stat
+  const start = Math.max(0, index - 50);
+  const end = Math.min(text.length, index + stat.length + 50);
+
+  let context = text.substring(start, end).trim();
+
+  // Clean up partial words at boundaries
+  if (start > 0) {
+    const firstSpace = context.indexOf(" ");
+    if (firstSpace > 0) context = context.substring(firstSpace + 1);
+  }
+  if (end < text.length) {
+    const lastSpace = context.lastIndexOf(" ");
+    if (lastSpace > 0) context = context.substring(0, lastSpace);
+  }
+
+  return context;
+}
+
+/**
+ * Check if text is relevant to the topic
+ */
+function isRelevantToTopic(text: string, title: string): boolean {
+  const titleWords = title
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length > 3);
+  const textLower = text.toLowerCase();
+
+  let matchCount = 0;
+  for (const word of titleWords) {
+    if (textLower.includes(word)) matchCount++;
+  }
+
+  return matchCount >= Math.min(2, titleWords.length / 2);
+}
+
 export default {
   braveSearch,
   calculateTrendScoreBrave,
   rankArticlesByTrendBrave,
   getTrendingAITopics,
+  deepResearchArticle,
 };

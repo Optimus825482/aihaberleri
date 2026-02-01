@@ -280,7 +280,7 @@ export async function isDuplicateNews(
           Math.max(newKeywords.length, existingKeywords.length);
 
         // 🆕 Tier 1: 4+ common keywords = very likely same story
-        if (intersection.length >= 4 && keywordOverlap > 0.40) {
+        if (intersection.length >= 4 && keywordOverlap > 0.4) {
           console.log(
             `❌ DUPLICATE: Strong keyword overlap - ${intersection.length} common words (${(keywordOverlap * 100).toFixed(1)}%) with article ${article.id}`,
           );
@@ -355,7 +355,7 @@ export async function isDuplicateNews(
           if (
             entityIntersection.length >= 2 &&
             hoursDiff < 24 &&
-            titleSimilarity > 0.40
+            titleSimilarity > 0.4
           ) {
             console.log(
               `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] + ${(titleSimilarity * 100).toFixed(1)}% similarity within 24h`,
