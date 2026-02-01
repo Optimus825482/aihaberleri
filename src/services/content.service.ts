@@ -1097,6 +1097,15 @@ export async function processAndPublishArticles(
           processed.categorySlug = forceCategorySlug;
         }
       } else {
+        // ⚡ CRITICAL FIX: Check for duplicates BEFORE processing (saves image generation costs)
+        console.log(`🔍 Pre-processing duplicate check: ${article.title.substring(0, 60)}...`);
+        
+        const preCheckDuplicate = await isDuplicate(article);
+        if (preCheckDuplicate) {
+          console.log(`🗑️ Pre-check duplicate skipped (saved processing): ${article.title}`);
+          continue; // Skip to next article - don't waste resources on duplicate
+        }
+
         // Normal single-source article processing
         // If forceCategorySlug is provided, use it instead of DeepSeek's category
         const targetCategory = forceCategorySlug
