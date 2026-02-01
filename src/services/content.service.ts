@@ -1098,11 +1098,15 @@ export async function processAndPublishArticles(
         }
       } else {
         // ⚡ CRITICAL FIX: Check for duplicates BEFORE processing (saves image generation costs)
-        console.log(`🔍 Pre-processing duplicate check: ${article.title.substring(0, 60)}...`);
-        
+        console.log(
+          `🔍 Pre-processing duplicate check: ${article.title.substring(0, 60)}...`,
+        );
+
         const preCheckDuplicate = await isDuplicate(article);
         if (preCheckDuplicate) {
-          console.log(`🗑️ Pre-check duplicate skipped (saved processing): ${article.title}`);
+          console.log(
+            `🗑️ Pre-check duplicate skipped (saved processing): ${article.title}`,
+          );
           continue; // Skip to next article - don't waste resources on duplicate
         }
 
