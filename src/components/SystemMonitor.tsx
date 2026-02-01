@@ -21,9 +21,11 @@ export function SystemMonitor({
 }: SystemMonitorProps) {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll logs to bottom
+  // Auto-scroll logs to bottom - only when logs exist
   useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (logs.length > 0) {
+      logsEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   }, [logs]);
 
   return (
@@ -54,7 +56,7 @@ export function SystemMonitor({
               <div className="absolute inset-0 bg-primary/50 blur-md" />
             </div>
             <CardTitle className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">
-              {isAgentEnabled ? "GHOSTWRITER_SYSTEM_MONITOR" : "SYSTEM_OFFLINE"}
+              {isAgentEnabled ? "SYSTEM_MONITOR" : "SYSTEM_OFFLINE"}
             </CardTitle>
           </div>
           {executing && (
@@ -95,15 +97,14 @@ export function SystemMonitor({
                   [{new Date(log.timestamp).toLocaleTimeString("tr-TR")}]
                 </span>
                 <span
-                  className={`${
-                    log.type === "error"
+                  className={`${log.type === "error"
                       ? "text-red-400 font-bold"
                       : log.type === "success"
                         ? "text-primary font-bold"
                         : log.type === "progress"
                           ? "text-sky-400"
                           : "text-zinc-400"
-                  } leading-relaxed break-all`}
+                    } leading-relaxed break-all`}
                 >
                   {log.type === "success" && "✓ "}
                   {log.type === "error" && "✗ "}

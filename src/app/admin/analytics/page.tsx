@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SystemMonitor, LogMessage } from "@/components/SystemMonitor";
+
 import {
   Clock,
   Eye,
@@ -65,48 +65,6 @@ interface AnalyticsData {
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // System Monitor States
-  const [logs, setLogs] = useState<LogMessage[]>([]);
-  const [executing, setExecuting] = useState(false);
-  // Default to true or fetch from API. Assuming enabled for now as requested.
-  const [isAgentEnabled, setIsAgentEnabled] = useState(true);
-
-  useEffect(() => {
-    // Fetch last agent execution logs (read-only, no agent trigger)
-    const fetchAgentLogs = async () => {
-      try {
-        const response = await fetch("/api/agent/stats");
-        const result = await response.json();
-        if (result.success && result.data?.history) {
-          // Convert history to log format for display
-          const historyLogs: LogMessage[] = result.data.history
-            .slice(0, 10)
-            .map(
-              (h: {
-                executionTime: string;
-                status: string;
-                articlesCreated: number;
-                duration: number;
-              }) => ({
-                message: `[${new Date(h.executionTime).toLocaleString()}] ${h.status === "SUCCESS" ? "✅" : "❌"} ${h.articlesCreated} makale, ${h.duration}s`,
-                type: h.status === "SUCCESS" ? "success" : "error",
-                timestamp: h.executionTime,
-              }),
-            );
-          setLogs(historyLogs);
-          setIsAgentEnabled(result.data.agent?.enabled ?? true);
-        }
-      } catch (error) {
-        console.error("Failed to fetch agent logs:", error);
-      }
-    };
-
-    fetchAgentLogs();
-    // Refresh logs every 30 seconds
-    const interval = setInterval(fetchAgentLogs, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     fetchAnalytics();
@@ -388,14 +346,6 @@ export default function AnalyticsPage() {
           </Card>
         </div>
 
-        {/* Real-time System Monitor */}
-        <div className="mt-8">
-          <SystemMonitor
-            logs={logs}
-            executing={executing}
-            isAgentEnabled={isAgentEnabled}
-          />
-        </div>
       </div>
     </AdminLayout>
   );

@@ -28,7 +28,6 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { DashboardDonutChart } from "@/components/DashboardDonutChart";
 import { RealtimeAreaChart } from "@/components/RealtimeAreaChart";
 import { CountryBarChart } from "@/components/CountryBarChart";
-import { SystemMonitor, LogMessage } from "@/components/SystemMonitor";
 import { AgentProgressBar } from "@/components/AgentProgressBar";
 
 interface DashboardStats {
@@ -606,13 +605,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Real-time Logs - Terminal Style */}
-        {/* Real-time Logs - Terminal Style */}
-        <SystemMonitor
-          logs={logs}
-          executing={executing}
-          isAgentEnabled={isAgentEnabled}
-        />
       </div>
     </AdminLayout>
   );

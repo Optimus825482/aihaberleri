@@ -461,18 +461,18 @@ export default function ArticlesPage() {
 
             {/* Desktop Table View */}
             <div className="hidden lg:block overflow-x-auto">
-              <Table className="min-w-[900px]">
+              <Table className="min-w-[850px] table-fixed">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[70px]">Görsel</TableHead>
-                    <TableHead className="min-w-[200px] max-w-[300px]">Başlık</TableHead>
-                    <TableHead className="w-[120px]">Kategori</TableHead>
-                    <TableHead className="w-[100px]">Tarih</TableHead>
-                    <TableHead className="w-[70px]">Skor</TableHead>
-                    <TableHead className="w-[80px]">Durum</TableHead>
-                    <TableHead className="w-[70px] text-center">FB</TableHead>
-                    <TableHead className="w-[80px] text-right">Görüntü</TableHead>
-                    <TableHead className="w-[120px] text-right">İşlemler</TableHead>
+                    <TableHead className="w-[60px]">Görsel</TableHead>
+                    <TableHead className="w-auto min-w-[180px]">Başlık</TableHead>
+                    <TableHead className="w-[100px]">Kategori</TableHead>
+                    <TableHead className="w-[85px]">Tarih</TableHead>
+                    <TableHead className="w-[60px]">Skor</TableHead>
+                    <TableHead className="w-[70px]">Durum</TableHead>
+                    <TableHead className="w-[85px] text-center">FB</TableHead>
+                    <TableHead className="w-[75px] text-right">Görüntü</TableHead>
+                    <TableHead className="w-[130px] text-right sticky right-0 bg-background shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.1)]">İşlemler</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -567,7 +567,7 @@ export default function ArticlesPage() {
                               className="gap-1 bg-green-600 hover:bg-green-700"
                             >
                               <CheckCircle className="h-3 w-3" />
-                              Paylaşıldı
+                              <span className="hidden xl:inline">Paylaşıldı</span>
                             </Badge>
                           ) : (
                             <Button
@@ -590,7 +590,7 @@ export default function ArticlesPage() {
                               ) : (
                                 <Facebook className="h-4 w-4" />
                               )}
-                              Paylaş
+                              <span className="hidden xl:inline">Paylaş</span>
                             </Button>
                           )}
                         </div>
@@ -601,8 +601,8 @@ export default function ArticlesPage() {
                           <span>{article.views}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <TableCell className="text-right sticky right-0 bg-background shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.1)]">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             size="sm"
                             variant="ghost"

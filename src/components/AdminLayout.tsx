@@ -22,6 +22,7 @@ import {
   BarChart,
   Activity,
   Shield,
+  Bell,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -75,6 +76,12 @@ const menuItems = [
     title: "Agent Ayarları",
     href: "/admin/agent-settings",
     icon: Bot,
+    requiredResource: "settings" as const,
+  },
+  {
+    title: "Bildirimler",
+    href: "/admin/notifications",
+    icon: Bell,
     requiredResource: "settings" as const,
   },
   {
