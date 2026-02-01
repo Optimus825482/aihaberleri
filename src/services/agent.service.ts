@@ -14,7 +14,6 @@ import {
   selectBestArticles,
   processAndPublishArticles,
 } from "./content.service";
-import { processIntelligentNews } from "./intelligent-news.service";
 import { emailService } from "@/lib/email";
 import { getRedis } from "@/lib/redis";
 import { emitToAdmin, SocketEvents } from "@/lib/socket";
@@ -204,62 +203,54 @@ export async function executeNewsAgent(
 
     // Live log: Selecting articles
     await liveLog.deepseek.info(
-      `🎯 Akıllı haber işleme başlatılıyor (${targetCount} hedef)...`,
+      `🎯 DeepSeek AI ile ${targetCount} haber seçiliyor...`,
     );
 
-    // Step 2: Use new intelligent news pipeline
-    // This includes: duplicate check, deep research, content synthesis, dual-language publishing
+    // Step 2: Select best articles using AI
+    const selectedArticles = await selectBestArticles(
+      newsArticles,
+      targetCount,
+    );
+    console.log(`✅ ${selectedArticles.length} haber seçildi`);
+
+    // Live log: Articles selected
+    await liveLog.deepseek.success(
+      `✅ ${selectedArticles.length} haber seçildi`,
+    );
+
+    // Step 3: Process and publish articles (includes deep research, rewriting, translation)
     agentLogger.step(
       agentLog.id,
-      "intelligent_processing",
-      "Akıllı haber işleme: Araştırma + Sentez + Çift dilde yayın",
-      40,
+      "process_articles",
+      "Haberler yeniden yazılıyor ve görseller oluşturuluyor",
+      60,
     );
-    console.log("🧠 Adım 2: Akıllı haber işleme pipeline'ı başlatılıyor...");
+    console.log("⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...");
     await updateJobProgress(
       agentLog.id,
-      "intelligent_processing",
-      "Derin araştırma ve içerik sentezleme...",
-      40,
+      "processing",
+      "Haberler yeniden yazılıyor ve görseller oluşturuluyor...",
+      60,
     );
 
     // Emit progress
     emitToAdmin(SocketEvents.AGENT_PROGRESS, {
-      step: "intelligent_processing",
-      message: "Akıllı haber işleme: Araştırma, sentez ve çift dilde yayın...",
-      progress: 40,
+      step: "processing",
+      message: "Haberler yeniden yazılıyor ve görseller oluşturuluyor...",
+      progress: 60,
     });
 
-    // Determine category for processing
-    const processingCategory = categorySlug || "yapay-zeka";
-
-    // NEW INTELLIGENT PIPELINE:
-    // 1. Sequential duplicate checking
-    // 2. Deep research with multiple sources (Brave + Jina)
-    // 3. Content synthesis (Turkish + English)
-    // 4. Dual-language publishing
-    const intelligentResults = await processIntelligentNews(
-      newsArticles,
-      targetCount,
-      processingCategory,
+    const published = await processAndPublishArticles(
+      selectedArticles,
       agentLog.id,
+      categorySlug,
     );
-
-    // Separate TR and EN articles
-    const trArticles = intelligentResults.filter((a) => a.language === "tr");
-    const enArticles = intelligentResults.filter((a) => a.language === "en");
-
-    articlesCreated = trArticles.length; // Count TR as main articles
-    publishedArticles.push(...intelligentResults);
-
-    console.log(
-      `✅ ${trArticles.length} Türkçe + ${enArticles.length} İngilizce haber yayınlandı`,
-    );
+    articlesCreated = published.length;
+    publishedArticles.push(...published);
+    console.log(`✅ ${articlesCreated} haber yayınlandı`);
 
     // Live log: Articles created
-    await liveLog.publish.success(
-      `✅ ${trArticles.length} TR + ${enArticles.length} EN haber yayında!`,
-    );
+    await liveLog.publish.success(`✅ ${articlesCreated} haber yayında!`);
 
     // Ping search engines to update sitemaps (non-blocking)
     // Uses multiple methods: IndexNow, WebSub, legacy ping
@@ -283,7 +274,7 @@ export async function executeNewsAgent(
     }
 
     // Emit article published events
-    for (const article of intelligentResults) {
+    for (const article of published) {
       emitToAdmin(SocketEvents.ARTICLE_PUBLISHED, {
         id: article.id,
         slug: article.slug,

@@ -1046,38 +1046,53 @@ export async function processIntelligentNews(
       });
       console.log(`   ✅ Türkçe yayınlandı: ${trSlug}`);
 
-      // STEP 6: İngilizce versiyonu yayınla
-      console.log(`🇬🇧 İngilizce versiyon yayınlanıyor...`);
-      const enSlug = slugify(synthesized.en.title) + "-en";
+      // STEP 6: İngilizce versiyonu ArticleTranslation tablosuna kaydet
+      console.log(`🇬🇧 İngilizce çeviri kaydediliyor...`);
+      const enSlug = slugify(synthesized.en.title);
 
-      const enArticle = await db.article.create({
-        data: {
-          title: synthesized.en.title,
-          slug: enSlug,
-          excerpt: synthesized.en.excerpt,
-          content: synthesized.en.content,
-          imageUrl: imageUrls.imageUrl,
-          imageUrlMedium: imageUrls.imageUrlMedium,
-          imageUrlSmall: imageUrls.imageUrlSmall,
-          imageUrlThumb: imageUrls.imageUrlThumb,
-          sourceUrl: article.url,
-          categoryId: categoryRecord.id,
-          status: "PUBLISHED", // EN always published if TR is
-          score: synthesized.tr.score || 800,
-          publishedAt: new Date(),
-          metaTitle: synthesized.en.title,
-          metaDescription: synthesized.en.metaDescription,
-          keywords: synthesized.en.keywords,
-          agentLogId,
-        },
-      });
+      // Önce Türkçe çeviriyi kaydet
+      await db.$executeRaw`
+        INSERT INTO "ArticleTranslation" (
+          id, "articleId", locale, title, slug, excerpt, content, 
+          "metaTitle", "metaDescription", "createdAt", "updatedAt"
+        ) VALUES (
+          gen_random_uuid(), ${trArticle.id}, 'tr', ${synthesized.tr.title}, 
+          ${trSlug}, ${synthesized.tr.excerpt}, ${synthesized.tr.content},
+          ${synthesized.tr.title}, ${synthesized.tr.metaDescription}, 
+          NOW(), NOW()
+        )
+        ON CONFLICT ("articleId", locale) DO UPDATE SET
+          title = EXCLUDED.title,
+          slug = EXCLUDED.slug,
+          excerpt = EXCLUDED.excerpt,
+          content = EXCLUDED.content,
+          "metaTitle" = EXCLUDED."metaTitle",
+          "metaDescription" = EXCLUDED."metaDescription",
+          "updatedAt" = NOW()
+      `;
 
-      published.push({
-        id: enArticle.id,
-        slug: enArticle.slug,
-        language: "en",
-      });
-      console.log(`   ✅ İngilizce yayınlandı: ${enSlug}`);
+      // Sonra İngilizce çeviriyi kaydet
+      await db.$executeRaw`
+        INSERT INTO "ArticleTranslation" (
+          id, "articleId", locale, title, slug, excerpt, content, 
+          "metaTitle", "metaDescription", "createdAt", "updatedAt"
+        ) VALUES (
+          gen_random_uuid(), ${trArticle.id}, 'en', ${synthesized.en.title}, 
+          ${enSlug}, ${synthesized.en.excerpt}, ${synthesized.en.content},
+          ${synthesized.en.title}, ${synthesized.en.metaDescription}, 
+          NOW(), NOW()
+        )
+        ON CONFLICT ("articleId", locale) DO UPDATE SET
+          title = EXCLUDED.title,
+          slug = EXCLUDED.slug,
+          excerpt = EXCLUDED.excerpt,
+          content = EXCLUDED.content,
+          "metaTitle" = EXCLUDED."metaTitle",
+          "metaDescription" = EXCLUDED."metaDescription",
+          "updatedAt" = NOW()
+      `;
+
+      console.log(`   ✅ Çeviriler kaydedildi (TR + EN)`);
 
       await liveLog.publish.success(
         `✅ Haber yayınlandı: ${synthesized.tr.title.substring(0, 40)}... (TR + EN)`,

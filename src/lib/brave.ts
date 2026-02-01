@@ -501,16 +501,27 @@ export async function deepResearchArticle(
             url: item.url,
           });
 
-          // Extract useful information from description
-          const desc = item.description || "";
+          // Try to read full content using Jina + Tavily fallback
+          let fullContent = item.description || "";
+
+          // Only try to read content for first 3 sources to avoid rate limits
+          if (result.sources.length <= 3) {
+            const readContent = await readUrlContentWithFallback(item.url);
+            if (readContent && readContent.length > fullContent.length) {
+              fullContent = readContent;
+              console.log(
+                `   ✅ İçerik okundu: ${item.title.substring(0, 40)}...`,
+              );
+            }
+          }
 
           // Look for statistics (numbers with %, $, million, billion etc.)
           const statPattern =
             /\d+(?:\.\d+)?(?:\s*(?:%|percent|million|billion|milyar|milyon|\$|€|£))/gi;
-          const stats = desc.match(statPattern);
+          const stats = fullContent.match(statPattern);
           if (stats) {
             stats.forEach((stat) => {
-              const context = extractStatContext(desc, stat);
+              const context = extractStatContext(fullContent, stat);
               if (context && !result.statistics.includes(context)) {
                 result.statistics.push(context);
               }
@@ -520,21 +531,28 @@ export async function deepResearchArticle(
           // Look for quotes (text in quotation marks)
           const quotePattern = /"([^"]{20,150})"/g;
           let match;
-          while ((match = quotePattern.exec(desc)) !== null) {
+          while ((match = quotePattern.exec(fullContent)) !== null) {
             if (!result.expertQuotes.includes(match[1])) {
               result.expertQuotes.push(match[1]);
             }
           }
 
-          // Add general facts from descriptions (if relevant)
-          if (desc.length > 50 && isRelevantToTopic(desc, title)) {
+          // Add general facts from content (if relevant)
+          if (
+            fullContent.length > 50 &&
+            isRelevantToTopic(fullContent, title)
+          ) {
             // Clean and add as additional context
-            const cleanDesc = desc.replace(/<[^>]*>/g, "").trim();
+            const cleanContent = fullContent.replace(/<[^>]*>/g, "").trim();
+            // Extract first meaningful paragraph
+            const paragraphs = cleanContent
+              .split(/\n\n+/)
+              .filter((p) => p.length > 50);
             if (
-              cleanDesc.length > 30 &&
-              !result.relatedContext.includes(cleanDesc)
+              paragraphs.length > 0 &&
+              !result.relatedContext.includes(paragraphs[0])
             ) {
-              result.relatedContext.push(cleanDesc);
+              result.relatedContext.push(paragraphs[0].substring(0, 500));
             }
           }
         }
@@ -562,6 +580,96 @@ export async function deepResearchArticle(
     console.error("❌ Deep research hatası:", error);
     return result; // Return empty result on error
   }
+}
+
+// ============================================
+// CONTENT READING - Multi-provider fallback
+// ============================================
+
+const JINA_READER_URL = "https://r.jina.ai";
+const JINA_TIMEOUT = 10000; // 10 seconds
+const TAVILY_EXTRACT_URL = "https://api.tavily.com/extract";
+const TAVILY_TIMEOUT = 12000; // 12 seconds
+
+/**
+ * Read URL content with Jina Reader
+ */
+async function readWithJina(url: string): Promise<string | null> {
+  try {
+    const response = await axios.get(`${JINA_READER_URL}/${url}`, {
+      headers: {
+        Accept: "text/plain",
+        "X-Return-Format": "markdown",
+      },
+      timeout: JINA_TIMEOUT,
+    });
+
+    const content = response.data;
+    if (content && content.length > 100) {
+      return content;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Read URL content with Tavily Extract (fallback)
+ */
+async function readWithTavily(url: string): Promise<string | null> {
+  const apiKey = process.env.TAVILY_API_KEY;
+  if (!apiKey) {
+    return null;
+  }
+
+  try {
+    const response = await axios.post(
+      TAVILY_EXTRACT_URL,
+      { urls: [url] },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        timeout: TAVILY_TIMEOUT,
+      },
+    );
+
+    const results = response.data?.results;
+    if (results && results.length > 0 && results[0].raw_content) {
+      return results[0].raw_content;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Read URL content with multi-provider fallback
+ * 1. Jina Reader (free, fast)
+ * 2. Tavily Extract (paid, reliable)
+ */
+async function readUrlContentWithFallback(url: string): Promise<string> {
+  // Try Jina Reader first
+  let content = await readWithJina(url);
+
+  if (!content) {
+    // Fallback to Tavily
+    content = await readWithTavily(url);
+  }
+
+  if (!content) {
+    return "";
+  }
+
+  // Truncate if too long
+  if (content.length > 3000) {
+    return content.substring(0, 3000) + "...";
+  }
+
+  return content;
 }
 
 /**
