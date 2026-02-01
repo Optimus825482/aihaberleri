@@ -244,9 +244,9 @@ export async function isDuplicateNews(
         };
       }
 
-      // 2. Title Similarity Check (55%+ similar - ENHANCED from 70%)
+      // 2. Title Similarity Check (65%+ similar - RELAXED from 55% on 01.02.2026)
       const titleSimilarity = calculateSimilarity(title, article.title);
-      if (titleSimilarity > 0.55) {
+      if (titleSimilarity > 0.65) {
         console.log(
           `❌ DUPLICATE: Title similarity ${(titleSimilarity * 100).toFixed(1)}% with article ${article.id}`,
         );
@@ -328,10 +328,11 @@ export async function isDuplicateNews(
             };
           }
 
-          // STRONG DUPLICATE: 2+ same entities within 24 hours (same story, different angle)
-          if (entityIntersection.length >= 2 && hoursDiff < 24) {
+          // RELAXED: 3+ same entities within 12 hours (same story, different angle)
+          // Changed from 2+ entities, 24h to 3+ entities, 12h (01.02.2026)
+          if (entityIntersection.length >= 3 && hoursDiff < 12) {
             console.log(
-              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] within 24h`,
+              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] within 12h`,
             );
             console.log(`   New: "${title}"`);
             console.log(`   Existing: "${article.title}"`);
@@ -342,8 +343,9 @@ export async function isDuplicateNews(
             };
           }
 
-          // Same entities within 72 hours + moderate title similarity = likely duplicate
-          if (hoursDiff < 72 && titleSimilarity > 0.45) {
+          // Same entities within 48 hours + moderate title similarity = likely duplicate
+          // RELAXED: 72h -> 48h, 45% -> 55% (01.02.2026)
+          if (hoursDiff < 48 && titleSimilarity > 0.55) {
             console.log(
               `❌ DUPLICATE: Entity match [${entityIntersection.join(", ")}] + ${(titleSimilarity * 100).toFixed(1)}% title similarity`,
             );
@@ -630,16 +632,12 @@ export async function fetchAINews(
       console.log(`✅ En güncel ${MAX_ARTICLES_TO_ANALYZE} haber seçildi`);
     }
 
-    // Step 3: Analyze trends using Brave Search API AND Google Trends
+    // Step 3: Analyze trends using Brave Search API ONLY
+    // NOTE: Google Trends removed on 01.02.2026 - all endpoints returning 404
+    // Brave API is now the sole trend source
     console.log(
-      `📊 ${itemsToAnalyze.length} haber için Trend (Brave + Google) analizi...`,
+      `📊 ${itemsToAnalyze.length} haber için Trend analizi (Brave API)...`,
     );
-
-    // Fetch Google Trends (Parallel)
-    const googleTrends = await import("@/lib/google-trends")
-      .then((m) => m.fetchGoogleTrends())
-      .catch(() => []);
-    const { calculateGoogleTrendScore } = await import("@/lib/google-trends");
 
     const trendRankings = await rankArticlesByTrendBrave(
       itemsToAnalyze.map((item) => ({
@@ -650,26 +648,15 @@ export async function fetchAINews(
 
     // Step 4: Sort by trend score and take top articles
     const topArticles = trendRankings
-      .slice(0, 20) // Top 20 trending (initially)
+      .slice(0, 20) // Top 20 trending
       .map((ranking) => {
         const item = itemsToAnalyze[ranking.index];
-
-        // Add Google Trend Boost
-        const googleScore = calculateGoogleTrendScore(item.title, googleTrends);
-        const finalScore = ranking.score + googleScore;
-
-        if (googleScore > 0) {
-          console.log(
-            `🔥 HOT TOPIC DETECTED: ${item.title} (Boost: +${googleScore})`,
-          );
-        }
-
         return {
           ...item,
-          trendScore: finalScore,
+          trendScore: ranking.score,
         };
       })
-      .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0)); // Re-sort after Google Boost
+      .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0));
 
     console.log(`✅ ${topArticles.length} trend haber seçildi`);
     console.log(

@@ -248,11 +248,12 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
     language: "en",
   },
-  {
-    name: "Microsoft Azure AI Blog",
-    url: "https://azure.microsoft.com/en-us/blog/topics/artificial-intelligence/feed/",
-    language: "en",
-  },
+  // DISABLED: Parse error - "Cannot convert object to primitive value" (01.02.2026)
+  // {
+  //   name: "Microsoft Azure AI Blog",
+  //   url: "https://azure.microsoft.com/en-us/blog/topics/artificial-intelligence/feed/",
+  //   language: "en",
+  // },
   {
     name: "AWS Machine Learning Blog",
     url: "https://aws.amazon.com/blogs/machine-learning/feed/",
@@ -277,11 +278,12 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://www.forbes.com/innovation/feed/",
     language: "en",
   },
-  {
-    name: "CNBC - Technology",
-    url: "https://www.cnbc.com/id/19854910/device/rss/rss.html",
-    language: "en",
-  },
+  // DISABLED: 403 Forbidden hatası (01.02.2026)
+  // {
+  //   name: "CNBC - Technology",
+  //   url: "https://www.cnbc.com/id/19854910/device/rss/rss.html",
+  //   language: "en",
+  // },
   {
     name: "The Economist - Technology",
     url: "https://www.economist.com/science-and-technology/rss.xml",
