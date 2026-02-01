@@ -1,7 +1,7 @@
 /**
  * RSS Feed Route
  * Generates RSS 2.0 feed with WebSub/PubSubHubbub support for faster Google indexing
- * 
+ *
  * WebSub enables real-time content notifications to search engines
  * Reference: https://www.w3.org/TR/websub/
  */
@@ -45,26 +45,30 @@ export async function GET() {
     });
 
     // Build RSS XML
-    const lastBuildDate = articles[0]?.publishedAt?.toUTCString() || new Date().toUTCString();
-    
-    const rssItems = articles.map((article) => {
-      const pubDate = article.publishedAt?.toUTCString() || new Date().toUTCString();
-      const articleUrl = `${SITE_URL}/news/${article.slug}`;
-      
-      // Clean HTML from content for description
-      const description = article.excerpt || 
-        article.content?.replace(/<[^>]*>/g, "").substring(0, 300) + "...";
-      
-      // Escape XML special characters
-      const escapeXml = (str: string) => 
-        str
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&apos;");
+    const lastBuildDate =
+      articles[0]?.publishedAt?.toUTCString() || new Date().toUTCString();
 
-      return `
+    const rssItems = articles
+      .map((article) => {
+        const pubDate =
+          article.publishedAt?.toUTCString() || new Date().toUTCString();
+        const articleUrl = `${SITE_URL}/news/${article.slug}`;
+
+        // Clean HTML from content for description
+        const description =
+          article.excerpt ||
+          article.content?.replace(/<[^>]*>/g, "").substring(0, 300) + "...";
+
+        // Escape XML special characters
+        const escapeXml = (str: string) =>
+          str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&apos;");
+
+        return `
     <item>
       <title>${escapeXml(article.title)}</title>
       <link>${articleUrl}</link>
@@ -75,11 +79,12 @@ export async function GET() {
       ${article.imageUrl ? `<enclosure url="${article.imageUrl}" type="image/jpeg" length="0"/>` : ""}
       <source url="${SITE_URL}/feed.xml">${SITE_NAME}</source>
     </item>`;
-    }).join("");
+      })
+      .join("");
 
     // WebSub hub links for real-time notifications
-    const hubLinks = WEBSUB_HUBS.map(hub => 
-      `<atom:link rel="hub" href="${hub}"/>`
+    const hubLinks = WEBSUB_HUBS.map(
+      (hub) => `<atom:link rel="hub" href="${hub}"/>`,
     ).join("\n    ");
 
     const rss = `<?xml version="1.0" encoding="UTF-8"?>
@@ -117,10 +122,12 @@ export async function GET() {
       status: 200,
       headers: {
         "Content-Type": "application/rss+xml; charset=utf-8",
-        "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
+        "Cache-Control":
+          "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
         // WebSub discovery headers
-        "Link": WEBSUB_HUBS.map(hub => `<${hub}>; rel="hub"`).join(", ") + 
-                `, <${SITE_URL}/feed.xml>; rel="self"`,
+        Link:
+          WEBSUB_HUBS.map((hub) => `<${hub}>; rel="hub"`).join(", ") +
+          `, <${SITE_URL}/feed.xml>; rel="self"`,
       },
     });
   } catch (error) {

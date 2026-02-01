@@ -254,13 +254,14 @@ export async function executeNewsAgent(
       pingSitemaps()
         .then((results) => {
           const successCount = [
-            results.google, 
-            results.bing, 
-            results.indexNow, 
-            results.webSub
+            results.google,
+            results.bing,
+            results.indexNow,
+            results.webSub,
           ].filter(Boolean).length;
           console.log(`🔔 Sitemap ping: ${successCount}/4 yöntem başarılı`);
-          if (results.indexNow) console.log("   ✅ IndexNow: Bing/Yandex bildirildi");
+          if (results.indexNow)
+            console.log("   ✅ IndexNow: Bing/Yandex bildirildi");
           if (results.webSub) console.log("   ✅ WebSub: Google bildirildi");
         })
         .catch((err) => {

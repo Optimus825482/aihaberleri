@@ -317,7 +317,7 @@ export async function writeIndexNowKeyFile(): Promise<void> {
 /**
  * Sitemap değişikliğini arama motorlarına bildir (Ping)
  * ENHANCED: Multiple fallback methods for faster indexing
- * 
+ *
  * Methods used:
  * 1. IndexNow API (Bing, Yandex) - Most reliable
  * 2. WebSub/PubSubHubbub (Google) - For RSS/Atom feeds
@@ -403,7 +403,7 @@ export async function pingSitemaps(): Promise<{
     try {
       const bingResponse = await fetch(
         `https://www.bing.com/ping?sitemap=${encodedSitemap}`,
-        { 
+        {
           method: "GET",
           signal: AbortSignal.timeout(10000), // 10s timeout
         },
@@ -429,7 +429,7 @@ export async function pingSitemaps(): Promise<{
     try {
       const googleResponse = await fetch(
         `https://www.google.com/ping?sitemap=${encodedSitemap}`,
-        { 
+        {
           method: "GET",
           signal: AbortSignal.timeout(10000),
         },

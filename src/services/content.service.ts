@@ -122,36 +122,70 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
 
 /**
  * Extract topic/theme from article title
+ * ENHANCED: Now returns multi-entity combinations for precise clustering
+ * Example: "Nvidia CEO OpenAI yatırım" → "NVIDIA+OpenAI" (multi-entity topic)
  */
 function extractTopic(title: string): string {
   const lowerTitle = title.toLowerCase();
 
-  // Entity-based topics
+  // Step 1: Extract ALL entities from title
+  const detectedEntities: string[] = [];
+
+  // Company entities
+  if (lowerTitle.includes("nvidia") || lowerTitle.includes("jensen huang"))
+    detectedEntities.push("NVIDIA");
   if (
+    lowerTitle.includes("openai") ||
     lowerTitle.includes("gpt") ||
     lowerTitle.includes("chatgpt") ||
-    lowerTitle.includes("openai")
+    lowerTitle.includes("sam altman")
   )
-    return "OpenAI/GPT";
-  if (lowerTitle.includes("gemini") || lowerTitle.includes("bard"))
-    return "Google/Gemini";
-  if (lowerTitle.includes("claude") || lowerTitle.includes("anthropic"))
-    return "Anthropic/Claude";
-  if (lowerTitle.includes("tesla") || lowerTitle.includes("elon"))
-    return "Tesla/Elon Musk";
+    detectedEntities.push("OpenAI");
+  if (lowerTitle.includes("google") || lowerTitle.includes("gemini"))
+    detectedEntities.push("Google");
+  if (
+    lowerTitle.includes("microsoft") ||
+    lowerTitle.includes("copilot") ||
+    lowerTitle.includes("satya nadella")
+  )
+    detectedEntities.push("Microsoft");
+  if (
+    lowerTitle.includes("anthropic") ||
+    lowerTitle.includes("claude") ||
+    lowerTitle.includes("dario amodei")
+  )
+    detectedEntities.push("Anthropic");
   if (
     lowerTitle.includes("meta") ||
     lowerTitle.includes("facebook") ||
-    lowerTitle.includes("llama")
+    lowerTitle.includes("llama") ||
+    lowerTitle.includes("zuckerberg")
   )
-    return "Meta/Facebook";
-  if (lowerTitle.includes("microsoft") || lowerTitle.includes("copilot"))
-    return "Microsoft";
-  if (lowerTitle.includes("google ai") || lowerTitle.includes("google yapay"))
-    return "Google AI";
-  if (lowerTitle.includes("nvidia")) return "NVIDIA";
-  if (lowerTitle.includes("apple")) return "Apple";
+    detectedEntities.push("Meta");
+  if (lowerTitle.includes("tesla") || lowerTitle.includes("elon musk"))
+    detectedEntities.push("Tesla");
+  if (lowerTitle.includes("apple")) detectedEntities.push("Apple");
+  if (lowerTitle.includes("amazon") || lowerTitle.includes("aws"))
+    detectedEntities.push("Amazon");
+  if (lowerTitle.includes("deepseek")) detectedEntities.push("DeepSeek");
 
+  // Step 2: If 2+ entities found, create combination topic (for better clustering)
+  if (detectedEntities.length >= 2) {
+    // Sort for consistent ordering (NVIDIA+OpenAI = OpenAI+NVIDIA)
+    const sorted = detectedEntities.sort();
+    const combo = sorted.slice(0, 3).join("+"); // Max 3 entities
+    console.log(
+      `🔗 Multi-entity topic detected: ${combo} from "${title.substring(0, 50)}..."`,
+    );
+    return combo;
+  }
+
+  // Step 3: Single entity - return as before with category prefix
+  if (detectedEntities.length === 1) {
+    return detectedEntities[0];
+  }
+
+  // Step 4: No company entity - check for technology/theme topics
   // Technology-based topics
   if (
     lowerTitle.includes("görüntü") ||
@@ -190,8 +224,7 @@ function extractTopic(title: string): string {
     lowerTitle.includes("investment")
   )
     return "Yatırım";
-  if (lowerTitle.includes("model") && !lowerTitle.includes("tesla"))
-    return "AI Modelleri";
+  if (lowerTitle.includes("model")) return "AI Modelleri";
 
   return "Genel AI"; // Default
 }

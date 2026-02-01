@@ -98,6 +98,7 @@ function extractNumbersWithUnits(text: string): string[] {
 
 /**
  * Extract entities (company names, product names) from text
+ * ENHANCED: Added key people titles and action keywords for better matching
  */
 function extractEntities(text: string): string[] {
   const knownEntities = [
@@ -142,6 +143,13 @@ function extractEntities(text: string): string[] {
     "satya nadella",
     "mark zuckerberg",
     "jensen huang",
+    // 🆕 Key action words (helps identify same story)
+    "yatırım",
+    "investment",
+    "ortaklık",
+    "partnership",
+    "satın alma",
+    "acquisition",
   ];
 
   const lowerText = text.toLowerCase();
@@ -259,7 +267,7 @@ export async function isDuplicateNews(
         };
       }
 
-      // 2.5. Keyword Overlap Check (NEW - 60%+ keyword overlap)
+      // 2.5. Keyword Overlap Check (ENHANCED - multiple thresholds)
       const newKeywords = extractKeywords(title);
       const existingKeywords = extractKeywords(article.title);
 
@@ -271,6 +279,20 @@ export async function isDuplicateNews(
           intersection.length /
           Math.max(newKeywords.length, existingKeywords.length);
 
+        // 🆕 Tier 1: 4+ common keywords = very likely same story
+        if (intersection.length >= 4 && keywordOverlap > 0.40) {
+          console.log(
+            `❌ DUPLICATE: Strong keyword overlap - ${intersection.length} common words (${(keywordOverlap * 100).toFixed(1)}%) with article ${article.id}`,
+          );
+          console.log(`   Common: [${intersection.join(", ")}]`);
+          return {
+            isDuplicate: true,
+            reason: `STRONG_KEYWORD_MATCH_${intersection.length}_WORDS`,
+            similarArticleId: article.id,
+          };
+        }
+
+        // Tier 2: 60%+ overlap (original check)
         if (keywordOverlap > 0.6) {
           console.log(
             `❌ DUPLICATE: Keyword overlap ${(keywordOverlap * 100).toFixed(1)}% with article ${article.id}`,
@@ -324,6 +346,25 @@ export async function isDuplicateNews(
             return {
               isDuplicate: true,
               reason: `MULTI_ENTITY_NUMBER_MATCH`,
+              similarArticleId: article.id,
+            };
+          }
+
+          // 🆕 NEW CHECK: 2+ same entities within 24h + ANY title similarity (40%+)
+          // This catches: "Nvidia CEO OpenAI yatırım X" vs "Nvidia CEO OpenAI yatırım Y"
+          if (
+            entityIntersection.length >= 2 &&
+            hoursDiff < 24 &&
+            titleSimilarity > 0.40
+          ) {
+            console.log(
+              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] + ${(titleSimilarity * 100).toFixed(1)}% similarity within 24h`,
+            );
+            console.log(`   New: "${title}"`);
+            console.log(`   Existing: "${article.title}"`);
+            return {
+              isDuplicate: true,
+              reason: `MULTI_ENTITY_SAME_STORY`,
               similarArticleId: article.id,
             };
           }
