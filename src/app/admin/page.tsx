@@ -120,6 +120,14 @@ interface AgentStats {
   }>;
 }
 
+interface LogMessage {
+  type: string;
+  module?: string;
+  message?: string;
+  timestamp?: string;
+  level?: "info" | "warn" | "error" | "success";
+}
+
 export default function AdminDashboard() {
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
     null,
