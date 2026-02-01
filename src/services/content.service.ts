@@ -671,37 +671,51 @@ export async function processArticle(
     // Step 1.5: 🆕 DEEP RESEARCH - Gather additional context
     console.log("🔬 Deep research yapılıyor...");
     await liveLog.content.info(`🔬 Ek araştırma yapılıyor...`);
-    
+
     const { deepResearchArticle } = await import("@/lib/brave");
-    const researchData = await deepResearchArticle(article.title, article.description);
-    
+    const researchData = await deepResearchArticle(
+      article.title,
+      article.description,
+    );
+
     // Build enriched content with research findings
     let enrichedContent = fullContent;
     const additionalSources: Array<{ title: string; url: string }> = [];
-    
+
     // Add statistics if found
     if (researchData.statistics.length > 0) {
       enrichedContent += "\n\n[ADDITIONAL STATISTICS FROM RESEARCH]:\n";
-      enrichedContent += researchData.statistics.map(s => `- ${s}`).join("\n");
+      enrichedContent += researchData.statistics
+        .map((s) => `- ${s}`)
+        .join("\n");
     }
-    
+
     // Add expert quotes if found
     if (researchData.expertQuotes.length > 0) {
       enrichedContent += "\n\n[EXPERT QUOTES FROM RESEARCH]:\n";
-      enrichedContent += researchData.expertQuotes.map(q => `"${q}"`).join("\n");
+      enrichedContent += researchData.expertQuotes
+        .map((q) => `"${q}"`)
+        .join("\n");
     }
-    
+
     // Add related context
     if (researchData.relatedContext.length > 0) {
       enrichedContent += "\n\n[ADDITIONAL CONTEXT FROM RESEARCH]:\n";
-      enrichedContent += researchData.relatedContext.slice(0, 3).map(c => `- ${c}`).join("\n");
+      enrichedContent += researchData.relatedContext
+        .slice(0, 3)
+        .map((c) => `- ${c}`)
+        .join("\n");
     }
-    
+
     // Collect sources for footer
     additionalSources.push(...researchData.sources);
-    
-    console.log(`✅ Deep research tamamlandı: ${researchData.sources.length} ek kaynak bulundu`);
-    await liveLog.content.success(`✅ ${researchData.sources.length} ek kaynak ile zenginleştirildi`);
+
+    console.log(
+      `✅ Deep research tamamlandı: ${researchData.sources.length} ek kaynak bulundu`,
+    );
+    await liveLog.content.success(
+      `✅ ${researchData.sources.length} ek kaynak ile zenginleştirildi`,
+    );
 
     // Step 2: Fetch recent articles for internal linking context (max 3 to avoid over-linking)
     const recentArticles = await db.article.findMany({
@@ -715,7 +729,9 @@ export async function processArticle(
     });
 
     // Step 3: Rewrite article using DeepSeek with ENRICHED content
-    console.log("🤖 DeepSeek ile zenginleştirilmiş içerik yeniden yazılıyor...");
+    console.log(
+      "🤖 DeepSeek ile zenginleştirilmiş içerik yeniden yazılıyor...",
+    );
 
     // Live log: Rewriting
     await liveLog.deepseek.info(
@@ -747,18 +763,24 @@ export async function processArticle(
 
     // 🆕 Add sources footer to content
     let finalContent = rewritten.content;
-    
+
     // Build sources list (original + research sources)
     const allSources = [
-      { title: new URL(article.url).hostname.replace("www.", ""), url: article.url },
+      {
+        title: new URL(article.url).hostname.replace("www.", ""),
+        url: article.url,
+      },
       ...additionalSources.slice(0, 4), // Limit to 4 additional sources
     ];
-    
+
     // Create compact AI disclosure + sources footer
     const sourcesHtml = allSources
-      .map(s => `<a href="${s.url}" target="_blank" rel="noopener nofollow" class="source-link">${s.title}</a>`)
+      .map(
+        (s) =>
+          `<a href="${s.url}" target="_blank" rel="noopener nofollow" class="source-link">${s.title}</a>`,
+      )
       .join(" • ");
-    
+
     finalContent += `
 <div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">

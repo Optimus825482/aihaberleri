@@ -197,14 +197,16 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { key: "site_name", label: "Site Adı", type: "text" },
+                { key: "site_name", label: "Site Adı", type: "text", placeholder: "AI Haberleri", defaultValue: "AI Haberleri" },
                 {
                   key: "site_description",
                   label: "Site Açıklaması",
                   type: "textarea",
+                  placeholder: "Yapay Zeka ve Teknoloji Haberleri",
+                  defaultValue: "Yapay Zeka ve Teknoloji Haberleri - En güncel AI, robotik, otomasyon ve makine öğrenimi haberleri"
                 },
-                { key: "site_url", label: "Site URL", type: "url" },
-                { key: "site_language", label: "Dil", type: "text" },
+                { key: "site_url", label: "Site URL", type: "url", placeholder: "https://aihaberleri.org", defaultValue: "https://aihaberleri.org" },
+                { key: "site_language", label: "Dil", type: "text", placeholder: "tr", defaultValue: "tr" },
               ].map((field) => {
                 const setting = data?.settings.general.find(
                   (s) => s.key === field.key,
@@ -217,7 +219,8 @@ export default function SettingsPage() {
                     {field.type === "textarea" ? (
                       <textarea
                         id={`general-${field.key}`}
-                        defaultValue={setting?.value || ""}
+                        defaultValue={setting?.value || field.defaultValue || ""}
+                        placeholder={field.placeholder}
                         onBlur={(e) => saveSetting(field.key, e.target.value)}
                         className="w-full px-3 py-2 border rounded-lg bg-background"
                         rows={3}
@@ -226,7 +229,8 @@ export default function SettingsPage() {
                       <input
                         id={`general-${field.key}`}
                         type={field.type}
-                        defaultValue={setting?.value || ""}
+                        defaultValue={setting?.value || field.defaultValue || ""}
+                        placeholder={field.placeholder}
                         onBlur={(e) => saveSetting(field.key, e.target.value)}
                         className="w-full px-3 py-2 border rounded-lg bg-background"
                       />
@@ -252,18 +256,22 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { key: "seo_title", label: "Meta Başlık", type: "text" },
+                { key: "seo_title", label: "Meta Başlık", type: "text", placeholder: "AI Haberleri - Yapay Zeka ve Teknoloji Haberleri", defaultValue: "AI Haberleri - Yapay Zeka ve Teknoloji Haberleri" },
                 {
                   key: "seo_description",
                   label: "Meta Açıklama",
                   type: "textarea",
+                  placeholder: "En güncel yapay zeka, robotik, otomasyon ve makine öğrenimi haberleri",
+                  defaultValue: "En güncel yapay zeka, robotik, otomasyon ve makine öğrenimi haberleri. AI dünyasındaki gelişmeleri takip edin."
                 },
                 {
                   key: "seo_keywords",
                   label: "Anahtar Kelimeler",
                   type: "text",
+                  placeholder: "yapay zeka, AI, robotik, makine öğrenimi",
+                  defaultValue: "yapay zeka, AI, robotik, makine öğrenimi, derin öğrenme, otomasyon, ChatGPT, teknoloji haberleri"
                 },
-                { key: "seo_og_image", label: "OG Image URL", type: "url" },
+                { key: "seo_og_image", label: "OG Image URL", type: "url", placeholder: "https://aihaberleri.org/logos/banners/hero-banner.png", defaultValue: "https://aihaberleri.org/logos/banners/hero-banner.png" },
               ].map((field) => {
                 const setting = data?.settings.seo.find(
                   (s) => s.key === field.key,
@@ -276,7 +284,8 @@ export default function SettingsPage() {
                     {field.type === "textarea" ? (
                       <textarea
                         id={field.key}
-                        defaultValue={setting?.value || ""}
+                        defaultValue={setting?.value || field.defaultValue || ""}
+                        placeholder={field.placeholder}
                         onBlur={(e) => saveSetting(field.key, e.target.value)}
                         className="w-full px-3 py-2 border rounded-lg bg-background"
                         rows={3}
@@ -285,7 +294,8 @@ export default function SettingsPage() {
                       <input
                         id={field.key}
                         type={field.type}
-                        defaultValue={setting?.value || ""}
+                        defaultValue={setting?.value || field.defaultValue || ""}
+                        placeholder={field.placeholder}
                         onBlur={(e) => saveSetting(field.key, e.target.value)}
                         className="w-full px-3 py-2 border rounded-lg bg-background"
                       />

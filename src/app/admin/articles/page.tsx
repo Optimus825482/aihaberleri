@@ -36,7 +36,6 @@ import {
   Search,
   Plus,
   Facebook,
-  CheckCircle,
   Loader2,
 } from "lucide-react";
 import Image from "next/image";
@@ -362,18 +361,36 @@ export default function ArticlesPage() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm line-clamp-2 leading-tight">
-                        {article.title}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        {article.facebookShared && (
+                          <Facebook className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
+                        )}
+                        <p className="font-semibold text-sm line-clamp-2 leading-tight">
+                          {article.title}
+                        </p>
+                      </div>
                       <div className="flex flex-wrap items-center gap-2 mt-2">
-                        <Badge variant="outline" className="text-xs">
+                        <Badge
+                          className={`text-xs font-bold ${article.category.slug === 'yapay-zeka' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30' :
+                            article.category.slug === 'robotik' ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30' :
+                              article.category.slug === 'otomasyon' ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30' :
+                                article.category.slug === 'makine-ogrenimi' ? 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30' :
+                                  'bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30'
+                            }`}
+                          variant="outline"
+                        >
                           {article.category.name}
                         </Badge>
                         <Badge
-                          variant={article.status === "PUBLISHED" ? "default" : "secondary"}
-                          className="text-xs"
+                          className={`text-xs font-bold tabular-nums ${(article.score || 0) >= 800 ? 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30' :
+                            (article.score || 0) >= 700 ? 'bg-lime-500/20 text-lime-700 dark:text-lime-300 border-lime-500/30' :
+                              (article.score || 0) >= 600 ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30' :
+                                (article.score || 0) >= 500 ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30' :
+                                  'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30'
+                            }`}
+                          variant="outline"
                         >
-                          {article.status === "PUBLISHED" ? "Yayında" : "Taslak"}
+                          {article.score || 0}
                         </Badge>
                       </div>
                     </div>
@@ -385,23 +402,9 @@ export default function ArticlesPage() {
                       <Eye className="h-3 w-3" />
                       <span>{article.views}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <span className={`font-bold ${(article.score || 0) >= 800 ? "text-green-600" :
-                        (article.score || 0) >= 500 ? "text-yellow-600" : "text-red-600"
-                        }`}>
-                        {article.score || 0}
-                      </span>
-                      <span>/1000</span>
-                    </div>
                     <div>
                       {new Date(article.publishedAt || article.createdAt).toLocaleDateString("tr-TR")}
                     </div>
-                    {article.facebookShared && (
-                      <Badge className="bg-green-600 text-xs gap-1">
-                        <CheckCircle className="h-3 w-3" />
-                        FB
-                      </Badge>
-                    )}
                   </div>
 
                   {/* Actions */}
@@ -461,16 +464,14 @@ export default function ArticlesPage() {
 
             {/* Desktop Table View */}
             <div className="hidden lg:block overflow-x-auto">
-              <Table className="min-w-[850px] table-fixed">
+              <Table className="min-w-[750px] table-fixed">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[60px]">Görsel</TableHead>
-                    <TableHead className="w-auto min-w-[180px]">Başlık</TableHead>
-                    <TableHead className="w-[100px]">Kategori</TableHead>
+                    <TableHead className="w-auto min-w-[200px]">Başlık</TableHead>
+                    <TableHead className="w-[110px]">Kategori</TableHead>
                     <TableHead className="w-[85px]">Tarih</TableHead>
-                    <TableHead className="w-[60px]">Skor</TableHead>
-                    <TableHead className="w-[70px]">Durum</TableHead>
-                    <TableHead className="w-[85px] text-center">FB</TableHead>
+                    <TableHead className="w-[70px]">Skor</TableHead>
                     <TableHead className="w-[75px] text-right">Görüntü</TableHead>
                     <TableHead className="w-[130px] text-right sticky right-0 bg-background shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.1)]">İşlemler</TableHead>
                   </TableRow>
@@ -499,16 +500,33 @@ export default function ArticlesPage() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium line-clamp-1">
-                            {article.title}
-                          </p>
+                          <div className="flex items-center gap-1.5">
+                            {article.facebookShared && (
+                              <Facebook className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
+                            )}
+                            <p className="font-medium line-clamp-1">
+                              {article.title}
+                            </p>
+                          </div>
                           <p className="text-sm text-muted-foreground line-clamp-1">
                             {article.excerpt}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
+                        <Badge
+                          className={`text-xs font-bold ${article.category.slug === 'yapay-zeka' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30' :
+                            article.category.slug === 'robotik' ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30' :
+                              article.category.slug === 'otomasyon' ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30' :
+                                article.category.slug === 'makine-ogrenimi' ? 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30' :
+                                  article.category.slug === 'derin-ogrenme' ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30' :
+                                    article.category.slug === 'nlp' ? 'bg-pink-500/20 text-pink-700 dark:text-pink-300 border-pink-500/30' :
+                                      article.category.slug === 'bilgisayarli-goru' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30' :
+                                        article.category.slug === 'etik' ? 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30' :
+                                          'bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30'
+                            }`}
+                          variant="outline"
+                        >
                           {article.category.name}
                         </Badge>
                       </TableCell>
@@ -530,70 +548,17 @@ export default function ArticlesPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1">
-                          <span
-                            className={`font-bold ${(article.score || 0) >= 800
-                              ? "text-green-600"
-                              : (article.score || 0) >= 500
-                                ? "text-yellow-600"
-                                : "text-red-600"
-                              }`}
-                          >
-                            {article.score || 0}
-                          </span>
-                          <span className="text-muted-foreground text-xs">
-                            /1000
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
                         <Badge
-                          variant={
-                            article.status === "PUBLISHED"
-                              ? "default"
-                              : "secondary"
-                          }
+                          className={`text-xs font-bold tabular-nums ${(article.score || 0) >= 800 ? 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30' :
+                            (article.score || 0) >= 700 ? 'bg-lime-500/20 text-lime-700 dark:text-lime-300 border-lime-500/30' :
+                              (article.score || 0) >= 600 ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30' :
+                                (article.score || 0) >= 500 ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30' :
+                                  'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30'
+                            }`}
+                          variant="outline"
                         >
-                          {article.status === "PUBLISHED"
-                            ? "Yayında"
-                            : "Taslak"}
+                          {article.score || 0}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center">
-                          {article.facebookShared ? (
-                            <Badge
-                              variant="default"
-                              className="gap-1 bg-green-600 hover:bg-green-700"
-                            >
-                              <CheckCircle className="h-3 w-3" />
-                              <span className="hidden xl:inline">Paylaşıldı</span>
-                            </Badge>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => shareFacebook(article.id)}
-                              disabled={
-                                sharingFacebook === article.id ||
-                                article.status !== "PUBLISHED"
-                              }
-                              className="gap-1"
-                              title={
-                                article.status !== "PUBLISHED"
-                                  ? "Sadece yayında olan haberler paylaşılabilir"
-                                  : "Facebook'ta paylaş"
-                              }
-                            >
-                              {sharingFacebook === article.id ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Facebook className="h-4 w-4" />
-                              )}
-                              <span className="hidden xl:inline">Paylaş</span>
-                            </Button>
-                          )}
-                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
