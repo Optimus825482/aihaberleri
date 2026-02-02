@@ -258,6 +258,28 @@ export async function translateAndSaveArticle(
     console.log(
       `✅ Article translations complete for: ${article.title.substring(0, 50)}...`,
     );
+
+    // 🆕 CRITICAL: Notify search engines about English translation!
+    if (targetLocale === "en") {
+      const englishUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/en/news/${article.slug}`;
+      console.log(
+        `🔔 Notifying search engines about English translation: ${englishUrl}`,
+      );
+
+      // Import SEO functions
+      const { submitToIndexNow } = await import("@/lib/seo");
+
+      // Submit English URL to IndexNow (Bing, Yandex)
+      try {
+        await submitToIndexNow(englishUrl, articleId);
+        console.log(`   ✅ IndexNow: English URL submitted`);
+      } catch (error) {
+        console.warn(`   ⚠️ IndexNow failed for English URL:`, error);
+      }
+
+      // Note: WebSub and sitemap pings are already done for the main article
+      // They cover all language versions automatically via sitemap
+    }
   } catch (error) {
     console.error(`❌ Failed to translate article ${articleId}:`, error);
     // Don't throw - translation failure shouldn't break article publishing
