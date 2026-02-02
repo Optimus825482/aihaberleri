@@ -249,20 +249,111 @@ export async function executeNewsAgent(
     });
 
     // Transform ArticleWithTopic[] to the format expected by processAndPublishArticles
-    const articlesForProcessing = selectedArticles.map((articleWithTopic) => ({
+    let articlesForProcessing = selectedArticles.map((articleWithTopic) => ({
       article: articleWithTopic as any, // Cast to NewsArticle (compatible structure)
       category: "Teknoloji", // Default category (will be overridden by DeepSeek if needed)
       topic: articleWithTopic.topic, // Pass topic through for saving
     }));
 
-    const published = await processAndPublishArticles(
-      articlesForProcessing,
-      agentLog.id,
-      categorySlug,
-    );
+    // 🔄 RETRY MECHANISM: Try up to 3 times with duplicate exclusion
+    let published: Array<{ id: string; slug: string }> = [];
+    let attempt = 1;
+    const maxAttempts = 3;
+    const excludedUrls = new Set<string>();
+    const excludedTopics = new Set<string>();
+
+    while (attempt <= maxAttempts && published.length === 0) {
+      console.log(`\n${"=".repeat(60)}`);
+      console.log(
+        `🔄 ATTEMPT ${attempt}/${maxAttempts}: Processing articles...`,
+      );
+      console.log(`${"=".repeat(60)}`);
+      console.log(`   Articles to process: ${articlesForProcessing.length}`);
+      console.log(`   Excluded URLs: ${excludedUrls.size}`);
+      console.log(`   Excluded topics: ${excludedTopics.size}`);
+
+      published = await processAndPublishArticles(
+        articlesForProcessing,
+        agentLog.id,
+        categorySlug,
+      );
+
+      if (published.length > 0) {
+        console.log(
+          `✅ SUCCESS on attempt ${attempt}: ${published.length} haber yayınlandı`,
+        );
+        break;
+      }
+
+      // If no articles published and we have more attempts
+      if (attempt < maxAttempts) {
+        console.log(
+          `\n⚠️  Attempt ${attempt} failed: 0 articles published (all duplicates)`,
+        );
+        console.log(`🔄 Preparing retry ${attempt + 1}/${maxAttempts}...`);
+
+        // Collect URLs and topics that were duplicates
+        articlesForProcessing.forEach((item) => {
+          if (item.article.url) {
+            excludedUrls.add(item.article.url);
+          }
+          if (item.topic) {
+            excludedTopics.add(item.topic);
+          }
+        });
+
+        // Get remaining articles from Stage 2 (with topics) that weren't selected
+        const remainingArticles = filteringResult.stage2_with_topics.filter(
+          (article) =>
+            !excludedUrls.has(article.url || "") &&
+            !excludedTopics.has(article.topic || ""),
+        );
+
+        console.log(`\n📊 Retry ${attempt + 1} statistics:`);
+        console.log(
+          `   Original pool: ${filteringResult.stage2_with_topics.length} articles`,
+        );
+        console.log(
+          `   Excluded: ${excludedUrls.size} URLs, ${excludedTopics.size} topics`,
+        );
+        console.log(`   Remaining: ${remainingArticles.length} articles`);
+
+        if (remainingArticles.length === 0) {
+          console.log(`❌ No remaining articles to retry. Giving up.`);
+          break;
+        }
+
+        // Sort by score and take top N
+        const retryCount = Math.min(targetCount, remainingArticles.length);
+        const retryArticles = remainingArticles
+          .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0))
+          .slice(0, retryCount);
+
+        console.log(`   Selected for retry: ${retryArticles.length} articles`);
+
+        // Transform for processing
+        articlesForProcessing = retryArticles.map((articleWithTopic) => ({
+          article: articleWithTopic as any,
+          category: "Teknoloji",
+          topic: articleWithTopic.topic,
+        }));
+
+        attempt++;
+      } else {
+        console.log(
+          `\n❌ All ${maxAttempts} attempts failed. No articles published.`,
+        );
+        break;
+      }
+    }
+
     articlesCreated = published.length;
     publishedArticles.push(...published);
-    console.log(`✅ ${articlesCreated} haber yayınlandı`);
+    console.log(`\n${"=".repeat(60)}`);
+    console.log(
+      `✅ FINAL RESULT: ${articlesCreated} haber yayınlandı (${attempt} attempt)`,
+    );
+    console.log(`${"=".repeat(60)}\n`);
 
     // Live log: Articles created
     await liveLog.publish.success(`✅ ${articlesCreated} haber yayında!`);
