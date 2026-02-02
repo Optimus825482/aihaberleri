@@ -4,6 +4,7 @@
  */
 
 import axios from "axios";
+// @ts-ignore - xml2js types not needed for this script
 import { parseStringPromise } from "xml2js";
 
 interface FeedTest {

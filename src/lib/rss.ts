@@ -197,7 +197,7 @@ export const AI_NEWS_RSS_FEEDS = [
   },
 
   // ========================================
-  // AI FOCUSED PUBLICATIONS (14 feeds) - UPDATED 2026-02-02
+  // AI FOCUSED PUBLICATIONS (39 feeds) - UPDATED 2026-02-02
   // ========================================
   {
     name: "AI News",
@@ -268,6 +268,97 @@ export const AI_NEWS_RSS_FEEDS = [
   {
     name: "The Algorithmic Bridge",
     url: "https://thealgorithmicbridge.substack.com/feed",
+    language: "en",
+  },
+  // ADDITIONAL TESTED & WORKING FEEDS (25 feeds from GitHub test - 2026-02-02)
+  {
+    name: "404 Media",
+    url: "https://www.404media.co/rss",
+    language: "en",
+  },
+  {
+    name: "Ahead of AI",
+    url: "https://magazine.sebastianraschka.com/feed",
+    language: "en",
+  },
+  {
+    name: "AI Accelerator Institute",
+    url: "https://aiacceleratorinstitute.com/rss/",
+    language: "en",
+  },
+  {
+    name: "AI - AI-TechPark",
+    url: "https://ai-techpark.com/category/ai/feed/",
+    language: "en",
+  },
+  {
+    name: "AI Archives | KnowTechie",
+    url: "https://knowtechie.com/category/ai/feed/",
+    language: "en",
+  },
+  {
+    name: "AIModels.fyi",
+    url: "https://aimodels.substack.com/feed",
+    language: "en",
+  },
+  {
+    name: "AI Now Institute",
+    url: "https://ainowinstitute.org/category/news/feed",
+    language: "en",
+  },
+  {
+    name: "AI Snake Oil",
+    url: "https://aisnakeoil.substack.com/feed",
+    language: "en",
+  },
+  {
+    name: "Ars Technica - All Content",
+    url: "https://feeds.arstechnica.com/arstechnica/index",
+    language: "en",
+  },
+  {
+    name: "Artificial Intelligence – Futurism",
+    url: "https://futurism.com/categories/ai-artificial-intelligence/feed",
+    language: "en",
+  },
+  {
+    name: "Artificial Intelligence News - ScienceDaily",
+    url: "https://www.sciencedaily.com/rss/computers_math/artificial_intelligence.xml",
+    language: "en",
+  },
+  {
+    name: "Machine Learning Mastery Blog",
+    url: "https://machinelearningmastery.com/blog/feed",
+    language: "en",
+  },
+  {
+    name: "Chain of Thought",
+    url: "https://every.to/chain-of-thought/feed.xml",
+    language: "en",
+  },
+  {
+    name: "Chip Huyen",
+    url: "https://huyenchip.com/feed",
+    language: "en",
+  },
+  {
+    name: "Crunchbase News",
+    url: "https://news.crunchbase.com/feed",
+    language: "en",
+  },
+  {
+    name: "Hugging Face Blog",
+    url: "https://huggingface.co/blog/feed.xml",
+    language: "en",
+  },
+  {
+    name: "KDnuggets",
+    url: "https://www.kdnuggets.com/feed",
+    language: "en",
+  },
+  {
+    name: "LangChain Blog",
+    url: "https://blog.langchain.dev/rss/",
     language: "en",
   },
 
