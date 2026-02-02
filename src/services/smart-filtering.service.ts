@@ -115,7 +115,7 @@ export async function extractTopicsStage(
 export async function smartSelectionStage(
   articles: ArticleWithTopic[],
   targetCount: number = 5,
-  timeWindowDays: number = 7,
+  timeWindowDays: number = 2, // 7 günden 2 güne düşürüldü
 ): Promise<ArticleWithTopic[]> {
   console.log(`\n🔍 STAGE 3: TOPIC-BASED DUPLICATE CHECK & SMART SELECTION`);
   console.log(`   Input: ${articles.length} haber`);
@@ -149,7 +149,7 @@ export async function runSmartFiltering(
     batchSize = 10,
     topPerBatch = 5,
     targetCount = 5,
-    timeWindowDays = 7,
+    timeWindowDays = 2, // 7 günden 2 güne düşürüldü (daha güncel haberler için)
   } = options;
 
   console.log(`\n${"=".repeat(60)}`);

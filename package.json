@@ -19,7 +19,10 @@
     "cron:scheduled-publisher": "tsx src/scripts/scheduled-publisher-cron.ts",
     "topic:extract": "tsx scripts/extract-topics-for-existing-articles.ts",
     "topic:extract:all": "tsx scripts/extract-topics-for-existing-articles.ts --all",
-    "test:smart-filtering": "tsx scripts/test-smart-filtering.ts"
+    "test:smart-filtering": "tsx scripts/test-smart-filtering.ts",
+    "test:new-rss-feeds": "tsx scripts/test-new-rss-feeds.ts",
+    "test:all-ai-feeds": "tsx scripts/test-all-ai-feeds.ts",
+    "test:sample-ai-feeds": "tsx scripts/test-sample-ai-feeds.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

@@ -212,7 +212,7 @@ export async function executeNewsAgent(
       batchSize: 10,
       topPerBatch: 5,
       targetCount: targetCount,
-      timeWindowDays: 7,
+      timeWindowDays: 2, // 7 günden 2 güne düşürüldü (daha güncel haberler için)
     });
 
     const selectedArticles = filteringResult.stage3_unique;

@@ -197,7 +197,7 @@ export const AI_NEWS_RSS_FEEDS = [
   },
 
   // ========================================
-  // AI FOCUSED PUBLICATIONS (4 feeds)
+  // AI FOCUSED PUBLICATIONS (14 feeds) - UPDATED 2026-02-02
   // ========================================
   {
     name: "AI News",
@@ -217,6 +217,57 @@ export const AI_NEWS_RSS_FEEDS = [
   {
     name: "Last Week in AI",
     url: "https://lastweekin.ai/feed",
+    language: "en",
+  },
+  // NEW AI-FOCUSED FEEDS (10 feeds added 2026-02-02)
+  {
+    name: "AI Business",
+    url: "https://aibusiness.com/rss.xml",
+    language: "en",
+  },
+  {
+    name: "THE DECODER - AI News",
+    url: "https://the-decoder.com/feed/",
+    language: "en",
+  },
+  {
+    name: "Unite.AI",
+    url: "https://www.unite.ai/feed/",
+    language: "en",
+  },
+  {
+    name: "Analytics India Magazine",
+    url: "https://analyticsindiamag.com/feed/",
+    language: "en",
+  },
+  {
+    name: "The Rundown AI",
+    url: "https://rss.beehiiv.com/feeds/2R3C6Bt5wj.xml",
+    language: "en",
+  },
+  {
+    name: "SiliconANGLE - AI",
+    url: "https://siliconangle.com/category/ai/feed",
+    language: "en",
+  },
+  {
+    name: "AI Trends",
+    url: "https://www.aitrends.com/feed/",
+    language: "en",
+  },
+  {
+    name: "Synced - AI Review",
+    url: "https://syncedreview.com/feed",
+    language: "en",
+  },
+  {
+    name: "The Gradient",
+    url: "https://thegradient.pub/rss/",
+    language: "en",
+  },
+  {
+    name: "The Algorithmic Bridge",
+    url: "https://thealgorithmicbridge.substack.com/feed",
     language: "en",
   },
 

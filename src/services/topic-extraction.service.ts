@@ -170,7 +170,7 @@ export function groupByTopic(
  */
 export async function checkTopicDuplicate(
   topic: string,
-  timeWindowDays: number = 7,
+  timeWindowDays: number = 2, // 7 günden 2 güne düşürüldü
 ): Promise<{
   isDuplicate: boolean;
   existingArticle?: { id: string; title: string; publishedAt: Date | null };
@@ -217,7 +217,7 @@ export async function checkTopicDuplicate(
 export async function selectUniqueTopicArticles(
   articles: ArticleWithTopic[],
   targetCount: number = 5,
-  timeWindowDays: number = 7,
+  timeWindowDays: number = 2, // 7 günden 2 güne düşürüldü
 ): Promise<ArticleWithTopic[]> {
   console.log(`\n🎯 Akıllı haber seçimi başlatılıyor...`);
   console.log(`   Aday sayısı: ${articles.length}`);
