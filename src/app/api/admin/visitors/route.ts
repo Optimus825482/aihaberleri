@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getGeolocation } from "@/lib/geolocation";
+import { getCachedGeolocation } from "@/lib/geolocation";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
+
+// In-memory cache for geolocation to avoid repeated API calls
+const geoCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 // Helper function to get flag emoji from country code
 function getFlagEmoji(countryCode: string): string {
@@ -16,6 +20,20 @@ function getFlagEmoji(countryCode: string): string {
   return String.fromCodePoint(...codePoints);
 }
 
+// Simple in-memory cache adapter for geolocation
+const memoryCache = {
+  get: async (key: string) => {
+    const cached = geoCache.get(key);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached.data;
+    }
+    return null;
+  },
+  set: async (key: string, value: string, ttl: number) => {
+    geoCache.set(key, { data: value, timestamp: Date.now() });
+  },
+};
+
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
@@ -26,25 +44,43 @@ export async function GET(request: NextRequest) {
     // Get visitors from last 5 minutes (active visitors)
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
+    // Optimized query with select to reduce data transfer
     const visitors = await db.visitor.findMany({
       where: {
         lastActivity: {
           gte: fiveMinutesAgo,
         },
       },
+      select: {
+        id: true,
+        ipAddress: true,
+        userAgent: true,
+        currentPage: true,
+        country: true,
+        countryCode: true,
+        city: true,
+        region: true,
+        isp: true,
+        latitude: true,
+        longitude: true,
+        timezone: true,
+        provider: true,
+        lastActivity: true,
+        createdAt: true,
+      },
       orderBy: {
         lastActivity: "desc",
       },
     });
 
-    // Enrich with flag emoji
+    // Enrich with flag emoji and location string
     const enrichedVisitors = visitors.map((visitor) => ({
       ...visitor,
       flag: visitor.countryCode ? getFlagEmoji(visitor.countryCode) : "🌍",
       location: [visitor.city, visitor.country].filter(Boolean).join(", "),
     }));
 
-    // Get stats
+    // Get stats efficiently
     const totalVisitors = await db.visitor.count();
     const activeVisitors = visitors.length;
     const uniqueCountries = new Set(
@@ -59,6 +95,7 @@ export async function GET(request: NextRequest) {
           total: totalVisitors,
           active: activeVisitors,
           uniqueCountries,
+          lastUpdate: new Date().toISOString(),
         },
       },
     });
@@ -84,8 +121,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "IP adresi gerekli" }, { status: 400 });
     }
 
-    // Get location from IP (dual-provider: ipwho.is + ip-api.com)
-    const location = await getGeolocation(ipAddress);
+    // Get location from IP with caching (dual-provider: ipwho.is + ip-api.com)
+    const location = await getCachedGeolocation(ipAddress, memoryCache, 86400);
 
     // Upsert visitor (update if exists, create if not)
     const visitor = await db.visitor.upsert({
