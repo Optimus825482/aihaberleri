@@ -161,6 +161,7 @@ export async function fetchPollinationsImage(
         const imageUrl = `${POLLINATIONS_GEN_URL}/${encodedPrompt}?${params.toString()}`;
 
         console.log("📝 Prompt:", cleanPrompt.substring(0, 100));
+        console.log("🎨 Full URL:", imageUrl); // Full URL for debugging
         console.log(
           "🎨 Authenticated URL (key=***):",
           imageUrl.substring(0, 120) + "...",
