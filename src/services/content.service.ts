@@ -46,6 +46,7 @@ export interface ProcessedArticle {
   metaTitle: string;
   metaDescription: string;
   score: number | null;
+  topic?: string; // NEW: Topic from smart filtering
 }
 
 /**
@@ -974,6 +975,7 @@ export async function publishArticle(
         metaTitle: processedArticle.metaTitle,
         metaDescription: processedArticle.metaDescription,
         keywords: processedArticle.keywords,
+        topic: processedArticle.topic, // NEW: Save topic from smart filtering
         agentLogId,
       },
     });
@@ -1071,19 +1073,21 @@ export async function publishArticle(
 /**
  * Process and publish multiple articles
  * ENHANCED: Now supports pre-aggregated articles from multi-source clustering
+ * ENHANCED: Now supports topic field from smart filtering
  */
 export async function processAndPublishArticles(
   articles: Array<{
     article: NewsArticle;
     category: string;
     aggregated?: ProcessedArticle;
+    topic?: string; // NEW: Topic from smart filtering
   }>,
   agentLogId?: string,
   forceCategorySlug?: string,
 ): Promise<Array<{ id: string; slug: string }>> {
   const published = [];
 
-  for (const { article, category, aggregated } of articles) {
+  for (const { article, category, aggregated, topic } of articles) {
     try {
       let processed: ProcessedArticle;
 
@@ -1095,6 +1099,11 @@ export async function processAndPublishArticles(
         // Override category slug if forced
         if (forceCategorySlug) {
           processed.categorySlug = forceCategorySlug;
+        }
+
+        // Add topic if provided
+        if (topic) {
+          processed.topic = topic;
         }
       } else {
         // ⚡ CRITICAL FIX: Check for duplicates BEFORE processing (saves image generation costs)
@@ -1123,6 +1132,11 @@ export async function processAndPublishArticles(
         // Override category slug if forced
         if (forceCategorySlug) {
           processed.categorySlug = forceCategorySlug;
+        }
+
+        // Add topic if provided from smart filtering
+        if (topic) {
+          processed.topic = topic;
         }
       }
 

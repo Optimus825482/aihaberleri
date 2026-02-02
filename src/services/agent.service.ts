@@ -248,8 +248,15 @@ export async function executeNewsAgent(
       progress: 60,
     });
 
+    // Transform ArticleWithTopic[] to the format expected by processAndPublishArticles
+    const articlesForProcessing = selectedArticles.map((articleWithTopic) => ({
+      article: articleWithTopic as any, // Cast to NewsArticle (compatible structure)
+      category: "Teknoloji", // Default category (will be overridden by DeepSeek if needed)
+      topic: articleWithTopic.topic, // Pass topic through for saving
+    }));
+
     const published = await processAndPublishArticles(
-      selectedArticles,
+      articlesForProcessing,
       agentLog.id,
       categorySlug,
     );

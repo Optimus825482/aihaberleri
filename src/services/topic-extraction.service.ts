@@ -173,21 +173,22 @@ export async function checkTopicDuplicate(
   timeWindowDays: number = 7,
 ): Promise<{
   isDuplicate: boolean;
-  existingArticle?: { id: string; title: string; publishedAt: Date };
+  existingArticle?: { id: string; title: string; publishedAt: Date | null };
 }> {
   try {
-    const existingArticle = await db.article.findFirst({
-      where: {
-        topic: topic,
-        publishedAt: {
-          gte: new Date(Date.now() - timeWindowDays * 24 * 60 * 60 * 1000),
-        },
-        status: "PUBLISHED",
+    const whereClause: any = {
+      topic: topic,
+      publishedAt: {
+        gte: new Date(Date.now() - timeWindowDays * 24 * 60 * 60 * 1000),
       },
+      status: "PUBLISHED",
+    };
+
+    const existingArticle = await db.article.findFirst({
+      where: whereClause,
       select: {
         id: true,
         title: true,
-        topic: true,
         publishedAt: true,
       },
       orderBy: {
@@ -257,7 +258,7 @@ export async function selectUniqueTopicArticles(
         `   ⏭️  SKIP (topic in database): ${topic} - "${article.title.substring(0, 50)}..."`,
       );
       console.log(
-        `      Existing: "${duplicateCheck.existingArticle?.title.substring(0, 50)}..." (${duplicateCheck.existingArticle?.publishedAt.toLocaleDateString()})`,
+        `      Existing: "${duplicateCheck.existingArticle?.title.substring(0, 50)}..." (${duplicateCheck.existingArticle?.publishedAt?.toLocaleDateString() || "N/A"})`,
       );
       skippedDuplicate++;
       continue;
@@ -291,11 +292,13 @@ export async function extractTopicsForExistingArticles(
     `🔄 Mevcut haberler için topic extraction başlatılıyor (limit: ${limit})...`,
   );
 
+  const whereClause: any = {
+    topic: null,
+    status: "PUBLISHED",
+  };
+
   const articles = await db.article.findMany({
-    where: {
-      topic: null,
-      status: "PUBLISHED",
-    },
+    where: whereClause,
     select: {
       id: true,
       title: true,
@@ -318,9 +321,10 @@ export async function extractTopicsForExistingArticles(
     for (const article of batch) {
       try {
         const topic = await extractTopic(article.title);
+        const updateData: any = { topic: topic };
         await db.article.update({
           where: { id: article.id },
-          data: { topic },
+          data: updateData,
         });
         processed++;
         console.log(
