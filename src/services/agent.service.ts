@@ -144,56 +144,20 @@ export async function executeNewsAgent(
 
     const newsArticles = await fetchAINews(categorySlug);
     articlesScraped = newsArticles.length;
-    console.log(`✅ ${articlesScraped} trend haber bulundu`);
+    console.log(
+      `✅ ${articlesScraped} unique trend haber bulundu (duplicate filtering yapıldı)`,
+    );
 
     // Live log: Articles fetched
-    await liveLog.rss.success(
-      `📰 ${articlesScraped} haber bulundu (RSS + Trend)`,
-    );
+    await liveLog.rss.success(`📰 ${articlesScraped} unique haber bulundu`);
 
     if (newsArticles.length === 0) {
-      throw new Error("Haber bulunamadı");
-    }
-
-    // NEW APPROACH: Early topic extraction and duplicate filtering
-    // Extract topics for ALL articles BEFORE scoring/filtering
-    console.log(
-      `\n🧠 EARLY TOPIC EXTRACTION: ${newsArticles.length} haber için topic çıkarılıyor...`,
-    );
-    const { extractTopicsBatch } = await import("./topic-extraction.service");
-    const articlesWithTopics = await extractTopicsBatch(newsArticles, 10); // Larger batch for speed
-
-    // Filter out duplicates BEFORE expensive Brave API calls
-    console.log(
-      `\n🔍 EARLY DUPLICATE FILTERING: Son 48 saatte yayınlananlar eleniyor...`,
-    );
-    const { filterDuplicatesByTopicAndUrl } =
-      await import("./topic-extraction.service");
-    const uniqueArticles = await filterDuplicatesByTopicAndUrl(
-      articlesWithTopics,
-      2,
-    ); // 2 days window
-
-    console.log(`\n📊 Early filtering sonuçları:`);
-    console.log(`   Toplam: ${newsArticles.length} haber`);
-    console.log(`   Topic extraction: ${articlesWithTopics.length} başarılı`);
-    console.log(
-      `   Duplicate elendi: ${articlesWithTopics.length - uniqueArticles.length} haber`,
-    );
-    console.log(`   Unique kaldı: ${uniqueArticles.length} haber`);
-    console.log(
-      `   Duplicate rate: ${(((articlesWithTopics.length - uniqueArticles.length) / articlesWithTopics.length) * 100).toFixed(1)}%`,
-    );
-
-    if (uniqueArticles.length === 0) {
       console.log(`\n⚠️  Tüm haberler duplicate! Yeni haber yok.`);
       throw new Error("Tüm haberler duplicate - yeni haber bulunamadı");
     }
 
-    // Continue with unique articles only (saves Brave API calls!)
-    console.log(
-      `\n✅ ${uniqueArticles.length} unique haber ile devam ediliyor...`,
-    );
+    // Use newsArticles directly (already filtered for duplicates in fetchAINews)
+    const uniqueArticles = newsArticles;
 
     // Step 2: Smart Filtering Pipeline (NEW!)
     agentLogger.step(

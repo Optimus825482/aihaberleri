@@ -673,11 +673,74 @@ export async function fetchAINews(
       console.log(`✅ En güncel ${MAX_ARTICLES_TO_ANALYZE} haber seçildi`);
     }
 
-    // Step 3: Analyze trends using Brave Search API ONLY
+    // 🆕 STEP 2.7: EARLY DUPLICATE FILTERING (BEFORE BRAVE API!)
+    // This is the CRITICAL optimization - filter duplicates BEFORE expensive Brave API calls
+    console.log(`\n🔍 EARLY DUPLICATE FILTERING (Brave API'den ÖNCE)...`);
+    console.log(`   Input: ${itemsToAnalyze.length} haber`);
+
+    // Convert RSS items to NewsArticle format for duplicate checking
+    const newsArticlesForCheck = convertRSSToNews(
+      itemsToAnalyze.map((item) => ({ ...item, trendScore: 0 })),
+    );
+
+    // Import duplicate filtering functions
+    const { extractTopicsBatch, filterDuplicatesByTopicAndUrl } =
+      await import("./topic-extraction.service");
+
+    // Extract topics for all articles
+    console.log(`🧠 Topic extraction: ${newsArticlesForCheck.length} haber...`);
+    const articlesWithTopics = await extractTopicsBatch(
+      newsArticlesForCheck,
+      10,
+    );
+
+    // Filter duplicates
+    console.log(`🔍 Duplicate check: Son 2 günde yayınlananlar eleniyor...`);
+    const uniqueArticles = await filterDuplicatesByTopicAndUrl(
+      articlesWithTopics,
+      2,
+    );
+
+    console.log(`\n📊 Early filtering sonuçları:`);
+    console.log(`   Input: ${newsArticlesForCheck.length} haber`);
+    console.log(
+      `   Duplicate: ${newsArticlesForCheck.length - uniqueArticles.length} haber`,
+    );
+    console.log(`   Unique: ${uniqueArticles.length} haber`);
+    console.log(
+      `   Duplicate rate: ${(((newsArticlesForCheck.length - uniqueArticles.length) / newsArticlesForCheck.length) * 100).toFixed(1)}%`,
+    );
+
+    if (uniqueArticles.length === 0) {
+      console.log(`\n⚠️  Tüm haberler duplicate! Boş array döndürülüyor.`);
+      return [];
+    }
+
+    // Map back to RSS items for Brave API
+    const uniqueRssItems = uniqueArticles
+      .map((article) => {
+        const originalItem = itemsToAnalyze.find(
+          (item) => item.title === article.title,
+        );
+        return originalItem!;
+      })
+      .filter(Boolean);
+
+    console.log(
+      `\n✅ ${uniqueRssItems.length} unique haber Brave API'ye gönderilecek`,
+    );
+    console.log(
+      `   Brave API maliyet tasarrufu: ${((1 - uniqueRssItems.length / itemsToAnalyze.length) * 100).toFixed(1)}%\n`,
+    );
+
+    // Update itemsToAnalyze with unique items only
+    itemsToAnalyze = uniqueRssItems;
+
+    // Step 3: Analyze trends using Brave Search API ONLY (NOW WITH UNIQUE ARTICLES!)
     // NOTE: Google Trends removed on 01.02.2026 - all endpoints returning 404
     // Brave API is now the sole trend source
     console.log(
-      `📊 ${itemsToAnalyze.length} haber için Trend analizi (Brave API)...`,
+      `📊 ${itemsToAnalyze.length} UNIQUE haber için Trend analizi (Brave API)...`,
     );
 
     const trendRankings = await rankArticlesByTrendBrave(
@@ -688,8 +751,10 @@ export async function fetchAINews(
     );
 
     // Step 4: Sort by trend score and take top articles
+    // 🔄 INCREASED from 20 to 50 for retry mechanism pool
+    // Agent will select 1-5 articles, but needs more options if duplicates found
     const topArticles = trendRankings
-      .slice(0, 20) // Top 20 trending
+      .slice(0, 50) // Top 50 trending (increased for retry pool)
       .map((ranking) => {
         const item = itemsToAnalyze[ranking.index];
         return {
@@ -699,7 +764,9 @@ export async function fetchAINews(
       })
       .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0));
 
-    console.log(`✅ ${topArticles.length} trend haber seçildi`);
+    console.log(
+      `✅ ${topArticles.length} trend haber seçildi (retry pool için artırıldı)`,
+    );
     console.log(
       "Top 5 Trend Haberler:",
       topArticles
