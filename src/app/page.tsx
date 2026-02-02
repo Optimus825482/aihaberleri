@@ -9,9 +9,9 @@ import {
   generateJsonLd,
 } from "@/lib/seo";
 
-// ISR (Incremental Static Regeneration) - Much faster than force-dynamic
-export const dynamic = "force-static"; // Generate at build time
-export const revalidate = 300; // Revalidate every 5 minutes (was 60s)
+// Dynamic rendering with ISR caching for better performance
+export const dynamic = "auto"; // Let Next.js decide (hybrid approach)
+export const revalidate = 300; // Cache for 5 minutes
 
 export default async function HomePage() {
   // Structured Data
