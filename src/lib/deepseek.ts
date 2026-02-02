@@ -438,88 +438,108 @@ export async function generateImagePrompt(
   content: string,
   category: string,
 ): Promise<string> {
-  const prompt = `Sen dünya çapında ödüllü bir haber fotoğrafçısısın. Bu yapay zeka haberi için REALISTIC ve JOURNALISTIC bir görsel prompt oluştur.
+  const prompt = `Sen dünya çapında ödüllü bir haber fotoğrafçısısın. Bu yapay zeka haberi için REALISTIC, DIVERSE ve CONTENT-FOCUSED bir görsel prompt oluştur.
 
 Haber Başlığı: ${title}
 Kategori: ${category}
-İçerik Özeti: ${content.substring(0, 400)}
+İçerik Özeti: ${content.substring(0, 500)}
 
-### PROMPT OLUŞTURMA KURALLARI:
+### CRITICAL RULES:
 
-1. **DİL:** İngilizce prompt (Pollinations.ai için)
+1. **CONTENT ANALYSIS (MOST IMPORTANT!):**
+   - Başlık ve içeriği DİKKATLİCE oku
+   - Haberin ANA KONUSUNU belirle (şirket adı, ürün adı, olay)
+   - O konuya ÖZEL görsel seç
+   - Generic ofis/toplantı odası YASAK!
 
-2. **REALİSTİK YAKLAŞIM:**
-   - Gerçek haber fotoğrafı gibi düşün
-   - Haberin KONUSUNA ÖZEL görsel seç
-   - Generic "brain/chip/hologram" yerine SPESIFIK detaylar
+2. **DIVERSITY - AVOID REPETITION:**
+   ❌ BANNED (overused): "empty office", "conference room", "meeting room", "workstation"
+   ✅ PREFERRED: Specific objects, devices, architecture, environments related to the news
 
-3. **KONU BAZLI GÖRSEL SEÇİMİ (NO HUMANS!):**
+3. **CONTENT-SPECIFIC VISUALS:**
 
-   **Güvenlik/Hack haberleri için:**
-   - "Security breach warning screen, red alert interface, command center monitors, no people"
-   - "Cybersecurity operations room, multiple screens showing threat data, empty workstations, no humans"
-   - "Digital lock breaking visualization, security vulnerability interface, no people"
+   **Şirket/Yatırım haberleri:**
+   - Şirket adı varsa → O şirketin ürünü/logosu/binası
+   - Örnek: "OpenAI" → "OpenAI headquarters building exterior, modern architecture"
+   - Örnek: "Tesla" → "Tesla electric vehicle charging station, futuristic design"
+   - Örnek: "Nvidia" → "Nvidia GPU chip close-up, green circuit board"
 
-   **Şirket/Yatırım haberleri için:**
-   - "Modern tech company headquarters exterior, glass building architecture, no people"
-   - "Corporate meeting room interior, empty conference table, professional setting, no humans"
-   - "Stock market trading floor screens, financial data displays, no people"
+   **Ürün lansmanı:**
+   - Ürün adı varsa → O ürünün görseli
+   - Örnek: "iPhone 16" → "iPhone device on pedestal, minimalist studio"
+   - Örnek: "ChatGPT" → "Chat interface on laptop screen, modern workspace"
+   - Örnek: "Gemini" → "AI assistant interface on tablet, clean background"
 
-   **Ürün lansmanı haberleri için:**
-   - "Product reveal stage, spotlight on new device, tech conference setup, no people"
-   - "Sleek product photography, minimalist studio setup, device close-up, no humans"
-   - "New technology device on display pedestal, professional lighting, no people"
+   **Güvenlik/Hack:**
+   - Spesifik tehdit → İlgili görsel
+   - Örnek: "data breach" → "Broken digital lock, red warning symbols"
+   - Örnek: "ransomware" → "Encrypted files visualization, red alert screen"
+   - Örnek: "phishing" → "Email security warning interface, danger symbols"
 
-   **Yasaklama/Regülasyon haberleri için:**
-   - "Government building exterior, official architecture, no people"
-   - "Legal documents on desk, gavel, courtroom interior, no humans"
-   - "Official announcement podium, empty stage, professional setting, no people"
+   **Regülasyon/Yasak:**
+   - Ülke/kurum adı → O ülkenin/kurumun binası
+   - Örnek: "EU ban" → "European Parliament building exterior, Brussels"
+   - Örnek: "China regulation" → "Beijing government district, modern architecture"
+   - Örnek: "US law" → "US Capitol building, Washington DC"
 
-   **AI/Robot haberleri için:**
-   - "Modern robotics lab interior, AI systems and equipment, no people"
-   - "Humanoid robot in clean laboratory environment, solo robot, no humans"
-   - "AI research facility interior, empty workstations with monitors, no people"
+   **Robot/AI:**
+   - Robot tipi → Spesifik robot görseli
+   - Örnek: "humanoid robot" → "White humanoid robot standing, clean lab"
+   - Örnek: "industrial robot" → "Robotic arm in factory, precision work"
+   - Örnek: "drone" → "Autonomous drone in flight, outdoor setting"
 
-   **Veri/Analiz haberleri için:**
-   - "Data center server racks, blue LED lights, clean facility corridor, no people"
-   - "Analytics dashboard on large screen, modern office interior, no humans"
-   - "Database visualization on monitors, network topology display, no people"
+   **Veri/Teknoloji:**
+   - Teknoloji tipi → İlgili ekipman
+   - Örnek: "cloud computing" → "Server farm aerial view, massive data center"
+   - Örnek: "quantum computing" → "Quantum computer chamber, cryogenic cooling"
+   - Örnek: "5G network" → "Cell tower with 5G antennas, urban skyline"
 
-4. **STİL MODİFİYERLERİ:**
-   - Kalite: "photorealistic, professional photography, 8k"
-   - Işık: "natural lighting, professional studio lighting, golden hour"
-   - Kompozisyon: "wide angle, shallow depth of field, centered composition"
-   - Mood: "professional, clean, modern, editorial style"
+4. **VISUAL VARIETY - USE DIFFERENT ANGLES:**
+   - Aerial views (drone shots)
+   - Close-ups (product details)
+   - Wide shots (architecture)
+   - Interior shots (facilities)
+   - Exterior shots (buildings)
+   - Abstract (visualizations)
 
-5. **YASAKLAR (CRITICAL - NO HUMANS!):**
-   - ❌ **ASLA İNSAN YÜZÜ, PORTRE, KİŞİ GÖSTERME**
-   - ❌ **NO PEOPLE, NO FACES, NO HUMAN FIGURES**
-   - ❌ "Holographic brain" - çok kullanıldı
-   - ❌ "Neural networks visualization" - çok generic
-   - ❌ "Neon glow, purple/blue lights" - çok futuristik
-   - ❌ "Circuit board close-up" - çok teknik
-   - ❌ Metin veya yazı
-   - ✅ SADECE: Mekanlar, objeler, ekranlar, binalar, cihazlar
+5. **STYLE MODIFIERS:**
+   - Quality: "photorealistic, professional photography, 8k, sharp focus"
+   - Lighting: "natural lighting, golden hour, dramatic lighting, studio lighting"
+   - Composition: "wide angle, macro shot, aerial view, centered composition"
+   - Mood: "professional, clean, modern, editorial style, journalistic"
 
-6. **UZUNLUK:** MAKSIMUM 150 KARAKTER
+6. **ABSOLUTE BANS:**
+   ❌ **NO HUMANS, NO FACES, NO HANDS, NO BODY PARTS**
+   ❌ "empty office" (overused!)
+   ❌ "conference room" (overused!)
+   ❌ "meeting room" (overused!)
+   ❌ "workstation" (overused!)
+   ❌ "holographic brain" (generic!)
+   ❌ "neon lights" (too futuristic!)
+   ❌ Text or writing
 
-7. **ZORUNLU EK:** Her prompt'a şunu ekle: ", no people, no faces, no humans"
+7. **LENGTH:** MAX 150 characters
 
-SADECE PROMPT METNİNİ VER. Açıklama YAZMA.
+8. **MANDATORY SUFFIX:** Add ", no people, no humans" to every prompt
 
-İYİ ÖRNEKLER (NO HUMANS):
-- "Modern tech company office interior, empty glass walls, computer workstations, natural daylight, no people"
-- "Cybersecurity command center, multiple monitors showing threat maps, red alert screens, dramatic lighting, no humans"
-- "Product launch stage, spotlight on new AI device, tech conference setup, professional photography, no people"
-- "Government building exterior, official architecture, press conference podium, editorial style, no humans"
-- "Data center interior, rows of server racks with blue LED indicators, clean industrial space, no people"`;
+EXAMPLES (DIVERSE & CONTENT-SPECIFIC):
+- "Nvidia GPU chip macro shot, green circuit board, professional lighting, no people"
+- "Tesla Gigafactory aerial view, solar panels on roof, industrial architecture, no humans"
+- "ChatGPT interface on MacBook screen, modern minimalist desk, natural light, no people"
+- "European Parliament building exterior, Brussels, blue hour photography, no humans"
+- "Quantum computer cryogenic chamber, blue glow, scientific facility, no people"
+- "5G cell tower close-up, urban skyline background, sunset lighting, no humans"
+- "Robotic arm assembling circuit board, factory floor, precision work, no people"
+- "Data center server corridor, blue LED lights, symmetrical composition, no humans"
+
+RESPOND WITH PROMPT ONLY. NO EXPLANATION.`;
 
   const response = await callDeepSeek(
     [
       {
         role: "system",
         content:
-          "Sen uzman bir haber fotoğrafçısısın. SADECE realistic, journalistic görsel prompt ver. Generic AI görselleri değil, gerçek haber fotoğrafı gibi düşün.",
+          "Sen uzman bir haber fotoğrafçısısın. Haberin içeriğini analiz et ve SPESIFIK, ÇEŞITLI görsel prompt oluştur. Generic ofis görselleri YASAK. Her haber için FARKLI bir görsel seç.",
       },
       {
         role: "user",
@@ -529,7 +549,7 @@ SADECE PROMPT METNİNİ VER. Açıklama YAZMA.
     {
       model: "deepseek-chat",
       maxTokens: 200,
-      temperature: 0.9, // Increased for more variety
+      temperature: 1.0, // Increased to 1.0 for maximum variety
     },
   );
 
