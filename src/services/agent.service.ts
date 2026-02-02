@@ -262,21 +262,32 @@ export async function executeNewsAgent(
     const excludedUrls = new Set<string>();
     const excludedTopics = new Set<string>();
 
-    while (attempt <= maxAttempts && published.length === 0) {
+    while (attempt <= maxAttempts && published.length < targetCount) {
       console.log(`\n${"=".repeat(60)}`);
       console.log(
         `🔄 ATTEMPT ${attempt}/${maxAttempts}: Processing articles...`,
       );
       console.log(`${"=".repeat(60)}`);
       console.log(`   Articles to process: ${articlesForProcessing.length}`);
+      console.log(`   Already published: ${published.length}/${targetCount}`);
       console.log(`   Excluded URLs: ${excludedUrls.size}`);
       console.log(`   Excluded topics: ${excludedTopics.size}`);
 
-      published = await processAndPublishArticles(
+      const newlyPublished = await processAndPublishArticles(
         articlesForProcessing,
         agentLog.id,
         categorySlug,
       );
+
+      // Add newly published to total
+      published.push(...newlyPublished);
+
+      if (published.length >= targetCount) {
+        console.log(
+          `✅ SUCCESS: ${published.length}/${targetCount} haber yayınlandı`,
+        );
+        break;
+      }
 
       if (published.length > 0) {
         console.log(
@@ -288,11 +299,14 @@ export async function executeNewsAgent(
       // If no articles published and we have more attempts
       if (attempt < maxAttempts) {
         console.log(
-          `\n⚠️  Attempt ${attempt} failed: 0 articles published (all duplicates)`,
+          `\n⚠️  Attempt ${attempt} failed: ${published.length} articles published`,
+        );
+        console.log(
+          `   ${articlesForProcessing.length - published.length} were duplicates`,
         );
         console.log(`🔄 Preparing retry ${attempt + 1}/${maxAttempts}...`);
 
-        // Collect URLs and topics that were duplicates
+        // Collect URLs and topics that were already processed (both published and duplicates)
         articlesForProcessing.forEach((item) => {
           if (item.article.url) {
             excludedUrls.add(item.article.url);
@@ -302,7 +316,7 @@ export async function executeNewsAgent(
           }
         });
 
-        // Get remaining articles from Stage 2 (with topics) that weren't selected
+        // Get remaining articles from Stage 2 (with topics) that haven't been tried yet
         const remainingArticles = filteringResult.stage2_with_topics.filter(
           (article) =>
             !excludedUrls.has(article.url || "") &&
@@ -314,22 +328,29 @@ export async function executeNewsAgent(
           `   Original pool: ${filteringResult.stage2_with_topics.length} articles`,
         );
         console.log(
-          `   Excluded: ${excludedUrls.size} URLs, ${excludedTopics.size} topics`,
+          `   Already processed: ${excludedUrls.size} URLs, ${excludedTopics.size} topics`,
         );
-        console.log(`   Remaining: ${remainingArticles.length} articles`);
+        console.log(
+          `   Remaining untried: ${remainingArticles.length} articles`,
+        );
 
         if (remainingArticles.length === 0) {
           console.log(`❌ No remaining articles to retry. Giving up.`);
           break;
         }
 
-        // Sort by score and take top N
+        // Sort by score and take top N (excluding already processed ones)
         const retryCount = Math.min(targetCount, remainingArticles.length);
         const retryArticles = remainingArticles
           .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0))
           .slice(0, retryCount);
 
-        console.log(`   Selected for retry: ${retryArticles.length} articles`);
+        console.log(
+          `   Selected for retry: ${retryArticles.length} NEW articles`,
+        );
+        console.log(
+          `   Top retry article: "${retryArticles[0]?.title?.substring(0, 50)}..."`,
+        );
 
         // Transform for processing
         articlesForProcessing = retryArticles.map((articleWithTopic) => ({
@@ -341,7 +362,7 @@ export async function executeNewsAgent(
         attempt++;
       } else {
         console.log(
-          `\n❌ All ${maxAttempts} attempts failed. No articles published.`,
+          `\n❌ All ${maxAttempts} attempts failed. ${published.length} articles published total.`,
         );
         break;
       }

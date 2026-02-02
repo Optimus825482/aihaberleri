@@ -1,0 +1,674 @@
+
+2026-02-02T01:36:07.258633587Z npm warn exec The following package was not found and will be installed: tsx@4.21.0
+2026-02-02T01:36:12.105589297Z ✅ News agent queue created
+2026-02-02T01:36:12.106944064Z ✅ Queue events listener created
+2026-02-02T01:36:12.173421659Z info: 🚀 Worker started {"environment":"production","module":"worker","service":"ai-news-agent","timestamp":"2026-02-02 01:36:12"}
+2026-02-02T01:36:12.173746619Z 🚀 Starting News Agent Worker...
+2026-02-02T01:36:12.174041458Z 🔍 Checking Redis connection...
+2026-02-02T01:36:12.202702816Z ✅ Redis connected
+2026-02-02T01:36:12.252092478Z ✅ Redis ready to accept commands
+2026-02-02T01:36:12.257168737Z ✅ Redis connection verified (PONG received)
+2026-02-02T01:36:12.257831066Z 🔄 Database connection attempt 1/10...
+2026-02-02T01:36:12.258290614Z 🔍 Testing database connection...
+2026-02-02T01:36:12.360073303Z info: 🔌 database connection connected {"environment":"production","module":"worker","service":"database","status":"connected","timestamp":"2026-02-02 01:36:12"}
+2026-02-02T01:36:12.362037438Z ✅ Database connection successful
+2026-02-02T01:36:12.362063968Z ✅ All systems ready, starting worker...
+2026-02-02T01:36:12.362072938Z 💓 Starting worker heartbeat...
+2026-02-02T01:36:12.362080918Z 
+2026-02-02T01:36:12.362088008Z 🎯 Initializing BullMQ Worker...
+2026-02-02T01:36:12.362094988Z    Queue Name: news-agent
+2026-02-02T01:36:12.362101878Z    Redis Status: ready
+2026-02-02T01:36:12.362108688Z    Concurrency: 1
+2026-02-02T01:36:12.362115448Z    Lock Duration: 10 minutes
+2026-02-02T01:36:12.364545423Z 
+2026-02-02T01:36:12.364628753Z ✅ Worker started successfully!
+2026-02-02T01:36:12.364639583Z 👂 Listening for jobs on queue: news-agent
+2026-02-02T01:36:12.364678873Z 📊 Worker stats will be logged here...
+2026-02-02T01:36:12.364686463Z 
+2026-02-02T01:36:12.365229611Z 
+2026-02-02T01:36:12.365249421Z 🔄 Başlangıç senkronizasyonu başlatılıyor...
+2026-02-02T01:36:12.366115720Z ✅ Newsletter queue created
+2026-02-02T01:36:12.366259159Z 
+2026-02-02T01:36:12.366268229Z 📧 Initializing Newsletter Worker...
+2026-02-02T01:36:12.367211918Z ✅ Newsletter worker started
+2026-02-02T01:36:12.422983126Z 💓 Heartbeat updated: 02.02.2026 01:36:12
+2026-02-02T01:36:12.443343301Z 
+2026-02-02T01:36:12.443364661Z ✅ Worker is ready and listening for jobs
+2026-02-02T01:36:12.455548565Z 🗑️ Removed existing newsletter job: 8397d10618ce9a6d653c11b6052e6192
+2026-02-02T01:36:12.467574488Z ℹ️ IndexNow için bekleyen haber bulunmadı.
+2026-02-02T01:36:12.469493095Z 
+2026-02-02T01:36:12.469514345Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-02T01:36:12.469517415Z 📧 NEWSLETTER SCHEDULE:
+2026-02-02T01:36:12.469519565Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-02T01:36:12.469521735Z ⏰ Time: Every day at 19:00 (Turkey)
+2026-02-02T01:36:12.469523655Z 🆔 Job Type: Cron (daily-digest)
+2026-02-02T01:36:12.469525595Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-02T01:36:12.469528105Z 
+2026-02-02T01:36:12.469562864Z ✅ Newsletter scheduler initialized
+2026-02-02T01:36:12.470964131Z 🔧 Repeatable job sistemi başlatılıyor...
+2026-02-02T01:36:12.479769712Z ✅ News agent queue created
+2026-02-02T01:36:12.479782862Z ✅ Queue events listener created
+2026-02-02T01:36:12.485619019Z ✅ Repeatable job mevcut (her 0.25 saatte bir).
+2026-02-02T01:36:12.485810809Z 📅 Sıradaki çalışma zamanı: 2/2/2026, 1:46:48 AM
+2026-02-02T01:36:42.372695939Z 💓 Heartbeat updated: 02.02.2026 01:36:42
+2026-02-02T01:37:12.381172012Z 💓 Heartbeat updated: 02.02.2026 01:37:12
+2026-02-02T01:37:42.388469605Z 💓 Heartbeat updated: 02.02.2026 01:37:42
+2026-02-02T01:37:59.338849026Z 
+2026-02-02T01:37:59.338906876Z 🔄 Job manual-trigger-1769996279329 is now active
+2026-02-02T01:37:59.339890543Z info: 🔄 Job processing started {"environment":"production","jobId":"manual-trigger-1769996279329","jobName":"scrape-and-publish","module":"worker","service":"ai-news-agent","timestamp":"2026-02-02 01:37:59"}
+2026-02-02T01:37:59.339999844Z 
+2026-02-02T01:37:59.340009584Z ============================================================
+2026-02-02T01:37:59.340017534Z 🤖 Processing job: scrape-and-publish (ID: manual-trigger-1769996279329)
+2026-02-02T01:37:59.340025274Z    Priority: 1
+2026-02-02T01:37:59.340032654Z    Attempt: 1/3
+2026-02-02T01:37:59.340650382Z    Timestamp: 2/2/2026, 1:37:59 AM
+2026-02-02T01:37:59.340667032Z ============================================================
+2026-02-02T01:37:59.340675372Z 
+2026-02-02T01:37:59.341961779Z 📊 Progress: 10% - Starting agent execution...
+2026-02-02T01:37:59.350473089Z info: 🤖 Agent execution started {"category":"all","environment":"production","logId":"cml4i31v500008dqvnp3p81vs","module":"agent","service":"ai-news-agent","timestamp":"2026-02-02 01:37:59"}
+2026-02-02T01:37:59.352649804Z [Socket] Cannot emit 'agent:started' - Socket.io not initialized
+2026-02-02T01:37:59.353066542Z 
+2026-02-02T01:37:59.353111412Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-02T01:37:59.353137722Z ┃           🤖 AGENT EXECUTION START                ┃
+2026-02-02T01:37:59.353143392Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-02T01:37:59.353148362Z ┃  Log ID:       cml4i31v5000...                    ┃
+2026-02-02T01:37:59.353152972Z ┃  Start Time:   02.02.2026 01:37:59      ┃
+2026-02-02T01:37:59.353157352Z ┃  Category:     All                         ┃
+2026-02-02T01:37:59.353162022Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-02T01:37:59.353166802Z 
+2026-02-02T01:37:59.353497802Z info: 📊 Agent step: fetch_news Yapay zeka haberleri aranıyor (RSS + Trend) {"environment":"production","logId":"cml4i31v500008dqvnp3p81vs","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-02-02 01:37:59"}
+2026-02-02T01:37:59.353636672Z 📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...
+2026-02-02T01:37:59.354263700Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-02T01:37:59.354780389Z 📰 AI haberleri toplanıyor (RSS + Trend Analizi)...
+2026-02-02T01:37:59.355049628Z 📡 91 RSS feed okunuyor...
+2026-02-02T01:37:59.355348977Z 📡 RSS feed okunuyor: BBC News - Technology
+2026-02-02T01:37:59.367891829Z 📡 RSS feed okunuyor: CNN - Technology
+2026-02-02T01:37:59.369973613Z 📡 RSS feed okunuyor: Bloomberg - Technology
+2026-02-02T01:37:59.417478442Z 📡 RSS feed okunuyor: The Wall Street Journal - Technology
+2026-02-02T01:37:59.419244749Z 📡 RSS feed okunuyor: Financial Times - Technology
+2026-02-02T01:37:59.841585832Z ✅ 10 haber bulundu: BBC News - Technology
+2026-02-02T01:37:59.846729291Z ✅ 10 haber bulundu: CNN - Technology
+2026-02-02T01:37:59.892086194Z ✅ 10 haber bulundu: Bloomberg - Technology
+2026-02-02T01:37:59.951906935Z ✅ 10 haber bulundu: The Wall Street Journal - Technology
+2026-02-02T01:38:00.007357435Z ✅ 10 haber bulundu: Financial Times - Technology
+2026-02-02T01:38:00.508417496Z 📡 RSS feed okunuyor: NBC News - Technology
+2026-02-02T01:38:00.511474698Z 📡 RSS feed okunuyor: ABC News - Technology
+2026-02-02T01:38:00.512738735Z 📡 RSS feed okunuyor: Sky News - Technology
+2026-02-02T01:38:00.514832691Z 📡 RSS feed okunuyor: Euronews - Technology
+2026-02-02T01:38:00.516927196Z 📡 RSS feed okunuyor: MIT Technology Review - AI
+2026-02-02T01:38:00.583952050Z ✅ 10 haber bulundu: MIT Technology Review - AI
+2026-02-02T01:38:00.644494018Z ✅ 10 haber bulundu: Euronews - Technology
+2026-02-02T01:38:00.742823298Z ✅ 10 haber bulundu: ABC News - Technology
+2026-02-02T01:38:00.833106977Z ✅ 10 haber bulundu: Sky News - Technology
+2026-02-02T01:38:01.176947565Z ✅ 10 haber bulundu: NBC News - Technology
+2026-02-02T01:38:01.678219803Z 📡 RSS feed okunuyor: VentureBeat - AI
+2026-02-02T01:38:01.680971377Z 📡 RSS feed okunuyor: The Verge - AI
+2026-02-02T01:38:01.683048691Z 📡 RSS feed okunuyor: TechCrunch - AI
+2026-02-02T01:38:01.685262676Z 📡 RSS feed okunuyor: Ars Technica - AI
+2026-02-02T01:38:01.687164652Z 📡 RSS feed okunuyor: Wired - AI
+2026-02-02T01:38:01.739247250Z ✅ 10 haber bulundu: TechCrunch - AI
+2026-02-02T01:38:01.761486578Z ✅ 10 haber bulundu: The Verge - AI
+2026-02-02T01:38:02.077261490Z ✅ 7 haber bulundu: VentureBeat - AI
+2026-02-02T01:38:02.129014869Z ✅ 10 haber bulundu: Wired - AI
+2026-02-02T01:38:02.149793210Z ✅ 10 haber bulundu: Ars Technica - AI
+2026-02-02T01:38:02.650513620Z 📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+2026-02-02T01:38:02.654503751Z 📡 RSS feed okunuyor: Engadget - Technology
+2026-02-02T01:38:02.656727666Z 📡 RSS feed okunuyor: The Next Web
+2026-02-02T01:38:02.658687301Z 📡 RSS feed okunuyor: TechRadar - News
+2026-02-02T01:38:02.660138097Z 📡 RSS feed okunuyor: CNET - News
+2026-02-02T01:38:02.762110279Z ✅ 10 haber bulundu: TechRadar - News
+2026-02-02T01:38:02.843328089Z ✅ 10 haber bulundu: CNET - News
+2026-02-02T01:38:02.902461671Z ✅ 10 haber bulundu: The Next Web
+2026-02-02T01:38:03.228070550Z ✅ 10 haber bulundu: ZDNet - Artificial Intelligence
+2026-02-02T01:38:03.682972756Z ✅ 10 haber bulundu: Engadget - Technology
+2026-02-02T01:38:04.184044633Z 📡 RSS feed okunuyor: Mashable - Tech
+2026-02-02T01:38:04.186337528Z 📡 RSS feed okunuyor: Gizmodo
+2026-02-02T01:38:04.188152313Z 📡 RSS feed okunuyor: Lifehacker
+2026-02-02T01:38:04.189789590Z 📡 RSS feed okunuyor: Digital Trends
+2026-02-02T01:38:04.191369776Z 📡 RSS feed okunuyor: Tom's Hardware
+2026-02-02T01:38:04.380051954Z ✅ 10 haber bulundu: Mashable - Tech
+2026-02-02T01:38:04.394937220Z ✅ 10 haber bulundu: Digital Trends
+2026-02-02T01:38:04.469154075Z ✅ 10 haber bulundu: Tom's Hardware
+2026-02-02T01:38:04.572325844Z ✅ 10 haber bulundu: Lifehacker
+2026-02-02T01:38:04.644952764Z ✅ 10 haber bulundu: Gizmodo
+2026-02-02T01:38:05.145502192Z 📡 RSS feed okunuyor: 9to5Mac
+2026-02-02T01:38:05.148106226Z 📡 RSS feed okunuyor: 9to5Google
+2026-02-02T01:38:05.150146502Z 📡 RSS feed okunuyor: Android Authority
+2026-02-02T01:38:05.152131006Z 📡 RSS feed okunuyor: Android Police
+2026-02-02T01:38:05.153502184Z 📡 RSS feed okunuyor: XDA Developers
+2026-02-02T01:38:05.209660332Z ✅ 10 haber bulundu: 9to5Google
+2026-02-02T01:38:05.237205687Z ✅ 10 haber bulundu: 9to5Mac
+2026-02-02T01:38:05.558913304Z ✅ 10 haber bulundu: Android Authority
+2026-02-02T01:38:05.561637088Z ✅ 10 haber bulundu: XDA Developers
+2026-02-02T01:38:05.563969463Z ✅ 10 haber bulundu: Android Police
+2026-02-02T01:38:06.064216711Z 📡 RSS feed okunuyor: Hacker News (YCombinator)
+2026-02-02T01:38:06.065444368Z 📡 RSS feed okunuyor: Product Hunt - Tech
+2026-02-02T01:38:06.066147627Z 📡 RSS feed okunuyor: AI News
+2026-02-02T01:38:06.067147594Z 📡 RSS feed okunuyor: MarkTechPost
+2026-02-02T01:38:06.067522133Z 📡 RSS feed okunuyor: The AI Edge (Substack)
+2026-02-02T01:38:06.157901381Z ✅ 10 haber bulundu: Product Hunt - Tech
+2026-02-02T01:38:06.213228081Z ✅ 10 haber bulundu: The AI Edge (Substack)
+2026-02-02T01:38:06.333684160Z ✅ 10 haber bulundu: AI News
+2026-02-02T01:38:06.369058706Z ✅ 10 haber bulundu: MarkTechPost
+2026-02-02T01:38:06.620157388Z ✅ 10 haber bulundu: Hacker News (YCombinator)
+2026-02-02T01:38:07.121011145Z 📡 RSS feed okunuyor: Last Week in AI
+2026-02-02T01:38:07.123460579Z 📡 RSS feed okunuyor: AI Business
+2026-02-02T01:38:07.130279102Z 📡 RSS feed okunuyor: THE DECODER - AI News
+2026-02-02T01:38:07.130306152Z 📡 RSS feed okunuyor: Unite.AI
+2026-02-02T01:38:07.131954939Z 📡 RSS feed okunuyor: Analytics India Magazine
+2026-02-02T01:38:07.335454561Z ✅ 10 haber bulundu: Last Week in AI
+2026-02-02T01:38:07.441492613Z ⚠️  Hata (Analytics India Magazine), tekrar deneniyor... Invalid character in entity name
+2026-02-02T01:38:07.441530923Z Line: 7
+2026-02-02T01:38:07.441537443Z Column: 49
+2026-02-02T01:38:07.441542463Z Char: =
+2026-02-02T01:38:07.512177978Z ⚠️  Hata (Unite.AI), tekrar deneniyor... Non-whitespace before first tag.
+2026-02-02T01:38:07.512212638Z Line: 0
+2026-02-02T01:38:07.512219408Z Column: 1
+2026-02-02T01:38:07.512224438Z Char: R
+2026-02-02T01:38:07.703213890Z ✅ 10 haber bulundu: AI Business
+2026-02-02T01:38:07.760604715Z ✅ 10 haber bulundu: THE DECODER - AI News
+2026-02-02T01:38:08.441666838Z 📡 RSS feed okunuyor: Analytics India Magazine (deneme 2)
+2026-02-02T01:38:08.512744771Z 📡 RSS feed okunuyor: Unite.AI (deneme 2)
+2026-02-02T01:38:08.556948277Z ⚠️  Hata (Analytics India Magazine), tekrar deneniyor... Invalid character in entity name
+2026-02-02T01:38:08.556987227Z Line: 7
+2026-02-02T01:38:08.556994547Z Column: 49
+2026-02-02T01:38:08.557000687Z Char: =
+2026-02-02T01:38:08.669779533Z ⚠️  Hata (Unite.AI), tekrar deneniyor... Non-whitespace before first tag.
+2026-02-02T01:38:08.669805953Z Line: 0
+2026-02-02T01:38:08.669808663Z Column: 1
+2026-02-02T01:38:08.669824203Z Char: R
+2026-02-02T01:38:10.556696184Z 📡 RSS feed okunuyor: Analytics India Magazine (deneme 3)
+2026-02-02T01:38:10.670615216Z 📡 RSS feed okunuyor: Unite.AI (deneme 3)
+2026-02-02T01:38:10.673284840Z ❌ RSS feed hatası (Analytics India Magazine): Invalid character in entity name
+2026-02-02T01:38:10.673311690Z Line: 7
+2026-02-02T01:38:10.673318180Z Column: 49
+2026-02-02T01:38:10.673323320Z Char: =
+2026-02-02T01:38:10.829133454Z ❌ RSS feed hatası (Unite.AI): Non-whitespace before first tag.
+2026-02-02T01:38:10.829159784Z Line: 0
+2026-02-02T01:38:10.829163364Z Column: 1
+2026-02-02T01:38:10.829166564Z Char: R
+2026-02-02T01:38:11.329546979Z 📡 RSS feed okunuyor: The Rundown AI
+2026-02-02T01:38:11.331850403Z 📡 RSS feed okunuyor: SiliconANGLE - AI
+2026-02-02T01:38:11.333833538Z 📡 RSS feed okunuyor: AI Trends
+2026-02-02T01:38:11.335481255Z 📡 RSS feed okunuyor: Synced - AI Review
+2026-02-02T01:38:11.337301620Z 📡 RSS feed okunuyor: The Gradient
+2026-02-02T01:38:11.612042145Z ✅ 10 haber bulundu: AI Trends
+2026-02-02T01:38:11.686705419Z ✅ 10 haber bulundu: Synced - AI Review
+2026-02-02T01:38:12.291902067Z ✅ 10 haber bulundu: The Rundown AI
+2026-02-02T01:38:12.388950739Z 💓 Heartbeat updated: 02.02.2026 01:38:12
+2026-02-02T01:38:12.716560329Z ✅ 10 haber bulundu: The Gradient
+2026-02-02T01:38:13.178229013Z ✅ 10 haber bulundu: SiliconANGLE - AI
+2026-02-02T01:38:13.679557133Z 📡 RSS feed okunuyor: The Algorithmic Bridge
+2026-02-02T01:38:13.681933708Z 📡 RSS feed okunuyor: 404 Media
+2026-02-02T01:38:13.683429345Z 📡 RSS feed okunuyor: Ahead of AI
+2026-02-02T01:38:13.684900681Z 📡 RSS feed okunuyor: AI Accelerator Institute
+2026-02-02T01:38:13.686285078Z 📡 RSS feed okunuyor: AI - AI-TechPark
+2026-02-02T01:38:13.813004540Z ✅ 10 haber bulundu: 404 Media
+2026-02-02T01:38:13.954073428Z ✅ 10 haber bulundu: Ahead of AI
+2026-02-02T01:38:13.990962441Z ✅ 10 haber bulundu: AI Accelerator Institute
+2026-02-02T01:38:14.066190184Z ✅ 10 haber bulundu: The Algorithmic Bridge
+2026-02-02T01:38:14.072428290Z ✅ 10 haber bulundu: AI - AI-TechPark
+2026-02-02T01:38:14.572502282Z 📡 RSS feed okunuyor: AI Archives | KnowTechie
+2026-02-02T01:38:14.574952027Z 📡 RSS feed okunuyor: AIModels.fyi
+2026-02-02T01:38:14.576407114Z 📡 RSS feed okunuyor: AI Now Institute
+2026-02-02T01:38:14.578199499Z 📡 RSS feed okunuyor: AI Snake Oil
+2026-02-02T01:38:14.579290597Z 📡 RSS feed okunuyor: Ars Technica - All Content
+2026-02-02T01:38:14.696672531Z ✅ 10 haber bulundu: AI Archives | KnowTechie
+2026-02-02T01:38:14.719436477Z ✅ 10 haber bulundu: AIModels.fyi
+2026-02-02T01:38:14.731098339Z ✅ 10 haber bulundu: Ars Technica - All Content
+2026-02-02T01:38:14.849968019Z ✅ 10 haber bulundu: AI Now Institute
+2026-02-02T01:38:14.981253331Z ✅ 10 haber bulundu: AI Snake Oil
+2026-02-02T01:38:15.482377311Z 📡 RSS feed okunuyor: Artificial Intelligence – Futurism
+2026-02-02T01:38:15.486387852Z 📡 RSS feed okunuyor: Artificial Intelligence News - ScienceDaily
+2026-02-02T01:38:15.486473031Z 📡 RSS feed okunuyor: Machine Learning Mastery Blog
+2026-02-02T01:38:15.488637125Z 📡 RSS feed okunuyor: Chain of Thought
+2026-02-02T01:38:15.491295940Z 📡 RSS feed okunuyor: Chip Huyen
+2026-02-02T01:38:15.658109937Z ✅ 10 haber bulundu: Chain of Thought
+2026-02-02T01:38:15.745069802Z ✅ 10 haber bulundu: Machine Learning Mastery Blog
+2026-02-02T01:38:16.198484914Z ✅ 10 haber bulundu: Artificial Intelligence News - ScienceDaily
+2026-02-02T01:38:16.339148372Z ✅ 10 haber bulundu: Chip Huyen
+2026-02-02T01:38:16.355121394Z ✅ 10 haber bulundu: Artificial Intelligence – Futurism
+2026-02-02T01:38:16.856163395Z 📡 RSS feed okunuyor: Crunchbase News
+2026-02-02T01:38:16.858696338Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-02T01:38:16.860097505Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-02T01:38:16.862005741Z 📡 RSS feed okunuyor: LangChain Blog
+2026-02-02T01:38:16.863764846Z 📡 RSS feed okunuyor: Machine Learning Mastery
+2026-02-02T01:38:16.893452437Z ✅ 10 haber bulundu: Machine Learning Mastery
+2026-02-02T01:38:17.066090160Z ✅ 10 haber bulundu: KDnuggets
+2026-02-02T01:38:17.208640593Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-02T01:38:17.291959967Z ✅ 10 haber bulundu: LangChain Blog
+2026-02-02T01:38:17.624927232Z ✅ 10 haber bulundu: Crunchbase News
+2026-02-02T01:38:18.125297332Z 📡 RSS feed okunuyor: OpenAI Blog
+2026-02-02T01:38:18.126853958Z 📡 RSS feed okunuyor: Google AI Blog
+2026-02-02T01:38:18.129554662Z 📡 RSS feed okunuyor: DeepMind Blog
+2026-02-02T01:38:18.130726219Z 📡 RSS feed okunuyor: NVIDIA Blog - AI
+2026-02-02T01:38:18.132122546Z 📡 RSS feed okunuyor: AWS Machine Learning Blog
+2026-02-02T01:38:18.288017179Z ✅ 10 haber bulundu: DeepMind Blog
+2026-02-02T01:38:18.398713787Z ✅ 10 haber bulundu: NVIDIA Blog - AI
+2026-02-02T01:38:18.543145486Z ✅ 10 haber bulundu: AWS Machine Learning Blog
+2026-02-02T01:38:18.583092192Z ✅ 10 haber bulundu: OpenAI Blog
+2026-02-02T01:38:18.965065061Z ✅ 10 haber bulundu: Google AI Blog
+2026-02-02T01:38:19.466051129Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-02T01:38:19.467984134Z 📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+2026-02-02T01:38:19.470283198Z 📡 RSS feed okunuyor: Forbes - Innovation
+2026-02-02T01:38:19.472105894Z 📡 RSS feed okunuyor: The Economist - Technology
+2026-02-02T01:38:19.474014120Z 📡 RSS feed okunuyor: Fast Company - Technology
+2026-02-02T01:38:19.522382126Z ✅ 10 haber bulundu: Forbes - Innovation
+2026-02-02T01:38:19.560814425Z ✅ 10 haber bulundu: Fast Company - Technology
+2026-02-02T01:38:19.656426830Z ✅ 10 haber bulundu: The Economist - Technology
+2026-02-02T01:38:19.727394392Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-02T01:38:20.213144295Z ✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+2026-02-02T01:38:20.717027275Z 📡 RSS feed okunuyor: MIT Sloan Management Review
+2026-02-02T01:38:20.717063675Z 📡 RSS feed okunuyor: Seeking Alpha - Technology
+2026-02-02T01:38:20.718065183Z 📡 RSS feed okunuyor: New Scientist - Technology
+2026-02-02T01:38:20.720438208Z 📡 RSS feed okunuyor: Popular Science
+2026-02-02T01:38:20.722137983Z 📡 RSS feed okunuyor: Popular Mechanics
+2026-02-02T01:38:20.793269106Z ✅ 10 haber bulundu: New Scientist - Technology
+2026-02-02T01:38:20.827734644Z ✅ 10 haber bulundu: Popular Science
+2026-02-02T01:38:20.921143514Z ✅ 10 haber bulundu: Seeking Alpha - Technology
+2026-02-02T01:38:21.015829960Z ✅ 10 haber bulundu: Popular Mechanics
+2026-02-02T01:38:21.418606729Z ✅ 10 haber bulundu: MIT Sloan Management Review
+2026-02-02T01:38:21.918951726Z 📡 RSS feed okunuyor: Space.com
+2026-02-02T01:38:21.920755522Z 📡 RSS feed okunuyor: Phys.org - Technology
+2026-02-02T01:38:21.923998255Z 📡 RSS feed okunuyor: ScienceDaily - Technology
+2026-02-02T01:38:21.924113295Z 📡 RSS feed okunuyor: Futurism
+2026-02-02T01:38:21.926172589Z 📡 RSS feed okunuyor: Singularity Hub
+2026-02-02T01:38:21.982237947Z ✅ 10 haber bulundu: Singularity Hub
+2026-02-02T01:38:22.060629191Z ✅ 10 haber bulundu: Futurism
+2026-02-02T01:38:22.418672846Z ✅ 10 haber bulundu: Space.com
+2026-02-02T01:38:22.604943895Z ✅ 10 haber bulundu: ScienceDaily - Technology
+2026-02-02T01:38:22.610425452Z ✅ 10 haber bulundu: Phys.org - Technology
+2026-02-02T01:38:23.110949249Z 📡 RSS feed okunuyor: IEEE Spectrum - Technology
+2026-02-02T01:38:23.113395293Z 📡 RSS feed okunuyor: Towards Data Science
+2026-02-02T01:38:23.114977860Z 📡 RSS feed okunuyor: Analytics Vidhya
+2026-02-02T01:38:23.116031277Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-02T01:38:23.118272591Z 📡 RSS feed okunuyor: Machine Learning Reddit
+2026-02-02T01:38:23.295255333Z ✅ 10 haber bulundu: KDnuggets
+2026-02-02T01:38:23.398980868Z ✅ 10 haber bulundu: IEEE Spectrum - Technology
+2026-02-02T01:38:23.596124943Z ✅ 10 haber bulundu: Towards Data Science
+2026-02-02T01:38:23.998738680Z ✅ 10 haber bulundu: Analytics Vidhya
+2026-02-02T01:38:24.174774544Z ✅ 10 haber bulundu: Machine Learning Reddit
+2026-02-02T01:38:24.675332889Z 📡 RSS feed okunuyor: AI Trends
+2026-02-02T01:38:24.953229961Z ✅ 10 haber bulundu: AI Trends
+2026-02-02T01:38:24.953268421Z ✅ Toplam 887 haber toplandı
+2026-02-02T01:38:24.998611874Z ✅ 834 benzersiz haber
+2026-02-02T01:38:24.999843311Z 📅 Son 48 saatte 293 haber
+2026-02-02T01:38:25.012691841Z 🤖 AI filtreleme: 85/293 haber AI ile ilgili
+2026-02-02T01:38:25.012718871Z 📊 85 haber için Trend analizi (Brave API)...
+2026-02-02T01:38:25.013090800Z 📊 Brave ile 85 haber analiz ediliyor...
+2026-02-02T01:38:25.013114660Z 📦 Batch 1/9 işleniyor (10 haber)...
+2026-02-02T01:38:25.726394451Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-02T01:38:26.226367767Z 📦 Batch 2/9 işleniyor (10 haber)...
+2026-02-02T01:38:26.997399021Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-02T01:38:27.497915715Z 📦 Batch 3/9 işleniyor (10 haber)...
+2026-02-02T01:38:27.855235279Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-02T01:38:28.355674992Z 📦 Batch 4/9 işleniyor (10 haber)...
+2026-02-02T01:38:28.692784742Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-02T01:38:29.192787567Z 📦 Batch 5/9 işleniyor (10 haber)...
+2026-02-02T01:38:29.894023193Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-02T01:38:30.394366186Z 📦 Batch 6/9 işleniyor (10 haber)...
+2026-02-02T01:38:31.069233023Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-02T01:38:31.570406624Z 📦 Batch 7/9 işleniyor (10 haber)...
+2026-02-02T01:38:31.982739334Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-02T01:38:32.483392544Z 📦 Batch 8/9 işleniyor (10 haber)...
+2026-02-02T01:38:32.788686740Z ⏳ 500ms bekleniyor (rate limit protection)...
+2026-02-02T01:38:33.289537719Z 📦 Batch 9/9 işleniyor (5 haber)...
+2026-02-02T01:38:33.597292087Z ✅ Brave trend sıralaması tamamlandı
+2026-02-02T01:38:33.597330076Z 📊 İşlenen: 85/85 haber
+2026-02-02T01:38:33.597337016Z 🏆 Top 5: #46 (skor: 280), #52 (skor: 275), #4 (skor: 260), #11 (skor: 258), #68 (skor: 258)
+2026-02-02T01:38:33.597524286Z ✅ 20 trend haber seçildi
+2026-02-02T01:38:33.597544326Z Top 5 Trend Haberler: 
+2026-02-02T01:38:33.597549226Z   1. OpenClaw (formerly Clawdbot) and Moltbook let attackers walk... (skor: 280)
+2026-02-02T01:38:33.597553906Z   2. Exposed Moltbook Database Let Anyone Take Control of Any AI ... (skor: 275)
+2026-02-02T01:38:33.597558236Z   3. Waymo Seeking About $16 Billion Near $110 Billion Valuation... (skor: 260)
+2026-02-02T01:38:33.597562636Z   4. French tech giant Capgemini to sell US subsidiary accused of... (skor: 258)
+2026-02-02T01:38:33.597589916Z   5. Nvidia boss insists 'huge' investment in OpenAI on track... (skor: 258)
+2026-02-02T01:38:33.597841026Z ✅ 20 trend haber bulundu
+2026-02-02T01:38:33.602775584Z info: 📊 Agent step: smart_filtering Akıllı filtreleme ve topic extraction {"environment":"production","logId":"cml4i31v500008dqvnp3p81vs","module":"agent","progress":40,"service":"ai-news-agent","step":"smart_filtering","timestamp":"2026-02-02 01:38:33"}
+2026-02-02T01:38:33.603001543Z 🎯 Adım 2: Akıllı filtreleme başlatılıyor...
+2026-02-02T01:38:33.604132711Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-02T01:38:33.611627373Z 📊 Haber sayısı ayarları: min=3, max=5
+2026-02-02T01:38:33.611651333Z 🎯 Hedef haber sayısı: 5
+2026-02-02T01:38:33.646084131Z 
+2026-02-02T01:38:33.646123801Z ============================================================
+2026-02-02T01:38:33.646133361Z 🚀 SMART FILTERING PIPELINE BAŞLATILIYOR
+2026-02-02T01:38:33.646141841Z ============================================================
+2026-02-02T01:38:33.646148141Z    Input: 20 haber
+2026-02-02T01:38:33.646153971Z    Target: 5 unique haber
+2026-02-02T01:38:33.646160201Z    Time window: 2 gün
+2026-02-02T01:38:33.646295080Z 
+2026-02-02T01:38:33.646333380Z 📊 STAGE 1: BATCH FILTERING
+2026-02-02T01:38:33.646340690Z    Input: 20 haber
+2026-02-02T01:38:33.646345740Z    Batch size: 10
+2026-02-02T01:38:33.646350430Z    Top per batch: 5
+2026-02-02T01:38:33.646922029Z    📦 Batch 1: 10 haber → 5 seçilecek
+2026-02-02T01:38:33.646950109Z       1. [280] OpenClaw (formerly Clawdbot) and Moltbook let atta...
+2026-02-02T01:38:33.646958289Z       2. [275] Exposed Moltbook Database Let Anyone Take Control ...
+2026-02-02T01:38:33.646965819Z       3. [260] Waymo Seeking About $16 Billion Near $110 Billion ...
+2026-02-02T01:38:33.646972729Z       4. [258.33333333333337] French tech giant Capgemini to sell US subsidiary ...
+2026-02-02T01:38:33.646980209Z       5. [257.8571428571429] Nvidia boss insists 'huge' investment in OpenAI on...
+2026-02-02T01:38:33.646986709Z    📦 Batch 2: 10 haber → 5 seçilecek
+2026-02-02T01:38:33.646993729Z       1. [235] Indonesia is lifting its ban on Grok, but with som...
+2026-02-02T01:38:33.647000229Z       2. [217.5] Google Brings Genie 3's Interactive World-Building...
+2026-02-02T01:38:33.647007009Z       3. [215] Pledge to Invest $100 Billion in OpenAI Was ‘Never...
+2026-02-02T01:38:33.647013929Z       4. [215] Nvidia CEO denies he’s ‘unhappy’ with OpenAI...
+2026-02-02T01:38:33.647020539Z       5. [213] A chatbot entirely powered by humans, not artifici...
+2026-02-02T01:38:33.647027379Z    ✅ Filtered: 10 haber
+2026-02-02T01:38:33.647034469Z 
+2026-02-02T01:38:33.647041099Z 🧠 STAGE 2: TOPIC EXTRACTION
+2026-02-02T01:38:33.647071199Z    Input: 10 haber
+2026-02-02T01:38:33.647082819Z 🧠 Topic extraction başlatılıyor: 10 haber
+2026-02-02T01:38:33.647259038Z 📦 Batch 1/3 işleniyor (4 haber)...
+2026-02-02T01:38:34.954763619Z    ✅ OpenClaw (formerly Clawdbot) and Moltbook let atta... → openclaw_moltbook_security_breach
+2026-02-02T01:38:34.954808249Z    ✅ Exposed Moltbook Database Let Anyone Take Control ... → moltbook_ai_agent_security
+2026-02-02T01:38:34.954814729Z    ✅ Waymo Seeking About $16 Billion Near $110 Billion ... → waymo_valuation_funding
+2026-02-02T01:38:34.954819889Z    ✅ French tech giant Capgemini to sell US subsidiary ... → capgemini_ice_subsidiary_sale
+2026-02-02T01:38:35.454942569Z 📦 Batch 2/3 işleniyor (4 haber)...
+2026-02-02T01:38:36.630208301Z    ✅ Nvidia boss insists 'huge' investment in OpenAI on... → nvidia_openai_investment
+2026-02-02T01:38:36.630248011Z    ✅ Indonesia is lifting its ban on Grok, but with som... → indonesia_grok_ban
+2026-02-02T01:38:36.630255211Z    ✅ Google Brings Genie 3's Interactive World-Building... → google_genie_ai_ultra_release
+2026-02-02T01:38:36.630260841Z    ✅ Pledge to Invest $100 Billion in OpenAI Was ‘Never... → nvidia_openai_investment_pledge
+2026-02-02T01:38:37.131241197Z 📦 Batch 3/3 işleniyor (2 haber)...
+2026-02-02T01:38:38.691818129Z    ✅ Nvidia CEO denies he’s ‘unhappy’ with OpenAI... → nvidia_ceo_openai_denial
+2026-02-02T01:38:38.691928298Z    ✅ A chatbot entirely powered by humans, not artifici... → chile_human_chatbot_community
+2026-02-02T01:38:38.693310606Z ✅ Topic extraction tamamlandı: 10 haber
+2026-02-02T01:38:38.693331576Z 
+2026-02-02T01:38:38.693337126Z    📊 Topic dağılımı:
+2026-02-02T01:38:38.693342526Z       openclaw_moltbook_security_breach: 1 haber
+2026-02-02T01:38:38.693347036Z       moltbook_ai_agent_security: 1 haber
+2026-02-02T01:38:38.693351236Z       waymo_valuation_funding: 1 haber
+2026-02-02T01:38:38.693355516Z       capgemini_ice_subsidiary_sale: 1 haber
+2026-02-02T01:38:38.693359826Z       nvidia_openai_investment: 1 haber
+2026-02-02T01:38:38.693363976Z       indonesia_grok_ban: 1 haber
+2026-02-02T01:38:38.693368076Z       google_genie_ai_ultra_release: 1 haber
+2026-02-02T01:38:38.693372246Z       nvidia_openai_investment_pledge: 1 haber
+2026-02-02T01:38:38.693376766Z       nvidia_ceo_openai_denial: 1 haber
+2026-02-02T01:38:38.693380916Z       chile_human_chatbot_community: 1 haber
+2026-02-02T01:38:38.693385046Z    ✅ Topics extracted: 10 haber
+2026-02-02T01:38:38.693389306Z 
+2026-02-02T01:38:38.693393476Z 🔍 STAGE 3: TOPIC-BASED DUPLICATE CHECK & SMART SELECTION
+2026-02-02T01:38:38.693398446Z    Input: 10 haber
+2026-02-02T01:38:38.693402666Z    Target: 5 unique topics
+2026-02-02T01:38:38.693424105Z 
+2026-02-02T01:38:38.693428895Z 🎯 Akıllı haber seçimi başlatılıyor...
+2026-02-02T01:38:38.693433775Z    Aday sayısı: 10
+2026-02-02T01:38:38.693438215Z    Hedef: 5 unique topic
+2026-02-02T01:38:38.693442685Z    Zaman penceresi: 2 gün
+2026-02-02T01:38:38.700366758Z    ✅ SELECTED [1/5]: openclaw_moltbook_security_breach (score: 280)
+2026-02-02T01:38:38.700389098Z       "OpenClaw (formerly Clawdbot) and Moltbook let attackers walk...")
+2026-02-02T01:38:38.703299522Z    ✅ SELECTED [2/5]: moltbook_ai_agent_security (score: 275)
+2026-02-02T01:38:38.703336092Z       "Exposed Moltbook Database Let Anyone Take Control of Any AI ...")
+2026-02-02T01:38:38.706207184Z    ✅ SELECTED [3/5]: waymo_valuation_funding (score: 260)
+2026-02-02T01:38:38.706249974Z       "Waymo Seeking About $16 Billion Near $110 Billion Valuation...")
+2026-02-02T01:38:38.709386567Z    ✅ SELECTED [4/5]: capgemini_ice_subsidiary_sale (score: 258.33333333333337)
+2026-02-02T01:38:38.709400507Z       "French tech giant Capgemini to sell US subsidiary accused of...")
+2026-02-02T01:38:38.712436040Z    ⏭️  SKIP (topic in database): nvidia_openai_investment - "Nvidia boss insists 'huge' investment in OpenAI on..."
+2026-02-02T01:38:38.712761489Z       Existing: "Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Plan..." (2/1/2026)
+2026-02-02T01:38:38.715579762Z    ⏭️  SKIP (topic in database): indonesia_grok_ban - "Indonesia is lifting its ban on Grok, but with som..."
+2026-02-02T01:38:38.715601542Z       Existing: "Endonezya, Grok Yasağını Koşullu Olarak Kaldırdı..." (2/1/2026)
+2026-02-02T01:38:38.718747765Z    ✅ SELECTED [5/5]: google_genie_ai_ultra_release (score: 217.5)
+2026-02-02T01:38:38.718773805Z       "Google Brings Genie 3's Interactive World-Building Prototype...")
+2026-02-02T01:38:38.718780615Z ✅ Hedef sayıya ulaşıldı (5 haber)
+2026-02-02T01:38:38.718786235Z 
+2026-02-02T01:38:38.718791335Z 📊 Seçim özeti:
+2026-02-02T01:38:38.718796335Z    Seçilen: 5
+2026-02-02T01:38:38.718800945Z    Atlanan (aynı topic): 0
+2026-02-02T01:38:38.718805575Z    Atlanan (duplicate): 2
+2026-02-02T01:38:38.718913725Z    Toplam işlenen: 10
+2026-02-02T01:38:38.718936194Z    ✅ Selected: 5 unique topics
+2026-02-02T01:38:38.718942184Z 
+2026-02-02T01:38:38.718946634Z ============================================================
+2026-02-02T01:38:38.719572232Z ✅ SMART FILTERING TAMAMLANDI
+2026-02-02T01:38:38.719590182Z ============================================================
+2026-02-02T01:38:38.719598182Z    Stage 1 (Batch Filter):    20 → 10
+2026-02-02T01:38:38.719625962Z    Stage 2 (Topic Extract):   10 → 10
+2026-02-02T01:38:38.719632402Z    Stage 3 (Smart Select):    10 → 5
+2026-02-02T01:38:38.719662013Z    Duplicate Rate:            50.0%
+2026-02-02T01:38:38.719668403Z    Processing Time:           5.1s
+2026-02-02T01:38:38.719674193Z ============================================================
+2026-02-02T01:38:38.719680153Z 
+2026-02-02T01:38:38.719686053Z ✅ 5 unique topic haberi seçildi
+2026-02-02T01:38:38.719692303Z    Duplicate rate: 50.0%
+2026-02-02T01:38:38.722345706Z info: 📊 Agent step: process_articles Haberler yeniden yazılıyor ve görseller oluşturuluyor {"environment":"production","logId":"cml4i31v500008dqvnp3p81vs","module":"agent","progress":60,"service":"ai-news-agent","step":"process_articles","timestamp":"2026-02-02 01:38:38"}
+2026-02-02T01:38:38.722624896Z ⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...
+2026-02-02T01:38:38.722935845Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-02T01:38:38.723161334Z 
+2026-02-02T01:38:38.723168464Z ============================================================
+2026-02-02T01:38:38.723173164Z 🔄 ATTEMPT 1/3: Processing articles...
+2026-02-02T01:38:38.723184274Z ============================================================
+2026-02-02T01:38:38.723256445Z    Articles to process: 5
+2026-02-02T01:38:38.723269794Z    Excluded URLs: 0
+2026-02-02T01:38:38.723336664Z    Excluded topics: 0
+2026-02-02T01:38:38.724046442Z 🔍 Pre-processing duplicate check: OpenClaw (formerly Clawdbot) and Moltbook let attackers walk...
+2026-02-02T01:38:38.749391841Z 🔍 Checking for duplicates among 70 recent articles...
+2026-02-02T01:38:38.781407995Z ✅ No duplicates found for: "OpenClaw (formerly Clawdbot) and Moltbook let attackers walk..."
+2026-02-02T01:38:38.782121734Z 📝 Haber işleniyor: OpenClaw (formerly Clawdbot) and Moltbook let attackers walk through the front door
+2026-02-02T01:38:38.788513799Z 📄 Makale içeriği alınıyor: https://the-decoder.com/openclaw-formerly-clawdbot-and-moltbook-let-attackers-walk-through-the-front-door/
+2026-02-02T01:38:38.788538079Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-02-02T01:38:39.219116992Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-02-02T01:38:40.282932195Z ✅ Direct fetch ile içerik alındı: 6527 karakter
+2026-02-02T01:38:40.282964125Z 🔬 Deep research yapılıyor...
+2026-02-02T01:38:40.307265096Z 🔬 Deep research başlatılıyor: "OpenClaw (formerly Clawdbot) and Moltbook let atta..."
+2026-02-02T01:38:41.711728974Z    ✅ İçerik okundu: OpenClaw - Wikipedia...
+2026-02-02T01:38:42.387564310Z 💓 Heartbeat updated: 02.02.2026 01:38:42
+2026-02-02T01:38:43.158744849Z    ✅ İçerik okundu: Clawdbot, Moltbot, OpenClaw? The Wild Ri...
+2026-02-02T01:38:44.366156572Z ✅ Deep research tamamlandı:
+2026-02-02T01:38:44.366198402Z    📊 0 istatistik
+2026-02-02T01:38:44.366207362Z    💬 3 alıntı
+2026-02-02T01:38:44.366399073Z    📚 7 kaynak
+2026-02-02T01:38:44.366406813Z    📝 3 ek bağlam
+2026-02-02T01:38:44.366411353Z ✅ Deep research tamamlandı: 7 ek kaynak bulundu
+2026-02-02T01:38:44.377739555Z 🤖 DeepSeek ile zenginleştirilmiş içerik yeniden yazılıyor...
+2026-02-02T01:39:12.394055291Z 💓 Heartbeat updated: 02.02.2026 01:39:12
+2026-02-02T01:39:23.482897084Z 📊 Haber Puanı: 850/1000
+2026-02-02T01:39:23.484930309Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-02-02T01:39:25.503217811Z 📝 Final prompt (140 chars): Holographic security breach visualization, red alert data streams, cracked neural networks, dark tech lab, volumetric lighting, 8k cinematic
+2026-02-02T01:39:25.503269580Z 📝 Görsel prompt: Holographic security breach visualization, red alert data streams, cracked neural networks, dark tech lab, volumetric lighting, 8k cinematic
+2026-02-02T01:39:25.503282360Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-02-02T01:39:25.504200547Z 🎨 Pollinations.ai isteği: Holographic security breach visualization, red alert data streams, cracked neural networks, dark tec
+2026-02-02T01:39:25.504228277Z 📝 Prompt: Holographic security breach visualization, red alert data streams, cracked neural networks, dark tec
+2026-02-02T01:39:25.504241187Z 🎨 Pollinations.ai görsel URL: https://image.pollinations.ai/prompt/Holographic%20security%20breach%20visualization%2C%20red%20alert%20data%20streams%2C%20cracked%20neural%20network
+2026-02-02T01:39:26.550382956Z ✅ Görsel URL: https://image.pollinations.ai/prompt/Holographic%20security%20breach%20visualization%2C%20red%20alert%20data%20streams%2C%20cracked%20neural%20networks%2C%20dark%20tech%20lab%2C%20volumetric%20lighting%2C%208k%20cinematic?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-02T01:39:26.555625133Z 🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...
+2026-02-02T01:39:26.555952143Z 
+2026-02-02T01:39:26.555972713Z 🖼️  Image Optimization Pipeline Started
+2026-02-02T01:39:26.555985343Z    Source: https://image.pollinations.ai/prompt/Holographic%20security%20breach%20visualization%2C%20red%20alert%20data%20streams%2C%20cracked%20neural%20networks%2C%20dark%20tech%20lab%2C%20volumetric%20lighting%2C%208k%20cinematic?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-02T01:39:26.556064313Z    Slug: openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi
+2026-02-02T01:39:26.556247372Z 📥 Downloading image from: https://image.pollinations.ai/prompt/Holographic%20security%20breach%20visualization%2C%20red%20alert%20data%20streams%2C%20cracked%20neural%20networks%2C%20dark%20tech%20lab%2C%20volumetric%20lighting%2C%208k%20cinematic?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-02T01:39:26.769230602Z 
+2026-02-02T01:39:26.769269552Z 📊 Original Image:
+2026-02-02T01:39:26.769279012Z    Format: jpeg
+2026-02-02T01:39:26.769286382Z    Size: 1059x556
+2026-02-02T01:39:26.769293712Z    File Size: 94.4KB
+2026-02-02T01:39:26.769397342Z    Download Time: 207ms
+2026-02-02T01:39:26.769543461Z 🎨 Generating 4 image sizes for: openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi
+2026-02-02T01:39:27.703997401Z ✅ Uploaded to R2: https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-large.webp
+2026-02-02T01:39:27.704042301Z   ✅ large: 80.1KB → https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-large.webp
+2026-02-02T01:39:28.079134975Z ✅ Uploaded to R2: https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-medium.webp
+2026-02-02T01:39:28.079178505Z   ✅ medium: 58.2KB → https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-medium.webp
+2026-02-02T01:39:28.485510123Z ✅ Uploaded to R2: https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-small.webp
+2026-02-02T01:39:28.485578983Z   ✅ small: 22.5KB → https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-small.webp
+2026-02-02T01:39:28.807062878Z ✅ Uploaded to R2: https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-thumb.webp
+2026-02-02T01:39:28.807101548Z   ✅ thumb: 5.6KB → https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-thumb.webp
+2026-02-02T01:39:28.807108498Z 
+2026-02-02T01:39:28.807113988Z ✅ Optimization Complete!
+2026-02-02T01:39:28.807118988Z    Total Time: 2244ms
+2026-02-02T01:39:28.807123338Z    Storage: Cloudflare R2
+2026-02-02T01:39:28.807127628Z ✅ Görsel optimizasyonu tamamlandı
+2026-02-02T01:39:28.807132158Z    Large: https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-large.webp
+2026-02-02T01:39:28.807136868Z    Medium: https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-medium.webp
+2026-02-02T01:39:28.807141368Z    Small: https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-small.webp
+2026-02-02T01:39:28.807146068Z    Thumb: https://images.aihaberleri.org/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi-thumb.webp
+2026-02-02T01:39:28.816936964Z 📤 Haber yayınlanıyor: OpenClaw ve Moltbook'ta Kritik Güvenlik Açıkları Tespit Edildi
+2026-02-02T01:39:28.839391679Z 🔍 Checking for duplicates among 70 recent articles...
+2026-02-02T01:39:28.850737541Z ✅ No duplicates found for: "OpenClaw ve Moltbook'ta Kritik Güvenlik Açıkları Tespit Edil..."
+2026-02-02T01:39:28.860518087Z ✅ Haber yayınlandı: openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi (Skor: 850)
+2026-02-02T01:39:28.863476131Z 🗑️  Invalidating cache by tag: articles
+2026-02-02T01:39:28.863831209Z 🗑️  Cache invalidated for tag: articles
+2026-02-02T01:39:28.864813427Z 📘 Posting to Facebook Page...
+2026-02-02T01:39:28.867434181Z 📱 Push bildirimi gönderiliyor...
+2026-02-02T01:39:28.906748815Z ✅ Haber başarıyla yayınlandı: openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi
+2026-02-02T01:39:28.906777285Z 🔍 Pre-processing duplicate check: Exposed Moltbook Database Let Anyone Take Control of Any AI ...
+2026-02-02T01:39:28.914300386Z 📱 3 aboneye push bildirimi gönderiliyor...
+2026-02-02T01:39:28.940450752Z 💾 Translation saved: tr - OpenClaw ve Moltbook'ta Kritik Güvenlik Açıkları T...
+2026-02-02T01:39:28.940736612Z 🌍 Translating article from tr to en...
+2026-02-02T01:39:28.940744932Z    Title: OpenClaw ve Moltbook'ta Kritik Güvenlik Açıkları T...
+2026-02-02T01:39:28.975701246Z 🔍 Checking for duplicates among 71 recent articles...
+2026-02-02T01:39:28.980065976Z ✅ No duplicates found for: "Exposed Moltbook Database Let Anyone Take Control of Any AI ..."
+2026-02-02T01:39:28.980080156Z 📝 Haber işleniyor: Exposed Moltbook Database Let Anyone Take Control of Any AI Agent on the Site
+2026-02-02T01:39:29.011449719Z 📄 Makale içeriği alınıyor: https://www.404media.co/exposed-moltbook-database-let-anyone-take-control-of-any-ai-agent-on-the-site/
+2026-02-02T01:39:29.011485219Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-02-02T01:39:29.141618802Z ✅ Push bildirimi tamamlandı: 3 başarılı, 0 başarısız
+2026-02-02T01:39:29.141753391Z ✅ Push bildirimi gönderildi
+2026-02-02T01:39:29.268148002Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-02-02T01:39:29.338251090Z ✅ Direct fetch ile içerik alındı: 6965 karakter
+2026-02-02T01:39:29.338287290Z 🔬 Deep research yapılıyor...
+2026-02-02T01:39:29.341127794Z 🔬 Deep research başlatılıyor: "Exposed Moltbook Database Let Anyone Take Control ..."
+2026-02-02T01:39:31.897321167Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi
+2026-02-02T01:39:35.194943937Z    ✅ İçerik okundu: Exposed Moltbook Database Let Anyone Tak...
+2026-02-02T01:39:36.800952052Z    ✅ İçerik okundu: r/LocalLLaMA on Reddit: Exposed Moltbook...
+2026-02-02T01:39:38.644045614Z ✅ Facebook post successful! ID: 882602408279863_122098956015242298
+2026-02-02T01:39:41.754292830Z    ✅ İçerik okundu: How a Startup’s Unsecured Database Expos...
+2026-02-02T01:39:42.389476959Z 💓 Heartbeat updated: 02.02.2026 01:39:42
+2026-02-02T01:39:43.335386634Z ✅ Deep research tamamlandı:
+2026-02-02T01:39:43.335418034Z    📊 1 istatistik
+2026-02-02T01:39:43.335427574Z    💬 3 alıntı
+2026-02-02T01:39:43.335435364Z    📚 7 kaynak
+2026-02-02T01:39:43.335442694Z    📝 5 ek bağlam
+2026-02-02T01:39:43.335580904Z ✅ Deep research tamamlandı: 7 ek kaynak bulundu
+2026-02-02T01:39:43.346888957Z 🤖 DeepSeek ile zenginleştirilmiş içerik yeniden yazılıyor...
+2026-02-02T01:39:58.154383404Z ✅ Translation complete: Critical Security Vulnerabilities Detected in Open...
+2026-02-02T01:39:58.165232067Z 💾 Translation saved: en - Critical Security Vulnerabilities Detected in Open...
+2026-02-02T01:39:58.165256087Z ✅ Article translations complete for: OpenClaw ve Moltbook'ta Kritik Güvenlik Açıkları T...
+2026-02-02T01:39:59.345656266Z 📊Progress: 20% - Agent still running...
+2026-02-02T01:40:12.392033708Z 💓 Heartbeat updated: 02.02.2026 01:40:12
+2026-02-02T01:40:21.793124201Z 📊 Haber Puanı: 890/1000
+2026-02-02T01:40:21.797278140Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-02-02T01:40:23.766967088Z 📝 Final prompt (150 chars): Holographic AI brain with exposed data streams, cracked circuit board, red security breach glow, volumetric lighting in dark server room, hyperreal...
+2026-02-02T01:40:23.767011208Z 📝 Görsel prompt: Holographic AI brain with exposed data streams, cracked circuit board, red security breach glow, volumetric lighting in dark server room, hyperreal...
+2026-02-02T01:40:23.767021278Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-02-02T01:40:23.767041648Z 🎨 Pollinations.ai isteği: Holographic AI brain with exposed data streams, cracked circuit board, red security breach glow, vol
+2026-02-02T01:40:23.767046728Z ⚠️ Prompt too long (165 chars), truncating to 150
+2026-02-02T01:40:23.767049718Z 📝 Prompt: Holographic AI brain with exposed data streams, cracked circuit board, red security breach glow, vol
+2026-02-02T01:40:23.767057338Z 🎨 Pollinations.ai görsel URL: https://image.pollinations.ai/prompt/Holographic%20AI%20brain%20with%20exposed%20data%20streams%2C%20cracked%20circuit%20board%2C%20red%20security%20b
+2026-02-02T01:40:42.391686101Z 💓 Heartbeat updated: 02.02.2026 01:40:42
+2026-02-02T01:40:56.394646020Z ✅ Görsel URL: https://image.pollinations.ai/prompt/Holographic%20AI%20brain%20with%20exposed%20data%20streams%2C%20cracked%20circuit%20board%2C%20red%20security%20breach%20glow%2C%20volumetric%20lighting%20in%20dark%20server%20room%2C%20hyperreal...?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-02T01:40:56.397253254Z 🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...
+2026-02-02T01:40:56.398803940Z 
+2026-02-02T01:40:56.398814560Z 🖼️  Image Optimization Pipeline Started
+2026-02-02T01:40:56.398837520Z    Source: https://image.pollinations.ai/prompt/Holographic%20AI%20brain%20with%20exposed%20data%20streams%2C%20cracked%20circuit%20board%2C%20red%20security%20breach%20glow%2C%20volumetric%20lighting%20in%20dark%20server%20room%2C%20hyperreal...?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-02T01:40:56.398844460Z    Slug: moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi
+2026-02-02T01:40:56.398847620Z 📥 Downloading image from: https://image.pollinations.ai/prompt/Holographic%20AI%20brain%20with%20exposed%20data%20streams%2C%20cracked%20circuit%20board%2C%20red%20security%20breach%20glow%2C%20volumetric%20lighting%20in%20dark%20server%20room%2C%20hyperreal...?width=1200&height=630&nologo=true&model=flux-realism&enhance=true
+2026-02-02T01:40:56.705304134Z 
+2026-02-02T01:40:56.705350133Z 📊 Original Image:
+2026-02-02T01:40:56.705357103Z    Format: jpeg
+2026-02-02T01:40:56.705362593Z    Size: 1059x556
+2026-02-02T01:40:56.705367553Z    File Size: 94.8KB
+2026-02-02T01:40:56.705372273Z    Download Time: 306ms
+2026-02-02T01:40:56.705376853Z 🎨 Generating 4 image sizes for: moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi
+2026-02-02T01:40:57.297067615Z ✅ Uploaded to R2: https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-large.webp
+2026-02-02T01:40:57.297103835Z   ✅ large: 79.5KB → https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-large.webp
+2026-02-02T01:40:57.822459635Z ✅ Uploaded to R2: https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-medium.webp
+2026-02-02T01:40:57.822506195Z   ✅ medium: 56.3KB → https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-medium.webp
+2026-02-02T01:40:58.167318051Z ✅ Uploaded to R2: https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-small.webp
+2026-02-02T01:40:58.167354681Z   ✅ small: 22.0KB → https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-small.webp
+2026-02-02T01:40:58.469607706Z ✅ Uploaded to R2: https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-thumb.webp
+2026-02-02T01:40:58.469643475Z   ✅ thumb: 5.6KB → https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-thumb.webp
+2026-02-02T01:40:58.469650525Z 
+2026-02-02T01:40:58.469655935Z ✅ Optimization Complete!
+2026-02-02T01:40:58.469660585Z    Total Time: 2070ms
+2026-02-02T01:40:58.469665065Z    Storage: Cloudflare R2
+2026-02-02T01:40:58.469669435Z ✅ Görsel optimizasyonu tamamlandı
+2026-02-02T01:40:58.469678935Z    Large: https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-large.webp
+2026-02-02T01:40:58.469683965Z    Medium: https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-medium.webp
+2026-02-02T01:40:58.469810975Z    Small: https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-small.webp
+2026-02-02T01:40:58.469826975Z    Thumb: https://images.aihaberleri.org/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi-thumb.webp
+2026-02-02T01:40:58.477981474Z 📤 Haber yayınlanıyor: Moltbook'ta Kritik Güvenlik Açığı: Tüm AI Hesapları Ele Geçirilebilir Durumdaydı
+2026-02-02T01:40:58.503805829Z 🔍 Checking for duplicates among 71 recent articles...
+2026-02-02T01:40:58.515549589Z ✅ No duplicates found for: "Moltbook'ta Kritik Güvenlik Açığı: Tüm AI Hesapları Ele Geçi..."
+2026-02-02T01:40:58.525693564Z ✅ Haber yayınlandı: moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi (Skor: 890)
+2026-02-02T01:40:58.527415749Z 🗑️  Invalidating cache by tag: articles
+2026-02-02T01:40:58.527840649Z 🗑️  Cache invalidated for tag: articles
+2026-02-02T01:40:58.528367907Z 📘 Posting to Facebook Page...
+2026-02-02T01:40:58.532776486Z 📱 Push bildirimi gönderiliyor...
+2026-02-02T01:40:58.537067554Z ✅ Haber başarıyla yayınlandı: moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi
+2026-02-02T01:40:58.537407194Z 🔍 Pre-processing duplicate check: Waymo Seeking About $16 Billion Near $110 Billion Valuation...
+2026-02-02T01:40:58.543407879Z 📱 3 aboneye push bildirimi gönderiliyor...
+2026-02-02T01:40:58.573415983Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.bloomberg.com/news/articles/2026-01-31/waymo-seeking-about-16-billion-near-110-billion-valuation","service":"ai-news-agent","timestamp":"2026-02-02 01:40:58","title":"Waymo, 110 Milyar Dolarlık Değerleme ile 16 Milyar Dolar Fon Arıyor"}
+2026-02-02T01:40:58.574050061Z 🗑️ Duplicate URL detected: Waymo, 110 Milyar Dolarlık Değerleme ile 16 Milyar Dolar Fon Arıyor
+2026-02-02T01:40:58.574069761Z    Existing URL: https://www.bloomberg.com/news/articles/2026-01-31/waymo-seeking-about-16-billion-near-110-billion-valuation
+2026-02-02T01:40:58.574076731Z    New URL: https://www.bloomberg.com/news/articles/2026-01-31/waymo-seeking-about-16-billion-near-110-billion-valuation
+2026-02-02T01:40:58.574518589Z 💾 Translation saved: tr - Moltbook'ta Kritik Güvenlik Açığı: Tüm AI Hesaplar...
+2026-02-02T01:40:58.574670630Z 🌍 Translating article from tr to en...
+2026-02-02T01:40:58.574679180Z    Title: Moltbook'ta Kritik Güvenlik Açığı: Tüm AI Hesaplar...
+2026-02-02T01:40:58.593763321Z 🗑️ Pre-check duplicate skipped (saved processing): Waymo Seeking About $16 Billion Near $110 Billion Valuation
+2026-02-02T01:40:58.594010491Z 🔍 Pre-processing duplicate check: French tech giant Capgemini to sell US subsidiary accused of...
+2026-02-02T01:40:58.610158239Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: http://www.euronews.com/business/2026/02/01/french-tech-giant-capgemini-to-sell-us-subsidiary-accused-of-providing-services-to-ice","service":"ai-news-agent","timestamp":"2026-02-02 01:40:58","title":"Capgemini Tartışmalı ICE Sözleşmesi Nedeniyle ABD Yan Kuruluşunu Satıyor"}
+2026-02-02T01:40:58.610182809Z 🗑️ Duplicate URL detected: Capgemini Tartışmalı ICE Sözleşmesi Nedeniyle ABD Yan Kuruluşunu Satıyor
+2026-02-02T01:40:58.610189729Z    Existing URL: http://www.euronews.com/business/2026/02/01/french-tech-giant-capgemini-to-sell-us-subsidiary-accused-of-providing-services-to-ice
+2026-02-02T01:40:58.610195049Z    New URL: http://www.euronews.com/business/2026/02/01/french-tech-giant-capgemini-to-sell-us-subsidiary-accused-of-providing-services-to-ice
+2026-02-02T01:40:58.611639595Z 🗑️ Pre-check duplicate skipped (saved processing): French tech giant Capgemini to sell US subsidiary accused of providing services to ICE
+2026-02-02T01:40:58.611667905Z 🔍 Pre-processing duplicate check: Google Brings Genie 3's Interactive World-Building Prototype...
+2026-02-02T01:40:58.615036137Z warn: 🗑️ Duplicate article detected {"environment":"production","module":"content","reason":"URL match: https://www.cnet.com/tech/services-and-software/google-brings-genie-3-world-building-experiment-to-ai-ultra-subscribers/","service":"ai-news-agent","timestamp":"2026-02-02 01:40:58","title":"Google Genie 3 İle Saniyeler İçinde Oyun Dünyası Yaratmayı AI Ultra Abonelerine Sunuyor"}
+2026-02-02T01:40:58.615603486Z 🗑️ Duplicate URL detected: Google Genie 3 İle Saniyeler İçinde Oyun Dünyası Yaratmayı AI Ultra Abonelerine Sunuyor
+2026-02-02T01:40:58.615618136Z    Existing URL: https://www.cnet.com/tech/services-and-software/google-brings-genie-3-world-building-experiment-to-ai-ultra-subscribers/
+2026-02-02T01:40:58.615624646Z    New URL: https://www.cnet.com/tech/services-and-software/google-brings-genie-3-world-building-experiment-to-ai-ultra-subscribers/
+2026-02-02T01:40:58.617043962Z 🗑️ Pre-check duplicate skipped (saved processing): Google Brings Genie 3's Interactive World-Building Prototype to AI Ultra Subscribers
+2026-02-02T01:40:58.617061402Z 📊 Toplam 2/5 haber yayınlandı
+2026-02-02T01:40:58.617067312Z ✅ SUCCESS on attempt 1: 2 haber yayınlandı
+2026-02-02T01:40:58.617071992Z 
+2026-02-02T01:40:58.617076572Z ============================================================
+2026-02-02T01:40:58.617081242Z ✅ FINAL RESULT: 2 haber yayınlandı (1 attempt)
+2026-02-02T01:40:58.617085892Z ============================================================
+2026-02-02T01:40:58.617090272Z 
+2026-02-02T01:40:58.620461294Z [Socket] Cannot emit 'article:published' - Socket.io not initialized
+2026-02-02T01:40:58.620564773Z [Socket] Cannot emit 'article:published' - Socket.io not initialized
+2026-02-02T01:40:58.621253621Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-02T01:40:58.641772389Z ⏰ Bir sonraki çalışma: 02.02.2026 01:55:58
+2026-02-02T01:40:58.648036904Z [Socket] Cannot emit 'agent:completed' - Socket.io not initialized
+2026-02-02T01:40:58.648444333Z info: ✅ Agent execution completed {"articlesCreated":2,"articlesScraped":20,"duration":179,"environment":"production","logId":"cml4i31v500008dqvnp3p81vs","module":"agent","service":"ai-news-agent","success":true,"timestamp":"2026-02-02 01:40:58"}
+2026-02-02T01:40:58.649042182Z ✅ Agent çalıştırması 179s içinde tamamlandı
+2026-02-02T01:40:58.649085361Z 
+2026-02-02T01:40:58.649088151Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-02T01:40:58.649090381Z ┃           ✅ AGENT EXECUTION SUCCESS              ┃
+2026-02-02T01:40:58.649092361Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-02T01:40:58.649104151Z ┃  Status:         SUCCESS                        ┃
+2026-02-02T01:40:58.649106171Z ┃  Duration:       179s                            ┃
+2026-02-02T01:40:58.649108031Z ┃  Articles Found: 20                             ┃
+2026-02-02T01:40:58.649109881Z ┃  Articles Made:  2                              ┃
+2026-02-02T01:40:58.649111711Z ┃  Next Run:       02.02.2026 01:55:58      ┃
+2026-02-02T01:40:58.649113611Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-02T01:40:58.649115601Z 
+2026-02-02T01:40:58.652406042Z 📊 Progress: 90% - Agent execution completed
+2026-02-02T01:40:58.652629811Z info: ✅ Job completed {"environment":"production","jobId":"manual-trigger-1769996279329","module":"worker","result":{"articlesCreated":2,"articlesScraped":20,"duration":179,"errors":[],"publishedArticles":[{"id":"cml4i4yxg00038dqv6nu68kn8","slug":"openclaw-ve-moltbookta-kritik-guvenlik-aciklari-tespit-edildi"},{"id":"cml4i6w4500068dqvi907dqp3","slug":"moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi"}],"success":true},"service":"ai-news-agent","timestamp":"2026-02-02 01:40:58"}
+2026-02-02T01:40:58.652658332Z 
+2026-02-02T01:40:58.652664442Z 📊 Execution Summary:
+2026-02-02T01:40:58.652706482Z    Articles Scraped: 20
+2026-02-02T01:40:58.652712242Z    Articles Created: 2
+2026-02-02T01:40:58.652740352Z    Duration: 179s
+2026-02-02T01:40:58.652744062Z    Status: ✅ SUCCESS
+2026-02-02T01:40:58.658759057Z 🔌 Database connection closed
+2026-02-02T01:40:58.723133563Z 
+2026-02-02T01:40:58.723157933Z ⏰ Next execution (repeatable): 2/2/2026, 1:55:58 AM
+2026-02-02T01:40:58.726408855Z 
+2026-02-02T01:40:58.726423775Z ✅ Job manual-trigger-1769996279329 completed successfully
+2026-02-02T01:40:58.750639434Z ✅ Push bildirimi tamamlandı: 3 başarılı, 0 başarısız
+2026-02-02T01:40:58.750657393Z ✅ Push bildirimi gönderildi
+2026-02-02T01:40:59.314476475Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/moltbookta-kritik-guvenlik-acigi-tum-ai-hesaplari-ele-gecirilebilir-durumdaydi
+2026-02-02T01:40:59.374171654Z ✅ IndexNow: 3 URLs submitted successfully
+2026-02-02T01:40:59.374214244Z ✅ IndexNow: Sitemap URLs submitted successfully
+2026-02-02T01:41:00.209019988Z ✅ WebSub ping successful: https://pubsubhubbub.appspot.com/
+2026-02-02T01:41:00.209454147Z 📊 Sitemap ping summary: 4/4 methods successful
+2026-02-02T01:41:00.209470037Z    - IndexNow: ✅
+2026-02-02T01:41:00.209477987Z    - WebSub: ✅
+2026-02-02T01:41:00.209484367Z    - Google: ✅
+2026-02-02T01:41:00.209490186Z    - Bing: ✅
+2026-02-02T01:41:00.209496086Z 🔔 Sitemap ping: 4/4 yöntem başarılı
+2026-02-02T01:41:00.209524166Z    ✅ IndexNow: Bing/Yandex bildirildi
+2026-02-02T01:41:00.209530617Z    ✅ WebSub: Google bildirildi
+2026-02-02T01:41:03.203997232Z ✅ Facebook post successful! ID: 882602408279863_122098956639242298
+2026-02-02T01:41:12.393766065Z 💓 Heartbeat updated: 02.02.2026 01:41:12
+2026-02-02T01:41:31.700249244Z ✅ Translation complete: Critical Security Vulnerability in Moltbook: All A...
+2026-02-02T01:41:31.714672197Z 💾 Translation saved: en - Critical Security Vulnerability in Moltbook: All A...
+2026-02-02T01:41:31.714844958Z ✅ Article translations complete for: Moltbook'ta Kritik Güvenlik Açığı: Tüm AI Hesaplar...
+2026-02-02T01:41:42.392349073Z 💓 Heartbeat updated: 02.02.2026 01:41:42
