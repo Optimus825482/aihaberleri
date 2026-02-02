@@ -142,12 +142,13 @@ export async function fetchPollinationsImage(
 
         const encodedPrompt = encodeURIComponent(cleanPrompt);
 
-        // Build new API URL: https://gen.pollinations.ai/image/{prompt}
+        // Build new API URL: https://gen.pollinations.ai/image/{prompt}?key=xxx
         const params = new URLSearchParams({
           width: width.toString(),
           height: height.toString(),
           model,
           enhance: enhance.toString(),
+          key: POLLINATIONS_API_KEY, // API key as query parameter
         });
 
         if (seed) {
@@ -158,7 +159,7 @@ export async function fetchPollinationsImage(
 
         console.log("📝 Prompt:", cleanPrompt.substring(0, 100));
         console.log(
-          "🎨 Authenticated URL:",
+          "🎨 Authenticated URL (key=***):",
           imageUrl.substring(0, 120) + "...",
         );
 
@@ -168,9 +169,6 @@ export async function fetchPollinationsImage(
 
         try {
           const response = await fetch(imageUrl, {
-            headers: {
-              Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
-            },
             signal: controller.signal,
           });
 

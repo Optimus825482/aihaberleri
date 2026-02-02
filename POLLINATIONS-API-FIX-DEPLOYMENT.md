@@ -1,13 +1,14 @@
 # 🎨 Pollinations.ai API Migration - Deployment Guide
 
 **Date:** 2026-02-02  
-**Status:** ✅ READY FOR DEPLOYMENT
+**Status:** ✅ READY FOR DEPLOYMENT  
+**Fix:** Query parameter authentication (not Bearer token)
 
 ---
 
 ## 📋 Summary
 
-Migrated Pollinations.ai image generation from legacy anonymous endpoint to new authenticated API with proper error handling and fallback strategy.
+Migrated Pollinations.ai image generation from legacy anonymous endpoint to new authenticated API with proper query parameter authentication and error handling.
 
 ---
 
@@ -15,20 +16,25 @@ Migrated Pollinations.ai image generation from legacy anonymous endpoint to new 
 
 ### 1. API Endpoint Migration
 
-- **Old:** `https://image.pollinations.ai/prompt/{prompt}?key=xxx` (legacy)
-- **New:** `https://gen.pollinations.ai/image/{prompt}` with `Authorization: Bearer` header
+- **Old:** `https://image.pollinations.ai/prompt/{prompt}` (legacy anonymous)
+- **New:** `https://gen.pollinations.ai/image/{prompt}?key=xxx` (query parameter auth)
 
-### 2. Code Updates (`src/lib/pollinations.ts`)
+### 2. Authentication Method Fix
+
+- **Wrong:** `Authorization: Bearer {key}` header (returns 400 error)
+- **Correct:** `?key={key}` query parameter (works!)
+
+### 3. Code Updates (`src/lib/pollinations.ts`)
 
 **Removed:**
 
+- Bearer token authentication (not supported - causes 400 error)
 - `nologo` parameter (not supported in new API)
-- Query string API key authentication
 - `flux-realism` default model
 
 **Added:**
 
-- Bearer token authentication header
+- Query parameter API key authentication (`?key=xxx`)
 - Proper timeout handling (180s)
 - Enhanced retry logic for 502/503/504 errors
 - Exponential backoff (2s, 4s, 8s, 15s)
@@ -36,11 +42,12 @@ Migrated Pollinations.ai image generation from legacy anonymous endpoint to new 
 
 **Updated:**
 
+- Authentication: Bearer header → Query parameter `?key=`
 - Default model: `flux-realism` → `flux` (more stable)
 - Timeout: 120s → 180s (Pollinations can be slow)
 - Interface: Removed `nologo` from `PollinationsOptions`
 
-### 3. Environment Configuration
+### 4. Environment Configuration
 
 **Added to `.env.example`:**
 
@@ -54,14 +61,15 @@ POLLINATIONS_API_KEY="pk_sET1VlYd117D84BM"
 POLLINATIONS_API_KEY=pk_sET1VlYd117D84BM
 ```
 
-### 4. Test Script (`scripts/test-pollinations-api.ts`)
+**Already in `.env` (local):**
 
-Created comprehensive test script that validates:
+```bash
+POLLINATIONS_API_KEY="pk_sET1VlYd117D84BM"
+```
 
-- ✅ API key validity
-- ✅ Pollen balance (currently: 1 pollen)
-- ✅ Available models (16 models)
-- ✅ Image generation
+### 5. Test Script (`scripts/test-pollinations-api.ts`)
+
+Updated to use query parameter authentication instead of Bearer token.
 
 ---
 
@@ -74,7 +82,7 @@ Created comprehensive test script that validates:
    Permissions: {"models":null,"account":["profile","balance","usage"]}
    Pollen Budget: Unlimited
 
-✅ Pollen Balance: 1
+✅ Pollen Balance: 0.9998 (decreased from 1.0 - API key is working!)
 
 ✅ Available models (16):
    - kontext: FLUX.1 Kontext
@@ -84,7 +92,8 @@ Created comprehensive test script that validates:
 
 ✅ Image generated successfully!
    Content-Type: image/jpeg
-   URL: https://gen.pollinations.ai/image/...
+   Size: 109 KB
+   URL: https://gen.pollinations.ai/image/...?key=pk_sET1VlYd117D84BM
 ```
 
 ---
@@ -102,9 +111,17 @@ POLLINATIONS_API_KEY=pk_sET1VlYd117D84BM
 ### 2. Deploy Updated Code
 
 ```bash
-git add src/lib/pollinations.ts .env.production .env.example
-git commit -m "fix: migrate to Pollinations.ai authenticated API endpoint"
+git add src/lib/pollinations.ts scripts/test-pollinations-api.ts
+git add .env.production .env.example
+git add POLLINATIONS-API-FIX-DEPLOYMENT.md IMAGE-GENERATION-FIX-SUMMARY.md
+git commit -m "fix: use query parameter auth for Pollinations.ai API (not Bearer token)"
 git push origin main
+```
+
+Or use the deployment script:
+
+```powershell
+.\deploy-image-fix.ps1
 ```
 
 ### 3. Verify in Production
@@ -113,15 +130,17 @@ After deployment, check logs for:
 
 ```
 🔑 Pollinations.ai API key ile görsel üretiliyor...
+📝 Prompt: ...
+🎨 Authenticated URL (key=***): https://gen.pollinations.ai/image/...
 ✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
 ```
 
 ### 4. Monitor Error Rates
 
-Watch for these error patterns:
+Watch for these patterns:
 
-- ❌ `502/503/504` → Service temporarily down (will auto-retry)
-- ❌ `400/404` → Falls back to anonymous endpoint
+- ✅ No more 400 errors from authenticated endpoint
+- ✅ Reduced 502 errors (better retry logic)
 - ⚠️ `Prompt too long` → Auto-truncates to 800 chars
 
 ---
@@ -138,7 +157,7 @@ Watch for these error patterns:
 ### Fallback Chain
 
 ```
-Authenticated API (with key)
+Authenticated API (?key=xxx)
   ↓ (on 4xx error)
 Anonymous API (no key)
   ↓ (on failure)
@@ -151,9 +170,11 @@ Static fallback image (/logos/og-image.png)
 
 - **Type:** Publishable key
 - **Name:** double-leopard
-- **Pollen Balance:** 1 (Unlimited budget)
+- **Key:** pk_sET1VlYd117D84BM
+- **Pollen Balance:** 0.9998 (Unlimited budget)
 - **Permissions:** Models, account profile, balance, usage
-- **Rate Limits:** Higher than anonymous (exact limits not documented)
+- **Rate Limits:** Higher than anonymous
+- **Authentication:** Query parameter `?key=xxx` (NOT Bearer token)
 
 ---
 
@@ -177,7 +198,31 @@ const fallbackUrl = `${baseUrl}/logos/og-image.png`;
 const fallbackUrl = "/logos/og-image.png";
 ```
 
-### Issue 2: Pollinations.ai 502 Error
+### Issue 2: Pollinations.ai 400 Error (Authentication)
+
+**Problem:** Using Bearer token authentication
+
+```
+Authorization: Bearer pk_sET1VlYd117D84BM
+Status: 400 Bad Request
+```
+
+**Solution:** Changed to query parameter authentication
+
+```typescript
+// Before (WRONG - returns 400)
+const response = await fetch(imageUrl, {
+  headers: {
+    Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+  },
+});
+
+// After (CORRECT - works!)
+const imageUrl = `${POLLINATIONS_GEN_URL}/${encodedPrompt}?key=${POLLINATIONS_API_KEY}`;
+const response = await fetch(imageUrl);
+```
+
+### Issue 3: Pollinations.ai 502 Error
 
 **Problem:** Service temporarily down or rate limit hit
 
@@ -196,22 +241,24 @@ const fallbackUrl = "/logos/og-image.png";
 
 ## 📝 Files Modified
 
-1. `src/lib/pollinations.ts` - API migration + error handling
-2. `.env.example` - Added API key
-3. `.env.production` - Added API key
-4. `scripts/test-pollinations-api.ts` - Created test script
+1. `src/lib/pollinations.ts` - Fixed authentication method (Bearer → query param)
+2. `scripts/test-pollinations-api.ts` - Updated test to use query param
+3. `.env.example` - Added API key
+4. `.env.production` - Added API key
+5. `.env` - Already had API key
 
 ---
 
 ## ✅ Verification Checklist
 
 - [x] API key tested and validated
-- [x] Image generation working
+- [x] Image generation working with query param auth
 - [x] Retry logic tested
 - [x] Fallback strategy tested
 - [x] Environment variables updated
-- [x] Test script created
+- [x] Test script updated
 - [x] Documentation updated
+- [x] Pollen balance decreasing (API key is being used)
 - [ ] Deployed to production
 - [ ] Production logs verified
 - [ ] Error rates monitored
@@ -220,11 +267,12 @@ const fallbackUrl = "/logos/og-image.png";
 
 ## 🎯 Expected Improvements
 
-1. **Higher rate limits** with authenticated API
-2. **Better error recovery** with retry logic
-3. **Faster fallback** for 4xx errors
-4. **No more 400 errors** from Next.js image optimization loop
+1. **No more 400 errors** from authenticated endpoint (fixed auth method)
+2. **Higher rate limits** with authenticated API
+3. **Better error recovery** with retry logic
+4. **Faster fallback** for 4xx errors
 5. **Reduced 502 errors** with longer timeout and retries
+6. **No more Next.js image loop** from fallback fix
 
 ---
 
@@ -237,6 +285,21 @@ If issues persist after deployment:
 3. Check production logs for error patterns
 4. Test with: `npx tsx scripts/test-pollinations-api.ts`
 5. Monitor pollen balance: https://gen.pollinations.ai/account/balance
+
+---
+
+## 🔑 Key Learnings
+
+**CRITICAL:** Pollinations.ai new API uses **query parameter authentication**, NOT Bearer token!
+
+```bash
+# ❌ WRONG (returns 400)
+curl 'https://gen.pollinations.ai/image/test' \
+  -H 'Authorization: Bearer pk_xxx'
+
+# ✅ CORRECT (works!)
+curl 'https://gen.pollinations.ai/image/test?key=pk_xxx'
+```
 
 ---
 
