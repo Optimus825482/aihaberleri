@@ -9,7 +9,6 @@
 interface PollinationsOptions {
   width?: number;
   height?: number;
-  nologo?: boolean;
   seed?: number;
   model?: "flux" | "flux-realism" | "flux-anime" | "flux-3d" | "turbo";
   enhance?: boolean;
@@ -17,8 +16,8 @@ interface PollinationsOptions {
 
 // API Configuration
 const POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY;
-const POLLINATIONS_IMAGE_URL = "https://image.pollinations.ai/prompt";
-const POLLINATIONS_GEN_URL = "https://gen.pollinations.ai/image";
+const POLLINATIONS_IMAGE_URL = "https://image.pollinations.ai/prompt"; // Legacy anonymous endpoint
+const POLLINATIONS_GEN_URL = "https://gen.pollinations.ai/image"; // New authenticated endpoint
 
 /**
  * Generate image URL from Pollinations.ai (simple URL method)
@@ -50,9 +49,8 @@ export function generateImageUrl(
   const {
     width = 1200,
     height = 630,
-    nologo = true,
     seed,
-    model = "flux-realism",
+    model = "flux",
     enhance = true,
   } = options;
 
@@ -82,7 +80,6 @@ export function generateImageUrl(
   const params = new URLSearchParams({
     width: width.toString(),
     height: height.toString(),
-    nologo: nologo.toString(),
     model,
     enhance: enhance.toString(),
   });
@@ -120,54 +117,54 @@ export async function fetchPollinationsImage(
   const {
     width = 1200,
     height = 630,
-    nologo = true,
     seed,
-    model = "flux-realism",
+    model = "flux",
     enhance = true,
   } = options;
 
   // Retry loop with exponential backoff
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // If we have an API key, use the authenticated endpoint for better rate limits
+      // If we have an API key, use the new authenticated endpoint
       if (POLLINATIONS_API_KEY) {
         console.log(
           `🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt ${attempt}/${maxRetries})`,
         );
 
-        // Truncate prompt to avoid 400 errors (URL length limits)
+        // Truncate prompt to avoid issues
         let cleanPrompt = prompt.trim();
         if (cleanPrompt.length > 800) {
           console.warn(
-            `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 800 for API`,
+            `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 800`,
           );
           cleanPrompt = cleanPrompt.substring(0, 797) + "...";
         }
+
         const encodedPrompt = encodeURIComponent(cleanPrompt);
+
+        // Build new API URL: https://gen.pollinations.ai/image/{prompt}
         const params = new URLSearchParams({
           width: width.toString(),
           height: height.toString(),
-          nologo: nologo.toString(),
           model,
           enhance: enhance.toString(),
-          key: POLLINATIONS_API_KEY,
         });
 
         if (seed) {
           params.append("seed", seed.toString());
         }
 
-        const imageUrl = `${POLLINATIONS_IMAGE_URL}/${encodedPrompt}?${params.toString()}`;
+        const imageUrl = `${POLLINATIONS_GEN_URL}/${encodedPrompt}?${params.toString()}`;
 
-        console.log("📝 Prompt:", prompt.substring(0, 100));
+        console.log("📝 Prompt:", cleanPrompt.substring(0, 100));
         console.log(
-          "🎨 Authenticated URL (key=***)",
+          "🎨 Authenticated URL:",
           imageUrl.substring(0, 120) + "...",
         );
 
         // Verify image is accessible with timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout - Pollinations can be very slow
+        const timeoutId = setTimeout(() => controller.abort(), 180000); // 180s timeout
 
         try {
           const response = await fetch(imageUrl, {
@@ -180,18 +177,20 @@ export async function fetchPollinationsImage(
           clearTimeout(timeoutId);
 
           if (response.ok) {
-            console.log("✅ Pollinations.ai görsel başarıyla oluşturuldu");
+            console.log(
+              "✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)",
+            );
             return imageUrl;
           }
 
-          // Retry on 502/503/504, not on 400/404
+          // Retry on 502/503/504
           if (
             (response.status === 502 ||
               response.status === 503 ||
               response.status === 504) &&
             attempt < maxRetries
           ) {
-            const delay = Math.min(2000 * Math.pow(2, attempt), 15000); // Increased delay
+            const delay = Math.min(2000 * Math.pow(2, attempt), 15000);
             console.warn(
               `⚠️ Pollinations API ${response.status} (service temporarily down), retry ${attempt}/${maxRetries} in ${delay}ms`,
             );
@@ -199,7 +198,7 @@ export async function fetchPollinationsImage(
             continue;
           }
 
-          // For 4xx errors, try anonymous fallback immediately
+          // For 4xx errors, try anonymous fallback
           if (response.status >= 400 && response.status < 500) {
             console.warn(
               `⚠️ Pollinations API ${response.status}, trying anonymous fallback`,
@@ -222,7 +221,6 @@ export async function fetchPollinationsImage(
           `❌ Pollinations.ai failed after ${maxRetries} attempts:`,
           error,
         );
-        // Return fallback image
         return getFallbackImage();
       }
 
@@ -235,7 +233,6 @@ export async function fetchPollinationsImage(
     }
   }
 
-  // Should never reach here, but return fallback just in case
   return getFallbackImage();
 }
 
@@ -378,9 +375,8 @@ export async function generateAINewsImage(
     const imageUrl = await fetchPollinationsImage(prompt, {
       width: 1200,
       height: 630,
-      model: "flux-realism",
+      model: "flux",
       enhance: true,
-      nologo: true,
     });
 
     console.log("✅ Görsel başarıyla oluşturuldu:", imageUrl.substring(0, 100));
@@ -391,7 +387,7 @@ export async function generateAINewsImage(
     return generateImageUrl("artificial intelligence technology digital art", {
       width: 1200,
       height: 630,
-      model: "flux-realism",
+      model: "flux",
     });
   }
 }
