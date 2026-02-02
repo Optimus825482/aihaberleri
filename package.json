@@ -16,7 +16,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "sync:facebook": "tsx scripts/sync-facebook-share-status.ts",
-    "cron:scheduled-publisher": "tsx src/scripts/scheduled-publisher-cron.ts"
+    "cron:scheduled-publisher": "tsx src/scripts/scheduled-publisher-cron.ts",
+    "topic:extract": "tsx scripts/extract-topics-for-existing-articles.ts",
+    "topic:extract:all": "tsx scripts/extract-topics-for-existing-articles.ts --all",
+    "test:smart-filtering": "tsx scripts/test-smart-filtering.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

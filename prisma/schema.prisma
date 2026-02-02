@@ -99,6 +99,7 @@ model Article {
   metaTitle          String?
   metaDescription    String?
   keywords           String[]
+  topic              String?              // NEW: Short topic identifier (e.g., nvidia_openai_investment)
   indexNowStatus     IndexStatus          @default(PENDING)
   indexedAt          DateTime?
   score              Int                  @default(0)
@@ -125,6 +126,8 @@ model Article {
   @@index([scheduledPublishAt])
   @@index([templateId])
   @@index([seoScore])
+  @@index([topic])                        // NEW: Index for topic-based queries
+  @@index([topic, publishedAt])           // NEW: Composite index for duplicate checks
 }
 
 // i18n: Article translations for multi-language support

@@ -155,25 +155,25 @@ export async function executeNewsAgent(
       throw new Error("Haber bulunamadı");
     }
 
-    // Step 2: Select best articles
+    // Step 2: Smart Filtering Pipeline (NEW!)
     agentLogger.step(
       agentLog.id,
-      "analyze_articles",
-      "En iyi haberler seçiliyor (DeepSeek AI)",
+      "smart_filtering",
+      "Akıllı filtreleme ve topic extraction",
       40,
     );
-    console.log("🎯 Adım 2: En iyi haberler seçiliyor...");
+    console.log("🎯 Adım 2: Akıllı filtreleme başlatılıyor...");
     await updateJobProgress(
       agentLog.id,
-      "analyzing",
-      "En iyi haberler seçiliyor (DeepSeek AI)...",
+      "filtering",
+      "Akıllı filtreleme ve topic extraction...",
       40,
     );
 
     // Emit progress
     emitToAdmin(SocketEvents.AGENT_PROGRESS, {
-      step: "analyzing",
-      message: "En iyi haberler seçiliyor (DeepSeek AI)...",
+      step: "filtering",
+      message: "Akıllı filtreleme ve topic extraction...",
       progress: 40,
     });
 
@@ -201,21 +201,29 @@ export async function executeNewsAgent(
 
     console.log(`🎯 Hedef haber sayısı: ${targetCount}`);
 
-    // Live log: Selecting articles
+    // Live log: Smart filtering
     await liveLog.deepseek.info(
-      `🎯 DeepSeek AI ile ${targetCount} haber seçiliyor...`,
+      `🚀 Akıllı filtreleme: ${newsArticles.length} haber → ${targetCount} unique topic`,
     );
 
-    // Step 2: Select best articles using AI
-    const selectedArticles = await selectBestArticles(
-      newsArticles,
-      targetCount,
+    // NEW: Run smart filtering pipeline
+    const { runSmartFiltering } = await import("./smart-filtering.service");
+    const filteringResult = await runSmartFiltering(newsArticles, {
+      batchSize: 10,
+      topPerBatch: 5,
+      targetCount: targetCount,
+      timeWindowDays: 7,
+    });
+
+    const selectedArticles = filteringResult.stage3_unique;
+    console.log(`✅ ${selectedArticles.length} unique topic haberi seçildi`);
+    console.log(
+      `   Duplicate rate: ${(filteringResult.stats.duplicate_rate * 100).toFixed(1)}%`,
     );
-    console.log(`✅ ${selectedArticles.length} haber seçildi`);
 
     // Live log: Articles selected
     await liveLog.deepseek.success(
-      `✅ ${selectedArticles.length} haber seçildi`,
+      `✅ ${selectedArticles.length} unique topic seçildi (duplicate rate: ${(filteringResult.stats.duplicate_rate * 100).toFixed(1)}%)`,
     );
 
     // Step 3: Process and publish articles (includes deep research, rewriting, translation)

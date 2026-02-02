@@ -1035,6 +1035,7 @@ export async function processIntelligentNews(
           metaTitle: synthesized.tr.title,
           metaDescription: synthesized.tr.metaDescription,
           keywords: synthesized.tr.keywords,
+          topic: article.topic, // NEW: Save topic for future duplicate checks
           agentLogId,
         },
       });
