@@ -9,9 +9,9 @@ import {
   generateJsonLd,
 } from "@/lib/seo";
 
-// Force dynamic rendering
-export const dynamic = "force-dynamic";
-export const revalidate = 60; // Revalidate every 60 seconds
+// ISR (Incremental Static Regeneration) - Much faster than force-dynamic
+export const dynamic = "force-static"; // Generate at build time
+export const revalidate = 300; // Revalidate every 5 minutes (was 60s)
 
 export default async function HomePage() {
   // Structured Data
@@ -42,21 +42,83 @@ export default async function HomePage() {
     );
   }
 
-  // Fetch settings from database with error handling
+  // Fetch settings and articles in PARALLEL for better performance
   let settings = {
     heroCarouselCount: 5,
     heroCarouselInterval: 6000,
   };
+  let articles: any[] = [];
+  let heroArticles: any[] = [];
 
   try {
-    const settingsFromDb = await db.setting.findMany({
-      where: {
-        key: {
-          in: ["heroCarouselCount", "heroCarouselInterval"],
-        },
-      },
-    });
+    // PARALLEL QUERIES - Much faster than sequential
+    const [settingsFromDb, articlesFromDb, heroArticlesFromDb] =
+      await Promise.all([
+        // Query 1: Settings
+        db.setting.findMany({
+          where: {
+            key: {
+              in: ["heroCarouselCount", "heroCarouselInterval"],
+            },
+          },
+          select: {
+            key: true,
+            value: true,
+          },
+        }),
+        // Query 2: Latest articles
+        db.article.findMany({
+          where: {
+            status: "PUBLISHED",
+            publishedAt: { not: null },
+          },
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            excerpt: true,
+            imageUrl: true,
+            publishedAt: true,
+            views: true,
+            category: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+          },
+          orderBy: {
+            publishedAt: "desc",
+          },
+          take: 12,
+        }),
+        // Query 3: Hero articles
+        db.article.findMany({
+          where: {
+            status: "PUBLISHED",
+            publishedAt: { not: null },
+          },
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            excerpt: true,
+            imageUrl: true,
+            publishedAt: true,
+            views: true,
+            category: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+          },
+          orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
+          take: 5, // Use default instead of settings for faster query
+        }),
+      ]);
 
+    // Process settings
     const settingsMap = settingsFromDb.reduce(
       (acc, setting) => {
         acc[setting.key] = parseInt(setting.value);
@@ -69,59 +131,12 @@ export default async function HomePage() {
       heroCarouselCount: settingsMap.heroCarouselCount || 5,
       heroCarouselInterval: settingsMap.heroCarouselInterval || 6000,
     };
-  } catch (error) {
-    console.error("Failed to fetch settings:", error);
-    // Fallback to defaults is already set
-  }
 
-  // Fetch latest articles with error handling
-  let articles: any[] = [];
-  try {
-    articles = await db.article.findMany({
-      where: {
-        status: "PUBLISHED",
-        publishedAt: { not: null },
-      },
-      include: {
-        category: {
-          select: {
-            name: true,
-            slug: true,
-          },
-        },
-      },
-      orderBy: {
-        publishedAt: "desc",
-      },
-      take: 12,
-    });
+    articles = articlesFromDb;
+    heroArticles = heroArticlesFromDb;
   } catch (error) {
-    console.error("Failed to fetch articles:", error);
-  }
-
-  type ArticleWithCategory = (typeof articles)[0];
-
-  // Fetch top articles for hero carousel with error handling
-  let heroArticles: any[] = [];
-  try {
-    heroArticles = await db.article.findMany({
-      where: {
-        status: "PUBLISHED",
-        publishedAt: { not: null },
-      },
-      include: {
-        category: {
-          select: {
-            name: true,
-            slug: true,
-          },
-        },
-      },
-      orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
-      take: settings.heroCarouselCount,
-    });
-  } catch (error) {
-    console.error("Failed to fetch hero articles:", error);
+    console.error("Failed to fetch data:", error);
+    // Fallbacks are already set
   }
 
   return (
@@ -146,7 +161,7 @@ export default async function HomePage() {
         <section id="latest-news" className="container mx-auto px-4 py-12">
           <h2 className="text-3xl font-bold mb-8">Son Haberler</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map((article: ArticleWithCategory, index: number) => (
+            {articles.map((article, index: number) => (
               <ArticleCard
                 key={article.id}
                 article={article}
