@@ -364,7 +364,7 @@ async function processAggregatedCluster(
     const imageUrl = await fetchPollinationsImage(imagePrompt, {
       width: 1200,
       height: 630,
-      model: "flux-realism",
+      model: "flux",
       enhance: true,
       nologo: true,
     });
@@ -808,7 +808,7 @@ export async function processArticle(
     const imageUrl = await fetchPollinationsImage(imagePrompt, {
       width: 1200,
       height: 630,
-      model: "flux-realism",
+      model: "flux",
       enhance: true,
       nologo: true,
     });

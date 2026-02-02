@@ -94,11 +94,15 @@ async function testPollinationsAPI() {
   const encodedPrompt = encodeURIComponent(testPrompt);
 
   try {
-    const imageUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?model=flux&width=1200&height=630&key=${POLLINATIONS_API_KEY}`;
+    const imageUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?model=flux&width=1200&height=630`;
     console.log(`📝 Prompt: ${testPrompt}`);
     console.log(`🎨 URL: ${imageUrl.substring(0, 100)}...`);
 
-    const imageResponse = await fetch(imageUrl);
+    const imageResponse = await fetch(imageUrl, {
+      headers: {
+        Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+      },
+    });
 
     if (imageResponse.ok) {
       const contentType = imageResponse.headers.get("content-type");

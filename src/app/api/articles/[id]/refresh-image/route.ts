@@ -48,7 +48,7 @@ export async function POST(
     const newImageUrl = await fetchPollinationsImage(imagePrompt, {
       width: 1200,
       height: 630,
-      model: "flux-realism",
+      model: "flux",
       enhance: true,
       nologo: true,
     });

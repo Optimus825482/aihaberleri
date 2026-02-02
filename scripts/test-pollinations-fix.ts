@@ -15,10 +15,14 @@ async function testFix() {
   if (POLLINATIONS_API_KEY) {
     console.log("1️⃣ Testing authenticated endpoint (flux model)...");
     try {
-      const authUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?model=flux&width=1200&height=630&key=${POLLINATIONS_API_KEY}`;
+      const authUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?model=flux&width=1200&height=630`;
       console.log(`📝 URL: ${authUrl.substring(0, 120)}...`);
 
-      const response = await fetch(authUrl);
+      const response = await fetch(authUrl, {
+        headers: {
+          Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+        },
+      });
       console.log(`📊 Status: ${response.status}`);
 
       if (response.ok) {

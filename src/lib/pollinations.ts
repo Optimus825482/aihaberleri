@@ -123,11 +123,6 @@ export function generateImageUrl(
     params.append("seed", seed.toString());
   }
 
-  // Add API key if available
-  if (POLLINATIONS_API_KEY) {
-    params.append("key", POLLINATIONS_API_KEY);
-  }
-
   console.log("🎨 Pollinations.ai isteği:", cleanPrompt.substring(0, 100));
   return `${POLLINATIONS_IMAGE_URL}/${encodedPrompt}?${params.toString()}`;
 }
@@ -180,13 +175,12 @@ export async function fetchPollinationsImage(
 
         const encodedPrompt = encodeURIComponent(cleanPrompt);
 
-        // Build new API URL: https://gen.pollinations.ai/image/{prompt}?key=xxx
+        // Build new API URL: https://gen.pollinations.ai/image/{prompt}
         const params = new URLSearchParams({
           width: width.toString(),
           height: height.toString(),
           model,
           enhance: enhance.toString(),
-          key: POLLINATIONS_API_KEY, // API key as query parameter
         });
 
         if (seed) {
@@ -196,9 +190,8 @@ export async function fetchPollinationsImage(
         const imageUrl = `${POLLINATIONS_GEN_URL}/${encodedPrompt}?${params.toString()}`;
 
         console.log("📝 Prompt:", cleanPrompt.substring(0, 100));
-        console.log("🎨 Full URL:", imageUrl); // Full URL for debugging
         console.log(
-          "🎨 Authenticated URL (key=***):",
+          "🎨 Authenticated URL:",
           imageUrl.substring(0, 120) + "...",
         );
 
@@ -208,6 +201,9 @@ export async function fetchPollinationsImage(
 
         try {
           const response = await fetch(imageUrl, {
+            headers: {
+              Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+            },
             signal: controller.signal,
           });
 

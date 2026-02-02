@@ -21,7 +21,7 @@ async function testPollinationsIntegration() {
       {
         width: 1200,
         height: 630,
-        model: "flux-realism",
+        model: "flux",
         enhance: true,
         nologo: true,
       },
@@ -61,7 +61,7 @@ async function testPollinationsIntegration() {
     const imageUrl = await fetchPollinationsImage(imagePrompt, {
       width: 1200,
       height: 630,
-      model: "flux-realism",
+      model: "flux",
       enhance: true,
       nologo: true,
     });
@@ -102,7 +102,7 @@ async function testPollinationsIntegration() {
       const url = generateImageUrl(prompt, {
         width: 800,
         height: 400,
-        model: "flux-realism",
+        model: "flux",
       });
       console.log(`  URL: ${url.substring(0, 100)}...`);
     }
