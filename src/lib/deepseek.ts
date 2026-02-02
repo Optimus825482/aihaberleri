@@ -453,37 +453,37 @@ Kategori: ${category}
    - Haberin KONUSUNA ÖZEL görsel seç
    - Generic "brain/chip/hologram" yerine SPESIFIK detaylar
 
-3. **KONU BAZLI GÖRSEL SEÇİMİ:**
+3. **KONU BAZLI GÖRSEL SEÇİMİ (NO HUMANS!):**
 
    **Güvenlik/Hack haberleri için:**
-   - "Security breach warning screen, red alert interface, command center monitors"
-   - "Cybersecurity operations room, multiple screens showing threat data"
-   - "Digital lock breaking, security vulnerability visualization"
+   - "Security breach warning screen, red alert interface, command center monitors, no people"
+   - "Cybersecurity operations room, multiple screens showing threat data, empty workstations, no humans"
+   - "Digital lock breaking visualization, security vulnerability interface, no people"
 
    **Şirket/Yatırım haberleri için:**
-   - "Modern tech company headquarters, glass building exterior"
-   - "Business handshake, corporate meeting room, professional setting"
-   - "Stock market trading floor, financial data displays"
+   - "Modern tech company headquarters exterior, glass building architecture, no people"
+   - "Corporate meeting room interior, empty conference table, professional setting, no humans"
+   - "Stock market trading floor screens, financial data displays, no people"
 
    **Ürün lansmanı haberleri için:**
-   - "Product reveal stage, spotlight on new device, tech conference"
-   - "Sleek product photography, minimalist studio setup"
-   - "Hands holding new technology device, close-up product shot"
+   - "Product reveal stage, spotlight on new device, tech conference setup, no people"
+   - "Sleek product photography, minimalist studio setup, device close-up, no humans"
+   - "New technology device on display pedestal, professional lighting, no people"
 
    **Yasaklama/Regülasyon haberleri için:**
-   - "Government building exterior, official announcement setting"
-   - "Legal documents, gavel, courtroom atmosphere"
-   - "Protest signs, public demonstration, crowd gathering"
+   - "Government building exterior, official architecture, no people"
+   - "Legal documents on desk, gavel, courtroom interior, no humans"
+   - "Official announcement podium, empty stage, professional setting, no people"
 
    **AI/Robot haberleri için:**
-   - "Modern robotics lab, engineers working with AI systems"
-   - "Humanoid robot in clean laboratory environment"
-   - "AI research facility, scientists at workstations"
+   - "Modern robotics lab interior, AI systems and equipment, no people"
+   - "Humanoid robot in clean laboratory environment, solo robot, no humans"
+   - "AI research facility interior, empty workstations with monitors, no people"
 
    **Veri/Analiz haberleri için:**
-   - "Data center server racks, blue LED lights, clean facility"
-   - "Analytics dashboard on large screen, modern office"
-   - "Database visualization, network topology diagram"
+   - "Data center server racks, blue LED lights, clean facility corridor, no people"
+   - "Analytics dashboard on large screen, modern office interior, no humans"
+   - "Database visualization on monitors, network topology display, no people"
 
 4. **STİL MODİFİYERLERİ:**
    - Kalite: "photorealistic, professional photography, 8k"
@@ -491,24 +491,28 @@ Kategori: ${category}
    - Kompozisyon: "wide angle, shallow depth of field, centered composition"
    - Mood: "professional, clean, modern, editorial style"
 
-5. **YASAKLAR:**
+5. **YASAKLAR (CRITICAL - NO HUMANS!):**
+   - ❌ **ASLA İNSAN YÜZÜ, PORTRE, KİŞİ GÖSTERME**
+   - ❌ **NO PEOPLE, NO FACES, NO HUMAN FIGURES**
    - ❌ "Holographic brain" - çok kullanıldı
    - ❌ "Neural networks visualization" - çok generic
    - ❌ "Neon glow, purple/blue lights" - çok futuristik
    - ❌ "Circuit board close-up" - çok teknik
-   - ❌ İnsan yüzü veya portre
    - ❌ Metin veya yazı
+   - ✅ SADECE: Mekanlar, objeler, ekranlar, binalar, cihazlar
 
 6. **UZUNLUK:** MAKSIMUM 150 KARAKTER
 
+7. **ZORUNLU EK:** Her prompt'a şunu ekle: ", no people, no faces, no humans"
+
 SADECE PROMPT METNİNİ VER. Açıklama YAZMA.
 
-İYİ ÖRNEKLER:
-- "Modern tech company office, glass walls, employees collaborating, natural daylight, professional photography"
-- "Cybersecurity command center, multiple monitors showing threat maps, red alert screens, dramatic lighting"
-- "Product launch event, spotlight on new AI device, tech conference stage, professional photography"
-- "Government building exterior, official announcement, press conference setup, editorial style"
-- "Data center interior, rows of server racks with blue LED indicators, clean industrial space"`;
+İYİ ÖRNEKLER (NO HUMANS):
+- "Modern tech company office interior, empty glass walls, computer workstations, natural daylight, no people"
+- "Cybersecurity command center, multiple monitors showing threat maps, red alert screens, dramatic lighting, no humans"
+- "Product launch stage, spotlight on new AI device, tech conference setup, professional photography, no people"
+- "Government building exterior, official architecture, press conference podium, editorial style, no humans"
+- "Data center interior, rows of server racks with blue LED indicators, clean industrial space, no people"`;
 
   const response = await callDeepSeek(
     [
@@ -555,27 +559,50 @@ SADECE PROMPT METNİNİ VER. Açıklama YAZMA.
   // Fallback if empty or too short
   if (!cleanPrompt || cleanPrompt.length < 20) {
     console.warn("⚠️  DeepSeek returned empty/short prompt, using fallback");
-    // Topic-based fallback
+    // Topic-based fallback (NO HUMANS!)
     const topicKeywords = title.toLowerCase();
     if (topicKeywords.includes("security") || topicKeywords.includes("hack")) {
       cleanPrompt =
-        "Cybersecurity operations center, threat monitoring screens, professional setting, editorial photography";
+        "Cybersecurity operations center, threat monitoring screens, empty workstations, professional setting, no people";
     } else if (
       topicKeywords.includes("launch") ||
       topicKeywords.includes("release")
     ) {
       cleanPrompt =
-        "Product reveal event, tech conference stage, spotlight on device, professional photography";
+        "Product reveal stage, tech conference setup, spotlight on device, professional photography, no people";
     } else if (
       topicKeywords.includes("invest") ||
       topicKeywords.includes("funding")
     ) {
       cleanPrompt =
-        "Modern tech company headquarters, glass building, corporate setting, professional photography";
+        "Modern tech company headquarters exterior, glass building, corporate architecture, professional photography, no people";
     } else {
       cleanPrompt =
-        "Modern technology workspace, clean professional setting, natural lighting, editorial style photography";
+        "Modern technology workspace interior, clean professional setting, natural lighting, editorial style, no humans";
     }
+  }
+
+  // CRITICAL: Enforce "no people" suffix if not present
+  const noHumansKeywords = [
+    "no people",
+    "no humans",
+    "no faces",
+    "no person",
+    "empty",
+  ];
+  const hasNoHumansKeyword = noHumansKeywords.some((keyword) =>
+    cleanPrompt.toLowerCase().includes(keyword),
+  );
+
+  if (!hasNoHumansKeyword) {
+    // Add "no people" to the end
+    if (cleanPrompt.length + 12 <= 150) {
+      cleanPrompt += ", no people";
+    } else {
+      // Truncate and add
+      cleanPrompt = cleanPrompt.substring(0, 138) + ", no people";
+    }
+    console.log("✅ Added 'no people' suffix to prompt");
   }
 
   console.log(`📝 Final prompt (${cleanPrompt.length} chars): ${cleanPrompt}`);
