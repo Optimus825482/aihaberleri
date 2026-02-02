@@ -264,6 +264,36 @@ export async function selectUniqueTopicArticles(
       continue;
     }
 
+    // NEW: URL-based duplicate check (prevents URL duplicates even with different topics)
+    if (article.url) {
+      const urlWithoutParams = article.url.split("?")[0]; // Ignore query parameters
+      const existingByUrl = await db.article.findFirst({
+        where: {
+          OR: [
+            { sourceUrl: article.url },
+            { sourceUrl: { startsWith: urlWithoutParams } },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          publishedAt: true,
+          sourceUrl: true,
+        },
+      });
+
+      if (existingByUrl) {
+        console.log(
+          `   ⏭️  SKIP (URL in database): ${article.url.substring(0, 60)}...`,
+        );
+        console.log(
+          `      Existing: "${existingByUrl.title.substring(0, 50)}..." (${existingByUrl.publishedAt?.toLocaleDateString() || "N/A"})`,
+        );
+        skippedDuplicate++;
+        continue;
+      }
+    }
+
     // ✅ Unique topic! Seç
     selected.push(article);
     seenTopics.add(topic);
