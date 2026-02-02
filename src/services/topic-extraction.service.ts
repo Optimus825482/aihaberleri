@@ -392,8 +392,116 @@ export default {
 };
 
 /**
- * NEW: Early duplicate filtering by topic and URL
+ * Extract entities from title (for duplicate detection)
+ */
+function extractEntities(title: string): string[] {
+  const entities: string[] = [];
+  const lowerTitle = title.toLowerCase();
+
+  // Common tech entities
+  const techEntities = [
+    "openai",
+    "nvidia",
+    "google",
+    "meta",
+    "microsoft",
+    "apple",
+    "amazon",
+    "tesla",
+    "anthropic",
+    "deepmind",
+    "facebook",
+    "instagram",
+    "twitter",
+    "x",
+    "tiktok",
+    "youtube",
+    "chatgpt",
+    "gemini",
+    "claude",
+    "grok",
+    "copilot",
+    "waymo",
+    "uber",
+    "lyft",
+    "spacex",
+    "neuralink",
+  ];
+
+  for (const entity of techEntities) {
+    if (lowerTitle.includes(entity)) {
+      entities.push(entity);
+    }
+  }
+
+  return entities;
+}
+
+/**
+ * Extract keywords from title (for similarity check)
+ * ENHANCED: Includes AI-specific short keywords
+ */
+function extractKeywords(title: string): string[] {
+  const stopWords = [
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "in",
+    "on",
+    "at",
+    "to",
+    "for",
+    "of",
+    "with",
+    "by",
+    "from",
+    "as",
+    "is",
+    "was",
+    "are",
+    "were",
+    "been",
+    "be",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "will",
+    "would",
+    "could",
+    "should",
+    "may",
+    "might",
+    "can",
+    "s",
+  ];
+
+  // AI-specific keywords (even if short)
+  const aiKeywords = ["ai", "ml", "gpt", "llm", "api"];
+
+  const words = title
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => {
+      // Include AI keywords even if short
+      if (aiKeywords.includes(word)) return true;
+      // Otherwise, filter by length and stopwords
+      return word.length > 2 && !stopWords.includes(word);
+    });
+
+  return words;
+}
+
+/**
+ * NEW: Early duplicate filtering by topic, URL, entities, and keywords
  * Filters out articles that already exist in database (last N days)
+ * AND filters duplicates within the same batch (cross-article comparison)
  * This should be called BEFORE expensive operations (Brave API, scoring, etc.)
  */
 export async function filterDuplicatesByTopicAndUrl(
@@ -410,53 +518,167 @@ export async function filterDuplicatesByTopicAndUrl(
   const unique: ArticleWithTopic[] = [];
   let duplicateCount = 0;
 
+  // Fetch recent articles from database ONCE (for performance)
+  const recentArticles = await db.article.findMany({
+    where: {
+      publishedAt: { gte: cutoffDate },
+    },
+    select: {
+      id: true,
+      title: true,
+      topic: true,
+      sourceUrl: true,
+      publishedAt: true,
+    },
+    take: 100, // Check last 100 articles
+  });
+
+  console.log(
+    `   📚 Checking against ${recentArticles.length} recent articles in database`,
+  );
+
   for (const article of articles) {
-    // 1. Topic-based check
+    let isDuplicate = false;
+
+    // 1. Topic-based check (database)
     if (article.topic) {
-      const existingByTopic = await db.article.findFirst({
-        where: {
-          topic: article.topic,
-          publishedAt: { gte: cutoffDate },
-        },
-        select: {
-          id: true,
-          title: true,
-          publishedAt: true,
-        },
-      });
+      const existingByTopic = recentArticles.find(
+        (a) => a.topic === article.topic,
+      );
 
       if (existingByTopic) {
         console.log(
-          `   ⏭️  SKIP (topic duplicate): ${article.topic} - "${article.title.substring(0, 50)}..."`,
+          `   ⏭️  SKIP (topic duplicate in DB): ${article.topic} - "${article.title.substring(0, 50)}..."`,
         );
         duplicateCount++;
+        isDuplicate = true;
+        continue;
+      }
+
+      // 🆕 CRITICAL: Check topic against ALREADY SELECTED articles in this batch
+      const batchDuplicate = unique.find((u) => u.topic === article.topic);
+      if (batchDuplicate) {
+        console.log(
+          `   ⏭️  SKIP (topic duplicate in BATCH): ${article.topic} - "${article.title.substring(0, 50)}..."`,
+        );
+        console.log(
+          `      Already selected: "${batchDuplicate.title.substring(0, 50)}..."`,
+        );
+        duplicateCount++;
+        isDuplicate = true;
         continue;
       }
     }
 
-    // 2. URL-based check
-    if (article.url) {
+    // 2. URL-based check (database)
+    if (!isDuplicate && article.url) {
       const urlWithoutParams = article.url.split("?")[0];
-      const existingByUrl = await db.article.findFirst({
-        where: {
-          OR: [
-            { sourceUrl: article.url },
-            { sourceUrl: { startsWith: urlWithoutParams } },
-          ],
-        },
-        select: {
-          id: true,
-          title: true,
-          publishedAt: true,
-        },
-      });
+      const existingByUrl = recentArticles.find(
+        (a) =>
+          a.sourceUrl === article.url ||
+          a.sourceUrl?.startsWith(urlWithoutParams),
+      );
 
       if (existingByUrl) {
         console.log(
-          `   ⏭️  SKIP (URL duplicate): ${article.url.substring(0, 60)}...`,
+          `   ⏭️  SKIP (URL duplicate in DB): ${article.url.substring(0, 60)}...`,
         );
         duplicateCount++;
+        isDuplicate = true;
         continue;
+      }
+
+      // 🆕 CRITICAL: Check URL against ALREADY SELECTED articles in this batch
+      const batchUrlDuplicate = unique.find(
+        (u) => u.url === article.url || u.url?.startsWith(urlWithoutParams),
+      );
+      if (batchUrlDuplicate) {
+        console.log(
+          `   ⏭️  SKIP (URL duplicate in BATCH): ${article.url.substring(0, 60)}...`,
+        );
+        duplicateCount++;
+        isDuplicate = true;
+        continue;
+      }
+    }
+
+    // 3. 🆕 CRITICAL: Entity+keyword check (database AND batch)
+    if (!isDuplicate) {
+      const entities = extractEntities(article.title);
+      if (entities.length >= 1) {
+        // At least 1 entity for matching
+
+        // Check against DATABASE articles
+        for (const existing of recentArticles) {
+          const existingEntities = extractEntities(existing.title);
+          const commonEntities = entities.filter((e) =>
+            existingEntities.includes(e),
+          );
+
+          // If 1+ common entities, check keyword similarity
+          if (commonEntities.length >= 1) {
+            const keywords = extractKeywords(article.title);
+            const existingKeywords = extractKeywords(existing.title);
+            const commonKeywords = keywords.filter((k) =>
+              existingKeywords.includes(k),
+            );
+            const similarity =
+              commonKeywords.length / Math.max(keywords.length, 1);
+
+            // If 30%+ keyword similarity with same entities = duplicate
+            if (similarity >= 0.3) {
+              console.log(
+                `   ⏭️  SKIP (entity+keyword duplicate in DB): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
+              );
+              console.log(`      New: "${article.title.substring(0, 50)}..."`);
+              console.log(
+                `      Existing: "${existing.title.substring(0, 50)}..." (${existing.publishedAt?.toLocaleDateString()})`,
+              );
+              duplicateCount++;
+              isDuplicate = true;
+              break;
+            }
+          }
+        }
+
+        // 🆕 CRITICAL: Check against ALREADY SELECTED articles in this batch
+        if (!isDuplicate) {
+          for (const selected of unique) {
+            const selectedEntities = extractEntities(selected.title);
+            const commonEntities = entities.filter((e) =>
+              selectedEntities.includes(e),
+            );
+
+            // If 2+ common entities, check keyword similarity
+            if (commonEntities.length >= 1) {
+              const keywords = extractKeywords(article.title);
+              const selectedKeywords = extractKeywords(selected.title);
+              const commonKeywords = keywords.filter((k) =>
+                selectedKeywords.includes(k),
+              );
+              const similarity =
+                commonKeywords.length / Math.max(keywords.length, 1);
+
+              // If 30%+ keyword similarity with same entities = duplicate
+              if (similarity >= 0.3) {
+                console.log(
+                  `   ⏭️  SKIP (entity+keyword duplicate in BATCH): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
+                );
+                console.log(
+                  `      New: "${article.title.substring(0, 50)}..."`,
+                );
+                console.log(
+                  `      Already selected: "${selected.title.substring(0, 50)}..."`,
+                );
+                duplicateCount++;
+                isDuplicate = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (isDuplicate) continue;
       }
     }
 
