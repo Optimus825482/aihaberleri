@@ -390,3 +390,87 @@ export default {
   selectUniqueTopicArticles,
   extractTopicsForExistingArticles,
 };
+
+/**
+ * NEW: Early duplicate filtering by topic and URL
+ * Filters out articles that already exist in database (last N days)
+ * This should be called BEFORE expensive operations (Brave API, scoring, etc.)
+ */
+export async function filterDuplicatesByTopicAndUrl(
+  articles: ArticleWithTopic[],
+  timeWindowDays: number = 2,
+): Promise<ArticleWithTopic[]> {
+  console.log(`\n🔍 Early duplicate filtering başlatılıyor...`);
+  console.log(`   Input: ${articles.length} haber`);
+  console.log(`   Time window: ${timeWindowDays} gün`);
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - timeWindowDays);
+
+  const unique: ArticleWithTopic[] = [];
+  let duplicateCount = 0;
+
+  for (const article of articles) {
+    // 1. Topic-based check
+    if (article.topic) {
+      const existingByTopic = await db.article.findFirst({
+        where: {
+          topic: article.topic,
+          publishedAt: { gte: cutoffDate },
+        },
+        select: {
+          id: true,
+          title: true,
+          publishedAt: true,
+        },
+      });
+
+      if (existingByTopic) {
+        console.log(
+          `   ⏭️  SKIP (topic duplicate): ${article.topic} - "${article.title.substring(0, 50)}..."`,
+        );
+        duplicateCount++;
+        continue;
+      }
+    }
+
+    // 2. URL-based check
+    if (article.url) {
+      const urlWithoutParams = article.url.split("?")[0];
+      const existingByUrl = await db.article.findFirst({
+        where: {
+          OR: [
+            { sourceUrl: article.url },
+            { sourceUrl: { startsWith: urlWithoutParams } },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          publishedAt: true,
+        },
+      });
+
+      if (existingByUrl) {
+        console.log(
+          `   ⏭️  SKIP (URL duplicate): ${article.url.substring(0, 60)}...`,
+        );
+        duplicateCount++;
+        continue;
+      }
+    }
+
+    // ✅ Unique!
+    unique.push(article);
+  }
+
+  console.log(`\n📊 Early filtering özeti:`);
+  console.log(`   Input: ${articles.length} haber`);
+  console.log(`   Duplicate: ${duplicateCount} haber`);
+  console.log(`   Unique: ${unique.length} haber`);
+  console.log(
+    `   Duplicate rate: ${((duplicateCount / articles.length) * 100).toFixed(1)}%`,
+  );
+
+  return unique;
+}

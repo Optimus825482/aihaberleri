@@ -115,12 +115,25 @@ export async function extractTopicsStage(
 export async function smartSelectionStage(
   articles: ArticleWithTopic[],
   targetCount: number = 5,
-  timeWindowDays: number = 2, // 7 günden 2 güne düşürüldü
+  timeWindowDays: number = 2,
+  skipDuplicateCheck: boolean = false, // NEW: Skip if already filtered
 ): Promise<ArticleWithTopic[]> {
   console.log(`\n🔍 STAGE 3: TOPIC-BASED DUPLICATE CHECK & SMART SELECTION`);
   console.log(`   Input: ${articles.length} haber`);
   console.log(`   Target: ${targetCount} unique topics`);
+  console.log(`   Skip duplicate check: ${skipDuplicateCheck}`);
 
+  if (skipDuplicateCheck) {
+    // Already filtered, just select top N
+    console.log(`   ⚡ Duplicate check SKIPPED (already filtered)`);
+    const selected = articles.slice(0, targetCount);
+    console.log(
+      `   ✅ Selected: ${selected.length} articles (no duplicate check needed)`,
+    );
+    return selected;
+  }
+
+  // Original logic with duplicate check
   const selected = await selectUniqueTopicArticles(
     articles,
     targetCount,
@@ -141,6 +154,7 @@ export async function runSmartFiltering(
     topPerBatch?: number;
     targetCount?: number;
     timeWindowDays?: number;
+    skipDuplicateCheck?: boolean; // NEW: Skip duplicate check if already filtered
   } = {},
 ): Promise<SmartFilteringResult> {
   const startTime = Date.now();
@@ -149,7 +163,8 @@ export async function runSmartFiltering(
     batchSize = 10,
     topPerBatch = 5,
     targetCount = 5,
-    timeWindowDays = 2, // 7 günden 2 güne düşürüldü (daha güncel haberler için)
+    timeWindowDays = 2,
+    skipDuplicateCheck = false, // NEW
   } = options;
 
   console.log(`\n${"=".repeat(60)}`);
@@ -158,18 +173,29 @@ export async function runSmartFiltering(
   console.log(`   Input: ${articles.length} haber`);
   console.log(`   Target: ${targetCount} unique haber`);
   console.log(`   Time window: ${timeWindowDays} gün`);
+  console.log(`   Skip duplicate check: ${skipDuplicateCheck}`);
 
   // STAGE 1: Batch Filtering
   const stage1_filtered = batchFilter(articles, batchSize, topPerBatch);
 
-  // STAGE 2: Topic Extraction
-  const stage2_with_topics = await extractTopicsStage(stage1_filtered);
+  // STAGE 2: Topic Extraction (skip if already has topics)
+  const hasTopics = stage1_filtered.every((a) => a.topic);
+  let stage2_with_topics: ArticleWithTopic[];
+
+  if (hasTopics && skipDuplicateCheck) {
+    console.log(`\n🧠 STAGE 2: TOPIC EXTRACTION`);
+    console.log(`   ⚡ SKIPPED (articles already have topics)`);
+    stage2_with_topics = stage1_filtered;
+  } else {
+    stage2_with_topics = await extractTopicsStage(stage1_filtered);
+  }
 
   // STAGE 3: Smart Selection
   const stage3_unique = await smartSelectionStage(
     stage2_with_topics,
     targetCount,
     timeWindowDays,
+    skipDuplicateCheck, // NEW: Pass skip flag
   );
 
   const processingTime = Date.now() - startTime;

@@ -155,6 +155,46 @@ export async function executeNewsAgent(
       throw new Error("Haber bulunamadı");
     }
 
+    // NEW APPROACH: Early topic extraction and duplicate filtering
+    // Extract topics for ALL articles BEFORE scoring/filtering
+    console.log(
+      `\n🧠 EARLY TOPIC EXTRACTION: ${newsArticles.length} haber için topic çıkarılıyor...`,
+    );
+    const { extractTopicsBatch } = await import("./topic-extraction.service");
+    const articlesWithTopics = await extractTopicsBatch(newsArticles, 10); // Larger batch for speed
+
+    // Filter out duplicates BEFORE expensive Brave API calls
+    console.log(
+      `\n🔍 EARLY DUPLICATE FILTERING: Son 48 saatte yayınlananlar eleniyor...`,
+    );
+    const { filterDuplicatesByTopicAndUrl } =
+      await import("./topic-extraction.service");
+    const uniqueArticles = await filterDuplicatesByTopicAndUrl(
+      articlesWithTopics,
+      2,
+    ); // 2 days window
+
+    console.log(`\n📊 Early filtering sonuçları:`);
+    console.log(`   Toplam: ${newsArticles.length} haber`);
+    console.log(`   Topic extraction: ${articlesWithTopics.length} başarılı`);
+    console.log(
+      `   Duplicate elendi: ${articlesWithTopics.length - uniqueArticles.length} haber`,
+    );
+    console.log(`   Unique kaldı: ${uniqueArticles.length} haber`);
+    console.log(
+      `   Duplicate rate: ${(((articlesWithTopics.length - uniqueArticles.length) / articlesWithTopics.length) * 100).toFixed(1)}%`,
+    );
+
+    if (uniqueArticles.length === 0) {
+      console.log(`\n⚠️  Tüm haberler duplicate! Yeni haber yok.`);
+      throw new Error("Tüm haberler duplicate - yeni haber bulunamadı");
+    }
+
+    // Continue with unique articles only (saves Brave API calls!)
+    console.log(
+      `\n✅ ${uniqueArticles.length} unique haber ile devam ediliyor...`,
+    );
+
     // Step 2: Smart Filtering Pipeline (NEW!)
     agentLogger.step(
       agentLog.id,
@@ -203,16 +243,17 @@ export async function executeNewsAgent(
 
     // Live log: Smart filtering
     await liveLog.deepseek.info(
-      `🚀 Akıllı filtreleme: ${newsArticles.length} haber → ${targetCount} unique topic`,
+      `🚀 Akıllı filtreleme: ${uniqueArticles.length} unique haber → ${targetCount} seçilecek`,
     );
 
-    // NEW: Run smart filtering pipeline
+    // NEW: Run smart filtering pipeline with UNIQUE articles only
     const { runSmartFiltering } = await import("./smart-filtering.service");
-    const filteringResult = await runSmartFiltering(newsArticles, {
+    const filteringResult = await runSmartFiltering(uniqueArticles, {
       batchSize: 10,
       topPerBatch: 5,
       targetCount: targetCount,
-      timeWindowDays: 2, // 7 günden 2 güne düşürüldü (daha güncel haberler için)
+      timeWindowDays: 2,
+      skipDuplicateCheck: true, // Already filtered duplicates!
     });
 
     const selectedArticles = filteringResult.stage3_unique;
