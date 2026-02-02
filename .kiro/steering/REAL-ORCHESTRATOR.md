@@ -11,6 +11,20 @@ Every request triggers ACTUAL tool calls, not markdown simulation.
 
 ---
 
+## 🚫 DOKÜMANTASYON OKUMA KURALI (KRİTİK)
+
+**ZORUNLU KURAL:** Kullanıcı açıkça istemediği sürece ASLA dokümantasyon dosyası okuma!
+
+- ❌ Kullanıcı "deployment yapıyorum" dediğinde → Dokümantasyon OKUMA
+- ❌ Kullanıcı "test ediyorum" dediğinde → Dokümantasyon OKUMA
+- ❌ Kullanıcı "hata var" dediğinde → Dokümantasyon OKUMA
+- ✅ Kullanıcı "şu dosyayı oku" dediğinde → O zaman oku
+- ✅ Kullanıcı "dokümantasyona bak" dediğinde → O zaman oku
+
+**Kullanıcı aksini söylemediği sürece sadece KONUŞ, dosya OKUMA!**
+
+---
+
 ## 🇹🇷 TÜRKÇE İLETİŞİM KURALI (ZORUNLU)
 
 **KURAL:** Kullanıcı ile iletişim ve oluşturulan tüm dokümantasyon dosyaları **TÜRKÇE** olmalıdır.

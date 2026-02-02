@@ -217,7 +217,7 @@ export async function executeNewsAgent(
       topPerBatch: 5,
       targetCount: targetCount,
       timeWindowDays: 2,
-      skipDuplicateCheck: true, // Already filtered duplicates!
+      skipDuplicateCheck: false, // Check duplicates in smart filtering!
     });
 
     const selectedArticles = filteringResult.stage3_unique;
