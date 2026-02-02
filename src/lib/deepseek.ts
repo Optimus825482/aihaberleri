@@ -431,62 +431,91 @@ function detectEntityForVisual(title: string): string | null {
 
 /**
  * Generate AI image prompt from article content
- * ENHANCED: Entity-aware prompts with consistent visual branding
+ * ENHANCED: Realistic, journalistic, topic-specific prompts
  */
 export async function generateImagePrompt(
   title: string,
   content: string,
   category: string,
 ): Promise<string> {
-  // Detect entity for visual style hints
-  const entity = detectEntityForVisual(title);
-  const entityStyle = entity ? ENTITY_VISUAL_STYLES[entity] : null;
-
-  const styleHint = entityStyle
-    ? `\n\nÖNEMLİ STİL İPUCU: Bu haber ${entity.toUpperCase()} ile ilgili. Şu görsel elementleri kullan: ${entityStyle}`
-    : "";
-
-  const prompt = `Sen dünya çapında ödüllü bir AI görsel prompt uzmanısın. Bu yapay zeka haberi için Pollinations.ai'da kullanılacak MÜKEMMEL ve ETKİLEYİCİ bir görsel prompt oluştur.
+  const prompt = `Sen dünya çapında ödüllü bir haber fotoğrafçısısın. Bu yapay zeka haberi için REALISTIC ve JOURNALISTIC bir görsel prompt oluştur.
 
 Haber Başlığı: ${title}
 Kategori: ${category}
-İçerik Özeti: ${content.substring(0, 400)}${styleHint}
+İçerik Özeti: ${content.substring(0, 400)}
 
 ### PROMPT OLUŞTURMA KURALLARI:
 
 1. **DİL:** İngilizce prompt (Pollinations.ai için)
 
-2. **GÖRSEL UNSURLAR (en az 3 tane kullan):**
-   - Işık efektleri: holographic, neon glow, volumetric lighting, lens flare
-   - Teknoloji: neural networks, circuit boards, data streams, holograms
-   - Atmosfer: futuristic cityscape, dark tech lab, clean studio
-   - Detaylar: reflective surfaces, particle effects, depth of field
+2. **REALİSTİK YAKLAŞIM:**
+   - Gerçek haber fotoğrafı gibi düşün
+   - Haberin KONUSUNA ÖZEL görsel seç
+   - Generic "brain/chip/hologram" yerine SPESIFIK detaylar
 
-3. **STİL MODİFİYERLERİ (1-2 tane ekle):**
-   - Kalite: 8k, hyperrealistic, cinematic, award-winning
-   - Sanat: digital art, concept art, 3D render, photorealistic
-   - Mood: dramatic lighting, moody, vibrant, ethereal
+3. **KONU BAZLI GÖRSEL SEÇİMİ:**
 
-4. **YASAKLAR:**
-   - ❌ İnsan yüzü veya portre KULLANMA
-   - ❌ Metin veya yazı ekleme
-   - ❌ Gerçek marka logoları
+   **Güvenlik/Hack haberleri için:**
+   - "Security breach warning screen, red alert interface, command center monitors"
+   - "Cybersecurity operations room, multiple screens showing threat data"
+   - "Digital lock breaking, security vulnerability visualization"
 
-5. **UZUNLUK:** MAKSIMUM 150 KARAKTER (ÇOK KRİTİK!)
+   **Şirket/Yatırım haberleri için:**
+   - "Modern tech company headquarters, glass building exterior"
+   - "Business handshake, corporate meeting room, professional setting"
+   - "Stock market trading floor, financial data displays"
 
-SADECE PROMPT METNİNİ VER. Açıklama veya düşünce YAZMA.
+   **Ürün lansmanı haberleri için:**
+   - "Product reveal stage, spotlight on new device, tech conference"
+   - "Sleek product photography, minimalist studio setup"
+   - "Hands holding new technology device, close-up product shot"
 
-ÖRNEK FORMATLAR:
-- "Holographic AI brain, neural connections, blue neon glow, dark tech lab, 8k cinematic"
-- "Futuristic GPU chip, green matrix data, NVIDIA style, hyperrealistic 3D render"
-- "Quantum computer core, blue cryogenic mist, sci-fi laboratory, volumetric light"`;
+   **Yasaklama/Regülasyon haberleri için:**
+   - "Government building exterior, official announcement setting"
+   - "Legal documents, gavel, courtroom atmosphere"
+   - "Protest signs, public demonstration, crowd gathering"
+
+   **AI/Robot haberleri için:**
+   - "Modern robotics lab, engineers working with AI systems"
+   - "Humanoid robot in clean laboratory environment"
+   - "AI research facility, scientists at workstations"
+
+   **Veri/Analiz haberleri için:**
+   - "Data center server racks, blue LED lights, clean facility"
+   - "Analytics dashboard on large screen, modern office"
+   - "Database visualization, network topology diagram"
+
+4. **STİL MODİFİYERLERİ:**
+   - Kalite: "photorealistic, professional photography, 8k"
+   - Işık: "natural lighting, professional studio lighting, golden hour"
+   - Kompozisyon: "wide angle, shallow depth of field, centered composition"
+   - Mood: "professional, clean, modern, editorial style"
+
+5. **YASAKLAR:**
+   - ❌ "Holographic brain" - çok kullanıldı
+   - ❌ "Neural networks visualization" - çok generic
+   - ❌ "Neon glow, purple/blue lights" - çok futuristik
+   - ❌ "Circuit board close-up" - çok teknik
+   - ❌ İnsan yüzü veya portre
+   - ❌ Metin veya yazı
+
+6. **UZUNLUK:** MAKSIMUM 150 KARAKTER
+
+SADECE PROMPT METNİNİ VER. Açıklama YAZMA.
+
+İYİ ÖRNEKLER:
+- "Modern tech company office, glass walls, employees collaborating, natural daylight, professional photography"
+- "Cybersecurity command center, multiple monitors showing threat maps, red alert screens, dramatic lighting"
+- "Product launch event, spotlight on new AI device, tech conference stage, professional photography"
+- "Government building exterior, official announcement, press conference setup, editorial style"
+- "Data center interior, rows of server racks with blue LED indicators, clean industrial space"`;
 
   const response = await callDeepSeek(
     [
       {
         role: "system",
         content:
-          "Sen uzman bir AI görsel prompt yazarısın. SADECE prompt metnini ver, başka hiçbir şey yazma.",
+          "Sen uzman bir haber fotoğrafçısısın. SADECE realistic, journalistic görsel prompt ver. Generic AI görselleri değil, gerçek haber fotoğrafı gibi düşün.",
       },
       {
         role: "user",
@@ -494,9 +523,9 @@ SADECE PROMPT METNİNİ VER. Açıklama veya düşünce YAZMA.
       },
     ],
     {
-      model: "deepseek-chat", // Use chat model instead of reasoner for simple tasks
+      model: "deepseek-chat",
       maxTokens: 200,
-      temperature: 0.8,
+      temperature: 0.9, // Increased for more variety
     },
   );
 
@@ -508,7 +537,6 @@ SADECE PROMPT METNİNİ VER. Açıklama veya düşünce YAZMA.
 
   // If response contains reasoning tags or multiple lines, extract the actual prompt
   if (cleanPrompt.includes("<think>") || cleanPrompt.includes("\n\n")) {
-    // Try to find the last substantial line (the actual prompt)
     const lines = cleanPrompt.split("\n").filter((line) => line.trim());
     cleanPrompt = lines[lines.length - 1] || cleanPrompt;
   }
@@ -516,7 +544,7 @@ SADECE PROMPT METNİNİ VER. Açıklama veya düşünce YAZMA.
   // Remove any remaining tags
   cleanPrompt = cleanPrompt.replace(/<[^>]+>/g, "").trim();
 
-  // CRITICAL: Enforce max length to prevent 400 errors
+  // CRITICAL: Enforce max length
   if (cleanPrompt.length > 150) {
     console.warn(
       `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 150`,
@@ -524,10 +552,30 @@ SADECE PROMPT METNİNİ VER. Açıklama veya düşünce YAZMA.
     cleanPrompt = cleanPrompt.substring(0, 147) + "...";
   }
 
-  // If still empty or too short, use fallback
+  // Fallback if empty or too short
   if (!cleanPrompt || cleanPrompt.length < 20) {
     console.warn("⚠️  DeepSeek returned empty/short prompt, using fallback");
-    cleanPrompt = `${category.toLowerCase()} AI tech, modern digital art, 4k, professional`;
+    // Topic-based fallback
+    const topicKeywords = title.toLowerCase();
+    if (topicKeywords.includes("security") || topicKeywords.includes("hack")) {
+      cleanPrompt =
+        "Cybersecurity operations center, threat monitoring screens, professional setting, editorial photography";
+    } else if (
+      topicKeywords.includes("launch") ||
+      topicKeywords.includes("release")
+    ) {
+      cleanPrompt =
+        "Product reveal event, tech conference stage, spotlight on device, professional photography";
+    } else if (
+      topicKeywords.includes("invest") ||
+      topicKeywords.includes("funding")
+    ) {
+      cleanPrompt =
+        "Modern tech company headquarters, glass building, corporate setting, professional photography";
+    } else {
+      cleanPrompt =
+        "Modern technology workspace, clean professional setting, natural lighting, editorial style photography";
+    }
   }
 
   console.log(`📝 Final prompt (${cleanPrompt.length} chars): ${cleanPrompt}`);
