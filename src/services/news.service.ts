@@ -461,8 +461,7 @@ const AI_KEYWORDS = [
   // Core AI Terms
   "artificial intelligence",
   "yapay zeka",
-  "ai ",
-  " ai",
+  " ai ", // ✅ FIX: Space on both sides to avoid "campaign", "detail", etc.
   "a.i.",
   "machine learning",
   "makine öğrenmesi",
