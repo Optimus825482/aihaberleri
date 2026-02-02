@@ -57,26 +57,46 @@ export function generateImageUrl(
     width = 1200,
     height = 630,
     seed,
-    model = "flux", // Changed from "flux" - API validation error
+    model = "flux", // Use flux as default - most stable model
     enhance = true,
   } = options;
 
-  // Validate model - updated with actual API supported models
-  if (
-    model &&
-    ![
-      "kontext",
-      "turbo",
-      "nanobanana",
-      "nanobanana-pro",
-      "seedream",
-      "flux",
-      "gptimage",
-    ].includes(model)
-  ) {
-    throw new Error(
-      "Invalid model. Choose from: flux, flux-realism, flux-anime, flux-3d, turbo",
-    );
+  // Validate model - updated with actual API supported models from gen.pollinations.ai
+  const validModels = [
+    "kontext",
+    "turbo",
+    "nanobanana",
+    "nanobanana-pro",
+    "seedream",
+    "seedream-pro",
+    "gptimage",
+    "gptimage-large",
+    "flux",
+    "zimage",
+    "veo",
+    "seedance",
+    "seedance-pro",
+    "wan",
+    "klein",
+    "klein-large",
+    "gpt-image",
+    "gpt-image-1-mini",
+    "gpt-image-1.5",
+    "gpt-image-large",
+    "z-image",
+    "z-image-turbo",
+    "veo-3.1-fast",
+    "video",
+    "wan2.6",
+    "wan-i2v",
+    "flux-klein",
+    "flux-klein-9b",
+    "klein-9b",
+  ];
+
+  if (model && !validModels.includes(model)) {
+    console.warn(`⚠️ Invalid model "${model}", falling back to "flux"`);
+    options.model = "flux";
   }
 
   const encodedPrompt = encodeURIComponent(cleanPrompt);
@@ -133,7 +153,7 @@ export async function fetchPollinationsImage(
     width = 1200,
     height = 630,
     seed,
-    model = "flux", // Changed from "flux" - API validation error
+    model = "flux", // Use flux as default - most stable model
     enhance = true,
   } = options;
 
@@ -217,9 +237,11 @@ export async function fetchPollinationsImage(
 
           // For 4xx errors, try anonymous fallback
           if (response.status >= 400 && response.status < 500) {
+            const errorText = await response.text();
             console.warn(
-              `⚠️ Pollinations API ${response.status}, trying anonymous fallback`,
+              `⚠️ Pollinations API ${response.status}: ${errorText.substring(0, 200)}`,
             );
+            console.warn(`⚠️ Trying anonymous fallback...`);
             return await fetchPollinationsImageAnonymous(prompt, options);
           }
         } catch (fetchError) {
@@ -276,6 +298,10 @@ async function fetchPollinationsImageAnonymous(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      // Log the error for debugging
+      console.error(
+        `❌ Anonymous endpoint failed with status: ${response.status}`,
+      );
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
@@ -283,6 +309,7 @@ async function fetchPollinationsImageAnonymous(
     return imageUrl;
   } catch (error) {
     clearTimeout(timeoutId);
+    console.error("❌ Anonymous endpoint error:", error);
     throw error;
   }
 }

@@ -94,7 +94,7 @@ async function testPollinationsAPI() {
   const encodedPrompt = encodeURIComponent(testPrompt);
 
   try {
-    const imageUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?model=turbo&width=1200&height=630&key=${POLLINATIONS_API_KEY}`;
+    const imageUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?model=flux&width=1200&height=630&key=${POLLINATIONS_API_KEY}`;
     console.log(`📝 Prompt: ${testPrompt}`);
     console.log(`🎨 URL: ${imageUrl.substring(0, 100)}...`);
 
