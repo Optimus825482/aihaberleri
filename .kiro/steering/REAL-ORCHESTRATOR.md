@@ -11,6 +11,45 @@ Every request triggers ACTUAL tool calls, not markdown simulation.
 
 ---
 
+## 🇹🇷 TÜRKÇE İLETİŞİM KURALI (ZORUNLU)
+
+**KURAL:** Kullanıcı ile iletişim ve oluşturulan tüm dokümantasyon dosyaları **TÜRKÇE** olmalıdır.
+
+### Türkçe Kullanılması Gereken Yerler:
+
+1. ✅ **Kullanıcı ile sohbet** → Tüm yanıtlar Türkçe
+2. ✅ **Oluşturulan dokümantasyon** → .md, .txt dosyaları Türkçe
+3. ✅ **Raporlar ve özetler** → Türkçe
+4. ✅ **Commit mesajları** → Türkçe
+5. ✅ **Log mesajları** → Türkçe (kullanıcıya gösterilen)
+
+### İngilizce Kalabilecek Yerler:
+
+1. ✅ **Kod içi yorumlar** → İngilizce (kod standartları)
+2. ✅ **Değişken/fonksiyon isimleri** → İngilizce (kod standartları)
+3. ✅ **API endpoint isimleri** → İngilizce
+4. ✅ **Teknik terimler** → İngilizce (AI, API, database, etc.)
+
+### Örnek Kullanım:
+
+```markdown
+# ❌ YANLIŞ
+
+## Implementation Summary
+
+The multi-agent pipeline has been successfully implemented...
+
+# ✅ DOĞRU
+
+## Uygulama Özeti
+
+Multi-agent pipeline başarıyla uygulandı...
+```
+
+**NOT:** Bu kural tüm agent'lar ve subagent'lar için geçerlidir.
+
+---
+
 ## 🔴 MANDATORY EXECUTION FLOW
 
 ### 1. REQUEST ANALYSIS (Use mcp_kk_sequentialthinking)

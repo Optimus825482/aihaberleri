@@ -3,9 +3,9 @@
  * Usage: npx tsx scripts/test-pollinations-api.ts
  */
 
-const POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY;
+const POLLINATIONS_KEY = process.env.POLLINATIONS_API_KEY;
 
-if (!POLLINATIONS_API_KEY) {
+if (!POLLINATIONS_KEY) {
   console.error("❌ POLLINATIONS_API_KEY not found in environment");
   console.log("Add to .env:");
   console.log("POLLINATIONS_API_KEY=pk_your_key_here");
@@ -20,7 +20,7 @@ async function testPollinationsAPI() {
   try {
     const keyResponse = await fetch("https://gen.pollinations.ai/account/key", {
       headers: {
-        Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+        Authorization: `Bearer ${POLLINATIONS_KEY}`,
       },
     });
 
@@ -47,7 +47,7 @@ async function testPollinationsAPI() {
       "https://gen.pollinations.ai/account/balance",
       {
         headers: {
-          Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+          Authorization: `Bearer ${POLLINATIONS_KEY}`,
         },
       },
     );
@@ -69,7 +69,7 @@ async function testPollinationsAPI() {
       "https://gen.pollinations.ai/image/models",
       {
         headers: {
-          Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+          Authorization: `Bearer ${POLLINATIONS_KEY}`,
         },
       },
     );
@@ -100,7 +100,7 @@ async function testPollinationsAPI() {
 
     const imageResponse = await fetch(imageUrl, {
       headers: {
-        Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+        Authorization: `Bearer ${POLLINATIONS_KEY}`,
       },
     });
 

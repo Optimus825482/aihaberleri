@@ -22,10 +22,16 @@
     "test:smart-filtering": "tsx scripts/test-smart-filtering.ts",
     "test:new-rss-feeds": "tsx scripts/test-new-rss-feeds.ts",
     "test:all-ai-feeds": "tsx scripts/test-all-ai-feeds.ts",
-    "test:sample-ai-feeds": "tsx scripts/test-sample-ai-feeds.ts"
+    "test:sample-ai-feeds": "tsx scripts/test-sample-ai-feeds.ts",
+    "test:pipeline": "tsx scripts/test-multi-agent-pipeline.ts",
+    "test:hybrid": "tsx scripts/test-hybrid-models.ts",
+    "worker:orchestrator": "tsx src/workers/orchestrator.worker.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
+    "@bull-board/api": "^6.16.4",
+    "@bull-board/express": "^6.16.4",
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",
     "@neondatabase/serverless": "^0.10.4",
     "@prisma/adapter-neon": "^6.2.1",

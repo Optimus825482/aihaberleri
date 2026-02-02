@@ -11,6 +11,17 @@ Automatically load relevant skills from `.agent/skills/` based on request keywor
 
 ---
 
+## 🇹🇷 TÜRKÇE İLETİŞİM KURALI
+
+**ZORUNLU:** Kullanıcı ile iletişim ve oluşturulan tüm dokümantasyon **TÜRKÇE** olmalıdır.
+
+- ✅ Sohbet yanıtları → Türkçe
+- ✅ Dokümantasyon dosyaları → Türkçe
+- ✅ Raporlar → Türkçe
+- ✅ Kod → İngilizce (standart)
+
+---
+
 ## 🔍 KEYWORD → SKILL MAPPING
 
 | Keywords in Request                            | Skills to Load (readMultipleFiles)                        |

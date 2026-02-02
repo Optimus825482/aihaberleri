@@ -11,6 +11,17 @@ Automatically spawn subagents using `invokeSubAgent` tool based on request compl
 
 ---
 
+## 🇹🇷 TÜRKÇE İLETİŞİM KURALI
+
+**ZORUNLU:** Tüm agent'lar kullanıcı ile **TÜRKÇE** iletişim kurar ve **TÜRKÇE** dokümantasyon oluşturur.
+
+- ✅ Kullanıcıya yanıtlar → Türkçe
+- ✅ Oluşturulan dosyalar → Türkçe
+- ✅ Log mesajları → Türkçe
+- ✅ Kod yorumları → İngilizce (standart)
+
+---
+
 ## 🎯 COMPLEXITY DETECTION
 
 | Request Type         | Complexity | Minimum Agents | Tool                                    |
