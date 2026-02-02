@@ -184,11 +184,16 @@ export async function fetchPollinationsImage(
             return imageUrl;
           }
 
-          // Retry on 502/503, not on 400/404
-          if (response.status >= 500 && attempt < maxRetries) {
-            const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+          // Retry on 502/503/504, not on 400/404
+          if (
+            (response.status === 502 ||
+              response.status === 503 ||
+              response.status === 504) &&
+            attempt < maxRetries
+          ) {
+            const delay = Math.min(2000 * Math.pow(2, attempt), 15000); // Increased delay
             console.warn(
-              `⚠️ Pollinations API ${response.status}, retry ${attempt}/${maxRetries} in ${delay}ms`,
+              `⚠️ Pollinations API ${response.status} (service temporarily down), retry ${attempt}/${maxRetries} in ${delay}ms`,
             );
             await new Promise((resolve) => setTimeout(resolve, delay));
             continue;
@@ -247,7 +252,7 @@ async function fetchPollinationsImageAnonymous(
 
   // Fetch image to verify it exists with timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout - Pollinations can be very slow
+  const timeoutId = setTimeout(() => controller.abort(), 180000); // 180s timeout - Pollinations can be VERY slow (increased from 120s)
 
   try {
     const response = await fetch(imageUrl, {
@@ -273,9 +278,9 @@ async function fetchPollinationsImageAnonymous(
  * Uses static placeholder to ensure images always display
  */
 function getFallbackImage(): string {
-  // Use static placeholder - always available, no external dependency
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-  const fallbackUrl = `${baseUrl}/logos/og-image.png`;
+  // CRITICAL FIX: Use direct path to avoid Next.js image optimization loop
+  // Don't use full URL with domain - causes 400 error when Next.js tries to optimize
+  const fallbackUrl = "/logos/og-image.png";
   console.warn(
     "⚠️ Pollinations.ai başarısız, fallback görsel kullanılıyor:",
     fallbackUrl,
