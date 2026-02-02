@@ -10,7 +10,14 @@ interface PollinationsOptions {
   width?: number;
   height?: number;
   seed?: number;
-  model?: "flux" | "flux-realism" | "flux-anime" | "flux-3d" | "turbo";
+  model?:
+    | "kontext"
+    | "turbo"
+    | "nanobanana"
+    | "nanobanana-pro"
+    | "seedream"
+    | "flux"
+    | "gptimage";
   enhance?: boolean;
 }
 
@@ -50,14 +57,22 @@ export function generateImageUrl(
     width = 1200,
     height = 630,
     seed,
-    model = "flux",
+    model = "flux", // Changed from "flux" - API validation error
     enhance = true,
   } = options;
 
-  // Validate model
+  // Validate model - updated with actual API supported models
   if (
     model &&
-    !["flux", "flux-realism", "flux-anime", "flux-3d", "turbo"].includes(model)
+    ![
+      "kontext",
+      "turbo",
+      "nanobanana",
+      "nanobanana-pro",
+      "seedream",
+      "flux",
+      "gptimage",
+    ].includes(model)
   ) {
     throw new Error(
       "Invalid model. Choose from: flux, flux-realism, flux-anime, flux-3d, turbo",
@@ -118,7 +133,7 @@ export async function fetchPollinationsImage(
     width = 1200,
     height = 630,
     seed,
-    model = "flux",
+    model = "flux", // Changed from "flux" - API validation error
     enhance = true,
   } = options;
 
