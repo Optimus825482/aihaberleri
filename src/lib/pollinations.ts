@@ -130,6 +130,9 @@ export async function fetchPollinationsImage(
         console.log(
           `🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt ${attempt}/${maxRetries})`,
         );
+        console.log(
+          `🔑 API Key exists: ${POLLINATIONS_API_KEY ? "YES" : "NO"}, length: ${POLLINATIONS_API_KEY?.length || 0}`,
+        );
 
         // Truncate prompt to avoid issues
         let cleanPrompt = prompt.trim();
