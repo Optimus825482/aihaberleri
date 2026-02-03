@@ -1,6 +1,6 @@
 /**
  * Search Provider Stats Collector
- * 
+ *
  * Her 5 dakikada bir getProviderStats() sonuçlarını database'e kaydeder
  * Cron job veya background worker tarafından çağrılmalıdır
  */
@@ -10,12 +10,12 @@ import { getProviderStats } from "@/lib/hybrid-search";
 
 /**
  * Provider istatistiklerini database'e kaydet
- * 
+ *
  * Bu fonksiyon:
  * 1. getProviderStats() ile mevcut durumu alır
  * 2. Her provider için SearchProviderMetric kaydı oluşturur
  * 3. Timestamp ile birlikte kaydeder
- * 
+ *
  * Kullanım:
  * - Cron job: Her 5 dakikada bir çağır
  * - Background worker: Periyodik olarak çağır
@@ -75,7 +75,7 @@ export async function saveProviderStats(): Promise<void> {
 
 /**
  * Eski metrikleri temizle (30 günden eski)
- * 
+ *
  * Database'in şişmesini önlemek için eski kayıtları siler
  * Günlük veya haftalık çalıştırılmalıdır
  */
@@ -100,7 +100,7 @@ export async function cleanupOldMetrics(): Promise<void> {
 
 /**
  * Provider istatistiklerini sıfırla
- * 
+ *
  * UYARI: Bu fonksiyon sadece test veya debug için kullanılmalıdır!
  * Production'da kullanmayın!
  */
@@ -119,19 +119,18 @@ export async function resetProviderStats(): Promise<void> {
 
 /**
  * Cron job için wrapper
- * 
+ *
  * Her 5 dakikada bir çalışacak şekilde ayarlanmalıdır
- * 
+ *
  * Örnek (Vercel Cron):
- * ```
+ * @example
  * // vercel.json
  * {
  *   "crons": [{
  *     "path": "/api/cron/save-provider-stats",
- *     "schedule": "*/5 * * * *"
+ *     "schedule": "every 5 minutes"
  *   }]
  * }
- * ```
  */
 export async function cronSaveProviderStats(): Promise<{
   success: boolean;
