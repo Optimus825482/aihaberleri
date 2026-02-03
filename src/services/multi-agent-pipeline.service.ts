@@ -161,7 +161,7 @@ export async function waitForPipelineCompletion(
     // Require multiple consecutive empty checks to avoid race conditions
     if (progress.articlesInQueue === 0 && progress.stage === "unknown") {
       consecutiveEmptyChecks++;
-      
+
       if (consecutiveEmptyChecks >= REQUIRED_EMPTY_CHECKS) {
         logger.success(
           `✅ Pipeline completed: ${progress.completed} articles processed`,
