@@ -1,0 +1,57 @@
+# SearXNG Rate Limiter Yapılandırması
+# Tarih: 3 Şubat 2026
+# Amaç: Bot koruması ve rate limiting
+
+[botdetection.ip_limit]
+# Link token aktif (her client'a token ver)
+link_token = true
+
+# Rate limit: Dakikada 30 request
+rate = "30/60"
+
+# Burst: Ani 10 request'e izin ver
+burst = 10
+
+# Window: 60 saniye
+window = 60
+
+[botdetection.ip_lists]
+# Geçiş izni verilen IP'ler (local)
+pass_ip = [
+  "127.0.0.0/8",
+  "::1/128",
+  "10.0.0.0/8",
+  "172.16.0.0/12",
+  "192.168.0.0/16",
+]
+
+# Bloke edilen IP'ler (şimdilik boş)
+block_ip = []
+
+[botdetection.http_accept]
+# HTTP Accept header kontrolü
+http_accept_encoding_list = [
+  "gzip",
+  "deflate",
+  "br",
+]
+
+[botdetection.http_accept_language]
+# HTTP Accept-Language header kontrolü
+http_accept_language_list = [
+  "en",
+  "en-US",
+  "en-GB",
+  "tr",
+  "tr-TR",
+]
+
+[botdetection.http_user_agent]
+# User-Agent kontrolü
+http_user_agent_list = [
+  "Mozilla",
+  "Chrome",
+  "Safari",
+  "Firefox",
+  "Edge",
+]

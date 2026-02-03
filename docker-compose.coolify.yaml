@@ -31,6 +31,7 @@ services:
       BRAVE_API_KEY: ${BRAVE_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
+      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://searxng-pwcsc8ow08oks0ggokwoo8ww.77.42.68.4.sslip.io}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER}
@@ -81,6 +82,7 @@ services:
       BRAVE_API_KEY: ${BRAVE_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
+      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://searxng-pwcsc8ow08oks0ggokwoo8ww.77.42.68.4.sslip.io}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER}
@@ -108,7 +110,15 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3001/api/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

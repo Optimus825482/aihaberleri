@@ -23,6 +23,10 @@ import {
   Activity,
   Shield,
   Bell,
+  Monitor,
+  Search,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -75,8 +79,20 @@ const menuItems = [
   {
     title: "Monitoring",
     href: "/admin/monitoring",
-    icon: Activity,
+    icon: Monitor,
     requiredResource: null,
+    submenu: [
+      {
+        title: "Sistem Durumu",
+        href: "/admin/monitoring",
+        icon: Activity,
+      },
+      {
+        title: "Arama Sağlayıcıları",
+        href: "/admin/monitoring/search-providers",
+        icon: Search,
+      },
+    ],
   },
   {
     title: "Agent Ayarları",
@@ -108,10 +124,28 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(
+    {},
+  );
   const { isInstallable, installApp } = usePWA();
   const router = useRouter();
 
   const userRole = session?.user?.role || "VIEWER";
+
+  // Toggle submenu expansion
+  const toggleSubmenu = (title: string) => {
+    setExpandedMenus((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
+
+  // Auto-expand monitoring submenu if on monitoring page
+  useEffect(() => {
+    if (pathname?.startsWith("/admin/monitoring")) {
+      setExpandedMenus((prev) => ({ ...prev, Monitoring: true }));
+    }
+  }, [pathname]);
 
   // 🚀 PHASE 1: Keyboard shortcuts activated
   useAdminShortcuts({
@@ -278,43 +312,136 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {visibleMenuItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const hasSubmenu = item.submenu && item.submenu.length > 0;
+            const isExpanded = expandedMenus[item.title];
+            const isSubmenuActive =
+              hasSubmenu && item.submenu?.some((sub) => pathname === sub.href);
 
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={closeMobileMenu}
-                className={`
-                  group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
-                  transition-all duration-200 relative overflow-hidden
-                  touch-manipulation active:scale-[0.98]
-                  ${
-                    isActive
-                      ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
-                      : "hover:bg-primary/5 hover:translate-x-1"
-                  }
-                `}
-              >
-                {/* Active Indicator */}
-                {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />
+              <div key={item.href}>
+                {/* Main Menu Item */}
+                {hasSubmenu ? (
+                  <button
+                    onClick={() => toggleSubmenu(item.title)}
+                    className={`
+                      group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
+                      transition-all duration-200 relative overflow-hidden w-full
+                      touch-manipulation active:scale-[0.98]
+                      ${
+                        isSubmenuActive
+                          ? "bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary shadow-lg shadow-primary/10"
+                          : "hover:bg-primary/5 hover:translate-x-1"
+                      }
+                    `}
+                  >
+                    {/* Active Indicator */}
+                    {isSubmenuActive && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                    )}
+
+                    <div
+                      className={`
+                      p-2 rounded-lg transition-all
+                      ${isSubmenuActive ? "bg-primary/20" : "bg-primary/10 group-hover:bg-primary/20"}
+                    `}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                    </div>
+                    <span className="truncate font-bold text-sm flex-1 text-left">
+                      {item.title}
+                    </span>
+
+                    {/* Chevron Icon */}
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4 transition-transform" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 transition-transform" />
+                    )}
+
+                    {/* Hover Effect */}
+                    {!isSubmenuActive && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    href={item.href}
+                    onClick={closeMobileMenu}
+                    className={`
+                      group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
+                      transition-all duration-200 relative overflow-hidden
+                      touch-manipulation active:scale-[0.98]
+                      ${
+                        isActive
+                          ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
+                          : "hover:bg-primary/5 hover:translate-x-1"
+                      }
+                    `}
+                  >
+                    {/* Active Indicator */}
+                    {isActive && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />
+                    )}
+
+                    <div
+                      className={`
+                      p-2 rounded-lg transition-all
+                      ${isActive ? "bg-white/20" : "bg-primary/10 group-hover:bg-primary/20"}
+                    `}
+                    >
+                      <Icon className="h-4 w-4 flex-shrink-0" />
+                    </div>
+                    <span className="truncate font-bold text-sm">
+                      {item.title}
+                    </span>
+
+                    {/* Hover Effect */}
+                    {!isActive && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </Link>
                 )}
 
-                <div
-                  className={`
-                  p-2 rounded-lg transition-all
-                  ${isActive ? "bg-white/20" : "bg-primary/10 group-hover:bg-primary/20"}
-                `}
-                >
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                </div>
-                <span className="truncate font-bold text-sm">{item.title}</span>
+                {/* Submenu Items */}
+                {hasSubmenu && isExpanded && (
+                  <div className="ml-4 mt-1 space-y-1 border-l-2 border-primary/10 pl-2">
+                    {item.submenu?.map((subItem) => {
+                      const SubIcon = subItem.icon;
+                      const isSubActive = pathname === subItem.href;
 
-                {/* Hover Effect */}
-                {!isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      return (
+                        <Link
+                          key={subItem.href}
+                          href={subItem.href}
+                          onClick={closeMobileMenu}
+                          className={`
+                            group flex items-center gap-2 px-3 py-2.5 rounded-lg
+                            transition-all duration-200 relative
+                            touch-manipulation active:scale-[0.98]
+                            ${
+                              isSubActive
+                                ? "bg-primary text-white shadow-md"
+                                : "hover:bg-primary/10 hover:translate-x-1"
+                            }
+                          `}
+                        >
+                          <div
+                            className={`
+                            p-1.5 rounded-md transition-all
+                            ${isSubActive ? "bg-white/20" : "bg-primary/10 group-hover:bg-primary/20"}
+                          `}
+                          >
+                            <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                          </div>
+                          <span className="truncate font-semibold text-xs">
+                            {subItem.title}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
-              </Link>
+              </div>
             );
           })}
         </nav>

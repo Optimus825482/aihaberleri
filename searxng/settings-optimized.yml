@@ -1,0 +1,198 @@
+# SearXNG Optimized Configuration
+# Tarih: 3 Şubat 2026
+# Amaç: DuckDuckGo CAPTCHA ve Google Timeout sorunlarını çözmek
+# Kullanım: Mevcut SearXNG projesinde settings.yml'i bu dosya ile değiştir
+
+use_default_settings: true
+
+server:
+  # Güvenlik için güçlü secret key (mevcut key'i koru)
+  secret_key: "__MEVCUT_SECRET_KEY_I_BURAYA_YAZ__"
+  
+  # Rate limiting aktif
+  limiter: true
+  
+  # Port
+  port: 8080
+  bind_address: "0.0.0.0"
+  
+  # Public instance (mevcut ayarı koru)
+  public_instance: false
+
+# Valkey/Redis bağlantısı (eğer varsa)
+# Yoksa bu bölümü yorum satırı yap
+valkey:
+  url: "valkey://valkey:6379/0"
+# veya Redis kullanıyorsan:
+# redis:
+#   url: "redis://redis:6379/0"
+
+# Arama ayarları
+search:
+  # Hata sonrası ban süreleri (saniye)
+  ban_time_on_fail: 10
+  max_ban_time_on_fail: 300
+  
+  # Engine suspension süreleri (saniye)
+  suspended_times:
+    SearxEngineAccessDenied: 86400        # 24 saat
+    SearxEngineCaptcha: 86400             # 24 saat (DuckDuckGo için)
+    SearxEngineTooManyRequests: 7200      # 2 saat
+    cf_SearxEngineCaptcha: 1296000        # 15 gün (Cloudflare)
+    cf_SearxEngineAccessDenied: 86400     # 24 saat
+    recaptcha_SearxEngineCaptcha: 604800  # 7 gün (Google)
+  
+  # Güvenli arama (moderate)
+  safe_search: 1
+  
+  # Sayfa limiti
+  max_page: 5
+
+# Giden request ayarları
+outgoing:
+  # Timeout değerleri (saniye)
+  request_timeout: 5.0
+  max_request_timeout: 15.0
+  
+  # Bağlantı havuzu
+  pool_connections: 200
+  pool_maxsize: 20
+  
+  # HTTP/2 desteği
+  enable_http2: true
+  
+  # User-Agent suffix (iletişim bilgisi)
+  useragent_suffix: " (+https://aihaberleri.org)"
+  
+  # Tor kullanmıyoruz
+  using_tor_proxy: false
+
+# Engine yönetimi
+engines:
+  # ============================================
+  # SORUNLU ENGINE'LERI DEVRE DIŞI BIRAK
+  # ============================================
+  remove:
+    - duckduckgo          # CAPTCHA sorunu
+    - duckduckgo_images   # CAPTCHA sorunu
+    - duckduckgo_videos   # CAPTCHA sorunu
+    - duckduckgo_news     # CAPTCHA sorunu
+    - google              # Timeout sorunu
+    - google_images       # Timeout sorunu
+    - google_news         # Timeout sorunu
+    - google_videos       # Timeout sorunu
+    - google_scholar      # Timeout sorunu
+  
+  # ============================================
+  # ALTERNATİF ENGINE'LERI ETKİNLEŞTİR
+  # ============================================
+  
+  # Bing (Microsoft) - Güvenilir, hızlı
+  - name: bing
+    disabled: false
+    weight: 1.5
+    timeout: 5.0
+    categories: general
+  
+  - name: bing_images
+    disabled: false
+    weight: 1.2
+    timeout: 5.0
+    categories: images
+  
+  - name: bing_news
+    disabled: false
+    weight: 1.2
+    timeout: 5.0
+    categories: news
+  
+  # Qwant (Avrupa, gizlilik odaklı)
+  - name: qwant
+    disabled: false
+    weight: 1.2
+    timeout: 5.0
+    categories: general
+  
+  - name: qwant_images
+    disabled: false
+    weight: 1.0
+    timeout: 5.0
+    categories: images
+  
+  - name: qwant_news
+    disabled: false
+    weight: 1.0
+    timeout: 5.0
+    categories: news
+  
+  # Brave Search (gizlilik odaklı, bağımsız index)
+  - name: brave
+    disabled: false
+    weight: 1.0
+    timeout: 5.0
+    categories: general
+  
+  # Startpage (Google proxy, gizlilik odaklı)
+  - name: startpage
+    disabled: false
+    weight: 1.0
+    timeout: 5.0
+    categories: general
+  
+  # Mojeek (bağımsız index)
+  - name: mojeek
+    disabled: false
+    weight: 0.8
+    timeout: 5.0
+    categories: general
+  
+  # Wikipedia (bilgi için)
+  - name: wikipedia
+    disabled: false
+    weight: 1.0
+    timeout: 5.0
+    categories: general
+  
+  # Wikidata (yapılandırılmış veri)
+  - name: wikidata
+    disabled: false
+    weight: 0.5
+    timeout: 5.0
+    categories: general
+
+# Genel ayarlar
+general:
+  # Debug modu kapalı (production)
+  debug: false
+  
+  # Instance adı
+  instance_name: "AIHaberleri SearXNG"
+  
+  # Metrics aktif (monitoring için)
+  enable_metrics: true
+
+# UI ayarları
+ui:
+  # Varsayılan tema
+  default_theme: simple
+  
+  # Dil
+  default_locale: "en"
+  
+  # Sonuç formatı
+  results_on_new_tab: false
+  
+  # Infinite scroll
+  infinite_scroll: false
+
+# Sonuç formatları
+enabled_plugins:
+  - 'Hash plugin'
+  - 'Self Information'
+  - 'Tracker URL remover'
+  - 'Ahmia blacklist'
+
+# Devre dışı plugin'ler
+disabled_plugins:
+  - 'Open Access DOI rewrite'
+  - 'Tor check plugin'

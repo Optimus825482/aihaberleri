@@ -74,10 +74,10 @@ const RATE_LIMIT_COOLDOWN = 5 * 60 * 1000;
 // Max consecutive errors before marking provider unavailable
 const MAX_CONSECUTIVE_ERRORS = 3;
 
-// Provider priority: SearXNG first (90%), then Brave/Tavily (10% fallback)
+// Provider priority: SearXNG ONLY (100%) - Brave disabled due to invalid token
 let currentProviderIndex = 0;
 const providers: SearchProvider[] = [
-  "searxng", // Primary (90%)
+  "searxng", // Primary (100%)
   "searxng",
   "searxng",
   "searxng",
@@ -86,8 +86,9 @@ const providers: SearchProvider[] = [
   "searxng",
   "searxng",
   "searxng",
-  "brave", // Fallback (5%)
-  "tavily", // Fallback (5%)
+  "searxng",
+  // "brave", // DISABLED: Invalid subscription token
+  // "tavily", // DISABLED: Keeping only SearXNG
 ];
 
 /**
