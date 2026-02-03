@@ -115,9 +115,10 @@ async function scheduleNextRun() {
       where: { key: "agent.intervalHours" },
     });
 
+    // DEFAULT: 0.25 hours = 15 minutes for real-time news pipeline
     const intervalHours = intervalSetting
       ? parseFloat(intervalSetting.value)
-      : 6;
+      : 0.25;
     const nextRun = new Date(
       Date.now() + Math.round(intervalHours * 60 * 60 * 1000),
     );
@@ -128,8 +129,9 @@ async function scheduleNextRun() {
       create: { key: "agent.nextRun", value: nextRun.toISOString() },
     });
 
+    const intervalMinutes = Math.round(intervalHours * 60);
     console.log(
-      `📅 Next agent run scheduled for: ${nextRun.toLocaleString()} (in-process scheduler)`,
+      `📅 Next agent run scheduled for: ${nextRun.toLocaleString()} (in ${intervalMinutes} min)`,
     );
   } catch (error) {
     console.error("❌ Failed to schedule next run:", error);

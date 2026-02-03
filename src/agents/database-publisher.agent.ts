@@ -338,6 +338,21 @@ export class DatabasePublisherAgent extends BaseAgent<
         `Database publishing complete: ${publishedArticles.length}/${articles.length} articles published`,
       );
 
+      // After all articles published, trigger sitemap pings (once per batch)
+      if (publishedArticles.length > 0) {
+        try {
+          const { pingSitemaps } = await import("@/lib/seo/indexnow");
+          const pingResults = await pingSitemaps();
+          this.logger.success(
+            `🔔 Sitemap pings: IndexNow=${pingResults.indexNow ? "✅" : "❌"} WebSub=${pingResults.webSub ? "✅" : "❌"} Google=${pingResults.google ? "✅" : "❌"} Bing=${pingResults.bing ? "✅" : "❌"}`,
+          );
+        } catch (pingError) {
+          this.logger.warn(
+            `Sitemap ping failed: ${(pingError as Error).message}`,
+          );
+        }
+      }
+
       return {
         success: true,
         data: publishedArticles,

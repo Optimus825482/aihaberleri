@@ -341,23 +341,31 @@ async function main() {
     // Trigger initial collection
     await triggerContentCollection();
 
-    // Schedule periodic collection (every 6 hours by default)
+    // Schedule periodic collection (every 15 minutes by default for real-time news)
     const intervalSetting = await db.setting.findUnique({
       where: { key: "agent.intervalHours" },
     });
+    // DEFAULT: 0.25 hours = 15 minutes for real-time news pipeline
     const intervalHours = intervalSetting
       ? parseFloat(intervalSetting.value)
-      : 6;
+      : 0.25;
 
-    setInterval(
-      async () => {
-        logger.info("Scheduled collection triggered");
-        await triggerContentCollection();
-      },
-      intervalHours * 60 * 60 * 1000,
+    const intervalMs = intervalHours * 60 * 60 * 1000;
+    const intervalMinutes = Math.round(intervalHours * 60);
+
+    setInterval(async () => {
+      logger.info(
+        `⏰ Scheduled collection triggered (every ${intervalMinutes} min)`,
+      );
+      await triggerContentCollection();
+    }, intervalMs);
+
+    logger.success(
+      `✅ Scheduled collection: every ${intervalMinutes} minutes (${intervalHours}h)`,
     );
-
-    logger.success(`Scheduled collection: every ${intervalHours} hours`);
+    logger.info(
+      `📅 Next run at: ${new Date(Date.now() + intervalMs).toLocaleString("tr-TR")}`,
+    );
   } else {
     logger.info("Agent disabled, skipping scheduled collection");
   }
