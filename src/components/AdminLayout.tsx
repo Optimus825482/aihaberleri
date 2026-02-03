@@ -73,6 +73,12 @@ const menuItems = [
     requiredResource: null,
   },
   {
+    title: "Monitoring",
+    href: "/admin/monitoring",
+    icon: Activity,
+    requiredResource: null,
+  },
+  {
     title: "Agent Ayarları",
     href: "/admin/agent-settings",
     icon: Bot,
@@ -282,9 +288,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                   transition-all duration-200 relative overflow-hidden
                   touch-manipulation active:scale-[0.98]
-                  ${isActive
-                    ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
-                    : "hover:bg-primary/5 hover:translate-x-1"
+                  ${
+                    isActive
+                      ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
+                      : "hover:bg-primary/5 hover:translate-x-1"
                   }
                 `}
               >

@@ -1,17 +1,17 @@
 /**
  * Hybrid Search Manager
- * Intelligently combines Brave Search, Tavily API, and SearXNG to avoid rate limits
+ * SearXNG-first strategy with Brave/Tavily fallback
  *
  * STRATEGY:
- * 1. Round-robin: Rotate between Brave, Tavily, and SearXNG
- * 2. Fallback: If one fails (429), switch to the next
- * 3. Load balancing: Track usage and distribute requests
+ * 1. Primary: SearXNG (90%) - Unlimited, self-hosted
+ * 2. Fallback: Brave (5%) - Only if SearXNG fails
+ * 3. Fallback: Tavily (5%) - Emergency backup
  * 4. Smart recovery: Retry failed provider after cooldown
  *
  * RATE LIMITS:
- * - Brave: 1 req/sec (free tier) or 20 req/sec (paid) - 2,000/month
- * - Tavily: 5 req/sec (standard) - 1,000/month
- * - SearXNG: UNLIMITED (self-hosted) ⭐
+ * - SearXNG: UNLIMITED (self-hosted) ⭐ PRIMARY
+ * - Brave: 2,000/month (emergency fallback only)
+ * - Tavily: 1,000/month (emergency fallback only)
  */
 
 import {
@@ -74,9 +74,21 @@ const RATE_LIMIT_COOLDOWN = 5 * 60 * 1000;
 // Max consecutive errors before marking provider unavailable
 const MAX_CONSECUTIVE_ERRORS = 3;
 
-// Round-robin counter
+// Provider priority: SearXNG first (90%), then Brave/Tavily (10% fallback)
 let currentProviderIndex = 0;
-const providers: SearchProvider[] = ["brave", "tavily", "searxng"];
+const providers: SearchProvider[] = [
+  "searxng", // Primary (90%)
+  "searxng",
+  "searxng",
+  "searxng",
+  "searxng",
+  "searxng",
+  "searxng",
+  "searxng",
+  "searxng",
+  "brave", // Fallback (5%)
+  "tavily", // Fallback (5%)
+];
 
 /**
  * Get next provider using round-robin

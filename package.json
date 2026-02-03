@@ -25,7 +25,10 @@
     "test:sample-ai-feeds": "tsx scripts/test-sample-ai-feeds.ts",
     "test:pipeline": "tsx scripts/test-multi-agent-pipeline.ts",
     "test:hybrid": "tsx scripts/test-hybrid-models.ts",
-    "worker:orchestrator": "tsx src/workers/orchestrator.worker.ts"
+    "worker:orchestrator": "tsx src/workers/orchestrator.worker.ts",
+    "migrate:search-providers": "tsx scripts/apply-search-provider-migration.ts",
+    "migrate:search-providers:test": "tsx scripts/apply-search-provider-migration.ts --with-test-data",
+    "test:search-providers": "tsx scripts/test-search-provider-monitoring.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

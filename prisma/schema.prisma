@@ -539,3 +539,17 @@ model FilterPreset {
   @@index([isDefault])
   @@index([isPublic])
 }
+
+// SearchProviderMetric model - Search provider monitoring
+model SearchProviderMetric {
+  id              String   @id @default(cuid())
+  provider        String   // "brave", "tavily", "searxng"
+  timestamp       DateTime @default(now())
+  requests        Int      @default(0)
+  errors          Int      @default(0)
+  avgResponseTime Float?
+  available       Boolean  @default(true)
+
+  @@index([provider, timestamp])
+  @@index([timestamp])
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Activity,
   AlertTriangle,
@@ -223,6 +224,76 @@ export default function MonitoringPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <CacheHitRateCard data={data.cache} />
             <WorkerStatusTimeline workers={data.workers} />
+          </div>
+
+          {/* Quick Links to Other Monitoring Pages */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Link href="/admin/monitoring/search-providers">
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 backdrop-blur-xl rounded-2xl p-6 border border-blue-200 dark:border-blue-800 shadow-lg hover:shadow-xl transition-all cursor-pointer group">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                      <Activity className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        Search Provider Monitoring
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Arama sağlayıcı istatistikleri
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-2xl group-hover:translate-x-1 transition-transform">
+                    →
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      SearXNG
+                    </p>
+                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                      ~90%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Brave
+                    </p>
+                    <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      ~5%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Tavily
+                    </p>
+                    <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                      ~5%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 backdrop-blur-xl rounded-2xl p-6 border border-purple-200 dark:border-purple-800 shadow-lg opacity-50 cursor-not-allowed">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-purple-500/10 rounded-xl">
+                    <Zap className="w-6 h-6 text-purple-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                      Agent Performance
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Yakında...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Alert Summary */}
