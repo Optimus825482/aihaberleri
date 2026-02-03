@@ -17,6 +17,7 @@ import { BaseAgent, AgentResult } from "./base-agent";
 import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 import type { ArticleWithVisuals } from "./visual-generator.agent";
+import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 
 export interface PublishedArticle {
   id: string;
@@ -143,12 +144,41 @@ export class DatabasePublisherAgent extends BaseAgent<
             },
           });
 
+          // Create Turkish translation in ArticleTranslation table (for i18n consistency)
+          try {
+            await db.articleTranslation.create({
+              data: {
+                articleId: createdArticle.id,
+                locale: "tr",
+                title: article.synthesizedContent.tr.title,
+                slug: createdArticle.slug,
+                excerpt: article.synthesizedContent.tr.excerpt || null,
+                content: article.synthesizedContent.tr.content,
+                metaTitle: article.synthesizedContent.tr.title,
+                metaDescription:
+                  article.synthesizedContent.tr.metaDescription || null,
+              },
+            });
+            this.logger.info(
+              `Turkish translation created: ${createdArticle.slug}`,
+            );
+          } catch (trError) {
+            // Ignore if already exists
+            if ((trError as any).code !== "P2002") {
+              this.logger.warn(
+                `Failed to create Turkish translation: ${(trError as Error).message}`,
+              );
+            }
+          }
+
           // Create English translation in ArticleTranslation table
+          let enSlugFinal = "";
           if (
             article.synthesizedContent.en?.title &&
             article.synthesizedContent.en?.content
           ) {
             const enSlug = generateSlug(article.synthesizedContent.en.title);
+            enSlugFinal = enSlug;
             try {
               await db.articleTranslation.create({
                 data: {
@@ -165,15 +195,15 @@ export class DatabasePublisherAgent extends BaseAgent<
               });
               this.logger.info(`English translation created: ${enSlug}`);
             } catch (enError) {
-              // If English slug already exists, update it
+              // If English slug already exists, create with unique suffix
               if ((enError as any).code === "P2002") {
-                const uniqueEnSlug = `${enSlug}-${createdArticle.id.slice(-6)}`;
+                enSlugFinal = `${enSlug}-${createdArticle.id.slice(-6)}`;
                 await db.articleTranslation.create({
                   data: {
                     articleId: createdArticle.id,
                     locale: "en",
                     title: article.synthesizedContent.en.title,
-                    slug: uniqueEnSlug,
+                    slug: enSlugFinal,
                     excerpt: article.synthesizedContent.en.excerpt || null,
                     content: article.synthesizedContent.en.content,
                     metaTitle: article.synthesizedContent.en.title,
@@ -182,7 +212,7 @@ export class DatabasePublisherAgent extends BaseAgent<
                   },
                 });
                 this.logger.info(
-                  `English translation created with unique slug: ${uniqueEnSlug}`,
+                  `English translation created with unique slug: ${enSlugFinal}`,
                 );
               } else {
                 this.logger.warn(
@@ -190,6 +220,28 @@ export class DatabasePublisherAgent extends BaseAgent<
                 );
               }
             }
+          }
+
+          // Submit to IndexNow (Bing, Yandex) for both TR and EN URLs
+          try {
+            // Submit Turkish URL
+            await submitArticleToIndexNow(createdArticle.slug);
+            this.logger.info(`IndexNow: Turkish URL submitted`);
+
+            // Submit English URL if available
+            if (enSlugFinal) {
+              const baseUrl =
+                process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+              const enUrl = `${baseUrl}/en/news/${enSlugFinal}`;
+              const { submitUrlToIndexNow } =
+                await import("@/lib/seo/indexnow");
+              await submitUrlToIndexNow(enUrl, createdArticle.id);
+              this.logger.info(`IndexNow: English URL submitted`);
+            }
+          } catch (indexError) {
+            this.logger.warn(
+              `IndexNow submission failed: ${(indexError as Error).message}`,
+            );
           }
 
           publishedArticles.push({
