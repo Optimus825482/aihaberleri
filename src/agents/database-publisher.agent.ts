@@ -143,6 +143,55 @@ export class DatabasePublisherAgent extends BaseAgent<
             },
           });
 
+          // Create English translation in ArticleTranslation table
+          if (
+            article.synthesizedContent.en?.title &&
+            article.synthesizedContent.en?.content
+          ) {
+            const enSlug = generateSlug(article.synthesizedContent.en.title);
+            try {
+              await db.articleTranslation.create({
+                data: {
+                  articleId: createdArticle.id,
+                  locale: "en",
+                  title: article.synthesizedContent.en.title,
+                  slug: enSlug,
+                  excerpt: article.synthesizedContent.en.excerpt || null,
+                  content: article.synthesizedContent.en.content,
+                  metaTitle: article.synthesizedContent.en.title,
+                  metaDescription:
+                    article.synthesizedContent.en.metaDescription || null,
+                },
+              });
+              this.logger.info(`English translation created: ${enSlug}`);
+            } catch (enError) {
+              // If English slug already exists, update it
+              if ((enError as any).code === "P2002") {
+                const uniqueEnSlug = `${enSlug}-${createdArticle.id.slice(-6)}`;
+                await db.articleTranslation.create({
+                  data: {
+                    articleId: createdArticle.id,
+                    locale: "en",
+                    title: article.synthesizedContent.en.title,
+                    slug: uniqueEnSlug,
+                    excerpt: article.synthesizedContent.en.excerpt || null,
+                    content: article.synthesizedContent.en.content,
+                    metaTitle: article.synthesizedContent.en.title,
+                    metaDescription:
+                      article.synthesizedContent.en.metaDescription || null,
+                  },
+                });
+                this.logger.info(
+                  `English translation created with unique slug: ${uniqueEnSlug}`,
+                );
+              } else {
+                this.logger.warn(
+                  `Failed to create English translation: ${(enError as Error).message}`,
+                );
+              }
+            }
+          }
+
           publishedArticles.push({
             id: createdArticle.id,
             slug: createdArticle.slug,

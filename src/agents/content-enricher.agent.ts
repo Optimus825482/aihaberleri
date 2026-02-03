@@ -466,6 +466,49 @@ Respond in JSON:
     }
     const enContent = JSON.parse(enJsonMatch[0]);
 
+    // Add AI disclaimer and sources footer to both TR and EN content
+    const sourcesHtmlTr = sources
+      .slice(0, 5)
+      .map(
+        (s) =>
+          `<a href="${s.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${new URL(s.url).hostname}</a>`,
+      )
+      .join(" • ");
+
+    const sourcesHtmlEn = sources
+      .slice(0, 5)
+      .map(
+        (s) =>
+          `<a href="${s.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${new URL(s.url).hostname}</a>`,
+      )
+      .join(" • ");
+
+    const aiDisclaimerTr = `
+<div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
+  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8a4 4 0 0 1 0 8"/><path d="M12 8a4 4 0 0 0 0 8"/></svg>
+    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">Yapay Zeka Destekli İçerik</span>
+  </div>
+  <div style="font-size: 0.65rem; color: #94a3b8;">
+    <strong style="color: #64748b;">Kaynaklar:</strong> ${sourcesHtmlTr}
+  </div>
+</div>`;
+
+    const aiDisclaimerEn = `
+<div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
+  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8a4 4 0 0 1 0 8"/><path d="M12 8a4 4 0 0 0 0 8"/></svg>
+    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">AI-Powered Content</span>
+  </div>
+  <div style="font-size: 0.65rem; color: #94a3b8;">
+    <strong style="color: #64748b;">Sources:</strong> ${sourcesHtmlEn}
+  </div>
+</div>`;
+
+    // Append disclaimers to content
+    trContent.content = (trContent.content || "") + aiDisclaimerTr;
+    enContent.content = (enContent.content || "") + aiDisclaimerEn;
+
     return {
       tr: trContent,
       en: enContent,
