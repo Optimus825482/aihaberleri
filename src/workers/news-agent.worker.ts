@@ -188,7 +188,8 @@ async function initializeWorker() {
   // Start heartbeat to indicate worker is alive
   startHeartbeat();
 
-  startWorker();
+  // CRITICAL: await startWorker to ensure multi-agent pipeline is initialized
+  await startWorker();
 }
 
 // Heartbeat function to indicate worker is alive
@@ -217,7 +218,7 @@ function startHeartbeat() {
   setInterval(updateHeartbeat, 30000);
 }
 
-function startWorker() {
+async function startWorker() {
   console.log("\n🎯 Initializing BullMQ Worker...");
   console.log(`   Queue Name: news-agent`);
   console.log(`   Redis Status: ${redis!.status}`);
@@ -225,10 +226,15 @@ function startWorker() {
   console.log(`   Lock Duration: 10 minutes`);
 
   // Initialize multi-agent pipeline agents BEFORE creating worker
-  initializeMultiAgentPipeline().catch((error) => {
+  // CRITICAL: Must await to ensure agents are ready before processing jobs
+  try {
+    await initializeMultiAgentPipeline();
+    console.log("✅ Multi-agent pipeline ready");
+  } catch (error) {
     console.error("❌ Multi-agent pipeline initialization failed:", error);
-    // Continue without multi-agent pipeline - fallback to legacy mode
-  });
+    console.error("⚠️ Pipeline agents will not process articles!");
+    // Don't exit - main worker can still run for other tasks
+  }
 
   // Create worker
   const worker = new Worker(

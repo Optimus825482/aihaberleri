@@ -182,6 +182,7 @@ export async function executeNewsAgent(
     });
 
     // Get article count from database settings (priority) or env vars (fallback)
+    // NOTE: If DB values are too low (1), use env vars as minimum floor
     const minSetting = await db.setting.findUnique({
       where: { key: "agent.minArticles" },
     });
@@ -189,12 +190,18 @@ export async function executeNewsAgent(
       where: { key: "agent.maxArticles" },
     });
 
-    const minArticles = minSetting
-      ? parseInt(minSetting.value)
-      : parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "3");
-    const maxArticles = maxSetting
-      ? parseInt(maxSetting.value)
-      : parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "5");
+    const envMin = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "3");
+    const envMax = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "5");
+
+    // Use MAX of DB setting and env var to prevent too-low values
+    const minArticles = Math.max(
+      minSetting ? parseInt(minSetting.value) : envMin,
+      envMin, // Enforce minimum from env
+    );
+    const maxArticles = Math.max(
+      maxSetting ? parseInt(maxSetting.value) : envMax,
+      envMax, // Enforce maximum from env
+    );
 
     console.log(
       `📊 Haber sayısı ayarları: min=${minArticles}, max=${maxArticles}`,

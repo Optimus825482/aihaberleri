@@ -25,7 +25,10 @@ export interface ScoredArticle extends CollectedArticle {
 }
 
 const RELEVANCE_THRESHOLD = 60; // Minimum score to pass
-const BATCH_SIZE = 10; // Articles per DeepSeek call
+const BATCH_SIZE = 10; // Articles per batch
+
+// BYPASS MODE: If Gemini fails, pass all articles with high scores (based on trend)
+const BYPASS_MODE_ENABLED = true;
 
 export class RelevanceFilterAgent extends BaseAgent<
   CollectedArticle[],
@@ -145,14 +148,21 @@ export class RelevanceFilterAgent extends BaseAgent<
 
   /**
    * Score a batch of articles using Gemini (HYBRID: Cost-efficient)
+   * BYPASS MODE: If Gemini fails, return all articles with trend-based scores
    */
   private async scoreBatch(
     articles: CollectedArticle[],
   ): Promise<ScoredArticle[]> {
+    // Check if Gemini API is configured
+    const hasGeminiKey = !!process.env.GOOGLE_API_KEY;
+
+    if (!hasGeminiKey) {
+      this.logger.warn(`⚠️ GOOGLE_API_KEY not configured - using BYPASS MODE`);
+      return this.bypassScoring(articles, "No Gemini API key");
+    }
+
     try {
-      this.logger.info(
-        `🤖 HYBRID: Using Gemini 2.0 Flash for batch scoring (47% cheaper)`,
-      );
+      this.logger.info(`🤖 HYBRID: Using Gemini 2.0 Flash for batch scoring`);
 
       const scores = await batchScoreArticles(articles);
 
@@ -170,6 +180,14 @@ export class RelevanceFilterAgent extends BaseAgent<
         this.serializeError(error),
       );
 
+      // BYPASS MODE: Pass articles with trend-based scores
+      if (BYPASS_MODE_ENABLED) {
+        this.logger.warn(
+          `🔄 BYPASS MODE: Passing ${articles.length} articles based on trend scores`,
+        );
+        return this.bypassScoring(articles, "Gemini API error - using bypass");
+      }
+
       // Fallback: assign default scores based on trend score
       return articles.map((article) => ({
         ...article,
@@ -178,6 +196,29 @@ export class RelevanceFilterAgent extends BaseAgent<
         suggestedTags: [],
       }));
     }
+  }
+
+  /**
+   * Bypass scoring - use trend scores directly
+   * All articles with trendScore >= 200 get high relevance scores
+   */
+  private bypassScoring(
+    articles: CollectedArticle[],
+    reason: string,
+  ): ScoredArticle[] {
+    return articles.map((article) => {
+      // Convert trend score (0-300) to relevance score (0-100)
+      // trendScore 200+ = relevanceScore 70+
+      const trendScore = article.trendScore || 100;
+      const relevanceScore = Math.min(Math.max(trendScore / 3, 50), 100);
+
+      return {
+        ...article,
+        relevanceScore: Math.round(relevanceScore),
+        reasoning: `BYPASS MODE: ${reason}. Trend score: ${trendScore}`,
+        suggestedTags: [],
+      };
+    });
   }
 
   /**

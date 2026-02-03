@@ -147,29 +147,43 @@ export async function waitForPipelineCompletion(
     `⏳ Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s)`,
   );
 
+  // CRITICAL: Wait for agents to pick up jobs before first check
+  // This prevents false "completed" detection when queues haven't been processed yet
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+
+  let consecutiveEmptyChecks = 0;
+  const REQUIRED_EMPTY_CHECKS = 3; // Require 3 consecutive empty checks to confirm completion
+
   while (Date.now() - startTime < timeoutMs) {
     const progress = await monitorPipelineProgress(agentLogId);
 
     // Check if all queues are empty (pipeline completed)
+    // Require multiple consecutive empty checks to avoid race conditions
     if (progress.articlesInQueue === 0 && progress.stage === "unknown") {
-      logger.success(
-        `✅ Pipeline completed: ${progress.completed} articles processed`,
-      );
+      consecutiveEmptyChecks++;
+      
+      if (consecutiveEmptyChecks >= REQUIRED_EMPTY_CHECKS) {
+        logger.success(
+          `✅ Pipeline completed: ${progress.completed} articles processed`,
+        );
 
-      // Get published articles count from database
-      const { db } = await import("@/lib/db");
-      const publishedCount = await db.article.count({
-        where: {
-          agentLogId,
-          status: "PUBLISHED",
-        },
-      });
+        // Get published articles count from database
+        const { db } = await import("@/lib/db");
+        const publishedCount = await db.article.count({
+          where: {
+            agentLogId,
+            status: "PUBLISHED",
+          },
+        });
 
-      return {
-        success: true,
-        articlesPublished: publishedCount,
-        errors,
-      };
+        return {
+          success: true,
+          articlesPublished: publishedCount,
+          errors,
+        };
+      }
+    } else {
+      consecutiveEmptyChecks = 0; // Reset counter if queue has items
     }
 
     // Log progress
