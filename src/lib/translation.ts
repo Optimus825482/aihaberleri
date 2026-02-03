@@ -267,11 +267,11 @@ export async function translateAndSaveArticle(
       );
 
       // Import SEO functions
-      const { submitToIndexNow } = await import("@/lib/seo");
+      const { submitUrlToIndexNow } = await import("@/lib/seo/indexnow");
 
       // Submit English URL to IndexNow (Bing, Yandex)
       try {
-        await submitToIndexNow(englishUrl, articleId);
+        await submitUrlToIndexNow(englishUrl, articleId);
         console.log(`   ✅ IndexNow: English URL submitted`);
       } catch (error) {
         console.warn(`   ⚠️ IndexNow failed for English URL:`, error);
