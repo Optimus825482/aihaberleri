@@ -137,8 +137,8 @@ export class ContentEnricherAgent extends BaseAgent<
             `Enriched: ${synthesized.tr.title.substring(0, 50)}...`,
           );
 
-          // Rate limiting between articles
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          // Rate limiting between articles (reduced for single article)
+          await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (error) {
           this.logger.error(
             `Failed to enrich article: ${article.title.substring(0, 50)}...`,

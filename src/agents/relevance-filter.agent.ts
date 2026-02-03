@@ -85,9 +85,9 @@ export class RelevanceFilterAgent extends BaseAgent<
 
         scoredArticles.push(...batchScores);
 
-        // Rate limiting between batches
+        // Rate limiting between batches (reduced for efficiency)
         if (i + BATCH_SIZE < articles.length) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
       }
 

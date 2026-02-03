@@ -100,9 +100,9 @@ export class VisualGeneratorAgent extends BaseAgent<
 
         articlesWithVisuals.push(...batchResults);
 
-        // Rate limiting between batches
+        // Rate limiting between batches (reduced for efficiency)
         if (i + PARALLEL_CONCURRENCY < articles.length) {
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
       }
 
