@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone", // Required for Docker deployment
+
+  // Force new build ID to bust cache on every deployment
+  generateBuildId: async () => {
+    return `build-${Date.now()}`;
+  },
+
   images: {
     remotePatterns: [
       {
