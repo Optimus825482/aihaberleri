@@ -602,27 +602,34 @@ RESPOND WITH PROMPT ONLY. NO EXPLANATION.`;
     }
   }
 
-  // CRITICAL: Enforce "no people" suffix if not present
-  const noHumansKeywords = [
-    "no people",
-    "no humans",
-    "no faces",
-    "no person",
-    "empty",
+  // CRITICAL: Remove any human-related words AI might have added
+  const humanPatterns = [
+    /\b(person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|user|staff)\b/gi,
+    /\b(head|hand|arm|leg|body|finger|eye|mouth|profile)\b/gi,
+    /\b(businessman|businesswoman|professional|executive|ceo)\b/gi,
   ];
+
+  for (const pattern of humanPatterns) {
+    cleanPrompt = cleanPrompt.replace(pattern, "").replace(/\s+/g, " ").trim();
+  }
+
+  // CRITICAL: Add strong negative prompt suffix for image generation
+  const noHumansSuffix =
+    ", no people, no humans, no faces, no hands, no body parts, empty scene";
+
+  const noHumansKeywords = ["no people", "no humans", "no faces"];
   const hasNoHumansKeyword = noHumansKeywords.some((keyword) =>
     cleanPrompt.toLowerCase().includes(keyword),
   );
 
   if (!hasNoHumansKeyword) {
-    // Add "no people" to the end
-    if (cleanPrompt.length + 12 <= 150) {
-      cleanPrompt += ", no people";
-    } else {
-      // Truncate and add
-      cleanPrompt = cleanPrompt.substring(0, 138) + ", no people";
+    // Truncate to make room for suffix
+    const maxBaseLength = 150 - noHumansSuffix.length;
+    if (cleanPrompt.length > maxBaseLength) {
+      cleanPrompt = cleanPrompt.substring(0, maxBaseLength - 3) + "...";
     }
-    console.log("✅ Added 'no people' suffix to prompt");
+    cleanPrompt += noHumansSuffix;
+    console.log("✅ Added strong negative prompt suffix");
   }
 
   console.log(`📝 Final prompt (${cleanPrompt.length} chars): ${cleanPrompt}`);

@@ -141,7 +141,31 @@ export async function fetchPollinationsImage(
   if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
     console.warn("⚠️  Empty prompt received, using fallback");
     prompt =
-      "artificial intelligence technology, modern digital art, professional tech illustration, high quality, 4k";
+      "artificial intelligence technology, modern digital art, professional tech illustration, high quality, 4k, no people, no humans";
+  }
+
+  // CRITICAL: Ensure no humans in prompt - add strong negative prompt
+  let sanitizedPrompt = prompt.trim();
+
+  // Remove any human-related terms that might have slipped through
+  const humanPatterns = [
+    /\b(person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|staff)\b/gi,
+    /\b(head|hand|arm|leg|body|finger|eye|mouth|profile|businessman|businesswoman)\b/gi,
+  ];
+  for (const pattern of humanPatterns) {
+    sanitizedPrompt = sanitizedPrompt
+      .replace(pattern, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  // Ensure negative prompt is present
+  if (
+    !sanitizedPrompt.toLowerCase().includes("no people") &&
+    !sanitizedPrompt.toLowerCase().includes("no humans")
+  ) {
+    sanitizedPrompt +=
+      ", no people, no humans, no faces, no hands, empty scene";
   }
 
   const {
@@ -164,8 +188,8 @@ export async function fetchPollinationsImage(
           `🔑 API Key exists: ${POLLINATIONS_API_KEY ? "YES" : "NO"}, length: ${POLLINATIONS_API_KEY?.length || 0}`,
         );
 
-        // Truncate prompt to avoid issues
-        let cleanPrompt = prompt.trim();
+        // Truncate prompt to avoid issues - use sanitizedPrompt
+        let cleanPrompt = sanitizedPrompt;
         if (cleanPrompt.length > 800) {
           console.warn(
             `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 800`,
@@ -238,7 +262,10 @@ export async function fetchPollinationsImage(
               `⚠️ Pollinations API ${response.status}: ${errorText.substring(0, 200)}`,
             );
             console.warn(`⚠️ Trying anonymous fallback...`);
-            return await fetchPollinationsImageAnonymous(prompt, options);
+            return await fetchPollinationsImageAnonymous(
+              sanitizedPrompt,
+              options,
+            );
           }
         } catch (fetchError) {
           clearTimeout(timeoutId);
@@ -247,7 +274,7 @@ export async function fetchPollinationsImage(
       }
 
       // No API key, use anonymous method
-      return await fetchPollinationsImageAnonymous(prompt, options);
+      return await fetchPollinationsImageAnonymous(sanitizedPrompt, options);
     } catch (error) {
       const isLastAttempt = attempt === maxRetries;
 

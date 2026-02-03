@@ -218,17 +218,21 @@ Kategori: ${category}
    ❌ YASAK (aşırı kullanılmış): "boş ofis", "toplantı odası", "konferans salonu", "iş istasyonu"
    ✅ TERCİH EDİLEN: Haberle ilgili spesifik nesneler, cihazlar, mimari, ortamlar
 
-3. **UZUNLUK:** MAKS 150 karakter
+3. **UZUNLUK:** MAKS 120 karakter (son eki hariç)
 
-4. **ZORUNLU SON EK:** Her prompt'a ", insan yok, yüz yok" ekle
-
-5. **MUTLAK YASAKLAR:**
-   ❌ **İNSAN YOK, YÜZ YOK, EL YOK, VÜCUT PARÇASI YOK**
+4. **MUTLAK YASAKLAR - HİÇBİR İNSAN ÖĞESİ:**
+   ❌ **İNSAN YOK - HİÇBİR ŞEKİLDE**
+   ❌ **YÜZ YOK, KAFA YOK, BAŞ YOK**
+   ❌ **EL YOK, KOL YOK, BACAK YOK, VÜCUT YOK**
+   ❌ **SİLÜET YOK, GÖLGE İNSAN YOK**
+   ❌ **İNSANI ÇAĞRIŞTIRAN HİÇBİR ŞEY YOK**
    ❌ "boş ofis" (aşırı kullanılmış!)
    ❌ "toplantı odası" (aşırı kullanılmış!)
    ❌ "holografik beyin" (generic!)
    ❌ "neon ışıklar" (çok fütüristik!)
    ❌ Metin veya yazı
+
+5. **ODAKLAN:** Sadece nesneler, cihazlar, mimari, manzara, soyut konseptler
 
 SADECE PROMPT İLE YANIT VER. AÇIKLAMA YOK.`;
 
@@ -237,7 +241,7 @@ SADECE PROMPT İLE YANIT VER. AÇIKLAMA YOK.`;
     temperature: 1.0, // Maximum variety
     maxTokens: 200,
     systemInstruction:
-      "Sen uzman bir haber fotoğrafçısısın. Haberin içeriğini analiz et ve SPESIFIK, ÇEŞITLI görsel prompt oluştur. Generic ofis görselleri YASAK. Her haber için FARKLI bir görsel seç.",
+      "Sen uzman bir haber fotoğrafçısısın. Haberin içeriğini analiz et ve SPESIFIK, ÇEŞITLI görsel prompt oluştur. Generic ofis görselleri YASAK. Her haber için FARKLI bir görsel seç. MUTLAKA insan içermeyen görseller üret - sadece nesneler, cihazlar, mimari veya soyut konseptler.",
   });
 
   // Clean up the response
@@ -253,41 +257,48 @@ SADECE PROMPT İLE YANIT VER. AÇIKLAMA YOK.`;
   }
 
   // CRITICAL: Enforce max length
-  if (cleanPrompt.length > 150) {
+  if (cleanPrompt.length > 120) {
     console.warn(
-      `⚠️ Prompt çok uzun (${cleanPrompt.length} karakter), 150'ye kısaltılıyor`,
+      `⚠️ Prompt çok uzun (${cleanPrompt.length} karakter), 120'ye kısaltılıyor`,
     );
-    cleanPrompt = cleanPrompt.substring(0, 147) + "...";
+    cleanPrompt = cleanPrompt.substring(0, 117) + "...";
   }
 
   // Fallback if empty or too short
   if (!cleanPrompt || cleanPrompt.length < 20) {
     console.warn("⚠️  Gemini boş/kısa prompt döndürdü, fallback kullanılıyor");
     cleanPrompt =
-      "Modern teknoloji çalışma alanı iç mekan, temiz profesyonel ortam, doğal aydınlatma, editoryal stil, insan yok";
+      "Modern teknoloji çalışma alanı, bilgisayar ekranları, temiz profesyonel ortam, doğal aydınlatma";
   }
 
-  // CRITICAL: Enforce "no people" suffix if not present
-  const noHumansKeywords = [
-    "insan yok",
-    "yüz yok",
-    "no people",
-    "no humans",
-    "boş",
+  // CRITICAL: Remove any human-related words AI might have added
+  const humanWords = [
+    /\b(insan|kişi|adam|kadın|erkek|çocuk|person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|user)\b/gi,
+    /\b(yüz|kafa|baş|el|kol|bacak|vücut|head|hand|arm|leg|body|finger|eye|mouth)\b/gi,
   ];
-  const hasNoHumansKeyword = noHumansKeywords.some((keyword) =>
-    cleanPrompt.toLowerCase().includes(keyword),
-  );
+
+  for (const pattern of humanWords) {
+    cleanPrompt = cleanPrompt.replace(pattern, "").replace(/\s+/g, " ").trim();
+  }
+
+  // CRITICAL: Add strong negative prompt suffix (English for better AI understanding)
+  const noHumansSuffix =
+    ", no people, no humans, no faces, no hands, no body parts, empty scene";
+
+  // Check if already has negative prompt
+  const hasNoHumansKeyword =
+    cleanPrompt.toLowerCase().includes("no people") ||
+    cleanPrompt.toLowerCase().includes("no humans") ||
+    cleanPrompt.toLowerCase().includes("insan yok");
 
   if (!hasNoHumansKeyword) {
-    // Add "insan yok" to the end
-    if (cleanPrompt.length + 12 <= 150) {
-      cleanPrompt += ", insan yok";
-    } else {
-      // Truncate and add
-      cleanPrompt = cleanPrompt.substring(0, 138) + ", insan yok";
+    // Truncate to make room for suffix
+    const maxBaseLength = 150 - noHumansSuffix.length;
+    if (cleanPrompt.length > maxBaseLength) {
+      cleanPrompt = cleanPrompt.substring(0, maxBaseLength - 3) + "...";
     }
-    console.log("✅ Prompt'a 'insan yok' son eki eklendi");
+    cleanPrompt += noHumansSuffix;
+    console.log("✅ Negatif prompt eklendi (no people, no humans, etc.)");
   }
 
   console.log(
