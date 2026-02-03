@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         slug: true,
         imageUrl: true,
         metaDescription: true,
-        metaKeywords: true,
+        keywords: true, // Changed from metaKeywords to keywords
       },
     });
 

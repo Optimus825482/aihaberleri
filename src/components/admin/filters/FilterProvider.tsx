@@ -110,7 +110,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       try {
         const params = new URLSearchParams();
-        Object.entries(filters).forEach(([key, value]) => {
+        Object.entries(filters || {}).forEach(([key, value]) => {
           if (value !== undefined && value !== null && value !== "") {
             if (Array.isArray(value)) {
               params.set(key, value.join(","));
@@ -142,7 +142,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
 
       // Update URL
       const params = new URLSearchParams();
-      Object.entries(newFilters).forEach(([key, value]) => {
+      Object.entries(newFilters || {}).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
           if (Array.isArray(value)) {
             params.set(key, value.join(","));

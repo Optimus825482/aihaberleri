@@ -35,11 +35,13 @@ export default function SearchProvidersMonitoringPage() {
         let csv =
           "Provider,Requests,Errors,Success Rate,Avg Response Time,Distribution\n";
 
-        Object.entries(data.providers).forEach(
-          ([provider, stats]: [string, any]) => {
-            csv += `${provider},${stats.requests},${stats.errors},${stats.successRate}%,${stats.avgResponseTime}ms,${stats.distribution}%\n`;
-          },
-        );
+        if (data?.providers) {
+          Object.entries(data.providers).forEach(
+            ([provider, stats]: [string, any]) => {
+              csv += `${provider},${stats.requests},${stats.errors},${stats.successRate}%,${stats.avgResponseTime}ms,${stats.distribution}%\n`;
+            },
+          );
+        }
 
         csv += `\nTotal,${data.totals.requests},${data.totals.errors},-,${data.totals.avgResponseTime}ms,-\n`;
 

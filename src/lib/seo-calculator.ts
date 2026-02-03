@@ -5,7 +5,7 @@ interface SEOInput {
   slug: string;
   imageUrl: string | null;
   metaDescription: string | null;
-  metaKeywords: string | null;
+  keywords: string[] | null; // Changed from metaKeywords to keywords (array)
 }
 
 interface SEORecommendation {
@@ -200,8 +200,8 @@ export function calculateSEOScore(input: SEOInput): SEOResult {
     });
   }
 
-  // Meta keywords kontrolü
-  if (!input.metaKeywords || input.metaKeywords.length === 0) {
+  // Keywords kontrolü
+  if (!input.keywords || input.keywords.length === 0) {
     score -= 5;
     recommendations.push({
       type: "Anahtar Kelime Eksik",

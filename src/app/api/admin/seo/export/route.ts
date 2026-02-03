@@ -23,7 +23,7 @@ export async function GET(request: Request) {
         slug: true,
         seoScore: true,
         metaDescription: true,
-        metaKeywords: true,
+        keywords: true, // Changed from metaKeywords to keywords
         publishedAt: true,
         views: true,
         category: {
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
       category: article.category.name,
       seoScore: article.seoScore,
       metaDescription: article.metaDescription || "",
-      metaKeywords: article.metaKeywords || "",
+      keywords: article.keywords?.join(", ") || "", // Convert array to string
       views: article.views,
       publishedAt: article.publishedAt?.toISOString() || "",
       totalRecommendations: article.seoRecommendations.length,
@@ -94,7 +94,7 @@ export async function GET(request: Request) {
         item.category,
         item.seoScore,
         `"${item.metaDescription.replace(/"/g, '""')}"`,
-        `"${item.metaKeywords.replace(/"/g, '""')}"`,
+        `"${item.keywords.replace(/"/g, '""')}"`,
         item.views,
         item.publishedAt,
         item.totalRecommendations,

@@ -163,88 +163,89 @@ export default function SearchProviderDashboard({
 
       {/* Provider Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {Object.entries(data.providers).map(([provider, stats]) => {
-          const color = getProviderColor(provider);
-          return (
-            <div
-              key={provider}
-              className={`bg-gradient-to-br from-${color}-50 to-${color}-100 dark:from-${color}-900/20 dark:to-${color}-900/10 backdrop-blur-xl rounded-2xl p-6 border border-${color}-200 dark:border-${color}-800 shadow-lg`}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white capitalize">
-                  {provider === "searxng" ? "SearXNG" : provider}
-                </h3>
-                <span className="text-2xl">
-                  {getProviderIcon(stats.available)}
-                </span>
+        {data?.providers &&
+          Object.entries(data.providers).map(([provider, stats]) => {
+            const color = getProviderColor(provider);
+            return (
+              <div
+                key={provider}
+                className={`bg-gradient-to-br from-${color}-50 to-${color}-100 dark:from-${color}-900/20 dark:to-${color}-900/10 backdrop-blur-xl rounded-2xl p-6 border border-${color}-200 dark:border-${color}-800 shadow-lg`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white capitalize">
+                    {provider === "searxng" ? "SearXNG" : provider}
+                  </h3>
+                  <span className="text-2xl">
+                    {getProviderIcon(stats.available)}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Distribution */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Kullanım Oranı
+                    </span>
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                      %{stats.distribution}
+                    </span>
+                  </div>
+
+                  {/* Requests */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      İstek Sayısı
+                    </span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {stats.requests.toLocaleString("tr-TR")}
+                    </span>
+                  </div>
+
+                  {/* Errors */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Hata Sayısı
+                    </span>
+                    <span
+                      className={`text-lg font-semibold ${stats.errors > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}
+                    >
+                      {stats.errors}
+                    </span>
+                  </div>
+
+                  {/* Success Rate */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Başarı Oranı
+                    </span>
+                    <span
+                      className={`text-lg font-semibold ${stats.successRate >= 90 ? "text-green-600 dark:text-green-400" : "text-yellow-600 dark:text-yellow-400"}`}
+                    >
+                      %{stats.successRate}
+                    </span>
+                  </div>
+
+                  {/* Response Time */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Yanıt Süresi
+                    </span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {stats.avgResponseTime}ms
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-4">
+                    <div
+                      className={`absolute top-0 left-0 h-full bg-${color}-500 transition-all duration-500`}
+                      style={{ width: `${stats.successRate}%` }}
+                    ></div>
+                  </div>
+                </div>
               </div>
-
-              <div className="space-y-3">
-                {/* Distribution */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Kullanım Oranı
-                  </span>
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                    %{stats.distribution}
-                  </span>
-                </div>
-
-                {/* Requests */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    İstek Sayısı
-                  </span>
-                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {stats.requests.toLocaleString("tr-TR")}
-                  </span>
-                </div>
-
-                {/* Errors */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Hata Sayısı
-                  </span>
-                  <span
-                    className={`text-lg font-semibold ${stats.errors > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"}`}
-                  >
-                    {stats.errors}
-                  </span>
-                </div>
-
-                {/* Success Rate */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Başarı Oranı
-                  </span>
-                  <span
-                    className={`text-lg font-semibold ${stats.successRate >= 90 ? "text-green-600 dark:text-green-400" : "text-yellow-600 dark:text-yellow-400"}`}
-                  >
-                    %{stats.successRate}
-                  </span>
-                </div>
-
-                {/* Response Time */}
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Yanıt Süresi
-                  </span>
-                  <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {stats.avgResponseTime}ms
-                  </span>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-4">
-                  <div
-                    className={`absolute top-0 left-0 h-full bg-${color}-500 transition-all duration-500`}
-                    style={{ width: `${stats.successRate}%` }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* Totals Summary */}

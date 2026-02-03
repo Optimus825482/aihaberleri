@@ -180,7 +180,7 @@ export default function VisitorsPageOptimized() {
       {} as Record<string, number>,
     );
 
-    return Object.entries(distribution).sort(([, a], [, b]) => b - a);
+    return Object.entries(distribution || {}).sort(([, a], [, b]) => b - a);
   }, [data?.visitors]);
 
   // Stats cards configuration

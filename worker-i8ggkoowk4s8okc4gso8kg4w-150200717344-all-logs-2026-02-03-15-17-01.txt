@@ -1,0 +1,2072 @@
+
+2026-02-03T15:05:46.131587743Z npm warn exec The following package was not found and will be installed: tsx@4.21.0
+2026-02-03T15:05:51.917952581Z ✅ News agent queue created
+2026-02-03T15:05:51.918785689Z ✅ Queue events listener created
+2026-02-03T15:05:51.997766377Z info: 🚀 Worker started {"environment":"production","module":"worker","service":"ai-news-agent","timestamp":"2026-02-03 15:05:51"}
+2026-02-03T15:05:51.998313834Z 🚀 Starting News Agent Worker...
+2026-02-03T15:05:51.998815242Z 🔍 Checking Redis connection...
+2026-02-03T15:05:52.023047006Z ✅ Redis connected
+2026-02-03T15:05:52.036236544Z ✅ Redis ready to accept commands
+2026-02-03T15:05:52.067199804Z ✅ Redis connection verified (PONG received)
+2026-02-03T15:05:52.067587503Z 🔄 Database connection attempt 1/10...
+2026-02-03T15:05:52.067598003Z 🔍 Testing database connection...
+2026-02-03T15:05:52.138453497Z info: 🔌 database connection connected {"environment":"production","module":"worker","service":"database","status":"connected","timestamp":"2026-02-03 15:05:52"}
+2026-02-03T15:05:52.138509127Z ✅ Database connection successful
+2026-02-03T15:05:52.138653986Z ✅ All systems ready, starting worker...
+2026-02-03T15:05:52.138786766Z 💓 Starting worker heartbeat...
+2026-02-03T15:05:52.139997872Z 
+2026-02-03T15:05:52.140017862Z 🎯 Initializing BullMQ Worker...
+2026-02-03T15:05:52.141238378Z    Queue Name: news-agent
+2026-02-03T15:05:52.141330808Z    Redis Status: ready
+2026-02-03T15:05:52.141339507Z    Concurrency: 1
+2026-02-03T15:05:52.141543017Z    Lock Duration: 10 minutes
+2026-02-03T15:05:52.145458305Z 
+2026-02-03T15:05:52.145525345Z ✅ Worker started successfully!
+2026-02-03T15:05:52.145533695Z 👂 Listening for jobs on queue: news-agent
+2026-02-03T15:05:52.145540895Z 📊 Worker stats will be logged here...
+2026-02-03T15:05:52.145547965Z 
+2026-02-03T15:05:52.145554705Z 
+2026-02-03T15:05:52.145561594Z 🔄 Başlangıç senkronizasyonu başlatılıyor...
+2026-02-03T15:05:52.145569394Z ✅ Newsletter queue created
+2026-02-03T15:05:52.145578934Z 
+2026-02-03T15:05:52.145586134Z 📧 Initializing Newsletter Worker...
+2026-02-03T15:05:52.145742744Z ✅ Newsletter worker started
+2026-02-03T15:05:52.174120982Z 💓 Heartbeat updated: 03.02.2026 15:05:52
+2026-02-03T15:05:52.178279420Z 
+2026-02-03T15:05:52.178314830Z ✅ Worker is ready and listening for jobs
+2026-02-03T15:05:52.187077861Z 🗑️ Removed existing newsletter job: 8397d10618ce9a6d653c11b6052e6192
+2026-02-03T15:05:52.194855947Z ℹ️ IndexNow için bekleyen haber bulunmadı.
+2026-02-03T15:05:52.201038597Z 🔧 Repeatable job sistemi başlatılıyor...
+2026-02-03T15:05:52.203422149Z 
+2026-02-03T15:05:52.203445769Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-03T15:05:52.203452509Z 📧 NEWSLETTER SCHEDULE:
+2026-02-03T15:05:52.203457489Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-03T15:05:52.203462659Z ⏰ Time: Every day at 19:00 (Turkey)
+2026-02-03T15:05:52.203467249Z 🆔 Job Type: Cron (daily-digest)
+2026-02-03T15:05:52.203472159Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-03T15:05:52.203476799Z 
+2026-02-03T15:05:52.204752175Z ✅ Newsletter scheduler initialized
+2026-02-03T15:05:52.217773754Z ✅ News agent queue created
+2026-02-03T15:05:52.218342511Z ✅ Queue events listener created
+2026-02-03T15:05:52.227110744Z ✅ Repeatable job mevcut (her 0.25 saatte bir).
+2026-02-03T15:05:52.227449823Z 📅 Sıradaki çalışma zamanı: 2/3/2026, 3:16:57 PM
+2026-02-03T15:06:22.150489111Z 💓 Heartbeat updated: 03.02.2026 15:06:22
+2026-02-03T15:06:52.158082284Z 💓 Heartbeat updated: 03.02.2026 15:06:52
+2026-02-03T15:07:22.165962471Z 💓 Heartbeat updated: 03.02.2026 15:07:22
+2026-02-03T15:07:52.171607054Z 💓 Heartbeat updated: 03.02.2026 15:07:52
+2026-02-03T15:08:22.171610909Z 💓 Heartbeat updated: 03.02.2026 15:08:22
+2026-02-03T15:08:52.180679105Z 💓 Heartbeat updated: 03.02.2026 15:08:52
+2026-02-03T15:09:22.188791220Z 💓 Heartbeat updated: 03.02.2026 15:09:22
+2026-02-03T15:09:52.191406711Z 💓 Heartbeat updated: 03.02.2026 15:09:52
+2026-02-03T15:10:22.195451671Z 💓 Heartbeat updated: 03.02.2026 15:10:22
+2026-02-03T15:10:52.194277439Z 💓 Heartbeat updated: 03.02.2026 15:10:52
+2026-02-03T15:11:22.201618363Z 💓 Heartbeat updated: 03.02.2026 15:11:22
+2026-02-03T15:11:52.200729877Z 💓 Heartbeat updated: 03.02.2026 15:11:52
+2026-02-03T15:12:22.207072128Z 💓 Heartbeat updated: 03.02.2026 15:12:22
+2026-02-03T15:12:52.206463705Z 💓 Heartbeat updated: 03.02.2026 15:12:52
+2026-02-03T15:13:22.207576894Z 💓 Heartbeat updated: 03.02.2026 15:13:22
+2026-02-03T15:13:52.218999959Z 💓 Heartbeat updated: 03.02.2026 15:13:52
+2026-02-03T15:14:22.227318719Z 💓 Heartbeat updated: 03.02.2026 15:14:22
+2026-02-03T15:14:52.226464724Z 💓 Heartbeat updated: 03.02.2026 15:14:52
+2026-02-03T15:15:00.038994978Z 
+2026-02-03T15:15:00.039027618Z 🔄 Job repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770131700000 is now active
+2026-02-03T15:15:00.040583323Z info: 🔄 Job processing started {"environment":"production","jobId":"repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770131700000","jobName":"scrape-and-publish","module":"worker","service":"ai-news-agent","timestamp":"2026-02-03 15:15:00"}
+2026-02-03T15:15:00.040798622Z 
+2026-02-03T15:15:00.040807982Z ============================================================
+2026-02-03T15:15:00.040954751Z 🤖 Processing job: scrape-and-publish (ID: repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770131700000)
+2026-02-03T15:15:00.040968061Z    Priority: default
+2026-02-03T15:15:00.042081508Z    Attempt: 1/3
+2026-02-03T15:15:00.044416990Z    Timestamp: 2/3/2026, 3:00:00 PM
+2026-02-03T15:15:00.044446740Z ============================================================
+2026-02-03T15:15:00.044452630Z 
+2026-02-03T15:15:00.050277631Z 📊 Progress: 10% - Starting agent execution...
+2026-02-03T15:15:00.083613513Z info: 🤖 Agent execution started {"category":"all","environment":"production","logId":"cml6qpl620000ywuep69u4j4a","module":"agent","service":"ai-news-agent","timestamp":"2026-02-03 15:15:00"}
+2026-02-03T15:15:00.090981979Z [Socket] Cannot emit 'agent:started' - Socket.io not initialized
+2026-02-03T15:15:00.090999219Z 
+2026-02-03T15:15:00.091003809Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-03T15:15:00.091022499Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-03T15:15:00.091029769Z ┃           🤖 AGENT EXECUTION START                ┃
+2026-02-03T15:15:00.091035369Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-03T15:15:00.091040519Z ┃  Log ID:       cml6qpl62000...                    ┃
+2026-02-03T15:15:00.091045179Z ┃  Start Time:   03.02.2026 15:15:00      ┃
+2026-02-03T15:15:00.091049669Z ┃  Category:     All                         ┃
+2026-02-03T15:15:00.091054249Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-03T15:15:00.091059029Z 
+2026-02-03T15:15:00.091063659Z info: 📊 Agent step: fetch_news Yapay zeka haberleri aranıyor (RSS + Trend) {"environment":"production","logId":"cml6qpl620000ywuep69u4j4a","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-02-03 15:15:00"}
+2026-02-03T15:15:00.091070739Z 📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...
+2026-02-03T15:15:00.091075589Z 📰 AI haberleri toplanıyor (RSS + Trend Analizi)...
+2026-02-03T15:15:00.091082419Z 📡 91 RSS feed okunuyor...
+2026-02-03T15:15:00.091880817Z 📡 RSS feed okunuyor: BBC News - Technology
+2026-02-03T15:15:00.117428074Z 📡 RSS feed okunuyor: CNN - Technology
+2026-02-03T15:15:00.119940795Z 📡 RSS feed okunuyor: Bloomberg - Technology
+2026-02-03T15:15:00.184989685Z 📡 RSS feed okunuyor: The Wall Street Journal - Technology
+2026-02-03T15:15:00.186211481Z 📡 RSS feed okunuyor: Financial Times - Technology
+2026-02-03T15:15:00.412092989Z ✅ 10 haber bulundu: BBC News - Technology
+2026-02-03T15:15:00.439623430Z ✅ 10 haber bulundu: CNN - Technology
+2026-02-03T15:15:00.621364251Z ✅ 10 haber bulundu: Bloomberg - Technology
+2026-02-03T15:15:00.629749414Z ✅ 10 haber bulundu: Financial Times - Technology
+2026-02-03T15:15:00.728201055Z ✅ 10 haber bulundu: The Wall Street Journal - Technology
+2026-02-03T15:15:01.232013554Z 📡 RSS feed okunuyor: NBC News - Technology
+2026-02-03T15:15:01.232039493Z 📡 RSS feed okunuyor: ABC News - Technology
+2026-02-03T15:15:01.232042173Z 📡 RSS feed okunuyor: Sky News - Technology
+2026-02-03T15:15:01.232499562Z 📡 RSS feed okunuyor: Euronews - Technology
+2026-02-03T15:15:01.233578998Z 📡 RSS feed okunuyor: MIT Technology Review - AI
+2026-02-03T15:15:01.333417085Z ✅ 10 haber bulundu: MIT Technology Review - AI
+2026-02-03T15:15:01.360500947Z ✅ 10 haber bulundu: NBC News - Technology
+2026-02-03T15:15:01.403519327Z ✅ 10 haber bulundu: Euronews - Technology
+2026-02-03T15:15:01.516425931Z ✅ 10 haber bulundu: ABC News - Technology
+2026-02-03T15:15:01.603524660Z ✅ 10 haber bulundu: Sky News - Technology
+2026-02-03T15:15:02.104584376Z 📡 RSS feed okunuyor: VentureBeat - AI
+2026-02-03T15:15:02.106944448Z 📡 RSS feed okunuyor: The Verge - AI
+2026-02-03T15:15:02.109013872Z 📡 RSS feed okunuyor: TechCrunch - AI
+2026-02-03T15:15:02.110805357Z 📡 RSS feed okunuyor: Ars Technica - AI
+2026-02-03T15:15:02.114990133Z 📡 RSS feed okunuyor: Wired - AI
+2026-02-03T15:15:02.155576141Z ✅ 10 haber bulundu: TechCrunch - AI
+2026-02-03T15:15:02.192715101Z ✅ 10 haber bulundu: The Verge - AI
+2026-02-03T15:15:02.248175221Z ✅ 10 haber bulundu: Ars Technica - AI
+2026-02-03T15:15:02.301980427Z ✅ 7 haber bulundu: VentureBeat - AI
+2026-02-03T15:15:02.579490298Z ✅ 10 haber bulundu: Wired - AI
+2026-02-03T15:15:03.080253316Z 📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+2026-02-03T15:15:03.083382056Z 📡 RSS feed okunuyor: Engadget - Technology
+2026-02-03T15:15:03.085723058Z 📡 RSS feed okunuyor: The Next Web
+2026-02-03T15:15:03.087648332Z 📡 RSS feed okunuyor: TechRadar - News
+2026-02-03T15:15:03.088859038Z 📡 RSS feed okunuyor: CNET - News
+2026-02-03T15:15:03.185979343Z ✅ 10 haber bulundu: TechRadar - News
+2026-02-03T15:15:03.266639153Z ✅ 10 haber bulundu: CNET - News
+2026-02-03T15:15:03.350350511Z ✅ 10 haber bulundu: The Next Web
+2026-02-03T15:15:03.416803776Z ✅ 10 haber bulundu: Engadget - Technology
+2026-02-03T15:15:03.759177577Z ✅ 10 haber bulundu: ZDNet - Artificial Intelligence
+2026-02-03T15:15:04.260255163Z 📡 RSS feed okunuyor: Mashable - Tech
+2026-02-03T15:15:04.263110094Z 📡 RSS feed okunuyor: Gizmodo
+2026-02-03T15:15:04.264751739Z 📡 RSS feed okunuyor: Lifehacker
+2026-02-03T15:15:04.266424593Z 📡 RSS feed okunuyor: Digital Trends
+2026-02-03T15:15:04.267902919Z 📡 RSS feed okunuyor: Tom's Hardware
+2026-02-03T15:15:04.439938481Z ✅ 10 haber bulundu: Tom's Hardware
+2026-02-03T15:15:04.514820298Z ✅ 10 haber bulundu: Mashable - Tech
+2026-02-03T15:15:04.684924188Z ✅ 10 haber bulundu: Gizmodo
+2026-02-03T15:15:04.788339172Z ✅ 10 haber bulundu: Lifehacker
+2026-02-03T15:15:05.240810767Z ✅ 10 haber bulundu: Digital Trends
+2026-02-03T15:15:05.743769697Z 📡 RSS feed okunuyor: 9to5Mac
+2026-02-03T15:15:05.746271129Z 📡 RSS feed okunuyor: 9to5Google
+2026-02-03T15:15:05.747589715Z 📡 RSS feed okunuyor: Android Authority
+2026-02-03T15:15:05.748683651Z 📡 RSS feed okunuyor: Android Police
+2026-02-03T15:15:05.749900787Z 📡 RSS feed okunuyor: XDA Developers
+2026-02-03T15:15:05.803231405Z ✅ 10 haber bulundu: 9to5Mac
+2026-02-03T15:15:06.112445433Z ✅ 10 haber bulundu: Android Authority
+2026-02-03T15:15:06.160899366Z ✅ 10 haber bulundu: Android Police
+2026-02-03T15:15:06.180914391Z ✅ 10 haber bulundu: XDA Developers
+2026-02-03T15:15:07.480327952Z ✅ 10 haber bulundu: 9to5Google
+2026-02-03T15:15:07.981006360Z 📡 RSS feed okunuyor: Hacker News (YCombinator)
+2026-02-03T15:15:07.982861753Z 📡 RSS feed okunuyor: Product Hunt - Tech
+2026-02-03T15:15:07.984530718Z 📡 RSS feed okunuyor: AI News
+2026-02-03T15:15:07.985885504Z 📡 RSS feed okunuyor: MarkTechPost
+2026-02-03T15:15:07.987140970Z 📡 RSS feed okunuyor: The AI Edge (Substack)
+2026-02-03T15:15:08.109940672Z ✅ 10 haber bulundu: Product Hunt - Tech
+2026-02-03T15:15:08.213344366Z ✅ 10 haber bulundu: MarkTechPost
+2026-02-03T15:15:08.256448297Z ✅ 10 haber bulundu: The AI Edge (Substack)
+2026-02-03T15:15:08.276127404Z ✅ 10 haber bulundu: AI News
+2026-02-03T15:15:09.201537326Z ✅ 10 haber bulundu: Hacker News (YCombinator)
+2026-02-03T15:15:09.702141614Z 📡 RSS feed okunuyor: Last Week in AI
+2026-02-03T15:15:09.704330607Z 📡 RSS feed okunuyor: AI Business
+2026-02-03T15:15:09.705630323Z 📡 RSS feed okunuyor: THE DECODER - AI News
+2026-02-03T15:15:09.706977788Z 📡 RSS feed okunuyor: Unite.AI
+2026-02-03T15:15:09.708227044Z 📡 RSS feed okunuyor: Analytics India Magazine
+2026-02-03T15:15:10.099153197Z ⚠️  Hata (Unite.AI), tekrar deneniyor... Non-whitespace before first tag.
+2026-02-03T15:15:10.099192308Z Line: 0
+2026-02-03T15:15:10.099195538Z Column: 1
+2026-02-03T15:15:10.099213608Z Char: R
+2026-02-03T15:15:10.178321150Z ⚠️  Hata (Analytics India Magazine), tekrar deneniyor... Attribute without value
+2026-02-03T15:15:10.178359670Z Line: 4
+2026-02-03T15:15:10.178368400Z Column: 19
+2026-02-03T15:15:10.178376030Z Char: s
+2026-02-03T15:15:10.254804423Z ✅ 10 haber bulundu: Last Week in AI
+2026-02-03T15:15:10.299898417Z ✅ 10 haber bulundu: AI Business
+2026-02-03T15:15:10.335821401Z ✅ 10 haber bulundu: THE DECODER - AI News
+2026-02-03T15:15:11.099767426Z 📡 RSS feed okunuyor: Unite.AI (deneme 2)
+2026-02-03T15:15:11.180057985Z 📡 RSS feed okunuyor: Analytics India Magazine (deneme 2)
+2026-02-03T15:15:11.289694760Z ⚠️  Hata (Unite.AI), tekrar deneniyor... Non-whitespace before first tag.
+2026-02-03T15:15:11.289731280Z Line: 0
+2026-02-03T15:15:11.289737090Z Column: 1
+2026-02-03T15:15:11.289742390Z Char: R
+2026-02-03T15:15:11.488786755Z ⚠️  Hata (Analytics India Magazine), tekrar deneniyor... Attribute without value
+2026-02-03T15:15:11.488825925Z Line: 4
+2026-02-03T15:15:11.488832435Z Column: 19
+2026-02-03T15:15:11.488838165Z Char: s
+2026-02-03T15:15:13.289915010Z 📡 RSS feed okunuyor: Unite.AI (deneme 3)
+2026-02-03T15:15:13.481896028Z ❌ RSS feed hatası (Unite.AI): Non-whitespace before first tag.
+2026-02-03T15:15:13.481922648Z Line: 0
+2026-02-03T15:15:13.481926098Z Column: 1
+2026-02-03T15:15:13.481929208Z Char: R
+2026-02-03T15:15:13.489087325Z 📡 RSS feed okunuyor: Analytics India Magazine (deneme 3)
+2026-02-03T15:15:13.707583857Z ❌ RSS feed hatası (Analytics India Magazine): Attribute without value
+2026-02-03T15:15:13.707602207Z Line: 4
+2026-02-03T15:15:13.707605727Z Column: 19
+2026-02-03T15:15:13.707608687Z Char: s
+2026-02-03T15:15:14.207803736Z 📡 RSS feed okunuyor: The Rundown AI
+2026-02-03T15:15:14.210108718Z 📡 RSS feed okunuyor: SiliconANGLE - AI
+2026-02-03T15:15:14.210119328Z 📡 RSS feed okunuyor: AI Trends
+2026-02-03T15:15:14.211117435Z 📡 RSS feed okunuyor: Synced - AI Review
+2026-02-03T15:15:14.211643823Z 📡 RSS feed okunuyor: The Gradient
+2026-02-03T15:15:14.395117949Z ✅ 10 haber bulundu: Synced - AI Review
+2026-02-03T15:15:14.512003841Z ✅ 10 haber bulundu: AI Trends
+2026-02-03T15:15:15.273775642Z ✅ 10 haber bulundu: The Rundown AI
+2026-02-03T15:15:15.521498600Z ✅ 10 haber bulundu: The Gradient
+2026-02-03T15:15:15.989513294Z ✅ 10 haber bulundu: SiliconANGLE - AI
+2026-02-03T15:15:16.490025102Z 📡 RSS feed okunuyor: The Algorithmic Bridge
+2026-02-03T15:15:16.491474877Z 📡 RSS feed okunuyor: 404 Media
+2026-02-03T15:15:16.493165341Z 📡 RSS feed okunuyor: Ahead of AI
+2026-02-03T15:15:16.493619260Z 📡 RSS feed okunuyor: AI Accelerator Institute
+2026-02-03T15:15:16.493947289Z 📡 RSS feed okunuyor: AI - AI-TechPark
+2026-02-03T15:15:16.584987304Z ✅ 10 haber bulundu: 404 Media
+2026-02-03T15:15:16.714242595Z ✅ 10 haber bulundu: AI Accelerator Institute
+2026-02-03T15:15:16.724988870Z ✅ 10 haber bulundu: AI - AI-TechPark
+2026-02-03T15:15:16.786530081Z ✅ 10 haber bulundu: Ahead of AI
+2026-02-03T15:15:17.268088281Z ✅ 10 haber bulundu: The Algorithmic Bridge
+2026-02-03T15:15:17.769133387Z 📡 RSS feed okunuyor: AI Archives | KnowTechie
+2026-02-03T15:15:17.770419553Z 📡 RSS feed okunuyor: AIModels.fyi
+2026-02-03T15:15:17.771023341Z 📡 RSS feed okunuyor: AI Now Institute
+2026-02-03T15:15:17.771636959Z 📡 RSS feed okunuyor: AI Snake Oil
+2026-02-03T15:15:17.772397587Z 📡 RSS feed okunuyor: Ars Technica - All Content
+2026-02-03T15:15:17.905259717Z ✅ 10 haber bulundu: Ars Technica - All Content
+2026-02-03T15:15:17.920189178Z ✅ 10 haber bulundu: AI Archives | KnowTechie
+2026-02-03T15:15:18.052953678Z ✅ 10 haber bulundu: AI Now Institute
+2026-02-03T15:15:18.121687125Z ✅ 10 haber bulundu: AIModels.fyi
+2026-02-03T15:15:18.378530863Z ✅ 10 haber bulundu: AI Snake Oil
+2026-02-03T15:15:18.881218654Z 📡 RSS feed okunuyor: Artificial Intelligence – Futurism
+2026-02-03T15:15:18.885365640Z 📡 RSS feed okunuyor: Artificial Intelligence News - ScienceDaily
+2026-02-03T15:15:18.885387170Z 📡 RSS feed okunuyor: Machine Learning Mastery Blog
+2026-02-03T15:15:18.885392440Z 📡 RSS feed okunuyor: Chain of Thought
+2026-02-03T15:15:18.885395810Z 📡 RSS feed okunuyor: Chip Huyen
+2026-02-03T15:15:18.999603980Z ✅ 10 haber bulundu: Artificial Intelligence – Futurism
+2026-02-03T15:15:19.001368005Z ✅ 10 haber bulundu: Machine Learning Mastery Blog
+2026-02-03T15:15:19.073653530Z ✅ 10 haber bulundu: Chain of Thought
+2026-02-03T15:15:19.536613821Z ✅ 10 haber bulundu: Chip Huyen
+2026-02-03T15:15:19.563321604Z ✅ 10 haber bulundu: Artificial Intelligence News - ScienceDaily
+2026-02-03T15:15:20.065572406Z 📡 RSS feed okunuyor: Crunchbase News
+2026-02-03T15:15:20.065593856Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-03T15:15:20.067147312Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-03T15:15:20.068789196Z 📡 RSS feed okunuyor: LangChain Blog
+2026-02-03T15:15:20.068800986Z 📡 RSS feed okunuyor: Machine Learning Mastery
+2026-02-03T15:15:20.102165108Z ✅ 10 haber bulundu: KDnuggets
+2026-02-03T15:15:20.109963722Z ✅ 10 haber bulundu: Machine Learning Mastery
+2026-02-03T15:15:20.473986892Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-03T15:15:20.570342621Z ✅ 10 haber bulundu: LangChain Blog
+2026-02-03T15:15:20.696907930Z ✅ 10 haber bulundu: Crunchbase News
+2026-02-03T15:15:21.196982360Z 📡 RSS feed okunuyor: OpenAI Blog
+2026-02-03T15:15:21.200094860Z 📡 RSS feed okunuyor: Google AI Blog
+2026-02-03T15:15:21.200138330Z 📡 RSS feed okunuyor: DeepMind Blog
+2026-02-03T15:15:21.201340946Z 📡 RSS feed okunuyor: NVIDIA Blog - AI
+2026-02-03T15:15:21.202308683Z 📡 RSS feed okunuyor: AWS Machine Learning Blog
+2026-02-03T15:15:21.302549628Z ✅ 10 haber bulundu: DeepMind Blog
+2026-02-03T15:15:21.332181832Z ✅ 10 haber bulundu: NVIDIA Blog - AI
+2026-02-03T15:15:21.588391812Z ✅ 10 haber bulundu: OpenAI Blog
+2026-02-03T15:15:21.611844306Z ✅ 10 haber bulundu: AWS Machine Learning Blog
+2026-02-03T15:15:21.848245900Z ✅ 10 haber bulundu: Google AI Blog
+2026-02-03T15:15:22.228146519Z 💓 Heartbeat updated: 03.02.2026 15:15:22
+2026-02-03T15:15:22.349069098Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-03T15:15:22.350761632Z 📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+2026-02-03T15:15:22.351802678Z 📡 RSS feed okunuyor: Forbes - Innovation
+2026-02-03T15:15:22.353060584Z 📡 RSS feed okunuyor: The Economist - Technology
+2026-02-03T15:15:22.353408823Z 📡 RSS feed okunuyor: Fast Company - Technology
+2026-02-03T15:15:22.387218723Z ✅ 10 haber bulundu: Forbes - Innovation
+2026-02-03T15:15:22.630771224Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-03T15:15:22.669765498Z ✅ 10 haber bulundu: The Economist - Technology
+2026-02-03T15:15:22.950329078Z ✅ 10 haber bulundu: Fast Company - Technology
+2026-02-03T15:15:23.086794746Z ✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+2026-02-03T15:15:23.586335838Z 📡 RSS feed okunuyor: MIT Sloan Management Review
+2026-02-03T15:15:23.588065463Z 📡 RSS feed okunuyor: Seeking Alpha - Technology
+2026-02-03T15:15:23.588082923Z 📡 RSS feed okunuyor: New Scientist - Technology
+2026-02-03T15:15:23.588965749Z 📡 RSS feed okunuyor: Popular Science
+2026-02-03T15:15:23.589555038Z 📡 RSS feed okunuyor: Popular Mechanics
+2026-02-03T15:15:23.622424721Z ✅ 10 haber bulundu: Seeking Alpha - Technology
+2026-02-03T15:15:23.682517116Z ✅ 10 haber bulundu: New Scientist - Technology
+2026-02-03T15:15:23.684780499Z ✅ 10 haber bulundu: Popular Mechanics
+2026-02-03T15:15:23.709286400Z ✅ 10 haber bulundu: Popular Science
+2026-02-03T15:15:23.891331239Z ✅ 10 haber bulundu: MIT Sloan Management Review
+2026-02-03T15:15:24.393704342Z 📡 RSS feed okunuyor: Space.com
+2026-02-03T15:15:24.393720352Z 📡 RSS feed okunuyor: Phys.org - Technology
+2026-02-03T15:15:24.394281559Z 📡 RSS feed okunuyor: ScienceDaily - Technology
+2026-02-03T15:15:24.395179197Z 📡 RSS feed okunuyor: Futurism
+2026-02-03T15:15:24.395924955Z 📡 RSS feed okunuyor: Singularity Hub
+2026-02-03T15:15:24.433859531Z ✅ 10 haber bulundu: Singularity Hub
+2026-02-03T15:15:24.486086483Z ✅ 10 haber bulundu: Futurism
+2026-02-03T15:15:24.508795159Z ✅ 10 haber bulundu: Space.com
+2026-02-03T15:15:25.039470489Z ✅ 10 haber bulundu: ScienceDaily - Technology
+2026-02-03T15:15:25.061153459Z ✅ 10 haber bulundu: Phys.org - Technology
+2026-02-03T15:15:25.560965749Z 📡 RSS feed okunuyor: IEEE Spectrum - Technology
+2026-02-03T15:15:25.563404601Z 📡 RSS feed okunuyor: Towards Data Science
+2026-02-03T15:15:25.564596637Z 📡 RSS feed okunuyor: Analytics Vidhya
+2026-02-03T15:15:25.565817883Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-03T15:15:25.568621315Z 📡 RSS feed okunuyor: Machine Learning Reddit
+2026-02-03T15:15:25.710097276Z ✅ 10 haber bulundu: KDnuggets
+2026-02-03T15:15:26.132215968Z ✅ 10 haber bulundu: Towards Data Science
+2026-02-03T15:15:26.213036287Z ✅ 10 haber bulundu: IEEE Spectrum - Technology
+2026-02-03T15:15:26.394400019Z ✅ 10 haber bulundu: Analytics Vidhya
+2026-02-03T15:15:27.043672934Z ✅ 10 haber bulundu: Machine Learning Reddit
+2026-02-03T15:15:27.544561142Z 📡 RSS feed okunuyor: AI Trends
+2026-02-03T15:15:28.899478300Z ✅ 10 haber bulundu: AI Trends
+2026-02-03T15:15:28.899531911Z ✅ Toplam 887 haber toplandı
+2026-02-03T15:15:28.920516092Z ✅ 832 benzersiz haber
+2026-02-03T15:15:28.921266680Z 📅 Son 48 saatte 407 haber
+2026-02-03T15:15:28.931229858Z 🤖 AI filtreleme: 125/407 haber AI ile ilgili
+2026-02-03T15:15:28.931276698Z ⚡ Smart Sampling: 125 haber → 100 habere düşürülüyor
+2026-02-03T15:15:28.931811605Z ✅ En güncel 100 haber seçildi
+2026-02-03T15:15:28.931819605Z 
+2026-02-03T15:15:28.931825625Z 🔍 EARLY DUPLICATE FILTERING (Brave API'den ÖNCE)...
+2026-02-03T15:15:28.931831605Z    Input: 100 haber
+2026-02-03T15:15:28.968023689Z 🧠 Topic extraction: 100 haber...
+2026-02-03T15:15:28.968051189Z 🧠 Topic extraction başlatılıyor: 100 haber
+2026-02-03T15:15:28.968058319Z 📦 Batch 1/10 işleniyor (10 haber)...
+2026-02-03T15:15:30.415557218Z    ✅ OpenAI's dissatisfaction with Nvidia chips sparked... → openai_cerebras_partnership
+2026-02-03T15:15:30.415577898Z    ✅ Weekly Top Picks #112: Besides Moltbook... → weekly_top_picks_issue
+2026-02-03T15:15:30.415582028Z    ✅ The Future of the Global Open-Source AI Ecosystem:... → global_opensource_ai_ecosystem_future
+2026-02-03T15:15:30.415585588Z    ✅ The Future Of AI Stocks? TSMC Commentary Suggests ... → tsmc_ai_stocks_commentary
+2026-02-03T15:15:30.415588518Z    ✅ SpaceX and xAI: A merger of ambition, optics, and ... → spacex_xai_merger
+2026-02-03T15:15:30.415600828Z    ✅ GitHub Browser Plugin for AI Contribution Blame in... → github_ai_contribution_plugin
+2026-02-03T15:15:30.415602868Z    ✅ Waymo raises $16 bn to fuel global robotaxi expans... → waymo_robotaxi_investment
+2026-02-03T15:15:30.415604788Z    ✅ Show HN: Inverting Agent Model (App as Clients, Ch... → inverting_agent_model_showcase
+2026-02-03T15:15:30.415606668Z    ✅ Humans are infiltrating the social network for AI ... → human_ai_bot_infiltration
+2026-02-03T15:15:30.415608578Z    ✅ Peak XV says internal disagreement led to partner ... → peak_xv_partner_exits
+2026-02-03T15:15:30.915936836Z 📦 Batch 2/10 işleniyor (10 haber)...
+2026-02-03T15:15:32.552391743Z    ✅ OpenClaw is a major leap forward for AI—and a cybe... → openclaw_ai_cybersecurity
+2026-02-03T15:15:32.552433923Z    ✅ Intel is co-developing new Z-Angle Memory to compe... → intel_z_angle_memory_development
+2026-02-03T15:15:32.552443623Z    ✅ This is the Home Assistant automation I run that m... → home_assistant_automation_family
+2026-02-03T15:15:32.552451573Z    ✅ Can AI Find Physics Beyond the Standard Model?... → ai_physics_research
+2026-02-03T15:15:32.552459243Z    ✅ Mario Tennis Fever preview: A racket-smashing blas... → mario_tennis_fever_preview
+2026-02-03T15:15:32.552466633Z    ✅ Does AI understand word impressions like humans do... → ai_language_understanding_research
+2026-02-03T15:15:32.552474083Z    ✅ Elon Musk’s xAI Faces Second UK Probe for Grok Sex... → xai_grok_uk_probe
+2026-02-03T15:15:32.552481373Z    ✅ UK data regulator opens probe into Elon Musk's X a... → uk_x_xai_deepfake_probe
+2026-02-03T15:15:32.552488623Z    ✅ DeepL Launches Voice API for Real-Time Speech Tran... → deepl_voice_api_launch
+2026-02-03T15:15:32.552617662Z    ✅ Google Maps may bring Gemini to the last place you... → google_maps_gemini_integration
+2026-02-03T15:15:33.053506819Z 📦 Batch 3/10 işleniyor (10 haber)...
+2026-02-03T15:15:34.578953145Z    ✅ Snag this 4K-capable gaming PC with an RTX 5070 Ti... → gaming_pc_rtx_5070_ti_deal
+2026-02-03T15:15:34.579000575Z    ✅ Google Home update brings more automation controls... → google_home_automation_update
+2026-02-03T15:15:34.579041795Z    ✅ SpaceX acquires xAI in a bid to make orbiting data... → spacex_xai_acquisition
+2026-02-03T15:15:34.579052295Z    ✅ Rural India powers global AI models... → rural_india_ai_power
+2026-02-03T15:15:34.579062275Z    ✅ OpenClaw's AI agent does everything, even social m... → openclaw_ai_agent_social_media
+2026-02-03T15:15:34.579071395Z    ✅ 6 New Features of Grok Imagine 1.0 [MUST TRY]... → grok_imagine_features
+2026-02-03T15:15:34.579079285Z    ✅ Robotaxi pioneer Waymo gets $16 billion injection ... → waymo_expansion_investment
+2026-02-03T15:15:34.579086565Z    ✅ The Morning After: Elon Musk’s SpaceX is buying hi... → spacex_xai_acquisition
+2026-02-03T15:15:34.579095445Z    ✅ Elon Musk’s SpaceX acquires Elon Musks xAI, includ... → spacex_xai_acquisition
+2026-02-03T15:15:34.579141974Z    ✅ Validating LLM Output? Prepare to Be ‘Persuasion B... → llm_output_validation
+2026-02-03T15:15:35.079754892Z 📦 Batch 4/10 işleniyor (10 haber)...
+2026-02-03T15:15:37.219648397Z    ✅ How Musk used SpaceX to rescue xAI and build a $1.... → spacex_xai_rescue
+2026-02-03T15:15:37.219690487Z    ✅ The rise of Moltbook suggests viral AI prompts may... → moltbook_ai_prompts_security
+2026-02-03T15:15:37.219721847Z    ✅ ‘Fallout’ Producer Jonathan Nolan on AI: ‘We’re in... → jonathan_nolan_ai_comments
+2026-02-03T15:15:37.219725547Z    ✅ Gemini’s new ChatGPT import lets you keep context ... → gemini_chatgpt_import
+2026-02-03T15:15:37.219728687Z    ✅ ‘Get Me Out’: Traders Dump Software Stocks as AI F... → software_stocks_selloff
+2026-02-03T15:15:37.219754947Z    ✅ Private Equity’s Giant Software Bet Has Been Upend... → private_equity_software_ai_disruption
+2026-02-03T15:15:37.219758417Z    ✅ Build an AI Study Assistant with Claude Code + And... → claude_code_android_studio_tutorial
+2026-02-03T15:15:37.219761497Z    ✅ Ronnie Sheth, CEO, SENEN Group: Why now is the tim... → senen_group_enterprise_ai_practical
+2026-02-03T15:15:37.219830576Z    ✅ Firefox users will soon be able to block all gener... → firefox_ai_features_ban
+2026-02-03T15:15:37.219834586Z    ✅ AI in healthcare is entering a new era of accounta... → ai_healthcare_accountability
+2026-02-03T15:15:37.722196458Z 📦 Batch 5/10 işleniyor (10 haber)...
+2026-02-03T15:15:39.373261687Z    ✅ Elon Musk's AI bot faces probe after allegedly cre... → elon_musk_ai_probe
+2026-02-03T15:15:39.373285737Z    ✅ Your AI might run in orbit if SpaceX gets its sate... → spacex_satellite_ai_plan
+2026-02-03T15:15:39.373289887Z    ✅ Anthropic’s Move Into Legal Is Sinking Data Servic... → anthropic_legal_move
+2026-02-03T15:15:39.373293117Z    ✅ Elon Musk merges money-losing xAI into SpaceX befo... → elon_musk_xai_spacex_merger
+2026-02-03T15:15:39.373296317Z    ✅ I use AI to help me blind buy perfumes, and it’s a... → ai_perfume_blind_buy
+2026-02-03T15:15:39.373299337Z    ✅ Apptio: Why scaling intelligent automation require... → apptio_intelligent_automation_scaling
+2026-02-03T15:15:39.373302867Z    ✅ xAI joins SpaceX in mega-merger... → xai_spacex_merger
+2026-02-03T15:15:39.373306197Z    ✅ FedEx tests how far AI can go in tracking and retu... → fedex_ai_tracking_test
+2026-02-03T15:15:39.373309207Z    ✅ Why America losing the global EV race hurts its ow... → america_ev_race_impact
+2026-02-03T15:15:39.373312187Z    ✅ OpenAI’s Codex app: When your IDE gets a brain... → openai_codex_launch
+2026-02-03T15:15:39.873942184Z 📦 Batch 6/10 işleniyor (10 haber)...
+2026-02-03T15:15:41.447988402Z    ✅ Miro Launches MCP Server to Connect Visual Collabo... → miro_mcp_server_launch
+2026-02-03T15:15:41.448024132Z    ✅ How to Build an OpenClaw Agent in Less Than 10 Min... → openclaw_agent_tutorial
+2026-02-03T15:15:41.448052192Z    ✅ Publicis deepens AI push, saying rivals have yet t... → publicis_ai_investment
+2026-02-03T15:15:41.448057832Z    ✅ Scheming, joking, complaining: Moltbook’s AI agent... → moltbook_ai_agents_behavior
+2026-02-03T15:15:41.448062802Z    ✅ OpenAI’s ChatGPT push triggers senior staff exits... → openai_chatgpt_staff_exits
+2026-02-03T15:15:41.448068082Z    ✅ Fuel cell groups ride AI wave as data centres stra... → fuel_cell_data_center_investment
+2026-02-03T15:15:41.448072972Z    ✅ The Out-of-Touch Adults' Guide to Kid Culture: Hum... → humans_ai_dance_battle
+2026-02-03T15:15:41.448077702Z    ✅ How to Build Multi-Layered LLM Safety Filters to D... → llm_safety_filters_defense
+2026-02-03T15:15:41.448082562Z    ✅ [D] Where is modern geometry actually useful in ma... → machine_learning_geometry_applications
+2026-02-03T15:15:41.448087352Z    ✅ Elon Musk's SpaceX buys Elon Musk's xAI... → spacex_xai_acquisition
+2026-02-03T15:15:41.948943469Z 📦 Batch 7/10 işleniyor (10 haber)...
+2026-02-03T15:15:43.529804965Z    ✅ New Apple study shows how grouping similar sounds ... → apple_ai_speech_generation
+2026-02-03T15:15:43.529841094Z    ✅ Waymo Closes in on Uber and Lyft Prices, as More R... → waymo_robotaxi_trust
+2026-02-03T15:15:43.529844814Z    ✅ Elon Musk Is Rolling xAI Into SpaceX—Creating the ... → xai_spacex_integration
+2026-02-03T15:15:43.529847614Z    ✅ Oracle chases $50 billion for AI build-out as doub... → oracle_ai_investment
+2026-02-03T15:15:43.529964434Z    ✅ Elon Musk's SpaceX acquires xAI... → spacex_xai_acquisition
+2026-02-03T15:15:43.529972844Z    ✅ Firefox Will Soon Let You Disable All Current (and... → firefox_ai_features_disable
+2026-02-03T15:15:43.529975934Z    ✅ Google Releases Conductor: a context driven Gemini... → google_conductor_release
+2026-02-03T15:15:43.529978624Z    ✅ The Sideload 020: AI-powered haircuts and cocktail... → ai_haircuts_cocktails
+2026-02-03T15:15:43.529981214Z    ✅ [D] Your pet peeves in ML research ?... → machine_learning_research_pet_peeves
+2026-02-03T15:15:43.529983734Z    ✅ Mamdani Shuts Down NYC’s Disastrous AI Chatbot... → mamdani_nyc_chatbot_shutdown
+2026-02-03T15:15:44.036249404Z 📦 Batch 8/10 işleniyor (10 haber)...
+2026-02-03T15:15:45.662298343Z    ✅ HHS Is Using AI Tools From Palantir to Target ‘DEI... → hhs_palantir_ai_targeting
+2026-02-03T15:15:45.662334032Z    ✅ Google Home update finally adds support for smart ... → google_home_automation_update
+2026-02-03T15:15:45.662340792Z    ✅ Why insurers’ increased use of AI is sparking conc... → insurers_ai_policyholder_concerns
+2026-02-03T15:15:45.662345842Z    ✅ Alarm Grows as Social Network Entirely for AI Star... → ai_social_network_threat
+2026-02-03T15:15:45.662350672Z    ✅ Firefox is adding a switch to turn AI features off... → firefox_ai_features_switch
+2026-02-03T15:15:45.662419372Z    ✅ Gemini Live rolling out floating pill redesign on ... → gemini_live_redesign
+2026-02-03T15:15:45.662426102Z    ✅ Frontier Radar #1: From chatbots to problem solver... → ai_agents_state_2026
+2026-02-03T15:15:45.662450332Z    ✅ What Snowflake’s deal with OpenAI tells us about t... → snowflake_openai_partnership
+2026-02-03T15:15:45.662456232Z    ✅ Firefox will soon let you block all of its generat... → firefox_ai_features_ban
+2026-02-03T15:15:45.662461272Z    ✅ Codex by OpenAI... → openai_codex_release
+2026-02-03T15:15:46.163194649Z 📦 Batch 9/10 işleniyor (10 haber)...
+2026-02-03T15:15:47.684257019Z    ✅ The Statistical Cost of Zero Padding in Convolutio... → cnn_zero_padding_research
+2026-02-03T15:15:47.684994616Z    ✅ OpenAI launches new macOS app for agentic coding... → openai_macos_app_launch
+2026-02-03T15:15:47.685033536Z    ✅ Combatting Cultural Bias in the Translation of AI ... → ai_models_cultural_bias
+2026-02-03T15:15:47.685041066Z    ✅ What we’ve been getting wrong about AI’s truth cri... → ai_truth_crisis
+2026-02-03T15:15:47.685047016Z    ✅ Adobe Firefly now offers unlimited image and video... → adobe_firefly_subscription_unlimited
+2026-02-03T15:15:47.685052646Z    ✅ OpenAI launches Codex app for macOS to manage mult... → openai_codex_macos_launch
+2026-02-03T15:15:47.685058636Z    ✅ [D] New interesting AI papers exploration service... → d_ai_papers_exploration
+2026-02-03T15:15:47.685063976Z    ✅ [D] Looking for advice regarding shortage of refer... → research_reference_shortage
+2026-02-03T15:15:47.685069436Z    ✅ New York Robotics Consortium Launches with 160 Sta... → new_york_robotics_consortium_launch
+2026-02-03T15:15:47.685074836Z    ✅ Building Systems That Survive Real Life... → system_survival_engineering
+2026-02-03T15:15:48.185034986Z 📦 Batch 10/10 işleniyor (10 haber)...
+2026-02-03T15:15:49.876004444Z    ✅ How Clarus Care uses Amazon Bedrock to deliver con... → clarus_care_amazon_bedrock_partnership
+2026-02-03T15:15:49.876071734Z    ✅ "Daddy", "Master", "Guru": Anthropic study shows h... → anthropic_claude_dependency
+2026-02-03T15:15:49.876075674Z    ✅ OpenClaw: all the news about the trending AI agent... → openclaw_ai_agent_news
+2026-02-03T15:15:49.876078734Z    ✅ The AI boom could cost Apple up to $57 more per iP... → apple_iphone_cost_increase
+2026-02-03T15:15:49.876081714Z    ✅ Klarna backs Google UCP to power AI agent payments... → klarna_google_ucp_partnership
+2026-02-03T15:15:49.876084494Z    ✅ Process Mining Matures in the Age of Generative AI... → process_mining_generative_ai_maturity
+2026-02-03T15:15:49.876087434Z    ✅ WTF is a Parameter?!?... → parameter_definition_explanation
+2026-02-03T15:15:49.876090075Z    ✅ Don’t Regulate AI Models. Regulate AI Use... → ai_regulation_policy
+2026-02-03T15:15:49.876092685Z    ✅ Docusign&#8217;s CEO on the dangers of trusting AI... → docusign_ai_contracts_dangers
+2026-02-03T15:15:49.876095715Z    ✅ Carbon Robotics built an AI model that detects and... → carbon_robotics_ai_model
+2026-02-03T15:15:49.876098475Z ✅ Topic extraction tamamlandı: 100 haber
+2026-02-03T15:15:49.876136974Z 🔍 Duplicate check: Son 2 günde yayınlananlar eleniyor...
+2026-02-03T15:15:49.876139854Z 
+2026-02-03T15:15:49.876142324Z 🔍 Early duplicate filtering başlatılıyor...
+2026-02-03T15:15:49.876145034Z    Input: 100 haber
+2026-02-03T15:15:49.876147564Z    Time window: 2 gün
+2026-02-03T15:15:49.898732010Z    📚 Checking against 100 recent articles in database
+2026-02-03T15:15:49.901423082Z    ⏭️  SKIP (topic duplicate in DB): spacex_xai_merger - "SpaceX and xAI: A merger of ambition, optics, and ..."
+2026-02-03T15:15:49.901642902Z    ⏭️  SKIP (topic duplicate in DB): waymo_robotaxi_investment - "Waymo raises $16 bn to fuel global robotaxi expans..."
+2026-02-03T15:15:49.904285683Z    ⏭️  SKIP (entity+keyword duplicate in DB): [x] + 33% similarity
+2026-02-03T15:15:49.904421832Z       New: "Elon Musk’s xAI Faces Second UK Probe for Grok Sex..."
+2026-02-03T15:15:49.904697131Z       Existing: "OpenAI, Elon Musk'ın xAI'sini Mahkemede Delil Yok ..." (2/2/2026)
+2026-02-03T15:15:49.910142344Z    ⏭️  SKIP (topic duplicate in BATCH): spacex_xai_acquisition - "The Morning After: Elon Musk’s SpaceX is buying hi..."
+2026-02-03T15:15:49.910253713Z       Already selected: "SpaceX acquires xAI in a bid to make orbiting data..."
+2026-02-03T15:15:49.910339053Z    ⏭️  SKIP (topic duplicate in BATCH): spacex_xai_acquisition - "Elon Musk’s SpaceX acquires Elon Musks xAI, includ..."
+2026-02-03T15:15:49.910404563Z       Already selected: "SpaceX acquires xAI in a bid to make orbiting data..."
+2026-02-03T15:15:49.910798221Z    ⏭️  SKIP (entity+keyword duplicate in DB): [x, spacex] + 33% similarity
+2026-02-03T15:15:49.910852561Z       New: "How Musk used SpaceX to rescue xAI and build a $1...."
+2026-02-03T15:15:49.910939682Z       Existing: "Elon Musk, xAI'yi SpaceX'e Katıyor: Dünyanın En De..." (2/3/2026)
+2026-02-03T15:15:49.913875892Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [x] + 42% similarity
+2026-02-03T15:15:49.913969081Z       New: "Elon Musk's AI bot faces probe after allegedly cre..."
+2026-02-03T15:15:49.914023791Z       Already selected: "UK data regulator opens probe into Elon Musk's X a..."
+2026-02-03T15:15:49.915175987Z    ⏭️  SKIP (entity+keyword duplicate in DB): [x, spacex] + 36% similarity
+2026-02-03T15:15:49.915242847Z       New: "Elon Musk merges money-losing xAI into SpaceX befo..."
+2026-02-03T15:15:49.915332037Z       Existing: "Elon Musk, xAI'yi SpaceX'e Katıyor: Dünyanın En De..." (2/3/2026)
+2026-02-03T15:15:49.915443806Z    ⏭️  SKIP (topic duplicate in DB): xai_spacex_merger - "xAI joins SpaceX in mega-merger..."
+2026-02-03T15:15:49.916848302Z    ⏭️  SKIP (topic duplicate in DB): openai_chatgpt_staff_exits - "OpenAI’s ChatGPT push triggers senior staff exits..."
+2026-02-03T15:15:49.917033082Z    ⏭️  SKIP (topic duplicate in BATCH): spacex_xai_acquisition - "Elon Musk's SpaceX buys Elon Musk's xAI..."
+2026-02-03T15:15:49.917210251Z       Already selected: "SpaceX acquires xAI in a bid to make orbiting data..."
+2026-02-03T15:15:49.917999838Z    ⏭️  SKIP (URL duplicate in DB): https://www.wired.com/story/spacex-acquires-xai-elon-musk/...
+2026-02-03T15:15:49.918123908Z    ⏭️  SKIP (topic duplicate in BATCH): spacex_xai_acquisition - "Elon Musk's SpaceX acquires xAI..."
+2026-02-03T15:15:49.918163768Z       Already selected: "SpaceX acquires xAI in a bid to make orbiting data..."
+2026-02-03T15:15:49.919953582Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [x] + 50% similarity
+2026-02-03T15:15:49.920091761Z       New: "Firefox Will Soon Let You Disable All Current (and..."
+2026-02-03T15:15:49.920096391Z       Already selected: "Firefox users will soon be able to block all gener..."
+2026-02-03T15:15:49.920929259Z    ⏭️  SKIP (topic duplicate in DB): hhs_palantir_ai_targeting - "HHS Is Using AI Tools From Palantir to Target ‘DEI..."
+2026-02-03T15:15:49.921162208Z    ⏭️  SKIP (topic duplicate in BATCH): google_home_automation_update - "Google Home update finally adds support for smart ..."
+2026-02-03T15:15:49.921166978Z       Already selected: "Google Home update brings more automation controls..."
+2026-02-03T15:15:49.921222288Z    ⏭️  SKIP (topic duplicate in DB): ai_social_network_threat - "Alarm Grows as Social Network Entirely for AI Star..."
+2026-02-03T15:15:49.921225048Z    ⏭️  SKIP (topic duplicate in DB): firefox_ai_features_switch - "Firefox is adding a switch to turn AI features off..."
+2026-02-03T15:15:49.921227168Z    ⏭️  SKIP (topic duplicate in DB): gemini_live_redesign - "Gemini Live rolling out floating pill redesign on ..."
+2026-02-03T15:15:49.921288967Z    ⏭️  SKIP (topic duplicate in DB): snowflake_openai_partnership - "What Snowflake’s deal with OpenAI tells us about t..."
+2026-02-03T15:15:49.921309667Z    ⏭️  SKIP (topic duplicate in BATCH): firefox_ai_features_ban - "Firefox will soon let you block all of its generat..."
+2026-02-03T15:15:49.921324867Z       Already selected: "Firefox users will soon be able to block all gener..."
+2026-02-03T15:15:49.921418777Z    ⏭️  SKIP (entity+keyword duplicate in DB): [openai] + 50% similarity
+2026-02-03T15:15:49.921442357Z       New: "Codex by OpenAI..."
+2026-02-03T15:15:49.921468057Z       Existing: "Nvidia CEO'su: OpenAI'a Yapılan Büyük Yatırım Plan..." (2/1/2026)
+2026-02-03T15:15:49.921534676Z    ⏭️  SKIP (topic duplicate in DB): openai_macos_app_launch - "OpenAI launches new macOS app for agentic coding..."
+2026-02-03T15:15:49.922258585Z    ⏭️  SKIP (entity+keyword duplicate in DB): [openai, x] + 33% similarity
+2026-02-03T15:15:49.922266784Z       New: "OpenAI launches Codex app for macOS to manage mult..."
+2026-02-03T15:15:49.922937273Z       Existing: "OpenAI, Codex Yapay Zeka Platformu için macOS Uygu..." (2/2/2026)
+2026-02-03T15:15:49.925886383Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [x] + 33% similarity
+2026-02-03T15:15:49.925895453Z       New: "[D] New interesting AI papers exploration service..."
+2026-02-03T15:15:49.925905203Z       Already selected: "Intel is co-developing new Z-Angle Memory to compe..."
+2026-02-03T15:15:49.925907283Z    ⏭️  SKIP (topic duplicate in DB): anthropic_claude_dependency - ""Daddy", "Master", "Guru": Anthropic study shows h..."
+2026-02-03T15:15:49.925909503Z    ⏭️  SKIP (topic duplicate in DB): openclaw_ai_agent_news - "OpenClaw: all the news about the trending AI agent..."
+2026-02-03T15:15:49.925911463Z    ⏭️  SKIP (topic duplicate in DB): klarna_google_ucp_partnership - "Klarna backs Google UCP to power AI agent payments..."
+2026-02-03T15:15:49.925913373Z    ⏭️  SKIP (topic duplicate in DB): carbon_robotics_ai_model - "Carbon Robotics built an AI model that detects and..."
+2026-02-03T15:15:49.925915263Z 
+2026-02-03T15:15:49.925917023Z 📊 Early filtering özeti:
+2026-02-03T15:15:49.925918883Z    Input: 100 haber
+2026-02-03T15:15:49.925920603Z    Duplicate: 29 haber
+2026-02-03T15:15:49.925922593Z    Unique: 71 haber
+2026-02-03T15:15:49.925924283Z    Duplicate rate: 29.0%
+2026-02-03T15:15:49.925925993Z 
+2026-02-03T15:15:49.925927723Z 📊 Early filtering sonuçları:
+2026-02-03T15:15:49.925929543Z    Input: 100 haber
+2026-02-03T15:15:49.925931863Z    Duplicate: 29 haber
+2026-02-03T15:15:49.925946613Z    Unique: 71 haber
+2026-02-03T15:15:49.925948563Z    Duplicate rate: 29.0%
+2026-02-03T15:15:49.925950293Z 
+2026-02-03T15:15:49.925951953Z ✅ 71 unique haber Brave API'ye gönderilecek
+2026-02-03T15:15:49.925953863Z    Brave API maliyet tasarrufu: 29.0%
+2026-02-03T15:15:49.925955633Z 
+2026-02-03T15:15:49.925957293Z 📊 71 UNIQUE haber için Trend analizi (Brave API)...
+2026-02-03T15:15:49.925959172Z 📊 Hybrid ile 71 haber analiz ediliyor...
+2026-02-03T15:15:49.925960932Z 📦 Batch 1/8 işleniyor (10 haber)...
+2026-02-03T15:15:49.966150923Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.966518291Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.967751447Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.967823947Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.968501634Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.968745694Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.969311782Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.969324742Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.970030710Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.970070880Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.970702327Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.970707857Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.972786211Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.972797741Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.973792578Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.974940014Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.974949264Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.975323782Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.976195990Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:49.976236890Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:49.976366629Z ⏳ 500ms bekleniyor...
+2026-02-03T15:15:50.476496788Z 📦 Batch 2/8 işleniyor (10 haber)...
+2026-02-03T15:15:50.483393835Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.484223853Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.485061240Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.485276849Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.486825874Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.486842444Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.491992758Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.492012248Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.492014778Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.492016948Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.493151974Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.493163474Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.496834492Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.496848042Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.496850572Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.496852652Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.501731556Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.504211638Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.505832903Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:50.505883532Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:50.505926812Z ⏳ 500ms bekleniyor...
+2026-02-03T15:15:51.006796298Z 📦 Batch 3/8 işleniyor (10 haber)...
+2026-02-03T15:15:51.014797453Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.014831693Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.015837340Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.015854780Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.017320235Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.017342275Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.018435711Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.018456941Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.019029990Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.019253969Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.020218786Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.020779053Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.020986243Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.020993693Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.023476585Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.023565384Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.026438515Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.026449855Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.028174209Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.028184019Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.028189319Z ⏳ 500ms bekleniyor...
+2026-02-03T15:15:51.529481715Z 📦 Batch 4/8 işleniyor (10 haber)...
+2026-02-03T15:15:51.545280983Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.545318423Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.551974122Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.552161361Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.553153228Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.556269538Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.557313184Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.557842923Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.561515411Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.561567191Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.562656668Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.562832627Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.567734061Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.567753671Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.568957447Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.570946810Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.573747961Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.573977140Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:51.575414856Z ⏳ 500ms bekleniyor...
+2026-02-03T15:15:51.575442555Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:51.575447625Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.078774333Z 📦 Batch 5/8 işleniyor (10 haber)...
+2026-02-03T15:15:52.082532632Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.082549632Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.083653059Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.083669019Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.084928764Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.085062934Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.086020341Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.086110881Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.088390903Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.088400083Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.089405589Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.089460079Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.097955641Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.097975631Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.097979211Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.097981921Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.097992382Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.097994392Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.099094568Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.099131308Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.099191168Z ⏳ 500ms bekleniyor...
+2026-02-03T15:15:52.225304299Z 💓 Heartbeat updated: 03.02.2026 15:15:52
+2026-02-03T15:15:52.600179504Z 📦 Batch 6/8 işleniyor (10 haber)...
+2026-02-03T15:15:52.606722242Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.606738932Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.612684413Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.612701363Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.612703803Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.612705753Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.612707743Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.612709503Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.612711293Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.612713123Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.612714963Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.612716713Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.612718493Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.612720253Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.616155162Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.616182762Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.616640941Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.616649261Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:52.617064999Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:52.617078609Z ⏳ 500ms bekleniyor...
+2026-02-03T15:15:52.617082389Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.118048565Z 📦 Batch 7/8 işleniyor (10 haber)...
+2026-02-03T15:15:53.130112746Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.130600735Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.131773831Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.132523428Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.133781144Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.134095473Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.137755922Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.137800671Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.141833588Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.141855478Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.143846612Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.143884732Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.145574396Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.146125404Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.147538750Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.148377267Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.151043378Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.151112368Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.152193225Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.152197415Z ⏳ 500ms bekleniyor...
+2026-02-03T15:15:53.152214985Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.654444076Z 📦 Batch 8/8 işleniyor (1 haber)...
+2026-02-03T15:15:53.658842252Z ❌ SearXNG search error: Request failed with status code 429
+2026-02-03T15:15:53.658882952Z ❌ SearXNG trend score error: Request failed with status code 429
+2026-02-03T15:15:53.659062511Z ✅ Hybrid trend sıralaması tamamlandı
+2026-02-03T15:15:53.659069841Z 📊 İşlenen: 71/71 haber
+2026-02-03T15:15:53.659072331Z 🏆 Top 5: #1 (skor: 0), #2 (skor: 0), #3 (skor: 0), #4 (skor: 0), #5 (skor: 0)
+2026-02-03T15:15:53.659074451Z 📈 Provider İstatistikleri:
+2026-02-03T15:15:53.659076351Z    Brave: 0 istek, 0 hata, ✅ aktif
+2026-02-03T15:15:53.659078251Z    Tavily: 0 istek, 0 hata, ✅ aktif
+2026-02-03T15:15:53.659080051Z    SearXNG: 71 istek, 0 hata, ✅ aktif
+2026-02-03T15:15:53.659233331Z ✅ 50 trend haber seçildi (retry pool için artırıldı)
+2026-02-03T15:15:53.659238521Z Top 5 Trend Haberler: 
+2026-02-03T15:15:53.659240561Z   1. OpenAI's dissatisfaction with Nvidia chips sparked Cerebras ... (skor: 0)
+2026-02-03T15:15:53.659242391Z   2. Weekly Top Picks #112: Besides Moltbook... (skor: 0)
+2026-02-03T15:15:53.659254641Z   3. The Future of the Global Open-Source AI Ecosystem: From Deep... (skor: 0)
+2026-02-03T15:15:53.659256571Z   4. The Future Of AI Stocks? TSMC Commentary Suggests AI Megatre... (skor: 0)
+2026-02-03T15:15:53.659258371Z   5. GitHub Browser Plugin for AI Contribution Blame in Pull Requ... (skor: 0)
+2026-02-03T15:15:53.659284120Z ✅ 50 unique trend haber bulundu (duplicate filtering yapıldı)
+2026-02-03T15:15:53.661293804Z info: 📊 Agent step: smart_filtering Akıllı filtreleme ve topic extraction {"environment":"production","logId":"cml6qpl620000ywuep69u4j4a","module":"agent","progress":40,"service":"ai-news-agent","step":"smart_filtering","timestamp":"2026-02-03 15:15:53"}
+2026-02-03T15:15:53.662604510Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-03T15:15:53.662629920Z 🎯 Adım 2: Akıllı filtreleme başlatılıyor...
+2026-02-03T15:15:53.667285895Z 📊 Haber sayısı ayarları: min=1, max=1
+2026-02-03T15:15:53.667299615Z 🎯 Hedef haber sayısı: 1
+2026-02-03T15:15:53.692986921Z 
+2026-02-03T15:15:53.693034031Z ============================================================
+2026-02-03T15:15:53.693036921Z 🚀 SMART FILTERING PIPELINE BAŞLATILIYOR
+2026-02-03T15:15:53.693039741Z ============================================================
+2026-02-03T15:15:53.693041581Z    Input: 50 haber
+2026-02-03T15:15:53.693043381Z    Target: 1 unique haber
+2026-02-03T15:15:53.693045061Z    Time window: 2 gün
+2026-02-03T15:15:53.693046801Z    Skip duplicate check: false
+2026-02-03T15:15:53.693048551Z 
+2026-02-03T15:15:53.693050211Z 📊 STAGE 1: BATCH FILTERING
+2026-02-03T15:15:53.693051951Z    Input: 50 haber
+2026-02-03T15:15:53.693053691Z    Batch size: 10
+2026-02-03T15:15:53.693055371Z    Top per batch: 5
+2026-02-03T15:15:53.693057041Z    📦 Batch 1: 10 haber → 5 seçilecek
+2026-02-03T15:15:53.693058851Z       1. [0] OpenAI's dissatisfaction with Nvidia chips sparked...
+2026-02-03T15:15:53.693060671Z       2. [0] Weekly Top Picks #112: Besides Moltbook...
+2026-02-03T15:15:53.693062401Z       3. [0] The Future of the Global Open-Source AI Ecosystem:...
+2026-02-03T15:15:53.693064121Z       4. [0] The Future Of AI Stocks? TSMC Commentary Suggests ...
+2026-02-03T15:15:53.693065851Z       5. [0] GitHub Browser Plugin for AI Contribution Blame in...
+2026-02-03T15:15:53.693067601Z    📦 Batch 2: 10 haber → 5 seçilecek
+2026-02-03T15:15:53.693069331Z       1. [0] This is the Home Assistant automation I run that m...
+2026-02-03T15:15:53.693071061Z       2. [0] Can AI Find Physics Beyond the Standard Model?...
+2026-02-03T15:15:53.693072821Z       3. [0] Mario Tennis Fever preview: A racket-smashing blas...
+2026-02-03T15:15:53.693074521Z       4. [0] Does AI understand word impressions like humans do...
+2026-02-03T15:15:53.693085401Z       5. [0] UK data regulator opens probe into Elon Musk's X a...
+2026-02-03T15:15:53.693087251Z    📦 Batch 3: 10 haber → 5 seçilecek
+2026-02-03T15:15:53.693111611Z       1. [0] Rural India powers global AI models...
+2026-02-03T15:15:53.693113411Z       2. [0] OpenClaw's AI agent does everything, even social m...
+2026-02-03T15:15:53.693115150Z       3. [0] 6 New Features of Grok Imagine 1.0 [MUST TRY]...
+2026-02-03T15:15:53.693116940Z       4. [0] Robotaxi pioneer Waymo gets $16 billion injection ...
+2026-02-03T15:15:53.693118700Z       5. [0] Validating LLM Output? Prepare to Be ‘Persuasion B...
+2026-02-03T15:15:53.693120490Z    📦 Batch 4: 10 haber → 5 seçilecek
+2026-02-03T15:15:53.693122240Z       1. [0] Build an AI Study Assistant with Claude Code + And...
+2026-02-03T15:15:53.693123970Z       2. [0] Ronnie Sheth, CEO, SENEN Group: Why now is the tim...
+2026-02-03T15:15:53.693125660Z       3. [0] Firefox users will soon be able to block all gener...
+2026-02-03T15:15:53.693127410Z       4. [0] AI in healthcare is entering a new era of accounta...
+2026-02-03T15:15:53.693129100Z       5. [0] Your AI might run in orbit if SpaceX gets its sate...
+2026-02-03T15:15:53.693130830Z    📦 Batch 5: 10 haber → 5 seçilecek
+2026-02-03T15:15:53.693132520Z       1. [0] OpenAI’s Codex app: When your IDE gets a brain...
+2026-02-03T15:15:53.693134260Z       2. [0] Miro Launches MCP Server to Connect Visual Collabo...
+2026-02-03T15:15:53.693136870Z       3. [0] How to Build an OpenClaw Agent in Less Than 10 Min...
+2026-02-03T15:15:53.693138670Z       4. [0] Publicis deepens AI push, saying rivals have yet t...
+2026-02-03T15:15:53.693140500Z       5. [0] Scheming, joking, complaining: Moltbook’s AI agent...
+2026-02-03T15:15:53.693142440Z    ✅ Filtered: 25 haber
+2026-02-03T15:15:53.693144190Z 
+2026-02-03T15:15:53.693145860Z 🧠 STAGE 2: TOPIC EXTRACTION
+2026-02-03T15:15:53.693147560Z    Input: 25 haber
+2026-02-03T15:15:53.693149270Z 🧠 Topic extraction başlatılıyor: 25 haber
+2026-02-03T15:15:53.693151100Z 📦 Batch 1/7 işleniyor (4 haber)...
+2026-02-03T15:15:55.226303721Z    ✅ OpenAI's dissatisfaction with Nvidia chips sparked... → openai_cerebras_partnership
+2026-02-03T15:15:55.226406561Z    ✅ Weekly Top Picks #112: Besides Moltbook... → weekly_top_picks_issue
+2026-02-03T15:15:55.226767409Z    ✅ The Future of the Global Open-Source AI Ecosystem:... → global_opensource_ai_ecosystem_future
+2026-02-03T15:15:55.226793959Z    ✅ The Future Of AI Stocks? TSMC Commentary Suggests ... → tsmc_ai_stocks_commentary
+2026-02-03T15:15:55.729084700Z 📦 Batch 2/7 işleniyor (4 haber)...
+2026-02-03T15:15:57.123193302Z    ✅ GitHub Browser Plugin for AI Contribution Blame in... → github_ai_contribution_plugin
+2026-02-03T15:15:57.123246331Z    ✅ This is the Home Assistant automation I run that m... → home_assistant_automation_family
+2026-02-03T15:15:57.123255041Z    ✅ Can AI Find Physics Beyond the Standard Model?... → ai_physics_research
+2026-02-03T15:15:57.123257941Z    ✅ Mario Tennis Fever preview: A racket-smashing blas... → mario_tennis_fever_preview
+2026-02-03T15:15:57.624145967Z 📦 Batch 3/7 işleniyor (4 haber)...
+2026-02-03T15:15:58.865114874Z    ✅ Does AI understand word impressions like humans do... → ai_language_understanding_research
+2026-02-03T15:15:58.865265884Z    ✅ UK data regulator opens probe into Elon Musk's X a... → uk_x_xai_deepfake_probe
+2026-02-03T15:15:58.865352863Z    ✅ Rural India powers global AI models... → rural_india_ai_power
+2026-02-03T15:15:58.865387893Z    ✅ OpenClaw's AI agent does everything, even social m... → openclaw_ai_agent_social_media
+2026-02-03T15:15:59.366185850Z 📦 Batch 4/7 işleniyor (4 haber)...
+2026-02-03T15:16:01.075476418Z    ✅ 6 New Features of Grok Imagine 1.0 [MUST TRY]... → grok_imagine_features
+2026-02-03T15:16:01.075500228Z    ✅ Robotaxi pioneer Waymo gets $16 billion injection ... → waymo_expansion_investment
+2026-02-03T15:16:01.075502818Z    ✅ Validating LLM Output? Prepare to Be ‘Persuasion B... → llm_output_validation
+2026-02-03T15:16:01.075504968Z    ✅ Build an AI Study Assistant with Claude Code + And... → claude_code_android_studio_integration
+2026-02-03T15:16:01.576123915Z 📦 Batch 5/7 işleniyor (4 haber)...
+2026-02-03T15:16:03.223922613Z    ✅ Ronnie Sheth, CEO, SENEN Group: Why now is the tim... → senen_group_enterprise_ai_practical
+2026-02-03T15:16:03.223947063Z    ✅ Firefox users will soon be able to block all gener... → firefox_generative_ai_block
+2026-02-03T15:16:03.223949653Z    ✅ AI in healthcare is entering a new era of accounta... → ai_healthcare_accountability
+2026-02-03T15:16:03.223951733Z    ✅ Your AI might run in orbit if SpaceX gets its sate... → spacex_satellite_ai_plan
+2026-02-03T15:16:03.726752133Z 📦 Batch 6/7 işleniyor (4 haber)...
+2026-02-03T15:16:05.177939828Z    ✅ OpenAI’s Codex app: When your IDE gets a brain... → openai_codex_launch
+2026-02-03T15:16:05.177966618Z    ✅ Miro Launches MCP Server to Connect Visual Collabo... → miro_mcp_server_launch
+2026-02-03T15:16:05.177973708Z    ✅ How to Build an OpenClaw Agent in Less Than 10 Min... → openclaw_agent_tutorial
+2026-02-03T15:16:05.177979918Z    ✅ Publicis deepens AI push, saying rivals have yet t... → publicis_ai_investment
+2026-02-03T15:16:05.678273426Z 📦 Batch 7/7 işleniyor (1 haber)...
+2026-02-03T15:16:07.298762362Z    ✅ Scheming, joking, complaining: Moltbook’s AI agent... → moltbook_ai_agents_behavior
+2026-02-03T15:16:07.298783582Z ✅ Topic extraction tamamlandı: 25 haber
+2026-02-03T15:16:07.298787432Z 
+2026-02-03T15:16:07.298790712Z    📊 Topic dağılımı:
+2026-02-03T15:16:07.298793782Z       openai_cerebras_partnership: 1 haber
+2026-02-03T15:16:07.298804232Z       weekly_top_picks_issue: 1 haber
+2026-02-03T15:16:07.298806212Z       global_opensource_ai_ecosystem_future: 1 haber
+2026-02-03T15:16:07.298808062Z       tsmc_ai_stocks_commentary: 1 haber
+2026-02-03T15:16:07.298809882Z       github_ai_contribution_plugin: 1 haber
+2026-02-03T15:16:07.298811712Z       home_assistant_automation_family: 1 haber
+2026-02-03T15:16:07.298813592Z       ai_physics_research: 1 haber
+2026-02-03T15:16:07.298815402Z       mario_tennis_fever_preview: 1 haber
+2026-02-03T15:16:07.298817212Z       ai_language_understanding_research: 1 haber
+2026-02-03T15:16:07.298819042Z       uk_x_xai_deepfake_probe: 1 haber
+2026-02-03T15:16:07.298820842Z    ✅ Topics extracted: 25 haber
+2026-02-03T15:16:07.298822722Z 
+2026-02-03T15:16:07.298824492Z 🔍 STAGE 3: TOPIC-BASED DUPLICATE CHECK & SMART SELECTION
+2026-02-03T15:16:07.298826812Z    Input: 25 haber
+2026-02-03T15:16:07.298831472Z    Target: 1 unique topics
+2026-02-03T15:16:07.298833352Z    Skip duplicate check: false
+2026-02-03T15:16:07.298835202Z 
+2026-02-03T15:16:07.298836972Z 🎯 Akıllı haber seçimi başlatılıyor...
+2026-02-03T15:16:07.298838932Z    Aday sayısı: 25
+2026-02-03T15:16:07.298840772Z    Hedef: 1 unique topic
+2026-02-03T15:16:07.298842632Z    Zaman penceresi: 2 gün
+2026-02-03T15:16:07.319932563Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-03T15:16:07.320436562Z    ✅ SELECTED [1/1]: openai_cerebras_partnership (score: 0)
+2026-02-03T15:16:07.320441762Z       "OpenAI's dissatisfaction with Nvidia chips sparked Cerebras ...")
+2026-02-03T15:16:07.320444322Z ✅ Hedef sayıya ulaşıldı (1 haber)
+2026-02-03T15:16:07.320446572Z 
+2026-02-03T15:16:07.320448552Z 📊 Seçim özeti:
+2026-02-03T15:16:07.320450452Z    Seçilen: 1
+2026-02-03T15:16:07.320452292Z    Atlanan (aynı topic): 0
+2026-02-03T15:16:07.320454122Z    Atlanan (duplicate): 0
+2026-02-03T15:16:07.320456062Z    Toplam işlenen: 25
+2026-02-03T15:16:07.320457922Z    ✅ Selected: 1 unique topics
+2026-02-03T15:16:07.320459762Z 
+2026-02-03T15:16:07.320461522Z ============================================================
+2026-02-03T15:16:07.320463392Z ✅ SMART FILTERING TAMAMLANDI
+2026-02-03T15:16:07.320465182Z ============================================================
+2026-02-03T15:16:07.320470702Z    Stage 1 (Batch Filter):    50 → 25
+2026-02-03T15:16:07.320472572Z    Stage 2 (Topic Extract):   25 → 25
+2026-02-03T15:16:07.320474442Z    Stage 3 (Smart Select):    25 → 1
+2026-02-03T15:16:07.320476302Z    Duplicate Rate:            96.0%
+2026-02-03T15:16:07.320485942Z    Processing Time:           13.6s
+2026-02-03T15:16:07.320487942Z ============================================================
+2026-02-03T15:16:07.320489812Z 
+2026-02-03T15:16:07.320491682Z ✅ 1 unique topic haberi seçildi
+2026-02-03T15:16:07.320493572Z    Duplicate rate: 96.0%
+2026-02-03T15:16:07.320495582Z info: 📊 Agent step: process_articles Haberler yeniden yazılıyor ve görseller oluşturuluyor {"environment":"production","logId":"cml6qpl620000ywuep69u4j4a","module":"agent","progress":60,"service":"ai-news-agent","step":"process_articles","timestamp":"2026-02-03 15:16:07"}
+2026-02-03T15:16:07.320498932Z ⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...
+2026-02-03T15:16:07.320500962Z 
+2026-02-03T15:16:07.320502722Z ============================================================
+2026-02-03T15:16:07.320504602Z 🔄 ATTEMPT 1/3: Processing articles...
+2026-02-03T15:16:07.320506442Z ============================================================
+2026-02-03T15:16:07.320508312Z    Articles to process: 1
+2026-02-03T15:16:07.320510122Z    Already published: 0/1
+2026-02-03T15:16:07.320511902Z    Excluded URLs: 0
+2026-02-03T15:16:07.320513722Z    Excluded topics: 0
+2026-02-03T15:16:07.320515562Z 🔍 Pre-processing duplicate check: OpenAI's dissatisfaction with Nvidia chips sparked Cerebras ...
+2026-02-03T15:16:07.326451153Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-03T15:16:07.354041923Z 🔍 Checking for duplicates among 263 recent articles...
+2026-02-03T15:16:07.393645385Z ✅ No duplicates found for: "OpenAI's dissatisfaction with Nvidia chips sparked Cerebras ..."
+2026-02-03T15:16:07.393660685Z 📝 Haber işleniyor: OpenAI's dissatisfaction with Nvidia chips sparked Cerebras deal
+2026-02-03T15:16:07.395543748Z 📄 Makale içeriği alınıyor: https://the-decoder.com/openais-dissatisfaction-with-nvidia-chips-sparked-cerebras-deal/
+2026-02-03T15:16:07.395557598Z 🔄 Jina Reader ile içerik çekiliyor...
+2026-02-03T15:16:07.789527521Z ⚠️  Jina Reader başarısız, fallback yöntemi deneniyor...
+2026-02-03T15:16:08.416808037Z ✅ Direct fetch ile içerik alındı: 4837 karakter
+2026-02-03T15:16:08.416838107Z 🔬 Deep research yapılıyor...
+2026-02-03T15:16:08.463367626Z 🔬 Deep research başlatılıyor: "OpenAI's dissatisfaction with Nvidia chips sparked..."
+2026-02-03T15:16:08.962748597Z Brave Search API Error: {
+2026-02-03T15:16:08.962774827Z   status: 422,
+2026-02-03T15:16:08.962778437Z   data: {
+2026-02-03T15:16:08.962781337Z     type: 'ErrorResponse',
+2026-02-03T15:16:08.962784467Z     error: {
+2026-02-03T15:16:08.962787347Z       id: '477a6af0-6363-4210-8eb2-ab714a17350c',
+2026-02-03T15:16:08.962790187Z       status: 422,
+2026-02-03T15:16:08.962806567Z       detail: 'The provided subscription token is invalid.',
+2026-02-03T15:16:08.962808557Z       meta: [Object],
+2026-02-03T15:16:08.962810257Z       code: 'SUBSCRIPTION_TOKEN_INVALID'
+2026-02-03T15:16:08.962812037Z     },
+2026-02-03T15:16:08.962813797Z     time: 1770131768
+2026-02-03T15:16:08.962815537Z   },
+2026-02-03T15:16:08.962817317Z   message: 'Request failed with status code 422'
+2026-02-03T15:16:08.962819127Z }
+2026-02-03T15:16:08.964533882Z ⚠️ Search failed for query "openai dissatisfaction nvidia chips sparked cerebras deal chatgpt developer reportedly": AxiosError: Request failed with status code 422
+2026-02-03T15:16:08.964548122Z     at settle (/app/node_modules/axios/lib/core/settle.js:19:12)
+2026-02-03T15:16:08.964550612Z     at Unzip.handleStreamEnd (/app/node_modules/axios/lib/adapters/http.js:798:11)
+2026-02-03T15:16:08.964552652Z     at Unzip.emit (node:events:524:28)
+2026-02-03T15:16:08.964554472Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-02-03T15:16:08.964556322Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-02-03T15:16:08.964558112Z     at Axios.request (/app/node_modules/axios/lib/core/Axios.js:45:41)
+2026-02-03T15:16:08.964559912Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-02-03T15:16:08.964561662Z     at async braveSearch (/app/src/lib/brave.ts:112:22)
+2026-02-03T15:16:08.964563362Z     at async deepResearchArticle (/app/src/lib/brave.ts:486:31)
+2026-02-03T15:16:08.964565082Z     at async processArticle (/app/src/services/content.service.ts:677:26)
+2026-02-03T15:16:08.964566812Z     at async processAndPublishArticles (/app/src/services/content.service.ts:1130:21)
+2026-02-03T15:16:08.964568582Z     at async executeNewsAgent (/app/src/services/agent.service.ts:281:30)
+2026-02-03T15:16:08.964570322Z     at async Worker.import_bullmq.Worker.connection (/app/src/workers/news-agent.worker.ts:215:21)
+2026-02-03T15:16:08.964572092Z     at async <anonymous> (/app/node_modules/bullmq/src/classes/worker.ts:994:26) {
+2026-02-03T15:16:08.964574112Z   isAxiosError: true,
+2026-02-03T15:16:08.964575882Z   code: 'ERR_BAD_REQUEST',
+2026-02-03T15:16:08.964578812Z   config: {
+2026-02-03T15:16:08.964580552Z     transitional: {
+2026-02-03T15:16:08.964582242Z       silentJSONParsing: true,
+2026-02-03T15:16:08.964583992Z       forcedJSONParsing: true,
+2026-02-03T15:16:08.964585802Z       clarifyTimeoutError: false
+2026-02-03T15:16:08.964587612Z     },
+2026-02-03T15:16:08.964589312Z     adapter: [ 'xhr', 'http', 'fetch' ],
+2026-02-03T15:16:08.964591162Z     transformRequest: [ [Function: transformRequest] ],
+2026-02-03T15:16:08.964592872Z     transformResponse: [ [Function: transformResponse] ],
+2026-02-03T15:16:08.964610372Z     timeout: 10000,
+2026-02-03T15:16:08.964612252Z     xsrfCookieName: 'XSRF-TOKEN',
+2026-02-03T15:16:08.964614022Z     xsrfHeaderName: 'X-XSRF-TOKEN',
+2026-02-03T15:16:08.964615742Z     maxContentLength: -1,
+2026-02-03T15:16:08.964617522Z     maxBodyLength: -1,
+2026-02-03T15:16:08.964619232Z     env: { FormData: [Function], Blob: [class Blob] },
+2026-02-03T15:16:08.964620971Z     validateStatus: [Function: validateStatus],
+2026-02-03T15:16:08.964622651Z     headers: Object [AxiosHeaders] {
+2026-02-03T15:16:08.964624341Z       Accept: 'application/json',
+2026-02-03T15:16:08.964626131Z       'Content-Type': undefined,
+2026-02-03T15:16:08.964627981Z       'Accept-Encoding': 'gzip',
+2026-02-03T15:16:08.964629721Z       'X-Subscription-Token': 'BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-',
+2026-02-03T15:16:08.964631541Z       'User-Agent': 'axios/1.13.4'
+2026-02-03T15:16:08.964633261Z     },
+2026-02-03T15:16:08.964634921Z     method: 'get',
+2026-02-03T15:16:08.964637341Z     url: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:08.964640281Z     allowAbsoluteUrls: true,
+2026-02-03T15:16:08.964642081Z     data: undefined
+2026-02-03T15:16:08.964643831Z   },
+2026-02-03T15:16:08.964645561Z   request: <ref *1> ClientRequest {
+2026-02-03T15:16:08.964647351Z     _events: [Object: null prototype] {
+2026-02-03T15:16:08.964649081Z       abort: [Function (anonymous)],
+2026-02-03T15:16:08.964650801Z       aborted: [Function (anonymous)],
+2026-02-03T15:16:08.964652511Z       connect: [Function (anonymous)],
+2026-02-03T15:16:08.964654211Z       error: [Function (anonymous)],
+2026-02-03T15:16:08.964655951Z       socket: [Function (anonymous)],
+2026-02-03T15:16:08.964657711Z       timeout: [Function (anonymous)],
+2026-02-03T15:16:08.964659521Z       finish: [Function: requestOnFinish]
+2026-02-03T15:16:08.964661241Z     },
+2026-02-03T15:16:08.964663031Z     _eventsCount: 7,
+2026-02-03T15:16:08.964664741Z     _maxListeners: undefined,
+2026-02-03T15:16:08.964666471Z     outputData: [],
+2026-02-03T15:16:08.964668141Z     outputSize: 0,
+2026-02-03T15:16:08.964669841Z     writable: true,
+2026-02-03T15:16:08.964671591Z     destroyed: true,
+2026-02-03T15:16:08.964673281Z     _last: true,
+2026-02-03T15:16:08.964674961Z     chunkedEncoding: false,
+2026-02-03T15:16:08.964676691Z     shouldKeepAlive: true,
+2026-02-03T15:16:08.964681411Z     maxRequestsOnConnectionReached: false,
+2026-02-03T15:16:08.964683231Z     _defaultKeepAlive: true,
+2026-02-03T15:16:08.964684961Z     useChunkedEncodingByDefault: false,
+2026-02-03T15:16:08.964686791Z     sendDate: false,
+2026-02-03T15:16:08.964688491Z     _removedConnection: false,
+2026-02-03T15:16:08.964690191Z     _removedContLen: false,
+2026-02-03T15:16:08.964691891Z     _removedTE: false,
+2026-02-03T15:16:08.964693601Z     strictContentLength: false,
+2026-02-03T15:16:08.964695321Z     _contentLength: 0,
+2026-02-03T15:16:08.964697021Z     _hasBody: true,
+2026-02-03T15:16:08.964698701Z     _trailer: '',
+2026-02-03T15:16:08.964700391Z     finished: true,
+2026-02-03T15:16:08.964702091Z     _headerSent: true,
+2026-02-03T15:16:08.964703781Z     _closed: true,
+2026-02-03T15:16:08.964705451Z     socket: TLSSocket {
+2026-02-03T15:16:08.964707151Z       _tlsOptions: [Object],
+2026-02-03T15:16:08.964708841Z       _secureEstablished: true,
+2026-02-03T15:16:08.964710531Z       _securePending: false,
+2026-02-03T15:16:08.964712241Z       _newSessionPending: false,
+2026-02-03T15:16:08.964713961Z       _controlReleased: true,
+2026-02-03T15:16:08.964715661Z       secureConnecting: false,
+2026-02-03T15:16:08.964717361Z       _SNICallback: null,
+2026-02-03T15:16:08.964719061Z       servername: 'api.search.brave.com',
+2026-02-03T15:16:08.964720801Z       alpnProtocol: false,
+2026-02-03T15:16:08.964722501Z       authorized: true,
+2026-02-03T15:16:08.964724181Z       authorizationError: null,
+2026-02-03T15:16:08.964725871Z       encrypted: true,
+2026-02-03T15:16:08.964727591Z       _events: [Object: null prototype],
+2026-02-03T15:16:08.964729341Z       _eventsCount: 9,
+2026-02-03T15:16:08.964731031Z       connecting: false,
+2026-02-03T15:16:08.964732721Z       _hadError: false,
+2026-02-03T15:16:08.964734411Z       _parent: null,
+2026-02-03T15:16:08.964736111Z       _host: 'api.search.brave.com',
+2026-02-03T15:16:08.964737851Z       _closeAfterHandlingError: false,
+2026-02-03T15:16:08.964739581Z       _readableState: [ReadableState],
+2026-02-03T15:16:08.964742291Z       _writableState: [WritableState],
+2026-02-03T15:16:08.964744061Z       allowHalfOpen: false,
+2026-02-03T15:16:08.964745811Z       _maxListeners: undefined,
+2026-02-03T15:16:08.964747621Z       _sockname: null,
+2026-02-03T15:16:08.964749301Z       _pendingData: null,
+2026-02-03T15:16:08.964751001Z       _pendingEncoding: '',
+2026-02-03T15:16:08.964755571Z       server: undefined,
+2026-02-03T15:16:08.964757371Z       _server: null,
+2026-02-03T15:16:08.964759091Z       ssl: [TLSWrap],
+2026-02-03T15:16:08.964760821Z       _requestCert: true,
+2026-02-03T15:16:08.964762541Z       _rejectUnauthorized: true,
+2026-02-03T15:16:08.964772001Z       timeout: 5000,
+2026-02-03T15:16:08.964773751Z       parser: null,
+2026-02-03T15:16:08.964775461Z       _httpMessage: null,
+2026-02-03T15:16:08.964777211Z       autoSelectFamilyAttemptedAddresses: [Array],
+2026-02-03T15:16:08.964779001Z       [Symbol(alpncallback)]: null,
+2026-02-03T15:16:08.964780921Z       [Symbol(res)]: [TLSWrap],
+2026-02-03T15:16:08.964782681Z       [Symbol(verified)]: true,
+2026-02-03T15:16:08.964784421Z       [Symbol(pendingSession)]: null,
+2026-02-03T15:16:08.964786241Z       [Symbol(async_id_symbol)]: -1,
+2026-02-03T15:16:08.964787961Z       [Symbol(kHandle)]: [TLSWrap],
+2026-02-03T15:16:08.964789771Z       [Symbol(lastWriteQueueSize)]: 0,
+2026-02-03T15:16:08.964791511Z       [Symbol(timeout)]: Timeout {
+2026-02-03T15:16:08.964793441Z         _idleTimeout: 5000,
+2026-02-03T15:16:08.964795291Z         _idlePrev: [TimersList],
+2026-02-03T15:16:08.964797041Z         _idleNext: [Timeout],
+2026-02-03T15:16:08.964798781Z         _idleStart: 620663,
+2026-02-03T15:16:08.964800481Z         _onTimeout: [Function: bound ],
+2026-02-03T15:16:08.964802231Z         _timerArgs: undefined,
+2026-02-03T15:16:08.964803971Z         _repeat: null,
+2026-02-03T15:16:08.964805701Z         _destroyed: false,
+2026-02-03T15:16:08.964807501Z         [Symbol(refed)]: false,
+2026-02-03T15:16:08.964809261Z         [Symbol(kHasPrimitive)]: false,
+2026-02-03T15:16:08.964811271Z         [Symbol(asyncId)]: 18017,
+2026-02-03T15:16:08.964813031Z         [Symbol(triggerId)]: 18015
+2026-02-03T15:16:08.964814771Z       },
+2026-02-03T15:16:08.964816491Z       [Symbol(kBuffer)]: null,
+2026-02-03T15:16:08.964818231Z       [Symbol(kBufferCb)]: null,
+2026-02-03T15:16:08.964819931Z       [Symbol(kBufferGen)]: null,
+2026-02-03T15:16:08.964821651Z       [Symbol(shapeMode)]: true,
+2026-02-03T15:16:08.964823361Z       [Symbol(kCapture)]: false,
+2026-02-03T15:16:08.964825251Z       [Symbol(kSetNoDelay)]: false,
+2026-02-03T15:16:08.964826971Z       [Symbol(kSetKeepAlive)]: true,
+2026-02-03T15:16:08.964828671Z       [Symbol(kSetKeepAliveInitialDelay)]: 1,
+2026-02-03T15:16:08.964830401Z       [Symbol(kBytesRead)]: 0,
+2026-02-03T15:16:08.964832091Z       [Symbol(kBytesWritten)]: 0,
+2026-02-03T15:16:08.964836731Z       [Symbol(connect-options)]: [Object]
+2026-02-03T15:16:08.964838531Z     },
+2026-02-03T15:16:08.964840271Z     _header: 'GET /res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw HTTP/1.1\r\n' +
+2026-02-03T15:16:08.964842601Z       'Accept: application/json\r\n' +
+2026-02-03T15:16:08.964844361Z       'Accept-Encoding: gzip\r\n' +
+2026-02-03T15:16:08.964846131Z       'X-Subscription-Token: BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-\r\n' +
+2026-02-03T15:16:08.964847941Z       'User-Agent: axios/1.13.4\r\n' +
+2026-02-03T15:16:08.964849681Z       'Host: api.search.brave.com\r\n' +
+2026-02-03T15:16:08.964851451Z       'Connection: keep-alive\r\n' +
+2026-02-03T15:16:08.964853211Z       '\r\n',
+2026-02-03T15:16:08.964854961Z     _keepAliveTimeout: 0,
+2026-02-03T15:16:08.964856721Z     _onPendingData: [Function: nop],
+2026-02-03T15:16:08.964858521Z     agent: Agent {
+2026-02-03T15:16:08.964860371Z       _events: [Object: null prototype],
+2026-02-03T15:16:08.964875150Z       _eventsCount: 2,
+2026-02-03T15:16:08.964877150Z       _maxListeners: undefined,
+2026-02-03T15:16:08.964878880Z       defaultPort: 443,
+2026-02-03T15:16:08.964880620Z       protocol: 'https:',
+2026-02-03T15:16:08.964882680Z       options: [Object: null prototype],
+2026-02-03T15:16:08.964885010Z       requests: [Object: null prototype] {},
+2026-02-03T15:16:08.964886780Z       sockets: [Object: null prototype] {},
+2026-02-03T15:16:08.964888500Z       freeSockets: [Object: null prototype],
+2026-02-03T15:16:08.964890310Z       keepAliveMsecs: 1000,
+2026-02-03T15:16:08.964892040Z       keepAlive: true,
+2026-02-03T15:16:08.964893740Z       maxSockets: Infinity,
+2026-02-03T15:16:08.964895420Z       maxFreeSockets: 256,
+2026-02-03T15:16:08.964897130Z       scheduling: 'lifo',
+2026-02-03T15:16:08.964898850Z       maxTotalSockets: Infinity,
+2026-02-03T15:16:08.964900560Z       totalSocketCount: 7,
+2026-02-03T15:16:08.964902240Z       maxCachedSessions: 100,
+2026-02-03T15:16:08.964903940Z       _sessionCache: [Object],
+2026-02-03T15:16:08.964905650Z       [Symbol(shapeMode)]: false,
+2026-02-03T15:16:08.964907360Z       [Symbol(kCapture)]: false
+2026-02-03T15:16:08.964909050Z     },
+2026-02-03T15:16:08.964910710Z     socketPath: undefined,
+2026-02-03T15:16:08.964912410Z     method: 'GET',
+2026-02-03T15:16:08.964914090Z     maxHeaderSize: undefined,
+2026-02-03T15:16:08.964915790Z     insecureHTTPParser: undefined,
+2026-02-03T15:16:08.964920670Z     joinDuplicateHeaders: undefined,
+2026-02-03T15:16:08.964922510Z     path: '/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:08.964924710Z     _ended: true,
+2026-02-03T15:16:08.964926400Z     res: IncomingMessage {
+2026-02-03T15:16:08.964928110Z       _events: [Object],
+2026-02-03T15:16:08.964929850Z       _readableState: [ReadableState],
+2026-02-03T15:16:08.964931570Z       _maxListeners: undefined,
+2026-02-03T15:16:08.964933260Z       socket: null,
+2026-02-03T15:16:08.964934930Z       httpVersionMajor: 1,
+2026-02-03T15:16:08.964936610Z       httpVersionMinor: 1,
+2026-02-03T15:16:08.964938280Z       httpVersion: '1.1',
+2026-02-03T15:16:08.964940030Z       complete: true,
+2026-02-03T15:16:08.964941740Z       rawHeaders: [Array],
+2026-02-03T15:16:08.964943450Z       rawTrailers: [],
+2026-02-03T15:16:08.964945190Z       joinDuplicateHeaders: undefined,
+2026-02-03T15:16:08.964946890Z       aborted: false,
+2026-02-03T15:16:08.964948570Z       upgrade: false,
+2026-02-03T15:16:08.964950240Z       url: '',
+2026-02-03T15:16:08.964951940Z       method: null,
+2026-02-03T15:16:08.964953620Z       statusCode: 422,
+2026-02-03T15:16:08.964955340Z       statusMessage: 'Unprocessable Entity',
+2026-02-03T15:16:08.964957060Z       client: [TLSSocket],
+2026-02-03T15:16:08.964958760Z       _consuming: true,
+2026-02-03T15:16:08.964960440Z       _dumped: false,
+2026-02-03T15:16:08.964962150Z       req: [Circular *1],
+2026-02-03T15:16:08.964963830Z       _eventsCount: 4,
+2026-02-03T15:16:08.964965710Z       responseUrl: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:08.964967910Z       redirects: [],
+2026-02-03T15:16:08.964969650Z       [Symbol(shapeMode)]: true,
+2026-02-03T15:16:08.964971390Z       [Symbol(kCapture)]: false,
+2026-02-03T15:16:08.964973090Z       [Symbol(kHeaders)]: [Object],
+2026-02-03T15:16:08.964974800Z       [Symbol(kHeadersCount)]: 14,
+2026-02-03T15:16:08.964976540Z       [Symbol(kTrailers)]: null,
+2026-02-03T15:16:08.964978230Z       [Symbol(kTrailersCount)]: 0
+2026-02-03T15:16:08.964979940Z     },
+2026-02-03T15:16:08.964981590Z     aborted: false,
+2026-02-03T15:16:08.964983280Z     timeoutCb: null,
+2026-02-03T15:16:08.964985110Z     upgradeOrConnect: false,
+2026-02-03T15:16:08.964989410Z     parser: null,
+2026-02-03T15:16:08.964991830Z     maxHeadersCount: null,
+2026-02-03T15:16:08.964993590Z     reusedSocket: false,
+2026-02-03T15:16:08.964995310Z     host: 'api.search.brave.com',
+2026-02-03T15:16:08.964997080Z     protocol: 'https:',
+2026-02-03T15:16:08.964998780Z     _redirectable: Writable {
+2026-02-03T15:16:08.965000480Z       _events: [Object],
+2026-02-03T15:16:08.965002210Z       _writableState: [WritableState],
+2026-02-03T15:16:08.965003920Z       _maxListeners: undefined,
+2026-02-03T15:16:08.965005620Z       _options: [Object],
+2026-02-03T15:16:08.965007310Z       _ended: true,
+2026-02-03T15:16:08.965009000Z       _ending: true,
+2026-02-03T15:16:08.965010690Z       _redirectCount: 0,
+2026-02-03T15:16:08.965012360Z       _redirects: [],
+2026-02-03T15:16:08.965014040Z       _requestBodyLength: 0,
+2026-02-03T15:16:08.965015750Z       _requestBodyBuffers: [],
+2026-02-03T15:16:08.965017450Z       _eventsCount: 3,
+2026-02-03T15:16:08.965019150Z       _onNativeResponse: [Function (anonymous)],
+2026-02-03T15:16:08.965020860Z       _currentRequest: [Circular *1],
+2026-02-03T15:16:08.965022620Z       _currentUrl: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:08.965024800Z       _timeout: null,
+2026-02-03T15:16:08.965026500Z       [Symbol(shapeMode)]: true,
+2026-02-03T15:16:08.965028240Z       [Symbol(kCapture)]: false
+2026-02-03T15:16:08.965029950Z     },
+2026-02-03T15:16:08.965031580Z     [Symbol(shapeMode)]: false,
+2026-02-03T15:16:08.965033250Z     [Symbol(kCapture)]: false,
+2026-02-03T15:16:08.965034940Z     [Symbol(kBytesWritten)]: 0,
+2026-02-03T15:16:08.965036610Z     [Symbol(kNeedDrain)]: false,
+2026-02-03T15:16:08.965038280Z     [Symbol(corked)]: 0,
+2026-02-03T15:16:08.965039950Z     [Symbol(kOutHeaders)]: [Object: null prototype] {
+2026-02-03T15:16:08.965041660Z       accept: [Array],
+2026-02-03T15:16:08.965043350Z       'accept-encoding': [Array],
+2026-02-03T15:16:08.965045060Z       'x-subscription-token': [Array],
+2026-02-03T15:16:08.965046750Z       'user-agent': [Array],
+2026-02-03T15:16:08.965048420Z       host: [Array]
+2026-02-03T15:16:08.965050070Z     },
+2026-02-03T15:16:08.965051700Z     [Symbol(errored)]: null,
+2026-02-03T15:16:08.965053420Z     [Symbol(kHighWaterMark)]: 16384,
+2026-02-03T15:16:08.965055130Z     [Symbol(kRejectNonStandardBodyWrites)]: false,
+2026-02-03T15:16:08.965060090Z     [Symbol(kUniqueHeaders)]: null
+2026-02-03T15:16:08.965061840Z   },
+2026-02-03T15:16:08.965063550Z   response: {
+2026-02-03T15:16:08.965065250Z     status: 422,
+2026-02-03T15:16:08.965066960Z     statusText: 'Unprocessable Entity',
+2026-02-03T15:16:08.965068680Z     headers: Object [AxiosHeaders] {
+2026-02-03T15:16:08.965070460Z       date: 'Tue, 03 Feb 2026 15:16:08 GMT',
+2026-02-03T15:16:08.965072180Z       'content-type': 'application/json',
+2026-02-03T15:16:08.965073930Z       'transfer-encoding': 'chunked',
+2026-02-03T15:16:08.965075650Z       connection: 'keep-alive',
+2026-02-03T15:16:08.965077350Z       'server-timing': 'search-roundtrip;dur=14.231',
+2026-02-03T15:16:08.965079070Z       vary: 'Accept-Encoding'
+2026-02-03T15:16:08.965080740Z     },
+2026-02-03T15:16:08.965082400Z     config: {
+2026-02-03T15:16:08.965084080Z       transitional: [Object],
+2026-02-03T15:16:08.965085770Z       adapter: [Array],
+2026-02-03T15:16:08.965087480Z       transformRequest: [Array],
+2026-02-03T15:16:08.965089190Z       transformResponse: [Array],
+2026-02-03T15:16:08.965090870Z       timeout: 10000,
+2026-02-03T15:16:08.965092560Z       xsrfCookieName: 'XSRF-TOKEN',
+2026-02-03T15:16:08.965094260Z       xsrfHeaderName: 'X-XSRF-TOKEN',
+2026-02-03T15:16:08.965096090Z       maxContentLength: -1,
+2026-02-03T15:16:08.965098040Z       maxBodyLength: -1,
+2026-02-03T15:16:08.965108350Z       env: [Object],
+2026-02-03T15:16:08.965110140Z       validateStatus: [Function: validateStatus],
+2026-02-03T15:16:08.965111930Z       headers: [Object [AxiosHeaders]],
+2026-02-03T15:16:08.965113659Z       method: 'get',
+2026-02-03T15:16:08.965115439Z       url: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:08.965117589Z       allowAbsoluteUrls: true,
+2026-02-03T15:16:08.965119329Z       data: undefined
+2026-02-03T15:16:08.965121029Z     },
+2026-02-03T15:16:08.965122719Z     request: <ref *1> ClientRequest {
+2026-02-03T15:16:08.965124519Z       _events: [Object: null prototype],
+2026-02-03T15:16:08.965126259Z       _eventsCount: 7,
+2026-02-03T15:16:08.965127969Z       _maxListeners: undefined,
+2026-02-03T15:16:08.965129649Z       outputData: [],
+2026-02-03T15:16:08.965131319Z       outputSize: 0,
+2026-02-03T15:16:08.965132999Z       writable: true,
+2026-02-03T15:16:08.965134679Z       destroyed: true,
+2026-02-03T15:16:08.965139779Z       _last: true,
+2026-02-03T15:16:08.965141779Z       chunkedEncoding: false,
+2026-02-03T15:16:08.965143509Z       shouldKeepAlive: true,
+2026-02-03T15:16:08.965145339Z       maxRequestsOnConnectionReached: false,
+2026-02-03T15:16:08.965147219Z       _defaultKeepAlive: true,
+2026-02-03T15:16:08.965149039Z       useChunkedEncodingByDefault: false,
+2026-02-03T15:16:08.965150759Z       sendDate: false,
+2026-02-03T15:16:08.965152459Z       _removedConnection: false,
+2026-02-03T15:16:08.965154159Z       _removedContLen: false,
+2026-02-03T15:16:08.965155919Z       _removedTE: false,
+2026-02-03T15:16:08.965157649Z       strictContentLength: false,
+2026-02-03T15:16:08.965159439Z       _contentLength: 0,
+2026-02-03T15:16:08.965161249Z       _hasBody: true,
+2026-02-03T15:16:08.965162919Z       _trailer: '',
+2026-02-03T15:16:08.965164609Z       finished: true,
+2026-02-03T15:16:08.965166379Z       _headerSent: true,
+2026-02-03T15:16:08.965168059Z       _closed: true,
+2026-02-03T15:16:08.965169769Z       socket: [TLSSocket],
+2026-02-03T15:16:08.965171509Z       _header: 'GET /res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw HTTP/1.1\r\n' +
+2026-02-03T15:16:08.965173729Z         'Accept: application/json\r\n' +
+2026-02-03T15:16:08.965175489Z         'Accept-Encoding: gzip\r\n' +
+2026-02-03T15:16:08.965177249Z         'X-Subscription-Token: BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-\r\n' +
+2026-02-03T15:16:08.965179039Z         'User-Agent: axios/1.13.4\r\n' +
+2026-02-03T15:16:08.965180769Z         'Host: api.search.brave.com\r\n' +
+2026-02-03T15:16:08.965182499Z         'Connection: keep-alive\r\n' +
+2026-02-03T15:16:08.965184239Z         '\r\n',
+2026-02-03T15:16:08.965185959Z       _keepAliveTimeout: 0,
+2026-02-03T15:16:08.965187649Z       _onPendingData: [Function: nop],
+2026-02-03T15:16:08.965189359Z       agent: [Agent],
+2026-02-03T15:16:08.965191059Z       socketPath: undefined,
+2026-02-03T15:16:08.965192769Z       method: 'GET',
+2026-02-03T15:16:08.965194439Z       maxHeaderSize: undefined,
+2026-02-03T15:16:08.965196139Z       insecureHTTPParser: undefined,
+2026-02-03T15:16:08.965197889Z       joinDuplicateHeaders: undefined,
+2026-02-03T15:16:08.965200069Z       path: '/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:08.965204829Z       _ended: true,
+2026-02-03T15:16:08.965206619Z       res: [IncomingMessage],
+2026-02-03T15:16:08.965208359Z       aborted: false,
+2026-02-03T15:16:08.965210069Z       timeoutCb: null,
+2026-02-03T15:16:08.965211789Z       upgradeOrConnect: false,
+2026-02-03T15:16:08.965213509Z       parser: null,
+2026-02-03T15:16:08.965215219Z       maxHeadersCount: null,
+2026-02-03T15:16:08.965216909Z       reusedSocket: false,
+2026-02-03T15:16:08.965218619Z       host: 'api.search.brave.com',
+2026-02-03T15:16:08.965220339Z       protocol: 'https:',
+2026-02-03T15:16:08.965222049Z       _redirectable: [Writable],
+2026-02-03T15:16:08.965223849Z       [Symbol(shapeMode)]: false,
+2026-02-03T15:16:08.965225669Z       [Symbol(kCapture)]: false,
+2026-02-03T15:16:08.965227379Z       [Symbol(kBytesWritten)]: 0,
+2026-02-03T15:16:08.965229109Z       [Symbol(kNeedDrain)]: false,
+2026-02-03T15:16:08.965230819Z       [Symbol(corked)]: 0,
+2026-02-03T15:16:08.965232529Z       [Symbol(kOutHeaders)]: [Object: null prototype],
+2026-02-03T15:16:08.965234279Z       [Symbol(errored)]: null,
+2026-02-03T15:16:08.965235969Z       [Symbol(kHighWaterMark)]: 16384,
+2026-02-03T15:16:08.965237669Z       [Symbol(kRejectNonStandardBodyWrites)]: false,
+2026-02-03T15:16:08.965239379Z       [Symbol(kUniqueHeaders)]: null
+2026-02-03T15:16:08.965241089Z     },
+2026-02-03T15:16:08.965242819Z     data: { type: 'ErrorResponse', error: [Object], time: 1770131768 }
+2026-02-03T15:16:08.965244649Z   },
+2026-02-03T15:16:08.965246359Z   status: 422
+2026-02-03T15:16:08.965248089Z }
+2026-02-03T15:16:09.132460237Z Brave Search API Error: {
+2026-02-03T15:16:09.132478206Z   status: 422,
+2026-02-03T15:16:09.132480656Z   data: {
+2026-02-03T15:16:09.132482716Z     type: 'ErrorResponse',
+2026-02-03T15:16:09.132484656Z     error: {
+2026-02-03T15:16:09.132486476Z       id: '46b33af6-f519-4d6c-92f9-26db10d1995f',
+2026-02-03T15:16:09.132488326Z       status: 422,
+2026-02-03T15:16:09.132490106Z       detail: 'The provided subscription token is invalid.',
+2026-02-03T15:16:09.132491926Z       meta: [Object],
+2026-02-03T15:16:09.132493686Z       code: 'SUBSCRIPTION_TOKEN_INVALID'
+2026-02-03T15:16:09.132495456Z     },
+2026-02-03T15:16:09.132497216Z     time: 1770131769
+2026-02-03T15:16:09.132498916Z   },
+2026-02-03T15:16:09.132500706Z   message: 'Request failed with status code 422'
+2026-02-03T15:16:09.132502456Z }
+2026-02-03T15:16:09.135031489Z ⚠️ Search failed for query "openai dissatisfaction nvidia chips sparked cerebras deal chatgpt developer reportedly details facts": AxiosError: Request failed with status code 422
+2026-02-03T15:16:09.135051559Z     at settle (/app/node_modules/axios/lib/core/settle.js:19:12)
+2026-02-03T15:16:09.135054159Z     at Unzip.handleStreamEnd (/app/node_modules/axios/lib/adapters/http.js:798:11)
+2026-02-03T15:16:09.135056309Z     at Unzip.emit (node:events:524:28)
+2026-02-03T15:16:09.135058179Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-02-03T15:16:09.135060039Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-02-03T15:16:09.135061909Z     at Axios.request (/app/node_modules/axios/lib/core/Axios.js:45:41)
+2026-02-03T15:16:09.135063759Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-02-03T15:16:09.135065609Z     at async braveSearch (/app/src/lib/brave.ts:112:22)
+2026-02-03T15:16:09.135067419Z     at async deepResearchArticle (/app/src/lib/brave.ts:486:31)
+2026-02-03T15:16:09.135069239Z     at async processArticle (/app/src/services/content.service.ts:677:26)
+2026-02-03T15:16:09.135071079Z     at async processAndPublishArticles (/app/src/services/content.service.ts:1130:21)
+2026-02-03T15:16:09.135072949Z     at async executeNewsAgent (/app/src/services/agent.service.ts:281:30)
+2026-02-03T15:16:09.135074789Z     at async Worker.import_bullmq.Worker.connection (/app/src/workers/news-agent.worker.ts:215:21)
+2026-02-03T15:16:09.135076659Z     at async <anonymous> (/app/node_modules/bullmq/src/classes/worker.ts:994:26) {
+2026-02-03T15:16:09.135079049Z   isAxiosError: true,
+2026-02-03T15:16:09.135080869Z   code: 'ERR_BAD_REQUEST',
+2026-02-03T15:16:09.135082629Z   config: {
+2026-02-03T15:16:09.135084419Z     transitional: {
+2026-02-03T15:16:09.135086209Z       silentJSONParsing: true,
+2026-02-03T15:16:09.135087979Z       forcedJSONParsing: true,
+2026-02-03T15:16:09.135089759Z       clarifyTimeoutError: false
+2026-02-03T15:16:09.135091569Z     },
+2026-02-03T15:16:09.135093339Z     adapter: [ 'xhr', 'http', 'fetch' ],
+2026-02-03T15:16:09.135095169Z     transformRequest: [ [Function: transformRequest] ],
+2026-02-03T15:16:09.135096999Z     transformResponse: [ [Function: transformResponse] ],
+2026-02-03T15:16:09.135107299Z     timeout: 10000,
+2026-02-03T15:16:09.135109099Z     xsrfCookieName: 'XSRF-TOKEN',
+2026-02-03T15:16:09.135110909Z     xsrfHeaderName: 'X-XSRF-TOKEN',
+2026-02-03T15:16:09.135112729Z     maxContentLength: -1,
+2026-02-03T15:16:09.135114519Z     maxBodyLength: -1,
+2026-02-03T15:16:09.135116289Z     env: { FormData: [Function], Blob: [class Blob] },
+2026-02-03T15:16:09.135118099Z     validateStatus: [Function: validateStatus],
+2026-02-03T15:16:09.135119889Z     headers: Object [AxiosHeaders] {
+2026-02-03T15:16:09.135124699Z       Accept: 'application/json',
+2026-02-03T15:16:09.135126499Z       'Content-Type': undefined,
+2026-02-03T15:16:09.135128309Z       'Accept-Encoding': 'gzip',
+2026-02-03T15:16:09.135130119Z       'X-Subscription-Token': 'BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-',
+2026-02-03T15:16:09.135131969Z       'User-Agent': 'axios/1.13.4'
+2026-02-03T15:16:09.135135699Z     },
+2026-02-03T15:16:09.135137559Z     method: 'get',
+2026-02-03T15:16:09.135139959Z     url: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+details+facts&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.135142499Z     allowAbsoluteUrls: true,
+2026-02-03T15:16:09.135144519Z     data: undefined
+2026-02-03T15:16:09.135146319Z   },
+2026-02-03T15:16:09.135148139Z   request: <ref *1> ClientRequest {
+2026-02-03T15:16:09.135149999Z     _events: [Object: null prototype] {
+2026-02-03T15:16:09.135151779Z       abort: [Function (anonymous)],
+2026-02-03T15:16:09.135153559Z       aborted: [Function (anonymous)],
+2026-02-03T15:16:09.135155399Z       connect: [Function (anonymous)],
+2026-02-03T15:16:09.135157189Z       error: [Function (anonymous)],
+2026-02-03T15:16:09.135158979Z       socket: [Function (anonymous)],
+2026-02-03T15:16:09.135160749Z       timeout: [Function (anonymous)],
+2026-02-03T15:16:09.135162489Z       finish: [Function: requestOnFinish]
+2026-02-03T15:16:09.135164279Z     },
+2026-02-03T15:16:09.135166029Z     _eventsCount: 7,
+2026-02-03T15:16:09.135167789Z     _maxListeners: undefined,
+2026-02-03T15:16:09.135169539Z     outputData: [],
+2026-02-03T15:16:09.135171288Z     outputSize: 0,
+2026-02-03T15:16:09.135173048Z     writable: true,
+2026-02-03T15:16:09.135174768Z     destroyed: true,
+2026-02-03T15:16:09.135176538Z     _last: true,
+2026-02-03T15:16:09.135178258Z     chunkedEncoding: false,
+2026-02-03T15:16:09.135180018Z     shouldKeepAlive: true,
+2026-02-03T15:16:09.135181768Z     maxRequestsOnConnectionReached: false,
+2026-02-03T15:16:09.135183568Z     _defaultKeepAlive: true,
+2026-02-03T15:16:09.135185318Z     useChunkedEncodingByDefault: false,
+2026-02-03T15:16:09.135187398Z     sendDate: false,
+2026-02-03T15:16:09.135189258Z     _removedConnection: false,
+2026-02-03T15:16:09.135191118Z     _removedContLen: false,
+2026-02-03T15:16:09.135192848Z     _removedTE: false,
+2026-02-03T15:16:09.135194568Z     strictContentLength: false,
+2026-02-03T15:16:09.135199388Z     _contentLength: 0,
+2026-02-03T15:16:09.135201248Z     _hasBody: true,
+2026-02-03T15:16:09.135203028Z     _trailer: '',
+2026-02-03T15:16:09.135204828Z     finished: true,
+2026-02-03T15:16:09.135206578Z     _headerSent: true,
+2026-02-03T15:16:09.135208348Z     _closed: true,
+2026-02-03T15:16:09.135210118Z     socket: TLSSocket {
+2026-02-03T15:16:09.135211868Z       _tlsOptions: [Object],
+2026-02-03T15:16:09.135213638Z       _secureEstablished: true,
+2026-02-03T15:16:09.135215398Z       _securePending: false,
+2026-02-03T15:16:09.135217168Z       _newSessionPending: false,
+2026-02-03T15:16:09.135218998Z       _controlReleased: true,
+2026-02-03T15:16:09.135220788Z       secureConnecting: false,
+2026-02-03T15:16:09.135222538Z       _SNICallback: null,
+2026-02-03T15:16:09.135224298Z       servername: 'api.search.brave.com',
+2026-02-03T15:16:09.135226088Z       alpnProtocol: false,
+2026-02-03T15:16:09.135227848Z       authorized: true,
+2026-02-03T15:16:09.135229578Z       authorizationError: null,
+2026-02-03T15:16:09.135231368Z       encrypted: true,
+2026-02-03T15:16:09.135233148Z       _events: [Object: null prototype],
+2026-02-03T15:16:09.135234948Z       _eventsCount: 9,
+2026-02-03T15:16:09.135236688Z       connecting: false,
+2026-02-03T15:16:09.135238448Z       _hadError: false,
+2026-02-03T15:16:09.135240228Z       _parent: null,
+2026-02-03T15:16:09.135241988Z       _host: 'api.search.brave.com',
+2026-02-03T15:16:09.135243798Z       _closeAfterHandlingError: false,
+2026-02-03T15:16:09.135245608Z       _readableState: [ReadableState],
+2026-02-03T15:16:09.135247428Z       _writableState: [WritableState],
+2026-02-03T15:16:09.135249228Z       allowHalfOpen: false,
+2026-02-03T15:16:09.135250998Z       _maxListeners: undefined,
+2026-02-03T15:16:09.135252858Z       _sockname: null,
+2026-02-03T15:16:09.135254618Z       _pendingData: null,
+2026-02-03T15:16:09.135256588Z       _pendingEncoding: '',
+2026-02-03T15:16:09.135258378Z       server: undefined,
+2026-02-03T15:16:09.135260158Z       _server: null,
+2026-02-03T15:16:09.135261918Z       ssl: [TLSWrap],
+2026-02-03T15:16:09.135263668Z       _requestCert: true,
+2026-02-03T15:16:09.135265448Z       _rejectUnauthorized: true,
+2026-02-03T15:16:09.135267218Z       timeout: 5000,
+2026-02-03T15:16:09.135268978Z       parser: null,
+2026-02-03T15:16:09.135270758Z       _httpMessage: null,
+2026-02-03T15:16:09.135272518Z       autoSelectFamilyAttemptedAddresses: [Array],
+2026-02-03T15:16:09.135276828Z       [Symbol(alpncallback)]: null,
+2026-02-03T15:16:09.135278698Z       [Symbol(res)]: [TLSWrap],
+2026-02-03T15:16:09.135280478Z       [Symbol(verified)]: true,
+2026-02-03T15:16:09.135282248Z       [Symbol(pendingSession)]: null,
+2026-02-03T15:16:09.135284048Z       [Symbol(async_id_symbol)]: -1,
+2026-02-03T15:16:09.135285858Z       [Symbol(kHandle)]: [TLSWrap],
+2026-02-03T15:16:09.135287658Z       [Symbol(lastWriteQueueSize)]: 0,
+2026-02-03T15:16:09.135289448Z       [Symbol(timeout)]: Timeout {
+2026-02-03T15:16:09.135291258Z         _idleTimeout: 5000,
+2026-02-03T15:16:09.135293098Z         _idlePrev: [TimersList],
+2026-02-03T15:16:09.135294868Z         _idleNext: [Timeout],
+2026-02-03T15:16:09.135296628Z         _idleStart: 620834,
+2026-02-03T15:16:09.135298398Z         _onTimeout: [Function: bound ],
+2026-02-03T15:16:09.135300218Z         _timerArgs: undefined,
+2026-02-03T15:16:09.135301968Z         _repeat: null,
+2026-02-03T15:16:09.135303718Z         _destroyed: false,
+2026-02-03T15:16:09.135305458Z         [Symbol(refed)]: false,
+2026-02-03T15:16:09.135307278Z         [Symbol(kHasPrimitive)]: false,
+2026-02-03T15:16:09.135309088Z         [Symbol(asyncId)]: 18040,
+2026-02-03T15:16:09.135310848Z         [Symbol(triggerId)]: 18038
+2026-02-03T15:16:09.135312648Z       },
+2026-02-03T15:16:09.135314468Z       [Symbol(kBuffer)]: null,
+2026-02-03T15:16:09.135316248Z       [Symbol(kBufferCb)]: null,
+2026-02-03T15:16:09.135318038Z       [Symbol(kBufferGen)]: null,
+2026-02-03T15:16:09.135319828Z       [Symbol(shapeMode)]: true,
+2026-02-03T15:16:09.135321678Z       [Symbol(kCapture)]: false,
+2026-02-03T15:16:09.135323488Z       [Symbol(kSetNoDelay)]: false,
+2026-02-03T15:16:09.135325298Z       [Symbol(kSetKeepAlive)]: true,
+2026-02-03T15:16:09.135327108Z       [Symbol(kSetKeepAliveInitialDelay)]: 1,
+2026-02-03T15:16:09.135328938Z       [Symbol(kBytesRead)]: 0,
+2026-02-03T15:16:09.135330698Z       [Symbol(kBytesWritten)]: 0,
+2026-02-03T15:16:09.135332498Z       [Symbol(connect-options)]: [Object]
+2026-02-03T15:16:09.135334308Z     },
+2026-02-03T15:16:09.135336118Z     _header: 'GET /res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+details+facts&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw HTTP/1.1\r\n' +
+2026-02-03T15:16:09.135338518Z       'Accept: application/json\r\n' +
+2026-02-03T15:16:09.135340348Z       'Accept-Encoding: gzip\r\n' +
+2026-02-03T15:16:09.135342198Z       'X-Subscription-Token: BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-\r\n' +
+2026-02-03T15:16:09.135346448Z       'User-Agent: axios/1.13.4\r\n' +
+2026-02-03T15:16:09.135348378Z       'Host: api.search.brave.com\r\n' +
+2026-02-03T15:16:09.135350208Z       'Connection: keep-alive\r\n' +
+2026-02-03T15:16:09.135352088Z       '\r\n',
+2026-02-03T15:16:09.135353968Z     _keepAliveTimeout: 0,
+2026-02-03T15:16:09.135355788Z     _onPendingData: [Function: nop],
+2026-02-03T15:16:09.135357608Z     agent: Agent {
+2026-02-03T15:16:09.135359368Z       _events: [Object: null prototype],
+2026-02-03T15:16:09.135361158Z       _eventsCount: 2,
+2026-02-03T15:16:09.135362938Z       _maxListeners: undefined,
+2026-02-03T15:16:09.135364988Z       defaultPort: 443,
+2026-02-03T15:16:09.135366838Z       protocol: 'https:',
+2026-02-03T15:16:09.135368668Z       options: [Object: null prototype],
+2026-02-03T15:16:09.135370508Z       requests: [Object: null prototype] {},
+2026-02-03T15:16:09.135372318Z       sockets: [Object: null prototype] {},
+2026-02-03T15:16:09.135374148Z       freeSockets: [Object: null prototype],
+2026-02-03T15:16:09.135376028Z       keepAliveMsecs: 1000,
+2026-02-03T15:16:09.135377788Z       keepAlive: true,
+2026-02-03T15:16:09.135379528Z       maxSockets: Infinity,
+2026-02-03T15:16:09.135381308Z       maxFreeSockets: 256,
+2026-02-03T15:16:09.135383148Z       scheduling: 'lifo',
+2026-02-03T15:16:09.135384928Z       maxTotalSockets: Infinity,
+2026-02-03T15:16:09.135386708Z       totalSocketCount: 7,
+2026-02-03T15:16:09.135388488Z       maxCachedSessions: 100,
+2026-02-03T15:16:09.135390258Z       _sessionCache: [Object],
+2026-02-03T15:16:09.135392048Z       [Symbol(shapeMode)]: false,
+2026-02-03T15:16:09.135393808Z       [Symbol(kCapture)]: false
+2026-02-03T15:16:09.135395588Z     },
+2026-02-03T15:16:09.135397348Z     socketPath: undefined,
+2026-02-03T15:16:09.135399108Z     method: 'GET',
+2026-02-03T15:16:09.135400828Z     maxHeaderSize: undefined,
+2026-02-03T15:16:09.135402618Z     insecureHTTPParser: undefined,
+2026-02-03T15:16:09.135404408Z     joinDuplicateHeaders: undefined,
+2026-02-03T15:16:09.135406258Z     path: '/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+details+facts&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.135408538Z     _ended: true,
+2026-02-03T15:16:09.135410278Z     res: IncomingMessage {
+2026-02-03T15:16:09.135412057Z       _events: [Object],
+2026-02-03T15:16:09.135413807Z       _readableState: [ReadableState],
+2026-02-03T15:16:09.135418057Z       _maxListeners: undefined,
+2026-02-03T15:16:09.135419927Z       socket: null,
+2026-02-03T15:16:09.135421687Z       httpVersionMajor: 1,
+2026-02-03T15:16:09.135423507Z       httpVersionMinor: 1,
+2026-02-03T15:16:09.135425277Z       httpVersion: '1.1',
+2026-02-03T15:16:09.135427037Z       complete: true,
+2026-02-03T15:16:09.135428847Z       rawHeaders: [Array],
+2026-02-03T15:16:09.135430617Z       rawTrailers: [],
+2026-02-03T15:16:09.135432397Z       joinDuplicateHeaders: undefined,
+2026-02-03T15:16:09.135434187Z       aborted: false,
+2026-02-03T15:16:09.135435927Z       upgrade: false,
+2026-02-03T15:16:09.135437677Z       url: '',
+2026-02-03T15:16:09.135439437Z       method: null,
+2026-02-03T15:16:09.135441177Z       statusCode: 422,
+2026-02-03T15:16:09.135442947Z       statusMessage: 'Unprocessable Entity',
+2026-02-03T15:16:09.135444727Z       client: [TLSSocket],
+2026-02-03T15:16:09.135446477Z       _consuming: true,
+2026-02-03T15:16:09.135448207Z       _dumped: false,
+2026-02-03T15:16:09.135449937Z       req: [Circular *1],
+2026-02-03T15:16:09.135451667Z       _eventsCount: 4,
+2026-02-03T15:16:09.135453477Z       responseUrl: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+details+facts&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.135455697Z       redirects: [],
+2026-02-03T15:16:09.135457497Z       [Symbol(shapeMode)]: true,
+2026-02-03T15:16:09.135459277Z       [Symbol(kCapture)]: false,
+2026-02-03T15:16:09.135461037Z       [Symbol(kHeaders)]: [Object],
+2026-02-03T15:16:09.135462807Z       [Symbol(kHeadersCount)]: 14,
+2026-02-03T15:16:09.135464587Z       [Symbol(kTrailers)]: null,
+2026-02-03T15:16:09.135466557Z       [Symbol(kTrailersCount)]: 0
+2026-02-03T15:16:09.135468387Z     },
+2026-02-03T15:16:09.135470097Z     aborted: false,
+2026-02-03T15:16:09.135471877Z     timeoutCb: null,
+2026-02-03T15:16:09.135473647Z     upgradeOrConnect: false,
+2026-02-03T15:16:09.135475397Z     parser: null,
+2026-02-03T15:16:09.135477167Z     maxHeadersCount: null,
+2026-02-03T15:16:09.135478917Z     reusedSocket: true,
+2026-02-03T15:16:09.135480687Z     host: 'api.search.brave.com',
+2026-02-03T15:16:09.135482467Z     protocol: 'https:',
+2026-02-03T15:16:09.135484207Z     _redirectable: Writable {
+2026-02-03T15:16:09.135486007Z       _events: [Object],
+2026-02-03T15:16:09.135487767Z       _writableState: [WritableState],
+2026-02-03T15:16:09.135492087Z       _maxListeners: undefined,
+2026-02-03T15:16:09.135493997Z       _options: [Object],
+2026-02-03T15:16:09.135495797Z       _ended: true,
+2026-02-03T15:16:09.135497557Z       _ending: true,
+2026-02-03T15:16:09.135499347Z       _redirectCount: 0,
+2026-02-03T15:16:09.135501137Z       _redirects: [],
+2026-02-03T15:16:09.135502937Z       _requestBodyLength: 0,
+2026-02-03T15:16:09.135504717Z       _requestBodyBuffers: [],
+2026-02-03T15:16:09.135506487Z       _eventsCount: 3,
+2026-02-03T15:16:09.135508257Z       _onNativeResponse: [Function (anonymous)],
+2026-02-03T15:16:09.135510067Z       _currentRequest: [Circular *1],
+2026-02-03T15:16:09.135511897Z       _currentUrl: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+details+facts&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.135514157Z       _timeout: null,
+2026-02-03T15:16:09.135515937Z       [Symbol(shapeMode)]: true,
+2026-02-03T15:16:09.135517727Z       [Symbol(kCapture)]: false
+2026-02-03T15:16:09.135519497Z     },
+2026-02-03T15:16:09.135521237Z     [Symbol(shapeMode)]: false,
+2026-02-03T15:16:09.135523017Z     [Symbol(kCapture)]: false,
+2026-02-03T15:16:09.135524777Z     [Symbol(kBytesWritten)]: 0,
+2026-02-03T15:16:09.135526567Z     [Symbol(kNeedDrain)]: false,
+2026-02-03T15:16:09.135528317Z     [Symbol(corked)]: 0,
+2026-02-03T15:16:09.135530087Z     [Symbol(kOutHeaders)]: [Object: null prototype] {
+2026-02-03T15:16:09.135531907Z       accept: [Array],
+2026-02-03T15:16:09.135533687Z       'accept-encoding': [Array],
+2026-02-03T15:16:09.135535477Z       'x-subscription-token': [Array],
+2026-02-03T15:16:09.135537287Z       'user-agent': [Array],
+2026-02-03T15:16:09.135539047Z       host: [Array]
+2026-02-03T15:16:09.135540797Z     },
+2026-02-03T15:16:09.135542537Z     [Symbol(errored)]: null,
+2026-02-03T15:16:09.135544337Z     [Symbol(kHighWaterMark)]: 16384,
+2026-02-03T15:16:09.135546157Z     [Symbol(kRejectNonStandardBodyWrites)]: false,
+2026-02-03T15:16:09.135547977Z     [Symbol(kUniqueHeaders)]: null
+2026-02-03T15:16:09.135549767Z   },
+2026-02-03T15:16:09.135551517Z   response: {
+2026-02-03T15:16:09.135553277Z     status: 422,
+2026-02-03T15:16:09.135555047Z     statusText: 'Unprocessable Entity',
+2026-02-03T15:16:09.135556837Z     headers: Object [AxiosHeaders] {
+2026-02-03T15:16:09.135558617Z       date: 'Tue, 03 Feb 2026 15:16:09 GMT',
+2026-02-03T15:16:09.135563057Z       'content-type': 'application/json',
+2026-02-03T15:16:09.135564947Z       'transfer-encoding': 'chunked',
+2026-02-03T15:16:09.135566767Z       connection: 'keep-alive',
+2026-02-03T15:16:09.135568567Z       'server-timing': 'search-roundtrip;dur=2.543',
+2026-02-03T15:16:09.135570397Z       vary: 'Accept-Encoding'
+2026-02-03T15:16:09.135572187Z     },
+2026-02-03T15:16:09.135573947Z     config: {
+2026-02-03T15:16:09.135575697Z       transitional: [Object],
+2026-02-03T15:16:09.135577497Z       adapter: [Array],
+2026-02-03T15:16:09.135579287Z       transformRequest: [Array],
+2026-02-03T15:16:09.135581077Z       transformResponse: [Array],
+2026-02-03T15:16:09.135582867Z       timeout: 10000,
+2026-02-03T15:16:09.135584747Z       xsrfCookieName: 'XSRF-TOKEN',
+2026-02-03T15:16:09.135586577Z       xsrfHeaderName: 'X-XSRF-TOKEN',
+2026-02-03T15:16:09.135588387Z       maxContentLength: -1,
+2026-02-03T15:16:09.135590197Z       maxBodyLength: -1,
+2026-02-03T15:16:09.135591977Z       env: [Object],
+2026-02-03T15:16:09.135593767Z       validateStatus: [Function: validateStatus],
+2026-02-03T15:16:09.135596507Z       headers: [Object [AxiosHeaders]],
+2026-02-03T15:16:09.135598357Z       method: 'get',
+2026-02-03T15:16:09.135600167Z       url: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+details+facts&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.135602417Z       allowAbsoluteUrls: true,
+2026-02-03T15:16:09.135604197Z       data: undefined
+2026-02-03T15:16:09.135605947Z     },
+2026-02-03T15:16:09.135607727Z     request: <ref *1> ClientRequest {
+2026-02-03T15:16:09.135609567Z       _events: [Object: null prototype],
+2026-02-03T15:16:09.135611357Z       _eventsCount: 7,
+2026-02-03T15:16:09.135613117Z       _maxListeners: undefined,
+2026-02-03T15:16:09.135614867Z       outputData: [],
+2026-02-03T15:16:09.135616627Z       outputSize: 0,
+2026-02-03T15:16:09.135618397Z       writable: true,
+2026-02-03T15:16:09.135620137Z       destroyed: true,
+2026-02-03T15:16:09.135621917Z       _last: true,
+2026-02-03T15:16:09.135623667Z       chunkedEncoding: false,
+2026-02-03T15:16:09.135625437Z       shouldKeepAlive: true,
+2026-02-03T15:16:09.135627227Z       maxRequestsOnConnectionReached: false,
+2026-02-03T15:16:09.135628987Z       _defaultKeepAlive: true,
+2026-02-03T15:16:09.135630737Z       useChunkedEncodingByDefault: false,
+2026-02-03T15:16:09.135632527Z       sendDate: false,
+2026-02-03T15:16:09.135636827Z       _removedConnection: false,
+2026-02-03T15:16:09.135638707Z       _removedContLen: false,
+2026-02-03T15:16:09.135640507Z       _removedTE: false,
+2026-02-03T15:16:09.135642307Z       strictContentLength: false,
+2026-02-03T15:16:09.135644137Z       _contentLength: 0,
+2026-02-03T15:16:09.135645907Z       _hasBody: true,
+2026-02-03T15:16:09.135647677Z       _trailer: '',
+2026-02-03T15:16:09.135649457Z       finished: true,
+2026-02-03T15:16:09.135651246Z       _headerSent: true,
+2026-02-03T15:16:09.135653076Z       _closed: true,
+2026-02-03T15:16:09.135654836Z       socket: [TLSSocket],
+2026-02-03T15:16:09.135656656Z       _header: 'GET /res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+details+facts&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw HTTP/1.1\r\n' +
+2026-02-03T15:16:09.135658956Z         'Accept: application/json\r\n' +
+2026-02-03T15:16:09.135660806Z         'Accept-Encoding: gzip\r\n' +
+2026-02-03T15:16:09.135662626Z         'X-Subscription-Token: BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-\r\n' +
+2026-02-03T15:16:09.135664506Z         'User-Agent: axios/1.13.4\r\n' +
+2026-02-03T15:16:09.135666326Z         'Host: api.search.brave.com\r\n' +
+2026-02-03T15:16:09.135668196Z         'Connection: keep-alive\r\n' +
+2026-02-03T15:16:09.135670026Z         '\r\n',
+2026-02-03T15:16:09.135671856Z       _keepAliveTimeout: 0,
+2026-02-03T15:16:09.135673676Z       _onPendingData: [Function: nop],
+2026-02-03T15:16:09.135675486Z       agent: [Agent],
+2026-02-03T15:16:09.135677266Z       socketPath: undefined,
+2026-02-03T15:16:09.135679046Z       method: 'GET',
+2026-02-03T15:16:09.135680806Z       maxHeaderSize: undefined,
+2026-02-03T15:16:09.135682646Z       insecureHTTPParser: undefined,
+2026-02-03T15:16:09.135684696Z       joinDuplicateHeaders: undefined,
+2026-02-03T15:16:09.135686576Z       path: '/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+details+facts&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.135688756Z       _ended: true,
+2026-02-03T15:16:09.135690536Z       res: [IncomingMessage],
+2026-02-03T15:16:09.135692316Z       aborted: false,
+2026-02-03T15:16:09.135694066Z       timeoutCb: null,
+2026-02-03T15:16:09.135695836Z       upgradeOrConnect: false,
+2026-02-03T15:16:09.135697636Z       parser: null,
+2026-02-03T15:16:09.135699406Z       maxHeadersCount: null,
+2026-02-03T15:16:09.135703646Z       reusedSocket: true,
+2026-02-03T15:16:09.135705566Z       host: 'api.search.brave.com',
+2026-02-03T15:16:09.135707386Z       protocol: 'https:',
+2026-02-03T15:16:09.135709206Z       _redirectable: [Writable],
+2026-02-03T15:16:09.135711016Z       [Symbol(shapeMode)]: false,
+2026-02-03T15:16:09.135712836Z       [Symbol(kCapture)]: false,
+2026-02-03T15:16:09.135714646Z       [Symbol(kBytesWritten)]: 0,
+2026-02-03T15:16:09.135716456Z       [Symbol(kNeedDrain)]: false,
+2026-02-03T15:16:09.135718256Z       [Symbol(corked)]: 0,
+2026-02-03T15:16:09.135720046Z       [Symbol(kOutHeaders)]: [Object: null prototype],
+2026-02-03T15:16:09.135721856Z       [Symbol(errored)]: null,
+2026-02-03T15:16:09.135723656Z       [Symbol(kHighWaterMark)]: 16384,
+2026-02-03T15:16:09.135725476Z       [Symbol(kRejectNonStandardBodyWrites)]: false,
+2026-02-03T15:16:09.135727306Z       [Symbol(kUniqueHeaders)]: null
+2026-02-03T15:16:09.135729126Z     },
+2026-02-03T15:16:09.135730916Z     data: { type: 'ErrorResponse', error: [Object], time: 1770131769 }
+2026-02-03T15:16:09.135732806Z   },
+2026-02-03T15:16:09.135734576Z   status: 422
+2026-02-03T15:16:09.135736356Z }
+2026-02-03T15:16:09.301537668Z Brave Search API Error: {
+2026-02-03T15:16:09.301552918Z   status: 422,
+2026-02-03T15:16:09.301561968Z   data: {
+2026-02-03T15:16:09.301563958Z     type: 'ErrorResponse',
+2026-02-03T15:16:09.301565798Z     error: {
+2026-02-03T15:16:09.301567588Z       id: '31249a86-6848-4158-969c-f1132c1d1b08',
+2026-02-03T15:16:09.301569568Z       status: 422,
+2026-02-03T15:16:09.301571348Z       detail: 'The provided subscription token is invalid.',
+2026-02-03T15:16:09.301573158Z       meta: [Object],
+2026-02-03T15:16:09.301574928Z       code: 'SUBSCRIPTION_TOKEN_INVALID'
+2026-02-03T15:16:09.301576778Z     },
+2026-02-03T15:16:09.301578558Z     time: 1770131769
+2026-02-03T15:16:09.301580338Z   },
+2026-02-03T15:16:09.301582118Z   message: 'Request failed with status code 422'
+2026-02-03T15:16:09.301583908Z }
+2026-02-03T15:16:09.301585708Z ⚠️ Search failed for query "openai dissatisfaction nvidia chips sparked cerebras deal chatgpt developer reportedly expert opinion analysis": AxiosError: Request failed with status code 422
+2026-02-03T15:16:09.301588318Z     at settle (/app/node_modules/axios/lib/core/settle.js:19:12)
+2026-02-03T15:16:09.301590188Z     at Unzip.handleStreamEnd (/app/node_modules/axios/lib/adapters/http.js:798:11)
+2026-02-03T15:16:09.301592118Z     at Unzip.emit (node:events:524:28)
+2026-02-03T15:16:09.301593928Z     at endReadableNT (node:internal/streams/readable:1698:12)
+2026-02-03T15:16:09.301604098Z     at process.processTicksAndRejections (node:internal/process/task_queues:82:21)
+2026-02-03T15:16:09.301606168Z     at Axios.request (/app/node_modules/axios/lib/core/Axios.js:45:41)
+2026-02-03T15:16:09.301608038Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-02-03T15:16:09.301609908Z     at async braveSearch (/app/src/lib/brave.ts:112:22)
+2026-02-03T15:16:09.301611788Z     at async deepResearchArticle (/app/src/lib/brave.ts:486:31)
+2026-02-03T15:16:09.301613648Z     at async processArticle (/app/src/services/content.service.ts:677:26)
+2026-02-03T15:16:09.301615558Z     at async processAndPublishArticles (/app/src/services/content.service.ts:1130:21)
+2026-02-03T15:16:09.301617428Z     at async executeNewsAgent (/app/src/services/agent.service.ts:281:30)
+2026-02-03T15:16:09.301619278Z     at async Worker.import_bullmq.Worker.connection (/app/src/workers/news-agent.worker.ts:215:21)
+2026-02-03T15:16:09.301621188Z     at async <anonymous> (/app/node_modules/bullmq/src/classes/worker.ts:994:26) {
+2026-02-03T15:16:09.301623308Z   isAxiosError: true,
+2026-02-03T15:16:09.301625128Z   code: 'ERR_BAD_REQUEST',
+2026-02-03T15:16:09.301626938Z   config: {
+2026-02-03T15:16:09.301628758Z     transitional: {
+2026-02-03T15:16:09.301630598Z       silentJSONParsing: true,
+2026-02-03T15:16:09.301632388Z       forcedJSONParsing: true,
+2026-02-03T15:16:09.301634198Z       clarifyTimeoutError: false
+2026-02-03T15:16:09.301636008Z     },
+2026-02-03T15:16:09.301637788Z     adapter: [ 'xhr', 'http', 'fetch' ],
+2026-02-03T15:16:09.301639618Z     transformRequest: [ [Function: transformRequest] ],
+2026-02-03T15:16:09.301641498Z     transformResponse: [ [Function: transformResponse] ],
+2026-02-03T15:16:09.301643368Z     timeout: 10000,
+2026-02-03T15:16:09.301645178Z     xsrfCookieName: 'XSRF-TOKEN',
+2026-02-03T15:16:09.301646968Z     xsrfHeaderName: 'X-XSRF-TOKEN',
+2026-02-03T15:16:09.301648788Z     maxContentLength: -1,
+2026-02-03T15:16:09.301651108Z     maxBodyLength: -1,
+2026-02-03T15:16:09.301652988Z     env: { FormData: [Function], Blob: [class Blob] },
+2026-02-03T15:16:09.301654858Z     validateStatus: [Function: validateStatus],
+2026-02-03T15:16:09.301656668Z     headers: Object [AxiosHeaders] {
+2026-02-03T15:16:09.301658458Z       Accept: 'application/json',
+2026-02-03T15:16:09.301660308Z       'Content-Type': undefined,
+2026-02-03T15:16:09.301662128Z       'Accept-Encoding': 'gzip',
+2026-02-03T15:16:09.301663958Z       'X-Subscription-Token': 'BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-',
+2026-02-03T15:16:09.301665978Z       'User-Agent': 'axios/1.13.4'
+2026-02-03T15:16:09.301667818Z     },
+2026-02-03T15:16:09.301672508Z     method: 'get',
+2026-02-03T15:16:09.301674488Z     url: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+expert+opinion+analysis&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.301676968Z     allowAbsoluteUrls: true,
+2026-02-03T15:16:09.301678818Z     data: undefined
+2026-02-03T15:16:09.301680608Z   },
+2026-02-03T15:16:09.301682408Z   request: <ref *1> ClientRequest {
+2026-02-03T15:16:09.301684328Z     _events: [Object: null prototype] {
+2026-02-03T15:16:09.301686148Z       abort: [Function (anonymous)],
+2026-02-03T15:16:09.301687928Z       aborted: [Function (anonymous)],
+2026-02-03T15:16:09.301689718Z       connect: [Function (anonymous)],
+2026-02-03T15:16:09.301691508Z       error: [Function (anonymous)],
+2026-02-03T15:16:09.301693358Z       socket: [Function (anonymous)],
+2026-02-03T15:16:09.301695148Z       timeout: [Function (anonymous)],
+2026-02-03T15:16:09.301696958Z       finish: [Function: requestOnFinish]
+2026-02-03T15:16:09.301698788Z     },
+2026-02-03T15:16:09.301700558Z     _eventsCount: 7,
+2026-02-03T15:16:09.301702448Z     _maxListeners: undefined,
+2026-02-03T15:16:09.301704348Z     outputData: [],
+2026-02-03T15:16:09.301706098Z     outputSize: 0,
+2026-02-03T15:16:09.301707878Z     writable: true,
+2026-02-03T15:16:09.301709618Z     destroyed: true,
+2026-02-03T15:16:09.301711388Z     _last: true,
+2026-02-03T15:16:09.301713138Z     chunkedEncoding: false,
+2026-02-03T15:16:09.301714898Z     shouldKeepAlive: true,
+2026-02-03T15:16:09.301716678Z     maxRequestsOnConnectionReached: false,
+2026-02-03T15:16:09.301718498Z     _defaultKeepAlive: true,
+2026-02-03T15:16:09.301720268Z     useChunkedEncodingByDefault: false,
+2026-02-03T15:16:09.301722098Z     sendDate: false,
+2026-02-03T15:16:09.301723838Z     _removedConnection: false,
+2026-02-03T15:16:09.301725658Z     _removedContLen: false,
+2026-02-03T15:16:09.301727408Z     _removedTE: false,
+2026-02-03T15:16:09.301729148Z     strictContentLength: false,
+2026-02-03T15:16:09.301730908Z     _contentLength: 0,
+2026-02-03T15:16:09.301732648Z     _hasBody: true,
+2026-02-03T15:16:09.301734398Z     _trailer: '',
+2026-02-03T15:16:09.301736168Z     finished: true,
+2026-02-03T15:16:09.301737918Z     _headerSent: true,
+2026-02-03T15:16:09.301739668Z     _closed: true,
+2026-02-03T15:16:09.301741418Z     socket: TLSSocket {
+2026-02-03T15:16:09.301746288Z       _tlsOptions: [Object],
+2026-02-03T15:16:09.301748188Z       _secureEstablished: true,
+2026-02-03T15:16:09.301749998Z       _securePending: false,
+2026-02-03T15:16:09.301751798Z       _newSessionPending: false,
+2026-02-03T15:16:09.301753628Z       _controlReleased: true,
+2026-02-03T15:16:09.301755418Z       secureConnecting: false,
+2026-02-03T15:16:09.301757208Z       _SNICallback: null,
+2026-02-03T15:16:09.301758988Z       servername: 'api.search.brave.com',
+2026-02-03T15:16:09.301760778Z       alpnProtocol: false,
+2026-02-03T15:16:09.301762558Z       authorized: true,
+2026-02-03T15:16:09.301764348Z       authorizationError: null,
+2026-02-03T15:16:09.301766118Z       encrypted: true,
+2026-02-03T15:16:09.301768477Z       _events: [Object: null prototype],
+2026-02-03T15:16:09.301770317Z       _eventsCount: 9,
+2026-02-03T15:16:09.301772097Z       connecting: false,
+2026-02-03T15:16:09.301773957Z       _hadError: false,
+2026-02-03T15:16:09.301775807Z       _parent: null,
+2026-02-03T15:16:09.301777587Z       _host: 'api.search.brave.com',
+2026-02-03T15:16:09.301779387Z       _closeAfterHandlingError: false,
+2026-02-03T15:16:09.301781177Z       _readableState: [ReadableState],
+2026-02-03T15:16:09.301783017Z       _writableState: [WritableState],
+2026-02-03T15:16:09.301784857Z       allowHalfOpen: false,
+2026-02-03T15:16:09.301786627Z       _maxListeners: undefined,
+2026-02-03T15:16:09.301788377Z       _sockname: null,
+2026-02-03T15:16:09.301790147Z       _pendingData: null,
+2026-02-03T15:16:09.301791897Z       _pendingEncoding: '',
+2026-02-03T15:16:09.301793647Z       server: undefined,
+2026-02-03T15:16:09.301795397Z       _server: null,
+2026-02-03T15:16:09.301797187Z       ssl: [TLSWrap],
+2026-02-03T15:16:09.301798927Z       _requestCert: true,
+2026-02-03T15:16:09.301800697Z       _rejectUnauthorized: true,
+2026-02-03T15:16:09.301802487Z       timeout: 5000,
+2026-02-03T15:16:09.301804227Z       parser: null,
+2026-02-03T15:16:09.301805987Z       _httpMessage: null,
+2026-02-03T15:16:09.301807737Z       autoSelectFamilyAttemptedAddresses: [Array],
+2026-02-03T15:16:09.301809547Z       [Symbol(alpncallback)]: null,
+2026-02-03T15:16:09.301811348Z       [Symbol(res)]: [TLSWrap],
+2026-02-03T15:16:09.301813108Z       [Symbol(verified)]: true,
+2026-02-03T15:16:09.301814868Z       [Symbol(pendingSession)]: null,
+2026-02-03T15:16:09.301816668Z       [Symbol(async_id_symbol)]: -1,
+2026-02-03T15:16:09.301818458Z       [Symbol(kHandle)]: [TLSWrap],
+2026-02-03T15:16:09.301822908Z       [Symbol(lastWriteQueueSize)]: 0,
+2026-02-03T15:16:09.301824778Z       [Symbol(timeout)]: Timeout {
+2026-02-03T15:16:09.301826618Z         _idleTimeout: 5000,
+2026-02-03T15:16:09.301828428Z         _idlePrev: [TimersList],
+2026-02-03T15:16:09.301830238Z         _idleNext: [Timeout],
+2026-02-03T15:16:09.301832008Z         _idleStart: 621001,
+2026-02-03T15:16:09.301833788Z         _onTimeout: [Function: bound ],
+2026-02-03T15:16:09.301835588Z         _timerArgs: undefined,
+2026-02-03T15:16:09.301837368Z         _repeat: null,
+2026-02-03T15:16:09.301839128Z         _destroyed: false,
+2026-02-03T15:16:09.301840898Z         [Symbol(refed)]: false,
+2026-02-03T15:16:09.301842698Z         [Symbol(kHasPrimitive)]: false,
+2026-02-03T15:16:09.301844508Z         [Symbol(asyncId)]: 18063,
+2026-02-03T15:16:09.301846288Z         [Symbol(triggerId)]: 18061
+2026-02-03T15:16:09.301848098Z       },
+2026-02-03T15:16:09.301849838Z       [Symbol(kBuffer)]: null,
+2026-02-03T15:16:09.301851638Z       [Symbol(kBufferCb)]: null,
+2026-02-03T15:16:09.301853418Z       [Symbol(kBufferGen)]: null,
+2026-02-03T15:16:09.301855178Z       [Symbol(shapeMode)]: true,
+2026-02-03T15:16:09.301856998Z       [Symbol(kCapture)]: false,
+2026-02-03T15:16:09.301858768Z       [Symbol(kSetNoDelay)]: false,
+2026-02-03T15:16:09.301860548Z       [Symbol(kSetKeepAlive)]: true,
+2026-02-03T15:16:09.301876328Z       [Symbol(kSetKeepAliveInitialDelay)]: 1,
+2026-02-03T15:16:09.301878248Z       [Symbol(kBytesRead)]: 0,
+2026-02-03T15:16:09.301880048Z       [Symbol(kBytesWritten)]: 0,
+2026-02-03T15:16:09.301881838Z       [Symbol(connect-options)]: [Object]
+2026-02-03T15:16:09.301883658Z     },
+2026-02-03T15:16:09.301885448Z     _header: 'GET /res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+expert+opinion+analysis&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw HTTP/1.1\r\n' +
+2026-02-03T15:16:09.301887938Z       'Accept: application/json\r\n' +
+2026-02-03T15:16:09.301890118Z       'Accept-Encoding: gzip\r\n' +
+2026-02-03T15:16:09.301892078Z       'X-Subscription-Token: BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-\r\n' +
+2026-02-03T15:16:09.301894098Z       'User-Agent: axios/1.13.4\r\n' +
+2026-02-03T15:16:09.301895958Z       'Host: api.search.brave.com\r\n' +
+2026-02-03T15:16:09.301897808Z       'Connection: keep-alive\r\n' +
+2026-02-03T15:16:09.301899668Z       '\r\n',
+2026-02-03T15:16:09.301901578Z     _keepAliveTimeout: 0,
+2026-02-03T15:16:09.301903398Z     _onPendingData: [Function: nop],
+2026-02-03T15:16:09.301910928Z     agent: Agent {
+2026-02-03T15:16:09.301912788Z       _events: [Object: null prototype],
+2026-02-03T15:16:09.301914648Z       _eventsCount: 2,
+2026-02-03T15:16:09.301916438Z       _maxListeners: undefined,
+2026-02-03T15:16:09.301918258Z       defaultPort: 443,
+2026-02-03T15:16:09.301920048Z       protocol: 'https:',
+2026-02-03T15:16:09.301921868Z       options: [Object: null prototype],
+2026-02-03T15:16:09.301923678Z       requests: [Object: null prototype] {},
+2026-02-03T15:16:09.301925508Z       sockets: [Object: null prototype] {},
+2026-02-03T15:16:09.301927338Z       freeSockets: [Object: null prototype],
+2026-02-03T15:16:09.301929138Z       keepAliveMsecs: 1000,
+2026-02-03T15:16:09.301930928Z       keepAlive: true,
+2026-02-03T15:16:09.301932708Z       maxSockets: Infinity,
+2026-02-03T15:16:09.301934478Z       maxFreeSockets: 256,
+2026-02-03T15:16:09.301936298Z       scheduling: 'lifo',
+2026-02-03T15:16:09.301938088Z       maxTotalSockets: Infinity,
+2026-02-03T15:16:09.301939898Z       totalSocketCount: 7,
+2026-02-03T15:16:09.301941668Z       maxCachedSessions: 100,
+2026-02-03T15:16:09.301943458Z       _sessionCache: [Object],
+2026-02-03T15:16:09.301945278Z       [Symbol(shapeMode)]: false,
+2026-02-03T15:16:09.301947078Z       [Symbol(kCapture)]: false
+2026-02-03T15:16:09.301948868Z     },
+2026-02-03T15:16:09.301950658Z     socketPath: undefined,
+2026-02-03T15:16:09.301952438Z     method: 'GET',
+2026-02-03T15:16:09.301954208Z     maxHeaderSize: undefined,
+2026-02-03T15:16:09.301956008Z     insecureHTTPParser: undefined,
+2026-02-03T15:16:09.301957838Z     joinDuplicateHeaders: undefined,
+2026-02-03T15:16:09.301959718Z     path: '/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+expert+opinion+analysis&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.301962068Z     _ended: true,
+2026-02-03T15:16:09.301963858Z     res: IncomingMessage {
+2026-02-03T15:16:09.301965658Z       _events: [Object],
+2026-02-03T15:16:09.301967458Z       _readableState: [ReadableState],
+2026-02-03T15:16:09.301969328Z       _maxListeners: undefined,
+2026-02-03T15:16:09.301971108Z       socket: null,
+2026-02-03T15:16:09.301972868Z       httpVersionMajor: 1,
+2026-02-03T15:16:09.301974658Z       httpVersionMinor: 1,
+2026-02-03T15:16:09.301976488Z       httpVersion: '1.1',
+2026-02-03T15:16:09.301978318Z       complete: true,
+2026-02-03T15:16:09.301980178Z       rawHeaders: [Array],
+2026-02-03T15:16:09.301984778Z       rawTrailers: [],
+2026-02-03T15:16:09.301986668Z       joinDuplicateHeaders: undefined,
+2026-02-03T15:16:09.301988518Z       aborted: false,
+2026-02-03T15:16:09.301990288Z       upgrade: false,
+2026-02-03T15:16:09.301992078Z       url: '',
+2026-02-03T15:16:09.301993858Z       method: null,
+2026-02-03T15:16:09.301995628Z       statusCode: 422,
+2026-02-03T15:16:09.301997438Z       statusMessage: 'Unprocessable Entity',
+2026-02-03T15:16:09.301999268Z       client: [TLSSocket],
+2026-02-03T15:16:09.302001308Z       _consuming: true,
+2026-02-03T15:16:09.302003108Z       _dumped: false,
+2026-02-03T15:16:09.302004958Z       req: [Circular *1],
+2026-02-03T15:16:09.302006758Z       _eventsCount: 4,
+2026-02-03T15:16:09.302008928Z       responseUrl: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+expert+opinion+analysis&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.302011247Z       redirects: [],
+2026-02-03T15:16:09.302013147Z       [Symbol(shapeMode)]: true,
+2026-02-03T15:16:09.302015017Z       [Symbol(kCapture)]: false,
+2026-02-03T15:16:09.302017907Z       [Symbol(kHeaders)]: [Object],
+2026-02-03T15:16:09.302019787Z       [Symbol(kHeadersCount)]: 14,
+2026-02-03T15:16:09.302021637Z       [Symbol(kTrailers)]: null,
+2026-02-03T15:16:09.302023437Z       [Symbol(kTrailersCount)]: 0
+2026-02-03T15:16:09.302025597Z     },
+2026-02-03T15:16:09.302027577Z     aborted: false,
+2026-02-03T15:16:09.302029367Z     timeoutCb: null,
+2026-02-03T15:16:09.302031157Z     upgradeOrConnect: false,
+2026-02-03T15:16:09.302032937Z     parser: null,
+2026-02-03T15:16:09.302034707Z     maxHeadersCount: null,
+2026-02-03T15:16:09.302036477Z     reusedSocket: true,
+2026-02-03T15:16:09.302038257Z     host: 'api.search.brave.com',
+2026-02-03T15:16:09.302040067Z     protocol: 'https:',
+2026-02-03T15:16:09.302041847Z     _redirectable: Writable {
+2026-02-03T15:16:09.302043657Z       _events: [Object],
+2026-02-03T15:16:09.302045437Z       _writableState: [WritableState],
+2026-02-03T15:16:09.302047257Z       _maxListeners: undefined,
+2026-02-03T15:16:09.302049037Z       _options: [Object],
+2026-02-03T15:16:09.302050827Z       _ended: true,
+2026-02-03T15:16:09.302052597Z       _ending: true,
+2026-02-03T15:16:09.302054397Z       _redirectCount: 0,
+2026-02-03T15:16:09.302056197Z       _redirects: [],
+2026-02-03T15:16:09.302060647Z       _requestBodyLength: 0,
+2026-02-03T15:16:09.302062487Z       _requestBodyBuffers: [],
+2026-02-03T15:16:09.302064297Z       _eventsCount: 3,
+2026-02-03T15:16:09.302066097Z       _onNativeResponse: [Function (anonymous)],
+2026-02-03T15:16:09.302067927Z       _currentRequest: [Circular *1],
+2026-02-03T15:16:09.302069777Z       _currentUrl: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+expert+opinion+analysis&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.302071997Z       _timeout: null,
+2026-02-03T15:16:09.302073787Z       [Symbol(shapeMode)]: true,
+2026-02-03T15:16:09.302075597Z       [Symbol(kCapture)]: false
+2026-02-03T15:16:09.302077397Z     },
+2026-02-03T15:16:09.302079137Z     [Symbol(shapeMode)]: false,
+2026-02-03T15:16:09.302080937Z     [Symbol(kCapture)]: false,
+2026-02-03T15:16:09.302082717Z     [Symbol(kBytesWritten)]: 0,
+2026-02-03T15:16:09.302084497Z     [Symbol(kNeedDrain)]: false,
+2026-02-03T15:16:09.302086287Z     [Symbol(corked)]: 0,
+2026-02-03T15:16:09.302088087Z     [Symbol(kOutHeaders)]: [Object: null prototype] {
+2026-02-03T15:16:09.302089947Z       accept: [Array],
+2026-02-03T15:16:09.302091727Z       'accept-encoding': [Array],
+2026-02-03T15:16:09.302093497Z       'x-subscription-token': [Array],
+2026-02-03T15:16:09.302095307Z       'user-agent': [Array],
+2026-02-03T15:16:09.302097107Z       host: [Array]
+2026-02-03T15:16:09.302107037Z     },
+2026-02-03T15:16:09.302108937Z     [Symbol(errored)]: null,
+2026-02-03T15:16:09.302110757Z     [Symbol(kHighWaterMark)]: 16384,
+2026-02-03T15:16:09.302112607Z     [Symbol(kRejectNonStandardBodyWrites)]: false,
+2026-02-03T15:16:09.302114467Z     [Symbol(kUniqueHeaders)]: null
+2026-02-03T15:16:09.302116307Z   },
+2026-02-03T15:16:09.302118097Z   response: {
+2026-02-03T15:16:09.302119877Z     status: 422,
+2026-02-03T15:16:09.302121677Z     statusText: 'Unprocessable Entity',
+2026-02-03T15:16:09.302123507Z     headers: Object [AxiosHeaders] {
+2026-02-03T15:16:09.302125537Z       date: 'Tue, 03 Feb 2026 15:16:09 GMT',
+2026-02-03T15:16:09.302127427Z       'content-type': 'application/json',
+2026-02-03T15:16:09.302129277Z       'transfer-encoding': 'chunked',
+2026-02-03T15:16:09.302131107Z       connection: 'keep-alive',
+2026-02-03T15:16:09.302132887Z       'server-timing': 'search-roundtrip;dur=3.236',
+2026-02-03T15:16:09.302134717Z       vary: 'Accept-Encoding'
+2026-02-03T15:16:09.302136527Z     },
+2026-02-03T15:16:09.302691615Z ✅ Deep research tamamlandı:
+2026-02-03T15:16:09.303196434Z     config: {
+2026-02-03T15:16:09.303205244Z       transitional: [Object],
+2026-02-03T15:16:09.303207474Z       adapter: [Array],
+2026-02-03T15:16:09.303209434Z       transformRequest: [Array],
+2026-02-03T15:16:09.303211224Z       transformResponse: [Array],
+2026-02-03T15:16:09.303213014Z       timeout: 10000,
+2026-02-03T15:16:09.304086210Z       xsrfCookieName: 'XSRF-TOKEN',
+2026-02-03T15:16:09.304107390Z       xsrfHeaderName: 'X-XSRF-TOKEN',
+2026-02-03T15:16:09.304110740Z       maxContentLength: -1,
+2026-02-03T15:16:09.304112880Z       maxBodyLength: -1,
+2026-02-03T15:16:09.304114770Z       env: [Object],
+2026-02-03T15:16:09.304116490Z       validateStatus: [Function: validateStatus],
+2026-02-03T15:16:09.304118310Z       headers: [Object [AxiosHeaders]],
+2026-02-03T15:16:09.304120040Z       method: 'get',
+2026-02-03T15:16:09.304121880Z       url: 'https://api.search.brave.com/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+expert+opinion+analysis&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.304124600Z       allowAbsoluteUrls: true,
+2026-02-03T15:16:09.304126400Z       data: undefined
+2026-02-03T15:16:09.304128110Z     },
+2026-02-03T15:16:09.304129990Z     request: <ref *1> ClientRequest {
+2026-02-03T15:16:09.304131870Z       _events: [Object: null prototype],
+2026-02-03T15:16:09.304133730Z       _eventsCount: 7,
+2026-02-03T15:16:09.304135420Z       _maxListeners: undefined,
+2026-02-03T15:16:09.304137190Z       outputData: [],
+2026-02-03T15:16:09.304138860Z       outputSize: 0,
+2026-02-03T15:16:09.304140600Z       writable: true,
+2026-02-03T15:16:09.304142260Z       destroyed: true,
+2026-02-03T15:16:09.304144050Z       _last: true,
+2026-02-03T15:16:09.304145770Z       chunkedEncoding: false,
+2026-02-03T15:16:09.304147450Z       shouldKeepAlive: true,
+2026-02-03T15:16:09.304149220Z       maxRequestsOnConnectionReached: false,
+2026-02-03T15:16:09.304150950Z       _defaultKeepAlive: true,
+2026-02-03T15:16:09.304152650Z       useChunkedEncodingByDefault: false,
+2026-02-03T15:16:09.304154350Z       sendDate: false,
+2026-02-03T15:16:09.304156050Z       _removedConnection: false,
+2026-02-03T15:16:09.304157750Z       _removedContLen: false,
+2026-02-03T15:16:09.304159430Z       _removedTE: false,
+2026-02-03T15:16:09.304161090Z       strictContentLength: false,
+2026-02-03T15:16:09.304162780Z       _contentLength: 0,
+2026-02-03T15:16:09.304164460Z       _hasBody: true,
+2026-02-03T15:16:09.304172380Z       _trailer: '',
+2026-02-03T15:16:09.304174190Z       finished: true,
+2026-02-03T15:16:09.304175920Z       _headerSent: true,
+2026-02-03T15:16:09.304177650Z       _closed: true,
+2026-02-03T15:16:09.304179350Z       socket: [TLSSocket],
+2026-02-03T15:16:09.304181100Z       _header: 'GET /res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+expert+opinion+analysis&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw HTTP/1.1\r\n' +
+2026-02-03T15:16:09.304183590Z         'Accept: application/json\r\n' +
+2026-02-03T15:16:09.304187070Z         'Accept-Encoding: gzip\r\n' +
+2026-02-03T15:16:09.304188960Z         'X-Subscription-Token: BSA3eyA2wTZUYceFFhfvG1DUmRRDgj-\r\n' +
+2026-02-03T15:16:09.304190760Z         'User-Agent: axios/1.13.4\r\n' +
+2026-02-03T15:16:09.304192500Z         'Host: api.search.brave.com\r\n' +
+2026-02-03T15:16:09.304194310Z         'Connection: keep-alive\r\n' +
+2026-02-03T15:16:09.304196030Z         '\r\n',
+2026-02-03T15:16:09.304197850Z       _keepAliveTimeout: 0,
+2026-02-03T15:16:09.304199550Z       _onPendingData: [Function: nop],
+2026-02-03T15:16:09.304201330Z       agent: [Agent],
+2026-02-03T15:16:09.304203020Z       socketPath: undefined,
+2026-02-03T15:16:09.304204700Z       method: 'GET',
+2026-02-03T15:16:09.304206360Z       maxHeaderSize: undefined,
+2026-02-03T15:16:09.304208190Z       insecureHTTPParser: undefined,
+2026-02-03T15:16:09.304209890Z       joinDuplicateHeaders: undefined,
+2026-02-03T15:16:09.304211641Z       path: '/res/v1/web/search?q=openai+dissatisfaction+nvidia+chips+sparked+cerebras+deal+chatgpt+developer+reportedly+expert+opinion+analysis&count=5&search_lang=en&country=US&safesearch=moderate&text_decorations=false&spellcheck=true&freshness=pw',
+2026-02-03T15:16:09.304259640Z       _ended: true,
+2026-02-03T15:16:09.304261460Z       res: [IncomingMessage],
+2026-02-03T15:16:09.304263420Z       aborted: false,
+2026-02-03T15:16:09.304265270Z       timeoutCb: null,
+2026-02-03T15:16:09.304267050Z       upgradeOrConnect: false,
+2026-02-03T15:16:09.304268850Z       parser: null,
+2026-02-03T15:16:09.304270640Z       maxHeadersCount: null,
+2026-02-03T15:16:09.304272570Z       reusedSocket: true,
+2026-02-03T15:16:09.304274370Z       host: 'api.search.brave.com',
+2026-02-03T15:16:09.304276190Z       protocol: 'https:',
+2026-02-03T15:16:09.304277990Z       _redirectable: [Writable],
+2026-02-03T15:16:09.304279780Z       [Symbol(shapeMode)]: false,
+2026-02-03T15:16:09.304281570Z       [Symbol(kCapture)]: false,
+2026-02-03T15:16:09.304283350Z       [Symbol(kBytesWritten)]: 0,
+2026-02-03T15:16:09.304288970Z       [Symbol(kNeedDrain)]: false,
+2026-02-03T15:16:09.304290870Z       [Symbol(corked)]: 0,
+2026-02-03T15:16:09.304292690Z       [Symbol(kOutHeaders)]: [Object: null prototype],
+2026-02-03T15:16:09.304294570Z       [Symbol(errored)]: null,
+2026-02-03T15:16:09.304296370Z       [Symbol(kHighWaterMark)]: 16384,
+2026-02-03T15:16:09.304298190Z       [Symbol(kRejectNonStandardBodyWrites)]: false,
+2026-02-03T15:16:09.304300010Z       [Symbol(kUniqueHeaders)]: null
+2026-02-03T15:16:09.304301820Z     },
+2026-02-03T15:16:09.304303650Z     data: { type: 'ErrorResponse', error: [Object], time: 1770131769 }
+2026-02-03T15:16:09.304305560Z   },
+2026-02-03T15:16:09.304307350Z   status: 422
+2026-02-03T15:16:09.304309150Z }
+2026-02-03T15:16:09.304315800Z    📊 0 istatistik
+2026-02-03T15:16:09.304318250Z    💬 0 alıntı
+2026-02-03T15:16:09.304320400Z    📚 0 kaynak
+2026-02-03T15:16:09.304322330Z    📝 0 ek bağlam
+2026-02-03T15:16:09.304324210Z ✅ Deep research tamamlandı: 0 ek kaynak bulundu
+2026-02-03T15:16:09.308958344Z 🤖 DeepSeek ile zenginleştirilmiş içerik yeniden yazılıyor...
+2026-02-03T15:16:22.227937124Z 💓 Heartbeat updated: 03.02.2026 15:16:22
+2026-02-03T15:16:52.232748867Z 💓 Heartbeat updated: 03.02.2026 15:16:52
+2026-02-03T15:16:52.233687314Z 📊 Haber Puanı: 880/1000
+2026-02-03T15:16:52.238592958Z 🎨 DeepSeek ile görsel prompt oluşturuluyor...
+2026-02-03T15:16:54.129788453Z 📝 Final prompt (111 chars): Nvidia H100 GPU chip close-up on circuit board, green PCB, professional macro photography, no people, no humans
+2026-02-03T15:16:54.129833203Z 📝 Görsel prompt: Nvidia H100 GPU chip close-up on circuit board, green PCB, professional macro photography, no people, no humans
+2026-02-03T15:16:54.129846863Z 🖼️  Pollinations.ai'dan görsel alınıyor...
+2026-02-03T15:16:54.129857853Z 🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+2026-02-03T15:16:54.129904602Z 🔑 API Key exists: YES, length: 19
+2026-02-03T15:16:54.129919342Z 📝 Prompt: Nvidia H100 GPU chip close-up on circuit board, green PCB, professional macro photography, no people
+2026-02-03T15:16:54.129928752Z 🎨 Authenticated URL: https://gen.pollinations.ai/image/Nvidia%20H100%20GPU%20chip%20close-up%20on%20circuit%20board%2C%20green%20PCB%2C%20pro...
+2026-02-03T15:16:57.372092104Z ✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+2026-02-03T15:16:57.372136244Z ✅ Görsel URL: https://gen.pollinations.ai/image/Nvidia%20H100%20GPU%20chip%20close-up%20on%20circuit%20board%2C%20green%20PCB%2C%20professional%20macro%20photography%2C%20no%20people%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-03T15:16:57.376120672Z 🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...
+2026-02-03T15:16:57.376783869Z 
+2026-02-03T15:16:57.376790529Z 🖼️  Image Optimization Pipeline Started
+2026-02-03T15:16:57.376959250Z    Source: https://gen.pollinations.ai/image/Nvidia%20H100%20GPU%20chip%20close-up%20on%20circuit%20board%2C%20green%20PCB%2C%20professional%20macro%20photography%2C%20no%20people%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-03T15:16:57.377005459Z    Slug: openai-nvidia-ciplerinin-hizindan-memnun-degil-cerebras-anlasmasi
+2026-02-03T15:16:57.377156739Z 📥 Downloading image from: https://gen.pollinations.ai/image/Nvidia%20H100%20GPU%20chip%20close-up%20on%20circuit%20board%2C%20green%20PCB%2C%20professional%20macro%20photography%2C%20no%20people%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-03T15:16:57.583164840Z ❌ Image download error: Error: Failed to download image: 401 Unauthorized
+2026-02-03T15:16:57.583187330Z     at downloadImage (/app/src/lib/image-optimizer.ts:49:13)
+2026-02-03T15:16:57.583192540Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-02-03T15:16:57.583196730Z     at async optimizeAndGenerateSizes (/app/src/lib/image-optimizer.ts:250:28)
+2026-02-03T15:16:57.583200650Z     at async processArticle (/app/src/services/content.service.ts:833:20)
+2026-02-03T15:16:57.583204400Z     at async processAndPublishArticles (/app/src/services/content.service.ts:1130:21)
+2026-02-03T15:16:57.583232140Z     at async executeNewsAgent (/app/src/services/agent.service.ts:281:30)
+2026-02-03T15:16:57.583236110Z     at async Worker.import_bullmq.Worker.connection (/app/src/workers/news-agent.worker.ts:215:21)
+2026-02-03T15:16:57.583239950Z     at async <anonymous> (/app/node_modules/bullmq/src/classes/worker.ts:994:26)
+2026-02-03T15:16:57.583716729Z 
+2026-02-03T15:16:57.583726259Z ❌ Image optimization failed: Error: Image download failed: Failed to download image: 401 Unauthorized
+2026-02-03T15:16:57.583730889Z     at downloadImage (/app/src/lib/image-optimizer.ts:58:11)
+2026-02-03T15:16:57.583734859Z     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2026-02-03T15:16:57.583738769Z     at async optimizeAndGenerateSizes (/app/src/lib/image-optimizer.ts:250:28)
+2026-02-03T15:16:57.583742479Z     at async processArticle (/app/src/services/content.service.ts:833:20)
+2026-02-03T15:16:57.583746138Z     at async processAndPublishArticles (/app/src/services/content.service.ts:1130:21)
+2026-02-03T15:16:57.583749898Z     at async executeNewsAgent (/app/src/services/agent.service.ts:281:30)
+2026-02-03T15:16:57.583753748Z     at async Worker.import_bullmq.Worker.connection (/app/src/workers/news-agent.worker.ts:215:21)
+2026-02-03T15:16:57.583918828Z ⚠️  Using original image URL as fallback for all sizes
+2026-02-03T15:16:57.583957928Z     at async <anonymous> (/app/node_modules/bullmq/src/classes/worker.ts:994:26)
+2026-02-03T15:16:57.583967498Z ✅ Görsel optimizasyonu tamamlandı
+2026-02-03T15:16:57.583984688Z    Large: https://gen.pollinations.ai/image/Nvidia%20H100%20GPU%20chip%20close-up%20on%20circuit%20board%2C%20green%20PCB%2C%20professional%20macro%20photography%2C%20no%20people%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-03T15:16:57.584007057Z    Medium: https://gen.pollinations.ai/image/Nvidia%20H100%20GPU%20chip%20close-up%20on%20circuit%20board%2C%20green%20PCB%2C%20professional%20macro%20photography%2C%20no%20people%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-03T15:16:57.584011557Z    Small: https://gen.pollinations.ai/image/Nvidia%20H100%20GPU%20chip%20close-up%20on%20circuit%20board%2C%20green%20PCB%2C%20professional%20macro%20photography%2C%20no%20people%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-03T15:16:57.584015917Z    Thumb: https://gen.pollinations.ai/image/Nvidia%20H100%20GPU%20chip%20close-up%20on%20circuit%20board%2C%20green%20PCB%2C%20professional%20macro%20photography%2C%20no%20people%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-03T15:16:57.595515650Z 📤 Haber yayınlanıyor: OpenAI, Nvidia Çiplerinin Hızından Memnun Değil: Cerebras Anlaşması
+2026-02-03T15:16:57.601682450Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-03T15:16:57.636007278Z 🔍 Checking for duplicates among 263 recent articles...
+2026-02-03T15:16:57.657035211Z ✅ No duplicates found for: "OpenAI, Nvidia Çiplerinin Hızından Memnun Değil: Cerebras An..."
+2026-02-03T15:16:57.674122335Z ✅ Haber yayınlandı: openai-nvidia-ciplerinin-hizindan-memnun-degil-cerebras-anlasmasi (Skor: 880)
+2026-02-03T15:16:57.685485539Z 🗑️  Invalidating cache by tag: articles
+2026-02-03T15:16:57.685561808Z 🗑️  Cache invalidated for tag: articles
+2026-02-03T15:16:57.686359105Z 📘 Posting to Facebook Page...
+2026-02-03T15:16:57.687788380Z 📱 Push bildirimi gönderiliyor...
+2026-02-03T15:16:57.701072008Z ✅ Haber başarıyla yayınlandı: openai-nvidia-ciplerinin-hizindan-memnun-degil-cerebras-anlasmasi
+2026-02-03T15:16:57.701084188Z 📊 Toplam 1/1 haber yayınlandı
+2026-02-03T15:16:57.701086688Z ✅ SUCCESS: 1/1 haber yayınlandı
+2026-02-03T15:16:57.701088858Z 
+2026-02-03T15:16:57.701090688Z ============================================================
+2026-02-03T15:16:57.701092528Z ✅ FINAL RESULT: 1 haber yayınlandı (1 attempt)
+2026-02-03T15:16:57.701094448Z ============================================================
+2026-02-03T15:16:57.701096218Z 
+2026-02-03T15:16:57.701592796Z [Socket] Cannot emit 'article:published' - Socket.io not initialized
+2026-02-03T15:16:57.701979794Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-03T15:16:57.705510463Z 📱 3 aboneye push bildirimi gönderiliyor...
+2026-02-03T15:16:57.733857251Z 💾 Translation saved: tr - OpenAI, Nvidia Çiplerinin Hızından Memnun Değil: C...
+2026-02-03T15:16:57.734070151Z 🌍 Translating article from tr to en...
+2026-02-03T15:16:57.734080950Z    Title: OpenAI, Nvidia Çiplerinin Hızından Memnun Değil: C...
+2026-02-03T15:16:57.748511224Z ⏰ Bir sonraki çalışma: 03.02.2026 15:31:57
+2026-02-03T15:16:57.762456329Z [Socket] Cannot emit 'agent:completed' - Socket.io not initialized
+2026-02-03T15:16:57.762732468Z info: ✅ Agent execution completed {"articlesCreated":1,"articlesScraped":50,"duration":117,"environment":"production","logId":"cml6qpl620000ywuep69u4j4a","module":"agent","service":"ai-news-agent","success":true,"timestamp":"2026-02-03 15:16:57"}
+2026-02-03T15:16:57.763856854Z ✅ Agent çalıştırması 117s içinde tamamlandı
+2026-02-03T15:16:57.763920764Z 
+2026-02-03T15:16:57.763933034Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-03T15:16:57.763935674Z ┃           ✅ AGENT EXECUTION SUCCESS              ┃
+2026-02-03T15:16:57.763937824Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-03T15:16:57.763939974Z ┃  Status:         SUCCESS                        ┃
+2026-02-03T15:16:57.763943954Z ┃  Duration:       117s                            ┃
+2026-02-03T15:16:57.763945894Z ┃  Articles Found: 50                             ┃
+2026-02-03T15:16:57.763947704Z ┃  Articles Made:  1                              ┃
+2026-02-03T15:16:57.763949554Z ┃  Next Run:       03.02.2026 15:31:57      ┃
+2026-02-03T15:16:57.763951484Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-03T15:16:57.763953494Z 
+2026-02-03T15:16:57.773729482Z 📊 Progress: 90% - Agent execution completed
+2026-02-03T15:16:57.773930331Z info: ✅ Job completed {"environment":"production","jobId":"repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770131700000","module":"worker","result":{"articlesCreated":1,"articlesScraped":50,"duration":117,"errors":[],"publishedArticles":[{"id":"cml6qs3wd0003ywuex8aus7ui","slug":"openai-nvidia-ciplerinin-hizindan-memnun-degil-cerebras-anlasmasi"}],"success":true},"service":"ai-news-agent","timestamp":"2026-02-03 15:16:57"}
+2026-02-03T15:16:57.773939691Z 
+2026-02-03T15:16:57.773941961Z 📊 Execution Summary:
+2026-02-03T15:16:57.773943941Z    Articles Scraped: 50
+2026-02-03T15:16:57.773945821Z    Articles Created: 1
+2026-02-03T15:16:57.773947651Z    Duration: 117s
+2026-02-03T15:16:57.773953411Z    Status: ✅ SUCCESS
+2026-02-03T15:16:57.790933656Z 🔌 Database connection closed
+2026-02-03T15:16:57.843141507Z 
+2026-02-03T15:16:57.843275256Z ⏰ Next execution (repeatable): 2/3/2026, 3:31:57 PM
+2026-02-03T15:16:57.852489247Z 
+2026-02-03T15:16:57.852503487Z ✅ Job repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770131700000 completed successfully
+2026-02-03T15:16:57.907857517Z ✅ Push bildirimi tamamlandı: 3 başarılı, 0 başarısız
+2026-02-03T15:16:57.908066616Z ✅ Push bildirimi gönderildi
+2026-02-03T15:16:58.257267493Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/openai-nvidia-ciplerinin-hizindan-memnun-degil-cerebras-anlasmasi
+2026-02-03T15:16:58.363977897Z ✅ IndexNow: 3 URLs submitted successfully
+2026-02-03T15:16:58.364018347Z ✅ IndexNow: Sitemap URLs submitted successfully
+2026-02-03T15:16:59.504749686Z ✅ WebSub ping successful: https://pubsubhubbub.appspot.com/
+2026-02-03T15:16:59.504778706Z 📊 Sitemap ping summary: 4/4 methods successful
+2026-02-03T15:16:59.504782586Z    - IndexNow: ✅
+2026-02-03T15:16:59.504786016Z    - WebSub: ✅
+2026-02-03T15:16:59.504789066Z    - Google: ✅
+2026-02-03T15:16:59.504792296Z    - Bing: ✅
+2026-02-03T15:16:59.504795166Z 🔔 Sitemap ping: 4/4 yöntem başarılı
+2026-02-03T15:16:59.504798206Z    ✅ IndexNow: Bing/Yandex bildirildi
+2026-02-03T15:16:59.504801066Z    ✅ WebSub: Google bildirildi

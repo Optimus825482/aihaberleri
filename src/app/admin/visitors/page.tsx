@@ -302,7 +302,9 @@ export default function VisitorsPage() {
                         className="text-xs border-green-500/30 bg-green-500/10 text-green-500"
                         title={`Geolocation provider: ${visitor.provider}`}
                       >
-                        {visitor.provider === "ipwho" ? "🔍 ipwho" : "⚡ ip-api"}
+                        {visitor.provider === "ipwho"
+                          ? "🔍 ipwho"
+                          : "⚡ ip-api"}
                       </Badge>
                     )}
                   </div>
@@ -358,37 +360,38 @@ export default function VisitorsPage() {
             </CardHeader>
             <CardContent className="relative z-10">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {Object.entries(
-                  data.visitors.reduce(
-                    (acc, visitor) => {
-                      const country = visitor.country || "Unknown";
-                      const flag = visitor.flag;
-                      const key = `${flag} ${country}`;
-                      acc[key] = (acc[key] || 0) + 1;
-                      return acc;
-                    },
-                    {} as Record<string, number>,
-                  ),
-                )
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([country, count]) => (
-                    <div
-                      key={country}
-                      className="flex items-center gap-3 p-4 border border-white/10 rounded-xl hover:border-violet-500/50 hover:bg-white/5 transition-all duration-300 group"
-                    >
-                      <span className="text-3xl group-hover:scale-110 transition-transform">
-                        {country.split(" ")[0]}
-                      </span>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold group-hover:text-violet-500 transition-colors">
-                          {country.split(" ").slice(1).join(" ")}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-mono">
-                          {count} ziyaretçi
-                        </p>
+                {data?.visitors &&
+                  Object.entries(
+                    data.visitors.reduce(
+                      (acc, visitor) => {
+                        const country = visitor.country || "Unknown";
+                        const flag = visitor.flag;
+                        const key = `${flag} ${country}`;
+                        acc[key] = (acc[key] || 0) + 1;
+                        return acc;
+                      },
+                      {} as Record<string, number>,
+                    ),
+                  )
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([country, count]) => (
+                      <div
+                        key={country}
+                        className="flex items-center gap-3 p-4 border border-white/10 rounded-xl hover:border-violet-500/50 hover:bg-white/5 transition-all duration-300 group"
+                      >
+                        <span className="text-3xl group-hover:scale-110 transition-transform">
+                          {country.split(" ")[0]}
+                        </span>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold group-hover:text-violet-500 transition-colors">
+                            {country.split(" ").slice(1).join(" ")}
+                          </p>
+                          <p className="text-xs text-muted-foreground font-mono">
+                            {count} ziyaretçi
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
               </div>
             </CardContent>
           </Card>
