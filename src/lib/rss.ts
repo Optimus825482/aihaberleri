@@ -230,16 +230,8 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://the-decoder.com/feed/",
     language: "en",
   },
-  {
-    name: "Unite.AI",
-    url: "https://www.unite.ai/feed/",
-    language: "en",
-  },
-  {
-    name: "Analytics India Magazine",
-    url: "https://analyticsindiamag.com/feed/",
-    language: "en",
-  },
+  // REMOVED: Unite.AI - RSS feed consistently returns malformed XML (Non-whitespace before first tag)
+  // REMOVED: Analytics India Magazine - RSS feed has attribute parsing issues
   {
     name: "The Rundown AI",
     url: "https://rss.beehiiv.com/feeds/2R3C6Bt5wj.xml",
@@ -606,7 +598,14 @@ export async function fetchRSSFeed(
     }
   }
 
-  console.error(`❌ RSS feed hatası (${sourceName}):`, lastError?.message);
+  // Only log detailed error info for debugging (not every retry)
+  if (lastError) {
+    console.error(`❌ RSS feed hatası (${sourceName}): ${lastError.message}`);
+    if (process.env.NODE_ENV === "development") {
+      console.error(`   Line: ${(lastError as any).line || "N/A"}`);
+      console.error(`   Column: ${(lastError as any).column || "N/A"}`);
+    }
+  }
   return [];
 }
 

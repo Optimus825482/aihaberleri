@@ -33,15 +33,26 @@ interface UploadResult {
 
 /**
  * Download image from URL
+ * Supports Pollinations.ai authenticated URLs with API key
  */
 async function downloadImage(url: string): Promise<Buffer> {
   try {
     console.log(`📥 Downloading image from: ${url}`);
+
+    // Build headers - add Pollinations API key if URL is from pollinations
+    const headers: Record<string, string> = {
+      "User-Agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    };
+
+    // Add authorization for Pollinations API
+    if (url.includes("pollinations.ai") && process.env.POLLINATIONS_API_KEY) {
+      headers["Authorization"] = `Bearer ${process.env.POLLINATIONS_API_KEY}`;
+      console.log(`🔑 Adding Pollinations API key to download request`);
+    }
+
     const response = await fetch(url, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-      },
+      headers,
       signal: AbortSignal.timeout(30000), // 30s timeout
     });
 

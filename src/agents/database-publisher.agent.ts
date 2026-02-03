@@ -3,11 +3,13 @@
  *
  * RESPONSIBILITIES:
  * 1. Save enriched articles with visuals to PostgreSQL
- * 2. Create both TR and EN versions
+ * 2. Create both TR and EN versions (ArticleTranslation table)
  * 3. Handle category assignment
  * 4. Generate SEO-friendly slugs
  * 5. Set publish status and timestamps
  * 6. Link to agent log for tracking
+ * 7. Send push notifications (Firebase)
+ * 8. Notify search engines (IndexNow)
  *
  * This is the FINAL step in the multi-agent pipeline.
  */
@@ -242,6 +244,75 @@ export class DatabasePublisherAgent extends BaseAgent<
             this.logger.warn(
               `IndexNow submission failed: ${(indexError as Error).message}`,
             );
+          }
+
+          // Send push notification (async - don't block publishing)
+          try {
+            const { sendPushNotification } = await import("@/lib/push");
+            const articleUrl = `https://aihaberleri.org/news/${createdArticle.slug}`;
+            sendPushNotification(
+              createdArticle.title,
+              article.synthesizedContent.tr.excerpt ||
+                createdArticle.title.substring(0, 100),
+              articleUrl,
+            )
+              .then(() => this.logger.info(`📱 Push notification sent`))
+              .catch((err) =>
+                this.logger.warn(`Push notification failed: ${err.message}`),
+              );
+          } catch (pushError) {
+            this.logger.warn(
+              `Push notification setup failed: ${(pushError as Error).message}`,
+            );
+          }
+
+          // Post to Twitter (async - don't block publishing)
+          try {
+            const { postTweet } = await import("@/lib/social/twitter");
+            postTweet({
+              title: createdArticle.title,
+              slug: createdArticle.slug,
+              excerpt: article.synthesizedContent.tr.excerpt || "",
+              categoryName: category.name,
+            })
+              .then(() => this.logger.info(`🐦 Tweet posted`))
+              .catch((err) =>
+                this.logger.warn(`Tweet failed: ${err.message}`),
+              );
+          } catch (twitterError) {
+            this.logger.warn(
+              `Twitter setup failed: ${(twitterError as Error).message}`,
+            );
+          }
+
+          // Post to Facebook (async - don't block publishing)
+          try {
+            const { postToFacebook } = await import("@/lib/social/facebook");
+            postToFacebook({
+              title: createdArticle.title,
+              slug: createdArticle.slug,
+              excerpt: article.synthesizedContent.tr.excerpt || "",
+              imageUrl: article.imageUrl,
+              categoryName: category.name,
+            })
+              .then(() => this.logger.info(`📘 Facebook post created`))
+              .catch((err) =>
+                this.logger.warn(`Facebook post failed: ${err.message}`),
+              );
+          } catch (facebookError) {
+            this.logger.warn(
+              `Facebook setup failed: ${(facebookError as Error).message}`,
+            );
+          }
+
+          // Invalidate cache (async - don't block)
+          try {
+            const { getCache } = await import("@/lib/cache");
+            const cache = getCache();
+            cache.invalidateByTag("articles").catch(() => {});
+            this.logger.info(`🗑️ Cache invalidated`);
+          } catch (cacheError) {
+            // Cache invalidation is not critical
           }
 
           publishedArticles.push({
