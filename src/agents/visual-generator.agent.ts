@@ -103,7 +103,9 @@ export class VisualGeneratorAgent extends BaseAgent<
 
         // Rate limiting between batches (increased to avoid 429 errors)
         if (i + PARALLEL_CONCURRENCY < articles.length) {
-          this.logger.info(`⏳ Waiting ${RATE_LIMIT_DELAY / 1000}s to avoid rate limit...`);
+          this.logger.info(
+            `⏳ Waiting ${RATE_LIMIT_DELAY / 1000}s to avoid rate limit...`,
+          );
           await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
         }
       }

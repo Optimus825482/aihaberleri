@@ -35,12 +35,17 @@ interface UploadResult {
  * Download image from URL with retry for rate limits
  * Supports Pollinations.ai authenticated URLs with API key
  */
-async function downloadImage(url: string, attempt: number = 1): Promise<Buffer> {
+async function downloadImage(
+  url: string,
+  attempt: number = 1,
+): Promise<Buffer> {
   const MAX_DOWNLOAD_RETRIES = 3;
   const RATE_LIMIT_DELAY = 5000; // 5 seconds wait on 429
-  
+
   try {
-    console.log(`📥 Downloading image from: ${url}${attempt > 1 ? ` (attempt ${attempt})` : ''}`);
+    console.log(
+      `📥 Downloading image from: ${url}${attempt > 1 ? ` (attempt ${attempt})` : ""}`,
+    );
 
     // Build headers - add Pollinations API key if URL is from pollinations
     const headers: Record<string, string> = {
@@ -61,8 +66,10 @@ async function downloadImage(url: string, attempt: number = 1): Promise<Buffer> 
 
     // Handle rate limiting with retry
     if (response.status === 429 && attempt < MAX_DOWNLOAD_RETRIES) {
-      console.log(`⚠️ Rate limited (429), waiting ${RATE_LIMIT_DELAY / 1000}s before retry...`);
-      await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+      console.log(
+        `⚠️ Rate limited (429), waiting ${RATE_LIMIT_DELAY / 1000}s before retry...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
       return downloadImage(url, attempt + 1);
     }
 
