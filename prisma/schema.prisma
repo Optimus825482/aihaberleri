@@ -89,12 +89,24 @@ model Article {
   title              String
   slug               String               @unique
   excerpt            String
-  content            String
+  content            String               @db.Text
+  
+  // English translations (for multi-agent pipeline)
+  titleEn            String?
+  excerptEn          String?
+  contentEn          String?              @db.Text
+  
+  // Images
   imageUrl           String?
   imageUrlMedium     String?              // 800px optimized
   imageUrlSmall      String?              // 400px optimized
   imageUrlThumb      String?              // 200px optimized
+  
+  // Source info
   sourceUrl          String?
+  sourceTitle        String?              // Original article title
+  sourceDescription  String?              // Original article description
+  
   status             ArticleStatus        @default(DRAFT)
   views              Int                  @default(0)
   publishedAt        DateTime?
@@ -103,10 +115,19 @@ model Article {
   categoryId         String
   authorId           String?
   agentLogId         String?
+  
+  // SEO Turkish
   metaTitle          String?
   metaDescription    String?
   keywords           String[]
-  topic              String?              // NEW: Short topic identifier (e.g., nvidia_openai_investment)
+  
+  // SEO English
+  metaDescriptionEn  String?
+  keywordsEn         String[]             @default([])
+  
+  // Trend & Topic
+  topic              String?              // Short topic identifier (e.g., nvidia_openai_investment)
+  trendScore         Int                  @default(0)  // Trend score from SearXNG
   indexNowStatus     IndexStatus          @default(PENDING)
   indexedAt          DateTime?
   score              Int                  @default(0)
