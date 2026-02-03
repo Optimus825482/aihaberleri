@@ -77,6 +77,12 @@ const menuItems = [
     requiredResource: null,
   },
   {
+    title: "SEO Dashboard",
+    href: "/admin/seo",
+    icon: Search,
+    requiredResource: null,
+  },
+  {
     title: "Monitoring",
     href: "/admin/monitoring",
     icon: Monitor,
