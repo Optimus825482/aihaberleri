@@ -1,16 +1,17 @@
 /**
  * Hybrid Search Manager
- * Intelligently combines Brave Search and Tavily API to avoid rate limits
+ * Intelligently combines Brave Search, Tavily API, and SearXNG to avoid rate limits
  *
  * STRATEGY:
- * 1. Round-robin: Alternate between Brave and Tavily
- * 2. Fallback: If one fails (429), switch to the other
+ * 1. Round-robin: Rotate between Brave, Tavily, and SearXNG
+ * 2. Fallback: If one fails (429), switch to the next
  * 3. Load balancing: Track usage and distribute requests
  * 4. Smart recovery: Retry failed provider after cooldown
  *
  * RATE LIMITS:
- * - Brave: 1 req/sec (free tier) or 20 req/sec (paid)
- * - Tavily: 5 req/sec (standard)
+ * - Brave: 1 req/sec (free tier) or 20 req/sec (paid) - 2,000/month
+ * - Tavily: 5 req/sec (standard) - 1,000/month
+ * - SearXNG: UNLIMITED (self-hosted) ⭐
  */
 
 import {
@@ -23,12 +24,17 @@ import {
   calculateTrendScoreTavily,
   TavilySearchResult,
 } from "./tavily";
+import {
+  searxngSearch,
+  calculateTrendScoreSearXNG,
+  SearXNGResult,
+} from "./searxng";
 
 // ============================================
 // PROVIDER STATE MANAGEMENT
 // ============================================
 
-type SearchProvider = "brave" | "tavily";
+type SearchProvider = "brave" | "tavily" | "searxng";
 
 interface ProviderState {
   available: boolean;
@@ -53,6 +59,13 @@ const providerStates: Record<SearchProvider, ProviderState> = {
     requestCount: 0,
     lastRequest: null,
   },
+  searxng: {
+    available: true,
+    lastError: null,
+    errorCount: 0,
+    requestCount: 0,
+    lastRequest: null,
+  },
 };
 
 // Cooldown period after rate limit (5 minutes)
@@ -63,7 +76,7 @@ const MAX_CONSECUTIVE_ERRORS = 3;
 
 // Round-robin counter
 let currentProviderIndex = 0;
-const providers: SearchProvider[] = ["brave", "tavily"];
+const providers: SearchProvider[] = ["brave", "tavily", "searxng"];
 
 /**
  * Get next provider using round-robin
@@ -169,6 +182,12 @@ export function getProviderStats() {
       errors: providerStates.tavily.errorCount,
       lastError: providerStates.tavily.lastError,
     },
+    searxng: {
+      available: providerStates.searxng.available,
+      requests: providerStates.searxng.requestCount,
+      errors: providerStates.searxng.errorCount,
+      lastError: providerStates.searxng.lastError,
+    },
   };
 }
 
@@ -195,7 +214,7 @@ export async function hybridSearch(
     preferredProvider?: SearchProvider;
   } = {},
 ): Promise<HybridSearchResult[]> {
-  const maxRetries = 2; // Try both providers if needed
+  const maxRetries = 3; // Try all 3 providers if needed
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -223,7 +242,7 @@ export async function hybridSearch(
           description: r.description || "",
           provider: "brave" as const,
         }));
-      } else {
+      } else if (provider === "tavily") {
         const tavilyResults = await tavilySearch(query, {
           max_results: options.count || 10,
         });
@@ -233,6 +252,20 @@ export async function hybridSearch(
           url: r.url,
           description: r.content,
           provider: "tavily" as const,
+          score: r.score,
+        }));
+      } else {
+        // SearXNG
+        const searxngResults = await searxngSearch(query, {
+          count: options.count || 10,
+          time_range: options.freshness === "pw" ? "week" : undefined,
+        });
+
+        results = searxngResults.map((r) => ({
+          title: r.title,
+          url: r.url,
+          description: r.content || "",
+          provider: "searxng" as const,
           score: r.score,
         }));
       }
@@ -280,7 +313,7 @@ export async function calculateTrendScoreHybrid(
   title: string,
   description: string,
 ): Promise<number> {
-  const maxRetries = 2;
+  const maxRetries = 3; // Try all 3 providers
   let lastError: Error | null = null;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
@@ -291,8 +324,11 @@ export async function calculateTrendScoreHybrid(
 
       if (provider === "brave") {
         score = await calculateTrendScoreBrave(title, description);
-      } else {
+      } else if (provider === "tavily") {
         score = await calculateTrendScoreTavily(title, description);
+      } else {
+        // SearXNG
+        score = await calculateTrendScoreSearXNG(title, description);
       }
 
       markProviderSuccess(provider);
@@ -409,6 +445,9 @@ export async function rankArticlesByTrendHybrid(
   );
   console.log(
     `   Tavily: ${stats.tavily.requests} istek, ${stats.tavily.errors} hata, ${stats.tavily.available ? "✅ aktif" : "🚫 devre dışı"}`,
+  );
+  console.log(
+    `   SearXNG: ${stats.searxng.requests} istek, ${stats.searxng.errors} hata, ${stats.searxng.available ? "✅ aktif" : "🚫 devre dışı"}`,
   );
 
   return scores;
