@@ -37,7 +37,8 @@ export interface ArticleWithVisuals extends EnrichedArticle {
 
 const IMAGE_TIMEOUT = 30000; // 30 seconds per image
 const MAX_RETRIES = 3;
-const PARALLEL_CONCURRENCY = 5; // Process 5 images in parallel
+const PARALLEL_CONCURRENCY = 1; // Process 1 image at a time (avoid Pollinations rate limit)
+const RATE_LIMIT_DELAY = 3000; // 3 seconds between images to avoid 429
 
 export class VisualGeneratorAgent extends BaseAgent<
   EnrichedArticle[],
@@ -100,9 +101,10 @@ export class VisualGeneratorAgent extends BaseAgent<
 
         articlesWithVisuals.push(...batchResults);
 
-        // Rate limiting between batches (reduced for efficiency)
+        // Rate limiting between batches (increased to avoid 429 errors)
         if (i + PARALLEL_CONCURRENCY < articles.length) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          this.logger.info(`⏳ Waiting ${RATE_LIMIT_DELAY / 1000}s to avoid rate limit...`);
+          await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
         }
       }
 

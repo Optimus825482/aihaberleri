@@ -134,7 +134,9 @@ export class DatabasePublisherAgent extends BaseAgent<
               sourceDescription: article.description,
               publishedAt: (article as any).publishedAt || new Date(),
               topic: article.topic,
-              trendScore: article.trendScore,
+              trendScore: article.trendScore || 0,
+              score:
+                article.synthesizedContent.tr.score || article.trendScore || 0,
 
               // Relations
               categoryId: category.id,
