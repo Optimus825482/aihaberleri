@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
 
     // 8. Create audit log
     await createAuditLog({
-      userId: session.user.id,
+      userId: session.user?.id || "",
       action: "CREATE_USER",
       resource: "User",
       resourceId: newUser.id,

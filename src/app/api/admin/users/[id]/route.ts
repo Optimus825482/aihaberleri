@@ -150,7 +150,7 @@ export async function PATCH(
 
     // 10. Create audit log
     await createAuditLog({
-      userId: session.user.id,
+      userId: session.user?.id || "",
       action: "UPDATE_USER",
       resource: "User",
       resourceId: userId,
@@ -296,7 +296,7 @@ export async function DELETE(
 
     // 8. Create audit log
     await createAuditLog({
-      userId: session.user.id,
+      userId: session.user?.id || "",
       action: "DELETE_USER",
       resource: "User",
       resourceId: userId,
