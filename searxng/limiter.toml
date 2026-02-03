@@ -1,28 +1,40 @@
 # SearXNG Rate Limiter Yapılandırması
 # Tarih: 3 Şubat 2026
-# Amaç: Bot koruması ve rate limiting
+# Amaç: Bot koruması ve rate limiting - Worker trafiğine optimize
+# Güncelleme: Rate limit artırıldı ve Docker network IP'leri eklendi
 
 [botdetection.ip_limit]
-# Link token aktif (her client'a token ver)
-link_token = true
+# Link token - DEVRE DIŞI (internal kullanım için)
+link_token = false
 
-# Rate limit: Dakikada 30 request
-rate = "30/60"
+# Rate limit: Dakikada 500 request (Worker için yeterli)
+rate = "500/60"
 
-# Burst: Ani 10 request'e izin ver
-burst = 10
+# Burst: Ani 100 request'e izin ver (batch işlemler için)
+burst = 100
 
 # Window: 60 saniye
 window = 60
 
 [botdetection.ip_lists]
-# Geçiş izni verilen IP'ler (local)
+# Geçiş izni verilen IP'ler (local + Docker networks)
 pass_ip = [
+  # Localhost
   "127.0.0.0/8",
   "::1/128",
+  # Private networks (Docker default)
   "10.0.0.0/8",
   "172.16.0.0/12",
   "192.168.0.0/16",
+  # Docker bridge networks (genellikle 172.17-31 aralığı)
+  "172.17.0.0/16",
+  "172.18.0.0/16",
+  "172.19.0.0/16",
+  "172.20.0.0/16",
+  "172.21.0.0/16",
+  "172.22.0.0/16",
+  # Coolify networks (olası aralıklar)
+  "100.64.0.0/10",
 ]
 
 # Bloke edilen IP'ler (şimdilik boş)

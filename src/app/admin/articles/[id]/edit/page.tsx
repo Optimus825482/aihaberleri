@@ -25,6 +25,7 @@ import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { SEOPanel } from "@/components/admin/SEOPanel";
 import { SchedulePublish } from "@/components/admin/SchedulePublish";
+import { SEOOptimizationModal } from "@/components/admin/SEOOptimizationModal";
 
 interface Category {
   id: string;
@@ -59,6 +60,7 @@ export default function EditArticlePage({
   const [categories, setCategories] = useState<Category[]>([]);
   const [article, setArticle] = useState<Article | null>(null);
   const [articleId, setArticleId] = useState<string>("");
+  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -277,7 +279,11 @@ export default function EditArticlePage({
                         alt="Önizleme"
                         fill
                         className="object-cover"
-                        unoptimized={formData.imageUrl.includes('pollinations.ai') || formData.imageUrl.includes('r2.dev') || formData.imageUrl.includes('images.aihaberleri.org')}
+                        unoptimized={
+                          formData.imageUrl.includes("pollinations.ai") ||
+                          formData.imageUrl.includes("r2.dev") ||
+                          formData.imageUrl.includes("images.aihaberleri.org")
+                        }
                       />
                     </div>
                   )}
@@ -383,14 +389,26 @@ export default function EditArticlePage({
             {/* SEO Analizi */}
             <Card>
               <CardHeader>
-                <CardTitle>SEO Analizi</CardTitle>
-                <CardDescription>
-                  Makale SEO performansını analiz edin ve önerileri görün
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>SEO Analizi</CardTitle>
+                    <CardDescription>
+                      Makale SEO performansını analiz edin ve önerileri görün
+                    </CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => setShowOptimizeModal(true)}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600"
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    Optimize Et
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <SEOPanel
-                  articleId={id}
+                  articleId={articleId}
                   initialScore={article.seoScore}
                   initialRecommendations={[]}
                 />
@@ -445,6 +463,18 @@ export default function EditArticlePage({
             </div>
           </div>
         </form>
+
+        {/* SEO Optimization Modal */}
+        <SEOOptimizationModal
+          open={showOptimizeModal}
+          onOpenChange={setShowOptimizeModal}
+          articleId={articleId}
+          articleTitle={article.title}
+          onSuccess={() => {
+            // Refresh article data
+            fetchData(articleId);
+          }}
+        />
       </div>
     </AdminLayout>
   );

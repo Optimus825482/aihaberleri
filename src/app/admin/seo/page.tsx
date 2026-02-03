@@ -148,10 +148,52 @@ export default function SEODashboardPage() {
               />
               Yenile
             </Button>
-            <Link href="/admin/seo/bulk-actions">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (
+                  !confirm(
+                    "Tüm yayınlanmış makalelere SEO hesaplaması yapılacak. Bu işlem uzun sürebilir. Devam etmek istiyor musunuz?",
+                  )
+                ) {
+                  return;
+                }
+
+                try {
+                  const response = await fetch(
+                    "/api/admin/seo/bulk-calculate",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        all: true,
+                        status: "PUBLISHED",
+                      }),
+                    },
+                  );
+
+                  const data = await response.json();
+                  if (data.success) {
+                    alert(
+                      `✅ ${data.results.processed} makale işlendi!\n\nOrtalama Skor: ${data.results.stats.averageScoreBefore} → ${data.results.stats.averageScoreAfter}\nİyileşme: +${data.results.stats.improvement}\n\nSüre: ${Math.round(data.results.duration / 1000)}s`,
+                    );
+                    fetchStats();
+                  } else {
+                    alert("❌ Hata: " + data.error);
+                  }
+                } catch (error) {
+                  console.error(error);
+                  alert("❌ Bir hata oluştu");
+                }
+              }}
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Toplu SEO Hesapla
+            </Button>
+            <Link href="/admin/seo/recommendations">
               <Button>
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Toplu İşlemler
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Bekleyen Öneriler
               </Button>
             </Link>
           </div>
@@ -197,25 +239,27 @@ export default function SEODashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-transparent">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  Bekleyen Öneriler
-                </span>
-                <div className="p-2 bg-orange-500/10 rounded-lg">
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
+          <Link href="/admin/seo/recommendations">
+            <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-transparent hover:border-orange-500/40 transition-colors cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Bekleyen Öneriler
+                  </span>
+                  <div className="p-2 bg-orange-500/10 rounded-lg">
+                    <AlertTriangle className="h-4 w-4 text-orange-500" />
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-black tabular-nums">
-                {(stats?.totalRecommendations || 0) -
-                  (stats?.resolvedRecommendations || 0)}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {stats?.articlesWithRecommendations || 0} makalede
-              </p>
-            </CardContent>
-          </Card>
+                <div className="text-3xl font-black tabular-nums">
+                  {(stats?.totalRecommendations || 0) -
+                    (stats?.resolvedRecommendations || 0)}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {stats?.articlesWithRecommendations || 0} makalede →
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent">
             <CardContent className="p-6">

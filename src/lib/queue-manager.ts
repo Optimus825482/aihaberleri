@@ -21,6 +21,8 @@ export const QUEUE_NAMES = {
   ENRICHED_ARTICLES: "enriched-articles",
   ARTICLES_WITH_VISUALS: "articles-with-visuals",
   DATABASE_PUBLISHER: "database-publisher", // NEW: Final publishing step
+  SEO_CALCULATION: "seo-calculation", // NEW: Bulk SEO calculation
+  SEO_OPTIMIZATION: "seo-optimization", // NEW: Bulk SEO optimization
 } as const;
 
 // Queue instances (lazy initialization)
@@ -102,6 +104,24 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 120000, // 2 minutes
+    attempts: 3,
+  },
+  [QUEUE_NAMES.SEO_CALCULATION]: {
+    concurrency: 2, // Parallel SEO calculations
+    rateLimit: {
+      max: 5,
+      duration: 1000,
+    },
+    lockDuration: 600000, // 10 minutes
+    attempts: 3,
+  },
+  [QUEUE_NAMES.SEO_OPTIMIZATION]: {
+    concurrency: 1, // Sequential optimization (AI-heavy)
+    rateLimit: {
+      max: 2,
+      duration: 1000,
+    },
+    lockDuration: 1200000, // 20 minutes (AI calls)
     attempts: 3,
   },
 };

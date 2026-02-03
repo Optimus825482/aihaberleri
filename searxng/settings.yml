@@ -8,8 +8,8 @@ server:
   # Güvenlik için güçlü secret key (production'da değiştir)
   secret_key: "__REPLACE_WITH_RANDOM_KEY__"
   
-  # Rate limiting aktif
-  limiter: true
+  # Rate limiting DEVRE DIŞI (internal kullanım - worker için)
+  limiter: false
   
   # Port
   port: 8080
@@ -17,6 +17,9 @@ server:
   
   # Public instance değil (internal kullanım)
   public_instance: false
+  
+  # Image proxy (güvenlik için)
+  image_proxy: false
 
 # Valkey/Redis bağlantısı (limiter için)
 valkey:
