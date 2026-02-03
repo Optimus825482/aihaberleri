@@ -20,6 +20,7 @@ export const QUEUE_NAMES = {
   UNIQUE_ARTICLES: "unique-articles",
   ENRICHED_ARTICLES: "enriched-articles",
   ARTICLES_WITH_VISUALS: "articles-with-visuals",
+  DATABASE_PUBLISHER: "database-publisher", // NEW: Final publishing step
 } as const;
 
 // Queue instances (lazy initialization)
@@ -92,6 +93,15 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 180000, // 3 minutes (Pollinations can be slow)
+    attempts: 3,
+  },
+  [QUEUE_NAMES.DATABASE_PUBLISHER]: {
+    concurrency: 3, // Database writes
+    rateLimit: {
+      max: 5,
+      duration: 1000,
+    },
+    lockDuration: 120000, // 2 minutes
     attempts: 3,
   },
 };

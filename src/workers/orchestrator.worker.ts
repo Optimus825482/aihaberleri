@@ -30,6 +30,7 @@ import { RelevanceFilterAgent } from "@/agents/relevance-filter.agent";
 import { DuplicateDetectorAgent } from "@/agents/duplicate-detector.agent";
 import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
+import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
 
 const logger = createModuleLogger("orchestrator");
 
@@ -39,18 +40,20 @@ let relevanceFilter: RelevanceFilterAgent;
 let duplicateDetector: DuplicateDetectorAgent;
 let contentEnricher: ContentEnricherAgent;
 let visualGenerator: VisualGeneratorAgent;
+let databasePublisher: DatabasePublisherAgent;
 
 /**
  * Initialize all agents
  */
 async function initializeAgents(): Promise<void> {
-  logger.info("Initializing 5-agent pipeline...");
+  logger.info("Initializing 6-agent pipeline...");
 
   contentCollector = new ContentCollectorAgent();
   relevanceFilter = new RelevanceFilterAgent();
   duplicateDetector = new DuplicateDetectorAgent();
   contentEnricher = new ContentEnricherAgent();
   visualGenerator = new VisualGeneratorAgent();
+  databasePublisher = new DatabasePublisherAgent();
 
   await Promise.all([
     contentCollector.start(),
@@ -58,9 +61,10 @@ async function initializeAgents(): Promise<void> {
     duplicateDetector.start(),
     contentEnricher.start(),
     visualGenerator.start(),
+    databasePublisher.start(),
   ]);
 
-  logger.success("All 5 agents started successfully");
+  logger.success("All 6 agents started successfully");
 }
 
 /**
@@ -75,6 +79,7 @@ async function stopAgents(): Promise<void> {
     duplicateDetector?.stop(),
     contentEnricher?.stop(),
     visualGenerator?.stop(),
+    databasePublisher?.stop(),
   ]);
 
   logger.success("All agents stopped");
@@ -130,6 +135,7 @@ async function monitorPipelineHealth(): Promise<void> {
     duplicateDetector?.healthCheck(),
     contentEnricher?.healthCheck(),
     visualGenerator?.healthCheck(),
+    databasePublisher?.healthCheck(),
   ]);
 
   logger.info("Agent Health:");

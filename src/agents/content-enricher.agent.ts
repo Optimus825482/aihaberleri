@@ -2,7 +2,7 @@
  * Content Enricher Agent
  *
  * RESPONSIBILITIES:
- * 1. Multi-source research (Brave API + Jina Reader)
+ * 1. Multi-source research (SearXNG + Jina Reader) ⭐ UNLIMITED!
  * 2. Gather 8-10 sources per article
  * 3. DeepSeek content synthesis (TR + EN)
  * 4. Generate keywords and meta descriptions
@@ -11,12 +11,14 @@
  * EXTRACTED FROM: src/services/intelligent-news.service.ts
  * - gatherSources() function
  * - synthesizeContent() function
+ *
+ * UPDATED: Using SearXNG instead of Brave API (no rate limits!)
  */
 
 import { Job } from "bullmq";
 import { BaseAgent, AgentResult, retryWithBackoff } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
-import { braveSearch, type BraveSearchResult } from "@/lib/brave";
+import { searxngSearch, type SearXNGResult } from "@/lib/searxng";
 import { callDeepSeek } from "@/lib/deepseek";
 import { callGemini } from "@/lib/gemini"; // HYBRID: Using Gemini for EN translation
 import axios from "axios";
@@ -180,7 +182,7 @@ export class ContentEnricherAgent extends BaseAgent<
   }
 
   /**
-   * Gather sources using Brave Search + Jina Reader
+   * Gather sources using SearXNG + Jina Reader (UNLIMITED!)
    */
   private async gatherSources(article: UniqueArticle): Promise<
     Array<{
@@ -214,15 +216,22 @@ export class ContentEnricherAgent extends BaseAgent<
       `${keywords} details facts`,
     ];
 
-    // Search with each query
+    this.logger.info(`🔍 Searching with SearXNG (unlimited!): ${keywords}`);
+
+    // Search with each query using SearXNG
     for (const query of searchQueries) {
       if (sources.length >= TARGET_SOURCE_COUNT) break;
 
       try {
-        const results = await braveSearch(query, {
+        const results = await searxngSearch(query, {
           count: 10,
-          freshness: "pw", // Past week
+          time_range: "week", // Past week
+          categories: "general,news",
         });
+
+        this.logger.info(
+          `📡 SearXNG returned ${results.length} results for: ${query.substring(0, 50)}...`,
+        );
 
         for (const result of results) {
           if (sources.length >= TARGET_SOURCE_COUNT) break;
@@ -233,7 +242,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
           if (this.shouldSkipUrl(result.url)) continue;
 
-          const relevanceScore = this.calculateRelevanceScore(
+          const relevanceScore = this.calculateRelevanceScoreSearXNG(
             result,
             article.title,
           );
@@ -518,29 +527,37 @@ Respond in JSON:
   }
 
   /**
-   * Calculate relevance score
+   * Calculate relevance score for SearXNG results
    */
-  private calculateRelevanceScore(
-    result: BraveSearchResult,
+  private calculateRelevanceScoreSearXNG(
+    result: SearXNGResult,
     originalTitle: string,
   ): number {
     let score = 0;
 
     const titleLower = originalTitle.toLowerCase();
     const resultTitleLower = result.title.toLowerCase();
-    const resultDescLower = (result.description || "").toLowerCase();
+    const resultContentLower = (result.content || "").toLowerCase();
 
     const titleWords = titleLower.split(/\s+/).filter((w) => w.length > 3);
     for (const word of titleWords) {
       if (resultTitleLower.includes(word)) score += 15;
-      if (resultDescLower.includes(word)) score += 5;
+      if (resultContentLower.includes(word)) score += 5;
     }
 
-    if (result.age) {
-      if (result.age.includes("hour")) score += 20;
-      else if (result.age.includes("day")) score += 10;
+    // SearXNG provides publishedDate
+    if (result.publishedDate) {
+      const publishedDate = new Date(result.publishedDate);
+      const now = new Date();
+      const hoursDiff =
+        (now.getTime() - publishedDate.getTime()) / (1000 * 60 * 60);
+
+      if (hoursDiff < 24)
+        score += 20; // Last 24 hours
+      else if (hoursDiff < 168) score += 10; // Last week
     }
 
+    // Authority domains
     const authorityDomains = [
       "techcrunch.com",
       "theverge.com",
@@ -556,6 +573,11 @@ Respond in JSON:
     ];
     if (authorityDomains.some((d) => result.url.includes(d))) {
       score += 15;
+    }
+
+    // SearXNG score (if available)
+    if (result.score) {
+      score += result.score * 10; // Normalize SearXNG score
     }
 
     return score;

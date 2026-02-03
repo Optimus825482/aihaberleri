@@ -231,153 +231,75 @@ export async function executeNewsAgent(
       `✅ ${selectedArticles.length} unique topic seçildi (duplicate rate: ${(filteringResult.stats.duplicate_rate * 100).toFixed(1)}%)`,
     );
 
-    // Step 3: Process and publish articles (includes deep research, rewriting, translation)
+    // Step 3: Start Multi-Agent Pipeline (NEW!)
     agentLogger.step(
       agentLog.id,
-      "process_articles",
-      "Haberler yeniden yazılıyor ve görseller oluşturuluyor",
+      "multi_agent_pipeline",
+      "Multi-agent pipeline başlatılıyor (Enrichment + Visual + Publish)",
       60,
     );
-    console.log("⚙️  Adım 3: Haberler işleniyor ve yayınlanıyor...");
+    console.log("🤖 Adım 3: Multi-agent pipeline başlatılıyor...");
     await updateJobProgress(
       agentLog.id,
-      "processing",
-      "Haberler yeniden yazılıyor ve görseller oluşturuluyor...",
+      "pipeline",
+      "Multi-agent pipeline: Enrichment → Visual → Publish",
       60,
     );
 
     // Emit progress
     emitToAdmin(SocketEvents.AGENT_PROGRESS, {
-      step: "processing",
-      message: "Haberler yeniden yazılıyor ve görseller oluşturuluyor...",
+      step: "pipeline",
+      message: "Multi-agent pipeline başlatıldı",
       progress: 60,
     });
 
-    // Transform ArticleWithTopic[] to the format expected by processAndPublishArticles
-    let articlesForProcessing = selectedArticles.map((articleWithTopic) => ({
-      article: articleWithTopic as any, // Cast to NewsArticle (compatible structure)
-      category: "Teknoloji", // Default category (will be overridden by DeepSeek if needed)
-      topic: articleWithTopic.topic, // Pass topic through for saving
-    }));
+    // Start multi-agent pipeline
+    const { startMultiAgentPipeline, waitForPipelineCompletion } =
+      await import("./multi-agent-pipeline.service");
 
-    // 🔄 RETRY MECHANISM: Try up to 3 times with duplicate exclusion
-    let published: Array<{ id: string; slug: string }> = [];
-    let attempt = 1;
-    const maxAttempts = 3;
-    const excludedUrls = new Set<string>();
-    const excludedTopics = new Set<string>();
+    await startMultiAgentPipeline(selectedArticles, {
+      agentLogId: agentLog.id,
+      categorySlug,
+      targetCount,
+    });
 
-    while (attempt <= maxAttempts && published.length < targetCount) {
-      console.log(`\n${"=".repeat(60)}`);
-      console.log(
-        `🔄 ATTEMPT ${attempt}/${maxAttempts}: Processing articles...`,
+    // Live log: Pipeline started
+    await liveLog.agent.info(
+      `🤖 Multi-agent pipeline başlatıldı: ${selectedArticles.length} haber işlenecek`,
+    );
+
+    // Wait for pipeline completion
+    console.log("⏳ Multi-agent pipeline tamamlanması bekleniyor...");
+    const pipelineResult = await waitForPipelineCompletion(
+      agentLog.id,
+      20 * 60 * 1000, // 20 minutes timeout
+    );
+
+    if (!pipelineResult.success) {
+      throw new Error(
+        `Multi-agent pipeline failed: ${pipelineResult.errors.join(", ")}`,
       );
-      console.log(`${"=".repeat(60)}`);
-      console.log(`   Articles to process: ${articlesForProcessing.length}`);
-      console.log(`   Already published: ${published.length}/${targetCount}`);
-      console.log(`   Excluded URLs: ${excludedUrls.size}`);
-      console.log(`   Excluded topics: ${excludedTopics.size}`);
-
-      const newlyPublished = await processAndPublishArticles(
-        articlesForProcessing,
-        agentLog.id,
-        categorySlug,
-      );
-
-      // Add newly published to total
-      published.push(...newlyPublished);
-
-      if (published.length >= targetCount) {
-        console.log(
-          `✅ SUCCESS: ${published.length}/${targetCount} haber yayınlandı`,
-        );
-        break;
-      }
-
-      if (published.length > 0) {
-        console.log(
-          `✅ SUCCESS on attempt ${attempt}: ${published.length} haber yayınlandı`,
-        );
-        break;
-      }
-
-      // If no articles published and we have more attempts
-      if (attempt < maxAttempts) {
-        console.log(
-          `\n⚠️  Attempt ${attempt} failed: ${published.length} articles published`,
-        );
-        console.log(
-          `   ${articlesForProcessing.length - published.length} were duplicates`,
-        );
-        console.log(`🔄 Preparing retry ${attempt + 1}/${maxAttempts}...`);
-
-        // Collect URLs and topics that were already processed (both published and duplicates)
-        articlesForProcessing.forEach((item) => {
-          if (item.article.url) {
-            excludedUrls.add(item.article.url);
-          }
-          if (item.topic) {
-            excludedTopics.add(item.topic);
-          }
-        });
-
-        // Get remaining articles from Stage 2 (with topics) that haven't been tried yet
-        const remainingArticles = filteringResult.stage2_with_topics.filter(
-          (article) =>
-            !excludedUrls.has(article.url || "") &&
-            !excludedTopics.has(article.topic || ""),
-        );
-
-        console.log(`\n📊 Retry ${attempt + 1} statistics:`);
-        console.log(
-          `   Original pool: ${filteringResult.stage2_with_topics.length} articles`,
-        );
-        console.log(
-          `   Already processed: ${excludedUrls.size} URLs, ${excludedTopics.size} topics`,
-        );
-        console.log(
-          `   Remaining untried: ${remainingArticles.length} articles`,
-        );
-
-        if (remainingArticles.length === 0) {
-          console.log(`❌ No remaining articles to retry. Giving up.`);
-          break;
-        }
-
-        // Sort by score and take top N (excluding already processed ones)
-        const retryCount = Math.min(targetCount, remainingArticles.length);
-        const retryArticles = remainingArticles
-          .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0))
-          .slice(0, retryCount);
-
-        console.log(
-          `   Selected for retry: ${retryArticles.length} NEW articles`,
-        );
-        console.log(
-          `   Top retry article: "${retryArticles[0]?.title?.substring(0, 50)}..."`,
-        );
-
-        // Transform for processing
-        articlesForProcessing = retryArticles.map((articleWithTopic) => ({
-          article: articleWithTopic as any,
-          category: "Teknoloji",
-          topic: articleWithTopic.topic,
-        }));
-
-        attempt++;
-      } else {
-        console.log(
-          `\n❌ All ${maxAttempts} attempts failed. ${published.length} articles published total.`,
-        );
-        break;
-      }
     }
 
-    articlesCreated = published.length;
-    publishedArticles.push(...published);
+    articlesCreated = pipelineResult.articlesPublished;
+
+    // Get published articles
+    const publishedArticlesData = await db.article.findMany({
+      where: {
+        agentLogId: agentLog.id,
+        status: "PUBLISHED",
+      },
+      select: {
+        id: true,
+        slug: true,
+      },
+    });
+
+    publishedArticles.push(...publishedArticlesData);
+
     console.log(`\n${"=".repeat(60)}`);
     console.log(
-      `✅ FINAL RESULT: ${articlesCreated} haber yayınlandı (${attempt} attempt)`,
+      `✅ MULTI-AGENT PIPELINE COMPLETED: ${articlesCreated} haber yayınlandı`,
     );
     console.log(`${"=".repeat(60)}\n`);
 
@@ -406,7 +328,7 @@ export async function executeNewsAgent(
     }
 
     // Emit article published events
-    for (const article of published) {
+    for (const article of publishedArticles) {
       emitToAdmin(SocketEvents.ARTICLE_PUBLISHED, {
         id: article.id,
         slug: article.slug,
@@ -462,10 +384,10 @@ export async function executeNewsAgent(
       where: { key: { in: ["agent.emailNotifications", "agent.adminEmail"] } },
     });
     const emailNotify =
-      emailSettings.find((s) => s.key === "agent.emailNotifications")?.value !==
-      "false";
+      emailSettings.find((s: any) => s.key === "agent.emailNotifications")
+        ?.value !== "false";
     const adminEmail =
-      emailSettings.find((s) => s.key === "agent.adminEmail")?.value ||
+      emailSettings.find((s: any) => s.key === "agent.adminEmail")?.value ||
       "ikinciyenikitap54@gmail.com";
 
     // Send email report
@@ -616,10 +538,10 @@ export async function executeNewsAgent(
         },
       });
       const emailNotify =
-        emailSettings.find((s) => s.key === "agent.emailNotifications")
+        emailSettings.find((s: any) => s.key === "agent.emailNotifications")
           ?.value !== "false";
       const adminEmail =
-        emailSettings.find((s) => s.key === "agent.adminEmail")?.value ||
+        emailSettings.find((s: any) => s.key === "agent.adminEmail")?.value ||
         "ikinciyenikitap54@gmail.com";
 
       // Send email report
@@ -730,20 +652,20 @@ export async function getCategoryStats() {
   const categories = await db.category.findMany({
     where: {
       id: {
-        in: stats.map((s) => s.categoryId),
+        in: stats.map((s: any) => s.categoryId),
       },
     },
   });
 
   return stats
-    .map((stat) => {
-      const category = categories.find((c) => c.id === stat.categoryId);
+    .map((stat: any) => {
+      const category = categories.find((c: any) => c.id === stat.categoryId);
       return {
         name: category?.name || "Bilinmiyor",
         count: stat._count.id,
       };
     })
-    .sort((a, b) => b.count - a.count);
+    .sort((a: any, b: any) => b.count - a.count);
 }
 
 export default {

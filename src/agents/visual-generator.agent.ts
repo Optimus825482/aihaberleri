@@ -46,6 +46,7 @@ export class VisualGeneratorAgent extends BaseAgent<
   protected config = {
     name: "visual-generator",
     queueName: QUEUE_NAMES.ARTICLES_WITH_VISUALS,
+    nextQueueName: "database-publisher", // NEW: Send to publisher
     enableMetrics: true,
   };
 
@@ -117,7 +118,7 @@ export class VisualGeneratorAgent extends BaseAgent<
       return {
         success: true,
         data: articlesWithVisuals,
-        skipNextQueue: true, // No next queue, this is the end of pipeline
+        nextQueue: "database-publisher", // NEW: Send to publisher
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls,
