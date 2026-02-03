@@ -1,5 +1,11 @@
 version: "3.8"
 
+networks:
+  # SearXNG network - allows worker to access self-hosted SearXNG
+  searxng-network:
+    external: true
+    name: pwcsc8ow08oks0ggokwoo8ww
+
 services:
   # Redis (Local container)
   redis:
@@ -53,6 +59,9 @@ services:
       AGENT_MAX_ARTICLES_PER_RUN: ${AGENT_MAX_ARTICLES_PER_RUN:-5}
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
+    networks:
+      - default
+      - searxng-network
     depends_on:
       redis:
         condition: service_healthy
@@ -106,6 +115,9 @@ services:
       PORT: 3001
     ports:
       - "3001:3001"
+    networks:
+      - default
+      - searxng-network
     depends_on:
       redis:
         condition: service_healthy
