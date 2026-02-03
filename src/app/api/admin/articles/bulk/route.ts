@@ -1,94 +1,190 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-
 /**
+ * Bulk Article Operations API
+ *
  * POST /api/admin/articles/bulk
  *
- * Bulk operations for articles
- *
- * Actions:
- * - publish: Publish selected articles
- * - unpublish: Unpublish selected articles
- * - delete: Delete selected articles
- * - changeCategory: Change category for selected articles
+ * Toplu makale işlemleri: yayınla, yayından kaldır, sil, kategori değiştir
  */
-export async function POST(req: NextRequest) {
+
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { getCache } from "@/lib/cache";
+import { createAuditLog } from "@/lib/audit-logger";
+import {
+  BulkActionSchema,
+  formatZodError,
+  safeValidateRequest,
+} from "@/lib/validation/admin";
+import {
+  bulkRateLimit,
+  getClientIdentifier,
+  checkRateLimit,
+} from "@/lib/rate-limiter";
+import { z } from "zod";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+
   try {
-    // Auth check
+    // 1. Authentication check
     const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: "Yetkisiz erişim" },
+        { status: 401 },
+      );
     }
 
-    const body = await req.json();
-    const { action, ids, categoryId } = body;
+    // 2. Rate limiting check (5 requests per minute)
+    const identifier = getClientIdentifier(request);
+    const rateLimitResponse = await checkRateLimit(bulkRateLimit, identifier);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
+    }
 
-    // Validation
-    if (!action || !Array.isArray(ids) || ids.length === 0) {
+    // 3. Parse and validate request body
+    const body = await request.json();
+    const validation = safeValidateRequest(BulkActionSchema, body);
+
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "action and ids[] are required" },
+        {
+          success: false,
+          error: "Validation error",
+          details: formatZodError(validation.error),
+        },
         { status: 400 },
       );
     }
 
-    let result;
+    const { action, ids, categoryId } = validation.data;
 
-    switch (action) {
-      case "publish":
-        result = await prisma.article.updateMany({
-          where: { id: { in: ids } },
-          data: { status: "PUBLISHED", updatedAt: new Date() },
-        });
-        break;
+    // 4. Execute bulk operation
+    let processed = 0;
+    let failed = 0;
+    const errors: Array<{ id: string; error: string }> = [];
 
-      case "unpublish":
-        result = await prisma.article.updateMany({
-          where: { id: { in: ids } },
-          data: { status: "DRAFT", updatedAt: new Date() },
-        });
-        break;
+    // Use transaction for data consistency
+    await db.$transaction(async (tx) => {
+      for (const id of ids) {
+        try {
+          switch (action) {
+            case "publish":
+              await tx.article.update({
+                where: { id },
+                data: {
+                  status: "PUBLISHED",
+                  publishedAt: new Date(),
+                },
+              });
+              processed++;
+              break;
 
-      case "delete":
-        // Soft delete (set status to DELETED or hard delete)
-        result = await prisma.article.deleteMany({
-          where: { id: { in: ids } },
-        });
-        break;
+            case "unpublish":
+              await tx.article.update({
+                where: { id },
+                data: {
+                  status: "DRAFT",
+                },
+              });
+              processed++;
+              break;
 
-      case "changeCategory":
-        if (!categoryId) {
-          return NextResponse.json(
-            { error: "categoryId is required for changeCategory action" },
-            { status: 400 },
-          );
+            case "delete":
+              await tx.article.delete({
+                where: { id },
+              });
+              processed++;
+              break;
+
+            case "changeCategory":
+              if (!categoryId) {
+                throw new Error("categoryId gerekli");
+              }
+              await tx.article.update({
+                where: { id },
+                data: {
+                  categoryId,
+                },
+              });
+              processed++;
+              break;
+
+            default:
+              throw new Error(`Geçersiz işlem: ${action}`);
+          }
+        } catch (error) {
+          failed++;
+          errors.push({
+            id,
+            error: error instanceof Error ? error.message : "Bilinmeyen hata",
+          });
+          console.error(`[BULK] Failed to ${action} article ${id}:`, error);
         }
+      }
+    });
 
-        result = await prisma.article.updateMany({
-          where: { id: { in: ids } },
-          data: { categoryId, updatedAt: new Date() },
-        });
-        break;
+    // 5. Invalidate cache
+    const cache = getCache();
+    await cache.invalidateByTag("articles");
 
-      default:
-        return NextResponse.json(
-          { error: `Unknown action: ${action}` },
-          { status: 400 },
-        );
-    }
+    // 6. Create audit log
+    const auditAction = {
+      publish: "BULK_PUBLISH_ARTICLES",
+      unpublish: "BULK_UNPUBLISH_ARTICLES",
+      delete: "BULK_DELETE_ARTICLES",
+      changeCategory: "BULK_CHANGE_CATEGORY",
+    }[action] as any;
 
+    await createAuditLog({
+      userId: session.user.id!,
+      action: auditAction,
+      resource: "Article",
+      resourceIds: ids,
+      metadata: {
+        action,
+        processed,
+        failed,
+        categoryId,
+        duration: Date.now() - startTime,
+      },
+      ipAddress: request.headers.get("x-forwarded-for") || "unknown",
+      userAgent: request.headers.get("user-agent") || "unknown",
+    });
+
+    // 7. Generate success message
+    const actionMessages = {
+      publish: "yayınlandı",
+      unpublish: "yayından kaldırıldı",
+      delete: "silindi",
+      changeCategory: "kategorisi değiştirildi",
+    };
+
+    const message =
+      failed === 0
+        ? `${processed} makale başarıyla ${actionMessages[action]}`
+        : `${processed} makale ${actionMessages[action]}, ${failed} makale başarısız`;
+
+    // 8. Return response
     return NextResponse.json({
       success: true,
-      action,
-      count: result.count,
-      message: `${result.count} articles ${action}ed successfully`,
+      processed,
+      failed,
+      errors,
+      message,
+      duration: Date.now() - startTime,
     });
   } catch (error) {
-    console.error("[BULK_ARTICLES_ERROR]", error);
+    console.error("[BULK] Bulk operation error:", error);
+
     return NextResponse.json(
       {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
+        success: false,
+        error: error instanceof Error ? error.message : "Bilinmeyen hata",
+        duration: Date.now() - startTime,
       },
       { status: 500 },
     );

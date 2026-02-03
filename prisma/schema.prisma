@@ -12,22 +12,29 @@ datasource db {
 }
 
 model User {
-  id        String      @id @default(cuid())
-  email     String      @unique
-  password  String
-  name      String?
-  role      Role        @default(ADMIN)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  lastLogin DateTime?
-  accounts  Account[]
-  articles  Article[]
-  sessions  Session[]
-  auditLogs AuditLog[]
-  templates ArticleTemplate[]
+  id            String      @id @default(cuid())
+  email         String      @unique
+  password      String
+  name          String?
+  role          Role        @default(ADMIN)
+  permissions   String[]    @default([])
+  isActive      Boolean     @default(true)
+  lastLogin     DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  accounts      Account[]
+  articles      Article[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  templates     ArticleTemplate[]
+  userSessions  UserSession[]
+  filterPresets FilterPreset[]
 
   @@index([email])
   @@index([role])
+  @@index([isActive])
+  @@index([lastLogin])
 }
 
 model Account {
@@ -404,4 +411,131 @@ model ArticleDuplicate {
   @@index([originalId])
   @@index([duplicateId])
   @@index([status])
+}
+
+// UserSession model - Admin panel için detaylı session tracking
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique
+  ipAddress    String
+  userAgent    String?
+  country      String?
+  city         String?
+  device       String?
+  browser      String?
+  os           String?
+  isActive     Boolean  @default(true)
+  lastActivity DateTime @default(now())
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([isActive])
+  @@index([lastActivity])
+  @@index([expiresAt])
+}
+
+// SystemMetric model - Sistem performans metrikleri
+model SystemMetric {
+  id              String   @id @default(cuid())
+  metricType      String   // "cpu", "memory", "disk", "database", "api_response_time"
+  value           Float
+  unit            String   // "%", "MB", "ms", etc.
+  metadata        Json?
+  timestamp       DateTime @default(now())
+
+  @@index([metricType])
+  @@index([timestamp(sort: Desc)])
+  @@index([metricType, timestamp])
+}
+
+// ErrorLog model - Detaylı hata loglama
+model ErrorLog {
+  id          String   @id @default(cuid())
+  level       String   // "error", "warning", "critical"
+  message     String   @db.Text
+  stack       String?  @db.Text
+  context     Json?
+  userId      String?
+  ipAddress   String?
+  userAgent   String?
+  url         String?
+  method      String?
+  statusCode  Int?
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  createdAt   DateTime @default(now())
+
+  @@index([level])
+  @@index([resolved])
+  @@index([createdAt(sort: Desc)])
+  @@index([userId])
+}
+
+// ApiMetric model - API performance tracking
+model ApiMetric {
+  id           String   @id @default(cuid())
+  endpoint     String
+  method       String
+  statusCode   Int
+  responseTime Int      // milliseconds
+  userId       String?
+  ipAddress    String?
+  userAgent    String?
+  error        String?  @db.Text
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([endpoint])
+  @@index([method])
+  @@index([statusCode])
+  @@index([createdAt(sort: Desc)])
+  @@index([endpoint, createdAt])
+}
+
+// BatchOperation model - Toplu işlem takibi
+model BatchOperation {
+  id              String   @id @default(cuid())
+  operationType   String   // "bulk_publish", "bulk_delete", "bulk_update", etc.
+  status          String   @default("pending") // "pending", "processing", "completed", "failed"
+  totalItems      Int
+  processedItems  Int      @default(0)
+  successCount    Int      @default(0)
+  failureCount    Int      @default(0)
+  errors          Json?
+  metadata        Json?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdBy       String
+  createdAt       DateTime @default(now())
+
+  @@index([status])
+  @@index([operationType])
+  @@index([createdBy])
+  @@index([createdAt(sort: Desc)])
+}
+
+// FilterPreset model - Kullanıcı filtre ayarları
+model FilterPreset {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  filters     Json     // Filtre ayarları (status, category, date range, etc.)
+  isDefault   Boolean  @default(false)
+  isPublic    Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isDefault])
+  @@index([isPublic])
 }

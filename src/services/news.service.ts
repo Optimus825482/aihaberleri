@@ -8,7 +8,7 @@ import {
   filterRecentArticles,
   type RSSItem,
 } from "@/lib/rss";
-import { rankArticlesByTrendBrave } from "@/lib/brave";
+import { rankArticlesByTrendHybrid } from "@/lib/hybrid-search";
 import { distance } from "fastest-levenshtein";
 import { db } from "@/lib/db";
 
@@ -742,7 +742,7 @@ export async function fetchAINews(
       `📊 ${itemsToAnalyze.length} UNIQUE haber için Trend analizi (Brave API)...`,
     );
 
-    const trendRankings = await rankArticlesByTrendBrave(
+    const trendRankings = await rankArticlesByTrendHybrid(
       itemsToAnalyze.map((item) => ({
         title: item.title,
         description: item.description,

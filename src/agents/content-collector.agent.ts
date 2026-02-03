@@ -19,7 +19,7 @@ import {
   filterRecentArticles,
   type RSSItem,
 } from "@/lib/rss";
-import { rankArticlesByTrendBrave } from "@/lib/brave";
+import { rankArticlesByTrendHybrid } from "@/lib/hybrid-search";
 
 export interface CollectorInput {
   categoryFilter?: string;
@@ -360,7 +360,7 @@ export class ContentCollectorAgent extends BaseAgent<
         `Ranking ${itemsToAnalyze.length} articles by trend (Brave API)...`,
       );
 
-      const trendRankings = await rankArticlesByTrendBrave(
+      const trendRankings = await rankArticlesByTrendHybrid(
         itemsToAnalyze.map((item) => ({
           title: item.title,
           description: item.description,
