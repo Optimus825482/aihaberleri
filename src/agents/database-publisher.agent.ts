@@ -276,9 +276,7 @@ export class DatabasePublisherAgent extends BaseAgent<
               categoryName: category.name,
             })
               .then(() => this.logger.info(`🐦 Tweet posted`))
-              .catch((err) =>
-                this.logger.warn(`Tweet failed: ${err.message}`),
-              );
+              .catch((err) => this.logger.warn(`Tweet failed: ${err.message}`));
           } catch (twitterError) {
             this.logger.warn(
               `Twitter setup failed: ${(twitterError as Error).message}`,
