@@ -4,7 +4,7 @@
  * Bu script tüm yayınlanmış makaleler için SEO skorlarını hesaplar
  */
 
-import { prisma } from "../src/lib/prisma";
+import { db } from "../src/lib/db";
 import {
   analyzeArticleSEO,
   saveSEORecommendations,
@@ -15,7 +15,7 @@ async function calculateAllSEOScores() {
 
   try {
     // Tüm yayınlanmış makaleleri al (limit yok)
-    const articles = await prisma.article.findMany({
+    const articles = await db.article.findMany({
       where: {
         status: "PUBLISHED",
       },
@@ -78,7 +78,7 @@ async function calculateAllSEOScores() {
     console.log(`📈 Toplam: ${articles.length}`);
 
     // Ortalama SEO skoru
-    const avgScore = await prisma.article.aggregate({
+    const avgScore = await db.article.aggregate({
       where: { status: "PUBLISHED" },
       _avg: { seoScore: true },
     });
@@ -88,7 +88,7 @@ async function calculateAllSEOScores() {
     );
 
     // Skor dağılımı
-    const scoreDistribution = await prisma.$queryRaw<
+    const scoreDistribution = await db.$queryRaw<
       Array<{ range: string; count: bigint }>
     >`
       SELECT 
@@ -107,12 +107,12 @@ async function calculateAllSEOScores() {
     `;
 
     console.log("\n📊 Skor Dağılımı:");
-    scoreDistribution.forEach((dist) => {
+    scoreDistribution.forEach((dist: { range: string; count: bigint }) => {
       console.log(`  ${dist.range}: ${dist.count} makale`);
     });
 
     // En düşük skorlu makaleler
-    const lowestScores = await prisma.article.findMany({
+    const lowestScores = await db.article.findMany({
       where: { status: "PUBLISHED" },
       select: {
         title: true,
@@ -124,21 +124,26 @@ async function calculateAllSEOScores() {
     });
 
     console.log("\n⚠️ En Düşük SEO Skorlu Makaleler:");
-    lowestScores.forEach((article, index) => {
-      console.log(
-        `  ${index + 1}. ${article.title.substring(0, 50)}... (${article.seoScore}/100)`,
-      );
-    });
+    lowestScores.forEach(
+      (
+        article: { title: string; seoScore: number; slug: string },
+        index: number,
+      ) => {
+        console.log(
+          `  ${index + 1}. ${article.title.substring(0, 50)}... (${article.seoScore}/100)`,
+        );
+      },
+    );
 
     // Toplam öneri sayısı
-    const totalRecommendations = await prisma.sEORecommendation.count({
+    const totalRecommendations = await db.sEORecommendation.count({
       where: { isResolved: false },
     });
 
     console.log(`\n📝 Toplam Aktif Öneri: ${totalRecommendations}`);
 
     // Öneri türlerine göre dağılım
-    const recommendationsByType = await prisma.$queryRaw<
+    const recommendationsByType = await db.$queryRaw<
       Array<{ type: string; count: bigint }>
     >`
       SELECT type, COUNT(*) as count
@@ -149,7 +154,7 @@ async function calculateAllSEOScores() {
     `;
 
     console.log("\n📊 Öneri Türleri:");
-    recommendationsByType.forEach((rec) => {
+    recommendationsByType.forEach((rec: { type: string; count: bigint }) => {
       console.log(`  ${rec.type}: ${rec.count} öneri`);
     });
 
@@ -158,7 +163,7 @@ async function calculateAllSEOScores() {
     console.error("\n❌ Kritik hata:", error);
     process.exit(1);
   } finally {
-    await prisma.$disconnect();
+    await db.$disconnect();
   }
 }
 

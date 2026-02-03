@@ -52,9 +52,9 @@ export async function GET(request: NextRequest) {
       // Error Logs
       db.errorLog.findMany({
         where: {
-          timestamp: { gte: startTime },
+          createdAt: { gte: startTime },
         },
-        orderBy: { timestamp: "desc" },
+        orderBy: { createdAt: "desc" },
         take: 100,
       }),
 
@@ -99,8 +99,23 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Monitoring API error:", error);
+
+    // Detaylı hata mesajı
+    const errorMessage =
+      error instanceof Error ? error.message : "Bilinmeyen hata";
+    const errorStack = error instanceof Error ? error.stack : "";
+
+    console.error("Error details:", {
+      message: errorMessage,
+      stack: errorStack,
+    });
+
     return NextResponse.json(
-      { error: "Monitoring verileri alınamadı" },
+      {
+        success: false,
+        error: "Monitoring verileri alınamadı",
+        details: errorMessage,
+      },
       { status: 500 },
     );
   }
@@ -238,7 +253,7 @@ async function getDatabaseStats() {
       where: {
         level: "WARN",
         message: { contains: "slow query" },
-        timestamp: { gte: new Date(Date.now() - 60 * 60 * 1000) },
+        createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) },
       },
     });
 
@@ -275,7 +290,7 @@ function aggregateErrorsByTime(
 
   errors.forEach((error) => {
     const bucketTime = Math.floor(
-      new Date(error.timestamp).getTime() / bucketSize,
+      new Date(error.createdAt).getTime() / bucketSize,
     );
     const bucketKey = new Date(bucketTime * bucketSize).toISOString();
 

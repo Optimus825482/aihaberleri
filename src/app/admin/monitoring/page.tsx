@@ -65,10 +65,23 @@ export default function MonitoringPage() {
       const response = await fetch(`/api/admin/monitoring?range=${timeRange}`);
       if (response.ok) {
         const result = await response.json();
-        setData(result.data);
+        if (result.success && result.data) {
+          setData(result.data);
+        } else {
+          console.error("API returned error:", result.error || result.details);
+          setData(null);
+        }
+      } else {
+        console.error(
+          "API request failed:",
+          response.status,
+          response.statusText,
+        );
+        setData(null);
       }
     } catch (error) {
       console.error("Monitoring data fetch error:", error);
+      setData(null);
     } finally {
       setLoading(false);
     }
@@ -131,6 +144,31 @@ export default function MonitoringPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Monitoring Verileri Yüklenemedi
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">
+            Lütfen konsolu kontrol edin veya sayfayı yenileyin.
+          </p>
+          <button
+            onClick={() => {
+              setLoading(true);
+              fetchMonitoringData();
+            }}
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Tekrar Dene
+          </button>
+        </div>
       </div>
     );
   }
