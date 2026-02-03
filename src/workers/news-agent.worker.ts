@@ -28,6 +28,70 @@ import { PrismaClient } from "@prisma/client";
 import { workerLogger } from "@/lib/logger";
 import { trackWorkerError } from "@/lib/sentry";
 
+// Multi-agent pipeline imports
+import { initializeQueues } from "@/lib/queue-manager";
+import { RelevanceFilterAgent } from "@/agents/relevance-filter.agent";
+import { DuplicateDetectorAgent } from "@/agents/duplicate-detector.agent";
+import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
+import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
+import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
+
+// Multi-agent pipeline instances
+let relevanceFilter: RelevanceFilterAgent;
+let duplicateDetector: DuplicateDetectorAgent;
+let contentEnricher: ContentEnricherAgent;
+let visualGenerator: VisualGeneratorAgent;
+let databasePublisher: DatabasePublisherAgent;
+
+/**
+ * Initialize multi-agent pipeline agents
+ */
+async function initializeMultiAgentPipeline(): Promise<void> {
+  console.log("🤖 Initializing multi-agent pipeline agents...");
+
+  try {
+    // Initialize queue manager first
+    await initializeQueues();
+
+    // Create and start all agents
+    relevanceFilter = new RelevanceFilterAgent();
+    duplicateDetector = new DuplicateDetectorAgent();
+    contentEnricher = new ContentEnricherAgent();
+    visualGenerator = new VisualGeneratorAgent();
+    databasePublisher = new DatabasePublisherAgent();
+
+    await Promise.all([
+      relevanceFilter.start(),
+      duplicateDetector.start(),
+      contentEnricher.start(),
+      visualGenerator.start(),
+      databasePublisher.start(),
+    ]);
+
+    console.log("✅ Multi-agent pipeline (5 agents) started successfully");
+  } catch (error) {
+    console.error("❌ Failed to initialize multi-agent pipeline:", error);
+    throw error;
+  }
+}
+
+/**
+ * Stop multi-agent pipeline agents
+ */
+async function stopMultiAgentPipeline(): Promise<void> {
+  console.log("🛑 Stopping multi-agent pipeline agents...");
+
+  await Promise.all([
+    relevanceFilter?.stop(),
+    duplicateDetector?.stop(),
+    contentEnricher?.stop(),
+    visualGenerator?.stop(),
+    databasePublisher?.stop(),
+  ]);
+
+  console.log("✅ Multi-agent pipeline stopped");
+}
+
 workerLogger.start();
 console.log("🚀 Starting News Agent Worker...");
 
@@ -159,6 +223,12 @@ function startWorker() {
   console.log(`   Redis Status: ${redis!.status}`);
   console.log(`   Concurrency: 1`);
   console.log(`   Lock Duration: 10 minutes`);
+
+  // Initialize multi-agent pipeline agents BEFORE creating worker
+  initializeMultiAgentPipeline().catch((error) => {
+    console.error("❌ Multi-agent pipeline initialization failed:", error);
+    // Continue without multi-agent pipeline - fallback to legacy mode
+  });
 
   // Create worker
   const worker = new Worker(
@@ -353,6 +423,7 @@ function startWorker() {
   // Graceful shutdown
   process.on("SIGTERM", async () => {
     console.log("\n🛑 SIGTERM received, closing worker...");
+    await stopMultiAgentPipeline();
     await worker.close();
     await (db as PrismaClient).$disconnect();
     await redis!.quit();
@@ -361,6 +432,7 @@ function startWorker() {
 
   process.on("SIGINT", async () => {
     console.log("\n🛑 SIGINT received, closing worker...");
+    await stopMultiAgentPipeline();
     await worker.close();
     await (db as PrismaClient).$disconnect();
     await redis!.quit();
