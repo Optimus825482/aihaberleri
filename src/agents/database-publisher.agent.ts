@@ -140,7 +140,7 @@ export class DatabasePublisherAgent extends BaseAgent<
 
               // Relations
               categoryId: category.id,
-              agentLogId: (job.data[0] as any)?.agentLogId || null, // Get from first article
+              agentLogId: (article as any)?.agentLogId || null, // Get from current article
 
               // Status
               status: "PUBLISHED",
