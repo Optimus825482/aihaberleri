@@ -74,7 +74,9 @@ export async function startMultiAgentPipeline(
   if (activeCount > 0) {
     logger.success(`✅ Job is being processed by an agent!`);
   } else if (waitingCount > 0) {
-    logger.warn(`⚠️ Job is waiting but no agent is processing - agents may not have started`);
+    logger.warn(
+      `⚠️ Job is waiting but no agent is processing - agents may not have started`,
+    );
   } else if (completedCount > 0) {
     logger.info(`✅ Job was already completed by an agent`);
   } else {
