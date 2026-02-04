@@ -2,12 +2,13 @@
  * Duplicate Detector Agent
  *
  * RESPONSIBILITIES:
- * 1. Check for duplicate articles using 3-layer detection
+ * 1. Check for duplicate articles using 4-layer detection
  * 2. Layer 1: Exact URL match (PostgreSQL)
- * 3. Layer 2: Qdrant vector similarity (title + excerpt embeddings)
+ * 3. Layer 2: Vector similarity using pgvector (semantic duplicates)
  * 4. Layer 3: Entity-based matching (company + action + timeframe)
- * 5. Store topic in Article.topic field for future checks
- * 6. Emit unique articles to unique-articles queue
+ * 5. Layer 4: Title/content similarity (Levenshtein fallback)
+ * 6. Store topic in Article.topic field for future checks
+ * 7. Emit unique articles to unique-articles queue
  *
  * EXTRACTED FROM: src/services/intelligent-news.service.ts - isArticleDuplicate()
  */
@@ -17,12 +18,18 @@ import { BaseAgent, AgentResult } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
 import { db } from "@/lib/db";
 import { isDuplicateNews } from "@/services/news.service";
+import {
+  checkSemanticDuplicate,
+  generateEmbedding,
+  EMBEDDING_DIMENSIONS,
+} from "@/lib/embeddings";
 import type { ScoredArticle } from "./relevance-filter.agent";
 
 export interface UniqueArticle extends ScoredArticle {
   topic?: string; // Short topic identifier for duplicate detection
   isDuplicate: boolean;
   duplicateReason?: string;
+  embedding?: number[]; // Pre-generated embedding for storage
 }
 
 export class DuplicateDetectorAgent extends BaseAgent<
@@ -78,10 +85,23 @@ export class DuplicateDetectorAgent extends BaseAgent<
             `Duplicate: ${article.title.substring(0, 50)}... (${duplicateCheck.reason})`,
           );
         } else {
+          // Pre-generate embedding for unique articles (to be stored later)
+          let embedding: number[] | undefined;
+          try {
+            const combinedText =
+              `${article.title}. ${article.description || ""}`.trim();
+            embedding = await generateEmbedding(combinedText);
+          } catch (embeddingError) {
+            this.logger.warn(
+              `Failed to generate embedding for: ${article.title.substring(0, 30)}...`,
+            );
+          }
+
           uniqueArticles.push({
             ...article,
             topic,
             isDuplicate: false,
+            embedding,
           });
         }
       }
@@ -146,13 +166,35 @@ export class DuplicateDetectorAgent extends BaseAgent<
       };
     }
 
-    // Layer 2: Entity-based semantic matching
+    // Layer 2: Vector similarity using pgvector (semantic duplicates)
+    try {
+      const semanticCheck = await checkSemanticDuplicate(
+        article.title,
+        article.description,
+        0.9, // High threshold for duplicates
+        48, // 48-hour window
+      );
+
+      if (semanticCheck.isDuplicate) {
+        return {
+          isDuplicate: true,
+          reason: `SEMANTIC_MATCH_${Math.round((semanticCheck.similarity || 0) * 100)}%`,
+        };
+      }
+    } catch (error) {
+      // Log but don't block on embedding errors
+      this.logger.warn(
+        `Semantic duplicate check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+
+    // Layer 3: Entity-based semantic matching
     const entityMatch = await this.checkEntityBasedDuplicate(article.title);
     if (entityMatch.isDuplicate) {
       return entityMatch;
     }
 
-    // Layer 3: Advanced title/content similarity (using existing service)
+    // Layer 4: Advanced title/content similarity (using existing service)
     const duplicateCheck = await isDuplicateNews(
       article.title,
       article.description,
@@ -170,7 +212,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
   }
 
   /**
-   * Entity-based duplicate detection
+   * Entity-based duplicate detection (Layer 3)
    */
   private async checkEntityBasedDuplicate(
     title: string,

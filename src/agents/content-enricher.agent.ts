@@ -21,6 +21,11 @@ import { QUEUE_NAMES } from "@/lib/queue-manager";
 import { searxngSearch, type SearXNGResult } from "@/lib/searxng";
 import { callDeepSeek } from "@/lib/deepseek";
 import { callGemini } from "@/lib/gemini"; // HYBRID: Using Gemini for EN translation
+import {
+  generateTitleVariants,
+  initializeABTestData,
+  TitleABTestData,
+} from "@/lib/title-ab-testing";
 import axios from "axios";
 import type { UniqueArticle } from "./duplicate-detector.agent";
 
@@ -48,6 +53,8 @@ export interface EnrichedArticle extends UniqueArticle {
       metaDescription: string;
     };
   };
+  // Title A/B Testing data
+  titleABTest?: TitleABTestData;
 }
 
 const JINA_READER_URL = "https://r.jina.ai";
@@ -127,10 +134,32 @@ export class ContentEnricherAgent extends BaseAgent<
           apiCalls += 2; // DeepSeek calls (TR + EN)
           tokensUsed += 12000; // Estimate
 
+          // Step 3: Generate Title A/B Test Variants
+          let titleABTest: TitleABTestData | undefined;
+          try {
+            this.logger.info(`📊 Generating title variants for A/B testing...`);
+            const variants = await generateTitleVariants(
+              synthesized.tr.content,
+              article.suggestedCategory || "teknoloji",
+            );
+            titleABTest = initializeABTestData(variants);
+            apiCalls += 1;
+            tokensUsed += 500;
+            this.logger.success(
+              `📊 Title variants generated: ${Object.keys(variants).length}`,
+            );
+          } catch (abTestError) {
+            this.logger.warn(
+              `Title A/B test generation failed, continuing without:`,
+              this.serializeError(abTestError),
+            );
+          }
+
           enrichedArticles.push({
             ...article,
             sources,
             synthesizedContent: synthesized,
+            titleABTest,
           });
 
           this.logger.success(

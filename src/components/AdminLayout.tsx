@@ -27,6 +27,8 @@ import {
   Search,
   ChevronDown,
   ChevronRight,
+  GitBranch,
+  Rocket,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -99,6 +101,18 @@ const menuItems = [
         icon: Search,
       },
     ],
+  },
+  {
+    title: "Pipeline",
+    href: "/admin/pipeline",
+    icon: GitBranch,
+    requiredResource: null,
+  },
+  {
+    title: "İyileştirmeler",
+    href: "/admin/improvements",
+    icon: Rocket,
+    requiredResource: null,
   },
   {
     title: "Agent Ayarları",
@@ -333,10 +347,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden w-full
                       touch-manipulation active:scale-[0.98]
-                      ${
-                        isSubmenuActive
-                          ? "bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary shadow-lg shadow-primary/10"
-                          : "hover:bg-primary/5 hover:translate-x-1"
+                      ${isSubmenuActive
+                        ? "bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary shadow-lg shadow-primary/10"
+                        : "hover:bg-primary/5 hover:translate-x-1"
                       }
                     `}
                   >
@@ -377,10 +390,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden
                       touch-manipulation active:scale-[0.98]
-                      ${
-                        isActive
-                          ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
-                          : "hover:bg-primary/5 hover:translate-x-1"
+                      ${isActive
+                        ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
+                        : "hover:bg-primary/5 hover:translate-x-1"
                       }
                     `}
                   >
@@ -424,10 +436,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             group flex items-center gap-2 px-3 py-2.5 rounded-lg
                             transition-all duration-200 relative
                             touch-manipulation active:scale-[0.98]
-                            ${
-                              isSubActive
-                                ? "bg-primary text-white shadow-md"
-                                : "hover:bg-primary/10 hover:translate-x-1"
+                            ${isSubActive
+                              ? "bg-primary text-white shadow-md"
+                              : "hover:bg-primary/10 hover:translate-x-1"
                             }
                           `}
                         >

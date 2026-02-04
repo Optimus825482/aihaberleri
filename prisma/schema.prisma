@@ -136,6 +136,10 @@ model Article {
   scheduledPublishAt DateTime?
   templateId         String?
   facebookShared     Boolean              @default(false)
+  
+  // Title A/B Testing
+  titleABTest        Json?                // { titleVariants, activeVariant, variantViews, variantClicks }
+  
   agentLog           AgentLog?            @relation(fields: [agentLogId], references: [id])
   author             User?                @relation(fields: [authorId], references: [id])
   category           Category             @relation(fields: [categoryId], references: [id])

@@ -32,6 +32,14 @@ import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
 import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
 
+// Smart Scheduler for Turkey timezone-aware scheduling
+import {
+  createDynamicScheduler,
+  getScheduleInfo,
+  recordLastRun,
+  type ScheduleInfo,
+} from "@/lib/smart-scheduler";
+
 const logger = createModuleLogger("orchestrator");
 
 // Agent instances
@@ -41,6 +49,12 @@ let duplicateDetector: DuplicateDetectorAgent;
 let contentEnricher: ContentEnricherAgent;
 let visualGenerator: VisualGeneratorAgent;
 let databasePublisher: DatabasePublisherAgent;
+
+// Smart scheduler instance for cleanup on shutdown
+let dynamicScheduler: {
+  stop: () => void;
+  getStatus: () => Promise<ScheduleInfo>;
+} | null = null;
 
 /**
  * Initialize all agents
@@ -336,35 +350,36 @@ async function main() {
   const isEnabled = enabledSetting ? enabledSetting.value !== "false" : true;
 
   if (isEnabled) {
-    logger.info("Agent enabled, checking schedule...");
+    logger.info("Agent enabled, initializing Smart Scheduler...");
 
-    // Trigger initial collection
-    await triggerContentCollection();
+    // Get initial schedule info
+    const initialInfo = await getScheduleInfo();
+    logger.info(`🇹🇷 Turkey time: ${initialInfo.turkeyTime}`);
+    logger.info(`📊 Time slot: ${initialInfo.timeSlot}`);
+    logger.info(`⏱️ Initial interval: ${initialInfo.interval} minutes`);
+    logger.info(`📋 Reason: ${initialInfo.reason}`);
 
-    // Schedule periodic collection (every 15 minutes by default for real-time news)
-    const intervalSetting = await db.setting.findUnique({
-      where: { key: "agent.intervalHours" },
-    });
-    // DEFAULT: 0.25 hours = 15 minutes for real-time news pipeline
-    const intervalHours = intervalSetting
-      ? parseFloat(intervalSetting.value)
-      : 0.25;
-
-    const intervalMs = intervalHours * 60 * 60 * 1000;
-    const intervalMinutes = Math.round(intervalHours * 60);
-
-    setInterval(async () => {
-      logger.info(
-        `⏰ Scheduled collection triggered (every ${intervalMinutes} min)`,
-      );
-      await triggerContentCollection();
-    }, intervalMs);
+    // Create dynamic scheduler with Turkey timezone awareness
+    dynamicScheduler = createDynamicScheduler(
+      async () => {
+        logger.info("⏰ Smart Scheduler: Triggering content collection...");
+        await triggerContentCollection();
+      },
+      {
+        immediate: true, // Run immediately on startup
+        onScheduleChange: (info) => {
+          logger.info(
+            `📅 Schedule updated: ${info.interval} min | ${info.reason} | Next: ${info.nextRun.toLocaleString("tr-TR")}`,
+          );
+        },
+      },
+    );
 
     logger.success(
-      `✅ Scheduled collection: every ${intervalMinutes} minutes (${intervalHours}h)`,
+      "✅ Smart Scheduler initialized with Turkey timezone awareness",
     );
     logger.info(
-      `📅 Next run at: ${new Date(Date.now() + intervalMs).toLocaleString("tr-TR")}`,
+      `📅 Next run at: ${initialInfo.nextRun.toLocaleString("tr-TR")} (${initialInfo.interval} min)`,
     );
   } else {
     logger.info("Agent disabled, skipping scheduled collection");
@@ -376,6 +391,7 @@ async function main() {
 // Graceful shutdown
 process.on("SIGTERM", async () => {
   logger.info("SIGTERM received, shutting down...");
+  dynamicScheduler?.stop();
   await stopAgents();
   await (db as PrismaClient).$disconnect();
   await getRedis()?.quit();
@@ -384,6 +400,7 @@ process.on("SIGTERM", async () => {
 
 process.on("SIGINT", async () => {
   logger.info("SIGINT received, shutting down...");
+  dynamicScheduler?.stop();
   await stopAgents();
   await (db as PrismaClient).$disconnect();
   await getRedis()?.quit();
