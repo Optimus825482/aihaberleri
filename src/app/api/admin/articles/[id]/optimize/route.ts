@@ -134,7 +134,8 @@ export async function POST(
             type: "text",
             improvements: contentResult.metaDescription.improvements,
           });
-          optimizations.metaDescription = contentResult.metaDescription.optimized;
+          optimizations.metaDescription =
+            contentResult.metaDescription.optimized;
         }
 
         if (contentResult.content?.optimizedContent) {
@@ -142,7 +143,8 @@ export async function POST(
             field: "content",
             label: "İçerik",
             before: (article.content || "").substring(0, 200) + "...",
-            after: contentResult.content.optimizedContent.substring(0, 200) + "...",
+            after:
+              contentResult.content.optimizedContent.substring(0, 200) + "...",
             type: "content",
             improvements: contentResult.content.improvements,
           });
@@ -183,7 +185,10 @@ export async function POST(
 
       // Extract technical optimizations
       if (mode === "review") {
-        if (technicalResult.slug?.optimized && technicalResult.slug.optimized !== article.slug) {
+        if (
+          technicalResult.slug?.optimized &&
+          technicalResult.slug.optimized !== article.slug
+        ) {
           diffs.push({
             field: "slug",
             label: "URL Slug",
@@ -195,12 +200,17 @@ export async function POST(
           optimizations.slug = technicalResult.slug.optimized;
         }
 
-        if (technicalResult.internalLinks && technicalResult.internalLinks.length > 0) {
+        if (
+          technicalResult.internalLinks &&
+          technicalResult.internalLinks.length > 0
+        ) {
           diffs.push({
             field: "internalLinks",
             label: "Dahili Linkler",
             before: "Mevcut link yok",
-            after: technicalResult.internalLinks.map((l: any) => l.anchor).join(", "),
+            after: technicalResult.internalLinks
+              .map((l: any) => l.anchor)
+              .join(", "),
             type: "links",
             details: technicalResult.internalLinks,
           });
@@ -250,7 +260,7 @@ export async function POST(
       diffs: mode === "review" ? diffs : [],
       optimizations: mode === "auto" ? optimizations : {},
       agentsRun: agents,
-      results: agentResults.map(r => ({
+      results: agentResults.map((r) => ({
         type: r.type,
         score: r.result.score || r.result.estimatedScore,
       })),
@@ -258,7 +268,10 @@ export async function POST(
   } catch (error) {
     console.error("SEO optimization error:", error);
     return NextResponse.json(
-      { error: "Optimizasyon başarısız oldu", details: error instanceof Error ? error.message : String(error) },
+      {
+        error: "Optimizasyon başarısız oldu",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     );
   }

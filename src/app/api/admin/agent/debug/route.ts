@@ -110,3 +110,101 @@ export async function GET() {
     );
   }
 }
+
+/**
+ * POST /api/admin/agent/debug
+ * Clean up stalled/failed jobs and reset queue
+ */
+export async function POST(request: Request) {
+  try {
+    const session = await auth();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const action = body.action || "clean";
+
+    const { getNewsAgentQueue } = await import("@/lib/queue");
+    const queue = getNewsAgentQueue();
+
+    if (!queue) {
+      return NextResponse.json(
+        { error: "Queue not available" },
+        { status: 503 },
+      );
+    }
+
+    const results: any = { action, cleaned: {} };
+
+    if (action === "clean" || action === "clean-all") {
+      // Get stalled/failed/completed jobs
+      const [failed, completed, active] = await Promise.all([
+        queue.getJobs(["failed"]),
+        queue.getJobs(["completed"]),
+        queue.getJobs(["active"]),
+      ]);
+
+      // Remove failed jobs
+      let failedRemoved = 0;
+      for (const job of failed) {
+        await job.remove();
+        failedRemoved++;
+      }
+      results.cleaned.failed = failedRemoved;
+
+      // Remove old completed jobs (keep last 10)
+      const completedToRemove = completed.slice(10);
+      let completedRemoved = 0;
+      for (const job of completedToRemove) {
+        await job.remove();
+        completedRemoved++;
+      }
+      results.cleaned.completed = completedRemoved;
+
+      // Check for stalled active jobs (running > 30 minutes)
+      const thirtyMinutesAgo = Date.now() - 30 * 60 * 1000;
+      let stalledRemoved = 0;
+      for (const job of active) {
+        if (job.timestamp < thirtyMinutesAgo) {
+          console.log(`Removing stalled job: ${job.id} (started at ${new Date(job.timestamp).toISOString()})`);
+          await job.moveToFailed(new Error("Job stalled - manually removed"), "manual-cleanup");
+          await job.remove();
+          stalledRemoved++;
+        }
+      }
+      results.cleaned.stalled = stalledRemoved;
+    }
+
+    if (action === "drain") {
+      // Remove ALL jobs
+      await queue.drain();
+      results.drained = true;
+    }
+
+    if (action === "obliterate") {
+      // Nuclear option - completely remove queue
+      await queue.obliterate({ force: true });
+      results.obliterated = true;
+    }
+
+    // Get updated counts
+    const counts = await queue.getJobCounts();
+    results.currentCounts = counts;
+    results.timestamp = new Date().toISOString();
+
+    return NextResponse.json({
+      success: true,
+      ...results,
+    });
+  } catch (error) {
+    console.error("Debug cleanup error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    );
+  }
+}
