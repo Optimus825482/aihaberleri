@@ -50,9 +50,11 @@ export async function POST(
           throw new Error(`Geçersiz agent: ${agentType}`);
         }
 
-        return {
-          type: agentType,
-          result: await agent.analyze({
+        // Each agent has different method signatures
+        let result;
+        if (agentType === "analyzer") {
+          // SEOAnalyzerAgent.analyze expects: { title, content, excerpt, metaTitle, metaDescription, keywords, slug }
+          result = await agent.analyze({
             title: article.title,
             content: article.content,
             excerpt: article.excerpt,
@@ -60,7 +62,35 @@ export async function POST(
             metaDescription: article.metaDescription,
             keywords: article.keywords,
             slug: article.slug,
-          }),
+          });
+        } else if (agentType === "content") {
+          // ContentOptimizerAgent.optimize expects: { title, content, excerpt, metaTitle, metaDescription, keywords, slug }
+          result = await agent.optimize({
+            title: article.title,
+            content: article.content,
+            excerpt: article.excerpt,
+            metaTitle: article.metaTitle,
+            metaDescription: article.metaDescription,
+            keywords: article.keywords,
+            slug: article.slug,
+          });
+        } else if (agentType === "technical") {
+          // TechnicalSEOAgent.optimize expects: { id, title, slug, content, imageUrl, category }
+          result = await agent.optimize({
+            id: article.id,
+            title: article.title,
+            slug: article.slug,
+            content: article.content,
+            imageUrl: article.imageUrl,
+            category: article.category,
+          });
+        } else {
+          throw new Error(`Geçersiz agent: ${agentType}`);
+        }
+
+        return {
+          type: agentType,
+          result,
         };
       }),
     );
