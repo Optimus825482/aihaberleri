@@ -3,16 +3,17 @@
  *
  * Adjusts news pipeline interval based on:
  * 1. Turkey peak hours (UTC+3)
- * 2. Weekends/holidays (optional slower schedule)
- * 3. Breaking news mode (5 min interval)
- * 4. Database configurable settings
+ * 2. Breaking news mode (5 min interval)
+ * 3. Database configurable settings
  *
- * Peak Hours:
- * - Morning: 08:00-10:00 → 10 min
- * - Lunch: 12:00-14:00 → 10 min
- * - Evening: 18:00-22:00 → 10 min
- * - Night: 00:00-07:00 → 60 min (save resources)
+ * Interval Schedule:
+ * - Morning: 08:00-10:00 → 10 min (peak)
+ * - Lunch: 12:00-14:00 → 10 min (peak)
+ * - Evening: 18:00-22:00 → 10 min (peak)
+ * - Night: 00:00-07:00 → 15 min (consistent)
  * - Normal: other times → 15 min
+ * 
+ * NOTE: No slowdown on weekends/holidays - consistent 15 min
  */
 
 import { db } from "@/lib/db";
@@ -70,10 +71,10 @@ const DEFAULT_CONFIG: SchedulerConfig = {
   peakMorningInterval: 10,
   peakLunchInterval: 10,
   peakEveningInterval: 10,
-  nightInterval: 60,
+  nightInterval: 15, // FIXED: 15 min even at night (was 60)
   normalInterval: 15,
-  weekendMultiplier: 1.5, // 1.5x slower on weekends
-  holidayMultiplier: 2.0, // 2x slower on holidays
+  weekendMultiplier: 1.0, // FIXED: No slowdown on weekends (was 1.5)
+  holidayMultiplier: 1.0, // FIXED: No slowdown on holidays (was 2.0)
 };
 
 // Turkish public holidays (month-day format)
