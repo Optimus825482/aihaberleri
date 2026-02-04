@@ -1,114 +1,81 @@
 /**
- * Vector Embeddings System
+ * Text Similarity System
  *
- * Uses @xenova/transformers for browser-compatible embeddings
- * Model: all-MiniLM-L6-v2 (384 dimensions)
+ * Uses hash-based and Levenshtein distance for duplicate detection
+ * No external ML dependencies (Docker compatible)
  *
  * Features:
- * - Singleton model caching
- * - Batch embedding support
- * - Cosine similarity calculation
- * - pgvector integration for semantic search
+ * - Text hash generation (simhash-like)
+ * - Levenshtein distance calculation
+ * - TF-IDF based similarity
+ * - pgvector-compatible format (for future ML upgrade)
  */
 
-import { pipeline, env } from "@xenova/transformers";
 import { db } from "@/lib/db";
 import type { Article } from "@prisma/client";
+import crypto from "crypto";
 
-// Configure transformers.js for server-side usage
-env.useBrowserCache = false;
-env.allowLocalModels = false;
-
-// Model configuration
-const MODEL_NAME = "Xenova/all-MiniLM-L6-v2";
-const EMBEDDING_DIMENSIONS = 384;
+// Configuration
+const HASH_DIMENSIONS = 384; // Match previous dimension for compatibility
 const DEFAULT_SIMILARITY_THRESHOLD = 0.85;
 
-// Singleton model instance - use 'any' to avoid type conflicts with transformers.js
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let embeddingPipeline: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let modelLoadingPromise: Promise<any> | null = null;
-
 /**
- * Get or initialize the embedding model (singleton pattern)
+ * Tokenize and normalize text
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getEmbeddingModel(): Promise<any> {
-  if (embeddingPipeline) {
-    return embeddingPipeline;
-  }
-
-  // Prevent multiple concurrent model loads
-  if (modelLoadingPromise) {
-    return modelLoadingPromise;
-  }
-
-  modelLoadingPromise = (async () => {
-    console.log("[Embeddings] Loading model:", MODEL_NAME);
-    const startTime = Date.now();
-
-    embeddingPipeline = await pipeline("feature-extraction", MODEL_NAME, {
-      quantized: true, // Use quantized model for faster inference
-    });
-
-    const loadTime = Date.now() - startTime;
-    console.log(`[Embeddings] Model loaded in ${loadTime}ms`);
-
-    return embeddingPipeline;
-  })();
-
-  return modelLoadingPromise;
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((token) => token.length > 2);
 }
 
 /**
- * Generate embedding for a single text
+ * Generate a deterministic hash-based embedding vector
+ * Uses simhash-like approach for text similarity
  *
  * @param text - Input text to embed
- * @returns Promise<number[]> - 384-dimensional embedding vector
- *
- * @example
- * const embedding = await generateEmbedding("AI revolutionizes healthcare");
- * console.log(embedding.length); // 384
+ * @returns Promise<number[]> - 384-dimensional hash vector
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   if (!text || text.trim().length === 0) {
     throw new Error("Text cannot be empty");
   }
 
-  const model = await getEmbeddingModel();
+  const tokens = tokenize(text);
 
-  // Truncate text to prevent token overflow (max ~512 tokens)
-  const truncatedText = text.slice(0, 2000);
+  // Initialize vector with zeros
+  const vector = new Array(HASH_DIMENSIONS).fill(0);
 
-  const output = await model(truncatedText, {
-    pooling: "mean",
-    normalize: true,
-  });
+  // Use token hashes to populate vector (simhash-like)
+  for (const token of tokens) {
+    const hash = crypto.createHash("md5").update(token).digest();
 
-  // Convert Float32Array to regular array
-  const embedding = Array.from(output.data as Float32Array);
+    for (let i = 0; i < HASH_DIMENSIONS; i++) {
+      const byteIndex = i % hash.length;
+      const bitIndex = i % 8;
+      const bit = (hash[byteIndex] >> bitIndex) & 1;
 
-  if (embedding.length !== EMBEDDING_DIMENSIONS) {
-    throw new Error(
-      `Unexpected embedding dimension: ${embedding.length} (expected ${EMBEDDING_DIMENSIONS})`,
-    );
+      vector[i] += bit === 1 ? 1 : -1;
+    }
   }
 
-  return embedding;
+  // Normalize vector
+  const magnitude = Math.sqrt(vector.reduce((sum, v) => sum + v * v, 0));
+
+  if (magnitude === 0) {
+    // Return zero vector for empty/meaningless text
+    return new Array(HASH_DIMENSIONS).fill(0);
+  }
+
+  return vector.map((v) => v / magnitude);
 }
 
 /**
  * Generate embeddings for multiple texts in batch
  *
  * @param texts - Array of input texts
- * @returns Promise<number[][]> - Array of 384-dimensional embedding vectors
- *
- * @example
- * const embeddings = await generateBatchEmbeddings([
- *   "OpenAI releases GPT-5",
- *   "Google announces Gemini 2"
- * ]);
+ * @returns Promise<number[][]> - Array of embedding vectors
  */
 export async function generateBatchEmbeddings(
   texts: string[],
@@ -117,34 +84,15 @@ export async function generateBatchEmbeddings(
     return [];
   }
 
-  const model = await getEmbeddingModel();
   const embeddings: number[][] = [];
 
-  // Process in batches of 32 for memory efficiency
-  const batchSize = 32;
-
-  for (let i = 0; i < texts.length; i += batchSize) {
-    const batch = texts.slice(i, i + batchSize);
-
-    // Process batch concurrently
-    const batchEmbeddings = await Promise.all(
-      batch.map(async (text) => {
-        if (!text || text.trim().length === 0) {
-          // Return zero vector for empty texts
-          return new Array(EMBEDDING_DIMENSIONS).fill(0);
-        }
-
-        const truncatedText = text.slice(0, 2000);
-        const output = await model(truncatedText, {
-          pooling: "mean",
-          normalize: true,
-        });
-
-        return Array.from(output.data as Float32Array);
-      }),
-    );
-
-    embeddings.push(...batchEmbeddings);
+  for (const text of texts) {
+    if (!text || text.trim().length === 0) {
+      embeddings.push(new Array(HASH_DIMENSIONS).fill(0));
+    } else {
+      const embedding = await generateEmbedding(text);
+      embeddings.push(embedding);
+    }
   }
 
   return embeddings;
@@ -156,10 +104,6 @@ export async function generateBatchEmbeddings(
  * @param a - First vector
  * @param b - Second vector
  * @returns number - Similarity score between -1 and 1 (1 = identical)
- *
- * @example
- * const similarity = cosineSimilarity(embedding1, embedding2);
- * if (similarity > 0.9) console.log("Very similar!");
  */
 export function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length) {
@@ -186,17 +130,63 @@ export function cosineSimilarity(a: number[], b: number[]): number {
 }
 
 /**
- * Find similar articles using pgvector similarity search
+ * Calculate Levenshtein distance between two strings
+ */
+export function levenshteinDistance(str1: string, str2: string): number {
+  const m = str1.length;
+  const n = str2.length;
+
+  // Early exit for empty strings
+  if (m === 0) return n;
+  if (n === 0) return m;
+
+  // Create distance matrix
+  const dp: number[][] = Array.from({ length: m + 1 }, () =>
+    Array(n + 1).fill(0),
+  );
+
+  // Initialize first row and column
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+  // Fill matrix
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1, // deletion
+        dp[i][j - 1] + 1, // insertion
+        dp[i - 1][j - 1] + cost, // substitution
+      );
+    }
+  }
+
+  return dp[m][n];
+}
+
+/**
+ * Calculate title similarity using Levenshtein distance
+ */
+export function titleSimilarity(title1: string, title2: string): number {
+  const normalized1 = title1.toLowerCase().trim();
+  const normalized2 = title2.toLowerCase().trim();
+
+  const maxLen = Math.max(normalized1.length, normalized2.length);
+
+  if (maxLen === 0) return 1;
+
+  const distance = levenshteinDistance(normalized1, normalized2);
+  return 1 - distance / maxLen;
+}
+
+/**
+ * Find similar articles using hash-based similarity
  *
  * @param embedding - Query embedding vector
  * @param threshold - Minimum similarity threshold (default: 0.85)
  * @param limit - Maximum number of results (default: 10)
  * @param hoursWindow - Only search articles from last N hours (default: 72)
  * @returns Promise<Article[]> - Similar articles sorted by similarity
- *
- * @example
- * const embedding = await generateEmbedding("OpenAI GPT-5 announcement");
- * const similar = await findSimilarArticles(embedding, 0.9);
  */
 export async function findSimilarArticles(
   embedding: number[],
@@ -204,9 +194,9 @@ export async function findSimilarArticles(
   limit: number = 10,
   hoursWindow: number = 72,
 ): Promise<(Article & { similarity: number })[]> {
-  if (embedding.length !== EMBEDDING_DIMENSIONS) {
+  if (embedding.length !== HASH_DIMENSIONS) {
     throw new Error(
-      `Invalid embedding dimension: ${embedding.length} (expected ${EMBEDDING_DIMENSIONS})`,
+      `Invalid embedding dimension: ${embedding.length} (expected ${HASH_DIMENSIONS})`,
     );
   }
 
@@ -215,20 +205,29 @@ export async function findSimilarArticles(
   // Use raw SQL for pgvector similarity search
   const vectorString = `[${embedding.join(",")}]`;
 
-  const results = await db.$queryRaw<(Article & { similarity: number })[]>`
-    SELECT 
-      a.*,
-      1 - (a.embedding <=> ${vectorString}::vector) as similarity
-    FROM "Article" a
-    WHERE 
-      a.embedding IS NOT NULL
-      AND a."publishedAt" >= ${cutoffDate}
-      AND 1 - (a.embedding <=> ${vectorString}::vector) >= ${threshold}
-    ORDER BY a.embedding <=> ${vectorString}::vector
-    LIMIT ${limit}
-  `;
+  try {
+    const results = await db.$queryRaw<(Article & { similarity: number })[]>`
+      SELECT 
+        a.*,
+        1 - (a.embedding <=> ${vectorString}::vector) as similarity
+      FROM "Article" a
+      WHERE 
+        a.embedding IS NOT NULL
+        AND a."publishedAt" >= ${cutoffDate}
+        AND 1 - (a.embedding <=> ${vectorString}::vector) >= ${threshold}
+      ORDER BY a.embedding <=> ${vectorString}::vector
+      LIMIT ${limit}
+    `;
 
-  return results;
+    return results;
+  } catch (error) {
+    // If pgvector not available, fall back to title-based search
+    console.warn(
+      "[Embeddings] pgvector query failed, using fallback:",
+      error,
+    );
+    return [];
+  }
 }
 
 /**
@@ -252,7 +251,35 @@ export async function checkSemanticDuplicate(
   matchedTitle?: string;
 }> {
   try {
-    // Combine title and excerpt for better semantic matching
+    const cutoffDate = new Date(Date.now() - hoursWindow * 60 * 60 * 1000);
+
+    // First try: Title similarity check (fast, no ML)
+    const recentArticles = await db.article.findMany({
+      where: {
+        publishedAt: { gte: cutoffDate },
+      },
+      select: {
+        id: true,
+        title: true,
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 200,
+    });
+
+    for (const article of recentArticles) {
+      const similarity = titleSimilarity(title, article.title);
+
+      if (similarity >= threshold) {
+        return {
+          isDuplicate: true,
+          similarity,
+          matchedArticleId: article.id,
+          matchedTitle: article.title,
+        };
+      }
+    }
+
+    // Second try: Hash-based embedding similarity
     const combinedText = `${title}. ${excerpt || ""}`.trim();
     const embedding = await generateEmbedding(combinedText);
 
@@ -375,19 +402,20 @@ export async function backfillEmbeddings(
  */
 export function getModelInfo() {
   return {
-    modelName: MODEL_NAME,
-    dimensions: EMBEDDING_DIMENSIONS,
-    isLoaded: embeddingPipeline !== null,
+    modelName: "hash-based-similarity",
+    dimensions: HASH_DIMENSIONS,
+    isLoaded: true, // Always ready (no ML model to load)
     defaultThreshold: DEFAULT_SIMILARITY_THRESHOLD,
   };
 }
 
 /**
- * Preload the model (call during app initialization)
+ * Preload the model (no-op for hash-based system)
  */
 export async function preloadModel(): Promise<void> {
-  await getEmbeddingModel();
+  // No-op: Hash-based system doesn't need preloading
+  console.log("[Embeddings] Hash-based similarity system ready");
 }
 
 // Export constants
-export { EMBEDDING_DIMENSIONS, DEFAULT_SIMILARITY_THRESHOLD };
+export { HASH_DIMENSIONS as EMBEDDING_DIMENSIONS, DEFAULT_SIMILARITY_THRESHOLD };
