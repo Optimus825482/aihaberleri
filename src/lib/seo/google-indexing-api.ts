@@ -7,26 +7,48 @@
 
 import { google } from "googleapis";
 import path from "path";
+import fs from "fs";
 
 // Service Account bilgileri
-const SERVICE_ACCOUNT_KEY_PATH = path.join(
-  process.cwd(),
-  "aihaberleri-46042-861df20fa232.json",
-);
 const SCOPES = ["https://www.googleapis.com/auth/indexing"];
-
-// API endpoint'leri
-const INDEXING_API_ENDPOINT =
-  "https://indexing.googleapis.com/v3/urlNotifications:publish";
-const BATCH_ENDPOINT = "https://indexing.googleapis.com/batch";
 
 /**
  * Google Indexing API istemcisini oluşturur
+ *
+ * Production'da GOOGLE_SERVICE_ACCOUNT_KEY environment variable'ını kullanır
+ * Development'ta JSON dosyasından okur
  */
 async function getIndexingClient() {
   try {
+    let credentials;
+
+    // Production'da environment variable kullan
+    if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+      console.log(
+        "🔐 Using GOOGLE_SERVICE_ACCOUNT_KEY from environment variable",
+      );
+      credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+    }
+    // Development'ta dosyadan oku
+    else {
+      console.log("🔐 Using JSON key file from disk (development mode)");
+      const keyPath = path.join(
+        process.cwd(),
+        "aihaberleri-46042-861df20fa232.json",
+      );
+
+      if (!fs.existsSync(keyPath)) {
+        throw new Error(
+          `JSON key file not found at: ${keyPath}\n` +
+            "Please ensure the file exists or set GOOGLE_SERVICE_ACCOUNT_KEY environment variable",
+        );
+      }
+
+      credentials = JSON.parse(fs.readFileSync(keyPath, "utf8"));
+    }
+
     const auth = new google.auth.GoogleAuth({
-      keyFile: SERVICE_ACCOUNT_KEY_PATH,
+      credentials,
       scopes: SCOPES,
     });
 
