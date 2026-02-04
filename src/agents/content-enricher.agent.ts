@@ -58,10 +58,10 @@ export interface EnrichedArticle extends UniqueArticle {
 }
 
 const JINA_READER_URL = "https://r.jina.ai";
-const JINA_TIMEOUT = 10000;
+const JINA_TIMEOUT = 5000; // Reduced from 10s to 5s for faster processing
 const TAVILY_EXTRACT_URL = "https://api.tavily.com/extract";
-const TAVILY_TIMEOUT = 12000;
-const TARGET_SOURCE_COUNT = 8;
+const TAVILY_TIMEOUT = 8000; // Reduced from 12s to 8s
+const TARGET_SOURCE_COUNT = 5; // Reduced from 8 to 5 for faster processing
 
 export class ContentEnricherAgent extends BaseAgent<
   UniqueArticle[],
@@ -103,19 +103,24 @@ export class ContentEnricherAgent extends BaseAgent<
     }
 
     try {
-      const enrichedArticles: EnrichedArticle[] = [];
+      // 🚀 PARALLEL PROCESSING: Process all articles concurrently for 5x speed boost
+      this.logger.info(
+        `🚀 Starting PARALLEL enrichment for ${articles.length} articles...`,
+      );
 
-      for (const article of articles) {
-        this.logger.info(`Enriching: ${article.title.substring(0, 50)}...`);
+      const enrichmentPromises = articles.map(async (article, index) => {
+        const articleNum = index + 1;
+        this.logger.info(
+          `[${articleNum}/${articles.length}] Enriching: ${article.title.substring(0, 50)}...`,
+        );
 
         try {
-          // Step 1: Gather sources
+          // Step 1: Gather sources (parallel SearXNG + Jina)
           const sources = await this.gatherSources(article);
-          apiCalls += 5; // Brave API calls
 
           if (sources.length < 2) {
             this.logger.warn(
-              `Insufficient sources (${sources.length}), using fallback`,
+              `[${articleNum}] Insufficient sources (${sources.length}), using fallback`,
             );
             sources.push({
               title: article.title,
@@ -125,60 +130,69 @@ export class ContentEnricherAgent extends BaseAgent<
             });
           }
 
-          // Step 2: Synthesize content (TR + EN)
+          // Step 2: Synthesize content (TR + EN) - these run in parallel across articles
           const synthesized = await this.synthesizeContent(
             article,
             sources,
             article.suggestedCategory || "teknoloji",
           );
-          apiCalls += 2; // DeepSeek calls (TR + EN)
-          tokensUsed += 12000; // Estimate
 
           // Step 3: Generate Title A/B Test Variants
           let titleABTest: TitleABTestData | undefined;
           try {
-            this.logger.info(`📊 Generating title variants for A/B testing...`);
             const variants = await generateTitleVariants(
               synthesized.tr.content,
               article.suggestedCategory || "teknoloji",
             );
             titleABTest = initializeABTestData(variants);
-            apiCalls += 1;
-            tokensUsed += 500;
-            this.logger.success(
-              `📊 Title variants generated: ${Object.keys(variants).length}`,
-            );
           } catch (abTestError) {
             this.logger.warn(
-              `Title A/B test generation failed, continuing without:`,
-              this.serializeError(abTestError),
+              `[${articleNum}] Title A/B test failed, continuing without`,
             );
           }
 
-          enrichedArticles.push({
-            ...article,
-            sources,
-            synthesizedContent: synthesized,
-            titleABTest,
-          });
-
           this.logger.success(
-            `Enriched: ${synthesized.tr.title.substring(0, 50)}...`,
+            `✅ [${articleNum}/${articles.length}] Enriched: ${synthesized.tr.title.substring(0, 50)}...`,
           );
 
-          // Rate limiting between articles (reduced for single article)
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          return {
+            success: true as const,
+            data: {
+              ...article,
+              sources,
+              synthesizedContent: synthesized,
+              titleABTest,
+            },
+          };
         } catch (error) {
           this.logger.error(
-            `Failed to enrich article: ${article.title.substring(0, 50)}...`,
+            `❌ [${articleNum}] Failed to enrich: ${article.title.substring(0, 50)}...`,
             this.serializeError(error),
           );
-          // Skip this article, continue with next
+          return { success: false as const, error };
+        }
+      });
+
+      // Wait for all articles to complete in parallel
+      const results = await Promise.allSettled(enrichmentPromises);
+
+      const enrichedArticles: EnrichedArticle[] = [];
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const result of results) {
+        if (result.status === "fulfilled" && result.value.success) {
+          enrichedArticles.push(result.value.data);
+          successCount++;
+          apiCalls += 8; // Approximate: 5 SearXNG + 2 LLM + 1 A/B test
+          tokensUsed += 12500;
+        } else {
+          failCount++;
         }
       }
 
       this.logger.success(
-        `Enrichment complete: ${enrichedArticles.length}/${articles.length} articles`,
+        `🏁 PARALLEL enrichment complete: ${successCount}/${articles.length} articles (${failCount} failed)`,
       );
 
       return {
@@ -237,67 +251,92 @@ export class ContentEnricherAgent extends BaseAgent<
       article.description,
     );
 
-    // Generate diverse search queries
-    const searchQueries = [
-      keywords,
-      `${keywords} latest news`,
-      `${keywords} analysis`,
-      `${keywords} details facts`,
-    ];
+    // Generate diverse search queries - use only 2 queries for speed
+    const searchQueries = [keywords, `${keywords} news`];
 
-    this.logger.info(`🔍 Searching with SearXNG (unlimited!): ${keywords}`);
+    this.logger.info(`🔍 Fast SearXNG search: ${keywords}`);
 
-    // Search with each query using SearXNG
-    for (const query of searchQueries) {
-      if (sources.length >= TARGET_SOURCE_COUNT) break;
+    // Collect all candidate URLs first (fast)
+    const candidateUrls: Array<{
+      title: string;
+      url: string;
+      relevanceScore: number;
+    }> = [];
 
-      try {
-        const results = await searxngSearch(query, {
-          count: 10,
-          time_range: "week", // Past week
-          categories: "general,news",
-        });
-
-        this.logger.info(
-          `📡 SearXNG returned ${results.length} results for: ${query.substring(0, 50)}...`,
-        );
-
-        for (const result of results) {
-          if (sources.length >= TARGET_SOURCE_COUNT) break;
-
-          const normalizedUrl = this.normalizeUrl(result.url);
-          if (seenUrls.has(normalizedUrl)) continue;
-          seenUrls.add(normalizedUrl);
-
-          if (this.shouldSkipUrl(result.url)) continue;
-
-          const relevanceScore = this.calculateRelevanceScoreSearXNG(
-            result,
-            article.title,
-          );
-
-          if (relevanceScore >= 30) {
-            const content = await this.readUrlContent(result.url);
-
-            if (content && content.length > 100) {
-              sources.push({
-                title: result.title,
-                url: result.url,
-                content,
-                relevanceScore,
-              });
-            }
-          }
+    // Search with all queries in parallel
+    const searchResults = await Promise.all(
+      searchQueries.map(async (query) => {
+        try {
+          return await searxngSearch(query, {
+            count: 8,
+            time_range: "week",
+            categories: "general,news",
+          });
+        } catch {
+          return [];
         }
+      }),
+    );
 
-        await new Promise((resolve) => setTimeout(resolve, 200));
-      } catch (error) {
-        this.logger.warn(
-          `Search failed for query: ${query}`,
-          this.serializeError(error),
+    // Flatten and dedupe results
+    for (const results of searchResults) {
+      for (const result of results) {
+        if (candidateUrls.length >= TARGET_SOURCE_COUNT * 2) break; // Get 2x candidates
+
+        const normalizedUrl = this.normalizeUrl(result.url);
+        if (seenUrls.has(normalizedUrl)) continue;
+        seenUrls.add(normalizedUrl);
+
+        if (this.shouldSkipUrl(result.url)) continue;
+
+        const relevanceScore = this.calculateRelevanceScoreSearXNG(
+          result,
+          article.title,
         );
+
+        if (relevanceScore >= 30) {
+          candidateUrls.push({
+            title: result.title,
+            url: result.url,
+            relevanceScore,
+          });
+        }
       }
     }
+
+    // Sort by relevance and take top candidates
+    candidateUrls.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    const topCandidates = candidateUrls.slice(0, TARGET_SOURCE_COUNT);
+
+    // 🚀 PARALLEL: Read all URLs in parallel (major speed boost!)
+    this.logger.info(
+      `📖 Reading ${topCandidates.length} URLs in parallel...`,
+    );
+
+    const contentResults = await Promise.allSettled(
+      topCandidates.map(async (candidate) => {
+        const content = await this.readUrlContent(candidate.url);
+        return { ...candidate, content };
+      }),
+    );
+
+    // Collect successful results
+    for (const result of contentResults) {
+      if (
+        result.status === "fulfilled" &&
+        result.value.content &&
+        result.value.content.length > 100
+      ) {
+        sources.push({
+          title: result.value.title,
+          url: result.value.url,
+          content: result.value.content,
+          relevanceScore: result.value.relevanceScore,
+        });
+      }
+    }
+
+    this.logger.info(`✅ Got ${sources.length} sources from parallel fetch`);
 
     // Sort by relevance
     sources.sort((a, b) => b.relevanceScore - a.relevanceScore);

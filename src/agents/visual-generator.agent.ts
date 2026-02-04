@@ -37,8 +37,8 @@ export interface ArticleWithVisuals extends EnrichedArticle {
 
 const IMAGE_TIMEOUT = 30000; // 30 seconds per image
 const MAX_RETRIES = 3;
-const PARALLEL_CONCURRENCY = 1; // Process 1 image at a time (avoid Pollinations rate limit)
-const RATE_LIMIT_DELAY = 3000; // 3 seconds between images to avoid 429
+const PARALLEL_CONCURRENCY = 3; // Process 3 images at a time (balanced speed vs rate limit)
+const RATE_LIMIT_DELAY = 1500; // 1.5 seconds between batches
 
 export class VisualGeneratorAgent extends BaseAgent<
   EnrichedArticle[],
