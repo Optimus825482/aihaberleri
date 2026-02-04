@@ -89,19 +89,52 @@ export async function clearAgentLogs(): Promise<void> {
 
 /**
  * Helper to create log functions for a specific module
+ * Also logs to console for Docker container visibility
  */
 export function createModuleLogger(moduleName: string) {
+  const consoleLog = (level: LogLevel, message: string) => {
+    const timestamp = new Date().toLocaleString("tr-TR");
+    const prefix = `[${timestamp}] [${moduleName}]`;
+    switch (level) {
+      case "info":
+        console.log(`ℹ️  ${prefix} ${message}`);
+        break;
+      case "success":
+        console.log(`✅ ${prefix} ${message}`);
+        break;
+      case "warn":
+        console.warn(`⚠️  ${prefix} ${message}`);
+        break;
+      case "error":
+        console.error(`❌ ${prefix} ${message}`);
+        break;
+      case "debug":
+        console.log(`🔍 ${prefix} ${message}`);
+        break;
+    }
+  };
+
   return {
-    info: (message: string, data?: Record<string, unknown>) =>
-      publishAgentLog("info", message, { module: moduleName, data }),
-    success: (message: string, data?: Record<string, unknown>) =>
-      publishAgentLog("success", message, { module: moduleName, data }),
-    warn: (message: string, data?: Record<string, unknown>) =>
-      publishAgentLog("warn", message, { module: moduleName, data }),
-    error: (message: string, data?: Record<string, unknown>) =>
-      publishAgentLog("error", message, { module: moduleName, data }),
-    debug: (message: string, data?: Record<string, unknown>) =>
-      publishAgentLog("debug", message, { module: moduleName, data }),
+    info: (message: string, data?: Record<string, unknown>) => {
+      consoleLog("info", message);
+      return publishAgentLog("info", message, { module: moduleName, data });
+    },
+    success: (message: string, data?: Record<string, unknown>) => {
+      consoleLog("success", message);
+      return publishAgentLog("success", message, { module: moduleName, data });
+    },
+    warn: (message: string, data?: Record<string, unknown>) => {
+      consoleLog("warn", message);
+      return publishAgentLog("warn", message, { module: moduleName, data });
+    },
+    error: (message: string, data?: Record<string, unknown>) => {
+      consoleLog("error", message);
+      return publishAgentLog("error", message, { module: moduleName, data });
+    },
+    debug: (message: string, data?: Record<string, unknown>) => {
+      consoleLog("debug", message);
+      return publishAgentLog("debug", message, { module: moduleName, data });
+    },
   };
 }
 

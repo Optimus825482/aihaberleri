@@ -51,21 +51,33 @@ export async function startMultiAgentPipeline(
     throw new Error("Relevance filter queue not available");
   }
 
-  await relevanceQueue.add("filter-relevance", collectedArticles, {
+  console.log(`\n📤 Adding job to queue: ${QUEUE_NAMES.RELEVANT_ARTICLES}`);
+  console.log(`   Articles: ${collectedArticles.length}`);
+  console.log(`   AgentLogId: ${config.agentLogId}`);
+
+  const job = await relevanceQueue.add("filter-relevance", collectedArticles, {
     removeOnComplete: 100, // Keep last 100 for debugging
     removeOnFail: 50,
     attempts: 3,
     priority: 1,
   });
 
+  console.log(`✅ Job added successfully: ${job.id}`);
+
   // Wait a moment for job to be picked up
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 1000)); // Increased to 1s
 
   // Verify job was added
   const waitingCount = await relevanceQueue.getWaitingCount();
   const activeCount = await relevanceQueue.getActiveCount();
   const completedCount = await relevanceQueue.getCompletedCount();
   const failedCount = await relevanceQueue.getFailedCount();
+
+  console.log(`\n📊 Queue Status (${QUEUE_NAMES.RELEVANT_ARTICLES}):`);
+  console.log(`   Waiting: ${waitingCount}`);
+  console.log(`   Active: ${activeCount}`);
+  console.log(`   Completed: ${completedCount}`);
+  console.log(`   Failed: ${failedCount}`);
 
   logger.info(
     `📊 Queue status: waiting=${waitingCount}, active=${activeCount}, completed=${completedCount}, failed=${failedCount}`,
@@ -171,6 +183,9 @@ export async function waitForPipelineCompletion(
   const startTime = Date.now();
   const errors: string[] = [];
 
+  console.log(
+    `\n⏳ Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s)`,
+  );
   logger.info(
     `⏳ Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s)`,
   );
@@ -182,8 +197,10 @@ export async function waitForPipelineCompletion(
   let consecutiveEmptyChecks = 0;
   const REQUIRED_EMPTY_CHECKS = 5; // Require 5 consecutive empty checks to confirm completion
   let hasSeenArticlesInQueue = false; // Track if we've ever seen articles in queue
+  let checkCount = 0;
 
   while (Date.now() - startTime < timeoutMs) {
+    checkCount++;
     const progress = await monitorPipelineProgress(agentLogId);
 
     // Track if we've seen any articles in queue
@@ -191,9 +208,15 @@ export async function waitForPipelineCompletion(
       hasSeenArticlesInQueue = true;
     }
 
-    // Log detailed progress
-    logger.info(
-      `📊 Queue status: stage=${progress.stage}, inQueue=${progress.articlesInQueue}, completed=${progress.completed}, failed=${progress.failed}, hasSeenArticles=${hasSeenArticlesInQueue}`,
+    // Log detailed progress every check
+    console.log(`\n📊 [Check #${checkCount}] Pipeline Progress:`);
+    console.log(`   Stage: ${progress.stage}`);
+    console.log(`   In Queue: ${progress.articlesInQueue}`);
+    console.log(`   Completed: ${progress.completed}`);
+    console.log(`   Failed: ${progress.failed}`);
+    console.log(`   Has Seen Articles: ${hasSeenArticlesInQueue}`);
+    console.log(
+      `   Empty Checks: ${consecutiveEmptyChecks}/${REQUIRED_EMPTY_CHECKS}`,
     );
 
     // Check if all queues are empty (pipeline completed)

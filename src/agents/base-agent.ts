@@ -76,6 +76,15 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
       this.config.queueName,
       async (job) => {
         const startTime = Date.now();
+        console.log(
+          `\n🤖 [${this.config.name}] ========== PROCESSING JOB ==========`,
+        );
+        console.log(`   Job ID: ${job.id}`);
+        console.log(`   Job Name: ${job.name}`);
+        console.log(`   Queue: ${this.config.queueName}`);
+        console.log(
+          `   Data items: ${Array.isArray(job.data) ? job.data.length : 1}`,
+        );
         this.logger.info(`Processing job ${job.id}`);
 
         try {
@@ -204,18 +213,26 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
     if (!this.worker) return;
 
     this.worker.on("ready", () => {
+      console.log(
+        `🟢 [${this.config.name}] Worker READY - listening for jobs on queue: ${this.config.queueName}`,
+      );
       this.logger.info("Worker ready");
     });
 
     this.worker.on("active", (job) => {
+      console.log(
+        `🔄 [${this.config.name}] Job ${job.id} ACTIVE - processing...`,
+      );
       this.logger.info(`Job ${job.id} active`);
     });
 
     this.worker.on("completed", (job) => {
+      console.log(`✅ [${this.config.name}] Job ${job.id} COMPLETED`);
       this.logger.success(`Job ${job.id} completed`);
     });
 
     this.worker.on("failed", (job, error) => {
+      console.log(`❌ [${this.config.name}] Job ${job?.id} FAILED: ${error}`);
       this.logger.error(`Job ${job?.id} failed:`, this.serializeError(error));
     });
 
