@@ -33,6 +33,11 @@ yarn-error.log*
 firebase-admin-key.json
 *firebase-adminsdk*.json
 
+# Google Service Account Keys
+aihaberleri-46042-861df20fa232.json
+*-gserviceaccount-*.json
+service_account_file.json
+
 # Vercel
 .vercel
 
@@ -61,3 +66,4 @@ logs
 # Backups
 *.backup
 *.bak
+.aihaberleri-46042-861df20fa232.json
