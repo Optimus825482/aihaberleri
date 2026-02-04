@@ -11,15 +11,28 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Tags,
   Plus,
   Edit,
   Trash2,
   FileText,
-  ArrowUp,
-  ArrowDown,
+  Eye,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
+import Link from "next/link";
+import { formatDistanceToNow } from "date-fns";
+import { tr } from "date-fns/locale";
 
 interface Category {
   id: string;
@@ -34,9 +47,26 @@ interface Category {
   };
 }
 
+interface Article {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  publishedAt: string | null;
+  createdAt: string;
+  views: number;
+  category: {
+    name: string;
+    slug: string;
+  };
+}
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<string>("");
+  const [categoryArticles, setCategoryArticles] = useState<Article[]>([]);
+  const [articlesLoading, setArticlesLoading] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -50,6 +80,12 @@ export default function CategoriesPage() {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    if (activeTab) {
+      fetchCategoryArticles(activeTab);
+    }
+  }, [activeTab]);
+
   const fetchCategories = async () => {
     try {
       setLoading(true);
@@ -58,11 +94,32 @@ export default function CategoriesPage() {
 
       if (result.success) {
         setCategories(result.data);
+        if (result.data.length > 0 && !activeTab) {
+          setActiveTab(result.data[0].slug);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCategoryArticles = async (slug: string) => {
+    try {
+      setArticlesLoading(true);
+      const response = await fetch(
+        `/api/admin/articles?category=${slug}&sortBy=publishedAt&sortOrder=desc&limit=50`
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setCategoryArticles(result.data.articles || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch category articles:", error);
+    } finally {
+      setArticlesLoading(false);
     }
   };
 
@@ -136,18 +193,8 @@ export default function CategoriesPage() {
 
   const generateSlug = (name: string) => {
     const turkishMap: Record<string, string> = {
-      ç: "c",
-      ğ: "g",
-      ı: "i",
-      ö: "o",
-      ş: "s",
-      ü: "u",
-      Ç: "c",
-      Ğ: "g",
-      İ: "i",
-      Ö: "o",
-      Ş: "s",
-      Ü: "u",
+      ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u",
+      Ç: "c", Ğ: "g", İ: "i", Ö: "o", Ş: "s", Ü: "u",
     };
 
     return name
@@ -182,7 +229,7 @@ export default function CategoriesPage() {
               Haber <span className="text-primary italic">Kategorileri</span>
             </h1>
             <p className="text-muted-foreground">
-              Kategori yönetimi ve düzenleme
+              Kategori yönetimi ve haber listesi
             </p>
           </div>
           <Button onClick={() => setShowForm(!showForm)} className="font-bold">
@@ -193,7 +240,7 @@ export default function CategoriesPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="bg-card/40 border-primary/10">
+          <Card className="bg-card/40 border-blue-500/20">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -205,7 +252,7 @@ export default function CategoriesPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card/40 border-primary/10">
+          <Card className="bg-card/40 border-green-500/20">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -219,7 +266,7 @@ export default function CategoriesPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card/40 border-primary/10">
+          <Card className="bg-card/40 border-purple-500/20">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
@@ -230,10 +277,8 @@ export default function CategoriesPage() {
               <div className="text-2xl font-black">
                 {categories.length > 0
                   ? Math.round(
-                    categories.reduce(
-                      (sum, cat) => sum + cat._count.articles,
-                      0,
-                    ) / categories.length,
+                    categories.reduce((sum, cat) => sum + cat._count.articles, 0) /
+                    categories.length
                   )
                   : 0}
               </div>
@@ -344,65 +389,171 @@ export default function CategoriesPage() {
           </Card>
         )}
 
-        {/* Categories List */}
+        {/* Category Tabs with Articles */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-black">Kategoriler</CardTitle>
-            <CardDescription>
-              {categories.length} kategori bulundu
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {categories.map((category) => (
-                <div
-                  key={category.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:border-primary/50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="font-bold">{category.name}</h3>
-                      <Badge variant="outline" className="text-xs">
-                        /{category.slug}
-                      </Badge>
-                      <Badge className="text-xs">
-                        {category._count.articles} haber
-                      </Badge>
-                    </div>
-                    {category.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {category.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => editCategory(category)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => deleteCategory(category.id)}
-                      disabled={category._count.articles > 0}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-
-              {categories.length === 0 && (
-                <div className="text-center py-12">
-                  <Tags className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                  <p className="text-muted-foreground">Kategori bulunamadı</p>
-                </div>
-              )}
+          <CardHeader className="pb-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-black">Kategori Haberleri</CardTitle>
+                <CardDescription>
+                  Kategoriye tıklayarak haberleri görüntüleyin
+                </CardDescription>
+              </div>
             </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {categories.length > 0 ? (
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
+                  {categories.map((category) => (
+                    <TabsTrigger
+                      key={category.slug}
+                      value={category.slug}
+                      className="relative data-[state=active]:bg-primary data-[state=active]:text-white font-medium text-sm px-4 py-2"
+                    >
+                      {category.name}
+                      <Badge
+                        variant="secondary"
+                        className="ml-2 h-5 px-1.5 text-xs data-[state=active]:bg-white/20"
+                      >
+                        {category._count.articles}
+                      </Badge>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                {categories.map((category) => (
+                  <TabsContent key={category.slug} value={category.slug} className="mt-4">
+                    {/* Category Info & Actions */}
+                    <div className="flex items-center justify-between mb-4 p-3 rounded-lg bg-muted/30">
+                      <div>
+                        <h3 className="font-bold text-lg">{category.name}</h3>
+                        {category.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {category.description}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => editCategory(category)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Düzenle
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteCategory(category.id)}
+                          disabled={category._count.articles > 0}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Articles Table */}
+                    {articlesLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : categoryArticles.length > 0 ? (
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/50">
+                              <TableHead className="font-bold">Başlık</TableHead>
+                              <TableHead className="font-bold w-[100px]">Durum</TableHead>
+                              <TableHead className="font-bold w-[100px]">Okuma</TableHead>
+                              <TableHead className="font-bold w-[150px]">Tarih</TableHead>
+                              <TableHead className="font-bold w-[80px]">İşlem</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {categoryArticles.map((article) => (
+                              <TableRow key={article.id} className="hover:bg-muted/30">
+                                <TableCell>
+                                  <div className="max-w-md">
+                                    <p className="font-medium line-clamp-1">{article.title}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      /{article.slug}
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge
+                                    variant={
+                                      article.status === "PUBLISHED"
+                                        ? "default"
+                                        : "secondary"
+                                    }
+                                    className="text-xs"
+                                  >
+                                    {article.status === "PUBLISHED" ? "Yayında" : "Taslak"}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1">
+                                    <Eye className="h-3 w-3 text-muted-foreground" />
+                                    <span className="text-sm font-medium">
+                                      {article.views?.toLocaleString("tr-TR") || 0}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-sm text-muted-foreground">
+                                    {article.publishedAt
+                                      ? formatDistanceToNow(new Date(article.publishedAt), {
+                                        addSuffix: true,
+                                        locale: tr,
+                                      })
+                                      : formatDistanceToNow(new Date(article.createdAt), {
+                                        addSuffix: true,
+                                        locale: tr,
+                                      })}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1">
+                                    <Link href={`/admin/articles/${article.id}`}>
+                                      <Button variant="ghost" size="sm">
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    </Link>
+                                    <Link
+                                      href={`/haberler/${article.slug}`}
+                                      target="_blank"
+                                    >
+                                      <Button variant="ghost" size="sm">
+                                        <ExternalLink className="h-4 w-4" />
+                                      </Button>
+                                    </Link>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 border rounded-lg">
+                        <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                        <p className="text-muted-foreground">
+                          Bu kategoride henüz haber yok
+                        </p>
+                      </div>
+                    )}
+                  </TabsContent>
+                ))}
+              </Tabs>
+            ) : (
+              <div className="text-center py-12">
+                <Tags className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-muted-foreground">Kategori bulunamadı</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

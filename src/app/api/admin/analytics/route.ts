@@ -40,6 +40,21 @@ export async function GET() {
       LIMIT 10
     `;
 
+    // Top Categories by total visits
+    const topCategories = await db.$queryRaw`
+      SELECT 
+        c.id,
+        c.name,
+        c.slug,
+        COUNT(aa.id) as visits
+      FROM "Category" c
+      JOIN "Article" a ON a."categoryId" = c.id
+      JOIN "ArticleAnalytics" aa ON a.id = aa."articleId"
+      GROUP BY c.id, c.name, c.slug
+      ORDER BY visits DESC
+      LIMIT 10
+    `;
+
     // 3. Recent Visits
     const recentVisits = await db.articleAnalytics.findMany({
       take: 20,
@@ -159,6 +174,11 @@ export async function GET() {
         },
         topArticles: JSON.parse(
           JSON.stringify(topArticles, (key, value) =>
+            typeof value === "bigint" ? value.toString() : value,
+          ),
+        ),
+        topCategories: JSON.parse(
+          JSON.stringify(topCategories, (key, value) =>
             typeof value === "bigint" ? value.toString() : value,
           ),
         ),

@@ -75,6 +75,11 @@ export async function GET(request: NextRequest) {
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
+    // Get last 24 hours for pipeline activity
+    const twentyFourHoursAgoForPipeline = new Date(
+      Date.now() - 24 * 60 * 60 * 1000,
+    );
+
     // Parallel queries for better performance
     const [
       totalArticles,
@@ -82,9 +87,12 @@ export async function GET(request: NextRequest) {
       todayArticles,
       publishedArticles,
       draftArticles,
+      todayViews,
       categoryStats,
       recentArticles,
       last7DaysArticles,
+      last24HoursArticles,
+      last24HoursAnalytics,
     ] = await Promise.all([
       // Total articles
       db.article.count(),
@@ -117,6 +125,16 @@ export async function GET(request: NextRequest) {
       db.article.count({
         where: {
           status: "DRAFT",
+        },
+      }),
+
+      // Today's views (analytics count for today)
+      db.articleAnalytics.count({
+        where: {
+          createdAt: {
+            gte: today,
+            lt: tomorrow,
+          },
         },
       }),
 
@@ -175,6 +193,31 @@ export async function GET(request: NextRequest) {
         where: {
           createdAt: {
             gte: sevenDaysAgo,
+          },
+        },
+        select: {
+          createdAt: true,
+        },
+      }),
+
+      // Last 24 hours articles for pipeline activity
+      db.article.findMany({
+        where: {
+          createdAt: {
+            gte: twentyFourHoursAgoForPipeline,
+          },
+        },
+        select: {
+          createdAt: true,
+          views: true,
+        },
+      }),
+
+      // Last 24 hours analytics for pipeline activity
+      db.articleAnalytics.findMany({
+        where: {
+          createdAt: {
+            gte: twentyFourHoursAgoForPipeline,
           },
         },
         select: {
@@ -377,6 +420,37 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Process pipeline activity data (hourly breakdown for last 24 hours)
+    const pipelineActivityData = [];
+    const nowMs = Date.now();
+    for (let i = 23; i >= 0; i--) {
+      const hourStart = new Date(nowMs - (i + 1) * 60 * 60 * 1000);
+      const hourEnd = new Date(nowMs - i * 60 * 60 * 1000);
+
+      const articlesInHour = last24HoursArticles.filter((article: any) => {
+        const articleTime = new Date(article.createdAt).getTime();
+        return (
+          articleTime >= hourStart.getTime() && articleTime < hourEnd.getTime()
+        );
+      });
+
+      const viewsInHour = last24HoursAnalytics.filter((analytics: any) => {
+        const analyticsTime = new Date(analytics.createdAt).getTime();
+        return (
+          analyticsTime >= hourStart.getTime() &&
+          analyticsTime < hourEnd.getTime()
+        );
+      }).length;
+
+      pipelineActivityData.push({
+        time: hourEnd.toLocaleTimeString("tr-TR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        articles: articlesInHour.length,
+        views: viewsInHour,
+      });
+    }
     // Category distribution for pie chart
     const categoryDistribution = categoryStatsWithViews.map(
       (cat: { name: string; articleCount: number }) => ({
@@ -397,6 +471,7 @@ export async function GET(request: NextRequest) {
           totalArticles,
           totalViews: totalViews._sum.views || 0,
           todayArticles,
+          todayViews: todayViews || 0,
           publishedArticles,
           draftArticles,
           activeVisitors: uniqueVisitorsInRange,
@@ -408,6 +483,8 @@ export async function GET(request: NextRequest) {
           categoryDistribution,
           realtimeVisitors: realtimeData,
           countryDistribution,
+          // Pipeline activity data (last 24 hours - hourly breakdown)
+          pipelineActivity: pipelineActivityData,
         },
       },
     };
