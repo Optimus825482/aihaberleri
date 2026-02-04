@@ -246,12 +246,14 @@ export class DuplicateDetectorAgent extends BaseAgent<
         existingEntities.includes(e),
       );
 
-      // 2+ common entities = likely same story
+      // DISABLED: Entity matching is too aggressive
+      // Smart filtering already does topic-based duplicate detection
+      // Only log for debugging, don't reject
       if (commonEntities.length >= 2) {
-        return {
-          isDuplicate: true,
-          reason: `ENTITY_MATCH_${commonEntities.join("+")}`,
-        };
+        this.logger.warn(
+          `⚠️ Entity overlap (not rejecting): ${commonEntities.join("+")} - "${title.substring(0, 50)}..."`,
+        );
+        // Previously: return { isDuplicate: true, reason: `ENTITY_MATCH_${commonEntities.join("+")}` };
       }
     }
 
