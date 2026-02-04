@@ -51,26 +51,51 @@ async function initializeMultiAgentPipeline(): Promise<void> {
 
   try {
     // Initialize queue manager first
+    console.log("   📦 Initializing queue manager...");
     await initializeQueues();
+    console.log("   ✅ Queue manager initialized");
 
     // Create and start all agents
+    console.log("   🔧 Creating agent instances...");
     relevanceFilter = new RelevanceFilterAgent();
     duplicateDetector = new DuplicateDetectorAgent();
     contentEnricher = new ContentEnricherAgent();
     visualGenerator = new VisualGeneratorAgent();
     databasePublisher = new DatabasePublisherAgent();
+    console.log("   ✅ Agent instances created");
 
+    console.log("   🚀 Starting all agents...");
     await Promise.all([
-      relevanceFilter.start(),
-      duplicateDetector.start(),
-      contentEnricher.start(),
-      visualGenerator.start(),
-      databasePublisher.start(),
+      relevanceFilter
+        .start()
+        .then(() => console.log("   ✅ RelevanceFilter started")),
+      duplicateDetector
+        .start()
+        .then(() => console.log("   ✅ DuplicateDetector started")),
+      contentEnricher
+        .start()
+        .then(() => console.log("   ✅ ContentEnricher started")),
+      visualGenerator
+        .start()
+        .then(() => console.log("   ✅ VisualGenerator started")),
+      databasePublisher
+        .start()
+        .then(() => console.log("   ✅ DatabasePublisher started")),
     ]);
 
     console.log("✅ Multi-agent pipeline (5 agents) started successfully");
   } catch (error) {
-    console.error("❌ Failed to initialize multi-agent pipeline:", error);
+    console.error("❌ Failed to initialize multi-agent pipeline:");
+    console.error(
+      "   Error:",
+      error instanceof Error ? error.message : String(error),
+    );
+    if (error instanceof Error && error.stack) {
+      console.error(
+        "   Stack:",
+        error.stack.split("\n").slice(0, 5).join("\n"),
+      );
+    }
     throw error;
   }
 }
@@ -227,14 +252,24 @@ async function startWorker() {
 
   // Initialize multi-agent pipeline agents BEFORE creating worker
   // CRITICAL: Must await to ensure agents are ready before processing jobs
+  let pipelineReady = false;
   try {
     await initializeMultiAgentPipeline();
     console.log("✅ Multi-agent pipeline ready");
+    pipelineReady = true;
   } catch (error) {
-    console.error("❌ Multi-agent pipeline initialization failed:", error);
+    console.error("❌ Multi-agent pipeline initialization failed:");
+    console.error("   Error:", error instanceof Error ? error.message : error);
+    console.error("   Stack:", error instanceof Error ? error.stack : "N/A");
     console.error("⚠️ Pipeline agents will not process articles!");
+    console.error("⚠️ Articles will be added to queue but NOT processed!");
     // Don't exit - main worker can still run for other tasks
   }
+
+  // Log pipeline status
+  console.log(
+    `\n📊 Pipeline Status: ${pipelineReady ? "✅ READY" : "❌ NOT READY"}`,
+  );
 
   // Create worker
   const worker = new Worker(

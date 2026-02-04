@@ -57,6 +57,27 @@ export async function startMultiAgentPipeline(
     priority: 1,
   });
 
+  // Verify job was added
+  const waitingCount = await relevanceQueue.getWaitingCount();
+  const activeCount = await relevanceQueue.getActiveCount();
+  const jobs = await relevanceQueue.getJobs(["waiting", "active", "delayed"]);
+
+  logger.info(
+    `📊 Queue status after add: waiting=${waitingCount}, active=${activeCount}, totalJobs=${jobs.length}`,
+  );
+
+  if (waitingCount === 0 && activeCount === 0) {
+    logger.error(
+      `❌ CRITICAL: Job was added but queue appears empty! Agents may not be initialized.`,
+    );
+    logger.error(`   This usually means the agent workers are not running.`);
+    logger.error(`   Check if initializeMultiAgentPipeline() succeeded.`);
+  } else if (waitingCount > 0 && activeCount === 0) {
+    logger.warn(
+      `⚠️ Job is waiting but no active workers - agents may not have started`,
+    );
+  }
+
   logger.success(
     `✅ ${articles.length} articles added to multi-agent pipeline`,
   );
@@ -147,19 +168,36 @@ export async function waitForPipelineCompletion(
     `⏳ Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s)`,
   );
 
-  // CRITICAL: Wait for agents to pick up jobs before first check
+  // CRITICAL: Wait longer for agents to pick up jobs before first check
   // This prevents false "completed" detection when queues haven't been processed yet
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   let consecutiveEmptyChecks = 0;
-  const REQUIRED_EMPTY_CHECKS = 3; // Require 3 consecutive empty checks to confirm completion
+  const REQUIRED_EMPTY_CHECKS = 5; // Require 5 consecutive empty checks to confirm completion
+  let hasSeenArticlesInQueue = false; // Track if we've ever seen articles in queue
 
   while (Date.now() - startTime < timeoutMs) {
     const progress = await monitorPipelineProgress(agentLogId);
 
+    // Track if we've seen any articles in queue
+    if (progress.articlesInQueue > 0 || progress.completed > 0) {
+      hasSeenArticlesInQueue = true;
+    }
+
+    // Log detailed progress
+    logger.info(
+      `📊 Queue status: stage=${progress.stage}, inQueue=${progress.articlesInQueue}, completed=${progress.completed}, failed=${progress.failed}, hasSeenArticles=${hasSeenArticlesInQueue}`,
+    );
+
     // Check if all queues are empty (pipeline completed)
     // Require multiple consecutive empty checks to avoid race conditions
     if (progress.articlesInQueue === 0 && progress.stage === "unknown") {
+      // If we've never seen articles in queue, agents might not be running
+      if (!hasSeenArticlesInQueue && consecutiveEmptyChecks < 6) {
+        logger.warn(
+          `⚠️ Queue appears empty but never saw articles - agents may not be running! (check ${consecutiveEmptyChecks + 1}/6)`,
+        );
+      }
       consecutiveEmptyChecks++;
 
       if (consecutiveEmptyChecks >= REQUIRED_EMPTY_CHECKS) {
