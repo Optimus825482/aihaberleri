@@ -222,10 +222,7 @@ export async function findSimilarArticles(
     return results;
   } catch (error) {
     // If pgvector not available, fall back to title-based search
-    console.warn(
-      "[Embeddings] pgvector query failed, using fallback:",
-      error,
-    );
+    console.warn("[Embeddings] pgvector query failed, using fallback:", error);
     return [];
   }
 }
@@ -418,4 +415,7 @@ export async function preloadModel(): Promise<void> {
 }
 
 // Export constants
-export { HASH_DIMENSIONS as EMBEDDING_DIMENSIONS, DEFAULT_SIMILARITY_THRESHOLD };
+export {
+  HASH_DIMENSIONS as EMBEDDING_DIMENSIONS,
+  DEFAULT_SIMILARITY_THRESHOLD,
+};
