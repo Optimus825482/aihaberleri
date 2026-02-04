@@ -181,6 +181,7 @@ export function titleSimilarity(title1: string, title2: string): number {
 
 /**
  * Find similar articles using hash-based similarity
+ * NOTE: pgvector not available, using JSONB-based fallback
  *
  * @param embedding - Query embedding vector
  * @param threshold - Minimum similarity threshold (default: 0.85)
@@ -202,27 +203,47 @@ export async function findSimilarArticles(
 
   const cutoffDate = new Date(Date.now() - hoursWindow * 60 * 60 * 1000);
 
-  // Use raw SQL for pgvector similarity search
-  const vectorString = `[${embedding.join(",")}]`;
-
   try {
-    const results = await db.$queryRaw<(Article & { similarity: number })[]>`
-      SELECT 
-        a.*,
-        1 - (a.embedding <=> ${vectorString}::vector) as similarity
-      FROM "Article" a
-      WHERE 
-        a.embedding IS NOT NULL
-        AND a."publishedAt" >= ${cutoffDate}
-        AND 1 - (a.embedding <=> ${vectorString}::vector) >= ${threshold}
-      ORDER BY a.embedding <=> ${vectorString}::vector
-      LIMIT ${limit}
-    `;
+    // Fetch recent articles with embeddings stored as JSONB
+    const articles = await db.article.findMany({
+      where: {
+        publishedAt: { gte: cutoffDate },
+        embedding: { not: null },
+      },
+      take: 500, // Limit to prevent memory issues
+    });
 
-    return results;
+    // Calculate similarity in memory (no pgvector)
+    const results: (Article & { similarity: number })[] = [];
+
+    for (const article of articles) {
+      if (!article.embedding) continue;
+
+      // Parse embedding from JSONB
+      let storedEmbedding: number[];
+      try {
+        storedEmbedding =
+          typeof article.embedding === "string"
+            ? JSON.parse(article.embedding)
+            : (article.embedding as number[]);
+      } catch {
+        continue;
+      }
+
+      if (!Array.isArray(storedEmbedding)) continue;
+
+      // Calculate cosine similarity
+      const similarity = cosineSimilarity(embedding, storedEmbedding);
+
+      if (similarity >= threshold) {
+        results.push({ ...article, similarity });
+      }
+    }
+
+    // Sort by similarity descending and limit
+    return results.sort((a, b) => b.similarity - a.similarity).slice(0, limit);
   } catch (error) {
-    // If pgvector not available, fall back to title-based search
-    console.warn("[Embeddings] pgvector query failed, using fallback:", error);
+    console.warn("[Embeddings] Similarity search failed:", error);
     return [];
   }
 }
@@ -306,7 +327,7 @@ export async function checkSemanticDuplicate(
 }
 
 /**
- * Generate and store embedding for an article
+ * Generate and store embedding for an article (as JSONB)
  *
  * @param articleId - Article ID
  * @param title - Article title
@@ -321,13 +342,13 @@ export async function storeArticleEmbedding(
     const combinedText = `${title}. ${excerpt || ""}`.trim();
     const embedding = await generateEmbedding(combinedText);
 
-    const vectorString = `[${embedding.join(",")}]`;
-
-    await db.$executeRaw`
-      UPDATE "Article"
-      SET embedding = ${vectorString}::vector
-      WHERE id = ${articleId}
-    `;
+    // Store as JSONB (no pgvector needed)
+    await db.article.update({
+      where: { id: articleId },
+      data: {
+        embedding: embedding as any, // Prisma will serialize to JSONB
+      },
+    });
 
     console.log(`[Embeddings] Stored embedding for article: ${articleId}`);
   } catch (error) {
