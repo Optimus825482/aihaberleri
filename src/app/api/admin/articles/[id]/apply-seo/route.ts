@@ -63,12 +63,11 @@ export async function POST(
     if (updatedArticle) {
       const analysis = await analyzer.analyze({
         title: updatedArticle.title,
-        content: updatedArticle.content,
-        excerpt: updatedArticle.excerpt,
-        metaTitle: updatedArticle.metaTitle,
-        metaDescription: updatedArticle.metaDescription,
-        keywords: updatedArticle.keywords,
+        content: updatedArticle.content || "",
+        metaDescription: updatedArticle.metaDescription || undefined,
         slug: updatedArticle.slug,
+        keywords: updatedArticle.keywords || undefined,
+        imageUrl: updatedArticle.imageUrl || undefined,
       });
 
       await db.article.update({
