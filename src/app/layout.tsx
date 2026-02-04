@@ -23,7 +23,12 @@ import "@/lib/init-scheduler";
 // Initialize cron jobs (visitor cleanup, etc.)
 import "@/lib/init-cron";
 
-const inter = Inter({ subsets: ["latin"], display: "swap" });
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
+});
 
 export const viewport: Viewport = {
   themeColor: "#2563eb",
@@ -72,6 +77,7 @@ export const metadata: Metadata = {
     title: "AI Haberleri",
   },
   verification: {
+    google: "6b655ec4-34d5-46c5-9331-0783527dca7b", // Google Search Console
     yandex: "43b39db24fc89b78",
   },
   other: {
@@ -124,7 +130,11 @@ export default function RootLayout({
       <head>
         {/* Preconnect for LCP/FCP optimization */}
         <link rel="preconnect" href="https://images.aihaberleri.org" />
-        <link rel="preconnect" href="https://image.pollinations.ai" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://image.pollinations.ai"
+          crossOrigin="anonymous"
+        />
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (

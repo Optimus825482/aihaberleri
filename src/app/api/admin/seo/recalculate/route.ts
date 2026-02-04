@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { z } from "zod";
 import { analyzeArticleSEO, saveSEORecommendations } from "@/lib/seo-analyzer";
 
@@ -38,9 +38,9 @@ export async function POST(request: NextRequest) {
 
   try {
     // Authentication check
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     // Parse and validate body
@@ -208,9 +208,9 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Authentication check
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     // Get total articles and their SEO status

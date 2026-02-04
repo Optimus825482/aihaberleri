@@ -1,8 +1,6 @@
 /**
  * Next.js Middleware
- * Applies security headers to all responses
- * Skill: api-patterns → Security headers
- * Skill: vulnerability-scanner → OWASP A02 Security Misconfiguration
+ * Applies security headers and admin page authentication
  */
 
 import { NextResponse } from "next/server";
@@ -11,8 +9,49 @@ import {
   addSecurityHeaders,
   addApiSecurityHeaders,
 } from "./middleware/security-headers";
+import { jwtVerify } from "jose";
 
-export default function middleware(request: NextRequest) {
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
+);
+
+export default async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Skip middleware for:
+  // - Login page
+  // - Auth API routes (NextAuth handles its own security)
+  // - Public API routes
+  // - Static files
+  const isPublicRoute =
+    pathname === "/admin/login" ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api/auth/") || // NextAuth routes
+    pathname.startsWith("/api/public/"); // Public API routes
+
+  // Only check auth for admin PAGES (not API routes)
+  // Admin API routes handle their own auth via auth() function
+  if (
+    pathname.startsWith("/admin") &&
+    !isPublicRoute &&
+    !pathname.startsWith("/admin/api")
+  ) {
+    const token = request.cookies.get("admin-session")?.value;
+
+    if (!token) {
+      console.log("[MIDDLEWARE] No token, redirecting to login");
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+
+    try {
+      await jwtVerify(token, JWT_SECRET);
+      console.log("[MIDDLEWARE] Token valid, allowing access to:", pathname);
+    } catch (error) {
+      console.log("[MIDDLEWARE] Invalid token, redirecting to login");
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+  }
+
   // Create response
   const response = NextResponse.next();
 
@@ -20,14 +59,13 @@ export default function middleware(request: NextRequest) {
   const secureResponse = addSecurityHeaders(request, response);
 
   // Add additional API security headers for API routes
-  if (request.nextUrl.pathname.startsWith("/api/")) {
+  if (pathname.startsWith("/api/")) {
     return addApiSecurityHeaders(secureResponse);
   }
 
   return secureResponse;
 }
 
-// Apply middleware to all routes
 export const config = {
   matcher: [
     /*
@@ -35,7 +73,9 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - sw.js (service worker)
+     * - manifest.json (PWA manifest)
      */
-    "/((?!_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json).*)",
   ],
 };

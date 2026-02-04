@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
@@ -55,11 +55,11 @@ export default function EditArticlePage({
   params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const { id } = use(params); // Unwrap the Promise using React's use() hook
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [article, setArticle] = useState<Article | null>(null);
-  const [articleId, setArticleId] = useState<string>("");
   const [showOptimizeModal, setShowOptimizeModal] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -75,11 +75,8 @@ export default function EditArticlePage({
   });
 
   useEffect(() => {
-    params.then((p) => {
-      setArticleId(p.id);
-      fetchData(p.id);
-    });
-  }, []);
+    fetchData(id);
+  }, [id]);
 
   const fetchData = async (id: string) => {
     try {
@@ -121,7 +118,7 @@ export default function EditArticlePage({
     setSaving(true);
 
     try {
-      const response = await fetch(`/api/articles/${articleId}`, {
+      const response = await fetch(`/api/articles/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -408,7 +405,7 @@ export default function EditArticlePage({
               </CardHeader>
               <CardContent>
                 <SEOPanel
-                  articleId={articleId}
+                  articleId={id}
                   initialScore={article.seoScore}
                   initialRecommendations={[]}
                 />
@@ -468,11 +465,11 @@ export default function EditArticlePage({
         <SEOOptimizationModal
           open={showOptimizeModal}
           onOpenChange={setShowOptimizeModal}
-          articleId={articleId}
+          articleId={id}
           articleTitle={article.title}
           onSuccess={() => {
             // Refresh article data
-            fetchData(articleId);
+            fetchData(id);
           }}
         />
       </div>

@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import {
   getSchedulerSettings,
   setBreakingNewsMode,
@@ -21,9 +21,9 @@ import {
  */
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     const settings = await getSchedulerSettings();
@@ -52,9 +52,9 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     const body = await request.json();

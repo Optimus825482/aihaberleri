@@ -8,6 +8,7 @@ import { authConfig } from "./auth.config";
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(db) as any,
+  debug: process.env.NODE_ENV === "development", // Enable debug logs
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -16,7 +17,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
+        console.log("[AUTH] Authorize called with:", {
+          email: credentials?.email,
+          hasPassword: !!credentials?.password,
+        });
+
         if (!credentials?.email || !credentials?.password) {
+          console.error("[AUTH] Missing credentials");
           throw new Error("Geçersiz kimlik bilgileri");
         }
 
@@ -24,7 +31,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           where: { email: credentials.email as string },
         });
 
+        console.log("[AUTH] User found:", {
+          exists: !!user,
+          hasPassword: !!user?.password,
+          email: user?.email,
+        });
+
         if (!user || !user.password) {
+          console.error("[AUTH] User not found or no password");
           throw new Error("Geçersiz kimlik bilgileri");
         }
 
@@ -33,9 +47,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.password,
         );
 
+        console.log("[AUTH] Password valid:", isPasswordValid);
+
         if (!isPasswordValid) {
+          console.error("[AUTH] Invalid password");
           throw new Error("Geçersiz kimlik bilgileri");
         }
+
+        console.log("[AUTH] Login successful for:", user.email);
 
         return {
           id: user.id,
@@ -47,4 +66,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
 });
-

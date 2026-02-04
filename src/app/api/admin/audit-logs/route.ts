@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { getRecentAuditLogs, getAuditStats } from "@/lib/audit";
 
 /**
@@ -8,10 +8,9 @@ import { getRecentAuditLogs, getAuditStats } from "@/lib/audit";
  */
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     // Only SUPER_ADMIN and ADMIN can view audit logs

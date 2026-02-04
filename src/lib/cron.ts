@@ -6,13 +6,15 @@
 import { db } from "./db";
 
 let cleanupInterval: NodeJS.Timeout | null = null;
-let isRunning = false;
+let indexingInterval: NodeJS.Timeout | null = null;
+let isCleanupRunning = false;
+let isIndexingRunning = false;
 
 /**
  * Start all cron jobs
  */
 export function startCronJobs() {
-  if (cleanupInterval) {
+  if (cleanupInterval && indexingInterval) {
     console.log("⏰ Cron jobs already running");
     return;
   }
@@ -27,9 +29,18 @@ export function startCronJobs() {
     60 * 60 * 1000,
   ); // Every 1 hour
 
+  // Aggressive indexing for pending articles every 15 minutes
+  indexingInterval = setInterval(
+    async () => {
+      await aggressiveIndexPendingArticles();
+    },
+    15 * 60 * 1000,
+  ); // Every 15 minutes
+
   // Run immediately on startup (after 30 seconds)
   setTimeout(() => {
     cleanupOldVisitors();
+    aggressiveIndexPendingArticles();
   }, 30000);
 
   console.log("✅ Cron jobs started");
@@ -42,8 +53,12 @@ export function stopCronJobs() {
   if (cleanupInterval) {
     clearInterval(cleanupInterval);
     cleanupInterval = null;
-    console.log("⏹️ Cron jobs stopped");
   }
+  if (indexingInterval) {
+    clearInterval(indexingInterval);
+    indexingInterval = null;
+  }
+  console.log("⏹️ Cron jobs stopped");
 }
 
 /**
@@ -51,12 +66,12 @@ export function stopCronJobs() {
  */
 async function cleanupOldVisitors() {
   // Prevent concurrent executions
-  if (isRunning) {
+  if (isCleanupRunning) {
     console.log("⏭️ Visitor cleanup already running, skipping...");
     return;
   }
 
-  isRunning = true;
+  isCleanupRunning = true;
 
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -75,7 +90,35 @@ async function cleanupOldVisitors() {
   } catch (error) {
     console.error("❌ Visitor cleanup error:", error);
   } finally {
-    isRunning = false;
+    isCleanupRunning = false;
+  }
+}
+
+/**
+ * Aggressive indexing for pending articles
+ * Runs every 15 minutes to ensure all articles are indexed
+ */
+async function aggressiveIndexPendingArticles() {
+  // Prevent concurrent executions
+  if (isIndexingRunning) {
+    console.log("⏭️ Aggressive indexing already running, skipping...");
+    return;
+  }
+
+  isIndexingRunning = true;
+
+  try {
+    const { indexPendingArticlesAggressively } =
+      await import("./seo/aggressive-indexing");
+    const result = await indexPendingArticlesAggressively();
+
+    if (result.count > 0) {
+      console.log(`🚀 Aggressively indexed ${result.count} pending articles`);
+    }
+  } catch (error) {
+    console.error("❌ Aggressive indexing cron error:", error);
+  } finally {
+    isIndexingRunning = false;
   }
 }
 
@@ -112,16 +155,47 @@ export async function triggerVisitorCleanup(): Promise<{
 }
 
 /**
+ * Manual aggressive indexing trigger (for API endpoint)
+ */
+export async function triggerAggressiveIndexing(): Promise<{
+  success: boolean;
+  count: number;
+  error?: string;
+}> {
+  try {
+    const { indexPendingArticlesAggressively } =
+      await import("./seo/aggressive-indexing");
+    const result = await indexPendingArticlesAggressively();
+
+    return {
+      success: result.success,
+      count: result.count,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      count: 0,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
  * Get cron job status
  */
 export function getCronStatus() {
   return {
-    running: cleanupInterval !== null,
+    running: cleanupInterval !== null && indexingInterval !== null,
     jobs: [
       {
         name: "Visitor Cleanup",
         interval: "1 hour",
         enabled: cleanupInterval !== null,
+      },
+      {
+        name: "Aggressive Indexing",
+        interval: "15 minutes",
+        enabled: indexingInterval !== null,
       },
     ],
   };

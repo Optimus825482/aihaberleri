@@ -997,13 +997,15 @@ export async function publishArticle(
       // Don't fail article creation if cache invalidation fails
     }
 
-    // Post-publish tasks: IndexNow submission
+    // Post-publish tasks: AGGRESSIVE INDEXING (IndexNow + Google + WebSub + Sitemap + Cloudflare)
     try {
-      submitArticleToIndexNow(article.slug).catch((err) =>
-        console.error("IndexNow auto-submit error:", err),
+      const { aggressivelyIndexArticle } =
+        await import("@/lib/seo/aggressive-indexing");
+      aggressivelyIndexArticle(article.slug, article.id).catch((err) =>
+        console.error("Aggressive indexing error:", err),
       );
     } catch (e) {
-      console.error("Failed to trigger IndexNow submission:", e);
+      console.error("Failed to trigger aggressive indexing:", e);
     }
 
     // Post to Twitter (Async)

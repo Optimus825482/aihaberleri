@@ -17,7 +17,7 @@ import {
 } from "@/lib/seo";
 
 interface Props {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 async function getArticle(slug: string) {
@@ -107,7 +107,8 @@ async function getRelatedArticles(categoryId: string, excludeId: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const article = await getArticle(params.slug);
+  const { slug } = await params;
+  const article = await getArticle(slug);
 
   if (!article) {
     return {
@@ -144,7 +145,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function EnglishArticlePage({ params }: Props) {
-  const article = await getArticle(params.slug);
+  const { slug } = await params;
+  const article = await getArticle(slug);
 
   if (!article) {
     notFound();
@@ -166,11 +168,11 @@ export default async function EnglishArticlePage({ params }: Props) {
     description: article.excerpt,
     image: article.imageUrl
       ? {
-        "@type": "ImageObject",
-        url: article.imageUrl,
-        width: 1200,
-        height: 630,
-      }
+          "@type": "ImageObject",
+          url: article.imageUrl,
+          width: 1200,
+          height: 630,
+        }
       : undefined,
     datePublished: article.publishedAt?.toISOString(),
     author: {
@@ -351,7 +353,11 @@ export default async function EnglishArticlePage({ params }: Props) {
                         alt={related.title}
                         fill
                         className="object-cover"
-                        unoptimized={related.imageUrl.includes('pollinations.ai') || related.imageUrl.includes('r2.dev') || related.imageUrl.includes('images.aihaberleri.org')}
+                        unoptimized={
+                          related.imageUrl.includes("pollinations.ai") ||
+                          related.imageUrl.includes("r2.dev") ||
+                          related.imageUrl.includes("images.aihaberleri.org")
+                        }
                       />
                     </div>
                   )}

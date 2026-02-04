@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
@@ -23,12 +23,9 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. Authentication check
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "Yetkisiz erişim" },
-        { status: 401 },
-      );
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
 
     // 2. Parse and validate query parameters

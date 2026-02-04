@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { getCachedGeolocation } from "@/lib/geolocation";
 
@@ -36,9 +36,9 @@ const memoryCache = {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     // Get visitors from last 5 minutes (active visitors)
@@ -180,9 +180,9 @@ export async function POST(request: NextRequest) {
 // Cleanup old visitors (called periodically by cron or manually)
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     // Use the cron service for cleanup

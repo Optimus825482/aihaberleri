@@ -1,9 +1,13 @@
 import { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
+);
 
 // Helper function to get flag emoji
 function getFlagEmoji(countryCode: string): string {
@@ -205,8 +209,16 @@ async function getRealtimeData() {
 }
 
 export async function GET(request: NextRequest) {
-  const session = await auth();
-  if (!session) {
+  // Check authentication using custom JWT
+  const token = request.cookies.get("admin-session")?.value;
+
+  if (!token) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  try {
+    await jwtVerify(token, JWT_SECRET);
+  } catch (error) {
     return new Response("Unauthorized", { status: 401 });
   }
 

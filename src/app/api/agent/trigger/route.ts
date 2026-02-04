@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { executeNewsAgent } from "@/services/agent.service";
 import { getRedis } from "@/lib/redis";

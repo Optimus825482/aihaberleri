@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,20 +23,33 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
+    console.log("[SIMPLE_LOGIN_PAGE] Attempting login for:", email);
+
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (result?.error) {
-        setError("Geçersiz e-posta veya şifre");
-      } else {
-        router.push("/admin");
-        router.refresh();
+      const data = await response.json();
+
+      console.log("[SIMPLE_LOGIN_PAGE] Response:", data);
+
+      if (!response.ok) {
+        setError(data.error || "Giriş başarısız");
+        return;
+      }
+
+      if (data.success) {
+        console.log("[SIMPLE_LOGIN_PAGE] Success! Redirecting...");
+        // Hard redirect to clear any cached state
+        window.location.href = "/admin";
       }
     } catch (error) {
+      console.error("[SIMPLE_LOGIN_PAGE] Exception:", error);
       setError("Bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setLoading(false);
@@ -95,7 +107,11 @@ export default function LoginPage() {
               </div>
             )}
 
-            <Button type="submit" className="w-full h-12 text-base touch-manipulation" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full h-12 text-base touch-manipulation"
+              disabled={loading}
+            >
               {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Button>
           </form>

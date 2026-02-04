@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 /**
  * GET /api/admin/r2-status
  * Check R2 storage configuration status
  */
 export async function GET() {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
+    }
 
   const requiredVars = [
     "R2_ENDPOINT",

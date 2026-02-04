@@ -7,6 +7,17 @@ const nextConfig = {
     return `build-${Date.now()}`;
   },
 
+  // Webpack configuration to ignore OpenTelemetry
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.ignoreWarnings = [
+        { module: /node_modules\/@opentelemetry/ },
+        { module: /node_modules\/require-in-the-middle/ },
+      ];
+    }
+    return config;
+  },
+
   // Turkish URL rewrites
   async rewrites() {
     return [
@@ -62,6 +73,8 @@ const nextConfig = {
     outputFileTracingIncludes: {
       "/": ["./node_modules/sharp/**/*"],
     },
+    // Disable instrumentation to prevent OpenTelemetry errors
+    instrumentationHook: false,
   },
   eslint: {
     // Warning: This allows production builds to successfully complete even if

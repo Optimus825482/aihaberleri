@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
 /**
@@ -8,10 +8,10 @@ import { db } from "@/lib/db";
  * Admin only
  */
 export async function POST() {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
+    }
 
   try {
     // Add missing image columns using raw SQL
@@ -63,10 +63,10 @@ export async function POST() {
  * Check if image columns exist
  */
 export async function GET() {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
+    }
 
   try {
     const result = await db.$queryRaw<Array<{ column_name: string }>>`

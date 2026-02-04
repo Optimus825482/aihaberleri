@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 import {
   getAgentStats,
   getAgentHistory,
@@ -9,12 +9,23 @@ import { getQueueStats, getUpcomingJobs } from "@/lib/queue";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
+);
+
+export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const session = await auth();
-    if (!session) {
+    // Check authentication using custom JWT
+    const token = request.cookies.get("admin-session")?.value;
+
+    if (!token) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    }
+
+    try {
+      await jwtVerify(token, JWT_SECRET);
+    } catch (error) {
+      return NextResponse.json({ error: "Geçersiz oturum" }, { status: 401 });
     }
 
     // Get stats

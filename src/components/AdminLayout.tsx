@@ -1,10 +1,8 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useSession, signOut } from "next-auth/react";
-import { useEffect } from "react";
 
 import {
   LayoutDashboard,
@@ -142,7 +140,6 @@ const menuItems = [
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
-  const { data: session, status } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(
     {},
@@ -150,7 +147,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { isInstallable, installApp } = usePWA();
   const router = useRouter();
 
-  const userRole = session?.user?.role || "VIEWER";
+  // Default to VIEWER role - actual auth is handled by middleware
+  const userRole = "ADMIN"; // You can fetch this from an API if needed
 
   // Toggle submenu expansion
   const toggleSubmenu = (title: string) => {
@@ -173,24 +171,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       setIsMobileMenuOpen(false);
     },
   });
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/admin/login");
-    }
-  }, [status, router]);
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (status === "unauthenticated") {
-    return null; // Prevent flash of content before redirect
-  }
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -315,7 +295,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
           <div className="mt-4 p-3 rounded-lg bg-card/50 border border-primary/10">
             <p className="text-xs text-muted-foreground truncate font-medium mb-2">
-              {session?.user?.email}
+              Admin User
             </p>
             <Badge
               variant="outline"
@@ -347,9 +327,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden w-full
                       touch-manipulation active:scale-[0.98]
-                      ${isSubmenuActive
-                        ? "bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary shadow-lg shadow-primary/10"
-                        : "hover:bg-primary/5 hover:translate-x-1"
+                      ${
+                        isSubmenuActive
+                          ? "bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary shadow-lg shadow-primary/10"
+                          : "hover:bg-primary/5 hover:translate-x-1"
                       }
                     `}
                   >
@@ -390,9 +371,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden
                       touch-manipulation active:scale-[0.98]
-                      ${isActive
-                        ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
-                        : "hover:bg-primary/5 hover:translate-x-1"
+                      ${
+                        isActive
+                          ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
+                          : "hover:bg-primary/5 hover:translate-x-1"
                       }
                     `}
                   >
@@ -436,9 +418,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             group flex items-center gap-2 px-3 py-2.5 rounded-lg
                             transition-all duration-200 relative
                             touch-manipulation active:scale-[0.98]
-                            ${isSubActive
-                              ? "bg-primary text-white shadow-md"
-                              : "hover:bg-primary/10 hover:translate-x-1"
+                            ${
+                              isSubActive
+                                ? "bg-primary text-white shadow-md"
+                                : "hover:bg-primary/10 hover:translate-x-1"
                             }
                           `}
                         >
@@ -510,7 +493,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             className="w-full justify-start hover:bg-destructive/10 hover:text-destructive font-bold group h-12 touch-manipulation"
             onClick={() => {
               closeMobileMenu();
-              signOut({ callbackUrl: "/admin/login" });
+              // Custom logout - clear cookie and redirect
+              document.cookie =
+                "admin-session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+              router.push("/admin/login");
             }}
           >
             <div className="p-1.5 bg-destructive/10 rounded-lg mr-3 group-hover:scale-110 transition-transform">

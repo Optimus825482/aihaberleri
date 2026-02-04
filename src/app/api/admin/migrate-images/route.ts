@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 
@@ -26,10 +26,10 @@ function checkR2Config(): { configured: boolean; missing: string[] } {
  * Migrate Pollinations.ai images to R2 storage
  */
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
+    }
 
   // Check R2 configuration BEFORE processing
   const r2Config = checkR2Config();
@@ -157,10 +157,10 @@ async function checkR2UrlExists(url: string): Promise<boolean> {
  * Get count of articles needing migration
  */
 export async function GET(request: Request) {
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
+    }
 
   const { searchParams } = new URL(request.url);
   const action = searchParams.get("action");

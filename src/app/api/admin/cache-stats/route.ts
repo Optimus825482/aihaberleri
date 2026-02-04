@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { getCache } from "@/lib/cache";
 import { redis } from "@/lib/redis";
 import logger from "@/lib/logger";
@@ -14,9 +14,9 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     // Check authentication
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     const cache = getCache();
@@ -115,9 +115,9 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     // Check authentication
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     const body = await request.json();

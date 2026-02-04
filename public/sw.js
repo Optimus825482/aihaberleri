@@ -24,6 +24,21 @@ self.addEventListener("fetch", (event) => {
 
   // Skip caching for Next.js API routes and internal resources
   const url = new URL(event.request.url);
+
+  // Skip Service Worker for external scripts (Google Ads, GTM, Analytics)
+  // Let browser handle these directly to avoid CSP violations
+  if (
+    url.hostname.includes("google") ||
+    url.hostname.includes("googletagmanager.com") ||
+    url.hostname.includes("googlesyndication.com") ||
+    url.hostname.includes("doubleclick.net") ||
+    url.hostname.includes("google-analytics.com") ||
+    url.hostname.includes("cloudflareinsights.com")
+  ) {
+    // Don't intercept, let browser handle directly
+    return;
+  }
+
   if (
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/_next/") ||

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { getNewsAgentQueue } from "@/lib/queue";
 import { getRedis } from "@/lib/redis";
 
@@ -9,9 +9,9 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   // Check authentication (skip in development)
   if (process.env.NODE_ENV === "production") {
-    const session = await auth();
-    if (!session) {
-      return new Response("Yetkisiz erişim", { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
   }
 

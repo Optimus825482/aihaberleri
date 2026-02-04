@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { hasPermission, Permission } from "@/lib/permissions";
 import {
   scheduleArticle,
@@ -15,13 +15,12 @@ export async function POST(
   { params }: { params: { id: string } },
 ) {
   try {
-    const session = await auth();
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
-    if (!hasPermission(session.user.role, Permission.EDIT_ARTICLE)) {
+    if (!hasPermission(session.role, Permission.EDIT_ARTICLE)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -73,13 +72,12 @@ export async function DELETE(
   { params }: { params: { id: string } },
 ) {
   try {
-    const session = await auth();
-
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
-    if (!hasPermission(session.user.role, Permission.EDIT_ARTICLE)) {
+    if (!hasPermission(session.role, Permission.EDIT_ARTICLE)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
