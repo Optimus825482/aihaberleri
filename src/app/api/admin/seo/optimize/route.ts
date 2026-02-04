@@ -22,8 +22,19 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { SEOOrchestratorService } from "@/services/seo-orchestrator.service";
+import { withAuth } from "@/lib/auth/middleware";
+import { UserRole } from "@prisma/client";
 
 export async function POST(request: NextRequest) {
+  // Authentication & Authorization check - EDITOR or ADMIN
+  const authResult = await withAuth(request, {
+    roles: [UserRole.EDITOR, UserRole.ADMIN],
+  });
+
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
 
@@ -106,6 +117,15 @@ export async function POST(request: NextRequest) {
  * }
  */
 export async function PUT(request: NextRequest) {
+  // Authentication & Authorization check - ADMIN only for batch operations
+  const authResult = await withAuth(request, {
+    roles: [UserRole.ADMIN],
+  });
+
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const body = await request.json();
 

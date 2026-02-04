@@ -5,7 +5,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { withAuth } from "@/lib/auth/middleware";
+import { UserRole } from "@prisma/client";
 import { z } from "zod";
 
 // Validation schemas
@@ -23,12 +24,22 @@ const deleteSchema = z.object({
  * Query params: articleId (required)
  */
 export async function GET(request: NextRequest) {
+  // Authentication & Authorization check
+  const authResult = await withAuth(request, {
+    roles: [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN],
+    skipCSRF: true, // GET request
+  });
+
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
-    // Authentication check
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
-    }
+    // Authentication check (REMOVED - now handled by withAuth)
+    // const session = await auth();
+    // if (!session) {
+    //   return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    // }
 
     // Get articleId from query params
     const { searchParams } = new URL(request.url);
@@ -108,12 +119,21 @@ export async function GET(request: NextRequest) {
  * Body: { id: string, resolved: boolean }
  */
 export async function POST(request: NextRequest) {
+  // Authentication & Authorization check - EDITOR or ADMIN only
+  const authResult = await withAuth(request, {
+    roles: [UserRole.EDITOR, UserRole.ADMIN],
+  });
+
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
-    // Authentication check
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
-    }
+    // Authentication check (REMOVED - now handled by withAuth)
+    // const session = await auth();
+    // if (!session) {
+    //   return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    // }
 
     // Parse and validate body
     const body = await request.json();
@@ -176,12 +196,21 @@ export async function POST(request: NextRequest) {
  * Body: { id: string }
  */
 export async function DELETE(request: NextRequest) {
+  // Authentication & Authorization check - EDITOR or ADMIN only
+  const authResult = await withAuth(request, {
+    roles: [UserRole.EDITOR, UserRole.ADMIN],
+  });
+
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
-    // Authentication check
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
-    }
+    // Authentication check (REMOVED - now handled by withAuth)
+    // const session = await auth();
+    // if (!session) {
+    //   return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
+    // }
 
     // Parse and validate body
     const body = await request.json();

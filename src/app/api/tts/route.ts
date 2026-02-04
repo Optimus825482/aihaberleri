@@ -7,6 +7,7 @@ import {
   getRateLimitHeaders,
   TTS_RATE_LIMIT,
 } from "@/lib/rate-limit";
+import { Errors, handleApiError } from "@/lib/errors";
 
 // ============================================
 // CACHE CONFIGURATION
@@ -49,23 +50,15 @@ export async function POST(req: NextRequest) {
 
     if (!rateLimitResult.success) {
       console.log(`[TTS POST] Rate limit exceeded for IP: ${clientIP}`);
-      return NextResponse.json(
-        {
-          error: "Too Many Requests",
-          message: `Rate limit exceeded. Try again in ${rateLimitResult.resetInSeconds} seconds.`,
-          retryAfter: rateLimitResult.resetInSeconds,
-        },
-        {
-          status: 429,
-          headers: getRateLimitHeaders(rateLimitResult, TTS_RATE_LIMIT.limit),
-        },
+      throw Errors.rateLimit(
+        `Rate limit exceeded. Try again in ${rateLimitResult.resetInSeconds} seconds.`,
       );
     }
 
     const { text, voice = "tr-TR-AhmetNeural" } = await req.json();
 
     if (!text) {
-      return NextResponse.json({ error: "Text is required" }, { status: 400 });
+      throw Errors.validation("Text is required", { field: "text" });
     }
 
     // ============================================
@@ -73,13 +66,10 @@ export async function POST(req: NextRequest) {
     // ============================================
     if (!isValidVoice(voice)) {
       console.log(`[TTS POST] Invalid voice rejected: ${voice}`);
-      return NextResponse.json(
-        {
-          error: "Invalid voice",
-          allowedVoices: getAllowedVoices(),
-        },
-        { status: 400 },
-      );
+      throw Errors.validation("Invalid voice", {
+        field: "voice",
+        allowedVoices: getAllowedVoices(),
+      });
     }
 
     // High limit for POST
@@ -156,11 +146,14 @@ export async function POST(req: NextRequest) {
         ...getRateLimitHeaders(rateLimitResult, TTS_RATE_LIMIT.limit),
       },
     });
-  } catch (error: any) {
-    console.error(`[TTS POST] Error:`, error.message || error);
-    return NextResponse.json(
-      { error: "Synthesis failed", details: error.message },
-      { status: 500 },
+  } catch (error) {
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        endpoint: "/api/tts",
+        method: "POST",
+        clientIP,
+      },
     );
   }
 }
@@ -168,80 +161,69 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const clientIP = getClientIP(req);
 
-  // ============================================
-  // RATE LIMITING CHECK
-  // ============================================
-  const rateLimitResult = await checkTTSRateLimit(clientIP);
-
-  if (!rateLimitResult.success) {
-    console.log(`[TTS GET] Rate limit exceeded for IP: ${clientIP}`);
-    return NextResponse.json(
-      {
-        error: "Too Many Requests",
-        message: `Rate limit exceeded. Try again in ${rateLimitResult.resetInSeconds} seconds.`,
-        retryAfter: rateLimitResult.resetInSeconds,
-      },
-      {
-        status: 429,
-        headers: getRateLimitHeaders(rateLimitResult, TTS_RATE_LIMIT.limit),
-      },
-    );
-  }
-
-  const searchParams = req.nextUrl.searchParams;
-  const text = searchParams.get("text");
-  const voice = searchParams.get("voice") || "tr-TR-AhmetNeural";
-
-  if (!text || text.length > 300) {
-    return NextResponse.json(
-      { error: "Please use POST for long texts" },
-      { status: 400 },
-    );
-  }
-
-  // ============================================
-  // VOICE VALIDATION
-  // ============================================
-  if (!isValidVoice(voice)) {
-    console.log(`[TTS GET] Invalid voice rejected: ${voice}`);
-    return NextResponse.json(
-      {
-        error: "Invalid voice",
-        allowedVoices: getAllowedVoices(),
-      },
-      { status: 400 },
-    );
-  }
-
-  // ============================================
-  // REDIS CACHE CHECK
-  // ============================================
-  const redis = getRedis();
-  const cacheKey = generateCacheKey(text, voice);
-
-  if (redis) {
-    try {
-      const cachedAudio = await redis.getBuffer(`${cacheKey}:audio`);
-
-      if (cachedAudio) {
-        console.log(`[TTS GET] CACHE HIT: ${cacheKey}`);
-        return new Response(cachedAudio as any, {
-          headers: {
-            "Content-Type": "audio/mpeg",
-            "Cache-Control": "public, max-age=86400",
-            "X-Cache": "HIT",
-            ...getRateLimitHeaders(rateLimitResult, TTS_RATE_LIMIT.limit),
-          },
-        });
-      }
-
-      console.log(`[TTS GET] CACHE MISS: ${cacheKey}`);
-    } catch (cacheError) {
-      console.error(`[TTS GET] Cache read error:`, cacheError);
-    }
-  }
-
   try {
+    // ============================================
+    // RATE LIMITING CHECK
+    // ============================================
+    const rateLimitResult = await checkTTSRateLimit(clientIP);
+
+    if (!rateLimitResult.success) {
+      console.log(`[TTS GET] Rate limit exceeded for IP: ${clientIP}`);
+      throw Errors.rateLimit(
+        `Rate limit exceeded. Try again in ${rateLimitResult.resetInSeconds} seconds.`,
+      );
+    }
+
+    const searchParams = req.nextUrl.searchParams;
+    const text = searchParams.get("text");
+    const voice = searchParams.get("voice") || "tr-TR-AhmetNeural";
+
+    if (!text || text.length > 300) {
+      throw Errors.validation("Please use POST for long texts", {
+        field: "text",
+        maxLength: 300,
+      });
+    }
+
+    // ============================================
+    // VOICE VALIDATION
+    // ============================================
+    if (!isValidVoice(voice)) {
+      console.log(`[TTS GET] Invalid voice rejected: ${voice}`);
+      throw Errors.validation("Invalid voice", {
+        field: "voice",
+        allowedVoices: getAllowedVoices(),
+      });
+    }
+
+    // ============================================
+    // REDIS CACHE CHECK
+    // ============================================
+    const redis = getRedis();
+    const cacheKey = generateCacheKey(text, voice);
+
+    if (redis) {
+      try {
+        const cachedAudio = await redis.getBuffer(`${cacheKey}:audio`);
+
+        if (cachedAudio) {
+          console.log(`[TTS GET] CACHE HIT: ${cacheKey}`);
+          return new Response(cachedAudio as any, {
+            headers: {
+              "Content-Type": "audio/mpeg",
+              "Cache-Control": "public, max-age=86400",
+              "X-Cache": "HIT",
+              ...getRateLimitHeaders(rateLimitResult, TTS_RATE_LIMIT.limit),
+            },
+          });
+        }
+
+        console.log(`[TTS GET] CACHE MISS: ${cacheKey}`);
+      } catch (cacheError) {
+        console.error(`[TTS GET] Cache read error:`, cacheError);
+      }
+    }
+
     const { audio } = await generateSpeech({ text, voice });
 
     // ============================================
@@ -264,8 +246,14 @@ export async function GET(req: NextRequest) {
         ...getRateLimitHeaders(rateLimitResult, TTS_RATE_LIMIT.limit),
       },
     });
-  } catch (error: any) {
-    console.error(`[TTS GET] Error:`, error.message || error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    return handleApiError(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        endpoint: "/api/tts",
+        method: "GET",
+        clientIP,
+      },
+    );
   }
 }

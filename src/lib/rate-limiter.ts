@@ -1,270 +1,231 @@
 /**
- * Rate Limiter
+ * Rate Limiter Implementation
  *
- * Rate limiting utilities using Upstash Redis
+ * Fix #14: Rate Limiting Eksik
+ * Skill: api-patterns → Rate limiting + vulnerability-scanner → A02 Security Misconfiguration
+ *
+ * Features:
+ * - Upstash Redis-based rate limiting
+ * - Endpoint-specific limits
+ * - Rate limit headers (X-RateLimit-*)
+ * - 429 Too Many Requests response
+ * - Sliding window algorithm
  */
 
-import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { NextRequest, NextResponse } from "next/server";
 
-// Redis client
-const redis = Redis.fromEnv();
+export interface RateLimitConfig {
+  maxRequests: number;
+  windowMs: number;
+}
 
-// ============================================================================
-// RATE LIMITERS
-// ============================================================================
+export interface RateLimitResult {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+  retryAfter?: number;
+}
+
+export class RateLimiter {
+  private redis: Redis;
+  private readonly prefix = "ratelimit:";
+
+  constructor() {
+    // Upstash Redis connection
+    this.redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL!,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    });
+  }
+
+  /**
+   * Check rate limit for identifier
+   *
+   * @param identifier - Unique identifier (user ID, IP, etc.)
+   * @param config - Rate limit configuration
+   * @returns Rate limit result
+   */
+  async check(
+    identifier: string,
+    config: RateLimitConfig,
+  ): Promise<RateLimitResult> {
+    const key = `${this.prefix}${identifier}`;
+    const now = Date.now();
+    const windowStart = now - config.windowMs;
+
+    try {
+      // Sliding window algorithm using Redis sorted set
+      const pipeline = this.redis.pipeline();
+
+      // Remove old entries outside the window
+      pipeline.zremrangebyscore(key, 0, windowStart);
+
+      // Count requests in current window
+      pipeline.zcard(key);
+
+      // Add current request
+      pipeline.zadd(key, { score: now, member: `${now}` });
+
+      // Set expiry
+      pipeline.expire(key, Math.ceil(config.windowMs / 1000));
+
+      const results = await pipeline.exec();
+      const count = (results[1] as number) || 0;
+
+      const allowed = count < config.maxRequests;
+      const remaining = Math.max(0, config.maxRequests - count - 1);
+      const reset = now + config.windowMs;
+
+      const result: RateLimitResult = {
+        allowed,
+        limit: config.maxRequests,
+        remaining,
+        reset,
+      };
+
+      if (!allowed) {
+        // Calculate retry-after in seconds
+        const oldestRequest = await this.redis.zrange(key, 0, 0, {
+          withScores: true,
+        });
+
+        if (oldestRequest.length > 0) {
+          const oldestTimestamp = oldestRequest[0].score;
+          const retryAfterMs = oldestTimestamp + config.windowMs - now;
+          result.retryAfter = Math.ceil(retryAfterMs / 1000);
+        }
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Rate limiter error:", error);
+
+      // Fail open - allow request if Redis is down
+      return {
+        allowed: true,
+        limit: config.maxRequests,
+        remaining: config.maxRequests - 1,
+        reset: now + config.windowMs,
+      };
+    }
+  }
+
+  /**
+   * Reset rate limit for identifier
+   *
+   * @param identifier - Unique identifier
+   */
+  async reset(identifier: string): Promise<void> {
+    const key = `${this.prefix}${identifier}`;
+    await this.redis.del(key);
+  }
+}
 
 /**
- * Global rate limiter: 100 requests per minute
- */
-export const globalRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(100, "1 m"),
-  analytics: true,
-  prefix: "ratelimit:global",
-});
-
-/**
- * Sensitive operations rate limiter: 10 requests per minute
- */
-export const sensitiveRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, "1 m"),
-  analytics: true,
-  prefix: "ratelimit:sensitive",
-});
-
-/**
- * Bulk operations rate limiter: 5 requests per minute
- */
-export const bulkRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "1 m"),
-  analytics: true,
-  prefix: "ratelimit:bulk",
-});
-
-/**
- * User creation rate limiter: 3 requests per hour
- */
-export const userCreationRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(3, "1 h"),
-  analytics: true,
-  prefix: "ratelimit:user-creation",
-});
-
-/**
- * Export operations rate limiter: 2 requests per hour
- */
-export const exportRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(2, "1 h"),
-  analytics: true,
-  prefix: "ratelimit:export",
-});
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Get client identifier from request
+ * Endpoint-specific rate limit configurations
  *
- * @param request - Next.js request
- * @returns Client identifier (IP or user ID)
+ * Based on api-patterns skill:
+ * - Read endpoints: Higher limits
+ * - Write endpoints: Lower limits
+ * - Bulk operations: Strictest limits
  */
-export function getClientIdentifier(request: NextRequest): string {
-  // Try to get user ID from session (if authenticated)
-  const userId = request.headers.get("x-user-id");
-  if (userId) return `user:${userId}`;
+export const RATE_LIMITS = {
+  // Read endpoints - 100 req/min
+  stats: {
+    maxRequests: 100,
+    windowMs: 60000,
+  },
+  dashboard: {
+    maxRequests: 100,
+    windowMs: 60000,
+  },
+  recommendations: {
+    maxRequests: 100,
+    windowMs: 60000,
+  },
 
-  // Fallback to IP address
-  const ip =
-    request.headers.get("x-forwarded-for") ||
-    request.headers.get("x-real-ip") ||
-    "unknown";
+  // Write endpoints - 30 req/min
+  optimize: {
+    maxRequests: 30,
+    windowMs: 60000,
+  },
+  recalculate: {
+    maxRequests: 30,
+    windowMs: 60000,
+  },
+
+  // Bulk operations - 10 req/min
+  bulkOptimize: {
+    maxRequests: 10,
+    windowMs: 60000,
+  },
+  bulkCalculate: {
+    maxRequests: 10,
+    windowMs: 60000,
+  },
+  bulkRecalculate: {
+    maxRequests: 10,
+    windowMs: 60000,
+  },
+
+  // Export operations - 5 req/min
+  export: {
+    maxRequests: 5,
+    windowMs: 60000,
+  },
+} as const;
+
+/**
+ * Get rate limit identifier from request
+ *
+ * Priority:
+ * 1. User ID (if authenticated)
+ * 2. IP address
+ * 3. Session ID
+ */
+export function getRateLimitIdentifier(request: Request): string {
+  // TODO: Get user ID from session after authentication is implemented
+  // For now, use IP address
+  const forwarded = request.headers.get("x-forwarded-for");
+  const ip = forwarded ? forwarded.split(",")[0] : "unknown";
 
   return `ip:${ip}`;
 }
 
 /**
- * Check rate limit and return response if exceeded
- *
- * @param ratelimit - Ratelimit instance
- * @param identifier - Client identifier
- * @returns null if allowed, NextResponse if rate limited
+ * Create rate limit response headers
  */
-export async function checkRateLimit(
-  ratelimit: Ratelimit,
-  identifier: string,
-): Promise<NextResponse | null> {
-  const { success, limit, reset, remaining } =
-    await ratelimit.limit(identifier);
-
-  if (!success) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Rate limit aşıldı",
-        details: {
-          limit,
-          remaining: 0,
-          reset: new Date(reset).toISOString(),
-        },
-      },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": limit.toString(),
-          "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": reset.toString(),
-          "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
-        },
-      },
-    );
-  }
-
-  return null;
-}
-
-/**
- * Add rate limit headers to response
- *
- * @param response - Next.js response
- * @param limit - Rate limit info
- * @returns Response with headers
- */
-export function addRateLimitHeaders(
-  response: NextResponse,
-  limit: {
-    limit: number;
-    remaining: number;
-    reset: number;
-  },
-): NextResponse {
-  response.headers.set("X-RateLimit-Limit", limit.limit.toString());
-  response.headers.set("X-RateLimit-Remaining", limit.remaining.toString());
-  response.headers.set("X-RateLimit-Reset", limit.reset.toString());
-
-  return response;
-}
-
-/**
- * Rate limit middleware wrapper
- *
- * @param ratelimit - Ratelimit instance
- * @param handler - Request handler
- * @returns Wrapped handler with rate limiting
- */
-export function withRateLimit(
-  ratelimit: Ratelimit,
-  handler: (request: NextRequest) => Promise<NextResponse>,
-) {
-  return async (request: NextRequest): Promise<NextResponse> => {
-    const identifier = getClientIdentifier(request);
-
-    // Check rate limit
-    const rateLimitResponse = await checkRateLimit(ratelimit, identifier);
-    if (rateLimitResponse) {
-      return rateLimitResponse;
-    }
-
-    // Get rate limit info for headers
-    const { limit, remaining, reset } = await ratelimit.limit(identifier);
-
-    // Execute handler
-    const response = await handler(request);
-
-    // Add rate limit headers
-    return addRateLimitHeaders(response, { limit, remaining, reset });
+export function createRateLimitHeaders(result: RateLimitResult): HeadersInit {
+  const headers: HeadersInit = {
+    "X-RateLimit-Limit": result.limit.toString(),
+    "X-RateLimit-Remaining": result.remaining.toString(),
+    "X-RateLimit-Reset": result.reset.toString(),
   };
+
+  if (result.retryAfter !== undefined) {
+    headers["Retry-After"] = result.retryAfter.toString();
+  }
+
+  return headers;
 }
 
 /**
- * Get rate limit stats for monitoring
- *
- * @param prefix - Rate limit prefix
- * @returns Rate limit statistics
+ * Create 429 Too Many Requests response
  */
-export async function getRateLimitStats(prefix: string) {
-  try {
-    // Get all keys with prefix
-    const keys = await redis.keys(`${prefix}:*`);
-
-    if (keys.length === 0) {
-      return {
-        totalKeys: 0,
-        activeClients: 0,
-        topClients: [],
-      };
-    }
-
-    // Get values for all keys
-    const values = await Promise.all(
-      keys.map(async (key) => {
-        const value = await redis.get(key);
-        return { key, value };
-      }),
-    );
-
-    // Calculate stats
-    const activeClients = values.filter((v) => v.value !== null).length;
-
-    // Get top clients by request count
-    const topClients = values
-      .filter((v) => v.value !== null)
-      .map((v) => ({
-        identifier: v.key.replace(`${prefix}:`, ""),
-        requests: typeof v.value === "number" ? v.value : 0,
-      }))
-      .sort((a, b) => b.requests - a.requests)
-      .slice(0, 10);
-
-    return {
-      totalKeys: keys.length,
-      activeClients,
-      topClients,
-    };
-  } catch (error) {
-    console.error("Failed to get rate limit stats:", error);
-    return {
-      totalKeys: 0,
-      activeClients: 0,
-      topClients: [],
-    };
-  }
-}
-
-/**
- * Reset rate limit for a client
- *
- * @param prefix - Rate limit prefix
- * @param identifier - Client identifier
- */
-export async function resetRateLimit(prefix: string, identifier: string) {
-  try {
-    await redis.del(`${prefix}:${identifier}`);
-    console.log(`[RATE_LIMIT] Reset rate limit for ${identifier}`);
-  } catch (error) {
-    console.error("Failed to reset rate limit:", error);
-  }
-}
-
-/**
- * Clear all rate limits (use with caution!)
- *
- * @param prefix - Rate limit prefix
- */
-export async function clearAllRateLimits(prefix: string) {
-  try {
-    const keys = await redis.keys(`${prefix}:*`);
-    if (keys.length > 0) {
-      await redis.del(...keys);
-      console.log(`[RATE_LIMIT] Cleared ${keys.length} rate limit keys`);
-    }
-  } catch (error) {
-    console.error("Failed to clear rate limits:", error);
-  }
+export function createRateLimitResponse(result: RateLimitResult): Response {
+  return new Response(
+    JSON.stringify({
+      success: false,
+      error: "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.",
+      retryAfter: result.retryAfter,
+    }),
+    {
+      status: 429,
+      headers: {
+        "Content-Type": "application/json",
+        ...createRateLimitHeaders(result),
+      },
+    },
+  );
 }

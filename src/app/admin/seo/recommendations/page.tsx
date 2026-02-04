@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
   Card,
@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SEOOptimizationModal } from "@/components/admin/SEOOptimizationModal";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface PendingRecommendation {
   articleId: string;
@@ -95,11 +96,7 @@ export default function SEORecommendationsPage() {
     title: string;
   } | null>(null);
 
-  useEffect(() => {
-    fetchRecommendations();
-  }, []);
-
-  const fetchRecommendations = async (silent = false) => {
+  const fetchRecommendations = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     if (silent) setRefreshing(true);
 
@@ -116,7 +113,11 @@ export default function SEORecommendationsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRecommendations();
+  }, [fetchRecommendations]);
 
   const toggleSeverity = (severity: string) => {
     setExpandedSeverity((prev) =>
@@ -138,7 +139,12 @@ export default function SEORecommendationsPage() {
     });
   };
 
-  const handleBulkOptimize = async () => {
+  // FIX #2: Race condition fix - Guard clause + proper error handling
+  // Skill: clean-code → Guard Clauses + vercel-react-best-practices → rerender-functional-setstate
+  const handleBulkOptimize = useCallback(async () => {
+    // Guard clause - prevent concurrent execution
+    if (optimizing) return;
+
     if (selectedArticles.size === 0) {
       alert("Lütfen optimize edilecek makaleleri seçin");
       return;
@@ -163,19 +169,30 @@ export default function SEORecommendationsPage() {
         }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({
+          error: "API isteği başarısız",
+        }));
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
       const data = await response.json();
       if (data.success) {
         alert(`${data.processed} makale optimize edildi!`);
         setSelectedArticles(new Set());
-        fetchRecommendations(true);
+        await fetchRecommendations(true); // Await to ensure sequential execution
+      } else {
+        throw new Error(data.error || "İşlem başarısız");
       }
     } catch (error) {
       console.error("Toplu optimizasyon hatası:", error);
-      alert("Bir hata oluştu");
+      alert(
+        `❌ Hata: ${error instanceof Error ? error.message : "Bilinmeyen hata"}`,
+      );
     } finally {
       setOptimizing(false);
     }
-  };
+  }, [optimizing, selectedArticles, fetchRecommendations]);
 
   if (loading) {
     return (
@@ -216,9 +233,12 @@ export default function SEORecommendationsPage() {
               size="sm"
               onClick={() => fetchRecommendations()}
               disabled={refreshing}
+              aria-label="SEO önerilerini yenile"
+              aria-busy={refreshing}
             >
               <RefreshCw
                 className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`}
+                aria-hidden="true"
               />
               Yenile
             </Button>
@@ -227,8 +247,10 @@ export default function SEORecommendationsPage() {
                 onClick={handleBulkOptimize}
                 disabled={optimizing}
                 className="bg-gradient-to-r from-purple-600 to-pink-600"
+                aria-label={`${selectedArticles.size} makaleyi toplu optimize et`}
+                aria-busy={optimizing}
               >
-                <Sparkles className="h-4 w-4 mr-2" />
+                <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
                 {optimizing
                   ? "Optimize Ediliyor..."
                   : `${selectedArticles.size} Makaleyi Optimize Et`}
@@ -250,6 +272,16 @@ export default function SEORecommendationsPage() {
               <CardHeader
                 className="cursor-pointer hover:bg-accent/50 transition-colors"
                 onClick={() => toggleSeverity(severity)}
+                role="button"
+                aria-expanded={isExpanded}
+                aria-label={`${config.label} öneri grubunu ${isExpanded ? "kapat" : "aç"}`}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleSeverity(severity);
+                  }
+                }}
               >
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -259,109 +291,24 @@ export default function SEORecommendationsPage() {
                     </span>
                   </CardTitle>
                   {isExpanded ? (
-                    <ChevronUp className="h-5 w-5" />
+                    <ChevronUp className="h-5 w-5" aria-hidden="true" />
                   ) : (
-                    <ChevronDown className="h-5 w-5" />
+                    <ChevronDown className="h-5 w-5" aria-hidden="true" />
                   )}
                 </div>
               </CardHeader>
 
               {isExpanded && (
                 <CardContent>
-                  <div className="space-y-4">
-                    {articles.map((article) => (
-                      <div
-                        key={article.articleId}
-                        className={`p-4 border rounded-lg ${config.bgColor} ${config.borderColor}`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={selectedArticles.has(article.articleId)}
-                            onCheckedChange={() =>
-                              toggleArticleSelection(article.articleId)
-                            }
-                            className="mt-1"
-                          />
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-2">
-                              <Badge
-                                variant="outline"
-                                className={`font-bold tabular-nums ${
-                                  article.seoScore >= 70
-                                    ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
-                                    : article.seoScore >= 50
-                                      ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
-                                      : "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
-                                }`}
-                              >
-                                {article.seoScore}
-                              </Badge>
-                              <Link
-                                href={`/admin/articles/${article.articleId}/edit`}
-                                className="font-medium hover:text-primary transition-colors line-clamp-1"
-                              >
-                                {article.articleTitle}
-                              </Link>
-                            </div>
-
-                            <div className="space-y-2 ml-4">
-                              {article.recommendations.map((rec) => (
-                                <div
-                                  key={rec.id}
-                                  className="text-sm flex items-start gap-2"
-                                >
-                                  <span className="text-muted-foreground">
-                                    ❌
-                                  </span>
-                                  <div>
-                                    <p className="font-medium">{rec.message}</p>
-                                    {rec.suggestion && (
-                                      <p className="text-muted-foreground text-xs mt-1">
-                                        💡 {rec.suggestion}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Link
-                              href={`/news/${article.articleSlug}`}
-                              target="_blank"
-                            >
-                              <Button variant="ghost" size="sm">
-                                <FileText className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <Link
-                              href={`/admin/articles/${article.articleId}/edit`}
-                            >
-                              <Button variant="outline" size="sm">
-                                Düzenle
-                              </Button>
-                            </Link>
-                            <Button
-                              size="sm"
-                              className="bg-gradient-to-r from-purple-600 to-pink-600"
-                              onClick={() => {
-                                setSelectedArticle({
-                                  id: article.articleId,
-                                  title: article.articleTitle,
-                                });
-                                setOptimizeModalOpen(true);
-                              }}
-                            >
-                              <Sparkles className="h-4 w-4 mr-1" />
-                              Optimize Et
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <VirtualizedArticleList
+                    articles={articles}
+                    severity={severity}
+                    config={config}
+                    selectedArticles={selectedArticles}
+                    toggleArticleSelection={toggleArticleSelection}
+                    setSelectedArticle={setSelectedArticle}
+                    setOptimizeModalOpen={setOptimizeModalOpen}
+                  />
                 </CardContent>
               )}
             </Card>
@@ -400,5 +347,173 @@ export default function SEORecommendationsPage() {
         )}
       </div>
     </AdminLayout>
+  );
+}
+
+// FIX #7: Virtualized Article List Component
+// Skill: rendering-content-visibility → Defer off-screen rendering
+interface VirtualizedArticleListProps {
+  articles: PendingRecommendation[];
+  severity: string;
+  config: (typeof SEVERITY_CONFIG)[keyof typeof SEVERITY_CONFIG];
+  selectedArticles: Set<string>;
+  toggleArticleSelection: (articleId: string) => void;
+  setSelectedArticle: (article: { id: string; title: string }) => void;
+  setOptimizeModalOpen: (open: boolean) => void;
+}
+
+function VirtualizedArticleList({
+  articles,
+  severity,
+  config,
+  selectedArticles,
+  toggleArticleSelection,
+  setSelectedArticle,
+  setOptimizeModalOpen,
+}: VirtualizedArticleListProps) {
+  const parentRef = useRef<HTMLDivElement>(null);
+
+  // Virtualizer configuration
+  const virtualizer = useVirtualizer({
+    count: articles.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 180, // Estimated height per item (in pixels)
+    overscan: 5, // Render 5 extra items above/below viewport
+  });
+
+  return (
+    <div
+      ref={parentRef}
+      className="max-h-[600px] overflow-auto"
+      style={{
+        // FIX #7: content-visibility for performance
+        contain: "strict",
+      }}
+    >
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const article = articles[virtualItem.index];
+
+          return (
+            <div
+              key={article.articleId}
+              data-index={virtualItem.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                transform: `translateY(${virtualItem.start}px)`,
+                // FIX #7: content-visibility CSS for off-screen rendering optimization
+                contentVisibility: "auto",
+                containIntrinsicSize: "0 180px",
+              }}
+              className="pb-4"
+            >
+              <div
+                className={`p-4 border rounded-lg ${config.bgColor} ${config.borderColor}`}
+              >
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedArticles.has(article.articleId)}
+                    onCheckedChange={() =>
+                      toggleArticleSelection(article.articleId)
+                    }
+                    className="mt-1"
+                    aria-label={`Makaleyi seç: ${article.articleTitle}`}
+                  />
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Badge
+                        variant="outline"
+                        className={`font-bold tabular-nums ${
+                          article.seoScore >= 70
+                            ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+                            : article.seoScore >= 50
+                              ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
+                              : "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
+                        }`}
+                      >
+                        {article.seoScore}
+                      </Badge>
+                      <Link
+                        href={`/admin/articles/${article.articleId}/edit`}
+                        className="font-medium hover:text-primary transition-colors line-clamp-1"
+                        aria-label={`Makaleyi düzenle: ${article.articleTitle}`}
+                      >
+                        {article.articleTitle}
+                      </Link>
+                    </div>
+
+                    <div className="space-y-2 ml-4">
+                      {article.recommendations.map((rec) => (
+                        <div
+                          key={rec.id}
+                          className="text-sm flex items-start gap-2"
+                        >
+                          <span className="text-muted-foreground">❌</span>
+                          <div>
+                            <p className="font-medium">{rec.message}</p>
+                            {rec.suggestion && (
+                              <p className="text-muted-foreground text-xs mt-1">
+                                💡 {rec.suggestion}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Link href={`/news/${article.articleSlug}`} target="_blank">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Makaleyi görüntüle: ${article.articleTitle}`}
+                      >
+                        <FileText className="h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </Link>
+                    <Link href={`/admin/articles/${article.articleId}/edit`}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        aria-label={`Makaleyi düzenle: ${article.articleTitle}`}
+                      >
+                        Düzenle
+                      </Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600"
+                      onClick={() => {
+                        setSelectedArticle({
+                          id: article.articleId,
+                          title: article.articleTitle,
+                        });
+                        setOptimizeModalOpen(true);
+                      }}
+                      aria-label={`Makaleyi optimize et: ${article.articleTitle}`}
+                    >
+                      <Sparkles className="h-4 w-4 mr-1" aria-hidden="true" />
+                      Optimize Et
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

@@ -1,7 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { withAuth } from "@/lib/auth/middleware";
+import { UserRole } from "@prisma/client";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Authentication & Authorization check - All authenticated users can export
+  const authResult = await withAuth(request, {
+    roles: [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN],
+    skipCSRF: true, // GET request
+  });
+
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const format = searchParams.get("format") || "json";

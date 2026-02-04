@@ -54,16 +54,34 @@ export default function BulkActionsPage() {
   const [result, setResult] = useState<BulkResult | null>(null);
   const { toast } = useToast();
 
-  // Kategorileri yükle
-  useState(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data) => {
+  // FIX #4: useState misuse fix - Convert to useEffect
+  // Skill: vercel-react-best-practices → rerender-move-effect-to-event
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const response = await fetch("/api/categories");
+
+        if (!response.ok) {
+          throw new Error("Kategoriler yüklenemedi");
+        }
+
+        const data = await response.json();
+
         if (data.success) {
           setCategories(data.data);
         }
-      });
-  });
+      } catch (error) {
+        console.error("Kategoriler yüklenemedi:", error);
+        toast({
+          title: "Hata",
+          description: "Kategoriler yüklenemedi",
+          variant: "destructive",
+        });
+      }
+    };
+
+    loadCategories();
+  }, [toast]);
 
   const handleRecalculate = async () => {
     if (

@@ -3,11 +3,29 @@ inclusion: always
 priority: 3
 ---
 
-# 🤖 AUTOMATIC AGENT SPAWNER
+# 🤖 AUTOMATIC AGENT SPAWNER + SUPERPOWERS INTEGRATION
 
 ## Purpose
 
-Automatically spawn subagents using `invokeSubAgent` tool based on request complexity.
+Automatically spawn subagents using `invokeSubAgent` tool based on request complexity AND activate relevant Superpowers skills for each agent.
+
+---
+
+## � SUPERPOWERS SKILL ACTIVATION
+
+**CRITICAL:** Before spawning agents, LOAD relevant Superpowers skills using REAL tool calls!
+
+**Superpowers CLI Location:**
+
+```
+C:\Users\erkan\.codex\superpowers\.codex\superpowers-codex
+```
+
+**How to Load Skills (REAL execution):**
+
+```bash
+node C:\Users\erkan\.codex\superpowers\.codex\superpowers-codex use-skill <skill-name>
+```
 
 ---
 
@@ -33,27 +51,114 @@ Automatically spawn subagents using `invokeSubAgent` tool based on request compl
 
 ---
 
-## 🔍 REQUEST → AGENT MAPPING
+## 🔍 REQUEST → AGENT + SUPERPOWERS SKILL MAPPING
 
-| Request Contains           | Agents to Spawn (invokeSubAgent)                                                                                                       | Roles                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| "debug", "hata", "fix"     | context-gatherer, general-task-execution (debugger), general-task-execution (tester)                                                   | Find code, analyze bug, create test |
-| "plan", "tasarım"          | general-task-execution (planner)                                                                                                       | Create PLAN.md                      |
-| "yeni proje", "create app" | general-task-execution (planner), general-task-execution (frontend), general-task-execution (backend), general-task-execution (tester) | Full stack creation                 |
-| "API", "backend"           | general-task-execution (backend), general-task-execution (database), general-task-execution (security)                                 | Backend implementation              |
-| "UI", "frontend"           | general-task-execution (frontend), general-task-execution (performance), general-task-execution (seo)                                  | Frontend implementation             |
-| "optimize", "performance"  | general-task-execution (performance), general-task-execution (frontend), general-task-execution (backend)                              | Performance analysis                |
-| "security", "güvenlik"     | general-task-execution (security), general-task-execution (penetration), general-task-execution (backend)                              | Security audit                      |
-| "deploy", "production"     | general-task-execution (devops), general-task-execution (security), general-task-execution (tester)                                    | Deployment                          |
+| Request Contains           | Superpowers Skills to Load (REAL)                                                         | Agents to Spawn (invokeSubAgent)                                                                                                       | Roles                               |
+| -------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| "debug", "hata", "fix"     | superpowers:systematic-debugging, superpowers:test-driven-development                     | context-gatherer, general-task-execution (debugger), general-task-execution (tester)                                                   | Find code, analyze bug, create test |
+| "plan", "tasarım"          | superpowers:writing-plans, superpowers:brainstorming                                      | general-task-execution (planner)                                                                                                       | Create PLAN.md                      |
+| "yeni proje", "create app" | superpowers:brainstorming, superpowers:writing-plans, superpowers:test-driven-development | general-task-execution (planner), general-task-execution (frontend), general-task-execution (backend), general-task-execution (tester) | Full stack creation                 |
+| "API", "backend"           | superpowers:test-driven-development, superpowers:verification-before-completion           | general-task-execution (backend), general-task-execution (database), general-task-execution (security)                                 | Backend implementation              |
+| "UI", "frontend"           | superpowers:brainstorming, superpowers:test-driven-development                            | general-task-execution (frontend), general-task-execution (performance), general-task-execution (seo)                                  | Frontend implementation             |
+| "optimize", "performance"  | superpowers:systematic-debugging, superpowers:verification-before-completion              | general-task-execution (performance), general-task-execution (frontend), general-task-execution (backend)                              | Performance analysis                |
+| "security", "güvenlik"     | superpowers:systematic-debugging, superpowers:verification-before-completion              | general-task-execution (security), general-task-execution (penetration), general-task-execution (backend)                              | Security audit                      |
+| "deploy", "production"     | superpowers:verification-before-completion, superpowers:finishing-a-development-branch    | general-task-execution (devops), general-task-execution (security), general-task-execution (tester)                                    | Deployment                          |
+| "code review"              | superpowers:requesting-code-review, superpowers:receiving-code-review                     | general-task-execution (reviewer)                                                                                                      | Code review                         |
+| "parallel", "independent"  | superpowers:dispatching-parallel-agents, superpowers:subagent-driven-development          | general-task-execution (multiple)                                                                                                      | Parallel execution                  |
 
 ---
 
-## 🤖 AUTO-SPAWN PROTOCOL
+## 🤖 AUTO-SPAWN PROTOCOL WITH SUPERPOWERS
 
 ```typescript
-async function autoSpawnAgents(userRequest: string, loadedSkills: string[]) {
+async function autoSpawnAgentsWithSuperpowers(
+  userRequest: string,
+  kiroSkills: string[],
+) {
   const request = userRequest.toLowerCase();
+
+  // STEP 1: Determine which Superpowers skills to load (REAL execution)
+  const superpowersSkills: string[] = [];
+
+  if (/debug|hata|fix/.test(request)) {
+    superpowersSkills.push(
+      "superpowers:systematic-debugging",
+      "superpowers:test-driven-development",
+    );
+  }
+
+  if (/plan|tasarım/.test(request)) {
+    superpowersSkills.push(
+      "superpowers:writing-plans",
+      "superpowers:brainstorming",
+    );
+  }
+
+  if (/yeni proje|create app/.test(request)) {
+    superpowersSkills.push(
+      "superpowers:brainstorming",
+      "superpowers:writing-plans",
+      "superpowers:test-driven-development",
+    );
+  }
+
+  if (/api|backend|server/.test(request)) {
+    superpowersSkills.push(
+      "superpowers:test-driven-development",
+      "superpowers:verification-before-completion",
+    );
+  }
+
+  if (/ui|frontend|arayüz/.test(request)) {
+    superpowersSkills.push(
+      "superpowers:brainstorming",
+      "superpowers:test-driven-development",
+    );
+  }
+
+  if (/optimize|performance|hızlandır/.test(request)) {
+    superpowersSkills.push(
+      "superpowers:systematic-debugging",
+      "superpowers:verification-before-completion",
+    );
+  }
+
+  if (/deploy|production/.test(request)) {
+    superpowersSkills.push(
+      "superpowers:verification-before-completion",
+      "superpowers:finishing-a-development-branch",
+    );
+  }
+
+  if (/code review/.test(request)) {
+    superpowersSkills.push(
+      "superpowers:requesting-code-review",
+      "superpowers:receiving-code-review",
+    );
+  }
+
+  if (/parallel|independent/.test(request)) {
+    superpowersSkills.push(
+      "superpowers:dispatching-parallel-agents",
+      "superpowers:subagent-driven-development",
+    );
+  }
+
+  // STEP 2: LOAD Superpowers skills (REAL tool execution)
+  const superpowersContent: Record<string, string> = {};
+
+  for (const skill of [...new Set(superpowersSkills)]) {
+    // REAL execution - not simulation!
+    const skillContent = await executePwsh({
+      command: `node C:\\Users\\erkan\\.codex\\superpowers\\.codex\\superpowers-codex use-skill ${skill}`,
+      explanation: `Loading ${skill} for agent delegation`,
+    });
+    superpowersContent[skill] = skillContent;
+  }
+
+  // STEP 3: Build agent configurations with loaded skills
   const agents: AgentConfig[] = [];
+  const allSkills = [...kiroSkills, ...Object.keys(superpowersContent)];
 
   // Codebase exploration needed?
   if (/debug|hata|fix|analyze|analiz/.test(request)) {
@@ -68,22 +173,58 @@ async function autoSpawnAgents(userRequest: string, loadedSkills: string[]) {
   if (/debug|hata|fix/.test(request)) {
     agents.push({
       name: "general-task-execution",
-      prompt: `You are a debugger specialist. 
-      
-Task: ${userRequest}
-Skills loaded: ${loadedSkills.join(", ")}
-Use systematic-debugging skill to find root cause.`,
-      explanation: "Analyzing bug with debugging expertise",
+      prompt: `You are a debugger specialist using Gemini 2.5 Flash.
+
+🎯 GÖREV: ${userRequest}
+
+📚 YÜKLÜ SKİLLER:
+${allSkills.map((s) => `- ${s}`).join("\n")}
+
+📖 SUPERPOWERS SKILL CONTENT:
+${Object.entries(superpowersContent)
+  .map(
+    ([name, content]) => `
+### ${name}
+${content}
+`,
+  )
+  .join("\n")}
+
+⚡ TALİMAT:
+1. superpowers:systematic-debugging skill'ini MUTLAKA kullan
+2. Root cause analysis yap
+3. Detaylı rapor et
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
+      explanation: "Analyzing bug with systematic-debugging skill",
     });
 
     agents.push({
       name: "general-task-execution",
-      prompt: `You are a test engineer.
-      
-Task: Create regression test for the fix
-Skills loaded: ${loadedSkills.join(", ")}
-Use testing-patterns skill.`,
-      explanation: "Creating test coverage",
+      prompt: `You are a test engineer using Gemini 2.5 Flash.
+
+🎯 GÖREV: Create regression test for the fix
+
+📚 YÜKLÜ SKİLLER:
+${allSkills.map((s) => `- ${s}`).join("\n")}
+
+📖 SUPERPOWERS SKILL CONTENT:
+${Object.entries(superpowersContent)
+  .map(
+    ([name, content]) => `
+### ${name}
+${content}
+`,
+  )
+  .join("\n")}
+
+⚡ TALİMAT:
+1. superpowers:test-driven-development skill'ini MUTLAKA kullan
+2. Test suite oluştur
+3. Coverage rapor et
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
+      explanation: "Creating test coverage with TDD skill",
     });
   }
 
@@ -91,31 +232,85 @@ Use testing-patterns skill.`,
   if (/api|backend|server/.test(request)) {
     agents.push({
       name: "general-task-execution",
-      prompt: `You are a backend specialist.
-      
-Task: ${userRequest}
-Skills loaded: ${loadedSkills.join(", ")}
-Use api-patterns and nodejs-best-practices skills.`,
-      explanation: "Implementing backend logic",
+      prompt: `You are a backend specialist using Gemini 2.5 Flash.
+
+🎯 GÖREV: ${userRequest}
+
+📚 YÜKLÜ SKİLLER:
+${allSkills.map((s) => `- ${s}`).join("\n")}
+
+📖 SUPERPOWERS SKILL CONTENT:
+${Object.entries(superpowersContent)
+  .map(
+    ([name, content]) => `
+### ${name}
+${content}
+`,
+  )
+  .join("\n")}
+
+⚡ TALİMAT:
+1. superpowers:test-driven-development skill'ini kullan
+2. API implementation yap
+3. Verification yap
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
+      explanation: "Implementing backend with TDD",
     });
 
     agents.push({
       name: "general-task-execution",
-      prompt: `You are a database architect.
-      
-Task: Design schema for ${userRequest}
-Skills loaded: ${loadedSkills.join(", ")}
-Use database-design skill.`,
+      prompt: `You are a database architect using Gemini 2.5 Flash.
+
+🎯 GÖREV: Design schema for ${userRequest}
+
+📚 YÜKLÜ SKİLLER:
+${allSkills.map((s) => `- ${s}`).join("\n")}
+
+📖 SUPERPOWERS SKILL CONTENT:
+${Object.entries(superpowersContent)
+  .map(
+    ([name, content]) => `
+### ${name}
+${content}
+`,
+  )
+  .join("\n")}
+
+⚡ TALİMAT:
+1. Database schema tasarla
+2. Migration planla
+3. Rapor et
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
       explanation: "Designing database schema",
     });
 
     agents.push({
       name: "general-task-execution",
-      prompt: `You are a security auditor.
-      
-Task: Review security for ${userRequest}
-Skills loaded: ${loadedSkills.join(", ")}
-Use vulnerability-scanner skill.`,
+      prompt: `You are a security auditor using Gemini 2.5 Flash.
+
+🎯 GÖREV: Review security for ${userRequest}
+
+📚 YÜKLÜ SKİLLER:
+${allSkills.map((s) => `- ${s}`).join("\n")}
+
+📖 SUPERPOWERS SKILL CONTENT:
+${Object.entries(superpowersContent)
+  .map(
+    ([name, content]) => `
+### ${name}
+${content}
+`,
+  )
+  .join("\n")}
+
+⚡ TALİMAT:
+1. Security audit yap
+2. Vulnerability'leri tespit et
+3. Önerileri rapor et
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
       explanation: "Auditing security",
     });
   }
@@ -124,40 +319,93 @@ Use vulnerability-scanner skill.`,
   if (/ui|frontend|arayüz|component/.test(request)) {
     agents.push({
       name: "general-task-execution",
-      prompt: `You are a frontend specialist.
-      
-Task: ${userRequest}
-Skills loaded: ${loadedSkills.join(", ")}
-Use nextjs-react-expert and tailwind-patterns skills.`,
-      explanation: "Implementing UI components",
+      prompt: `You are a frontend specialist using Gemini 2.5 Flash.
+
+🎯 GÖREV: ${userRequest}
+
+📚 YÜKLÜ SKİLLER:
+${allSkills.map((s) => `- ${s}`).join("\n")}
+
+📖 SUPERPOWERS SKILL CONTENT:
+${Object.entries(superpowersContent)
+  .map(
+    ([name, content]) => `
+### ${name}
+${content}
+`,
+  )
+  .join("\n")}
+
+⚡ TALİMAT:
+1. superpowers:brainstorming skill'ini kullan
+2. UI component'leri implement et
+3. superpowers:test-driven-development ile test yaz
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
+      explanation: "Implementing UI with brainstorming and TDD",
     });
 
     agents.push({
       name: "general-task-execution",
-      prompt: `You are a performance optimizer.
-      
-Task: Optimize performance for ${userRequest}
-Skills loaded: ${loadedSkills.join(", ")}
-Use performance-profiling skill.`,
+      prompt: `You are a performance optimizer using Gemini 2.5 Flash.
+
+🎯 GÖREV: Optimize performance for ${userRequest}
+
+📚 YÜKLÜ SKİLLER:
+${allSkills.map((s) => `- ${s}`).join("\n")}
+
+📖 SUPERPOWERS SKILL CONTENT:
+${Object.entries(superpowersContent)
+  .map(
+    ([name, content]) => `
+### ${name}
+${content}
+`,
+  )
+  .join("\n")}
+
+⚡ TALİMAT:
+1. Performance analizi yap
+2. Optimization uygula
+3. Benchmark rapor et
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
       explanation: "Optimizing performance",
     });
 
     agents.push({
       name: "general-task-execution",
-      prompt: `You are an SEO specialist.
-      
-Task: Add SEO for ${userRequest}
-Skills loaded: ${loadedSkills.join(", ")}
-Use seo-fundamentals skill.`,
+      prompt: `You are an SEO specialist using Gemini 2.5 Flash.
+
+🎯 GÖREV: Add SEO for ${userRequest}
+
+📚 YÜKLÜ SKİLLER:
+${allSkills.map((s) => `- ${s}`).join("\n")}
+
+📖 SUPERPOWERS SKILL CONTENT:
+${Object.entries(superpowersContent)
+  .map(
+    ([name, content]) => `
+### ${name}
+${content}
+`,
+  )
+  .join("\n")}
+
+⚡ TALİMAT:
+1. SEO implementation yap
+2. Meta tags ekle
+3. Rapor et
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
       explanation: "Implementing SEO",
     });
   }
 
-  // Spawn all agents in parallel
+  // STEP 4: Spawn all agents in parallel
   if (agents.length >= 3) {
     return await Promise.all(agents.map((agent) => invokeSubAgent(agent)));
   } else if (agents.length > 0) {
-    // Sequential for < 3 agents
     return await Promise.all(agents.map((agent) => invokeSubAgent(agent)));
   }
 
@@ -167,35 +415,58 @@ Use seo-fundamentals skill.`,
 
 ---
 
-## 📋 EXECUTION FLOW
+## 📋 EXECUTION FLOW WITH SUPERPOWERS
 
-1. **Analyze request** → Determine complexity
-2. **Select agents** → Based on keywords (minimum 3 for HIGH complexity)
-3. **Build prompts** → Include user request + loaded skills + context
-4. **Spawn parallel** → Use `invokeSubAgent` tool
-5. **Synthesize results** → Combine agent outputs
+1. **Analyze request** → Determine complexity and required domains
+2. **Load Superpowers skills** → REAL execution via `executePwsh` + node command
+3. **Select agents** → Based on keywords (minimum 3 for HIGH complexity)
+4. **Build prompts** → Include user request + Kiro skills + Superpowers skill content
+5. **Spawn parallel** → Use `invokeSubAgent` tool with full skill context
+6. **Synthesize results** → Combine agent outputs
 
 ---
 
 ## 🔴 MANDATORY RULES
 
 - ✅ HIGH complexity = MINIMUM 3 agents
+- ✅ LOAD Superpowers skills FIRST using REAL `executePwsh` tool call
 - ✅ Use `invokeSubAgent` tool (not simulation)
-- ✅ Pass full context to each agent (user request + skills + previous work)
+- ✅ Pass full context to each agent (user request + Kiro skills + Superpowers content)
 - ✅ Spawn in parallel when possible
 - ✅ Use context-gatherer for codebase tasks
+- ✅ NEVER simulate skill loading - ALWAYS use real tool calls
 
 ---
 
-## 💡 EXAMPLE: Real Execution
+## 💡 EXAMPLE: Real Execution with Superpowers
 
 User: "Login API endpoint debug et"
 
 ```typescript
-// Step 1: Load skills (from SKILL-LOADER.md)
-const skills = await loadSkills(request); // ['api-patterns', 'systematic-debugging', ...]
+// Step 1: Load Kiro skills (from SKILL-LOADER.md)
+const kiroSkills = await readMultipleFiles({
+  paths: [
+    ".agent/skills/systematic-debugging/SKILL.md",
+    ".agent/skills/api-patterns/SKILL.md",
+    ".agent/skills/testing-patterns/SKILL.md",
+  ],
+  explanation: "Loading Kiro skills for debugging task",
+});
 
-// Step 2: Spawn agents (REAL tool calls)
+// Step 2: Load Superpowers skills (REAL execution - NOT simulation!)
+const debugSkillContent = await executePwsh({
+  command:
+    "node C:\\Users\\erkan\\.codex\\superpowers\\.codex\\superpowers-codex use-skill superpowers:systematic-debugging",
+  explanation: "Loading systematic-debugging Superpowers skill",
+});
+
+const tddSkillContent = await executePwsh({
+  command:
+    "node C:\\Users\\erkan\\.codex\\superpowers\\.codex\\superpowers-codex use-skill superpowers:test-driven-development",
+  explanation: "Loading TDD Superpowers skill",
+});
+
+// Step 3: Spawn agents with FULL skill context (REAL tool calls)
 const [context, debugResult, testResult] = await Promise.all([
   invokeSubAgent({
     name: "context-gatherer",
@@ -205,35 +476,59 @@ const [context, debugResult, testResult] = await Promise.all([
 
   invokeSubAgent({
     name: "general-task-execution",
-    prompt: `You are a debugger specialist.
+    prompt: `You are a debugger specialist using Gemini 2.5 Flash.
 
-Task: Debug login API endpoint
-Skills loaded: ${skills.join(", ")}
-Context: ${context}
+🎯 GÖREV: Debug login API endpoint
 
-Use systematic-debugging skill to find root cause.`,
-    explanation: "Analyzing login API bug",
+📚 YÜKLÜ KIRO SKİLLER:
+- systematic-debugging
+- api-patterns
+
+📖 SUPERPOWERS SKILL CONTENT:
+### superpowers:systematic-debugging
+${debugSkillContent}
+
+⚡ TALİMAT:
+1. superpowers:systematic-debugging skill'ini MUTLAKA kullan
+2. Root cause analysis yap
+3. Fix öner
+4. Detaylı rapor et
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
+    explanation: "Analyzing login API bug with systematic-debugging skill",
   }),
 
   invokeSubAgent({
     name: "general-task-execution",
-    prompt: `You are a test engineer.
+    prompt: `You are a test engineer using Gemini 2.5 Flash.
 
-Task: Create test for login API fix
-Skills loaded: ${skills.join(", ")}
-Context: ${context}
+🎯 GÖREV: Create regression test for login API fix
 
-Use testing-patterns skill.`,
-    explanation: "Creating API test coverage",
+📚 YÜKLÜ KIRO SKİLLER:
+- testing-patterns
+- api-patterns
+
+📖 SUPERPOWERS SKILL CONTENT:
+### superpowers:test-driven-development
+${tddSkillContent}
+
+⚡ TALİMAT:
+1. superpowers:test-driven-development skill'ini MUTLAKA kullan
+2. Test suite oluştur
+3. Coverage rapor et
+
+BU SKİLLERİ KULLANARAK GÖREVİ TAMAMLA VE MAESTRO'YA RAPOR ET.`,
+    explanation: "Creating API test coverage with TDD skill",
   }),
 ]);
 
-// Step 3: Synthesize
+// Step 4: Synthesize
 return {
   codeFiles: context.files,
   rootCause: debugResult.analysis,
   fix: debugResult.solution,
   tests: testResult.tests,
+  superpowersUsed: ["systematic-debugging", "test-driven-development"],
 };
 ```
 

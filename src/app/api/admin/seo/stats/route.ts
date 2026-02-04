@@ -1,7 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { withAuth } from "@/lib/auth/middleware";
+import { UserRole } from "@prisma/client";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Authentication & Authorization check
+  const authResult = await withAuth(request, {
+    roles: [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN],
+    skipCSRF: true, // GET request, CSRF not needed
+  });
+
+  if (authResult instanceof NextResponse) {
+    return authResult; // Return error response
+  }
+
   try {
     // Toplam makale sayısı ve ortalama skor
     const articleStats = await prisma.article.aggregate({
@@ -36,41 +48,36 @@ export async function GET() {
       },
     });
 
-    // Skor dağılımı
-    const allArticles = await prisma.article.findMany({
-      select: {
-        seoScore: true,
-      },
-    });
+    // Skor dağılımı - Database-level aggregation (N+1 query fix)
+    const scoreDistributionRaw = await prisma.$queryRaw<
+      Array<{ range: string; count: bigint }>
+    >`
+      SELECT 
+        CASE 
+          WHEN "seoScore" >= 90 THEN '90-100'
+          WHEN "seoScore" >= 70 THEN '70-89'
+          WHEN "seoScore" >= 50 THEN '50-69'
+          WHEN "seoScore" >= 30 THEN '30-49'
+          ELSE '0-29'
+        END as range,
+        COUNT(*) as count
+      FROM "Article"
+      GROUP BY range
+      ORDER BY 
+        CASE 
+          WHEN range = '90-100' THEN 1
+          WHEN range = '70-89' THEN 2
+          WHEN range = '50-69' THEN 3
+          WHEN range = '30-49' THEN 4
+          ELSE 5
+        END
+    `;
 
-    const scoreDistribution = [
-      {
-        range: "90-100",
-        count: allArticles.filter((a: any) => a.seoScore >= 90).length,
-      },
-      {
-        range: "70-89",
-        count: allArticles.filter(
-          (a: any) => a.seoScore >= 70 && a.seoScore < 90,
-        ).length,
-      },
-      {
-        range: "50-69",
-        count: allArticles.filter(
-          (a: any) => a.seoScore >= 50 && a.seoScore < 70,
-        ).length,
-      },
-      {
-        range: "30-49",
-        count: allArticles.filter(
-          (a: any) => a.seoScore >= 30 && a.seoScore < 50,
-        ).length,
-      },
-      {
-        range: "0-29",
-        count: allArticles.filter((a: any) => a.seoScore < 30).length,
-      },
-    ];
+    // Convert BigInt to Number for JSON serialization
+    const scoreDistribution = scoreDistributionRaw.map((item) => ({
+      range: item.range,
+      count: Number(item.count),
+    }));
 
     // Öneri türleri dağılımı
     const recommendationsByType = await prisma.sEORecommendation.groupBy({

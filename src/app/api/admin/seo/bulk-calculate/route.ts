@@ -6,6 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { withAuth } from "@/lib/auth/middleware";
+import { UserRole } from "@prisma/client";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import { db } from "@/lib/db";
 import { z } from "zod";
@@ -20,8 +22,17 @@ const BulkCalculateSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // Authentication & Authorization check - ADMIN only
+  const authResult = await withAuth(request, {
+    roles: [UserRole.ADMIN],
+  });
+
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
-    // TODO: Add auth check when NextAuth is properly configured
+    // TODO: Add auth check when NextAuth is properly configured (REMOVED - now handled by withAuth)
     // const session = await getServerSession(authOptions);
     // if (!session?.user) {
     //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -147,8 +158,18 @@ export async function POST(request: NextRequest) {
 
 // GET method to check queue status
 export async function GET(request: NextRequest) {
+  // Authentication & Authorization check - ADMIN only
+  const authResult = await withAuth(request, {
+    roles: [UserRole.ADMIN],
+    skipCSRF: true, // GET request
+  });
+
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
   try {
-    // TODO: Add auth check when NextAuth is properly configured
+    // TODO: Add auth check when NextAuth is properly configured (REMOVED - now handled by withAuth)
     // const session = await getServerSession(authOptions);
     // if (!session?.user) {
     //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
