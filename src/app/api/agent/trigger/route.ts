@@ -99,16 +99,19 @@ export async function POST(request: Request) {
         });
         console.log("📋 Queue available, adding job...");
 
-        // Remove any existing delayed jobs to avoid conflicts
+        // Remove any existing jobs (including failed) to avoid conflicts
         const existingJobs = await newsAgentQueue.getJobs([
           "delayed",
           "waiting",
+          "failed",
+          "completed",
         ]);
         console.log(`   Found ${existingJobs.length} existing jobs in queue`);
 
         for (const job of existingJobs) {
-          if (job.id === "news-agent-scheduled-run") {
-            console.log(`   Removing existing job: ${job.id}`);
+          if (job.id === "news-agent-scheduled-run" || job.id?.startsWith("manual-trigger-")) {
+            const state = await job.getState();
+            console.log(`   Removing existing job: ${job.id} (state: ${state})`);
             await job.remove();
           }
         }
@@ -127,7 +130,13 @@ export async function POST(request: Request) {
             jobId,
             priority: executeNow ? 1 : 10, // High priority for manual triggers
             removeOnComplete: true,
+            removeOnFail: 3, // Keep last 3 failed jobs for debugging
             delay: 0, // Execute immediately
+            attempts: 3, // Retry up to 3 times
+            backoff: {
+              type: "exponential",
+              delay: 60000, // 1 minute initial delay
+            },
           },
         );
 
