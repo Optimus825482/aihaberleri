@@ -190,9 +190,10 @@ export async function executeNewsAgent(
       where: { key: "agent.maxArticles" },
     });
 
-    // Default: 1 article per run (15 min interval = ~4 articles/hour)
-    const envMin = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "1");
-    const envMax = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "1");
+    // Default: 3-5 articles per run to ensure at least some pass relevance filter
+    // If relevance filter rejects some, we still have backup candidates
+    const envMin = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "3");
+    const envMax = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "5");
 
     // Use DB setting if exists, otherwise env var (which defaults to 1)
     const minArticles = minSetting ? parseInt(minSetting.value) : envMin;

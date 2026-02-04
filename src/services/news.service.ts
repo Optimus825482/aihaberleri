@@ -654,6 +654,26 @@ export async function fetchAINews(
     // SMART SAMPLING: Prioritize recent + diverse sources
     let itemsToAnalyze = aiFilteredItems;
 
+    // 🆕 STEP 2.6: Filter Reddit discussion posts (not news articles)
+    // Reddit tags: [D]=Discussion, [R]=Research, [P]=Project, [N]=News
+    const REDDIT_DISCUSSION_PATTERNS =
+      /^\s*\[(D|R|P|Discussion|Research|Project)\]/i;
+    const beforeRedditFilter = itemsToAnalyze.length;
+    itemsToAnalyze = itemsToAnalyze.filter((item) => {
+      if (REDDIT_DISCUSSION_PATTERNS.test(item.title)) {
+        console.log(
+          `   ⏭️  SKIP (Reddit discussion): ${item.title.substring(0, 50)}...`,
+        );
+        return false;
+      }
+      return true;
+    });
+    if (beforeRedditFilter !== itemsToAnalyze.length) {
+      console.log(
+        `🔍 Reddit filtre: ${beforeRedditFilter - itemsToAnalyze.length} discussion post elendi`,
+      );
+    }
+
     // If too many articles, sample intelligently
     const MAX_ARTICLES_TO_ANALYZE = 100;
     if (itemsToAnalyze.length > MAX_ARTICLES_TO_ANALYZE) {
