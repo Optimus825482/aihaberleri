@@ -4,8 +4,9 @@
 User-agent: *
 Allow: /
 
-# Sitemap
+# Sitemaps
 Sitemap: https://aihaberleri.org/sitemap.xml
+Sitemap: https://aihaberleri.org/news-sitemap.xml
 
 # ads.txt için özel izin
 Allow: /ads.txt
