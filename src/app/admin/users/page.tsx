@@ -129,7 +129,7 @@ export default function UsersPage() {
     }
 
     try {
-      const response = await fetch("/api/admin/users/bulk/role", {
+      const response = await fetch("/api/admin/users/bulk-role", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userIds: selectedUsers, role }),
