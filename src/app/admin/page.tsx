@@ -288,7 +288,7 @@ export default function AdminDashboard() {
 
             {/* Quick Actions */}
             <div className="flex items-center gap-2">
-              <Link href="/admin/create">
+              <Link href="/admin/articles/create">
                 <Button className="font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all">
                   <FileText className="mr-2 h-4 w-4" />
                   Yeni Haber
@@ -629,7 +629,6 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
-
       </div>
     </AdminLayout>
   );
