@@ -167,8 +167,13 @@ export async function POST(request: Request) {
       let stalledRemoved = 0;
       for (const job of active) {
         if (job.timestamp < thirtyMinutesAgo) {
-          console.log(`Removing stalled job: ${job.id} (started at ${new Date(job.timestamp).toISOString()})`);
-          await job.moveToFailed(new Error("Job stalled - manually removed"), "manual-cleanup");
+          console.log(
+            `Removing stalled job: ${job.id} (started at ${new Date(job.timestamp).toISOString()})`,
+          );
+          await job.moveToFailed(
+            new Error("Job stalled - manually removed"),
+            "manual-cleanup",
+          );
           await job.remove();
           stalledRemoved++;
         }
