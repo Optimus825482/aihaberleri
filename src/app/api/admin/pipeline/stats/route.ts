@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getAllQueueStats, QUEUE_NAMES } from "@/lib/queue-manager";
-import { CircuitBreaker } from "@/lib/circuit-breaker";
-import { getScheduleInfo } from "@/lib/smart-scheduler";
 
 export async function GET() {
   const session = await auth();
@@ -12,69 +9,7 @@ export async function GET() {
   }
 
   try {
-    // Get queue stats
-    const queueStats = await getAllQueueStats();
-
-    // Get circuit breaker status
-    const circuits = Array.from(CircuitBreaker.getAllCircuits().entries()).map(
-      ([name, circuit]) => {
-        const metrics = circuit.getMetrics();
-        return {
-          name,
-          state: metrics.currentState,
-          failureRate: metrics.failureRate,
-          totalRequests: metrics.totalRequests,
-          lastFailure: metrics.lastFailure?.toISOString() || null,
-        };
-      },
-    );
-
-    // If no circuits registered yet, show default ones
-    if (circuits.length === 0) {
-      const defaultCircuits = [
-        "deepseek",
-        "gemini",
-        "pollinations",
-        "searxng",
-        "jina",
-        "tavily",
-      ];
-      circuits.push(
-        ...defaultCircuits.map((name) => ({
-          name,
-          state: "CLOSED" as const,
-          failureRate: 0,
-          totalRequests: 0,
-          lastFailure: null,
-        })),
-      );
-    }
-
-    // Get schedule info
-    let schedule;
-    try {
-      schedule = await getScheduleInfo();
-      // Convert Date to string for JSON
-      schedule = {
-        ...schedule,
-        nextRun: schedule.nextRun.toISOString(),
-      };
-    } catch {
-      schedule = {
-        interval: 15,
-        reason: "NORMAL",
-        turkeyTime: new Date().toLocaleTimeString("tr-TR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        nextRun: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-        isWeekend: false,
-        isBreakingNews: false,
-        multiplier: 1,
-      };
-    }
-
-    // Map queue stats to agent format
+    // Default agent list
     const agentNames = [
       "content-collector",
       "relevance-filter",
@@ -84,6 +19,80 @@ export async function GET() {
       "database-publisher",
     ];
 
+    // Try to get queue stats (may fail if Redis not available)
+    let queueStats: Array<{ queueName: string; waiting: number; active: number; completed: number; failed: number }> = [];
+    try {
+      const { getAllQueueStats } = await import("@/lib/queue-manager");
+      queueStats = (await getAllQueueStats()) || [];
+    } catch (queueError) {
+      console.warn("Queue stats unavailable:", queueError);
+    }
+
+    // Try to get circuit breaker status
+    let circuits: Array<{ name: string; state: string; failureRate: number; totalRequests: number; lastFailure: string | null }> = [];
+    try {
+      const { CircuitBreaker } = await import("@/lib/circuit-breaker");
+      const allCircuits = CircuitBreaker.getAllCircuits();
+      circuits = Array.from(allCircuits.entries()).map(([name, circuit]) => {
+        const metrics = circuit.getMetrics();
+        const total = metrics.totalSuccesses + metrics.totalFailures;
+        return {
+          name,
+          state: metrics.state,
+          failureRate: total > 0 ? (metrics.totalFailures / total) * 100 : 0,
+          totalRequests: total,
+          lastFailure: metrics.lastFailureTime ? new Date(metrics.lastFailureTime).toISOString() : null,
+        };
+      });
+    } catch (circuitError) {
+      console.warn("Circuit breaker stats unavailable:", circuitError);
+    }
+
+    // If no circuits registered yet, show default ones
+    if (circuits.length === 0) {
+      const defaultCircuits = ["deepseek", "gemini", "pollinations", "searxng", "jina", "tavily"];
+      circuits = defaultCircuits.map((name) => ({
+        name,
+        state: "CLOSED",
+        failureRate: 0,
+        totalRequests: 0,
+        lastFailure: null,
+      }));
+    }
+
+    // Try to get schedule info
+    let schedule: {
+      interval: number;
+      reason: string;
+      turkeyTime: string;
+      nextRun: string;
+      isWeekend: boolean;
+      isBreakingNews: boolean;
+    } = {
+      interval: 15,
+      reason: "NORMAL",
+      turkeyTime: new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }),
+      nextRun: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      isWeekend: false,
+      isBreakingNews: false,
+    };
+    try {
+      const { getScheduleInfo } = await import("@/lib/smart-scheduler");
+      const scheduleData = await getScheduleInfo();
+      schedule = {
+        interval: scheduleData.interval,
+        reason: scheduleData.reason,
+        turkeyTime: scheduleData.turkeyTime,
+        nextRun: scheduleData.nextRun.toISOString(),
+        isWeekend: scheduleData.isWeekend,
+        isBreakingNews: scheduleData.isBreakingNews,
+      };
+    } catch (scheduleError) {
+      console.warn("Schedule info unavailable:", scheduleError);
+    }
+
+    // Map queue stats to agent format
+    const { QUEUE_NAMES } = await import("@/lib/queue-manager");
     const queueNameMap: Record<string, string> = {
       "content-collector": QUEUE_NAMES.COLLECTED_ARTICLES,
       "relevance-filter": QUEUE_NAMES.RELEVANT_ARTICLES,
@@ -99,8 +108,7 @@ export async function GET() {
 
       return {
         name,
-        status:
-          stat?.active > 0 ? "running" : stat?.failed > 0 ? "error" : "idle",
+        status: (stat?.active ?? 0) > 0 ? "running" : (stat?.failed ?? 0) > 0 ? "error" : "idle",
         queueCount: (stat?.waiting || 0) + (stat?.active || 0),
         processedCount: stat?.completed || 0,
         lastRun: null,
@@ -123,7 +131,7 @@ export async function GET() {
     // Get success rate from agent logs
     const recentLogs = await db.agentLog.findMany({
       take: 100,
-      orderBy: { createdAt: "desc" },
+      orderBy: { executionTime: "desc" },
       select: { status: true },
     });
 
@@ -136,8 +144,8 @@ export async function GET() {
 
     // Get last pipeline run
     const lastRun = await db.agentLog.findFirst({
-      orderBy: { createdAt: "desc" },
-      select: { createdAt: true },
+      orderBy: { executionTime: "desc" },
+      select: { executionTime: true },
     });
 
     return NextResponse.json({
@@ -146,7 +154,7 @@ export async function GET() {
       schedule,
       totalArticlesToday,
       successRate,
-      lastPipelineRun: lastRun?.createdAt?.toISOString() || null,
+      lastPipelineRun: lastRun?.executionTime?.toISOString() || null,
     });
   } catch (error) {
     console.error("Pipeline stats error:", error);
