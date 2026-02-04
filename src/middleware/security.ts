@@ -18,7 +18,6 @@ import {
   RATE_LIMITS,
   getRateLimitIdentifier,
   createRateLimitHeaders,
-  createRateLimitResponse,
 } from "@/lib/rate-limiter";
 import { sanitizeInput } from "@/lib/sql-injection-prevention";
 
@@ -183,7 +182,7 @@ export async function withSecurity(
  * TODO: Implement after authentication system is ready
  */
 export async function withAuth(
-  request: NextRequest,
+  _request: NextRequest,
 ): Promise<{ authenticated: boolean; userId?: string }> {
   // TODO: Check session/JWT token
   // For now, return unauthenticated
@@ -196,8 +195,8 @@ export async function withAuth(
  * TODO: Implement after role-based access control is ready
  */
 export async function withAuthorization(
-  request: NextRequest,
-  requiredRole: "admin" | "editor" | "viewer",
+  _request: NextRequest,
+  _requiredRole: "admin" | "editor" | "viewer",
 ): Promise<boolean> {
   // TODO: Check user role
   // For now, return false

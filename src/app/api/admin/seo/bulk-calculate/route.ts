@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/auth/middleware";
-import { UserRole } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import { db } from "@/lib/db";
 import { z } from "zod";
@@ -24,7 +24,7 @@ const BulkCalculateSchema = z.object({
 export async function POST(request: NextRequest) {
   // Authentication & Authorization check - ADMIN only
   const authResult = await withAuth(request, {
-    roles: [UserRole.ADMIN],
+    roles: [Role.ADMIN],
   });
 
   if (authResult instanceof NextResponse) {
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   // Authentication & Authorization check - ADMIN only
   const authResult = await withAuth(request, {
-    roles: [UserRole.ADMIN],
+    roles: [Role.ADMIN],
     skipCSRF: true, // GET request
   });
 

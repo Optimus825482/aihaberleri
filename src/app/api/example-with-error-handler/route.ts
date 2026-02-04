@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { Errors, handleApiError, asyncHandler } from "@/lib/errors";
-import { auth } from "@/auth";
+import { auth } from "@/lib/auth";
 
 /**
  * Example GET endpoint with error handling

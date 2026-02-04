@@ -13,7 +13,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { withAuth } from "@/lib/auth/middleware";
-import { UserRole } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import { nanoid } from "nanoid";
 import { withSecurity, auditLog } from "@/middleware/security";
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   return withSecurity(request, "bulkOptimize", async (req) => {
     // Authentication & Authorization check - ADMIN only
     const authResult = await withAuth(req, {
-      roles: [UserRole.ADMIN],
+      roles: [Role.ADMIN],
     });
 
     if (authResult instanceof NextResponse) {
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   // Authentication & Authorization check - ADMIN only
   const authResult = await withAuth(request, {
-    roles: [UserRole.ADMIN],
+    roles: [Role.ADMIN],
     skipCSRF: true, // GET request
   });
 

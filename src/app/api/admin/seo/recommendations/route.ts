@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth/middleware";
-import { UserRole } from "@prisma/client";
+import { Role } from "@prisma/client";
 import { z } from "zod";
 
 // Validation schemas
@@ -26,7 +26,7 @@ const deleteSchema = z.object({
 export async function GET(request: NextRequest) {
   // Authentication & Authorization check
   const authResult = await withAuth(request, {
-    roles: [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN],
+    roles: [Role.VIEWER, Role.EDITOR, Role.ADMIN],
     skipCSRF: true, // GET request
   });
 
@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   // Authentication & Authorization check - EDITOR or ADMIN only
   const authResult = await withAuth(request, {
-    roles: [UserRole.EDITOR, UserRole.ADMIN],
+    roles: [Role.EDITOR, Role.ADMIN],
   });
 
   if (authResult instanceof NextResponse) {
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   // Authentication & Authorization check - EDITOR or ADMIN only
   const authResult = await withAuth(request, {
-    roles: [UserRole.EDITOR, UserRole.ADMIN],
+    roles: [Role.EDITOR, Role.ADMIN],
   });
 
   if (authResult instanceof NextResponse) {

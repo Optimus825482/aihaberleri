@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { withAuth } from "@/lib/auth/middleware";
-import { UserRole } from "@prisma/client";
+import { Role } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   // Authentication & Authorization check
   const authResult = await withAuth(request, {
-    roles: [UserRole.VIEWER, UserRole.EDITOR, UserRole.ADMIN],
+    roles: [Role.VIEWER, Role.EDITOR, Role.ADMIN],
     skipCSRF: true, // GET request, CSRF not needed
   });
 

@@ -10,44 +10,28 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { UserRole } from "@prisma/client";
+import { Role } from "@prisma/client";
 
 /**
  * Permission matrix - Endpoint bazlı yetki kontrolü
  */
 const PERMISSIONS = {
   // Read-only endpoints - VIEWER ve üstü
-  "GET:/api/admin/seo/stats": [
-    UserRole.VIEWER,
-    UserRole.EDITOR,
-    UserRole.ADMIN,
-  ],
-  "GET:/api/admin/seo/recommendations": [
-    UserRole.VIEWER,
-    UserRole.EDITOR,
-    UserRole.ADMIN,
-  ],
-  "GET:/api/admin/seo/dashboard": [
-    UserRole.VIEWER,
-    UserRole.EDITOR,
-    UserRole.ADMIN,
-  ],
-  "GET:/api/admin/seo/export": [
-    UserRole.VIEWER,
-    UserRole.EDITOR,
-    UserRole.ADMIN,
-  ],
+  "GET:/api/admin/seo/stats": [Role.VIEWER, Role.EDITOR, Role.ADMIN],
+  "GET:/api/admin/seo/recommendations": [Role.VIEWER, Role.EDITOR, Role.ADMIN],
+  "GET:/api/admin/seo/dashboard": [Role.VIEWER, Role.EDITOR, Role.ADMIN],
+  "GET:/api/admin/seo/export": [Role.VIEWER, Role.EDITOR, Role.ADMIN],
 
   // Write endpoints - EDITOR ve üstü
-  "POST:/api/admin/seo/recommendations": [UserRole.EDITOR, UserRole.ADMIN],
-  "DELETE:/api/admin/seo/recommendations": [UserRole.EDITOR, UserRole.ADMIN],
-  "POST:/api/admin/seo/optimize": [UserRole.EDITOR, UserRole.ADMIN],
-  "POST:/api/admin/seo/recalculate": [UserRole.EDITOR, UserRole.ADMIN],
+  "POST:/api/admin/seo/recommendations": [Role.EDITOR, Role.ADMIN],
+  "DELETE:/api/admin/seo/recommendations": [Role.EDITOR, Role.ADMIN],
+  "POST:/api/admin/seo/optimize": [Role.EDITOR, Role.ADMIN],
+  "POST:/api/admin/seo/recalculate": [Role.EDITOR, Role.ADMIN],
 
   // Bulk operations - ADMIN only
-  "POST:/api/admin/seo/bulk-optimize": [UserRole.ADMIN],
-  "POST:/api/admin/seo/bulk-calculate": [UserRole.ADMIN],
-  "POST:/api/admin/seo/bulk-recalculate": [UserRole.ADMIN],
+  "POST:/api/admin/seo/bulk-optimize": [Role.ADMIN],
+  "POST:/api/admin/seo/bulk-calculate": [Role.ADMIN],
+  "POST:/api/admin/seo/bulk-recalculate": [Role.ADMIN],
 } as const;
 
 /**
@@ -73,10 +57,7 @@ export async function requireAuth(request: NextRequest) {
 /**
  * Authorization check - Role-based access control (RBAC)
  */
-export async function requireRole(
-  request: NextRequest,
-  allowedRoles: UserRole[],
-) {
+export async function requireRole(request: NextRequest, allowedRoles: Role[]) {
   const authResult = await requireAuth(request);
 
   if (authResult instanceof NextResponse) {
@@ -85,7 +66,7 @@ export async function requireRole(
 
   const { user } = authResult;
 
-  if (!user.role || !allowedRoles.includes(user.role as UserRole)) {
+  if (!user.role || !allowedRoles.includes(user.role as Role)) {
     return NextResponse.json(
       {
         error: "Yetkisiz işlem",
@@ -113,7 +94,7 @@ export async function requirePermission(request: NextRequest) {
 
   if (!allowedRoles) {
     // Endpoint permission matrix'te tanımlı değil - default ADMIN only
-    return requireRole(request, [UserRole.ADMIN]);
+    return requireRole(request, [Role.ADMIN]);
   }
 
   return requireRole(request, allowedRoles);
@@ -151,7 +132,7 @@ export function validateCSRFToken(request: NextRequest): boolean {
 export async function withAuth(
   request: NextRequest,
   options?: {
-    roles?: UserRole[];
+    roles?: Role[];
     skipCSRF?: boolean;
   },
 ) {
