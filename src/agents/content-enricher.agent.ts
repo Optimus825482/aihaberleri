@@ -309,9 +309,7 @@ export class ContentEnricherAgent extends BaseAgent<
     const topCandidates = candidateUrls.slice(0, TARGET_SOURCE_COUNT);
 
     // 🚀 PARALLEL: Read all URLs in parallel (major speed boost!)
-    this.logger.info(
-      `📖 Reading ${topCandidates.length} URLs in parallel...`,
-    );
+    this.logger.info(`📖 Reading ${topCandidates.length} URLs in parallel...`);
 
     const contentResults = await Promise.allSettled(
       topCandidates.map(async (candidate) => {
