@@ -1,0 +1,22 @@
+# AI Haberleri - robots.txt
+# https://aihaberleri.org
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://aihaberleri.org/sitemap.xml
+
+# ads.txt için özel izin
+Allow: /ads.txt
+
+# Admin panelini engelle
+Disallow: /admin/
+Disallow: /api/admin/
+
+# Arama sonuçları (duplicate content önleme)
+Disallow: /arama?
+Disallow: /en/search?
+
+# Host
+Host: https://aihaberleri.org
