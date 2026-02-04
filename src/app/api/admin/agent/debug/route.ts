@@ -18,7 +18,7 @@ export async function GET() {
     if (!redis) {
       return NextResponse.json(
         { error: "Redis not available" },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -29,7 +29,7 @@ export async function GET() {
     if (!queue) {
       return NextResponse.json(
         { error: "Queue not available" },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
@@ -61,7 +61,7 @@ export async function GET() {
         failedReason: job.failedReason,
         stacktrace: job.stacktrace?.slice(0, 3), // First 3 lines only
         data: job.data,
-      }))
+      })),
     );
 
     // Get active job details
@@ -72,7 +72,7 @@ export async function GET() {
         timestamp: new Date(job.timestamp).toISOString(),
         attemptsMade: job.attemptsMade,
         progress: await job.progress,
-      }))
+      })),
     );
 
     return NextResponse.json({
@@ -106,7 +106,7 @@ export async function GET() {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

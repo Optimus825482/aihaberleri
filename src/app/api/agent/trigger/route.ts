@@ -109,9 +109,14 @@ export async function POST(request: Request) {
         console.log(`   Found ${existingJobs.length} existing jobs in queue`);
 
         for (const job of existingJobs) {
-          if (job.id === "news-agent-scheduled-run" || job.id?.startsWith("manual-trigger-")) {
+          if (
+            job.id === "news-agent-scheduled-run" ||
+            job.id?.startsWith("manual-trigger-")
+          ) {
             const state = await job.getState();
-            console.log(`   Removing existing job: ${job.id} (state: ${state})`);
+            console.log(
+              `   Removing existing job: ${job.id} (state: ${state})`,
+            );
             await job.remove();
           }
         }
