@@ -8,6 +8,84 @@
 import { callDeepSeek } from "@/lib/deepseek";
 import { db } from "@/lib/db";
 
+/**
+ * AI Keywords for quick relevance check
+ * Used to filter out non-AI news before expensive API calls
+ */
+const AI_KEYWORDS = [
+  // Core AI Terms
+  "artificial intelligence",
+  "yapay zeka",
+  " ai ",
+  "a.i.",
+  "machine learning",
+  "deep learning",
+  "neural network",
+  // AI Models & Products
+  "gpt",
+  "chatgpt",
+  "openai",
+  "gemini",
+  "claude",
+  "anthropic",
+  "llama",
+  "mistral",
+  "deepseek",
+  "copilot",
+  "bard",
+  "dall-e",
+  "midjourney",
+  "stable diffusion",
+  "sora",
+  "grok",
+  // AI Techniques
+  "nlp",
+  "natural language",
+  "computer vision",
+  "transformer",
+  "language model",
+  "generative ai",
+  "llm",
+  "large language model",
+  // AI Companies
+  "nvidia",
+  "hugging face",
+  "cohere",
+  "perplexity",
+  "stability ai",
+  "meta ai",
+  "google ai",
+  "microsoft ai",
+  "amazon ai",
+  "xai",
+  // Tech keywords
+  "robot",
+  "automation",
+  "autonomous",
+  "algorithm",
+  "data science",
+  "tech",
+  "software",
+  "startup",
+  "silicon valley",
+  "chip",
+  "gpu",
+  "semiconductor",
+  "quantum",
+  "blockchain",
+  "crypto",
+  "web3",
+];
+
+/**
+ * Quick AI relevance check using keywords
+ * Returns true if article appears to be AI/tech related
+ */
+function isAIRelevant(title: string, description?: string): boolean {
+  const text = `${title} ${description || ""}`.toLowerCase();
+  return AI_KEYWORDS.some((keyword) => text.includes(keyword.toLowerCase()));
+}
+
 export interface ArticleWithTopic {
   id?: string;
   title: string;
@@ -233,6 +311,7 @@ export async function selectUniqueTopicArticles(
   const seenTopics = new Set<string>();
   let skippedSameTopic = 0;
   let skippedDuplicate = 0;
+  let skippedNotAI = 0;
 
   for (const article of sortedArticles) {
     if (selected.length >= targetCount) {
@@ -241,6 +320,15 @@ export async function selectUniqueTopicArticles(
     }
 
     const topic = article.topic || "unknown";
+
+    // NEW: Quick AI relevance check BEFORE expensive duplicate checks
+    if (!isAIRelevant(article.title, article.description)) {
+      console.log(
+        `   ⏭️  SKIP (not AI-related): "${article.title.substring(0, 50)}..."`,
+      );
+      skippedNotAI++;
+      continue;
+    }
 
     // Bu topic'i daha önce seçtik mi?
     if (seenTopics.has(topic)) {
@@ -305,6 +393,7 @@ export async function selectUniqueTopicArticles(
 
   console.log(`\n📊 Seçim özeti:`);
   console.log(`   Seçilen: ${selected.length}`);
+  console.log(`   Atlanan (AI değil): ${skippedNotAI}`);
   console.log(`   Atlanan (aynı topic): ${skippedSameTopic}`);
   console.log(`   Atlanan (duplicate): ${skippedDuplicate}`);
   console.log(`   Toplam işlenen: ${sortedArticles.length}`);
