@@ -52,30 +52,35 @@ export async function startMultiAgentPipeline(
   }
 
   await relevanceQueue.add("filter-relevance", collectedArticles, {
-    removeOnComplete: true,
+    removeOnComplete: 100, // Keep last 100 for debugging
+    removeOnFail: 50,
     attempts: 3,
     priority: 1,
   });
 
+  // Wait a moment for job to be picked up
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
   // Verify job was added
   const waitingCount = await relevanceQueue.getWaitingCount();
   const activeCount = await relevanceQueue.getActiveCount();
-  const jobs = await relevanceQueue.getJobs(["waiting", "active", "delayed"]);
+  const completedCount = await relevanceQueue.getCompletedCount();
+  const failedCount = await relevanceQueue.getFailedCount();
 
   logger.info(
-    `📊 Queue status after add: waiting=${waitingCount}, active=${activeCount}, totalJobs=${jobs.length}`,
+    `📊 Queue status: waiting=${waitingCount}, active=${activeCount}, completed=${completedCount}, failed=${failedCount}`,
   );
 
-  if (waitingCount === 0 && activeCount === 0) {
-    logger.error(
-      `❌ CRITICAL: Job was added but queue appears empty! Agents may not be initialized.`,
-    );
+  if (activeCount > 0) {
+    logger.success(`✅ Job is being processed by an agent!`);
+  } else if (waitingCount > 0) {
+    logger.warn(`⚠️ Job is waiting but no agent is processing - agents may not have started`);
+  } else if (completedCount > 0) {
+    logger.info(`✅ Job was already completed by an agent`);
+  } else {
+    logger.error(`❌ CRITICAL: Job was added but queue appears empty!`);
     logger.error(`   This usually means the agent workers are not running.`);
     logger.error(`   Check if initializeMultiAgentPipeline() succeeded.`);
-  } else if (waitingCount > 0 && activeCount === 0) {
-    logger.warn(
-      `⚠️ Job is waiting but no active workers - agents may not have started`,
-    );
   }
 
   logger.success(
@@ -193,11 +198,34 @@ export async function waitForPipelineCompletion(
     // Require multiple consecutive empty checks to avoid race conditions
     if (progress.articlesInQueue === 0 && progress.stage === "unknown") {
       // If we've never seen articles in queue, agents might not be running
-      if (!hasSeenArticlesInQueue && consecutiveEmptyChecks < 6) {
-        logger.warn(
-          `⚠️ Queue appears empty but never saw articles - agents may not be running! (check ${consecutiveEmptyChecks + 1}/6)`,
-        );
+      // Wait longer before declaring completion
+      if (!hasSeenArticlesInQueue) {
+        if (consecutiveEmptyChecks < 12) {
+          // Wait up to 60 seconds (12 * 5s) for agents to start
+          logger.warn(
+            `⚠️ Queue appears empty but never saw articles - waiting for agents to start (${consecutiveEmptyChecks + 1}/12)`,
+          );
+          consecutiveEmptyChecks++;
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          continue;
+        } else {
+          // After 60 seconds, assume agents are not running
+          logger.error(
+            `❌ CRITICAL: Agents never started processing. Pipeline cannot complete.`,
+          );
+          logger.error(
+            `   Check worker logs for "Multi-agent pipeline ready" message.`,
+          );
+          return {
+            success: false,
+            articlesPublished: 0,
+            errors: [
+              "Agents never started processing - check worker initialization",
+            ],
+          };
+        }
       }
+
       consecutiveEmptyChecks++;
 
       if (consecutiveEmptyChecks >= REQUIRED_EMPTY_CHECKS) {
