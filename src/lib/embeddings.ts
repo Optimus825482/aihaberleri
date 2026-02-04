@@ -180,8 +180,8 @@ export function titleSimilarity(title1: string, title2: string): number {
 }
 
 /**
- * Find similar articles using hash-based similarity
- * NOTE: pgvector not available, using JSONB-based fallback
+ * Find similar articles using title and hash-based similarity
+ * NOTE: No embedding field in schema, using in-memory hash comparison
  *
  * @param embedding - Query embedding vector
  * @param threshold - Minimum similarity threshold (default: 0.85)
@@ -204,39 +204,75 @@ export async function findSimilarArticles(
   const cutoffDate = new Date(Date.now() - hoursWindow * 60 * 60 * 1000);
 
   try {
-    // Fetch recent articles with embeddings stored as JSONB
+    // Fetch recent articles (no embedding field in schema)
     const articles = await db.article.findMany({
       where: {
         publishedAt: { gte: cutoffDate },
-        embedding: { not: null },
+      },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        excerpt: true,
+        content: true,
+        titleEn: true,
+        excerptEn: true,
+        contentEn: true,
+        imageUrl: true,
+        imageUrlMedium: true,
+        imageUrlSmall: true,
+        imageUrlThumb: true,
+        sourceUrl: true,
+        sourceTitle: true,
+        sourceDescription: true,
+        status: true,
+        views: true,
+        createdAt: true,
+        updatedAt: true,
+        categoryId: true,
+        authorId: true,
+        agentLogId: true,
+        metaTitle: true,
+        metaDescription: true,
+        keywords: true,
+        metaDescriptionEn: true,
+        keywordsEn: true,
+        topic: true,
+        trendScore: true,
+        indexNowStatus: true,
+        indexedAt: true,
+        score: true,
+        seoScore: true,
+        readingTime: true,
+        scheduledPublishAt: true,
+        templateId: true,
+        facebookShared: true,
+        titleABTest: true,
+        publishedAt: true,
       },
       take: 500, // Limit to prevent memory issues
+      orderBy: { publishedAt: "desc" },
     });
 
-    // Calculate similarity in memory (no pgvector)
+    // Calculate similarity in memory using generated embeddings
     const results: (Article & { similarity: number })[] = [];
 
     for (const article of articles) {
-      if (!article.embedding) continue;
+      // Generate embedding for this article on-the-fly
+      const articleText = `${article.title}. ${article.excerpt || ""}`.trim();
+      if (!articleText) continue;
 
-      // Parse embedding from JSONB
-      let storedEmbedding: number[];
       try {
-        storedEmbedding =
-          typeof article.embedding === "string"
-            ? JSON.parse(article.embedding)
-            : (article.embedding as number[]);
+        const articleEmbedding = await generateEmbedding(articleText);
+        const similarity = cosineSimilarity(embedding, articleEmbedding);
+
+        if (similarity >= threshold) {
+          results.push({ ...article, similarity } as Article & {
+            similarity: number;
+          });
+        }
       } catch {
         continue;
-      }
-
-      if (!Array.isArray(storedEmbedding)) continue;
-
-      // Calculate cosine similarity
-      const similarity = cosineSimilarity(embedding, storedEmbedding);
-
-      if (similarity >= threshold) {
-        results.push({ ...article, similarity });
       }
     }
 
@@ -327,7 +363,9 @@ export async function checkSemanticDuplicate(
 }
 
 /**
- * Generate and store embedding for an article (as JSONB)
+ * Generate and store embedding for an article
+ * NOTE: No embedding field in schema - this is now a no-op
+ * Embeddings are calculated on-the-fly during similarity checks
  *
  * @param articleId - Article ID
  * @param title - Article title
@@ -338,30 +376,17 @@ export async function storeArticleEmbedding(
   title: string,
   excerpt: string,
 ): Promise<void> {
-  try {
-    const combinedText = `${title}. ${excerpt || ""}`.trim();
-    const embedding = await generateEmbedding(combinedText);
-
-    // Store as JSONB (no pgvector needed)
-    await db.article.update({
-      where: { id: articleId },
-      data: {
-        embedding: embedding as any, // Prisma will serialize to JSONB
-      },
-    });
-
-    console.log(`[Embeddings] Stored embedding for article: ${articleId}`);
-  } catch (error) {
-    console.error(
-      `[Embeddings] Failed to store embedding for article ${articleId}:`,
-      error,
-    );
-    throw error;
-  }
+  // No-op: Embeddings are calculated on-the-fly
+  // No embedding field in Prisma schema
+  console.log(
+    `[Embeddings] Skipping storage for article ${articleId} (on-the-fly calculation used)`,
+  );
 }
 
 /**
  * Backfill embeddings for existing articles
+ * NOTE: No embedding field in schema - this is now a no-op
+ * Embeddings are calculated on-the-fly during similarity checks
  *
  * @param batchSize - Number of articles to process at once
  * @param maxArticles - Maximum total articles to process
@@ -370,49 +395,11 @@ export async function backfillEmbeddings(
   batchSize: number = 50,
   maxArticles: number = 1000,
 ): Promise<{ processed: number; errors: number }> {
-  let processed = 0;
-  let errors = 0;
-  let offset = 0;
-
-  console.log("[Embeddings] Starting backfill...");
-
-  while (processed + errors < maxArticles) {
-    // Fetch articles without embeddings
-    const articles = await db.$queryRaw<
-      { id: string; title: string; excerpt: string }[]
-    >`
-      SELECT id, title, excerpt
-      FROM "Article"
-      WHERE embedding IS NULL
-      ORDER BY "publishedAt" DESC
-      LIMIT ${batchSize}
-      OFFSET ${offset}
-    `;
-
-    if (articles.length === 0) {
-      break;
-    }
-
-    for (const article of articles) {
-      try {
-        await storeArticleEmbedding(article.id, article.title, article.excerpt);
-        processed++;
-      } catch {
-        errors++;
-      }
-    }
-
-    offset += batchSize;
-    console.log(
-      `[Embeddings] Backfill progress: ${processed} processed, ${errors} errors`,
-    );
-  }
-
+  // No-op: Embeddings are calculated on-the-fly
   console.log(
-    `[Embeddings] Backfill complete: ${processed} processed, ${errors} errors`,
+    "[Embeddings] Backfill skipped - using on-the-fly calculation (no embedding field in schema)",
   );
-
-  return { processed, errors };
+  return { processed: 0, errors: 0 };
 }
 
 /**
