@@ -7,6 +7,20 @@ const nextConfig = {
     return `build-${Date.now()}`;
   },
 
+  // Turkish URL rewrites
+  async rewrites() {
+    return [
+      {
+        source: "/haberler/:slug",
+        destination: "/news/:slug",
+      },
+      {
+        source: "/haberler",
+        destination: "/news",
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       {

@@ -20,6 +20,8 @@ const CSP_DIRECTIVES = {
     "'unsafe-eval'", // Required for Next.js dev mode
     "https://www.googletagmanager.com",
     "https://www.google-analytics.com",
+    "https://pagead2.googlesyndication.com", // Google AdSense
+    "https://static.cloudflareinsights.com", // Cloudflare Analytics
   ],
   "style-src": [
     "'self'",
@@ -42,7 +44,10 @@ const CSP_DIRECTIVES = {
   "connect-src": [
     "'self'",
     "https://www.google-analytics.com",
+    "https://analytics.google.com", // Google Analytics collect endpoint
     "https://api.openai.com",
+    "wss://aihaberleri.org", // WebSocket for real-time updates
+    "ws://localhost:3000", // WebSocket for local development
   ],
   "frame-ancestors": ["'none'"], // Prevents clickjacking
   "base-uri": ["'self'"],
