@@ -29,6 +29,7 @@ import { DashboardDonutChart } from "@/components/DashboardDonutChart";
 import { RealtimeAreaChart } from "@/components/RealtimeAreaChart";
 import { CountryBarChart } from "@/components/CountryBarChart";
 import { AgentProgressBar } from "@/components/AgentProgressBar";
+import { RealtimeDashboard } from "@/components/admin/RealtimeDashboard";
 
 interface DashboardStats {
   metrics: {
@@ -388,6 +389,22 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* 🔴 REALTIME DASHBOARD - Live Pipeline & Visitors */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-1 bg-gradient-to-b from-green-500 to-blue-500 rounded-full" />
+            <div>
+              <h2 className="text-2xl font-black tracking-tight">
+                Canlı <span className="text-green-500">Dashboard</span>
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Pipeline durumu ve ziyaretçi istatistikleri
+              </p>
+            </div>
+          </div>
+          <RealtimeDashboard />
         </div>
 
         {/* Primary Operational Section */}
