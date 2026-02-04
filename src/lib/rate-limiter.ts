@@ -184,7 +184,7 @@ export const RATE_LIMITS = {
  * 2. IP address
  * 3. Session ID
  */
-export function getRateLimitIdentifier(request: Request): string {
+export function getClientIdentifier(request: Request): string {
   // TODO: Get user ID from session after authentication is implemented
   // For now, use IP address
   const forwarded = request.headers.get("x-forwarded-for");
@@ -192,6 +192,23 @@ export function getRateLimitIdentifier(request: Request): string {
 
   return `ip:${ip}`;
 }
+
+/**
+ * Check rate limit for a request
+ */
+export async function checkRateLimit(
+  request: Request,
+  config: RateLimitConfig,
+): Promise<RateLimitResult> {
+  const limiter = new RateLimiter();
+  const identifier = getClientIdentifier(request);
+  return limiter.check(identifier, config);
+}
+
+// Export rate limit constants
+export const bulkRateLimit = RATE_LIMITS.bulkOptimize;
+export const sensitiveRateLimit = { maxRequests: 20, windowMs: 60000 };
+export const userCreationRateLimit = { maxRequests: 10, windowMs: 60000 };
 
 /**
  * Create rate limit response headers

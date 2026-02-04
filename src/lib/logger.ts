@@ -294,3 +294,4 @@ export const dbLogger = {
 
 // Export main logger for custom use
 export default logger;
+export { logger };

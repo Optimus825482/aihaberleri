@@ -16,7 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   RateLimiter,
   RATE_LIMITS,
-  getRateLimitIdentifier,
+  getClientIdentifier,
   createRateLimitHeaders,
 } from "@/lib/rate-limiter";
 import { sanitizeInput } from "@/lib/sql-injection-prevention";
@@ -31,7 +31,7 @@ export async function withRateLimit(
   endpoint: keyof typeof RATE_LIMITS,
 ): Promise<NextResponse | null> {
   const rateLimiter = new RateLimiter();
-  const identifier = getRateLimitIdentifier(request);
+  const identifier = getClientIdentifier(request);
   const config = RATE_LIMITS[endpoint];
 
   const result = await rateLimiter.check(identifier, config);
