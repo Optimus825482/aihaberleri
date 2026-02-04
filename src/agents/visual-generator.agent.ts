@@ -21,7 +21,7 @@ import {
   withTimeout,
 } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
-import { generateImagePromptGemini } from "@/lib/gemini"; // HYBRID: Using Gemini for multimodal
+import { generateImagePrompt } from "@/lib/deepseek"; // UPDATED: Using DeepSeek for image prompts
 import { fetchPollinationsImage } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import { generateSlug } from "@/lib/utils";
@@ -164,15 +164,15 @@ export class VisualGeneratorAgent extends BaseAgent<
 
       this.logger.info(`Generating visual: ${title.substring(0, 50)}...`);
 
-      // Step 1: Generate image prompt with Gemini (HYBRID: Multimodal capabilities)
+      // Step 1: Generate image prompt with DeepSeek (content-focused, diverse prompts)
       this.logger.info(
-        `🤖 HYBRID: Using Gemini 2.0 Flash for image prompt (multimodal)`,
+        `🤖 Using DeepSeek for image prompt generation (content-aware)`,
       );
-      const imagePrompt = await retryWithBackoff(
-        () =>
-          withTimeout(
-            generateImagePromptGemini(title, content, category),
-            10000,
+      const imagePrompt: string = await retryWithBackoff(
+        async () =>
+          await withTimeout(
+            generateImagePrompt(title, content, category),
+            15000,
             "Image prompt generation timeout",
           ),
         2,
