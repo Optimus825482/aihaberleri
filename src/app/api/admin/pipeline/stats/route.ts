@@ -20,7 +20,13 @@ export async function GET() {
     ];
 
     // Try to get queue stats (may fail if Redis not available)
-    let queueStats: Array<{ queueName: string; waiting: number; active: number; completed: number; failed: number }> = [];
+    let queueStats: Array<{
+      queueName: string;
+      waiting: number;
+      active: number;
+      completed: number;
+      failed: number;
+    }> = [];
     try {
       const { getAllQueueStats } = await import("@/lib/queue-manager");
       queueStats = (await getAllQueueStats()) || [];
@@ -29,7 +35,13 @@ export async function GET() {
     }
 
     // Try to get circuit breaker status
-    let circuits: Array<{ name: string; state: string; failureRate: number; totalRequests: number; lastFailure: string | null }> = [];
+    let circuits: Array<{
+      name: string;
+      state: string;
+      failureRate: number;
+      totalRequests: number;
+      lastFailure: string | null;
+    }> = [];
     try {
       const { CircuitBreaker } = await import("@/lib/circuit-breaker");
       const allCircuits = CircuitBreaker.getAllCircuits();
@@ -41,7 +53,9 @@ export async function GET() {
           state: metrics.state,
           failureRate: total > 0 ? (metrics.totalFailures / total) * 100 : 0,
           totalRequests: total,
-          lastFailure: metrics.lastFailureTime ? new Date(metrics.lastFailureTime).toISOString() : null,
+          lastFailure: metrics.lastFailureTime
+            ? new Date(metrics.lastFailureTime).toISOString()
+            : null,
         };
       });
     } catch (circuitError) {
@@ -50,7 +64,14 @@ export async function GET() {
 
     // If no circuits registered yet, show default ones
     if (circuits.length === 0) {
-      const defaultCircuits = ["deepseek", "gemini", "pollinations", "searxng", "jina", "tavily"];
+      const defaultCircuits = [
+        "deepseek",
+        "gemini",
+        "pollinations",
+        "searxng",
+        "jina",
+        "tavily",
+      ];
       circuits = defaultCircuits.map((name) => ({
         name,
         state: "CLOSED",
@@ -71,7 +92,10 @@ export async function GET() {
     } = {
       interval: 15,
       reason: "NORMAL",
-      turkeyTime: new Date().toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" }),
+      turkeyTime: new Date().toLocaleTimeString("tr-TR", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
       nextRun: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
       isWeekend: false,
       isBreakingNews: false,
@@ -108,7 +132,12 @@ export async function GET() {
 
       return {
         name,
-        status: (stat?.active ?? 0) > 0 ? "running" : (stat?.failed ?? 0) > 0 ? "error" : "idle",
+        status:
+          (stat?.active ?? 0) > 0
+            ? "running"
+            : (stat?.failed ?? 0) > 0
+              ? "error"
+              : "idle",
         queueCount: (stat?.waiting || 0) + (stat?.active || 0),
         processedCount: stat?.completed || 0,
         lastRun: null,
