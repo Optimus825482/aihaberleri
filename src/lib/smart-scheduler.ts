@@ -12,7 +12,7 @@
  * - Evening: 18:00-22:00 → 10 min (peak)
  * - Night: 00:00-07:00 → 15 min (consistent)
  * - Normal: other times → 15 min
- * 
+ *
  * NOTE: No slowdown on weekends/holidays - consistent 15 min
  */
 
