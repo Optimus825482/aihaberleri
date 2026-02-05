@@ -5,15 +5,28 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { notifyNewsToGoogle } from "@/lib/seo/google-indexing-api";
+import {
+  notifyNewsToGoogle,
+  notifyMultipleNewsToGoogle,
+} from "@/lib/seo/google-indexing-api";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postToFacebook } from "@/lib/social/facebook";
 
 /**
- * Bulk Google Submit with Streaming Logs
+ * Bulk Google Submit with Streaming Logs and Batch Processing
+ *
+ * Google Indexing API Limits:
+ * - 200 URLs per day
+ * - Batch size: 100 URLs per request (for speed)
+ * - Rate limiting: Small delay between batches
  */
 async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
   const encoder = new TextEncoder();
+
+  // Configuration
+  const DAILY_LIMIT = 200; // Google's daily quota
+  const BATCH_SIZE = 100; // Process 100 URLs per batch
+  const BATCH_DELAY_MS = 2000; // 2 seconds between batches
 
   // Create a readable stream
   const stream = new ReadableStream({
@@ -23,16 +36,33 @@ async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
       };
 
       try {
+        // Limit to daily quota
+        const limitedArticleIds = articleIds.slice(0, DAILY_LIMIT);
+
+        if (articleIds.length > DAILY_LIMIT) {
+          sendLog({
+            type: "warning",
+            message: `⚠️ Günlük limit: ${DAILY_LIMIT} URL. ${articleIds.length} haber var, ilk ${DAILY_LIMIT} tanesi işlenecek.`,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
         sendLog({
           type: "start",
-          message: `🚀 ${articleIds.length} haber için Google Indexing API'ye gönderim başlatılıyor...`,
+          message: `🚀 ${limitedArticleIds.length} haber için SADECE Google Indexing API'ye gönderim başlatılıyor...`,
+          timestamp: new Date().toISOString(),
+        });
+
+        sendLog({
+          type: "info",
+          message: `📦 Batch İşleme: ${BATCH_SIZE} URL/batch (çok daha hızlı!)`,
           timestamp: new Date().toISOString(),
         });
 
         // Get articles
         const articles = await db.article.findMany({
           where: {
-            id: { in: articleIds },
+            id: { in: limitedArticleIds },
             status: "PUBLISHED",
           },
           select: {
@@ -48,72 +78,177 @@ async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
           timestamp: new Date().toISOString(),
         });
 
-        let successCount = 0;
-        let failedCount = 0;
+        const baseUrl =
+          process.env.NEXT_PUBLIC_BASE_URL || "https://aihaberleri.org";
+        let totalSuccess = 0;
+        let totalFailed = 0;
+        let quotaExceeded = false;
 
-        // Process each article
-        for (let i = 0; i < articles.length; i++) {
-          const article = articles[i];
+        // Process in batches
+        const batches = [];
+        for (let i = 0; i < articles.length; i += BATCH_SIZE) {
+          batches.push(articles.slice(i, i + BATCH_SIZE));
+        }
+
+        sendLog({
+          type: "info",
+          message: `📦 ${batches.length} batch oluşturuldu (her batch ${BATCH_SIZE} URL'ye kadar)`,
+          timestamp: new Date().toISOString(),
+        });
+
+        for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+          const batch = batches[batchIndex];
+
+          if (quotaExceeded) {
+            sendLog({
+              type: "warning",
+              message: `⚠️ Günlük quota doldu, kalan ${batches.length - batchIndex} batch yarın işlenecek`,
+              timestamp: new Date().toISOString(),
+            });
+            break;
+          }
 
           sendLog({
             type: "progress",
-            message: `[${i + 1}/${articles.length}] İşleniyor: ${article.title}`,
-            current: i + 1,
-            total: articles.length,
+            message: `📦 Batch ${batchIndex + 1}/${batches.length} işleniyor (${batch.length} URL)...`,
+            current: batchIndex + 1,
+            total: batches.length,
             timestamp: new Date().toISOString(),
           });
 
           try {
-            // Send to Google
-            await notifyNewsToGoogle(article.slug);
+            // Send batch to Google
+            const batchResult = await notifyMultipleNewsToGoogle(
+              batch.map((a) => a.slug),
+            );
 
-            // Update database
-            await db.article.update({
-              where: { id: article.id },
-              data: {
-                googleIndexStatus: "SUBMITTED",
-                googleIndexedAt: new Date(),
-              },
-            });
+            if (batchResult.success) {
+              // Update successful articles
+              const successfulArticleIds = batchResult.results
+                .filter((r: any) => r.success)
+                .map((r: any) => {
+                  const article = batch.find(
+                    (a) => `${baseUrl}/${a.slug}` === r.url,
+                  );
+                  return article?.id;
+                })
+                .filter(Boolean);
 
-            successCount++;
+              if (successfulArticleIds.length > 0) {
+                await db.article.updateMany({
+                  where: { id: { in: successfulArticleIds } },
+                  data: {
+                    googleIndexStatus: "SUBMITTED",
+                    googleIndexedAt: new Date(),
+                  },
+                });
+              }
 
-            sendLog({
-              type: "success",
-              message: `✅ Başarılı: ${article.title}`,
-              articleId: article.id,
-              articleTitle: article.title,
-              timestamp: new Date().toISOString(),
-            });
+              // Update failed articles
+              const failedArticleIds = batchResult.results
+                .filter((r: any) => !r.success)
+                .map((r: any) => {
+                  const article = batch.find(
+                    (a) => `${baseUrl}/${a.slug}` === r.url,
+                  );
+                  return article?.id;
+                })
+                .filter(Boolean);
+
+              if (failedArticleIds.length > 0) {
+                await db.article.updateMany({
+                  where: { id: { in: failedArticleIds } },
+                  data: { googleIndexStatus: "FAILED" },
+                });
+              }
+
+              totalSuccess += batchResult.successCount;
+              totalFailed += batchResult.failCount;
+
+              sendLog({
+                type: "success",
+                message: `✅ Batch ${batchIndex + 1}/${batches.length} tamamlandı: ${batchResult.successCount} başarılı, ${batchResult.failCount} başarısız`,
+                timestamp: new Date().toISOString(),
+              });
+
+              // Check if quota exceeded in batch
+              const quotaError = batchResult.results.find(
+                (r: any) => r.error === "QUOTA_EXCEEDED",
+              );
+              if (quotaError) {
+                quotaExceeded = true;
+                sendLog({
+                  type: "warning",
+                  message: `⚠️ Günlük quota doldu! Bugün ${totalSuccess} haber gönderildi. Kalan haberler yarın otomatik gönderilecek.`,
+                  timestamp: new Date().toISOString(),
+                });
+                break;
+              }
+            } else {
+              totalFailed += batch.length;
+
+              // Mark all as failed
+              await db.article.updateMany({
+                where: { id: { in: batch.map((a) => a.id) } },
+                data: { googleIndexStatus: "FAILED" },
+              });
+
+              sendLog({
+                type: "error",
+                message: `❌ Batch ${batchIndex + 1}/${batches.length} başarısız: ${batchResult.error}`,
+                timestamp: new Date().toISOString(),
+              });
+            }
           } catch (error: any) {
-            failedCount++;
-
-            // Mark as failed
-            await db.article.update({
-              where: { id: article.id },
-              data: { googleIndexStatus: "FAILED" },
-            });
+            totalFailed += batch.length;
 
             sendLog({
               type: "error",
-              message: `❌ Başarısız: ${article.title} - ${error.message}`,
-              articleId: article.id,
-              articleTitle: article.title,
-              error: error.message,
+              message: `❌ Batch ${batchIndex + 1}/${batches.length} hatası: ${error.message}`,
               timestamp: new Date().toISOString(),
+            });
+
+            // Mark batch as failed
+            await db.article.updateMany({
+              where: { id: { in: batch.map((a) => a.id) } },
+              data: { googleIndexStatus: "FAILED" },
             });
           }
 
-          // Small delay to avoid rate limiting
-          await new Promise((resolve) => setTimeout(resolve, 200));
+          // Wait between batches (except last one)
+          if (batchIndex < batches.length - 1 && !quotaExceeded) {
+            sendLog({
+              type: "info",
+              message: `⏳ Sonraki batch için ${BATCH_DELAY_MS / 1000} saniye bekleniyor...`,
+              timestamp: new Date().toISOString(),
+            });
+            await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
+          }
         }
+
+        const remainingCount = articleIds.length - totalSuccess - totalFailed;
 
         sendLog({
           type: "complete",
-          message: `🎉 Tamamlandı! ${successCount} başarılı, ${failedCount} başarısız`,
-          successCount,
-          failedCount,
+          message: `🎉 İşlem tamamlandı!\n✅ Başarılı: ${totalSuccess}\n❌ Başarısız: ${totalFailed}\n⏳ Kalan: ${remainingCount > 0 ? remainingCount + " (yarın işlenecek)" : "0"}`,
+          successCount: totalSuccess,
+          failedCount: totalFailed,
+          remainingCount,
           total: articles.length,
+          timestamp: new Date().toISOString(),
+        });
+
+        if (remainingCount > 0) {
+          sendLog({
+            type: "info",
+            message: `💡 İpucu: Kalan ${remainingCount} haber için yarın tekrar "Hepsini Google'a Gönder" butonuna basın.`,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        sendLog({
+          type: "info",
+          message: `⚡ Batch işleme sayesinde ${batches.length} batch ile ${articles.length} haber işlendi!`,
           timestamp: new Date().toISOString(),
         });
 
@@ -147,19 +282,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
-    const status = searchParams.get("status"); // "all", "pending", "sent"
-    const platform = searchParams.get("platform"); // "all", "indexnow", "google", "facebook"
-    const search = searchParams.get("search") || ""; // Search query
+    const status = searchParams.get("status");
+    const platform = searchParams.get("platform");
+    const search = searchParams.get("search") || "";
 
     const skip = (page - 1) * limit;
 
-    // Build where clause
     const where: any = {
       status: "PUBLISHED",
       publishedAt: { not: null },
     };
 
-    // Search filter
     if (search) {
       where.title = {
         contains: search,
@@ -167,7 +300,6 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Status filter
     if (status === "pending") {
       where.OR = [
         { indexNowStatus: "PENDING" },
@@ -179,7 +311,6 @@ export async function GET(request: NextRequest) {
       where.facebookShared = true;
     }
 
-    // Platform-specific filter
     if (platform && platform !== "all") {
       if (platform === "indexnow") {
         where.OR = [
@@ -187,7 +318,6 @@ export async function GET(request: NextRequest) {
           { indexNowStatus: "FAILED" },
         ];
       } else if (platform === "google") {
-        // For now, we use same status as IndexNow for Google
         where.OR = [
           { indexNowStatus: "PENDING" },
           { indexNowStatus: "FAILED" },
@@ -197,7 +327,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get articles with notification status
     const [articles, total] = await Promise.all([
       db.article.findMany({
         where,
@@ -227,7 +356,6 @@ export async function GET(request: NextRequest) {
       db.article.count({ where }),
     ]);
 
-    // Format response with English tracking
     const formattedArticles = articles.map((article) => {
       return {
         id: article.id,
@@ -247,22 +375,6 @@ export async function GET(request: NextRequest) {
           facebook: {
             status: article.facebookShared ? "SUBMITTED" : "PENDING",
             sentAt: article.facebookShared ? article.publishedAt : null,
-          },
-        },
-        notificationsEn: {
-          indexNow: {
-            status: (article as any).indexNowStatusEn || "PENDING",
-            sentAt: (article as any).indexedAtEn,
-          },
-          google: {
-            status: (article as any).googleIndexStatusEn || "PENDING",
-            sentAt: (article as any).googleIndexedAtEn,
-          },
-          facebook: {
-            status: (article as any).facebookSharedEn ? "SUBMITTED" : "PENDING",
-            sentAt: (article as any).facebookSharedEn
-              ? article.publishedAt
-              : null,
           },
         },
       };
@@ -313,7 +425,6 @@ export async function POST(request: NextRequest) {
       return handleBulkGoogleSubmitWithStreaming(articleIds);
     }
 
-    // Get articles
     const articles = await db.article.findMany({
       where: {
         id: { in: articleIds },
@@ -349,69 +460,7 @@ export async function POST(request: NextRequest) {
       facebook: { success: 0, failed: 0 },
     };
 
-    // Process based on action
-    if (action === "resend_all" || action === "send_pending") {
-      // Send to all platforms
-      for (const article of articles) {
-        // IndexNow
-        try {
-          await submitArticleToIndexNow(article.slug, article.id);
-          results.indexNow.success++;
-        } catch (error) {
-          console.error(`IndexNow failed for ${article.slug}:`, error);
-          results.indexNow.failed++;
-        }
-
-        // Google Indexing API
-        try {
-          await notifyNewsToGoogle(article.slug);
-          results.google.success++;
-
-          // Update Google status in database
-          await db.article.update({
-            where: { id: article.id },
-            data: {
-              googleIndexStatus: "SUBMITTED",
-              googleIndexedAt: new Date(),
-            },
-          });
-        } catch (error) {
-          console.error(`Google Indexing failed for ${article.slug}:`, error);
-          results.google.failed++;
-
-          // Mark as failed
-          await db.article.update({
-            where: { id: article.id },
-            data: { googleIndexStatus: "FAILED" },
-          });
-        }
-
-        // Facebook
-        try {
-          await postToFacebook({
-            title: article.title,
-            slug: article.slug,
-            excerpt: article.excerpt,
-            imageUrl: article.imageUrl,
-            categoryName: article.category.name,
-          });
-          results.facebook.success++;
-
-          // Update facebookShared status
-          await db.article.update({
-            where: { id: article.id },
-            data: { facebookShared: true },
-          });
-        } catch (error) {
-          console.error(`Facebook post failed for ${article.slug}:`, error);
-          results.facebook.failed++;
-        }
-
-        // Small delay to avoid rate limiting
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-    } else if (action === "resend_indexnow") {
-      // Only IndexNow
+    if (action === "resend_indexnow") {
       for (const article of articles) {
         try {
           await submitArticleToIndexNow(article.slug, article.id);
@@ -421,13 +470,10 @@ export async function POST(request: NextRequest) {
         }
       }
     } else if (action === "resend_google") {
-      // Only Google
       for (const article of articles) {
         try {
           await notifyNewsToGoogle(article.slug);
           results.google.success++;
-
-          // Update Google status
           await db.article.update({
             where: { id: article.id },
             data: {
@@ -437,8 +483,6 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           results.google.failed++;
-
-          // Mark as failed
           await db.article.update({
             where: { id: article.id },
             data: { googleIndexStatus: "FAILED" },
@@ -446,7 +490,6 @@ export async function POST(request: NextRequest) {
         }
       }
     } else if (action === "resend_facebook") {
-      // Only Facebook
       for (const article of articles) {
         try {
           await postToFacebook({
@@ -457,7 +500,6 @@ export async function POST(request: NextRequest) {
             categoryName: article.category.name,
           });
           results.facebook.success++;
-
           await db.article.update({
             where: { id: article.id },
             data: { facebookShared: true },

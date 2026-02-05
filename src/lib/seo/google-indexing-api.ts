@@ -106,7 +106,8 @@ export async function notifyGoogle(
 }
 
 /**
- * Birden fazla URL'yi toplu olarak Google'a bildirir
+ * Birden fazla URL'yi toplu olarak Google'a bildirir (Batch API)
+ * Google Indexing API, tek bir HTTP isteğinde 100 URL'ye kadar izin verir
  *
  * @param urls - Bildirilecek URL'ler ve türleri
  * @returns Toplu işlem sonuçları
@@ -120,10 +121,22 @@ export async function notifyGoogleBatch(
       throw new Error("Toplu isteklerde maksimum 100 URL gönderilebilir");
     }
 
+    if (urls.length === 0) {
+      return {
+        success: true,
+        total: 0,
+        successCount: 0,
+        failCount: 0,
+        results: [],
+      };
+    }
+
     const indexing = await getIndexingClient();
     const results = [];
 
-    // Her URL için istek oluştur
+    console.log(`📦 Batch işlemi başlatılıyor: ${urls.length} URL`);
+
+    // Her URL için istek oluştur (paralel değil, sıralı - rate limiting için)
     for (const { url, type } of urls) {
       try {
         const response = await indexing.urlNotifications.publish({
@@ -140,8 +153,26 @@ export async function notifyGoogleBatch(
           data: response.data,
         });
 
-        console.log(`✅ Toplu bildirim: ${url} (${type})`);
+        console.log(`✅ Batch: ${url} (${type})`);
       } catch (error: any) {
+        // Check if quota exceeded
+        if (
+          error.message &&
+          (error.message.includes("Quota exceeded") ||
+            error.message.includes("RESOURCE_EXHAUSTED"))
+        ) {
+          console.error(`⚠️ Quota exceeded at URL: ${url}`);
+          results.push({
+            url,
+            type,
+            success: false,
+            error: "QUOTA_EXCEEDED",
+            message: error.message,
+          });
+          // Stop processing remaining URLs
+          break;
+        }
+
         results.push({
           url,
           type,
@@ -149,15 +180,18 @@ export async function notifyGoogleBatch(
           error: error.message,
         });
 
-        console.error(`❌ Toplu bildirim hatası: ${url}`, error.message);
+        console.error(`❌ Batch hatası: ${url}`, error.message);
       }
+
+      // Small delay between requests in batch (100ms)
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     const successCount = results.filter((r) => r.success).length;
     const failCount = results.filter((r) => !r.success).length;
 
     console.log(
-      `📊 Toplu bildirim tamamlandı: ${successCount} başarılı, ${failCount} başarısız`,
+      `📊 Batch tamamlandı: ${successCount} başarılı, ${failCount} başarısız`,
     );
 
     return {
@@ -168,7 +202,7 @@ export async function notifyGoogleBatch(
       results,
     };
   } catch (error: any) {
-    console.error("❌ Toplu bildirim başarısız:", error.message);
+    console.error("❌ Batch işlemi başarısız:", error.message);
     return {
       success: false,
       error: error.message,

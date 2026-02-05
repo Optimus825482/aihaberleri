@@ -901,21 +901,42 @@ export default function SEONotificationsPage() {
                 <RefreshCw
                   className={`h-5 w-5 ${bulkGoogleProcessing ? "animate-spin" : ""}`}
                 />
-                Gönderim Logları
+                Google Indexing API - Canlı Loglar
               </h3>
               <button
                 onClick={() => setShowLogs(false)}
-                className="text-gray-400 hover:text-white"
+                className="text-gray-400 hover:text-white transition-colors"
               >
                 ✕
               </button>
             </div>
+
+            {/* Rate Limiting Info */}
+            <div className="mb-3 p-3 bg-blue-900/30 border border-blue-700 rounded-lg">
+              <div className="text-sm text-blue-300 space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">⚡ Rate Limiting:</span>
+                  <span>1 saniye/istek</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">📊 Günlük Limit:</span>
+                  <span>200 URL (Google API)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">🎯 Strateji:</span>
+                  <span>Sadece Google'a gönderim (Facebook/IndexNow yok)</span>
+                </div>
+              </div>
+            </div>
+
             <div
               id="log-container"
-              className="space-y-1 font-mono text-sm max-h-96 overflow-y-auto"
+              className="space-y-1 font-mono text-sm max-h-96 overflow-y-auto bg-black/30 rounded p-3"
             >
               {logs.length === 0 ? (
-                <div className="text-gray-400">Loglar yükleniyor...</div>
+                <div className="text-gray-400 animate-pulse">
+                  🔄 Loglar yükleniyor...
+                </div>
               ) : (
                 logs.map((log, index) => {
                   const logMessage =
@@ -925,21 +946,23 @@ export default function SEONotificationsPage() {
                   return (
                     <div
                       key={index}
-                      className={`${
+                      className={`py-1 ${
                         logType === "success" || logMessage.includes("✅")
                           ? "text-green-400"
                           : logType === "error" ||
                               logType === "fatal" ||
                               logMessage.includes("❌")
                             ? "text-red-400"
-                            : logType === "start" ||
-                                logType === "complete" ||
-                                logMessage.includes("🚀") ||
-                                logMessage.includes("🎉")
-                              ? "text-blue-400"
-                              : logType === "progress"
-                                ? "text-yellow-400"
-                                : "text-gray-300"
+                            : logType === "warning" || logMessage.includes("⚠️")
+                              ? "text-yellow-400"
+                              : logType === "start" ||
+                                  logType === "complete" ||
+                                  logMessage.includes("🚀") ||
+                                  logMessage.includes("🎉")
+                                ? "text-blue-400"
+                                : logType === "progress"
+                                  ? "text-cyan-400"
+                                  : "text-gray-300"
                       }`}
                     >
                       {logMessage}
@@ -948,6 +971,27 @@ export default function SEONotificationsPage() {
                 })
               )}
             </div>
+
+            {/* Progress Summary */}
+            {bulkGoogleProcessing && logs.length > 0 && (
+              <div className="mt-3 p-3 bg-gray-800 rounded-lg">
+                <div className="text-sm text-gray-300">
+                  <div className="flex items-center justify-between">
+                    <span>İşlem devam ediyor...</span>
+                    <span className="text-blue-400 animate-pulse">●</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!bulkGoogleProcessing && logs.length > 0 && (
+              <div className="mt-3 p-3 bg-green-900/30 border border-green-700 rounded-lg">
+                <div className="text-sm text-green-300">
+                  ✅ İşlem tamamlandı! Detaylar için yukarıdaki logları
+                  inceleyin.
+                </div>
+              </div>
+            )}
           </div>
         )}
 
