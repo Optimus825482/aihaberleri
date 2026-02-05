@@ -8,7 +8,7 @@
  * npx tsx scripts/check-search-console-access.ts
  */
 
-import { notifyGoogle } from "../src/lib/seo/google-indexing-api";
+import { notifyGoogle } from "../src/lib/seo/google-indexing-api.js";
 
 async function checkSearchConsoleAccess() {
   console.log("🔍 Search Console Erişim Kontrolü Başlıyor...\n");

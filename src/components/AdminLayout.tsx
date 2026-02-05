@@ -106,6 +106,12 @@ const menuItems = [
     requiredResource: "settings" as const,
   },
   {
+    title: "SEO Bildirimleri",
+    href: "/admin/seo-notifications",
+    icon: Search,
+    requiredResource: null,
+  },
+  {
     title: "Kullanıcılar",
     href: "/admin/users",
     icon: Users,
@@ -313,7 +319,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               const hasSubmenu = item.submenu && item.submenu.length > 0;
               const isExpanded = expandedMenus[item.title];
               const isSubmenuActive =
-                hasSubmenu && item.submenu?.some((sub) => pathname === sub.href);
+                hasSubmenu &&
+                item.submenu?.some((sub) => pathname === sub.href);
 
               return (
                 <div key={item.href}>
@@ -325,10 +332,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden w-full
                       touch-manipulation active:scale-[0.98]
-                      ${isSubmenuActive
+                      ${
+                        isSubmenuActive
                           ? "bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary shadow-lg shadow-primary/10"
                           : "hover:bg-primary/5 hover:translate-x-1"
-                        }
+                      }
                     `}
                     >
                       {/* Active Indicator */}
@@ -368,10 +376,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden
                       touch-manipulation active:scale-[0.98]
-                      ${isActive
+                      ${
+                        isActive
                           ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
                           : "hover:bg-primary/5 hover:translate-x-1"
-                        }
+                      }
                     `}
                     >
                       {/* Active Indicator */}
@@ -414,10 +423,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             group flex items-center gap-2 px-3 py-2.5 rounded-lg
                             transition-all duration-200 relative
                             touch-manipulation active:scale-[0.98]
-                            ${isSubActive
+                            ${
+                              isSubActive
                                 ? "bg-primary text-white shadow-md"
                                 : "hover:bg-primary/10 hover:translate-x-1"
-                              }
+                            }
                           `}
                           >
                             <div

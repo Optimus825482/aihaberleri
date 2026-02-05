@@ -52,8 +52,7 @@ async function getIndexingClient() {
       scopes: SCOPES,
     });
 
-    const authClient = await auth.getClient();
-    return google.indexing({ version: "v3", auth: authClient });
+    return google.indexing({ version: "v3", auth });
   } catch (error) {
     console.error("❌ Google Indexing API istemcisi oluşturulamadı:", error);
     throw error;

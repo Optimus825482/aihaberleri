@@ -268,6 +268,7 @@ export async function translateAndSaveArticle(
 
       // Import SEO functions
       const { submitUrlToIndexNow } = await import("@/lib/seo/indexnow");
+      const { notifyGoogle } = await import("@/lib/seo/google-indexing-api");
 
       // Submit English URL to IndexNow (Bing, Yandex)
       try {
@@ -275,6 +276,17 @@ export async function translateAndSaveArticle(
         console.log(`   ✅ IndexNow: English URL submitted`);
       } catch (error) {
         console.warn(`   ⚠️ IndexNow failed for English URL:`, error);
+      }
+
+      // 🆕 Submit English URL to Google Indexing API
+      try {
+        await notifyGoogle(englishUrl, "URL_UPDATED");
+        console.log(`   ✅ Google Indexing API: English URL submitted`);
+      } catch (error) {
+        console.warn(
+          `   ⚠️ Google Indexing API failed for English URL:`,
+          error,
+        );
       }
 
       // Note: WebSub and sitemap pings are already done for the main article

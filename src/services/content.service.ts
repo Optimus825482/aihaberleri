@@ -997,12 +997,19 @@ export async function publishArticle(
       // Don't fail article creation if cache invalidation fails
     }
 
-    // Post-publish tasks: AGGRESSIVE INDEXING (IndexNow + Google + WebSub + Sitemap + Cloudflare)
+    // Post-publish tasks: AGGRESSIVE INDEXING (IndexNow + Google Indexing API + WebSub + Sitemap + Cloudflare)
     try {
       const { aggressivelyIndexArticle } =
         await import("@/lib/seo/aggressive-indexing");
       aggressivelyIndexArticle(article.slug, article.id).catch((err) =>
         console.error("Aggressive indexing error:", err),
+      );
+
+      // 🆕 Google Indexing API - Notify Google immediately
+      const { notifyNewsToGoogle } =
+        await import("@/lib/seo/google-indexing-api");
+      notifyNewsToGoogle(article.slug).catch((err) =>
+        console.error("Google Indexing API error:", err),
       );
     } catch (e) {
       console.error("Failed to trigger aggressive indexing:", e);
