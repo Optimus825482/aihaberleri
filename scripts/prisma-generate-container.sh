@@ -1,20 +1,14 @@
-#!/bin/bash
+ 28f19417ef06#!/bin/bash
 
 # Prisma Generate in Container
 # Bu script container içinde Prisma client'ı yeniden generate eder
 
-echo "🔍 Container ID'sini buluyorum..."
-CONTAINER_ID=$(docker ps | grep "app-i8ggkoowk4s8okc4gso8kg4w" | awk '{print $1}')
+CONTAINER_ID="28f19417ef06"
 
-if [ -z "$CONTAINER_ID" ]; then
-  echo "❌ Container bulunamadı!"
-  exit 1
-fi
-
-echo "✅ Container bulundu: $CONTAINER_ID"
+echo "✅ Container ID: $CONTAINER_ID"
 echo ""
 echo "🔄 Prisma client generate ediliyor..."
-docker exec -it $CONTAINER_ID npx prisma generate
+docker exec $CONTAINER_ID npx prisma generate
 
 echo ""
 echo "✅ Prisma client başarıyla generate edildi!"
@@ -27,3 +21,9 @@ echo "✅ Tamamlandı! Container yeniden başlatıldı."
 echo ""
 echo "📝 Test için:"
 echo "   https://aihaberleri.org/admin/seo-notifications"
+echo ""
+echo "🎯 Beklenen Sonuç:"
+echo "   - ✅ Prisma client googleIndexStatus kolonunu tanıyacak"
+echo "   - ✅ TypeScript hataları kaybolacak"
+echo "   - ✅ 'Hepsini Google'a Gönder' butonu çalışacak"
+echo "   - ✅ Batch processing (100 URL/batch) aktif olacak"

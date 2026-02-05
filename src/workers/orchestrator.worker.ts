@@ -223,8 +223,58 @@ async function publishArticlesToDatabase(
           keywords: synthesizedContent.tr.keywords,
           topic,
           agentLogId,
+          language: "tr", // Türkçe haber
         },
       });
+
+      // Post-publish notifications (non-blocking)
+      if (synthesizedContent.tr.score >= 750) {
+        // IndexNow bildirimi
+        (async () => {
+          try {
+            const { submitArticleToIndexNow } =
+              await import("@/lib/seo/indexnow");
+            const indexNowSuccess = await submitArticleToIndexNow(
+              slug,
+              trArticle.id,
+            );
+
+            // IndexNow başarılıysa googleIndexed'i true yap
+            if (indexNowSuccess) {
+              await db.article.update({
+                where: { id: trArticle.id },
+                data: {
+                  googleIndexed: true,
+                  indexNowStatus: "SUBMITTED",
+                  indexedAt: new Date(),
+                },
+              });
+              logger.success(`IndexNow: ${slug} bildirildi`);
+            }
+          } catch (err) {
+            logger.error(`IndexNow failed for ${slug}:`, err);
+          }
+        })();
+
+        // Facebook paylaşımı
+        (async () => {
+          try {
+            const { postToFacebook } = await import("@/lib/social/facebook");
+            const facebookSuccess = await postToFacebook(trArticle.id);
+
+            // Facebook başarılıysa facebookShared'i true yap
+            if (facebookSuccess) {
+              await db.article.update({
+                where: { id: trArticle.id },
+                data: { facebookShared: true },
+              });
+              logger.success(`Facebook: ${slug} paylaşıldı`);
+            }
+          } catch (err) {
+            logger.error(`Facebook failed for ${slug}:`, err);
+          }
+        })();
+      }
 
       // Create translations (TR + EN)
       await db.$executeRaw`

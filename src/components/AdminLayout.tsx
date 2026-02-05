@@ -28,6 +28,7 @@ import {
   GitBranch,
   Rocket,
   Mail,
+  Send,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,12 @@ const menuItems = [
     title: "SEO Bildirimleri",
     href: "/admin/seo-notifications",
     icon: Search,
+    requiredResource: null,
+  },
+  {
+    title: "Google Indexing Batch",
+    href: "/admin/google-indexing-batch",
+    icon: Send,
     requiredResource: null,
   },
   {
