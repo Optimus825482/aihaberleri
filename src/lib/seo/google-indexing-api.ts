@@ -211,8 +211,7 @@ export async function getNotificationMetadata(url: string) {
  * @returns Bildirim sonucu
  */
 export async function notifyNewsToGoogle(newsSlug: string) {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || "https://aihaberleri.com.tr";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://aihaberleri.org";
   const fullUrl = `${baseUrl}/${newsSlug}`;
 
   return await notifyGoogle(fullUrl, "URL_UPDATED");
@@ -225,8 +224,7 @@ export async function notifyNewsToGoogle(newsSlug: string) {
  * @returns Bildirim sonucu
  */
 export async function notifyNewsDeletedToGoogle(newsSlug: string) {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || "https://aihaberleri.com.tr";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://aihaberleri.org";
   const fullUrl = `${baseUrl}/${newsSlug}`;
 
   return await notifyGoogle(fullUrl, "URL_DELETED");
@@ -239,8 +237,7 @@ export async function notifyNewsDeletedToGoogle(newsSlug: string) {
  * @returns Toplu bildirim sonucu
  */
 export async function notifyMultipleNewsToGoogle(newsSlugs: string[]) {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || "https://aihaberleri.com.tr";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://aihaberleri.org";
 
   const urls = newsSlugs.map((slug) => ({
     url: `${baseUrl}/${slug}`,
