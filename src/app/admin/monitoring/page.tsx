@@ -401,3 +401,5 @@ export default function MonitoringPage() {
         )}
       </div>
     </AdminLayout>
+  );
+}
