@@ -60,17 +60,6 @@ export default function SEONotificationsPage() {
   const [bulkGoogleProcessing, setBulkGoogleProcessing] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [showLogs, setShowLogs] = useState(false);
-  const [bulkGoogleProcessing, setBulkGoogleProcessing] = useState(false);
-  const [logs, setLogs] = useState<
-    Array<{
-      type: string;
-      message: string;
-      timestamp: string;
-      articleId?: string;
-      articleTitle?: string;
-    }>
-  >([]);
-  const [showLogs, setShowLogs] = useState(false);
 
   // Fetch articles
   const fetchArticles = async (page: number = 1) => {
