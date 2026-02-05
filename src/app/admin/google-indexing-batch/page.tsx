@@ -40,6 +40,7 @@ import {
   Globe,
   Search,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -72,6 +73,7 @@ export default function GoogleIndexingBatchPage() {
   );
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(false);
   const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(
     null,
   );
@@ -246,6 +248,58 @@ export default function GoogleIndexingBatchPage() {
     setDateTo("");
   };
 
+  // Check Google indexing status for selected articles
+  const handleCheckStatus = async () => {
+    if (selectedArticles.size === 0) {
+      toast({
+        title: "Uyarı",
+        description: "Lütfen en az bir haber seçin",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCheckingStatus(true);
+
+    try {
+      const response = await fetch("/api/admin/google-indexing/check-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          articleIds: Array.from(selectedArticles),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "Kontrol Tamamlandı",
+          description: `✅ ${data.indexed} bildirilmiş, ❌ ${data.notIndexed} bildirilmemiş`,
+        });
+
+        // Clear selection and refresh
+        setSelectedArticles(new Set());
+        fetchUnindexedArticles();
+      } else {
+        toast({
+          title: "Hata",
+          description: data.error || "Durum kontrolü başarısız",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Status check failed:", error);
+      toast({
+        title: "Hata",
+        description: "Durum kontrolü sırasında bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
   const progressPercentage = batchProgress
     ? (batchProgress.completed / batchProgress.total) * 100
     : 0;
@@ -263,23 +317,43 @@ export default function GoogleIndexingBatchPage() {
               Toplu Google bildirim yönetimi
             </p>
           </div>
-          <Button
-            onClick={handleBatchSubmit}
-            disabled={selectedArticles.size === 0 || submitting}
-            className="font-bold"
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gönderiliyor...
-              </>
-            ) : (
-              <>
-                <Send className="mr-2 h-4 w-4" />
-                Yarın İçin Planla ({selectedArticles.size})
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={handleCheckStatus}
+              disabled={selectedArticles.size === 0 || checkingStatus}
+              variant="outline"
+              className="font-bold"
+            >
+              {checkingStatus ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Kontrol Ediliyor...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Google Durumunu Kontrol Et ({selectedArticles.size})
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleBatchSubmit}
+              disabled={selectedArticles.size === 0 || submitting}
+              className="font-bold"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Gönderiliyor...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Yarın İçin Planla ({selectedArticles.size})
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Batch Progress */}
