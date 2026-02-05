@@ -58,7 +58,7 @@ export default function SEONotificationsPage() {
   );
   const [processing, setProcessing] = useState(false);
   const [bulkGoogleProcessing, setBulkGoogleProcessing] = useState(false);
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
   const [showLogs, setShowLogs] = useState(false);
 
   // Fetch articles
@@ -190,9 +190,8 @@ export default function SEONotificationsPage() {
     }
   };
 
-  // Bulk send all to Google with streaming logs
-  const bulkSendToGoogle = async () => {
-    // Get all pending Google articles
+  // Bulk Google Submit with Streaming Logs
+  const bulkGoogleSubmit = async () => {
     const pendingGoogleArticles = articles.filter(
       (a) =>
         a.notifications.google.status === "PENDING" ||
@@ -206,7 +205,7 @@ export default function SEONotificationsPage() {
 
     if (
       !confirm(
-        `${pendingGoogleArticles.length} haber Google Indexing API'ye gönderilecek. Onaylıyor musunuz?\n\nNot: Bu işlem birkaç dakika sürebilir.`,
+        `${pendingGoogleArticles.length} haber Google Indexing API'ye gönderilecek. Onaylıyor musunuz?`,
       )
     ) {
       return;
@@ -227,12 +226,16 @@ export default function SEONotificationsPage() {
         }),
       });
 
-      if (!response.body) {
-        throw new Error("No response body");
+      if (!response.ok) {
+        throw new Error("Request failed");
       }
 
-      const reader = response.body.getReader();
+      const reader = response.body?.getReader();
       const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error("No reader available");
+      }
 
       while (true) {
         const { done, value } = await reader.read();
@@ -321,81 +324,6 @@ export default function SEONotificationsPage() {
       alert("❌ Bildirim gönderilemedi");
     } finally {
       setProcessing(false);
-    }
-  };
-
-  // Bulk Google Submit with Streaming Logs
-  const bulkGoogleSubmit = async () => {
-    const pendingGoogleArticles = articles.filter(
-      (a) =>
-        a.notifications.google.status === "PENDING" ||
-        a.notifications.google.status === "FAILED",
-    );
-
-    if (pendingGoogleArticles.length === 0) {
-      alert("Google'a gönderilmemiş haber bulunamadı");
-      return;
-    }
-
-    if (
-      !confirm(
-        `${pendingGoogleArticles.length} haber Google Indexing API'ye gönderilecek. Onaylıyor musunuz?`,
-      )
-    ) {
-      return;
-    }
-
-    setBulkGoogleProcessing(true);
-    setShowLogs(true);
-    setLogs([]);
-
-    try {
-      const response = await fetch("/api/admin/seo-notifications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "bulk_google_submit",
-          articleIds: pendingGoogleArticles.map((a) => a.id),
-          streamLogs: true,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Request failed");
-      }
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-
-      if (!reader) {
-        throw new Error("No reader available");
-      }
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = JSON.parse(line.slice(6));
-            const timestamp = new Date(data.timestamp).toLocaleTimeString(
-              "tr-TR",
-            );
-            setLogs((prev) => [...prev, `[${timestamp}] ${data.message}`]);
-          }
-        }
-      }
-
-      // Refresh articles after completion
-      await fetchArticles(pagination.page);
-    } catch (error) {
-      console.error("Bulk Google submit error:", error);
-      setLogs((prev) => [...prev, `❌ Hata: ${error}`]);
-    } finally {
-      setBulkGoogleProcessing(false);
     }
   };
 
@@ -967,7 +895,7 @@ export default function SEONotificationsPage() {
 
         {/* Real-time Logs */}
         {showLogs && (
-          <div className="mt-6 bg-gray-900 rounded-lg shadow-lg p-4 max-h-96 overflow-y-auto">
+          <div className="mt-6 bg-gray-900 rounded-lg shadow-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                 <RefreshCw
@@ -982,26 +910,42 @@ export default function SEONotificationsPage() {
                 ✕
               </button>
             </div>
-            <div className="space-y-1 font-mono text-sm">
+            <div
+              id="log-container"
+              className="space-y-1 font-mono text-sm max-h-96 overflow-y-auto"
+            >
               {logs.length === 0 ? (
                 <div className="text-gray-400">Loglar yükleniyor...</div>
               ) : (
-                logs.map((log, index) => (
-                  <div
-                    key={index}
-                    className={`${
-                      log.includes("✅")
-                        ? "text-green-400"
-                        : log.includes("❌")
-                          ? "text-red-400"
-                          : log.includes("🚀") || log.includes("🎉")
-                            ? "text-blue-400"
-                            : "text-gray-300"
-                    }`}
-                  >
-                    {log}
-                  </div>
-                ))
+                logs.map((log, index) => {
+                  const logMessage =
+                    typeof log === "string" ? log : log.message;
+                  const logType = typeof log === "string" ? "" : log.type;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`${
+                        logType === "success" || logMessage.includes("✅")
+                          ? "text-green-400"
+                          : logType === "error" ||
+                              logType === "fatal" ||
+                              logMessage.includes("❌")
+                            ? "text-red-400"
+                            : logType === "start" ||
+                                logType === "complete" ||
+                                logMessage.includes("🚀") ||
+                                logMessage.includes("🎉")
+                              ? "text-blue-400"
+                              : logType === "progress"
+                                ? "text-yellow-400"
+                                : "text-gray-300"
+                      }`}
+                    >
+                      {logMessage}
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
