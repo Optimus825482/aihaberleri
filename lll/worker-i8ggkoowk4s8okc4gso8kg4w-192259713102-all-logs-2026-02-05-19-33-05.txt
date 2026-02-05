@@ -1,0 +1,1411 @@
+
+2026-02-05T19:28:31.004287737Z npm warn exec The following package was not found and will be installed: tsx@4.21.0
+2026-02-05T19:28:36.506094297Z ✅ News agent queue created
+2026-02-05T19:28:36.507096494Z ✅ Queue events listener created
+2026-02-05T19:28:36.749965295Z info: 🚀 Worker started {"environment":"production","module":"worker","service":"ai-news-agent","timestamp":"2026-02-05 19:28:36"}
+2026-02-05T19:28:36.750152974Z 🚀 Starting News Agent Worker...
+2026-02-05T19:28:36.750369363Z 🔍 Checking Redis connection...
+2026-02-05T19:28:36.761807930Z ✅ Redis connected
+2026-02-05T19:28:36.768993409Z ✅ Redis ready to accept commands
+2026-02-05T19:28:36.804152247Z ✅ Redis connection verified (PONG received)
+2026-02-05T19:28:36.804354886Z 🔄 Database connection attempt 1/10...
+2026-02-05T19:28:36.804455876Z 🔍 Testing database connection...
+2026-02-05T19:28:36.856217885Z info: 🔌 database connection connected {"environment":"production","module":"worker","service":"database","status":"connected","timestamp":"2026-02-05 19:28:36"}
+2026-02-05T19:28:36.856237675Z ✅ Database connection successful
+2026-02-05T19:28:36.856241245Z ✅ All systems ready, starting worker...
+2026-02-05T19:28:36.856244185Z 💓 Starting worker heartbeat...
+2026-02-05T19:28:36.856247045Z 
+2026-02-05T19:28:36.856249885Z 🎯 Initializing BullMQ Worker...
+2026-02-05T19:28:36.856252755Z    Queue Name: news-agent
+2026-02-05T19:28:36.856255525Z    Redis Status: ready
+2026-02-05T19:28:36.856258225Z    Concurrency: 1
+2026-02-05T19:28:36.856260925Z    Lock Duration: 10 minutes
+2026-02-05T19:28:36.856263725Z 🤖 Initializing multi-agent pipeline agents...
+2026-02-05T19:28:36.856266505Z    📦 Initializing queue manager...
+2026-02-05T19:28:36.900102486Z ℹ️  [05.02.2026 19:28:36] [queue-manager] Initializing all queues...
+2026-02-05T19:28:36.900822285Z ℹ️  [05.02.2026 19:28:36] [queue-manager] Queue created: collected-articles
+2026-02-05T19:28:36.901261283Z ℹ️  [05.02.2026 19:28:36] [queue-manager] Queue created: relevant-articles
+2026-02-05T19:28:36.901661203Z ℹ️  [05.02.2026 19:28:36] [queue-manager] Queue created: unique-articles
+2026-02-05T19:28:36.901995491Z ℹ️  [05.02.2026 19:28:36] [queue-manager] Queue created: enriched-articles
+2026-02-05T19:28:36.902305550Z ℹ️  [05.02.2026 19:28:36] [queue-manager] Queue created: articles-with-visuals
+2026-02-05T19:28:36.902622889Z ℹ️  [05.02.2026 19:28:36] [queue-manager] Queue created: database-publisher
+2026-02-05T19:28:36.902800518Z ℹ️  [05.02.2026 19:28:36] [queue-manager] Queue created: seo-calculation
+2026-02-05T19:28:36.903056678Z ℹ️  [05.02.2026 19:28:36] [queue-manager] Queue created: seo-optimization
+2026-02-05T19:28:36.904840463Z ℹ️  [05.02.2026 19:28:36] [queue-manager] All queues initialized
+2026-02-05T19:28:36.905758230Z    ✅ Queue manager initialized
+2026-02-05T19:28:36.905788680Z    🔧 Creating agent instances...
+2026-02-05T19:28:36.905791310Z    ✅ Agent instances created
+2026-02-05T19:28:36.905793300Z    🚀 Starting all agents...
+2026-02-05T19:28:36.905795360Z ℹ️  [05.02.2026 19:28:36] [relevance-filter] Starting agent: relevance-filter
+2026-02-05T19:28:36.905797370Z ℹ️  [05.02.2026 19:28:36] [relevance-filter] Queue: relevant-articles
+2026-02-05T19:28:36.905799460Z ℹ️  [05.02.2026 19:28:36] [relevance-filter] Concurrency: 5
+2026-02-05T19:28:36.906570858Z ✅ [05.02.2026 19:28:36] [relevance-filter] Agent started: relevance-filter
+2026-02-05T19:28:36.906738218Z ℹ️  [05.02.2026 19:28:36] [duplicate-detector] Starting agent: duplicate-detector
+2026-02-05T19:28:36.906817527Z ℹ️  [05.02.2026 19:28:36] [duplicate-detector] Queue: unique-articles
+2026-02-05T19:28:36.906893517Z ℹ️  [05.02.2026 19:28:36] [duplicate-detector] Concurrency: 8
+2026-02-05T19:28:36.907207366Z ✅ [05.02.2026 19:28:36] [duplicate-detector] Agent started: duplicate-detector
+2026-02-05T19:28:36.907342355Z ℹ️  [05.02.2026 19:28:36] [content-enricher] Starting agent: content-enricher
+2026-02-05T19:28:36.907418975Z ℹ️  [05.02.2026 19:28:36] [content-enricher] Queue: enriched-articles
+2026-02-05T19:28:36.907579664Z ℹ️  [05.02.2026 19:28:36] [content-enricher] Concurrency: 3
+2026-02-05T19:28:36.907856504Z ✅ [05.02.2026 19:28:36] [content-enricher] Agent started: content-enricher
+2026-02-05T19:28:36.908650171Z ℹ️  [05.02.2026 19:28:36] [visual-generator] Starting agent: visual-generator
+2026-02-05T19:28:36.908655101Z ℹ️  [05.02.2026 19:28:36] [visual-generator] Queue: articles-with-visuals
+2026-02-05T19:28:36.908657631Z ℹ️  [05.02.2026 19:28:36] [visual-generator] Concurrency: 5
+2026-02-05T19:28:36.908659741Z ✅ [05.02.2026 19:28:36] [visual-generator] Agent started: visual-generator
+2026-02-05T19:28:36.908661671Z ℹ️  [05.02.2026 19:28:36] [database-publisher] Starting agent: database-publisher
+2026-02-05T19:28:36.909691219Z ℹ️  [05.02.2026 19:28:36] [database-publisher] Queue: database-publisher
+2026-02-05T19:28:36.909696679Z ℹ️  [05.02.2026 19:28:36] [database-publisher] Concurrency: 3
+2026-02-05T19:28:36.909749958Z ✅ [05.02.2026 19:28:36] [database-publisher] Agent started: database-publisher
+2026-02-05T19:28:36.909751878Z    ✅ RelevanceFilter started
+2026-02-05T19:28:36.909753808Z    ✅ DuplicateDetector started
+2026-02-05T19:28:36.909755608Z    ✅ ContentEnricher started
+2026-02-05T19:28:36.909757388Z    ✅ VisualGenerator started
+2026-02-05T19:28:36.909759248Z    ✅ DatabasePublisher started
+2026-02-05T19:28:36.909761138Z ✅ Multi-agent pipeline (5 agents) started successfully
+2026-02-05T19:28:36.909762988Z ✅ Multi-agent pipeline ready
+2026-02-05T19:28:36.909764778Z 
+2026-02-05T19:28:36.909773338Z 📊 Pipeline Status: ✅ READY
+2026-02-05T19:28:36.909775448Z 
+2026-02-05T19:28:36.909777238Z ✅ Worker started successfully!
+2026-02-05T19:28:36.909779098Z 👂 Listening for jobs on queue: news-agent
+2026-02-05T19:28:36.909780978Z 📊 Worker stats will be logged here...
+2026-02-05T19:28:36.909783198Z 
+2026-02-05T19:28:36.909820018Z 
+2026-02-05T19:28:36.909822088Z 🔄 Başlangıç senkronizasyonu başlatılıyor...
+2026-02-05T19:28:36.910261327Z ✅ Newsletter queue created
+2026-02-05T19:28:36.910283527Z 
+2026-02-05T19:28:36.910285827Z 📧 Initializing Newsletter Worker...
+2026-02-05T19:28:36.910618976Z ✅ Newsletter worker started
+2026-02-05T19:28:36.916160250Z 💓 Heartbeat updated: 05.02.2026 19:28:36
+2026-02-05T19:28:36.941569996Z 🟢 [relevance-filter] Worker READY - listening for jobs on queue: relevant-articles
+2026-02-05T19:28:36.941587206Z ℹ️  [05.02.2026 19:28:36] [relevance-filter] Worker ready
+2026-02-05T19:28:36.941741785Z 🟢 [duplicate-detector] Worker READY - listening for jobs on queue: unique-articles
+2026-02-05T19:28:36.941749985Z ℹ️  [05.02.2026 19:28:36] [duplicate-detector] Worker ready
+2026-02-05T19:28:36.941819395Z 🟢 [content-enricher] Worker READY - listening for jobs on queue: enriched-articles
+2026-02-05T19:28:36.941822275Z ℹ️  [05.02.2026 19:28:36] [content-enricher] Worker ready
+2026-02-05T19:28:36.941895595Z 🟢 [visual-generator] Worker READY - listening for jobs on queue: articles-with-visuals
+2026-02-05T19:28:36.941898135Z ℹ️  [05.02.2026 19:28:36] [visual-generator] Worker ready
+2026-02-05T19:28:36.942022414Z 
+2026-02-05T19:28:36.942026284Z ✅ Worker is ready and listening for jobs
+2026-02-05T19:28:36.942028444Z 🟢 [database-publisher] Worker READY - listening for jobs on queue: database-publisher
+2026-02-05T19:28:36.942030374Z ℹ️  [05.02.2026 19:28:36] [database-publisher] Worker ready
+2026-02-05T19:28:36.942375553Z 🗑️ Removed existing newsletter job: 8397d10618ce9a6d653c11b6052e6192
+2026-02-05T19:28:36.963441172Z ℹ️ IndexNow için bekleyen haber bulunmadı.
+2026-02-05T19:28:36.964778038Z 
+2026-02-05T19:28:36.964791048Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-05T19:28:36.964794178Z 📧 NEWSLETTER SCHEDULE:
+2026-02-05T19:28:36.964796188Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-05T19:28:36.964798258Z ⏰ Time: Every day at 19:00 (Turkey)
+2026-02-05T19:28:36.964799988Z 🆔 Job Type: Cron (daily-digest)
+2026-02-05T19:28:36.964801818Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-05T19:28:36.964814278Z 
+2026-02-05T19:28:36.965177626Z ✅ Newsletter scheduler initialized
+2026-02-05T19:28:36.966752632Z 🔧 Repeatable job sistemi başlatılıyor...
+2026-02-05T19:28:36.977414051Z ✅ News agent queue created
+2026-02-05T19:28:36.977570131Z ✅ Queue events listener created
+2026-02-05T19:28:36.981094771Z ✅ Repeatable job mevcut (her 0.25 saatte bir).
+2026-02-05T19:28:36.981307950Z 📅 Sıradaki çalışma zamanı: 2/5/2026, 7:32:35 PM
+2026-02-05T19:29:06.862222299Z 💓 Heartbeat updated: 05.02.2026 19:29:06
+2026-02-05T19:29:36.863577118Z 💓 Heartbeat updated: 05.02.2026 19:29:36
+2026-02-05T19:30:00.078789045Z 
+2026-02-05T19:30:00.078841705Z 🔄 Job repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770319800000 is now active
+2026-02-05T19:30:00.078851155Z info: 🔄 Job processing started {"environment":"production","jobId":"repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770319800000","jobName":"scrape-and-publish","module":"worker","service":"ai-news-agent","timestamp":"2026-02-05 19:30:00"}
+2026-02-05T19:30:00.078860775Z 
+2026-02-05T19:30:00.078867735Z ============================================================
+2026-02-05T19:30:00.078874745Z 🤖 Processing job: scrape-and-publish (ID: repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770319800000)
+2026-02-05T19:30:00.078881965Z    Priority: default
+2026-02-05T19:30:00.078888725Z    Attempt: 1/3
+2026-02-05T19:30:00.078895785Z    Timestamp: 2/5/2026, 7:15:00 PM
+2026-02-05T19:30:00.078902675Z ============================================================
+2026-02-05T19:30:00.078909535Z 
+2026-02-05T19:30:00.080675850Z 📊 Progress: 10% - Starting agent execution...
+2026-02-05T19:30:00.088466357Z info: 🤖 Agent execution started {"category":"all","environment":"production","logId":"cml9up82c00009kz8z8sz2h5q","module":"agent","service":"ai-news-agent","timestamp":"2026-02-05 19:30:00"}
+2026-02-05T19:30:00.089369665Z ℹ️  [05.02.2026 19:30:00] [agent] 🚀 Agent başlatıldı (ID: cml9up82...)
+2026-02-05T19:30:00.091686238Z [Socket] Cannot emit 'agent:started' - Socket.io not initialized
+2026-02-05T19:30:00.091903407Z 
+2026-02-05T19:30:00.091923507Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-05T19:30:00.091988177Z ┃           🤖 AGENT EXECUTION START                ┃
+2026-02-05T19:30:00.091996397Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-05T19:30:00.092004127Z ┃  Log ID:       cml9up82c000...                    ┃
+2026-02-05T19:30:00.092011137Z ┃  Start Time:   05.02.2026 19:30:00      ┃
+2026-02-05T19:30:00.092018217Z ┃  Category:     All                         ┃
+2026-02-05T19:30:00.092093166Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-05T19:30:00.092098826Z 
+2026-02-05T19:30:00.092628534Z info: 📊 Agent step: fetch_news Yapay zeka haberleri aranıyor (RSS + Trend) {"environment":"production","logId":"cml9up82c00009kz8z8sz2h5q","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-02-05 19:30:00"}
+2026-02-05T19:30:00.092987204Z 📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...
+2026-02-05T19:30:00.093963721Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-05T19:30:00.094875988Z 📰 AI haberleri toplanıyor (RSS + Trend Analizi)...
+2026-02-05T19:30:00.095421337Z 📡 89 RSS feed okunuyor...
+2026-02-05T19:30:00.096002655Z 📡 RSS feed okunuyor: BBC News - Technology
+2026-02-05T19:30:00.108553589Z 📡 RSS feed okunuyor: CNN - Technology
+2026-02-05T19:30:00.111768399Z 📡 RSS feed okunuyor: Bloomberg - Technology
+2026-02-05T19:30:00.147990664Z 📡 RSS feed okunuyor: The Wall Street Journal - Technology
+2026-02-05T19:30:00.149281770Z 📡 RSS feed okunuyor: Financial Times - Technology
+2026-02-05T19:30:00.173211370Z ✅ 10 haber bulundu: The Wall Street Journal - Technology
+2026-02-05T19:30:00.274480754Z ✅ 10 haber bulundu: CNN - Technology
+2026-02-05T19:30:00.378973439Z ✅ 10 haber bulundu: BBC News - Technology
+2026-02-05T19:30:00.539153001Z ✅ 10 haber bulundu: Bloomberg - Technology
+2026-02-05T19:30:00.771810022Z ✅ 10 haber bulundu: Financial Times - Technology
+2026-02-05T19:30:01.275834110Z 📡 RSS feed okunuyor: NBC News - Technology
+2026-02-05T19:30:01.277390076Z 📡 RSS feed okunuyor: ABC News - Technology
+2026-02-05T19:30:01.280507707Z 📡 RSS feed okunuyor: Sky News - Technology
+2026-02-05T19:30:01.283169329Z 📡 RSS feed okunuyor: Euronews - Technology
+2026-02-05T19:30:01.287981765Z 📡 RSS feed okunuyor: MIT Technology Review - AI
+2026-02-05T19:30:01.366805355Z ✅ 10 haber bulundu: MIT Technology Review - AI
+2026-02-05T19:30:01.443720361Z ✅ 10 haber bulundu: Euronews - Technology
+2026-02-05T19:30:01.457487120Z ✅ 10 haber bulundu: NBC News - Technology
+2026-02-05T19:30:01.465554547Z ✅ 10 haber bulundu: ABC News - Technology
+2026-02-05T19:30:01.594651390Z ✅ 10 haber bulundu: Sky News - Technology
+2026-02-05T19:30:02.095764337Z 📡 RSS feed okunuyor: VentureBeat - AI
+2026-02-05T19:30:02.097205502Z 📡 RSS feed okunuyor: The Verge - AI
+2026-02-05T19:30:02.098407219Z 📡 RSS feed okunuyor: TechCrunch - AI
+2026-02-05T19:30:02.100233604Z 📡 RSS feed okunuyor: Ars Technica - AI
+2026-02-05T19:30:02.100684472Z 📡 RSS feed okunuyor: Wired - AI
+2026-02-05T19:30:02.120837104Z ✅ 10 haber bulundu: Ars Technica - AI
+2026-02-05T19:30:02.126586327Z ✅ 10 haber bulundu: Wired - AI
+2026-02-05T19:30:02.135972630Z ✅ 10 haber bulundu: TechCrunch - AI
+2026-02-05T19:30:02.153163839Z ✅ 10 haber bulundu: The Verge - AI
+2026-02-05T19:30:02.235243149Z ✅ 7 haber bulundu: VentureBeat - AI
+2026-02-05T19:30:02.735385789Z 📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+2026-02-05T19:30:02.738718440Z 📡 RSS feed okunuyor: Engadget - Technology
+2026-02-05T19:30:02.743977504Z 📡 RSS feed okunuyor: The Next Web
+2026-02-05T19:30:02.746819736Z 📡 RSS feed okunuyor: TechRadar - News
+2026-02-05T19:30:02.747708723Z 📡 RSS feed okunuyor: CNET - News
+2026-02-05T19:30:02.913511429Z ✅ 10 haber bulundu: TechRadar - News
+2026-02-05T19:30:02.977083034Z ✅ 10 haber bulundu: CNET - News
+2026-02-05T19:30:03.072475036Z ✅ 10 haber bulundu: The Next Web
+2026-02-05T19:30:03.074689089Z ✅ 10 haber bulundu: ZDNet - Artificial Intelligence
+2026-02-05T19:30:03.737930822Z ✅ 10 haber bulundu: Engadget - Technology
+2026-02-05T19:30:04.238966341Z 📡 RSS feed okunuyor: Mashable - Tech
+2026-02-05T19:30:04.241324764Z 📡 RSS feed okunuyor: Gizmodo
+2026-02-05T19:30:04.242951689Z 📡 RSS feed okunuyor: Lifehacker
+2026-02-05T19:30:04.244387194Z 📡 RSS feed okunuyor: Digital Trends
+2026-02-05T19:30:04.245766750Z 📡 RSS feed okunuyor: Tom's Hardware
+2026-02-05T19:30:04.301694498Z ✅ 10 haber bulundu: Digital Trends
+2026-02-05T19:30:04.441994168Z ✅ 10 haber bulundu: Tom's Hardware
+2026-02-05T19:30:04.517494048Z ✅ 10 haber bulundu: Mashable - Tech
+2026-02-05T19:30:04.878714463Z ✅ 10 haber bulundu: Lifehacker
+2026-02-05T19:30:06.864904234Z 💓 Heartbeat updated: 05.02.2026 19:30:06
+2026-02-05T19:30:15.279794028Z ✅ 10 haber bulundu: Gizmodo
+2026-02-05T19:30:15.783128599Z 📡 RSS feed okunuyor: 9to5Mac
+2026-02-05T19:30:15.783877996Z 📡 RSS feed okunuyor: 9to5Google
+2026-02-05T19:30:15.785941721Z 📡 RSS feed okunuyor: Android Authority
+2026-02-05T19:30:15.787807536Z 📡 RSS feed okunuyor: Android Police
+2026-02-05T19:30:15.789948349Z 📡 RSS feed okunuyor: XDA Developers
+2026-02-05T19:30:15.869014848Z ✅ 10 haber bulundu: 9to5Mac
+2026-02-05T19:30:15.901324464Z ✅ 10 haber bulundu: 9to5Google
+2026-02-05T19:30:16.159306271Z ✅ 10 haber bulundu: Android Authority
+2026-02-05T19:30:16.219543205Z ✅ 10 haber bulundu: Android Police
+2026-02-05T19:30:16.220794351Z ✅ 10 haber bulundu: XDA Developers
+2026-02-05T19:30:16.721857598Z 📡 RSS feed okunuyor: Hacker News (YCombinator)
+2026-02-05T19:30:16.723079345Z 📡 RSS feed okunuyor: Product Hunt - Tech
+2026-02-05T19:30:16.723860202Z 📡 RSS feed okunuyor: AI News
+2026-02-05T19:30:16.724663040Z 📡 RSS feed okunuyor: MarkTechPost
+2026-02-05T19:30:16.725254259Z 📡 RSS feed okunuyor: The AI Edge (Substack)
+2026-02-05T19:30:16.854681040Z ✅ 10 haber bulundu: Product Hunt - Tech
+2026-02-05T19:30:16.925051115Z ✅ 10 haber bulundu: MarkTechPost
+2026-02-05T19:30:17.005791579Z ✅ 10 haber bulundu: AI News
+2026-02-05T19:30:17.203144933Z ✅ 10 haber bulundu: The AI Edge (Substack)
+2026-02-05T19:30:17.284100156Z ✅ 10 haber bulundu: Hacker News (YCombinator)
+2026-02-05T19:30:17.785130874Z 📡 RSS feed okunuyor: Last Week in AI
+2026-02-05T19:30:17.787411497Z 📡 RSS feed okunuyor: AI Business
+2026-02-05T19:30:17.788863813Z 📡 RSS feed okunuyor: THE DECODER - AI News
+2026-02-05T19:30:17.790133940Z 📡 RSS feed okunuyor: The Rundown AI
+2026-02-05T19:30:17.791240776Z 📡 RSS feed okunuyor: SiliconANGLE - AI
+2026-02-05T19:30:18.021917763Z ✅ 10 haber bulundu: Last Week in AI
+2026-02-05T19:30:18.427013290Z ✅ 10 haber bulundu: AI Business
+2026-02-05T19:30:18.536897099Z ✅ 10 haber bulundu: THE DECODER - AI News
+2026-02-05T19:30:18.828842277Z ✅ 10 haber bulundu: The Rundown AI
+2026-02-05T19:30:19.497743514Z ✅ 10 haber bulundu: SiliconANGLE - AI
+2026-02-05T19:30:19.997009357Z 📡 RSS feed okunuyor: AI Trends
+2026-02-05T19:30:19.998851072Z 📡 RSS feed okunuyor: Synced - AI Review
+2026-02-05T19:30:20.000611736Z 📡 RSS feed okunuyor: The Gradient
+2026-02-05T19:30:20.003713867Z 📡 RSS feed okunuyor: The Algorithmic Bridge
+2026-02-05T19:30:20.004229735Z 📡 RSS feed okunuyor: 404 Media
+2026-02-05T19:30:20.175609875Z ✅ 10 haber bulundu: Synced - AI Review
+2026-02-05T19:30:20.184856129Z ✅ 10 haber bulundu: 404 Media
+2026-02-05T19:30:20.352830008Z ✅ 10 haber bulundu: AI Trends
+2026-02-05T19:30:20.736961077Z ✅ 10 haber bulundu: The Algorithmic Bridge
+2026-02-05T19:30:20.974272043Z ✅ 10 haber bulundu: The Gradient
+2026-02-05T19:30:21.475471450Z 📡 RSS feed okunuyor: Ahead of AI
+2026-02-05T19:30:21.477764563Z 📡 RSS feed okunuyor: AI Accelerator Institute
+2026-02-05T19:30:21.479230779Z 📡 RSS feed okunuyor: AI - AI-TechPark
+2026-02-05T19:30:21.480162576Z 📡 RSS feed okunuyor: AI Archives | KnowTechie
+2026-02-05T19:30:21.481199524Z 📡 RSS feed okunuyor: AIModels.fyi
+2026-02-05T19:30:21.666285833Z ✅ 10 haber bulundu: AI - AI-TechPark
+2026-02-05T19:30:21.679598444Z ✅ 10 haber bulundu: AI Accelerator Institute
+2026-02-05T19:30:21.774546457Z ✅ 10 haber bulundu: AI Archives | KnowTechie
+2026-02-05T19:30:21.889115672Z ✅ 10 haber bulundu: Ahead of AI
+2026-02-05T19:30:21.895128764Z ✅ 10 haber bulundu: AIModels.fyi
+2026-02-05T19:30:22.397773027Z 📡 RSS feed okunuyor: AI Now Institute
+2026-02-05T19:30:22.397805597Z 📡 RSS feed okunuyor: AI Snake Oil
+2026-02-05T19:30:22.399851941Z 📡 RSS feed okunuyor: Ars Technica - All Content
+2026-02-05T19:30:22.402287194Z 📡 RSS feed okunuyor: Artificial Intelligence – Futurism
+2026-02-05T19:30:22.403689540Z 📡 RSS feed okunuyor: Artificial Intelligence News - ScienceDaily
+2026-02-05T19:30:22.448731719Z ✅ 10 haber bulundu: Ars Technica - All Content
+2026-02-05T19:30:22.548352258Z ✅ 10 haber bulundu: Artificial Intelligence – Futurism
+2026-02-05T19:30:22.775019446Z ✅ 10 haber bulundu: AI Now Institute
+2026-02-05T19:30:22.841481642Z ✅ 10 haber bulundu: AI Snake Oil
+2026-02-05T19:30:23.143746680Z ✅ 10 haber bulundu: Artificial Intelligence News - ScienceDaily
+2026-02-05T19:30:23.643936969Z 📡 RSS feed okunuyor: Machine Learning Mastery Blog
+2026-02-05T19:30:23.645826714Z 📡 RSS feed okunuyor: Chain of Thought
+2026-02-05T19:30:23.647372339Z 📡 RSS feed okunuyor: Chip Huyen
+2026-02-05T19:30:23.648740535Z 📡 RSS feed okunuyor: Crunchbase News
+2026-02-05T19:30:23.650025951Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-05T19:30:23.810735772Z ✅ 10 haber bulundu: Machine Learning Mastery Blog
+2026-02-05T19:30:23.842772839Z ✅ 10 haber bulundu: Chain of Thought
+2026-02-05T19:30:24.129930710Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-05T19:30:24.433703703Z ✅ 10 haber bulundu: Chip Huyen
+2026-02-05T19:30:24.591477973Z ✅ 10 haber bulundu: Crunchbase News
+2026-02-05T19:30:25.089932717Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-05T19:30:25.092076071Z 📡 RSS feed okunuyor: LangChain Blog
+2026-02-05T19:30:25.093275618Z 📡 RSS feed okunuyor: Machine Learning Mastery
+2026-02-05T19:30:25.094150655Z 📡 RSS feed okunuyor: OpenAI Blog
+2026-02-05T19:30:25.095308461Z 📡 RSS feed okunuyor: Google AI Blog
+2026-02-05T19:30:25.132089904Z ✅ 10 haber bulundu: Machine Learning Mastery
+2026-02-05T19:30:25.199520847Z ✅ 10 haber bulundu: KDnuggets
+2026-02-05T19:30:25.370949907Z ✅ 10 haber bulundu: LangChain Blog
+2026-02-05T19:30:25.528174188Z ✅ 10 haber bulundu: OpenAI Blog
+2026-02-05T19:30:25.831477033Z ✅ 10 haber bulundu: Google AI Blog
+2026-02-05T19:30:26.332141851Z 📡 RSS feed okunuyor: DeepMind Blog
+2026-02-05T19:30:26.334885962Z 📡 RSS feed okunuyor: NVIDIA Blog - AI
+2026-02-05T19:30:26.336414777Z 📡 RSS feed okunuyor: AWS Machine Learning Blog
+2026-02-05T19:30:26.337537314Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-05T19:30:26.338030263Z 📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+2026-02-05T19:30:26.421696949Z ✅ 10 haber bulundu: DeepMind Blog
+2026-02-05T19:30:26.535996185Z ✅ 10 haber bulundu: NVIDIA Blog - AI
+2026-02-05T19:30:26.680598243Z ✅ 10 haber bulundu: AWS Machine Learning Blog
+2026-02-05T19:30:26.700872834Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-05T19:30:27.093124999Z ✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+2026-02-05T19:30:27.593454448Z 📡 RSS feed okunuyor: Forbes - Innovation
+2026-02-05T19:30:27.595583691Z 📡 RSS feed okunuyor: The Economist - Technology
+2026-02-05T19:30:27.596804078Z 📡 RSS feed okunuyor: Fast Company - Technology
+2026-02-05T19:30:27.598005284Z 📡 RSS feed okunuyor: MIT Sloan Management Review
+2026-02-05T19:30:27.599107851Z 📡 RSS feed okunuyor: Seeking Alpha - Technology
+2026-02-05T19:30:27.644765298Z ✅ 10 haber bulundu: Forbes - Innovation
+2026-02-05T19:30:27.652714035Z ✅ 10 haber bulundu: Seeking Alpha - Technology
+2026-02-05T19:30:27.683558375Z ✅ 10 haber bulundu: Fast Company - Technology
+2026-02-05T19:30:27.826553568Z ✅ 10 haber bulundu: The Economist - Technology
+2026-02-05T19:30:27.994261987Z ✅ 10 haber bulundu: MIT Sloan Management Review
+2026-02-05T19:30:28.494851087Z 📡 RSS feed okunuyor: New Scientist - Technology
+2026-02-05T19:30:28.496893710Z 📡 RSS feed okunuyor: Popular Science
+2026-02-05T19:30:28.498750875Z 📡 RSS feed okunuyor: Popular Mechanics
+2026-02-05T19:30:28.499837982Z 📡 RSS feed okunuyor: Space.com
+2026-02-05T19:30:28.501683606Z 📡 RSS feed okunuyor: Phys.org - Technology
+2026-02-05T19:30:28.594124706Z ✅ 10 haber bulundu: Popular Science
+2026-02-05T19:30:28.601992374Z ✅ 10 haber bulundu: New Scientist - Technology
+2026-02-05T19:30:28.663382254Z ✅ 10 haber bulundu: Popular Mechanics
+2026-02-05T19:30:28.723698068Z ✅ 10 haber bulundu: Space.com
+2026-02-05T19:30:29.180188775Z ✅ 10 haber bulundu: Phys.org - Technology
+2026-02-05T19:30:29.682065301Z 📡 RSS feed okunuyor: ScienceDaily - Technology
+2026-02-05T19:30:29.685682801Z 📡 RSS feed okunuyor: Futurism
+2026-02-05T19:30:29.690159937Z 📡 RSS feed okunuyor: Singularity Hub
+2026-02-05T19:30:29.691608432Z 📡 RSS feed okunuyor: IEEE Spectrum - Technology
+2026-02-05T19:30:29.693947015Z 📡 RSS feed okunuyor: Towards Data Science
+2026-02-05T19:30:29.738652786Z ✅ 10 haber bulundu: Singularity Hub
+2026-02-05T19:30:29.758323208Z ✅ 10 haber bulundu: Futurism
+2026-02-05T19:30:30.017155962Z ✅ 10 haber bulundu: IEEE Spectrum - Technology
+2026-02-05T19:30:30.417260004Z ✅ 10 haber bulundu: ScienceDaily - Technology
+2026-02-05T19:30:30.462716981Z ✅ 10 haber bulundu: Towards Data Science
+2026-02-05T19:30:30.962860521Z 📡 RSS feed okunuyor: Analytics Vidhya
+2026-02-05T19:30:30.965163624Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-05T19:30:30.967449437Z 📡 RSS feed okunuyor: Machine Learning Reddit
+2026-02-05T19:30:30.968723753Z 📡 RSS feed okunuyor: AI Trends
+2026-02-05T19:30:30.998041118Z ✅ 10 haber bulundu: KDnuggets
+2026-02-05T19:30:31.222431803Z ✅ 10 haber bulundu: AI Trends
+2026-02-05T19:30:32.090593998Z ✅ 10 haber bulundu: Analytics Vidhya
+2026-02-05T19:30:32.227966187Z ✅ 10 haber bulundu: Machine Learning Reddit
+2026-02-05T19:30:32.227999647Z ✅ Toplam 887 haber toplandı
+2026-02-05T19:30:32.275000041Z ✅ 831 benzersiz haber
+2026-02-05T19:30:32.276732965Z 📅 Son 48 saatte 437 haber
+2026-02-05T19:30:32.298449122Z 🤖 AI filtreleme: 166/437 haber AI ile ilgili
+2026-02-05T19:30:32.298943261Z    ⏭️  SKIP (Reddit discussion): [R] "What data trained this model?" shouldn't requ...
+2026-02-05T19:30:32.298995361Z    ⏭️  SKIP (Reddit discussion): [P] Open-source agentic AI that reasons through da...
+2026-02-05T19:30:32.299004851Z 🔍 Reddit filtre: 2 discussion post elendi
+2026-02-05T19:30:32.299012481Z ⚡ Smart Sampling: 164 haber → 100 habere düşürülüyor
+2026-02-05T19:30:32.300506926Z ✅ En güncel 100 haber seçildi
+2026-02-05T19:30:32.300523436Z 
+2026-02-05T19:30:32.300530886Z 🔍 EARLY DUPLICATE FILTERING (Brave API'den ÖNCE)...
+2026-02-05T19:30:32.300546656Z    Input: 100 haber
+2026-02-05T19:30:32.343839319Z 🧠 Topic extraction: 100 haber...
+2026-02-05T19:30:32.343903419Z 🧠 Topic extraction başlatılıyor: 100 haber
+2026-02-05T19:30:32.343913279Z 📦 Batch 1/10 işleniyor (10 haber)...
+2026-02-05T19:30:34.076669901Z    ✅ Which AI chatbots are ad-free? It's time to look b... → ai_chatbot_ad_free_comparison
+2026-02-05T19:30:34.076699751Z    ✅ Meta is giving its AI slop feed an app of its own... → meta_ai_app_release
+2026-02-05T19:30:34.076707151Z    ✅ AI agents debate more effectively when given perso... → ai_agents_debate_improvement
+2026-02-05T19:30:34.076713661Z    ✅ Claude Opus 4.6 brings one million token context w... → anthropic_claude_opus_release
+2026-02-05T19:30:34.076719921Z    ✅ We tasked Opus 4.6 using agent teams to build a C ... → anthropic_opus_compiler
+2026-02-05T19:30:34.077897317Z    ✅ Special educators are using AI to fill in the gaps... → special_educators_ai_usage
+2026-02-05T19:30:34.077923107Z    ✅ Anthropic reveals new Opus 4.6 model with more aut... → anthropic_opus_release
+2026-02-05T19:30:34.077940097Z    ✅ MLB Players Association Partners With Genies To Tu... → mlbpa_genies_partnership
+2026-02-05T19:30:34.077948297Z    ✅ Elon Musk is getting serious about orbital data ce... → elon_musk_orbital_data_centers
+2026-02-05T19:30:34.077955987Z    ✅ OpenAI Just Launched GPT-5.3-Codex: A Faster Agent... → openai_gpt_5_3_codex_launch
+2026-02-05T19:30:34.576960709Z 📦 Batch 2/10 işleniyor (10 haber)...
+2026-02-05T19:30:35.804434346Z    ✅ Big Tech shares slide for third day with AI stocks... → big_tech_ai_stocks_decline
+2026-02-05T19:30:35.804478436Z    ✅ Report claims Nvidia will not be releasing any new... → nvidia_rtx_gpu_release
+2026-02-05T19:30:35.804486856Z    ✅ How data centers provided power during Winter Stor... → data_centers_power_provision
+2026-02-05T19:30:35.804494426Z    ✅ Anthropic's Claude Opus 4.6 uncovers 500 zero-day ... → anthropic_claude_opus_security_scan
+2026-02-05T19:30:35.804501836Z    ✅ Super Bowl LX ads: all AI everything... → super_bowl_ai_ads
+2026-02-05T19:30:35.804508876Z    ✅ I tested the Notta Memo and ditched handwritten no... → notta_memo_review
+2026-02-05T19:30:35.804515816Z    ✅ Nvidia's GeForce RTX 60-series reportedly might no... → nvidia_geforce_rtx_60_series_release
+2026-02-05T19:30:35.804532266Z    ✅ A bot-only social media platform: What the Moltboo... → moltbook_ai_experiment
+2026-02-05T19:30:35.804540256Z    ✅ OpenAI launches a way for enterprises to build and... → openai_ai_agents_launch
+2026-02-05T19:30:35.804546996Z    ✅ Anthropic's Powerful Claude Opus AI Model Is Getti... → anthropic_claude_opus_upgrade
+2026-02-05T19:30:36.304721866Z 📦 Batch 3/10 işleniyor (10 haber)...
+2026-02-05T19:30:36.868721749Z 💓 Heartbeat updated: 05.02.2026 19:30:36
+2026-02-05T19:30:37.616926255Z    ✅ AI is in its self-improvement era: OpenAI says its... → openai_coding_model_self_improvement
+2026-02-05T19:30:37.616962505Z    ✅ Claude has been having a moment — can it keep it u... → anthropic_claude_momentum
+2026-02-05T19:30:37.616966355Z    ✅ Anthropic debuts new model with hopes to corner th... → anthropic_new_model_release
+2026-02-05T19:30:37.616969495Z    ✅ OpenAI's new GPT-5.3-Codex is 25% faster and goes ... → openai_gpt_5_3_codex_release
+2026-02-05T19:30:37.616972685Z    ✅ OpenAI's Frontier gives AI agents employee-like id... → openai_frontier_agents_launch
+2026-02-05T19:30:37.616977295Z    ✅ Anthropic releases Opus 4.6 with new ‘agent teams’... → anthropic_opus_agent_teams_release
+2026-02-05T19:30:37.617058824Z    ✅ Orchestrate teams of Claude Code sessions... → anthropic_claude_code_launch
+2026-02-05T19:30:37.617080814Z    ✅ OpenAI is hoppin' mad about Anthropic's new Super ... → openai_anthropic_ad_criticism
+2026-02-05T19:30:37.617089994Z    ✅ Anthropic launches new Claude model as AI fears ra... → anthropic_claude_release
+2026-02-05T19:30:37.617165974Z    ✅ Anthropic says its new Claude Opus 4.6 can nail yo... → anthropic_claude_opus_release
+2026-02-05T19:30:38.118113641Z 📦 Batch 4/10 işleniyor (10 haber)...
+2026-02-05T19:30:39.730362894Z    ✅ Advancing finance with Claude Opus 4.6... → anthropic_claude_opus_finance
+2026-02-05T19:30:39.730388985Z    ✅ Move over, Mac mini: Geekom A9 Max brings Ryzen AI... → geekom_a9_max_launch
+2026-02-05T19:30:39.730392665Z    ✅ AI bot web traffic is closing in on human usage, e... → ai_bot_web_traffic_warning
+2026-02-05T19:30:39.730409735Z    ✅ What's Behind Wall Street's Reaction To AI Replaci... → wall_street_ai_software_reaction
+2026-02-05T19:30:39.730411935Z    ✅ NVIDIA reportedly won't release new graphics cards... → nvidia_graphics_cards_release
+2026-02-05T19:30:39.730413975Z    ✅ Meta tests a standalone app for its AI-generated ‘... → meta_vibes_app_test
+2026-02-05T19:30:39.730416045Z    ✅ Yet another Windows update is wreaking havoc on ga... → nvidia_windows_update_recommendation
+2026-02-05T19:30:39.731207562Z    ✅ Case study: Takeda... → takeda_case_study
+2026-02-05T19:30:39.731230182Z    ✅ The real reasons Elon Musk merged xAI and SpaceX... → xai_spacex_merger
+2026-02-05T19:30:39.731236722Z    ✅ Anthropic takes aim at chatbot ads—with its own Su... → anthropic_super_bowl_ad
+2026-02-05T19:30:40.231055113Z 📦 Batch 5/10 işleniyor (10 haber)...
+2026-02-05T19:30:41.546240422Z    ✅ How the Epstein files reignited the rich and power... → epstein_files_grudges
+2026-02-05T19:30:41.546323442Z    ✅ This is the next big thing in corporate AI... → corporate_ai_trends
+2026-02-05T19:30:41.546326362Z    ✅ Nvidia&#8217;s RTX 50-series Super refresh is dela... → nvidia_rtx_delay
+2026-02-05T19:30:41.546328922Z    ✅ AI agents are prompting human boom scrolling... → ai_agents_scrolling_behavior
+2026-02-05T19:30:41.546331372Z    ✅ Google airing Gemini ad at the Super Bowl: ‘New Ho... → google_gemini_superbowl_ad
+2026-02-05T19:30:41.546333622Z    ✅ Study identifies key elements that determine impac... → ai_jobs_impact_study
+2026-02-05T19:30:41.546335712Z    ✅ I finally cleaned up my messy Google Drive with a ... → google_gemini_organization
+2026-02-05T19:30:41.546337862Z    ✅ Amazon is turning to AI to cut film and TV product... → amazon_ai_cost_reduction
+2026-02-05T19:30:41.546339752Z    ✅ AI Expo 2026 Day 2: Moving experimental pilots to ... → ai_expo_production_transition
+2026-02-05T19:30:41.546343212Z    ✅ Sam Altman Is Spiraling... → sam_altman_spiraling
+2026-02-05T19:30:42.047079120Z 📦 Batch 6/10 işleniyor (10 haber)...
+2026-02-05T19:30:43.331667961Z    ✅ OpenAI Won the Consumer Mindshare—And Paid For It ... → openai_consumer_mindshare_cost
+2026-02-05T19:30:43.332849487Z    ✅ How Google’s new AI could change videogames foreve... → google_ai_videogames
+2026-02-05T19:30:43.332869117Z    ✅ MLB players strike deal to be turned into AI chara... → mlb_players_ai_characters_partnership
+2026-02-05T19:30:43.332875597Z    ✅ Peloton Institutes Mass Layoffs After Pivoting to ... → peloton_ai_layoffs
+2026-02-05T19:30:43.332880907Z    ✅ Tech Stack for Vibe Coding Modern Applications... → tech_stack_vibe_coding
+2026-02-05T19:30:43.332885977Z    ✅ AI venture Fundamental secures $1.2bn valuation an... → fundamental_amazon_partnership
+2026-02-05T19:30:43.332890867Z    ✅ Mechanistic Interpretability: Peeking Inside an LL... → mechanistic_interpretability_research
+2026-02-05T19:30:43.332895857Z    ✅ Private capital giants warn AI risks could slow gr... → private_capital_ai_warning
+2026-02-05T19:30:43.332938717Z    ✅ Brain-inspired AI helps soft robot arms switch tas... → soft_robotics_ai_stability
+2026-02-05T19:30:43.332943917Z    ✅ ElevenLabs CEO: Voice is the next interface for AI... → elevenlabs_voice_interface
+2026-02-05T19:30:43.833030866Z 📦 Batch 7/10 işleniyor (10 haber)...
+2026-02-05T19:30:45.015024755Z    ✅ Google set to double AI spending to $185bn after s... → google_ai_spending_increase
+2026-02-05T19:30:45.015045725Z    ✅ Anthropic, OpenAI rivalry spills into new Super Bo... → anthropic_openai_superbowl_ads
+2026-02-05T19:30:45.015058135Z    ✅ Increase of AI bots on the Internet sparks arms ra... → ai_bots_internet_arms_race
+2026-02-05T19:30:45.015060375Z    ✅ Agent Evaluation: How to Test and Measure Agentic ... → agentic_ai_evaluation
+2026-02-05T19:30:45.015062515Z    ✅ Snowflake thinks AI coding agents are solving the ... → snowflake_ai_coding_agents_problem
+2026-02-05T19:30:45.015064375Z    ✅ Anthropic Just Sent Shockwaves Through the Entire ... → anthropic_ai_tool_release
+2026-02-05T19:30:45.015066165Z    ✅ Anthropic is betting on ad-free Claude to win you ... → anthropic_claude_launch
+2026-02-05T19:30:45.015067975Z    ✅ News sites are locking out the internet archive to... → news_sites_ai_crawling_restrictions
+2026-02-05T19:30:45.015069795Z    ✅ OpenAI Frontier is a single platform to control yo... → openai_frontier_platform
+2026-02-05T19:30:45.015071585Z    ✅ Why NVIDIA RTX PCs offer the best way to run AI lo... → nvidia_rtx_local_ai
+2026-02-05T19:30:45.515772483Z 📦 Batch 8/10 işleniyor (10 haber)...
+2026-02-05T19:30:46.638525065Z    ✅ Secure a snappy gaming PC with an RTX 5060 and 16G... → msi_codex_r2_launch
+2026-02-05T19:30:46.638564006Z    ✅ Anthropic’s Superbowl Ads Mocking OpenAI Have Sam ... → anthropic_openai_ad_mockery
+2026-02-05T19:30:46.638572866Z    ✅ Tesla's robotics ambitions rest on the knife-edge ... → tesla_robotics_supply_chain
+2026-02-05T19:30:46.638580266Z    ✅ How to Access and Use Qwen3-Coder-Next?... → qwen3_coder_next_access
+2026-02-05T19:30:46.638587296Z    ✅ Voxtral Transcribe 2 offers speech recognition at ... → voxtral_transcribe_2_pricing
+2026-02-05T19:30:46.638594236Z    ✅ ChatGPT boss ridiculed for online 'tantrum' over r... → openai_ceo_superbowl_ad_criticism
+2026-02-05T19:30:46.638601406Z    ✅ Meta's internal memo signals AI comeback after roc... → meta_ai_comeback
+2026-02-05T19:30:46.638606916Z    ✅ Is this the ‘take off’ moment for AI agents?... → ai_agents_takeoff
+2026-02-05T19:30:46.638611496Z    ✅ The Absolute Insanity of Moltbook... → moltbook_insanity
+2026-02-05T19:30:46.638615976Z    ✅ Amazon launches AI Studio to cut film and TV produ... → amazon_ai_studio_launch
+2026-02-05T19:30:47.139372884Z 📦 Batch 9/10 işleniyor (10 haber)...
+2026-02-05T19:30:48.332836979Z    ✅ Global VC Investment Surged In January, With U.S. ... → global_vc_investment_surge
+2026-02-05T19:30:48.332871419Z    ✅ TSMC to make advanced AI semiconductors in Japan i... → tsmc_japan_semiconductor_production
+2026-02-05T19:30:48.332874429Z    ✅ GPT-5 lowers the cost of cell-free protein synthes... → gpt5_protein_synthesis_cost
+2026-02-05T19:30:48.332876439Z    ✅ Microsoft unveils method to detect sleeper agent b... → microsoft_sleeper_agent_detection
+2026-02-05T19:30:48.332878319Z    ✅ Hollywood Is Losing Audiences to AI Fatigue... → hollywood_ai_fatigue
+2026-02-05T19:30:48.332880219Z    ✅ Altman claims ChatGPT has more users in Texas alon... → altman_chatgpt_usage_claim
+2026-02-05T19:30:48.332882089Z    ✅ Anthropic’s ad-free campaign takes aim at OpenAI... → anthropic_openai_campaign
+2026-02-05T19:30:48.332883939Z    ✅ This is the most misunderstood graph in AI... → ai_graph_misunderstanding
+2026-02-05T19:30:48.332885749Z    ✅ Introducing Trusted Access for Cyber... → trusted_access_cyber_launch
+2026-02-05T19:30:48.332887659Z    ✅ My neighborhood is pushing back against sidewalk d... → sidewalk_delivery_robots_opposition
+2026-02-05T19:30:48.833734886Z 📦 Batch 10/10 işleniyor (10 haber)...
+2026-02-05T19:30:50.288117750Z    ✅ Kembara closes €750M first close to fuel growth of... → kembara_european_deeptech_fund
+2026-02-05T19:30:50.288157200Z    ✅ Mark Cuban just made a surprising anti‑AI investme... → mark_cuban_anti_ai_investment
+2026-02-05T19:30:50.288164100Z    ✅ OpenAI’s enterprise push: The hidden story behind ... → openai_enterprise_sales
+2026-02-05T19:30:50.288169380Z    ✅ Mistral AI Launches Voxtral Transcribe 2: Pairing ... → mistral_ai_voxtral_launch
+2026-02-05T19:30:50.288174260Z    ✅ 40 RAG Interview Questions and Answers... → rag_interview_questions
+2026-02-05T19:30:50.288179340Z    ✅ GitHub Agent HQ... → github_agent_hq_launch
+2026-02-05T19:30:50.288184130Z    ✅ NVIDIA AI Release VibeTensor: An AI Generated Deep... → nvidia_vibetensor_release
+2026-02-05T19:30:50.288189010Z    ✅ Sam Altman got exceptionally testy over Claude Sup... → sam_altman_claude_ads
+2026-02-05T19:30:50.288193740Z    ✅ Trump talks Minneapolis, Joe Rogan, the Fed, AI an... → trump_interview_2028
+2026-02-05T19:30:50.288198470Z    ✅ GPT-5.3-Codex System Card... → gpt_5_3_codex_release
+2026-02-05T19:30:50.288252870Z ✅ Topic extraction tamamlandı: 100 haber
+2026-02-05T19:30:50.288278460Z 🔍 Duplicate check: Son 2 günde yayınlananlar eleniyor...
+2026-02-05T19:30:50.289029528Z 
+2026-02-05T19:30:50.289073668Z 🔍 Early duplicate filtering başlatılıyor...
+2026-02-05T19:30:50.289079708Z    Input: 100 haber
+2026-02-05T19:30:50.289084818Z    Time window: 2 gün
+2026-02-05T19:30:50.304769822Z    📚 Checking against 100 recent articles in database
+2026-02-05T19:30:50.317918024Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [anthropic] + 33% similarity
+2026-02-05T19:30:50.317947464Z       New: "Anthropic reveals new Opus 4.6 model with more aut..."
+2026-02-05T19:30:50.317998653Z       Already selected: "Claude Opus 4.6 brings one million token context w..."
+2026-02-05T19:30:50.323160668Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [nvidia, x] + 50% similarity
+2026-02-05T19:30:50.323188358Z       New: "Nvidia's GeForce RTX 60-series reportedly might no..."
+2026-02-05T19:30:50.323195008Z       Already selected: "Report claims Nvidia will not be releasing any new..."
+2026-02-05T19:30:50.326821617Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [anthropic, claude] + 50% similarity
+2026-02-05T19:30:50.326847017Z       New: "Anthropic's Powerful Claude Opus AI Model Is Getti..."
+2026-02-05T19:30:50.326853387Z       Already selected: "Claude Opus 4.6 brings one million token context w..."
+2026-02-05T19:30:50.330296897Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [openai, x] + 42% similarity
+2026-02-05T19:30:50.330361547Z       New: "OpenAI's new GPT-5.3-Codex is 25% faster and goes ..."
+2026-02-05T19:30:50.330368317Z       Already selected: "OpenAI Just Launched GPT-5.3-Codex: A Faster Agent..."
+2026-02-05T19:30:50.332628200Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [anthropic] + 33% similarity
+2026-02-05T19:30:50.332677500Z       New: "Anthropic releases Opus 4.6 with new ‘agent teams’..."
+2026-02-05T19:30:50.332683910Z       Already selected: "Claude Opus 4.6 brings one million token context w..."
+2026-02-05T19:30:50.333216078Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [claude] + 40% similarity
+2026-02-05T19:30:50.333228518Z       New: "Orchestrate teams of Claude Code sessions..."
+2026-02-05T19:30:50.333234268Z       Already selected: "Anthropic's Claude Opus 4.6 uncovers 500 zero-day ..."
+2026-02-05T19:30:50.334600905Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [anthropic, claude] + 33% similarity
+2026-02-05T19:30:50.334661135Z       New: "Anthropic launches new Claude model as AI fears ra..."
+2026-02-05T19:30:50.334784374Z       Already selected: "Claude Opus 4.6 brings one million token context w..."
+2026-02-05T19:30:50.334849174Z    ⏭️  SKIP (topic duplicate in BATCH): anthropic_claude_opus_release - "Anthropic says its new Claude Opus 4.6 can nail yo..."
+2026-02-05T19:30:50.334854794Z       Already selected: "Claude Opus 4.6 brings one million token context w..."
+2026-02-05T19:30:50.335161733Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [claude] + 50% similarity
+2026-02-05T19:30:50.335181733Z       New: "Advancing finance with Claude Opus 4.6..."
+2026-02-05T19:30:50.335188723Z       Already selected: "Claude Opus 4.6 brings one million token context w..."
+2026-02-05T19:30:50.338016734Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [meta] + 44% similarity
+2026-02-05T19:30:50.338043844Z       New: "Meta tests a standalone app for its AI-generated ‘..."
+2026-02-05T19:30:50.338454014Z       Already selected: "Meta is giving its AI slop feed an app of its own..."
+2026-02-05T19:30:50.340389627Z    ⏭️  SKIP (entity+keyword duplicate in DB): [x, spacex] + 43% similarity
+2026-02-05T19:30:50.340413057Z       New: "The real reasons Elon Musk merged xAI and SpaceX..."
+2026-02-05T19:30:50.340419777Z       Existing: "Musk, SpaceX ve xAI'yı Birleştirdi: Uzayda Yapay Z..." (2/4/2026)
+2026-02-05T19:30:50.340983516Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [anthropic] + 44% similarity
+2026-02-05T19:30:50.340996916Z       New: "Anthropic takes aim at chatbot ads—with its own Su..."
+2026-02-05T19:30:50.341002576Z       Already selected: "OpenAI is hoppin' mad about Anthropic's new Super ..."
+2026-02-05T19:30:50.342592821Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [nvidia, x] + 45% similarity
+2026-02-05T19:30:50.342613711Z       New: "Nvidia&#8217;s RTX 50-series Super refresh is dela..."
+2026-02-05T19:30:50.342621051Z       Already selected: "Report claims Nvidia will not be releasing any new..."
+2026-02-05T19:30:50.348009196Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [x] + 33% similarity
+2026-02-05T19:30:50.348032566Z       New: "ElevenLabs CEO: Voice is the next interface for AI..."
+2026-02-05T19:30:50.348039496Z       Already selected: "This is the next big thing in corporate AI..."
+2026-02-05T19:30:50.349279112Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [openai, anthropic] + 40% similarity
+2026-02-05T19:30:50.349291842Z       New: "Anthropic, OpenAI rivalry spills into new Super Bo..."
+2026-02-05T19:30:50.349297242Z       Already selected: "OpenAI is hoppin' mad about Anthropic's new Super ..."
+2026-02-05T19:30:50.352216973Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [openai] + 38% similarity
+2026-02-05T19:30:50.352265363Z       New: "OpenAI Frontier is a single platform to control yo..."
+2026-02-05T19:30:50.352271963Z       Already selected: "OpenAI launches a way for enterprises to build and..."
+2026-02-05T19:30:50.354790545Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [openai, anthropic] + 33% similarity
+2026-02-05T19:30:50.354806765Z       New: "Anthropic’s Superbowl Ads Mocking OpenAI Have Sam ..."
+2026-02-05T19:30:50.354814465Z       Already selected: "OpenAI is hoppin' mad about Anthropic's new Super ..."
+2026-02-05T19:30:50.355752333Z    ⏭️  SKIP (entity+keyword duplicate in DB): [x] + 50% similarity
+2026-02-05T19:30:50.355789493Z       New: "How to Access and Use Qwen3-Coder-Next?..."
+2026-02-05T19:30:50.355795913Z       Existing: "Qwen3-Coder-Next: Kodlama Dünyasında Yeni Bir Çığı..." (2/3/2026)
+2026-02-05T19:30:50.358272845Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [amazon] + 75% similarity
+2026-02-05T19:30:50.358308415Z       New: "Amazon launches AI Studio to cut film and TV produ..."
+2026-02-05T19:30:50.358315075Z       Already selected: "Amazon is turning to AI to cut film and TV product..."
+2026-02-05T19:30:50.359708071Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [openai, anthropic] + 33% similarity
+2026-02-05T19:30:50.359742622Z       New: "Anthropic’s ad-free campaign takes aim at OpenAI..."
+2026-02-05T19:30:50.359748332Z       Already selected: "OpenAI is hoppin' mad about Anthropic's new Super ..."
+2026-02-05T19:30:50.361210177Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [openai] + 33% similarity
+2026-02-05T19:30:50.361224097Z       New: "OpenAI’s enterprise push: The hidden story behind ..."
+2026-02-05T19:30:50.361229347Z       Already selected: "OpenAI's Frontier gives AI agents employee-like id..."
+2026-02-05T19:30:50.361910705Z    ⏭️  SKIP (entity+keyword duplicate in DB): [nvidia] + 33% similarity
+2026-02-05T19:30:50.361935304Z       New: "NVIDIA AI Release VibeTensor: An AI Generated Deep..."
+2026-02-05T19:30:50.361941424Z       Existing: "NVIDIA ve Dassault Systèmes Sanal İkizler için End..." (2/4/2026)
+2026-02-05T19:30:50.362369474Z    ⏭️  SKIP (entity+keyword duplicate in BATCH): [x] + 30% similarity
+2026-02-05T19:30:50.362383284Z       New: "Sam Altman got exceptionally testy over Claude Sup..."
+2026-02-05T19:30:50.362389334Z       Already selected: "Super Bowl LX ads: all AI everything..."
+2026-02-05T19:30:50.362537563Z    ⏭️  SKIP (entity+keyword duplicate in DB): [x] + 50% similarity
+2026-02-05T19:30:50.362545803Z       New: "GPT-5.3-Codex System Card..."
+2026-02-05T19:30:50.362550443Z       Existing: "OpenAI GPT-5.2 ve Codex'te Performans Devrimi: %40..." (2/4/2026)
+2026-02-05T19:30:50.362555153Z 
+2026-02-05T19:30:50.362559543Z 📊 Early filtering özeti:
+2026-02-05T19:30:50.362564163Z    Input: 100 haber
+2026-02-05T19:30:50.362702723Z    Duplicate: 24 haber
+2026-02-05T19:30:50.362707763Z    Unique: 76 haber
+2026-02-05T19:30:50.362712003Z    Duplicate rate: 24.0%
+2026-02-05T19:30:50.362716223Z 
+2026-02-05T19:30:50.362720463Z 📊 Early filtering sonuçları:
+2026-02-05T19:30:50.362724903Z    Input: 100 haber
+2026-02-05T19:30:50.362729223Z    Duplicate: 24 haber
+2026-02-05T19:30:50.362733532Z    Unique: 76 haber
+2026-02-05T19:30:50.362776132Z    Duplicate rate: 24.0%
+2026-02-05T19:30:50.362980752Z 
+2026-02-05T19:30:50.362986922Z ✅ 76 unique haber Brave API'ye gönderilecek
+2026-02-05T19:30:50.362991882Z    Brave API maliyet tasarrufu: 24.0%
+2026-02-05T19:30:50.362996611Z 
+2026-02-05T19:30:50.363001111Z 📊 76 UNIQUE haber için Trend analizi (Brave API)...
+2026-02-05T19:30:50.363385951Z 📊 Hybrid ile 76 haber analiz ediliyor...
+2026-02-05T19:30:50.363395561Z 📦 Batch 1/8 işleniyor (10 haber)...
+2026-02-05T19:30:50.389751864Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.389825424Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.875940665Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.875974595Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.876708492Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.876726612Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.877477750Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.877488650Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.878717896Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.879357494Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.879372814Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.879378894Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.879967753Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.879987213Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.880474191Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.880708251Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.881466378Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.881709617Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.882245606Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:50.882417796Z ⏳ 500ms bekleniyor...
+2026-02-05T19:30:50.882424295Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.383220003Z 📦 Batch 2/8 işleniyor (10 haber)...
+2026-02-05T19:30:51.386069475Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.386274135Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.892570796Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.892606906Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.893390304Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.893436174Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.894040782Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.894083312Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.894548310Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.894557760Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.895122599Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.895135129Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.895554688Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.895561948Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.896243996Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.896255706Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.896841024Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.896851844Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.897458672Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:51.897606392Z ⏳ 500ms bekleniyor...
+2026-02-05T19:30:51.897617562Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.397681121Z 📦 Batch 3/8 işleniyor (10 haber)...
+2026-02-05T19:30:52.400110834Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.400122844Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.906971985Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.907011005Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.907503403Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.907510883Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.908074911Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.908084471Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.908605990Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.908611650Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.909408358Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.909421818Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.909952196Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.909960826Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.910450264Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.910455614Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.911178722Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.911251092Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.911563651Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.911581841Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:52.911654761Z ⏳ 500ms bekleniyor...
+2026-02-05T19:30:53.411856930Z 📦 Batch 4/8 işleniyor (10 haber)...
+2026-02-05T19:30:53.414226663Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.414240913Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.923132457Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.923167947Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.924106745Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.924140094Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.924792172Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.924814712Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.925010622Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.926899446Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.926920246Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.926926036Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.928134442Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.928206802Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.928805471Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.928817371Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.929277909Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.929285379Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.929860678Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.929881898Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:53.929903918Z ⏳ 500ms bekleniyor...
+2026-02-05T19:30:54.431103214Z 📦 Batch 5/8 işleniyor (10 haber)...
+2026-02-05T19:30:54.433433017Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.433463717Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.940813866Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.941388054Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.941582944Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.941587384Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.942649880Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.942662420Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.942677870Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.942787951Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.943198759Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.943233339Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.943776337Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.943812737Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.944240676Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.944299126Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.944763474Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.944777244Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.945339623Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:54.945422853Z ⏳ 500ms bekleniyor...
+2026-02-05T19:30:54.945449423Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.445289473Z 📦 Batch 6/8 işleniyor (10 haber)...
+2026-02-05T19:30:55.448439234Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.448529514Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.954382397Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.954416887Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.955010425Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.955020135Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.955647843Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.955658173Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.956193542Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.956201712Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.956711010Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.956721070Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.957228629Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.957235549Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.957905196Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.957915176Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.958539875Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.958565095Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.959244692Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.959266602Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:55.959288492Z ⏳ 500ms bekleniyor...
+2026-02-05T19:30:56.460103791Z 📦 Batch 7/8 işleniyor (10 haber)...
+2026-02-05T19:30:56.462350454Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.462364314Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.970897149Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.971026808Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.971967346Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.971986576Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.972682924Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.972859714Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.973567471Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.973576241Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.974158300Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.974174510Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.974762157Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.974774647Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.976590763Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.976687082Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.976773682Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.976857142Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.977389009Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:56.977869379Z ⏳ 500ms bekleniyor...
+2026-02-05T19:30:56.977913999Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.478323178Z 📦 Batch 8/8 işleniyor (6 haber)...
+2026-02-05T19:30:57.484257750Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.484280720Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.985124778Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.985167278Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.985724396Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.985766876Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.986816832Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.986839062Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.986846882Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.986853252Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.987315472Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.987326092Z ❌ SearXNG trend score error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:30:57.987585741Z ✅ Hybrid trend sıralaması tamamlandı
+2026-02-05T19:30:57.987595121Z 📊 İşlenen: 76/76 haber
+2026-02-05T19:30:57.987601891Z 🏆 Top 5: #5 (skor: 60), #13 (skor: 60), #4 (skor: 59), #37 (skor: 59), #54 (skor: 59)
+2026-02-05T19:30:57.987882820Z 📈 Provider İstatistikleri:
+2026-02-05T19:30:57.987898439Z    Brave: 0 istek, 0 hata, ✅ aktif
+2026-02-05T19:30:57.987905269Z    Tavily: 0 istek, 0 hata, ✅ aktif
+2026-02-05T19:30:57.987911929Z    SearXNG: 76 istek, 0 hata, ✅ aktif
+2026-02-05T19:30:57.988123269Z ✅ 50 trend haber seçildi (retry pool için artırıldı)
+2026-02-05T19:30:57.989039026Z Top 5 Trend Haberler: 
+2026-02-05T19:30:57.989094196Z   1. We tasked Opus 4.6 using agent teams to build a C Compiler... (skor: 60)
+2026-02-05T19:30:57.989101616Z   2. Anthropic's Claude Opus 4.6 uncovers 500 zero-day flaws in o... (skor: 60)
+2026-02-05T19:30:57.989108226Z   3. Claude Opus 4.6 brings one million token context window to A... (skor: 59)
+2026-02-05T19:30:57.989114136Z   4. Sam Altman Is Spiraling... (skor: 59)
+2026-02-05T19:30:57.989119626Z   5. Why NVIDIA RTX PCs offer the best way to run AI locally... (skor: 59)
+2026-02-05T19:30:57.989125446Z ✅ 50 unique trend haber bulundu (duplicate filtering yapıldı)
+2026-02-05T19:30:57.989131306Z ✅ [05.02.2026 19:30:57] [rss] 📰 50 unique haber bulundu
+2026-02-05T19:30:57.993532213Z info: 📊 Agent step: smart_filtering Akıllı filtreleme ve topic extraction {"environment":"production","logId":"cml9up82c00009kz8z8sz2h5q","module":"agent","progress":40,"service":"ai-news-agent","step":"smart_filtering","timestamp":"2026-02-05 19:30:57"}
+2026-02-05T19:30:57.993576863Z 🎯 Adım 2: Akıllı filtreleme başlatılıyor...
+2026-02-05T19:30:57.994789730Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-05T19:30:58.001605060Z 📊 Haber sayısı ayarları: min=2, max=3
+2026-02-05T19:30:58.001750689Z 🎯 Hedef haber sayısı: 3
+2026-02-05T19:30:58.001761909Z ℹ️  [05.02.2026 19:30:58] [deepseek] 🚀 Akıllı filtreleme: 50 unique haber → 3 seçilecek
+2026-02-05T19:30:58.049447420Z 
+2026-02-05T19:30:58.049476960Z ============================================================
+2026-02-05T19:30:58.051719803Z 🚀 SMART FILTERING PIPELINE BAŞLATILIYOR
+2026-02-05T19:30:58.051740773Z ============================================================
+2026-02-05T19:30:58.051745693Z    Input: 50 haber
+2026-02-05T19:30:58.051749673Z    Target: 3 unique haber
+2026-02-05T19:30:58.051753363Z    Time window: 2 gün
+2026-02-05T19:30:58.051756934Z    Skip duplicate check: false
+2026-02-05T19:30:58.051760504Z 
+2026-02-05T19:30:58.051763994Z 📊 STAGE 1: BATCH FILTERING
+2026-02-05T19:30:58.051767804Z    Input: 50 haber
+2026-02-05T19:30:58.051771344Z    Batch size: 10
+2026-02-05T19:30:58.051774834Z    Top per batch: 5
+2026-02-05T19:30:58.051778384Z    📦 Batch 1: 10 haber → 5 seçilecek
+2026-02-05T19:30:58.051821354Z       1. [60] We tasked Opus 4.6 using agent teams to build a C ...
+2026-02-05T19:30:58.052027263Z       2. [60] Anthropic's Claude Opus 4.6 uncovers 500 zero-day ...
+2026-02-05T19:30:58.052033903Z       3. [59] Claude Opus 4.6 brings one million token context w...
+2026-02-05T19:30:58.052038273Z       4. [59] Sam Altman Is Spiraling...
+2026-02-05T19:30:58.052049273Z       5. [59] Why NVIDIA RTX PCs offer the best way to run AI lo...
+2026-02-05T19:30:58.052161642Z    📦 Batch 2: 10 haber → 5 seçilecek
+2026-02-05T19:30:58.052514871Z       1. [58] The Absolute Insanity of Moltbook...
+2026-02-05T19:30:58.052827420Z       2. [57] Google airing Gemini ad at the Super Bowl: ‘New Ho...
+2026-02-05T19:30:58.052845070Z       3. [56] Meta's internal memo signals AI comeback after roc...
+2026-02-05T19:30:58.052849510Z       4. [55] Meta is giving its AI slop feed an app of its own...
+2026-02-05T19:30:58.052887650Z       5. [55] Brain-inspired AI helps soft robot arms switch tas...
+2026-02-05T19:30:58.052977970Z    📦 Batch 3: 10 haber → 5 seçilecek
+2026-02-05T19:30:58.053175469Z       1. [54] Increase of AI bots on the Internet sparks arms ra...
+2026-02-05T19:30:58.053181969Z       2. [54] GitHub Agent HQ...
+2026-02-05T19:30:58.053185729Z       3. [53] GPT-5 lowers the cost of cell-free protein synthes...
+2026-02-05T19:30:58.053189339Z       4. [51] Big Tech shares slide for third day with AI stocks...
+2026-02-05T19:30:58.053192849Z       5. [51] OpenAI launches a way for enterprises to build and...
+2026-02-05T19:30:58.053246169Z    📦 Batch 4: 10 haber → 5 seçilecek
+2026-02-05T19:30:58.055003644Z       1. [47] Claude has been having a moment — can it keep it u...
+2026-02-05T19:30:58.055015094Z       2. [46] Is this the ‘take off’ moment for AI agents?...
+2026-02-05T19:30:58.055018484Z       3. [45] Special educators are using AI to fill in the gaps...
+2026-02-05T19:30:58.055020964Z       4. [45] Super Bowl LX ads: all AI everything...
+2026-02-05T19:30:58.055294943Z       5. [45] ChatGPT boss ridiculed for online 'tantrum' over r...
+2026-02-05T19:30:58.055299532Z    📦 Batch 5: 10 haber → 5 seçilecek
+2026-02-05T19:30:58.055301832Z       1. [42] AI agents are prompting human boom scrolling...
+2026-02-05T19:30:58.055303602Z       2. [42] Hollywood Is Losing Audiences to AI Fatigue...
+2026-02-05T19:30:58.055308592Z       3. [41] Peloton Institutes Mass Layoffs After Pivoting to ...
+2026-02-05T19:30:58.058780042Z       4. [41] Introducing Trusted Access for Cyber...
+2026-02-05T19:30:58.058789442Z       5. [40] AI agents debate more effectively when given perso...
+2026-02-05T19:30:58.058791792Z    ✅ Filtered: 25 haber
+2026-02-05T19:30:58.058793872Z 
+2026-02-05T19:30:58.058795682Z 🧠 STAGE 2: TOPIC EXTRACTION
+2026-02-05T19:30:58.058797542Z    Input: 25 haber
+2026-02-05T19:30:58.058799392Z 🧠 Topic extraction başlatılıyor: 25 haber
+2026-02-05T19:30:58.058801332Z 📦 Batch 1/7 işleniyor (4 haber)...
+2026-02-05T19:30:59.273031528Z    ✅ We tasked Opus 4.6 using agent teams to build a C ... → anthropic_opus_compiler_development
+2026-02-05T19:30:59.273083867Z    ✅ Anthropic's Claude Opus 4.6 uncovers 500 zero-day ... → anthropic_claude_opus_security_discovery
+2026-02-05T19:30:59.273088097Z    ✅ Claude Opus 4.6 brings one million token context w... → anthropic_claude_opus_release
+2026-02-05T19:30:59.273125517Z    ✅ Sam Altman Is Spiraling... → sam_altman_spiraling
+2026-02-05T19:30:59.773197578Z 📦 Batch 2/7 işleniyor (4 haber)...
+2026-02-05T19:31:00.958029188Z    ✅ Why NVIDIA RTX PCs offer the best way to run AI lo... → nvidia_rtx_local_ai
+2026-02-05T19:31:00.958094538Z    ✅ The Absolute Insanity of Moltbook... → moltbook_insanity
+2026-02-05T19:31:00.958106168Z    ✅ Google airing Gemini ad at the Super Bowl: ‘New Ho... → google_gemini_superbowl_ad
+2026-02-05T19:31:00.958116928Z    ✅ Meta's internal memo signals AI comeback after roc... → meta_ai_comeback
+2026-02-05T19:31:01.458924565Z 📦 Batch 3/7 işleniyor (4 haber)...
+2026-02-05T19:31:02.630811723Z    ✅ Meta is giving its AI slop feed an app of its own... → meta_ai_app_launch
+2026-02-05T19:31:02.630851373Z    ✅ Brain-inspired AI helps soft robot arms switch tas... → soft_robot_ai_stability
+2026-02-05T19:31:02.630863323Z    ✅ Increase of AI bots on the Internet sparks arms ra... → ai_bots_internet_arms_race
+2026-02-05T19:31:02.630874383Z    ✅ GitHub Agent HQ... → github_agent_hq_launch
+2026-02-05T19:31:03.133673115Z 📦 Batch 4/7 işleniyor (4 haber)...
+2026-02-05T19:31:04.271720172Z    ✅ GPT-5 lowers the cost of cell-free protein synthes... → gpt5_protein_synthesis_cost
+2026-02-05T19:31:04.271769492Z    ✅ Big Tech shares slide for third day with AI stocks... → big_tech_ai_stocks_decline
+2026-02-05T19:31:04.271778432Z    ✅ OpenAI launches a way for enterprises to build and... → openai_ai_agents_launch
+2026-02-05T19:31:04.271808622Z    ✅ Claude has been having a moment — can it keep it u... → anthropic_claude_momentum
+2026-02-05T19:31:04.772615170Z 📦 Batch 5/7 işleniyor (4 haber)...
+2026-02-05T19:31:05.976837995Z    ✅ Is this the ‘take off’ moment for AI agents?... → ai_agents_takeoff
+2026-02-05T19:31:05.976876885Z    ✅ Special educators are using AI to fill in the gaps... → special_educators_ai_usage
+2026-02-05T19:31:05.976883555Z    ✅ Super Bowl LX ads: all AI everything... → super_bowl_ai_ads
+2026-02-05T19:31:05.976888475Z    ✅ ChatGPT boss ridiculed for online 'tantrum' over r... → openai_ceo_superbowl_ad_criticism
+2026-02-05T19:31:06.477744292Z 📦 Batch 6/7 işleniyor (4 haber)...
+2026-02-05T19:31:06.866565766Z 💓 Heartbeat updated: 05.02.2026 19:31:06
+2026-02-05T19:31:07.630664014Z    ✅ AI agents are prompting human boom scrolling... → ai_agents_scrolling_prompt
+2026-02-05T19:31:07.630687434Z    ✅ Hollywood Is Losing Audiences to AI Fatigue... → hollywood_ai_fatigue
+2026-02-05T19:31:07.630690764Z    ✅ Peloton Institutes Mass Layoffs After Pivoting to ... → peloton_ai_layoffs
+2026-02-05T19:31:07.630693484Z    ✅ Introducing Trusted Access for Cyber... → trusted_access_cyber_launch
+2026-02-05T19:31:08.130544995Z 📦 Batch 7/7 işleniyor (1 haber)...
+2026-02-05T19:31:09.445757356Z    ✅ AI agents debate more effectively when given perso... → ai_agents_debate_improvement
+2026-02-05T19:31:09.445823945Z ✅ Topic extraction tamamlandı: 25 haber
+2026-02-05T19:31:09.446001975Z 
+2026-02-05T19:31:09.446006595Z    📊 Topic dağılımı:
+2026-02-05T19:31:09.446198654Z       anthropic_opus_compiler_development: 1 haber
+2026-02-05T19:31:09.446353553Z       anthropic_claude_opus_security_discovery: 1 haber
+2026-02-05T19:31:09.446358913Z       anthropic_claude_opus_release: 1 haber
+2026-02-05T19:31:09.446361163Z       sam_altman_spiraling: 1 haber
+2026-02-05T19:31:09.446362963Z       nvidia_rtx_local_ai: 1 haber
+2026-02-05T19:31:09.446364813Z       moltbook_insanity: 1 haber
+2026-02-05T19:31:09.446366613Z       google_gemini_superbowl_ad: 1 haber
+2026-02-05T19:31:09.446368453Z       meta_ai_comeback: 1 haber
+2026-02-05T19:31:09.446370273Z       meta_ai_app_launch: 1 haber
+2026-02-05T19:31:09.446372143Z       soft_robot_ai_stability: 1 haber
+2026-02-05T19:31:09.446374153Z    ✅ Topics extracted: 25 haber
+2026-02-05T19:31:09.446503603Z 
+2026-02-05T19:31:09.446506403Z 🔍 STAGE 3: TOPIC-BASED DUPLICATE CHECK & SMART SELECTION
+2026-02-05T19:31:09.446508733Z    Input: 25 haber
+2026-02-05T19:31:09.446669952Z    Target: 3 unique topics
+2026-02-05T19:31:09.446679442Z    Skip duplicate check: false
+2026-02-05T19:31:09.446901291Z 
+2026-02-05T19:31:09.446912111Z 🎯 Akıllı haber seçimi başlatılıyor...
+2026-02-05T19:31:09.447095292Z    Aday sayısı: 25
+2026-02-05T19:31:09.447098612Z    Hedef: 3 unique topic
+2026-02-05T19:31:09.447100622Z    Zaman penceresi: 2 gün
+2026-02-05T19:31:09.458985447Z    ✅ SELECTED [1/3]: anthropic_opus_compiler_development (score: 60)
+2026-02-05T19:31:09.459006927Z       "We tasked Opus 4.6 using agent teams to build a C Compiler...")
+2026-02-05T19:31:09.465292858Z    ✅ SELECTED [2/3]: anthropic_claude_opus_security_discovery (score: 60)
+2026-02-05T19:31:09.465307468Z       "Anthropic's Claude Opus 4.6 uncovers 500 zero-day flaws in o...")
+2026-02-05T19:31:09.471328941Z    ✅ SELECTED [3/3]: anthropic_claude_opus_release (score: 59)
+2026-02-05T19:31:09.471344111Z       "Claude Opus 4.6 brings one million token context window to A...")
+2026-02-05T19:31:09.471346531Z ✅ Hedef sayıya ulaşıldı (3 haber)
+2026-02-05T19:31:09.471348801Z 
+2026-02-05T19:31:09.471350831Z 📊 Seçim özeti:
+2026-02-05T19:31:09.471352701Z    Seçilen: 3
+2026-02-05T19:31:09.471354761Z    Atlanan (AI değil): 0
+2026-02-05T19:31:09.471377920Z    Atlanan (aynı topic): 0
+2026-02-05T19:31:09.471437660Z    Atlanan (duplicate): 0
+2026-02-05T19:31:09.471440490Z    Toplam işlenen: 25
+2026-02-05T19:31:09.471442430Z    ✅ Selected: 3 unique topics
+2026-02-05T19:31:09.471505790Z 
+2026-02-05T19:31:09.471511500Z ============================================================
+2026-02-05T19:31:09.471513490Z ✅ SMART FILTERING TAMAMLANDI
+2026-02-05T19:31:09.471515270Z ============================================================
+2026-02-05T19:31:09.471517110Z    Stage 1 (Batch Filter):    50 → 25
+2026-02-05T19:31:09.471567540Z    Stage 2 (Topic Extract):   25 → 25
+2026-02-05T19:31:09.471569920Z    Stage 3 (Smart Select):    25 → 3
+2026-02-05T19:31:09.471588950Z    Duplicate Rate:            88.0%
+2026-02-05T19:31:09.471659129Z    Processing Time:           11.4s
+2026-02-05T19:31:09.471734599Z ============================================================
+2026-02-05T19:31:09.471736979Z 
+2026-02-05T19:31:09.471857189Z ✅ 3 unique topic haberi seçildi
+2026-02-05T19:31:09.471866939Z    Duplicate rate: 88.0%
+2026-02-05T19:31:09.471979968Z ✅ [05.02.2026 19:31:09] [deepseek] ✅ 3 unique topic seçildi (duplicate rate: 88.0%)
+2026-02-05T19:31:09.474886380Z info: 📊 Agent step: multi_agent_pipeline Multi-agent pipeline başlatılıyor (Enrichment + Visual + Publish) {"environment":"production","logId":"cml9up82c00009kz8z8sz2h5q","module":"agent","progress":60,"service":"ai-news-agent","step":"multi_agent_pipeline","timestamp":"2026-02-05 19:31:09"}
+2026-02-05T19:31:09.474897640Z 🤖 Adım 3: Multi-agent pipeline başlatılıyor...
+2026-02-05T19:31:09.475450118Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-05T19:31:09.519133041Z ℹ️  [05.02.2026 19:31:09] [multi-agent-pipeline] 🚀 Starting multi-agent pipeline with 3 articles
+2026-02-05T19:31:09.519218321Z 
+2026-02-05T19:31:09.519223331Z 📤 Adding job to queue: relevant-articles
+2026-02-05T19:31:09.519316291Z    Articles: 3
+2026-02-05T19:31:09.519510280Z    AgentLogId: cml9up82c00009kz8z8sz2h5q
+2026-02-05T19:31:09.527738396Z ✅ Job added successfully: 227
+2026-02-05T19:31:09.529776399Z 🔄 [relevance-filter] Job 227 ACTIVE - processing...
+2026-02-05T19:31:09.529790770Z ℹ️  [05.02.2026 19:31:09] [relevance-filter] Job 227 active
+2026-02-05T19:31:09.530216829Z 
+2026-02-05T19:31:09.530223709Z 🤖 [relevance-filter] ========== PROCESSING JOB ==========
+2026-02-05T19:31:09.530858276Z    Job ID: 227
+2026-02-05T19:31:09.530871276Z    Job Name: filter-relevance
+2026-02-05T19:31:09.530873646Z    Queue: relevant-articles
+2026-02-05T19:31:09.530875706Z    Data items: 3
+2026-02-05T19:31:09.530877516Z ℹ️  [05.02.2026 19:31:09] [relevance-filter] Processing job 227
+2026-02-05T19:31:09.530934016Z ℹ️  [05.02.2026 19:31:09] [relevance-filter] Filtering 3 articles for relevance...
+2026-02-05T19:31:09.531383625Z ℹ️  [05.02.2026 19:31:09] [relevance-filter] Processing batch 1/1 (3 articles)
+2026-02-05T19:31:09.531494725Z ℹ️  [05.02.2026 19:31:09] [relevance-filter] 🤖 HYBRID: Using Gemini 2.0 Flash for batch scoring
+2026-02-05T19:31:10.529443860Z 
+2026-02-05T19:31:10.529574060Z 📊 Queue Status (relevant-articles):
+2026-02-05T19:31:10.529580070Z    Waiting: 0
+2026-02-05T19:31:10.529584360Z    Active: 1
+2026-02-05T19:31:10.529588170Z    Completed: 100
+2026-02-05T19:31:10.529591860Z    Failed: 0
+2026-02-05T19:31:10.529595480Z ℹ️  [05.02.2026 19:31:10] [multi-agent-pipeline] 📊 Queue status: waiting=0, active=1, completed=100, failed=0
+2026-02-05T19:31:10.529603700Z ✅ [05.02.2026 19:31:10] [multi-agent-pipeline] ✅ Job is being processed by an agent!
+2026-02-05T19:31:10.529608290Z ✅ [05.02.2026 19:31:10] [multi-agent-pipeline] ✅ 3 articles added to multi-agent pipeline
+2026-02-05T19:31:10.529612230Z 
+2026-02-05T19:31:10.529615970Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-05T19:31:10.529620220Z ┃        🤖 MULTI-AGENT PIPELINE STARTED            ┃
+2026-02-05T19:31:10.529624190Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-05T19:31:10.529628140Z ┃  Articles:     3                                  ┃
+2026-02-05T19:31:10.529674310Z ┃  Target:       3                                  ┃
+2026-02-05T19:31:10.529678450Z ┃  Agent Log:    cml9up82c000...                    ┃
+2026-02-05T19:31:10.529682130Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-05T19:31:10.529686109Z ┃  Pipeline Flow:                                   ┃
+2026-02-05T19:31:10.529689779Z ┃  1. ✅ Content Collected (RSS + Trend)            ┃
+2026-02-05T19:31:10.529693560Z ┃  2. 🔄 Relevance Filter (AI scoring)              ┃
+2026-02-05T19:31:10.529697340Z ┃  3. 🔄 Duplicate Detection (3-layer)              ┃
+2026-02-05T19:31:10.529700990Z ┃  4. 🔄 Content Enrichment (Brave + Jina)          ┃
+2026-02-05T19:31:10.529704620Z ┃  5. 🔄 Visual Generation (Pollinations)           ┃
+2026-02-05T19:31:10.529708220Z ┃  6. 🔄 Database Publishing                        ┃
+2026-02-05T19:31:10.529711880Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-05T19:31:10.529715870Z   
+2026-02-05T19:31:10.529719480Z ℹ️  [05.02.2026 19:31:10] [agent] 🤖 Multi-agent pipeline başlatıldı: 3 haber işlenecek
+2026-02-05T19:31:10.530146339Z ⏳ Multi-agent pipeline tamamlanması bekleniyor...
+2026-02-05T19:31:10.530359138Z 
+2026-02-05T19:31:10.530370808Z ⏳ Waiting for pipeline completion (timeout: 1200s)
+2026-02-05T19:31:10.530375958Z ℹ️  [05.02.2026 19:31:10] [multi-agent-pipeline] ⏳ Waiting for pipeline completion (timeout: 1200s)
+2026-02-05T19:31:11.761041534Z ✅ [05.02.2026 19:31:11] [relevance-filter] Filtered: 3/3 articles passed (0.0% rejected)
+2026-02-05T19:31:11.761348924Z ℹ️  [05.02.2026 19:31:11] [relevance-filter] Top 5 relevant articles:
+2026-02-05T19:31:11.762218961Z ℹ️  [05.02.2026 19:31:11] [relevance-filter]   1. [92] Anthropic's Claude Opus 4.6 uncovers 500 zero-day ...
+2026-02-05T19:31:11.762239741Z ℹ️  [05.02.2026 19:31:11] [relevance-filter]   2. [90] Claude Opus 4.6 brings one million token context w...
+2026-02-05T19:31:11.762246180Z ℹ️  [05.02.2026 19:31:11] [relevance-filter]   3. [88] We tasked Opus 4.6 using agent teams to build a C ...
+2026-02-05T19:31:11.762511750Z ✅ [05.02.2026 19:31:11] [relevance-filter] Job 227 completed in 2232ms
+2026-02-05T19:31:11.768254383Z ℹ️  [05.02.2026 19:31:11] [relevance-filter] Emitted to next queue: unique-articles
+2026-02-05T19:31:11.773425649Z 🔄 [duplicate-detector] Job 227 ACTIVE - processing...
+2026-02-05T19:31:11.773468868Z ℹ️  [05.02.2026 19:31:11] [duplicate-detector] Job 227 active
+2026-02-05T19:31:11.773475128Z 
+2026-02-05T19:31:11.773480078Z 🤖 [duplicate-detector] ========== PROCESSING JOB ==========
+2026-02-05T19:31:11.773484838Z    Job ID: 227
+2026-02-05T19:31:11.773489688Z    Job Name: relevance-filter-output
+2026-02-05T19:31:11.773509088Z    Queue: unique-articles
+2026-02-05T19:31:11.773513918Z    Data items: 3
+2026-02-05T19:31:11.773518488Z ℹ️  [05.02.2026 19:31:11] [duplicate-detector] Processing job 227
+2026-02-05T19:31:11.773523258Z ℹ️  [05.02.2026 19:31:11] [duplicate-detector] Checking 3 articles for duplicates...
+2026-02-05T19:31:11.779411181Z ✅ [relevance-filter] Job 227 COMPLETED
+2026-02-05T19:31:11.779431601Z ✅ [05.02.2026 19:31:11] [relevance-filter] Job 227 completed
+2026-02-05T19:31:11.779437891Z ℹ️  [05.02.2026 19:31:11] [queue-manager] [relevant-articles] Job 227 completed
+2026-02-05T19:31:12.185238916Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-05T19:31:12.250132857Z 🔍 Checking for duplicates among 497 recent articles...
+2026-02-05T19:31:12.289120022Z ✅ No duplicates found for: "Anthropic's Claude Opus 4.6 uncovers 500 zero-day flaws in o..."
+2026-02-05T19:31:12.548373555Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-05T19:31:12.625624500Z 🔍 Checking for duplicates among 497 recent articles...
+2026-02-05T19:31:12.669350312Z ✅ No duplicates found for: "Claude Opus 4.6 brings one million token context window to A..."
+2026-02-05T19:31:13.046838480Z 🔍 Checking for duplicates among 359 recent articles...
+2026-02-05T19:31:13.064570378Z ✅ No duplicates found for: "We tasked Opus 4.6 using agent teams to build a C Compiler..."
+2026-02-05T19:31:13.064588408Z ✅ [05.02.2026 19:31:13] [duplicate-detector] Duplicate check: 3/3 unique (0.0% duplicates)
+2026-02-05T19:31:13.064591208Z ✅ [05.02.2026 19:31:13] [duplicate-detector] Job 227 completed in 1292ms
+2026-02-05T19:31:13.066606973Z ℹ️  [05.02.2026 19:31:13] [duplicate-detector] Emitted to next queue: enriched-articles
+2026-02-05T19:31:13.067664520Z 🔄 [content-enricher] Job 201 ACTIVE - processing...
+2026-02-05T19:31:13.067685149Z ℹ️  [05.02.2026 19:31:13] [content-enricher] Job 201 active
+2026-02-05T19:31:13.067762999Z 
+2026-02-05T19:31:13.067765259Z 🤖 [content-enricher] ========== PROCESSING JOB ==========
+2026-02-05T19:31:13.067767179Z    Job ID: 201
+2026-02-05T19:31:13.067768919Z    Job Name: duplicate-detector-output
+2026-02-05T19:31:13.067770689Z    Queue: enriched-articles
+2026-02-05T19:31:13.067772409Z    Data items: 3
+2026-02-05T19:31:13.067777709Z ℹ️  [05.02.2026 19:31:13] [content-enricher] Processing job 201
+2026-02-05T19:31:13.068094588Z ℹ️  [05.02.2026 19:31:13] [content-enricher] Enriching 3 articles...
+2026-02-05T19:31:13.068138298Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 🚀 Starting PARALLEL enrichment for 3 articles...
+2026-02-05T19:31:13.068251777Z ℹ️  [05.02.2026 19:31:13] [content-enricher] [1/3] Enriching: Anthropic's Claude Opus 4.6 uncovers 500 zero-day ...
+2026-02-05T19:31:13.068954936Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 🔍 Fast SearXNG search: anthropic claude opus uncovers 500 zero day flaws
+2026-02-05T19:31:13.069959563Z ℹ️  [05.02.2026 19:31:13] [content-enricher] [2/3] Enriching: Claude Opus 4.6 brings one million token context w...
+2026-02-05T19:31:13.070121452Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 🔍 Fast SearXNG search: claude opus brings one million token context window
+2026-02-05T19:31:13.070197662Z ℹ️  [05.02.2026 19:31:13] [content-enricher] [3/3] Enriching: We tasked Opus 4.6 using agent teams to build a C ...
+2026-02-05T19:31:13.070272572Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 🔍 Fast SearXNG search: tasked opus using agent teams build compiler article
+2026-02-05T19:31:13.071113340Z ✅ [duplicate-detector] Job 227 COMPLETED
+2026-02-05T19:31:13.071117730Z ✅ [05.02.2026 19:31:13] [duplicate-detector] Job 227 completed
+2026-02-05T19:31:13.071457468Z ℹ️  [05.02.2026 19:31:13] [queue-manager] [unique-articles] Job 227 completed
+2026-02-05T19:31:13.072367436Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:31:13.571773628Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:31:13.571939557Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:31:13.571973337Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-05T19:31:13.572219976Z ℹ️  [05.02.2026 19:31:13] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-05T19:31:13.572319336Z ⚠️  [05.02.2026 19:31:13] [content-enricher] [2] Insufficient sources (0), using fallback
+2026-02-05T19:31:13.572627735Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-05T19:31:13.573712272Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:31:13.573918782Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-05T19:31:13.573969602Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:31:13.574043091Z ℹ️  [05.02.2026 19:31:13] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-05T19:31:13.574123171Z ⚠️  [05.02.2026 19:31:13] [content-enricher] [3] Insufficient sources (0), using fallback
+2026-02-05T19:31:13.574224961Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-05T19:31:13.580172413Z ❌ SearXNG search error: connect ECONNREFUSED 10.0.4.4:8080
+2026-02-05T19:31:13.580192703Z ⚠️  [05.02.2026 19:31:13] [content-enricher] [1] Insufficient sources (0), using fallback
+2026-02-05T19:31:13.580212753Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-05T19:31:13.580218743Z ℹ️  [05.02.2026 19:31:13] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-05T19:31:13.580224133Z ℹ️  [05.02.2026 19:31:13] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-05T19:31:15.539013964Z 
+2026-02-05T19:31:15.539041064Z 📊 [Check #1] Pipeline Progress:
+2026-02-05T19:31:15.539047694Z    Stage: enriched-articles
+2026-02-05T19:31:15.539052364Z    In Queue: 1
+2026-02-05T19:31:15.539056764Z    Completed: 100
+2026-02-05T19:31:15.539078864Z    Failed: 0
+2026-02-05T19:31:15.539085274Z    Has Seen Articles: true
+2026-02-05T19:31:15.539090864Z    Empty Checks: 0/5
+2026-02-05T19:31:15.539095594Z ℹ️  [05.02.2026 19:31:15] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:31:20.541077800Z 
+2026-02-05T19:31:20.541127120Z 📊 [Check #2] Pipeline Progress:
+2026-02-05T19:31:20.541137240Z    Stage: enriched-articles
+2026-02-05T19:31:20.541145180Z    In Queue: 1
+2026-02-05T19:31:20.541152040Z    Completed: 100
+2026-02-05T19:31:20.541159230Z    Failed: 0
+2026-02-05T19:31:20.541166190Z    Has Seen Articles: true
+2026-02-05T19:31:20.541173270Z    Empty Checks: 0/5
+2026-02-05T19:31:20.541215280Z ℹ️  [05.02.2026 19:31:20] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:31:25.544112311Z 
+2026-02-05T19:31:25.544158061Z 📊 [Check #3] Pipeline Progress:
+2026-02-05T19:31:25.544166141Z    Stage: enriched-articles
+2026-02-05T19:31:25.544172701Z    In Queue: 1
+2026-02-05T19:31:25.544178481Z    Completed: 100
+2026-02-05T19:31:25.544184131Z    Failed: 0
+2026-02-05T19:31:25.544189761Z    Has Seen Articles: true
+2026-02-05T19:31:25.544195481Z    Empty Checks: 0/5
+2026-02-05T19:31:25.544206061Z ℹ️  [05.02.2026 19:31:25] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:31:30.551230651Z 
+2026-02-05T19:31:30.551345840Z 📊 [Check #4] Pipeline Progress:
+2026-02-05T19:31:30.551663639Z    Stage: enriched-articles
+2026-02-05T19:31:30.551677519Z    In Queue: 1
+2026-02-05T19:31:30.551682789Z    Completed: 100
+2026-02-05T19:31:30.551687329Z    Failed: 0
+2026-02-05T19:31:30.551691689Z    Has Seen Articles: true
+2026-02-05T19:31:30.551696079Z    Empty Checks: 0/5
+2026-02-05T19:31:30.551700729Z ℹ️  [05.02.2026 19:31:30] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:31:35.553422035Z 
+2026-02-05T19:31:35.553441115Z 📊 [Check #5] Pipeline Progress:
+2026-02-05T19:31:35.553445145Z    Stage: enriched-articles
+2026-02-05T19:31:35.553448375Z    In Queue: 1
+2026-02-05T19:31:35.553451135Z    Completed: 100
+2026-02-05T19:31:35.553461425Z    Failed: 0
+2026-02-05T19:31:35.553463305Z    Has Seen Articles: true
+2026-02-05T19:31:35.553465005Z    Empty Checks: 0/5
+2026-02-05T19:31:35.553466805Z ℹ️  [05.02.2026 19:31:35] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:31:36.868158566Z 💓 Heartbeat updated: 05.02.2026 19:31:36
+2026-02-05T19:31:40.555474319Z 
+2026-02-05T19:31:40.555516239Z 📊 [Check #6] Pipeline Progress:
+2026-02-05T19:31:40.555523219Z    Stage: enriched-articles
+2026-02-05T19:31:40.555528299Z    In Queue: 1
+2026-02-05T19:31:40.555532819Z    Completed: 100
+2026-02-05T19:31:40.555537129Z    Failed: 0
+2026-02-05T19:31:40.555541379Z    Has Seen Articles: true
+2026-02-05T19:31:40.555545609Z    Empty Checks: 0/5
+2026-02-05T19:31:40.555550009Z ℹ️  [05.02.2026 19:31:40] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:31:45.558431402Z 
+2026-02-05T19:31:45.558469452Z 📊 [Check #7] Pipeline Progress:
+2026-02-05T19:31:45.558476102Z    Stage: enriched-articles
+2026-02-05T19:31:45.558480982Z    In Queue: 1
+2026-02-05T19:31:45.558485472Z    Completed: 100
+2026-02-05T19:31:45.558490092Z    Failed: 0
+2026-02-05T19:31:45.558494332Z    Has Seen Articles: true
+2026-02-05T19:31:45.558504802Z    Empty Checks: 0/5
+2026-02-05T19:31:45.558510022Z ℹ️  [05.02.2026 19:31:45] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:31:50.562239551Z 
+2026-02-05T19:31:50.562277891Z 📊 [Check #8] Pipeline Progress:
+2026-02-05T19:31:50.562286441Z    Stage: enriched-articles
+2026-02-05T19:31:50.562293161Z    In Queue: 1
+2026-02-05T19:31:50.562312151Z    Completed: 100
+2026-02-05T19:31:50.562318691Z    Failed: 0
+2026-02-05T19:31:50.562324642Z    Has Seen Articles: true
+2026-02-05T19:31:50.562331152Z    Empty Checks: 0/5
+2026-02-05T19:31:50.562340572Z ℹ️  [05.02.2026 19:31:50] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:31:55.565140253Z 
+2026-02-05T19:31:55.565175553Z 📊 [Check #9] Pipeline Progress:
+2026-02-05T19:31:55.565182463Z    Stage: enriched-articles
+2026-02-05T19:31:55.565187833Z    In Queue: 1
+2026-02-05T19:31:55.565192683Z    Completed: 100
+2026-02-05T19:31:55.565197213Z    Failed: 0
+2026-02-05T19:31:55.565201933Z    Has Seen Articles: true
+2026-02-05T19:31:55.565206633Z    Empty Checks: 0/5
+2026-02-05T19:31:55.565430682Z ℹ️  [05.02.2026 19:31:55] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:31:59.126458575Z ℹ️  [05.02.2026 19:31:59] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-05T19:32:00.087342570Z 📊Progress: 20% - Agent still running...
+2026-02-05T19:32:00.567553608Z 
+2026-02-05T19:32:00.567594167Z 📊 [Check #10] Pipeline Progress:
+2026-02-05T19:32:00.567600967Z    Stage: enriched-articles
+2026-02-05T19:32:00.567605787Z    In Queue: 1
+2026-02-05T19:32:00.567610497Z    Completed: 100
+2026-02-05T19:32:00.567614937Z    Failed: 0
+2026-02-05T19:32:00.567619107Z    Has Seen Articles: true
+2026-02-05T19:32:00.567623247Z    Empty Checks: 0/5
+2026-02-05T19:32:00.567627517Z ℹ️  [05.02.2026 19:32:00] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:32:03.420022919Z ℹ️  [05.02.2026 19:32:03] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-05T19:32:03.939207303Z ✅ [05.02.2026 19:32:03] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-05T19:32:05.569795551Z 
+2026-02-05T19:32:05.569827061Z 📊 [Check #11] Pipeline Progress:
+2026-02-05T19:32:05.569832921Z    Stage: enriched-articles
+2026-02-05T19:32:05.569837021Z    In Queue: 1
+2026-02-05T19:32:05.569867541Z    Completed: 100
+2026-02-05T19:32:05.569871331Z    Failed: 0
+2026-02-05T19:32:05.569875001Z    Has Seen Articles: true
+2026-02-05T19:32:05.569894911Z    Empty Checks: 0/5
+2026-02-05T19:32:05.569958501Z ℹ️  [05.02.2026 19:32:05] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:32:06.867333704Z 💓 Heartbeat updated: 05.02.2026 19:32:06
+2026-02-05T19:32:07.692094025Z ✅ [05.02.2026 19:32:07] [content-enricher] ✅ [1/3] Enriched: Claude Opus 4.6, Açık Kaynak Kodlarda 500 Sıfırınc...
+2026-02-05T19:32:07.787771456Z ✅ [05.02.2026 19:32:07] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-05T19:32:09.281202974Z ℹ️  [05.02.2026 19:32:09] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-05T19:32:10.575663644Z 
+2026-02-05T19:32:10.575706124Z 📊 [Check #12] Pipeline Progress:
+2026-02-05T19:32:10.575717994Z    Stage: enriched-articles
+2026-02-05T19:32:10.575728813Z    In Queue: 1
+2026-02-05T19:32:10.575738383Z    Completed: 100
+2026-02-05T19:32:10.575747693Z    Failed: 0
+2026-02-05T19:32:10.575756943Z    Has Seen Articles: true
+2026-02-05T19:32:10.575765823Z    Empty Checks: 0/5
+2026-02-05T19:32:10.575796353Z ℹ️  [05.02.2026 19:32:10] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:32:11.787945524Z ✅ [05.02.2026 19:32:11] [content-enricher] ✅ [2/3] Enriched: Claude Opus 4.6 Devrim Yaratıyor: 1 Milyon Token'l...
+2026-02-05T19:32:13.713915019Z Gemini API Error: {
+2026-02-05T19:32:13.713952809Z   message: '[GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent: [503 Service Unavailable] The model is overloaded. Please try again later.',
+2026-02-05T19:32:13.713956308Z   status: 503,
+2026-02-05T19:32:13.713958778Z   details: undefined
+2026-02-05T19:32:13.713961008Z }
+2026-02-05T19:32:13.714000998Z ⚠️  [05.02.2026 19:32:13] [content-enricher] ⚠️ Gemini failed (Gemini API error: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent: [503 Service Unavailable] The model is overloaded. Please try again later.), falling back to DeepSeek for EN content...
+2026-02-05T19:32:13.999417315Z DeepSeek API Error: {
+2026-02-05T19:32:13.999455295Z   status: 400,
+2026-02-05T19:32:13.999461365Z   data: {
+2026-02-05T19:32:13.999465915Z     error: {
+2026-02-05T19:32:13.999470675Z       message: `Failed to deserialize the JSON body into the target type: messages: invalid type: string "You are a world-renowned investigative journalist.\\n\\nTask: Create a comprehensive, original English news article by synthesizing 1 sources.\\n\\n### ORIGINAL NEWS:\\nTitle: We tasked Opus 4.6 using agent teams to build a C Compiler\\nDescription: <p>Article URL: <a href=\\"https://www.anthropic.com/engineering/building-c-compiler\\">https://www.anthropic.com/engineering/building-c-compiler</a></p>\\n<p>Comments URL: <a href=\\"https://news.ycombinator.com/item?id=46903616\\">https://news.ycombinator.com/item?id=46903616</a></p>\\n<p>Points: 15</p>\\n<p># Comments: 1</p>\\n\\n### SOURCES:\\n\\n--- SOURCE 1: www.anthropic.com ---\\nTitle: We tasked Opus 4.6 using agent teams to build a C Compiler\\nURL: https://www.anthropic.com/engineering/building-c-compiler\\nContent:\\n<p>Article URL: <a href=\\"https://www.anthropic.com/engineering/building-c-compiler\\">https://www.anthropic.com/engineering/building-c-compiler</a></p>\\n<p>Comments URL: <a href=\\"https://news.ycombinator.com/item?id=46903616\\">https://news.ycombinator.com/item?id=46903616</a></p>\\n<p>Points: 15</p>\\n<p># Comments: 1</p>\\n\\n\\n### RULES:\\n1. CREATE ORIGINAL CONTENT (synthesize, don't copy)\\n2. Cite sources: \\"According to Reuters...\\", \\"TechCrunch reports...\\"\\n3. Professional tone: Objective, neutral, third-person\\n4. Structure: Title (50-70 chars), Excerpt (2-3 sentences), Content (HTML, min 500 words)\\n5. SEO: Meta description (150-160 chars), 5-8 keywords\\n\\nRespond in JSON:\\n{\\n  \\"title\\": \\"SEO-Optimized English Title\\",\\n  \\"excerpt\\": \\"2-3 sentence summary\\",\\n  \\"content\\": \\"Full HTML article\\",\\n  \\"keywords\\": [\\"keyword1\\", \\"keyword2\\"],\\n  \\"metaDescription\\": \\"SEO meta description\\"\\n}", expected a sequence at line 1 column 1719`,
+2026-02-05T19:32:13.999507735Z       type: 'invalid_request_error',
+2026-02-05T19:32:13.999512595Z       param: null,
+2026-02-05T19:32:13.999518515Z       code: 'invalid_request_error'
+2026-02-05T19:32:13.999523055Z     }
+2026-02-05T19:32:13.999527355Z   },
+2026-02-05T19:32:13.999531695Z   message: 'Request failed with status code 400'
+2026-02-05T19:32:13.999536205Z }
+2026-02-05T19:32:14.002055267Z ✅ [05.02.2026 19:32:14] [content-enricher] 🏁 PARALLEL enrichment complete: 2/3 articles (1 failed)
+2026-02-05T19:32:14.002104017Z ✅ [05.02.2026 19:32:14] [content-enricher] Job 201 completed in 60933ms
+2026-02-05T19:32:14.002120918Z ❌ [05.02.2026 19:32:13] [content-enricher] ❌ [3] Failed to enrich: We tasked Opus 4.6 using agent teams to build a C ...
+2026-02-05T19:32:14.008877488Z ℹ️  [05.02.2026 19:32:14] [content-enricher] Emitted to next queue: articles-with-visuals
+2026-02-05T19:32:14.013135726Z ✅ [content-enricher] Job 201 COMPLETED
+2026-02-05T19:32:14.013148616Z ✅ [05.02.2026 19:32:14] [content-enricher] Job 201 completed
+2026-02-05T19:32:14.013151836Z 🔄 [visual-generator] Job 192 ACTIVE - processing...
+2026-02-05T19:32:14.013154346Z ℹ️  [05.02.2026 19:32:14] [visual-generator] Job 192 active
+2026-02-05T19:32:14.013223296Z 
+2026-02-05T19:32:14.013227296Z 🤖 [visual-generator] ========== PROCESSING JOB ==========
+2026-02-05T19:32:14.013297985Z    Job ID: 192
+2026-02-05T19:32:14.013393885Z    Job Name: content-enricher-output
+2026-02-05T19:32:14.013706154Z    Queue: articles-with-visuals
+2026-02-05T19:32:14.013899873Z    Data items: 2
+2026-02-05T19:32:14.018763519Z ℹ️  [05.02.2026 19:32:14] [visual-generator] Processing job 192
+2026-02-05T19:32:14.018776609Z ℹ️  [05.02.2026 19:32:14] [visual-generator] Generating visuals for 2 articles (parallel: 3)...
+2026-02-05T19:32:14.018779669Z ℹ️  [05.02.2026 19:32:14] [visual-generator] Processing batch 1/1 (2 articles)
+2026-02-05T19:32:14.018782319Z ℹ️  [05.02.2026 19:32:14] [visual-generator] Generating visual: Claude Opus 4.6, Açık Kaynak Kodlarda 500 Sıfırınc...
+2026-02-05T19:32:14.018785169Z ℹ️  [05.02.2026 19:32:14] [visual-generator] 🤖 Using DeepSeek for image prompt generation (content-aware)
+2026-02-05T19:32:14.018787749Z ℹ️  [05.02.2026 19:32:14] [visual-generator] Generating visual: Claude Opus 4.6 Devrim Yaratıyor: 1 Milyon Token'l...
+2026-02-05T19:32:14.018790179Z ℹ️  [05.02.2026 19:32:14] [visual-generator] 🤖 Using DeepSeek for image prompt generation (content-aware)
+2026-02-05T19:32:14.022125559Z ℹ️  [05.02.2026 19:32:14] [queue-manager] [enriched-articles] Job 201 completed
+2026-02-05T19:32:15.561724913Z 📝 Final prompt (104 chars): Claude AI interface on laptop screen, code vulnerability warnings highlighted, dark mode, no , no humans
+2026-02-05T19:32:15.561767733Z ℹ️  [05.02.2026 19:32:15] [visual-generator] Image prompt: Claude AI interface on laptop screen, code vulnerability warnings highlighted, dark mode, no , no hu...
+2026-02-05T19:32:15.563260008Z 🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+2026-02-05T19:32:15.563281188Z 🔑 API Key exists: YES, length: 19
+2026-02-05T19:32:15.563375878Z 📝 Prompt: Claude AI interface on laptop screen, code vulnerability warnings highlighted, dark mode, no , no hu
+2026-02-05T19:32:15.563384228Z 🎨 Authenticated URL: https://gen.pollinations.ai/image/Claude%20AI%20interface%20on%20laptop%20screen%2C%20code%20vulnerability%20warnings%20...
+2026-02-05T19:32:15.578322555Z 
+2026-02-05T19:32:15.578352455Z 📊 [Check #13] Pipeline Progress:
+2026-02-05T19:32:15.578358875Z    Stage: articles-with-visuals
+2026-02-05T19:32:15.578363665Z    In Queue: 1
+2026-02-05T19:32:15.578368145Z    Completed: 100
+2026-02-05T19:32:15.578372415Z    Failed: 0
+2026-02-05T19:32:15.578376615Z    Has Seen Articles: true
+2026-02-05T19:32:15.578409995Z    Empty Checks: 0/5
+2026-02-05T19:32:15.578429324Z ℹ️  [05.02.2026 19:32:15] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:32:15.826412139Z 📝 Final prompt (110 chars): Anthropic company headquarters exterior, San Francisco, modern glass architecture, photography, no , no humans
+2026-02-05T19:32:15.826450409Z ℹ️  [05.02.2026 19:32:15] [visual-generator] Image prompt: Anthropic company headquarters exterior, San Francisco, modern glass architecture, photography, no ,...
+2026-02-05T19:32:15.827053518Z 🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+2026-02-05T19:32:15.827075088Z 🔑 API Key exists: YES, length: 19
+2026-02-05T19:32:15.827187237Z 📝 Prompt: Anthropic company headquarters exterior, San Francisco, modern glass architecture, photography, no ,
+2026-02-05T19:32:15.827214967Z 🎨 Authenticated URL: https://gen.pollinations.ai/image/Anthropic%20company%20headquarters%20exterior%2C%20San%20Francisco%2C%20modern%20glass...
+2026-02-05T19:32:17.602158405Z ✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+2026-02-05T19:32:17.602176385Z 
+2026-02-05T19:32:17.602178595Z 🖼️  Image Optimization Pipeline Started
+2026-02-05T19:32:17.602181355Z    Source: https://gen.pollinations.ai/image/Anthropic%20company%20headquarters%20exterior%2C%20San%20Francisco%2C%20modern%20glass%20architecture%2C%20photography%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-05T19:32:17.602184645Z    Slug: claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere
+2026-02-05T19:32:17.602187185Z 📥 Downloading image from: https://gen.pollinations.ai/image/Anthropic%20company%20headquarters%20exterior%2C%20San%20Francisco%2C%20modern%20glass%20architecture%2C%20photography%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-05T19:32:17.602190285Z 🔑 Adding Pollinations API key to download request
+2026-02-05T19:32:17.770064633Z ⚠️ Rate limited (429), waiting 5s before retry...
+2026-02-05T19:32:20.580809978Z 
+2026-02-05T19:32:20.580848138Z 📊 [Check #14] Pipeline Progress:
+2026-02-05T19:32:20.580854838Z    Stage: articles-with-visuals
+2026-02-05T19:32:20.580859628Z    In Queue: 1
+2026-02-05T19:32:20.580864157Z    Completed: 100
+2026-02-05T19:32:20.580868527Z    Failed: 0
+2026-02-05T19:32:20.580872737Z    Has Seen Articles: true
+2026-02-05T19:32:20.580876947Z    Empty Checks: 0/5
+2026-02-05T19:32:20.580946707Z ℹ️  [05.02.2026 19:32:20] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:32:22.770795252Z 📥 Downloading image from: https://gen.pollinations.ai/image/Anthropic%20company%20headquarters%20exterior%2C%20San%20Francisco%2C%20modern%20glass%20architecture%2C%20photography%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true (attempt 2)
+2026-02-05T19:32:22.770841582Z 🔑 Adding Pollinations API key to download request
+2026-02-05T19:32:23.213006852Z 
+2026-02-05T19:32:23.213045872Z 📊 Original Image:
+2026-02-05T19:32:23.213052852Z    Format: jpeg
+2026-02-05T19:32:23.213057922Z    Size: 1200x630
+2026-02-05T19:32:23.213062622Z    File Size: 140.7KB
+2026-02-05T19:32:23.213067272Z    Download Time: 5607ms
+2026-02-05T19:32:23.213253341Z 🎨 Generating 4 image sizes for: claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere
+2026-02-05T19:32:24.211388687Z ✅ Uploaded to R2: https://images.aihaberleri.org/claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere-large.webp
+2026-02-05T19:32:24.212219904Z   ✅ large: 121.3KB → https://images.aihaberleri.org/claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere-large.webp
+2026-02-05T19:32:24.714344429Z ✅ Uploaded to R2: https://images.aihaberleri.org/claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere-medium.webp
+2026-02-05T19:32:24.714406108Z   ✅ medium: 67.0KB → https://images.aihaberleri.org/claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere-medium.webp
+2026-02-05T19:32:25.168813351Z ✅ Uploaded to R2: https://images.aihaberleri.org/claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere-small.webp
+2026-02-05T19:32:25.168870851Z   ✅ small: 22.4KB → https://images.aihaberleri.org/claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere-small.webp
+2026-02-05T19:32:25.548700302Z ✅ Uploaded to R2: https://images.aihaberleri.org/claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere-thumb.webp
+2026-02-05T19:32:25.548735222Z   ✅ thumb: 6.2KB → https://images.aihaberleri.org/claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere-thumb.webp
+2026-02-05T19:32:25.548738672Z 
+2026-02-05T19:32:25.548741322Z ✅ Optimization Complete!
+2026-02-05T19:32:25.548743932Z    Total Time: 7943ms
+2026-02-05T19:32:25.548757682Z    Storage: Cloudflare R2
+2026-02-05T19:32:25.548924501Z ✅ [05.02.2026 19:32:25] [visual-generator] Image optimized and uploaded
+2026-02-05T19:32:25.549214780Z ✅ [05.02.2026 19:32:25] [visual-generator] Visual generated in 11532ms: Claude Opus 4.6 Devrim Yaratıyor: 1 Milyon Token'l...
+2026-02-05T19:32:25.585355124Z 
+2026-02-05T19:32:25.585384664Z 📊 [Check #15] Pipeline Progress:
+2026-02-05T19:32:25.585390184Z    Stage: articles-with-visuals
+2026-02-05T19:32:25.585394034Z    In Queue: 1
+2026-02-05T19:32:25.585397594Z    Completed: 100
+2026-02-05T19:32:25.585401224Z    Failed: 0
+2026-02-05T19:32:25.585404564Z    Has Seen Articles: true
+2026-02-05T19:32:25.585407874Z    Empty Checks: 0/5
+2026-02-05T19:32:25.585411724Z ℹ️  [05.02.2026 19:32:25] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:32:30.591168218Z 
+2026-02-05T19:32:30.591200958Z 📊 [Check #16] Pipeline Progress:
+2026-02-05T19:32:30.591207838Z    Stage: articles-with-visuals
+2026-02-05T19:32:30.591213158Z    In Queue: 1
+2026-02-05T19:32:30.591217868Z    Completed: 100
+2026-02-05T19:32:30.591222398Z    Failed: 0
+2026-02-05T19:32:30.591712657Z    Has Seen Articles: true
+2026-02-05T19:32:30.591775217Z    Empty Checks: 0/5
+2026-02-05T19:32:30.591780857Z ℹ️  [05.02.2026 19:32:30] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:32:30.875874947Z ✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+2026-02-05T19:32:30.875918407Z 
+2026-02-05T19:32:30.875924277Z 🖼️  Image Optimization Pipeline Started
+2026-02-05T19:32:30.875929487Z    Source: https://gen.pollinations.ai/image/Claude%20AI%20interface%20on%20laptop%20screen%2C%20code%20vulnerability%20warnings%20highlighted%2C%20dark%20mode%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-05T19:32:30.875935517Z    Slug: claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti
+2026-02-05T19:32:30.875940077Z 📥 Downloading image from: https://gen.pollinations.ai/image/Claude%20AI%20interface%20on%20laptop%20screen%2C%20code%20vulnerability%20warnings%20highlighted%2C%20dark%20mode%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+2026-02-05T19:32:30.875945367Z 🔑 Adding Pollinations API key to download request
+2026-02-05T19:32:31.090212651Z ⚠️ Rate limited (429), waiting 5s before retry...
+2026-02-05T19:32:35.594398728Z 
+2026-02-05T19:32:35.594439608Z 📊 [Check #17] Pipeline Progress:
+2026-02-05T19:32:35.594446668Z    Stage: articles-with-visuals
+2026-02-05T19:32:35.594451728Z    In Queue: 1
+2026-02-05T19:32:35.594456428Z    Completed: 100
+2026-02-05T19:32:35.594479738Z    Failed: 0
+2026-02-05T19:32:35.594484648Z    Has Seen Articles: true
+2026-02-05T19:32:35.594489418Z    Empty Checks: 0/5
+2026-02-05T19:32:35.594494098Z ℹ️  [05.02.2026 19:32:35] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 100 completed, 0 failed)
+2026-02-05T19:32:36.090144461Z 📥 Downloading image from: https://gen.pollinations.ai/image/Claude%20AI%20interface%20on%20laptop%20screen%2C%20code%20vulnerability%20warnings%20highlighted%2C%20dark%20mode%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true (attempt 2)
+2026-02-05T19:32:36.090277330Z 🔑 Adding Pollinations API key to download request
+2026-02-05T19:32:36.477373450Z 
+2026-02-05T19:32:36.477417630Z 📊 Original Image:
+2026-02-05T19:32:36.477426720Z    Format: jpeg
+2026-02-05T19:32:36.477433320Z    Size: 1200x630
+2026-02-05T19:32:36.477439830Z    File Size: 76.0KB
+2026-02-05T19:32:36.477446410Z    Download Time: 5601ms
+2026-02-05T19:32:36.477452740Z 🎨 Generating 4 image sizes for: claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti
+2026-02-05T19:32:36.868788727Z 💓 Heartbeat updated: 05.02.2026 19:32:36
+2026-02-05T19:32:36.982495966Z ✅ Uploaded to R2: https://images.aihaberleri.org/claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti-large.webp
+2026-02-05T19:32:36.982535496Z   ✅ large: 55.9KB → https://images.aihaberleri.org/claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti-large.webp
+2026-02-05T19:32:37.469940212Z ✅ Uploaded to R2: https://images.aihaberleri.org/claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti-medium.webp
+2026-02-05T19:32:37.469976862Z   ✅ medium: 36.2KB → https://images.aihaberleri.org/claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti-medium.webp
+2026-02-05T19:32:37.921239514Z ✅ Uploaded to R2: https://images.aihaberleri.org/claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti-small.webp
+2026-02-05T19:32:37.921277864Z   ✅ small: 14.1KB → https://images.aihaberleri.org/claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti-small.webp
+2026-02-05T19:32:38.399833516Z ✅ Uploaded to R2: https://images.aihaberleri.org/claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti-thumb.webp
+2026-02-05T19:32:38.399875016Z   ✅ thumb: 4.0KB → https://images.aihaberleri.org/claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti-thumb.webp
+2026-02-05T19:32:38.399881656Z 
+2026-02-05T19:32:38.399886866Z ✅ Optimization Complete!
+2026-02-05T19:32:38.399988876Z    Total Time: 7523ms
+2026-02-05T19:32:38.399994736Z    Storage: Cloudflare R2
+2026-02-05T19:32:38.399999476Z ✅ [05.02.2026 19:32:38] [visual-generator] Image optimized and uploaded
+2026-02-05T19:32:38.400306724Z ✅ [05.02.2026 19:32:38] [visual-generator] Visual generated in 24385ms: Claude Opus 4.6, Açık Kaynak Kodlarda 500 Sıfırınc...
+2026-02-05T19:32:38.400615423Z ✅ [05.02.2026 19:32:38] [visual-generator] Visual generation complete: 2/2 successful (0 failed)
+2026-02-05T19:32:38.400879482Z ✅ [05.02.2026 19:32:38] [visual-generator] Job 192 completed in 24387ms
+2026-02-05T19:32:38.405012641Z ℹ️  [05.02.2026 19:32:38] [visual-generator] Emitted to next queue: database-publisher
+2026-02-05T19:32:38.408517081Z ✅ [visual-generator] Job 192 COMPLETED
+2026-02-05T19:32:38.408570000Z ✅ [05.02.2026 19:32:38] [visual-generator] Job 192 completed
+2026-02-05T19:32:38.409451138Z 🔄 [database-publisher] Job 184 ACTIVE - processing...
+2026-02-05T19:32:38.409472838Z ℹ️  [05.02.2026 19:32:38] [database-publisher] Job 184 active
+2026-02-05T19:32:38.409723647Z 
+2026-02-05T19:32:38.409746957Z 🤖 [database-publisher] ========== PROCESSING JOB ==========
+2026-02-05T19:32:38.409754767Z    Job ID: 184
+2026-02-05T19:32:38.409760877Z    Job Name: visual-generator-output
+2026-02-05T19:32:38.409766537Z    Queue: database-publisher
+2026-02-05T19:32:38.409772107Z    Data items: 2
+2026-02-05T19:32:38.409777767Z ℹ️  [05.02.2026 19:32:38] [database-publisher] Processing job 184
+2026-02-05T19:32:38.411153463Z ℹ️  [05.02.2026 19:32:38] [database-publisher] Publishing 2 articles to database...
+2026-02-05T19:32:38.414160763Z ℹ️  [05.02.2026 19:32:38] [queue-manager] [articles-with-visuals] Job 192 completed
+2026-02-05T19:32:38.443243339Z ℹ️  [05.02.2026 19:32:38] [database-publisher] Turkish translation created: claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti
+2026-02-05T19:32:38.447073998Z ℹ️  [05.02.2026 19:32:38] [database-publisher] English translation created: ai-powers-massive-open-source-security-discovery
+2026-02-05T19:32:39.014297641Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti
+2026-02-05T19:32:39.020623943Z ℹ️  [05.02.2026 19:32:39] [database-publisher] IndexNow: Turkish URL submitted
+2026-02-05T19:32:39.384118461Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/en/news/ai-powers-massive-open-source-security-discovery
+2026-02-05T19:32:39.393804363Z ℹ️  [05.02.2026 19:32:39] [database-publisher] IndexNow: English URL submitted
+2026-02-05T19:32:39.430922774Z 📱 1 aboneye push bildirimi gönderiliyor...
+2026-02-05T19:32:39.460039110Z ℹ️  [05.02.2026 19:32:39] [database-publisher] 🐦 Tweet posted
+2026-02-05T19:32:39.487075230Z 📘 Posting to Facebook Page...
+2026-02-05T19:32:39.497299981Z 🗑️  Invalidating cache by tag: articles
+2026-02-05T19:32:39.497497760Z ℹ️  [05.02.2026 19:32:39] [database-publisher] 🗑️ Cache invalidated
+2026-02-05T19:32:39.497583180Z ✅ [05.02.2026 19:32:39] [database-publisher] Published: Claude Opus 4.6, Açık Kaynak Kodlarda 500 Sıfırınc... (claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti)
+2026-02-05T19:32:39.506870303Z ℹ️  [05.02.2026 19:32:39] [database-publisher] Turkish translation created: claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere
+2026-02-05T19:32:39.509163277Z ℹ️  [05.02.2026 19:32:39] [database-publisher] English translation created: anthropic-unveils-claude-opus-46-with-groundbreaking-1-million-token-context-window
+2026-02-05T19:32:39.512974665Z ✅ Push bildirimi tamamlandı: 1 başarılı, 0 başarısız
+2026-02-05T19:32:39.512985535Z ℹ️  [05.02.2026 19:32:39] [database-publisher] 📱 Push notification sent
+2026-02-05T19:32:39.961733215Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere
+2026-02-05T19:32:39.968234125Z ℹ️  [05.02.2026 19:32:39] [database-publisher] IndexNow: Turkish URL submitted
+2026-02-05T19:32:40.366237954Z ✅ IndexNow: URL submitted successfully - https://aihaberleri.org/en/news/anthropic-unveils-claude-opus-46-with-groundbreaking-1-million-token-context-window
+2026-02-05T19:32:40.371676027Z ℹ️  [05.02.2026 19:32:40] [database-publisher] IndexNow: English URL submitted
+2026-02-05T19:32:40.377322011Z ℹ️  [05.02.2026 19:32:40] [database-publisher] 🐦 Tweet posted
+2026-02-05T19:32:40.377345671Z 📱 1 aboneye push bildirimi gönderiliyor...
+2026-02-05T19:32:40.381249129Z 📘 Posting to Facebook Page...
+2026-02-05T19:32:40.385278568Z 🗑️  Invalidating cache by tag: articles
+2026-02-05T19:32:40.385399458Z ℹ️  [05.02.2026 19:32:40] [database-publisher] 🗑️ Cache invalidated
+2026-02-05T19:32:40.385571277Z ✅ [05.02.2026 19:32:40] [database-publisher] Published: Claude Opus 4.6 Devrim Yaratıyor: 1 Milyon Token'l... (claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere)
+2026-02-05T19:32:40.385736396Z ✅ [05.02.2026 19:32:40] [database-publisher] Database publishing complete: 2/2 articles published
+2026-02-05T19:32:40.422785878Z ✅ Push bildirimi tamamlandı: 1 başarılı, 0 başarısız
+2026-02-05T19:32:40.422819908Z ℹ️  [05.02.2026 19:32:40] [database-publisher] 📱 Push notification sent
+2026-02-05T19:32:40.597183679Z 
+2026-02-05T19:32:40.597215229Z 📊 [Check #18] Pipeline Progress:
+2026-02-05T19:32:40.597358018Z    Stage: unknown
+2026-02-05T19:32:40.597374448Z    In Queue: 0
+2026-02-05T19:32:40.597380458Z    Completed: 100
+2026-02-05T19:32:40.597385358Z    Failed: 0
+2026-02-05T19:32:40.597389818Z    Has Seen Articles: true
+2026-02-05T19:32:40.597394398Z    Empty Checks: 0/5
+2026-02-05T19:32:40.876172914Z ✅ IndexNow: 3 URLs submitted successfully
+2026-02-05T19:32:40.876205105Z ✅ IndexNow: Sitemap URLs submitted successfully
+2026-02-05T19:32:41.944231655Z ✅ WebSub ping successful: https://pubsubhubbub.appspot.com/
+2026-02-05T19:32:41.944280635Z 📊 Sitemap ping summary: 4/4 methods successful
+2026-02-05T19:32:41.944284925Z    - IndexNow: ✅
+2026-02-05T19:32:41.944318865Z    - WebSub: ✅
+2026-02-05T19:32:41.944321525Z    - Google: ✅
+2026-02-05T19:32:41.944323835Z    - Bing: ✅
+2026-02-05T19:32:41.944352035Z ✅ [05.02.2026 19:32:41] [database-publisher] 🔔 Sitemap pings: IndexNow=✅ WebSub=✅ Google=✅ Bing=✅
+2026-02-05T19:32:41.945470631Z ✅ [05.02.2026 19:32:41] [database-publisher] Job 184 completed in 3535ms
+2026-02-05T19:32:41.946733928Z ℹ️  [05.02.2026 19:32:41] [queue-manager] [database-publisher] Job 184 completed
+2026-02-05T19:32:41.947099977Z ✅ [database-publisher] Job 184 COMPLETED
+2026-02-05T19:32:41.947107337Z ✅ [05.02.2026 19:32:41] [database-publisher] Job 184 completed
+2026-02-05T19:32:43.127984538Z ✅ Facebook post successful! ID: 882602408279863_122102247735242298
+2026-02-05T19:32:43.128027228Z ℹ️  [05.02.2026 19:32:43] [database-publisher] 📘 Facebook post created
+2026-02-05T19:32:43.219448222Z ✅ Facebook post successful! ID: 882602408279863_122102247717242298
+2026-02-05T19:32:43.219478732Z ℹ️  [05.02.2026 19:32:43] [database-publisher] 📘 Facebook post created
+2026-02-05T19:32:45.602727643Z 
+2026-02-05T19:32:45.602762532Z 📊 [Check #19] Pipeline Progress:
+2026-02-05T19:32:45.602768182Z    Stage: unknown
+2026-02-05T19:32:45.602772072Z    In Queue: 0
+2026-02-05T19:32:45.602775662Z    Completed: 100
+2026-02-05T19:32:45.602779122Z    Failed: 0
+2026-02-05T19:32:45.602782492Z    Has Seen Articles: true
+2026-02-05T19:32:45.602785982Z    Empty Checks: 1/5
+2026-02-05T19:32:50.605478934Z 
+2026-02-05T19:32:50.605529583Z 📊 [Check #20] Pipeline Progress:
+2026-02-05T19:32:50.605539183Z    Stage: unknown
+2026-02-05T19:32:50.605546733Z    In Queue: 0
+2026-02-05T19:32:50.605553333Z    Completed: 100
+2026-02-05T19:32:50.605560023Z    Failed: 0
+2026-02-05T19:32:50.605566383Z    Has Seen Articles: true
+2026-02-05T19:32:50.605572913Z    Empty Checks: 2/5
+2026-02-05T19:32:55.608322314Z 
+2026-02-05T19:32:55.608365304Z 📊 [Check #21] Pipeline Progress:
+2026-02-05T19:32:55.608374294Z    Stage: unknown
+2026-02-05T19:32:55.608381124Z    In Queue: 0
+2026-02-05T19:32:55.608387804Z    Completed: 100
+2026-02-05T19:32:55.608395104Z    Failed: 0
+2026-02-05T19:32:55.608402314Z    Has Seen Articles: true
+2026-02-05T19:32:55.608409234Z    Empty Checks: 3/5
+2026-02-05T19:33:00.611232565Z 
+2026-02-05T19:33:00.611270965Z 📊 [Check #22] Pipeline Progress:
+2026-02-05T19:33:00.611277415Z    Stage: unknown
+2026-02-05T19:33:00.611282175Z    In Queue: 0
+2026-02-05T19:33:00.611286645Z    Completed: 100
+2026-02-05T19:33:00.611308085Z    Failed: 0
+2026-02-05T19:33:00.611313075Z    Has Seen Articles: true
+2026-02-05T19:33:00.611322015Z    Empty Checks: 4/5
+2026-02-05T19:33:00.611326545Z ✅ [05.02.2026 19:33:00] [multi-agent-pipeline] ✅ Pipeline completed: 100 articles processed
+2026-02-05T19:33:00.722158632Z 
+2026-02-05T19:33:00.722178722Z ============================================================
+2026-02-05T19:33:00.722181212Z ✅ MULTI-AGENT PIPELINE COMPLETED: 2 haber yayınlandı
+2026-02-05T19:33:00.722203262Z ============================================================
+2026-02-05T19:33:00.722205252Z 
+2026-02-05T19:33:00.722264142Z ✅ [05.02.2026 19:33:00] [publish] ✅ 2 haber yayında!
+2026-02-05T19:33:00.724531755Z [Socket] Cannot emit 'article:published' - Socket.io not initialized
+2026-02-05T19:33:00.724664155Z [Socket] Cannot emit 'article:published' - Socket.io not initialized
+2026-02-05T19:33:00.725297182Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-05T19:33:00.757615548Z ⏰ Bir sonraki çalışma: 05.02.2026 19:48:00
+2026-02-05T19:33:00.764679217Z [Socket] Cannot emit 'agent:completed' - Socket.io not initialized
+2026-02-05T19:33:00.764949336Z info: ✅ Agent execution completed {"articlesCreated":2,"articlesScraped":50,"duration":180,"environment":"production","logId":"cml9up82c00009kz8z8sz2h5q","module":"agent","service":"ai-news-agent","success":true,"timestamp":"2026-02-05 19:33:00"}
+2026-02-05T19:33:00.765747234Z ✅ Agent çalıştırması 180s içinde tamamlandı
+2026-02-05T19:33:00.765768324Z 
+2026-02-05T19:33:00.765774144Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-05T19:33:00.765779674Z ┃           ✅ AGENT EXECUTION SUCCESS              ┃
+2026-02-05T19:33:00.765784404Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-05T19:33:00.765789214Z ┃  Status:         SUCCESS                        ┃
+2026-02-05T19:33:00.765793674Z ┃  Duration:       180s                            ┃
+2026-02-05T19:33:00.765797984Z ┃  Articles Found: 50                             ┃
+2026-02-05T19:33:00.765802484Z ┃  Articles Made:  2                              ┃
+2026-02-05T19:33:00.765806814Z ┃  Next Run:       05.02.2026 19:48:00      ┃
+2026-02-05T19:33:00.765811164Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-05T19:33:00.765815864Z 
+2026-02-05T19:33:00.766567852Z 📊 Progress: 90% - Agent execution completed
+2026-02-05T19:33:00.766851011Z info: ✅ Job completed {"environment":"production","jobId":"repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770319800000","module":"worker","result":{"articlesCreated":2,"articlesScraped":50,"duration":180,"errors":[],"publishedArticles":[{"id":"cml9usn2l00089kz8cqfo8177","slug":"claude-opus-46-devrim-yaratiyor-1-milyon-tokenlik-bellek-pencere"},{"id":"cml9usm8p00029kz8ks6rc5xy","slug":"claude-opus-46-acik-kaynak-kodlarda-500-sifirinci-gun-acigi-tespit-etti"}],"success":true},"service":"ai-news-agent","timestamp":"2026-02-05 19:33:00"}
+2026-02-05T19:33:00.766890641Z 
+2026-02-05T19:33:00.766896011Z 📊 Execution Summary:
+2026-02-05T19:33:00.766900731Z    Articles Scraped: 50
+2026-02-05T19:33:00.766905091Z    Articles Created: 2
+2026-02-05T19:33:00.766909291Z    Duration: 180s
+2026-02-05T19:33:00.766913561Z    Status: ✅ SUCCESS
+2026-02-05T19:33:00.774853277Z 🔌 Database connection closed
+2026-02-05T19:33:00.848174204Z 
+2026-02-05T19:33:00.848195414Z ⏰ Next execution (repeatable): 2/5/2026, 7:48:00 PM
+2026-02-05T19:33:00.850347897Z 
+2026-02-05T19:33:00.850416907Z ✅ Job repeat:2602dd5a4cc123ab7b1bfd7f655c4f48:1770319800000 completed successfully
+2026-02-05T19:33:01.304352312Z ✅ IndexNow: 3 URLs submitted successfully
+2026-02-05T19:33:01.304373682Z ✅ IndexNow: Sitemap URLs submitted successfully
+2026-02-05T19:33:02.368366775Z ✅ WebSub ping successful: https://pubsubhubbub.appspot.com/
+2026-02-05T19:33:02.368387264Z 📊 Sitemap ping summary: 4/4 methods successful
+2026-02-05T19:33:02.368389714Z    - IndexNow: ✅
+2026-02-05T19:33:02.368391624Z    - WebSub: ✅
+2026-02-05T19:33:02.368393434Z    - Google: ✅
+2026-02-05T19:33:02.368395104Z    - Bing: ✅
+2026-02-05T19:33:02.368482894Z 🔔 Sitemap ping: 4/4 yöntem başarılı
+2026-02-05T19:33:02.368485644Z    ✅ IndexNow: Bing/Yandex bildirildi
+2026-02-05T19:33:02.368487474Z    ✅ WebSub: Google bildirildi

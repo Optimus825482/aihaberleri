@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { getRedis } from "@/lib/redis";
 import { getRecentAgentLogs, LOG_CHANNEL_NAME } from "@/lib/agent-log-stream";
@@ -14,9 +14,9 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   // Check authentication
   const session = await requireAdminAuth();
-    if (session instanceof NextResponse) {
-      return session;
-    }
+  if (session instanceof NextResponse) {
+    return session;
+  }
 
   const redis = getRedis();
   if (!redis) {
