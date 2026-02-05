@@ -261,42 +261,20 @@ export async function translateAndSaveArticle(
 
     // 🆕 CRITICAL: Notify search engines about English translation!
     if (targetLocale === "en") {
-      const englishUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/en/news/${article.slug}`;
       console.log(
-        `🔔 Notifying search engines about English translation: ${englishUrl}`,
+        `🔔 Notifying search engines about English translation: ${translation.slug}`,
       );
 
-      // Import SEO functions
-      const { submitUrlToIndexNow } = await import("@/lib/seo/indexnow");
-      const { notifyGoogle } = await import("@/lib/seo/google-indexing-api");
+      // Import indexing tracker
+      const { notifyEnglishArticle } =
+        await import("@/lib/seo/indexing-tracker");
 
-      // Submit English URL to IndexNow (Bing, Yandex)
+      // Notify English version to all platforms
       try {
-        await submitUrlToIndexNow(englishUrl, articleId);
-        console.log(`   ✅ IndexNow: English URL submitted`);
+        await notifyEnglishArticle(articleId, translation.slug);
+        console.log(`   ✅ English version notified to all platforms`);
       } catch (error) {
-        console.warn(`   ⚠️ IndexNow failed for English URL:`, error);
-      }
-
-      // 🆕 Submit English URL to Google Indexing API
-      try {
-        await notifyGoogle(englishUrl, "URL_UPDATED");
-        console.log(`   ✅ Google Indexing API: English URL submitted`);
-
-        // Update Google status for English translation
-        // Note: We track this on the main article, not translation table
-        await db.article.update({
-          where: { id: articleId },
-          data: {
-            googleIndexStatus: "SUBMITTED",
-            googleIndexedAt: new Date(),
-          },
-        });
-      } catch (error) {
-        console.warn(
-          `   ⚠️ Google Indexing API failed for English URL:`,
-          error,
-        );
+        console.warn(`   ⚠️ Failed to notify English version:`, error);
       }
 
       // Note: WebSub and sitemap pings are already done for the main article

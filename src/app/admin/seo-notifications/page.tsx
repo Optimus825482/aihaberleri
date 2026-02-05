@@ -57,6 +57,20 @@ export default function SEONotificationsPage() {
     new Set(),
   );
   const [processing, setProcessing] = useState(false);
+  const [bulkGoogleProcessing, setBulkGoogleProcessing] = useState(false);
+  const [logs, setLogs] = useState<string[]>([]);
+  const [showLogs, setShowLogs] = useState(false);
+  const [bulkGoogleProcessing, setBulkGoogleProcessing] = useState(false);
+  const [logs, setLogs] = useState<
+    Array<{
+      type: string;
+      message: string;
+      timestamp: string;
+      articleId?: string;
+      articleTitle?: string;
+    }>
+  >([]);
+  const [showLogs, setShowLogs] = useState(false);
 
   // Fetch articles
   const fetchArticles = async (page: number = 1) => {
@@ -187,6 +201,90 @@ export default function SEONotificationsPage() {
     }
   };
 
+  // Bulk send all to Google with streaming logs
+  const bulkSendToGoogle = async () => {
+    // Get all pending Google articles
+    const pendingGoogleArticles = articles.filter(
+      (a) =>
+        a.notifications.google.status === "PENDING" ||
+        a.notifications.google.status === "FAILED",
+    );
+
+    if (pendingGoogleArticles.length === 0) {
+      alert("Google'a gönderilmemiş haber bulunamadı");
+      return;
+    }
+
+    if (
+      !confirm(
+        `${pendingGoogleArticles.length} haber Google Indexing API'ye gönderilecek. Onaylıyor musunuz?\n\nNot: Bu işlem birkaç dakika sürebilir.`,
+      )
+    ) {
+      return;
+    }
+
+    setBulkGoogleProcessing(true);
+    setShowLogs(true);
+    setLogs([]);
+
+    try {
+      const response = await fetch("/api/admin/seo-notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "bulk_google_submit",
+          articleIds: pendingGoogleArticles.map((a) => a.id),
+          streamLogs: true,
+        }),
+      });
+
+      if (!response.body) {
+        throw new Error("No response body");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = JSON.parse(line.slice(6));
+            setLogs((prev) => [...prev, data]);
+
+            // Auto-scroll to bottom
+            setTimeout(() => {
+              const logContainer = document.getElementById("log-container");
+              if (logContainer) {
+                logContainer.scrollTop = logContainer.scrollHeight;
+              }
+            }, 100);
+          }
+        }
+      }
+
+      // Refresh articles after completion
+      await fetchArticles(pagination.page);
+    } catch (error) {
+      console.error("Bulk Google submit error:", error);
+      setLogs((prev) => [
+        ...prev,
+        {
+          type: "fatal",
+          message: `💥 Kritik hata: ${error}`,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setBulkGoogleProcessing(false);
+    }
+  };
+
   // Send pending only
   const sendPending = async () => {
     const pendingArticles = articles.filter(
@@ -234,6 +332,81 @@ export default function SEONotificationsPage() {
       alert("❌ Bildirim gönderilemedi");
     } finally {
       setProcessing(false);
+    }
+  };
+
+  // Bulk Google Submit with Streaming Logs
+  const bulkGoogleSubmit = async () => {
+    const pendingGoogleArticles = articles.filter(
+      (a) =>
+        a.notifications.google.status === "PENDING" ||
+        a.notifications.google.status === "FAILED",
+    );
+
+    if (pendingGoogleArticles.length === 0) {
+      alert("Google'a gönderilmemiş haber bulunamadı");
+      return;
+    }
+
+    if (
+      !confirm(
+        `${pendingGoogleArticles.length} haber Google Indexing API'ye gönderilecek. Onaylıyor musunuz?`,
+      )
+    ) {
+      return;
+    }
+
+    setBulkGoogleProcessing(true);
+    setShowLogs(true);
+    setLogs([]);
+
+    try {
+      const response = await fetch("/api/admin/seo-notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "bulk_google_submit",
+          articleIds: pendingGoogleArticles.map((a) => a.id),
+          streamLogs: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error("No reader available");
+      }
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = JSON.parse(line.slice(6));
+            const timestamp = new Date(data.timestamp).toLocaleTimeString(
+              "tr-TR",
+            );
+            setLogs((prev) => [...prev, `[${timestamp}] ${data.message}`]);
+          }
+        }
+      }
+
+      // Refresh articles after completion
+      await fetchArticles(pagination.page);
+    } catch (error) {
+      console.error("Bulk Google submit error:", error);
+      setLogs((prev) => [...prev, `❌ Hata: ${error}`]);
+    } finally {
+      setBulkGoogleProcessing(false);
     }
   };
 
@@ -399,6 +572,17 @@ export default function SEONotificationsPage() {
             >
               <Send className="h-4 w-4" />
               {processing ? "Gönderiliyor..." : "Gönderilmeyenleri Gönder"}
+            </button>
+
+            <button
+              onClick={bulkGoogleSubmit}
+              disabled={bulkGoogleProcessing}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
+            >
+              <Send className="h-4 w-4" />
+              {bulkGoogleProcessing
+                ? "Google'a Gönderiliyor..."
+                : "Hepsini Google'a Gönder"}
             </button>
 
             <button
@@ -791,6 +975,48 @@ export default function SEONotificationsPage() {
             </>
           )}
         </div>
+
+        {/* Real-time Logs */}
+        {showLogs && (
+          <div className="mt-6 bg-gray-900 rounded-lg shadow-lg p-4 max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <RefreshCw
+                  className={`h-5 w-5 ${bulkGoogleProcessing ? "animate-spin" : ""}`}
+                />
+                Gönderim Logları
+              </h3>
+              <button
+                onClick={() => setShowLogs(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-1 font-mono text-sm">
+              {logs.length === 0 ? (
+                <div className="text-gray-400">Loglar yükleniyor...</div>
+              ) : (
+                logs.map((log, index) => (
+                  <div
+                    key={index}
+                    className={`${
+                      log.includes("✅")
+                        ? "text-green-400"
+                        : log.includes("❌")
+                          ? "text-red-400"
+                          : log.includes("🚀") || log.includes("🎉")
+                            ? "text-blue-400"
+                            : "text-gray-300"
+                    }`}
+                  >
+                    {log}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
