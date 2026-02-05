@@ -7,12 +7,20 @@ export async function GET(request: NextRequest) {
     const language = searchParams.get("language");
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
+    const statusFilter = searchParams.get("status"); // "all", "indexed", "not_indexed"
 
-    // Build where clause
+    // Build where clause - TÜM YAYINLANMIŞ HABERLERİ ÇEK
     const where: any = {
-      googleIndexed: false,
       status: "PUBLISHED",
     };
+
+    // Status filter
+    if (statusFilter === "indexed") {
+      where.googleIndexed = true;
+    } else if (statusFilter === "not_indexed") {
+      where.googleIndexed = false;
+    }
+    // "all" ise filtre ekleme - tümünü getir
 
     if (language && language !== "all") {
       where.language = language;
@@ -28,7 +36,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch unindexed articles
+    // Fetch ALL published articles
     const articles = await prisma.article.findMany({
       where,
       select: {
@@ -39,6 +47,9 @@ export async function GET(request: NextRequest) {
         publishedAt: true,
         googleIndexed: true,
         googleIndexedAt: true,
+        googleIndexStatus: true,
+        googleIndexingScheduled: true,
+        googleIndexingScheduledAt: true,
         category: {
           select: {
             name: true,
@@ -48,7 +59,7 @@ export async function GET(request: NextRequest) {
       orderBy: {
         publishedAt: "desc",
       },
-      take: 500, // Limit to prevent performance issues
+      take: 1000, // Increased limit
     });
 
     // Transform data
@@ -61,6 +72,10 @@ export async function GET(request: NextRequest) {
       category: article.category?.name || "Uncategorized",
       googleIndexed: article.googleIndexed,
       googleIndexedAt: article.googleIndexedAt?.toISOString() || null,
+      googleIndexStatus: article.googleIndexStatus,
+      googleIndexingScheduled: article.googleIndexingScheduled,
+      googleIndexingScheduledAt:
+        article.googleIndexingScheduledAt?.toISOString() || null,
     }));
 
     return NextResponse.json({
@@ -69,7 +84,7 @@ export async function GET(request: NextRequest) {
       count: transformedArticles.length,
     });
   } catch (error) {
-    console.error("Failed to fetch unindexed articles:", error);
+    console.error("Failed to fetch articles:", error);
     return NextResponse.json(
       {
         success: false,

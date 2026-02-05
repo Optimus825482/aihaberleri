@@ -56,6 +56,9 @@ interface Article {
   category: string;
   googleIndexed: boolean;
   googleIndexedAt: string | null;
+  googleIndexStatus: "PENDING" | "SUBMITTED" | "FAILED";
+  googleIndexingScheduled: boolean;
+  googleIndexingScheduledAt: string | null;
 }
 
 interface BatchProgress {
@@ -80,6 +83,7 @@ export default function GoogleIndexingBatchPage() {
 
   // Filters
   const [languageFilter, setLanguageFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all"); // "all", "indexed", "not_indexed"
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -87,13 +91,14 @@ export default function GoogleIndexingBatchPage() {
   // Fetch unindexed articles
   useEffect(() => {
     fetchUnindexedArticles();
-  }, [languageFilter, dateFrom, dateTo]);
+  }, [languageFilter, statusFilter, dateFrom, dateTo]);
 
   const fetchUnindexedArticles = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       if (languageFilter !== "all") params.append("language", languageFilter);
+      if (statusFilter !== "all") params.append("status", statusFilter);
       if (dateFrom) params.append("dateFrom", dateFrom);
       if (dateTo) params.append("dateTo", dateTo);
 
@@ -243,6 +248,7 @@ export default function GoogleIndexingBatchPage() {
   // Reset filters
   const resetFilters = () => {
     setLanguageFilter("all");
+    setStatusFilter("all");
     setSearchQuery("");
     setDateFrom("");
     setDateTo("");
@@ -297,6 +303,35 @@ export default function GoogleIndexingBatchPage() {
       });
     } finally {
       setCheckingStatus(false);
+    }
+  };
+
+  // Get status badge
+  const getStatusBadge = (article: Article) => {
+    if (article.googleIndexed && article.googleIndexedAt) {
+      // Bildirilmiş ve onaylanmış
+      return (
+        <Badge className="border-green-500/30 text-green-600 bg-green-500/10">
+          <CheckCircle2 className="h-3 w-3 mr-1" />
+          Bildirildi
+        </Badge>
+      );
+    } else if (article.googleIndexingScheduled) {
+      // Batch'e eklendi, yarın gönderilecek
+      return (
+        <Badge className="border-blue-500/30 text-blue-600 bg-blue-500/10">
+          <Clock className="h-3 w-3 mr-1" />
+          Planlandı
+        </Badge>
+      );
+    } else {
+      // Henüz bildirilmedi
+      return (
+        <Badge className="border-yellow-500/30 text-yellow-600 bg-yellow-500/10">
+          <XCircle className="h-3 w-3 mr-1" />
+          Bekliyor
+        </Badge>
+      );
     }
   };
 
@@ -394,7 +429,7 @@ export default function GoogleIndexingBatchPage() {
             <CardDescription>Haberleri filtrele ve arama yap</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {/* Language Filter */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
@@ -412,6 +447,24 @@ export default function GoogleIndexingBatchPage() {
                     <SelectItem value="all">Tümü</SelectItem>
                     <SelectItem value="tr">🇹🇷 Türkçe</SelectItem>
                     <SelectItem value="en">🇬🇧 İngilizce</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Status Filter */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Durum
+                </Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tümü</SelectItem>
+                    <SelectItem value="indexed">✅ Bildirildi</SelectItem>
+                    <SelectItem value="not_indexed">⏳ Bekliyor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -477,11 +530,9 @@ export default function GoogleIndexingBatchPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg">
-                  Bildirilmemiş Haberler
-                </CardTitle>
+                <CardTitle className="text-lg">Tüm Haberler</CardTitle>
                 <CardDescription>
-                  Google'a henüz bildirilmemiş haberler
+                  Yayınlanmış tüm haberlerin Google bildirim durumu
                 </CardDescription>
               </div>
               {filteredArticles.length > 0 && (
@@ -507,7 +558,7 @@ export default function GoogleIndexingBatchPage() {
               <div className="text-center py-12">
                 <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground font-medium">
-                  Bildirilmemiş haber bulunamadı
+                  Haber bulunamadı
                 </p>
               </div>
             ) : (
@@ -527,6 +578,7 @@ export default function GoogleIndexingBatchPage() {
                       <TableHead>Kategori</TableHead>
                       <TableHead>Dil</TableHead>
                       <TableHead>Yayın Tarihi</TableHead>
+                      <TableHead>Google Bildirimi</TableHead>
                       <TableHead>Durum</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -573,20 +625,37 @@ export default function GoogleIndexingBatchPage() {
                             <Clock className="h-3 w-3 text-muted-foreground" />
                             {format(
                               new Date(article.publishedAt),
-                              "dd MMM yyyy",
+                              "dd MMM yyyy HH:mm",
                               { locale: tr },
                             )}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant="outline"
-                            className="border-yellow-500/30 text-yellow-600 bg-yellow-500/10"
-                          >
-                            <Clock className="h-3 w-3 mr-1" />
-                            Bekliyor
-                          </Badge>
+                          {article.googleIndexedAt ? (
+                            <div className="flex items-center gap-2 text-sm text-green-600">
+                              <CheckCircle2 className="h-3 w-3" />
+                              {format(
+                                new Date(article.googleIndexedAt),
+                                "dd MMM yyyy HH:mm",
+                                { locale: tr },
+                              )}
+                            </div>
+                          ) : article.googleIndexingScheduledAt ? (
+                            <div className="flex items-center gap-2 text-sm text-blue-600">
+                              <Clock className="h-3 w-3" />
+                              {format(
+                                new Date(article.googleIndexingScheduledAt),
+                                "dd MMM yyyy HH:mm",
+                                { locale: tr },
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              -
+                            </span>
+                          )}
                         </TableCell>
+                        <TableCell>{getStatusBadge(article)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
