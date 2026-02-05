@@ -16,6 +16,7 @@ import { Footer } from "@/components/Footer";
 import { LayoutWrapper } from "@/components/layout-wrapper";
 import { AudioProvider } from "@/context/AudioContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { VisitorTracker } from "@/components/VisitorTracker";
 
 // Initialize scheduler (in-process fallback if worker not available)
 import "@/lib/init-scheduler";
@@ -162,6 +163,7 @@ export default function RootLayout({
               <GoogleTagManagerNoScript />
               <GoogleAnalytics />
               <GoogleTagManager />
+              <VisitorTracker />
               <LayoutWrapper header={<SiteHeader />} footer={<Footer />}>
                 {children}
               </LayoutWrapper>

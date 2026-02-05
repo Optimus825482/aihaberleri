@@ -196,6 +196,18 @@ export async function saveArticleTranslation(
   console.log(
     `💾 Translation saved: ${locale} - ${translation.title.substring(0, 50)}...`,
   );
+
+  // 🆕 CRITICAL: Also update Article table's English fields for faster queries
+  if (locale === "en") {
+    await db.$executeRaw`
+      UPDATE "Article" SET
+        "titleEn" = ${translation.title},
+        "excerptEn" = ${translation.excerpt},
+        "contentEn" = ${translation.content}
+      WHERE id = ${articleId}
+    `;
+    console.log(`   ✅ Article.titleEn/contentEn/excerptEn updated`);
+  }
 }
 
 /**

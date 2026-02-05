@@ -10,6 +10,39 @@ const SEARXNG_BASE_URL =
   process.env.SEARXNG_BASE_URL ||
   "http://searxng-pwcsc8ow08oks0ggokwoo8ww.77.42.68.4.sslip.io";
 
+// Rate limiting: Prevent overwhelming SearXNG with parallel requests
+let lastRequestTime = 0;
+let requestQueue: Array<() => void> = [];
+let isProcessingQueue = false;
+const MIN_REQUEST_INTERVAL = 500; // 500ms between requests
+const MAX_CONCURRENT_REQUESTS = 2; // Max 2 concurrent requests
+let activeRequests = 0;
+
+async function rateLimitedRequest<T>(fn: () => Promise<T>): Promise<T> {
+  // Wait if too many active requests
+  while (activeRequests >= MAX_CONCURRENT_REQUESTS) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  // Ensure minimum interval between requests
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+    await new Promise((resolve) =>
+      setTimeout(resolve, MIN_REQUEST_INTERVAL - timeSinceLastRequest),
+    );
+  }
+
+  lastRequestTime = Date.now();
+  activeRequests++;
+
+  try {
+    return await fn();
+  } finally {
+    activeRequests--;
+  }
+}
+
 export interface SearXNGResult {
   title: string;
   url: string;
@@ -63,15 +96,15 @@ export async function searxngSearch(
       params.append("categories", options.categories);
     }
 
-    const response = await axios.get<SearXNGResponse>(
-      `${SEARXNG_BASE_URL}/search`,
-      {
+    // Rate-limited request to prevent overwhelming SearXNG
+    const response = await rateLimitedRequest(() =>
+      axios.get<SearXNGResponse>(`${SEARXNG_BASE_URL}/search`, {
         params,
-        timeout: 10000,
+        timeout: 15000, // Increased timeout for rate-limited requests
         headers: {
           "User-Agent": "AIHaberleri-NewsBot/1.0",
         },
-      },
+      }),
     );
 
     const results = response.data.results || [];

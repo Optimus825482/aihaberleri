@@ -48,6 +48,7 @@ export default function SEONotificationsPage() {
     total: 0,
     totalPages: 0,
   });
+  const [quota, setQuota] = useState<{ limit: number; used: number; remaining: number } | null>(null);
   const [filter, setFilter] = useState<"all" | "pending" | "sent">("all");
   const [platformFilter, setPlatformFilter] = useState<
     "all" | "indexnow" | "google" | "facebook"
@@ -79,6 +80,10 @@ export default function SEONotificationsPage() {
       if (data.success) {
         setArticles(data.data);
         setPagination(data.pagination);
+        // Quota bilgisini güncelle
+        if (data.quota?.daily) {
+          setQuota(data.quota.daily);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch articles:", error);
@@ -365,7 +370,7 @@ export default function SEONotificationsPage() {
 
     const notification =
       article.notifications[
-        platformFilter as keyof typeof article.notifications
+      platformFilter as keyof typeof article.notifications
       ];
     return (
       notification.status === "PENDING" || notification.status === "FAILED"
@@ -404,10 +409,11 @@ export default function SEONotificationsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Status Filter */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              <label htmlFor="status-filter" className="text-xs font-medium text-gray-700 dark:text-gray-300">
                 Durum Filtresi
               </label>
               <select
+                id="status-filter"
                 value={filter}
                 onChange={(e) =>
                   setFilter(e.target.value as "all" | "pending" | "sent")
@@ -422,18 +428,19 @@ export default function SEONotificationsPage() {
 
             {/* Platform Filter */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              <label htmlFor="platform-filter" className="text-xs font-medium text-gray-700 dark:text-gray-300">
                 Platform Filtresi
               </label>
               <select
+                id="platform-filter"
                 value={platformFilter}
                 onChange={(e) =>
                   setPlatformFilter(
                     e.target.value as
-                      | "all"
-                      | "indexnow"
-                      | "google"
-                      | "facebook",
+                    | "all"
+                    | "indexnow"
+                    | "google"
+                    | "facebook",
                   )
                 }
                 className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
@@ -480,6 +487,35 @@ export default function SEONotificationsPage() {
             </div>
           </div>
 
+          {/* Google Quota Info */}
+          {quota && (
+            <div className={`p-3 rounded-lg border ${quota.remaining === 0
+              ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+              : quota.remaining < 50
+                ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+              }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📊</span>
+                  <span className="font-medium text-sm">Google Indexing API Günlük Quota</span>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <span>Kullanılan: <strong>{quota.used}</strong>/{quota.limit}</span>
+                  <span className={`font-bold ${quota.remaining === 0 ? 'text-red-600' : quota.remaining < 50 ? 'text-yellow-600' : 'text-green-600'
+                    }`}>
+                    Kalan: {quota.remaining}
+                  </span>
+                </div>
+              </div>
+              {quota.remaining === 0 && (
+                <p className="text-sm text-red-600 mt-1">
+                  🔴 Günlük limit doldu! Yarın (UTC 00:00'da) sıfırlanacak.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Action Buttons - Responsive */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
             <button
@@ -493,13 +529,15 @@ export default function SEONotificationsPage() {
 
             <button
               onClick={bulkGoogleSubmit}
-              disabled={bulkGoogleProcessing}
+              disabled={bulkGoogleProcessing || (quota?.remaining === 0)}
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors"
             >
               <Send className="h-4 w-4" />
               {bulkGoogleProcessing
                 ? "Google'a Gönderiliyor..."
-                : "Hepsini Google'a Gönder"}
+                : quota?.remaining === 0
+                  ? "Quota Doldu"
+                  : "Hepsini Google'a Gönder"}
             </button>
 
             <button
@@ -537,6 +575,8 @@ export default function SEONotificationsPage() {
                       <th className="px-4 py-3 text-left">
                         <input
                           type="checkbox"
+                          aria-label="Tümünü seç"
+                          title="Tümünü seç"
                           checked={
                             selectedArticles.size === filteredArticles.length &&
                             filteredArticles.length > 0
@@ -577,6 +617,8 @@ export default function SEONotificationsPage() {
                         <td className="px-4 py-3">
                           <input
                             type="checkbox"
+                            aria-label={`${article.title} seç`}
+                            title={`${article.title} seç`}
                             checked={selectedArticles.has(article.id)}
                             onChange={() => toggleArticle(article.id)}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -750,6 +792,8 @@ export default function SEONotificationsPage() {
                   <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
+                      aria-label={`${article.title} seç`}
+                      title={`${article.title} seç`}
                       checked={selectedArticles.has(article.id)}
                       onChange={() => toggleArticle(article.id)}
                       className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -946,24 +990,23 @@ export default function SEONotificationsPage() {
                   return (
                     <div
                       key={index}
-                      className={`py-1 ${
-                        logType === "success" || logMessage.includes("✅")
-                          ? "text-green-400"
-                          : logType === "error" ||
-                              logType === "fatal" ||
-                              logMessage.includes("❌")
-                            ? "text-red-400"
-                            : logType === "warning" || logMessage.includes("⚠️")
-                              ? "text-yellow-400"
-                              : logType === "start" ||
-                                  logType === "complete" ||
-                                  logMessage.includes("🚀") ||
-                                  logMessage.includes("🎉")
-                                ? "text-blue-400"
-                                : logType === "progress"
-                                  ? "text-cyan-400"
-                                  : "text-gray-300"
-                      }`}
+                      className={`py-1 ${logType === "success" || logMessage.includes("✅")
+                        ? "text-green-400"
+                        : logType === "error" ||
+                          logType === "fatal" ||
+                          logMessage.includes("❌")
+                          ? "text-red-400"
+                          : logType === "warning" || logMessage.includes("⚠️")
+                            ? "text-yellow-400"
+                            : logType === "start" ||
+                              logType === "complete" ||
+                              logMessage.includes("🚀") ||
+                              logMessage.includes("🎉")
+                              ? "text-blue-400"
+                              : logType === "progress"
+                                ? "text-cyan-400"
+                                : "text-gray-300"
+                        }`}
                     >
                       {logMessage}
                     </div>

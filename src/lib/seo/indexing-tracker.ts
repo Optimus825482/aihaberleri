@@ -6,8 +6,8 @@
  */
 
 import { db } from "@/lib/db";
-import { submitArticleToIndexNow } from "./indexnow";
-import { notifyNewsToGoogle } from "./google-indexing-api";
+import { submitArticleToIndexNow, submitUrlToIndexNow } from "./indexnow";
+import { notifyGoogle } from "./google-indexing-api";
 
 interface IndexingResult {
   success: boolean;
@@ -24,6 +24,7 @@ export async function notifyTurkishArticle(
   slug: string,
 ): Promise<IndexingResult[]> {
   const results: IndexingResult[] = [];
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
 
   // 1. IndexNow (Turkish)
   try {
@@ -57,7 +58,8 @@ export async function notifyTurkishArticle(
 
   // 2. Google Indexing API (Turkish)
   try {
-    await notifyNewsToGoogle(slug);
+    const turkishUrl = `${baseUrl}/news/${slug}`;
+    await notifyGoogle(turkishUrl, "URL_UPDATED");
     await db.article.update({
       where: { id: articleId },
       data: {
@@ -96,10 +98,12 @@ export async function notifyEnglishArticle(
   slugEn: string,
 ): Promise<IndexingResult[]> {
   const results: IndexingResult[] = [];
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
 
-  // 1. IndexNow (English)
+  // 1. IndexNow (English) - Use /en/news/ prefix for English articles
   try {
-    await submitArticleToIndexNow(slugEn, articleId);
+    const englishUrl = `${baseUrl}/en/news/${slugEn}`;
+    await submitUrlToIndexNow(englishUrl);
     await db.article.update({
       where: { id: articleId },
       data: {
@@ -129,7 +133,8 @@ export async function notifyEnglishArticle(
 
   // 2. Google Indexing API (English)
   try {
-    await notifyNewsToGoogle(slugEn);
+    const englishGoogleUrl = `${baseUrl}/en/news/${slugEn}`;
+    await notifyGoogle(englishGoogleUrl, "URL_UPDATED");
     await db.article.update({
       where: { id: articleId },
       data: {

@@ -68,6 +68,12 @@ interface BatchProgress {
   inProgress: boolean;
 }
 
+interface QuotaInfo {
+  todayUsed: number;
+  limit: number;
+  remaining: number;
+}
+
 export default function GoogleIndexingBatchPage() {
   const { toast } = useToast();
   const [articles, setArticles] = useState<Article[]>([]);
@@ -80,6 +86,7 @@ export default function GoogleIndexingBatchPage() {
   const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(
     null,
   );
+  const [quotaInfo, setQuotaInfo] = useState<QuotaInfo | null>(null);
 
   // Filters
   const [languageFilter, setLanguageFilter] = useState<string>("all");
@@ -278,10 +285,30 @@ export default function GoogleIndexingBatchPage() {
 
       const data = await response.json();
 
+      // Quota bilgisini güncelle
+      if (data.quotaRemaining !== undefined) {
+        setQuotaInfo({
+          todayUsed: 50 - data.quotaRemaining,
+          limit: 50,
+          remaining: data.quotaRemaining,
+        });
+      }
+
+      if (response.status === 429) {
+        // Quota aşıldı
+        toast({
+          title: "Günlük Limit Doldu",
+          description: data.error || "Yarın tekrar deneyin",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (data.success) {
+        const skippedMsg = data.skipped > 0 ? `, ${data.skipped} atlandı (cache)` : "";
         toast({
           title: "Kontrol Tamamlandı",
-          description: `✅ ${data.indexed} bildirilmiş, ❌ ${data.notIndexed} bildirilmemiş`,
+          description: `✅ ${data.indexed} bildirilmiş, ❌ ${data.notIndexed} bildirilmemiş${skippedMsg}`,
         });
 
         // Clear selection and refresh
@@ -351,6 +378,15 @@ export default function GoogleIndexingBatchPage() {
             <p className="text-muted-foreground text-sm">
               Toplu Google bildirim yönetimi
             </p>
+            {quotaInfo && (
+              <Badge
+                variant={quotaInfo.remaining > 10 ? "outline" : "destructive"}
+                className="mt-1"
+              >
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Status Check: {quotaInfo.remaining}/{quotaInfo.limit} kaldı
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <Button

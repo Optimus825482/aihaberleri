@@ -13,12 +13,33 @@ import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postToFacebook } from "@/lib/social/facebook";
 
 /**
+ * Bugün kaç Google Indexing API isteği yapıldığını hesapla
+ * googleIndexedAt alanı bugün olan kayıtları say
+ */
+async function getTodayGoogleIndexingCount(): Promise<number> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const count = await db.article.count({
+    where: {
+      googleIndexedAt: {
+        gte: today,
+      },
+    },
+  });
+
+  return count;
+}
+
+/**
  * Bulk Google Submit with Streaming Logs and Batch Processing
  *
  * Google Indexing API Limits:
- * - 200 URLs per day
+ * - 200 URLs per day (TOPLAM - status check dahil!)
  * - Batch size: 100 URLs per request (for speed)
  * - Rate limiting: Small delay between batches
+ *
+ * ⚠️ ÖNEMLİ: Bu fonksiyon çağrılmadan önce kalan quota kontrol edilmeli!
  */
 async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
   const encoder = new TextEncoder();
@@ -36,13 +57,43 @@ async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
       };
 
       try {
-        // Limit to daily quota
-        const limitedArticleIds = articleIds.slice(0, DAILY_LIMIT);
+        // 🔴 BUGÜN KALAN QUOTA'YI KONTROL ET
+        const todayUsed = await getTodayGoogleIndexingCount();
+        const remainingQuota = Math.max(0, DAILY_LIMIT - todayUsed);
 
-        if (articleIds.length > DAILY_LIMIT) {
+        sendLog({
+          type: "info",
+          message: `📊 Bugünkü kullanım: ${todayUsed}/${DAILY_LIMIT} | Kalan quota: ${remainingQuota}`,
+          timestamp: new Date().toISOString(),
+        });
+
+        if (remainingQuota === 0) {
+          sendLog({
+            type: "error",
+            message: `🔴 GÜNLÜK QUOTA DOLDU! Bugün ${todayUsed} istek yapılmış. Yarın tekrar deneyin.`,
+            timestamp: new Date().toISOString(),
+          });
+          sendLog({
+            type: "complete",
+            message: "İşlem iptal edildi - quota doldu",
+            successCount: 0,
+            failedCount: 0,
+            remainingCount: articleIds.length,
+            total: 0,
+            timestamp: new Date().toISOString(),
+          });
+          controller.close();
+          return;
+        }
+
+        // Kalan quota kadar makale al (maksimum)
+        const maxArticles = Math.min(articleIds.length, remainingQuota);
+        const limitedArticleIds = articleIds.slice(0, maxArticles);
+
+        if (articleIds.length > maxArticles) {
           sendLog({
             type: "warning",
-            message: `⚠️ Günlük limit: ${DAILY_LIMIT} URL. ${articleIds.length} haber var, ilk ${DAILY_LIMIT} tanesi işlenecek.`,
+            message: `⚠️ Kalan quota: ${remainingQuota}. ${articleIds.length} haber var, sadece ${maxArticles} tanesi işlenecek.`,
             timestamp: new Date().toISOString(),
           });
         }
@@ -122,7 +173,7 @@ async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
               batch.map((a) => a.slug),
             );
 
-            if (batchResult.success) {
+            if (batchResult.success && batchResult.results) {
               // Update successful articles
               const successfulArticleIds = batchResult.results
                 .filter((r: any) => r.success)
@@ -132,7 +183,7 @@ async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
                   );
                   return article?.id;
                 })
-                .filter(Boolean);
+                .filter((id): id is string => Boolean(id));
 
               if (successfulArticleIds.length > 0) {
                 await db.article.updateMany({
@@ -153,7 +204,7 @@ async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
                   );
                   return article?.id;
                 })
-                .filter(Boolean);
+                .filter((id): id is string => Boolean(id));
 
               if (failedArticleIds.length > 0) {
                 await db.article.updateMany({
@@ -162,8 +213,8 @@ async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
                 });
               }
 
-              totalSuccess += batchResult.successCount;
-              totalFailed += batchResult.failCount;
+              totalSuccess += batchResult.successCount ?? 0;
+              totalFailed += batchResult.failCount ?? 0;
 
               sendLog({
                 type: "success",
@@ -172,7 +223,7 @@ async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
               });
 
               // Check if quota exceeded in batch
-              const quotaError = batchResult.results.find(
+              const quotaError = batchResult.results?.find(
                 (r: any) => r.error === "QUOTA_EXCEEDED",
               );
               if (quotaError) {
@@ -388,6 +439,14 @@ export async function GET(request: NextRequest) {
         limit,
         total,
         totalPages: Math.ceil(total / limit),
+      },
+      // Quota bilgisi ekle
+      quota: {
+        daily: {
+          limit: 200,
+          used: await getTodayGoogleIndexingCount(),
+          remaining: Math.max(0, 200 - (await getTodayGoogleIndexingCount())),
+        },
       },
     });
   } catch (error: any) {

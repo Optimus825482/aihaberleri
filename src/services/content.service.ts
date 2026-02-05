@@ -1039,7 +1039,21 @@ export async function publishArticle(
         excerpt: article.excerpt,
         imageUrl: processedArticle.imageUrl,
         categoryName: category.name,
-      }).catch((err) => console.error("Async Facebook post failed:", err));
+      })
+        .then(async (success) => {
+          if (success) {
+            // Facebook başarılıysa veritabanını güncelle
+            await prisma.article.update({
+              where: { id: article.id },
+              data: { facebookShared: true },
+            });
+            console.log(
+              "✅ Facebook paylaşıldı ve DB güncellendi:",
+              article.slug,
+            );
+          }
+        })
+        .catch((err) => console.error("Async Facebook post failed:", err));
     } catch (e) {
       console.error("Failed to trigger Facebook post:", e);
     }

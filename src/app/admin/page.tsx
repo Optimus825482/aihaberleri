@@ -28,6 +28,7 @@ import Link from "next/link";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
+import { AgentPipelineStepper } from "@/components/admin/AgentPipelineStepper";
 import {
     AreaChart,
     Area,
@@ -254,6 +255,9 @@ export default function AdminDashboard() {
                     </Card>
                 </div>
 
+                {/* Agent Pipeline Stepper - Real-time Progress */}
+                <AgentPipelineStepper />
+
                 {/* Pipeline Status & Otonom Sistem */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Pipeline Activity Chart */}
@@ -340,8 +344,8 @@ export default function AdminDashboard() {
                     {/* Otonom Sistem Durumu */}
                     <Card
                         className={`border-2 overflow-hidden ${isAgentEnabled
-                                ? "border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
-                                : "border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent"
+                            ? "border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
+                            : "border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent"
                             }`}
                     >
                         <CardHeader className="pb-2">

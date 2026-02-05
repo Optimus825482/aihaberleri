@@ -25,7 +25,8 @@ export interface DailyDigestResult {
 }
 
 /**
- * Get today's published articles
+ * Get today's top trending published articles
+ * Sorted by viewCount (most-read first), limited to 30 articles
  */
 export async function getTodayArticles() {
   const today = new Date();
@@ -47,23 +48,28 @@ export async function getTodayArticles() {
       excerpt: true,
       slug: true,
       imageUrl: true,
+      viewCount: true,
       category: {
         select: {
           name: true,
         },
       },
     },
-    orderBy: {
-      publishedAt: "desc",
-    },
+    orderBy: [
+      { viewCount: "desc" }, // Primary: Most viewed (trending)
+      { publishedAt: "desc" }, // Secondary: Newest
+    ],
+    take: 30, // Top 30 most-read articles
   });
 
-  return articles.map((article) => ({
+  return articles.map((article, index) => ({
     title: article.title,
     excerpt: article.excerpt || "",
     slug: article.slug,
     category: article.category?.name || "Genel",
     imageUrl: article.imageUrl || undefined,
+    viewCount: article.viewCount || 0,
+    trendRank: index + 1,
   }));
 }
 

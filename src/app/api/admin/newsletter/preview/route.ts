@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 
-// GET - Fetch newsletter preview for today's articles
+// GET - Fetch newsletter preview with top trending articles
 export async function GET() {
   try {
     const session = await requireAdminAuth();
@@ -10,13 +10,13 @@ export async function GET() {
       return session; // Return 401 response
     }
 
-    // Get today's date range (same logic as send-daily API)
+    // Get today's date range
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Fetch today's published articles
+    // Fetch top 30 most-read articles published today, sorted by viewCount
     const articles = await prisma.article.findMany({
       where: {
         status: "PUBLISHED",
@@ -31,16 +31,18 @@ export async function GET() {
         excerpt: true,
         imageUrl: true,
         publishedAt: true,
+        viewCount: true,
         category: {
           select: {
             name: true,
           },
         },
       },
-      orderBy: {
-        publishedAt: "desc",
-      },
-      take: 10, // Limit to 10 articles for newsletter
+      orderBy: [
+        { viewCount: "desc" }, // Primary: Most viewed
+        { publishedAt: "desc" }, // Secondary: Newest
+      ],
+      take: 30, // Top 30 most-read articles
     });
 
     // Get subscriber count (newsletter table with ACTIVE status)
@@ -60,17 +62,20 @@ export async function GET() {
 
     const subject =
       articles.length > 0
-        ? `🤖 AI Haberleri - ${dateStr} | ${articles.length} Yeni Haber`
+        ? `🔥 Bugünün En Çok Okunanları | ${dateStr} | ${articles.length} Trend Haber`
         : `🤖 AI Haberleri - ${dateStr}`;
 
-    // Format articles for preview
-    const formattedArticles = articles.map((article) => ({
+    // Format articles for preview with trend indicator
+    const formattedArticles = articles.map((article, index) => ({
       id: article.id,
       title: article.title,
       excerpt: article.excerpt || "",
       category: article.category.name,
       publishedAt: article.publishedAt?.toISOString() || "",
       imageUrl: article.imageUrl,
+      viewCount: article.viewCount || 0,
+      trendRank: index + 1, // 1-based rank
+      isTrending: (article.viewCount || 0) > 100, // Mark as trending if >100 views
     }));
 
     return NextResponse.json({
@@ -81,6 +86,8 @@ export async function GET() {
         articles: formattedArticles,
         subscriberCount,
         scheduledTime: "19:00",
+        sortedBy: "viewCount", // Indicate sorting method
+        totalViews: articles.reduce((sum, a) => sum + (a.viewCount || 0), 0),
       },
     });
   } catch (error) {

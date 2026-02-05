@@ -490,9 +490,7 @@ JSON formatında yanıt ver:
     const trContent = JSON.parse(trJsonMatch[0]);
 
     // English content (HYBRID: Using Gemini 2.5 Flash Lite for translation - 47% cheaper)
-    this.logger.info(
-      `🤖 HYBRID: Using Gemini 2.5 Flash Lite for EN content synthesis (47% cheaper)`,
-    );
+    // FALLBACK: If Gemini fails, use DeepSeek for EN content
     const enPrompt = `You are a world-renowned investigative journalist.
 
 Task: Create a comprehensive, original English news article by synthesizing ${sources.length} sources.
@@ -520,17 +518,48 @@ Respond in JSON:
   "metaDescription": "SEO meta description"
 }`;
 
-    const enResponse = await callGemini(enPrompt, {
-      model: "gemini-2.5-flash-lite",
-      maxTokens: 6000,
-      temperature: 0.9,
-    });
+    let enContent: any;
+    let usedProvider = "Gemini";
 
-    const enJsonMatch = enResponse.match(/\{[\s\S]*\}/);
-    if (!enJsonMatch) {
-      throw new Error("Failed to parse English content");
+    try {
+      // Try Gemini first (47% cheaper)
+      this.logger.info(
+        `🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...`,
+      );
+      const enResponse = await callGemini(enPrompt, {
+        model: "gemini-2.5-flash-lite",
+        maxTokens: 6000,
+        temperature: 0.9,
+      });
+
+      const enJsonMatch = enResponse.match(/\{[\s\S]*\}/);
+      if (!enJsonMatch) {
+        throw new Error("Failed to parse English content from Gemini");
+      }
+      enContent = JSON.parse(enJsonMatch[0]);
+      this.logger.success(`✅ Gemini EN content generated successfully`);
+    } catch (geminiError: any) {
+      // Fallback to DeepSeek if Gemini fails
+      this.logger.warn(
+        `⚠️ Gemini failed (${geminiError.message}), falling back to DeepSeek for EN content...`,
+      );
+      usedProvider = "DeepSeek";
+
+      const enResponseDeepSeek = await callDeepSeek(enPrompt, {
+        model: "deepseek-chat",
+        maxTokens: 6000,
+        temperature: 0.9,
+      });
+
+      const enJsonMatchDeepSeek = enResponseDeepSeek.match(/\{[\s\S]*\}/);
+      if (!enJsonMatchDeepSeek) {
+        throw new Error(
+          "Failed to parse English content from DeepSeek fallback",
+        );
+      }
+      enContent = JSON.parse(enJsonMatchDeepSeek[0]);
+      this.logger.success(`✅ DeepSeek EN content generated (fallback)`);
     }
-    const enContent = JSON.parse(enJsonMatch[0]);
 
     // Add AI disclaimer and sources footer to both TR and EN content
     const sourcesHtmlTr = sources

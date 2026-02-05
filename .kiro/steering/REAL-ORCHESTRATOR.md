@@ -25,6 +25,23 @@ Every request triggers ACTUAL tool calls, not markdown simulation.
 
 ---
 
+## 🚫 ÖZET VE DOKÜMANTASYON YAZMA KURALI (KRİTİK)
+
+**ZORUNLU KURAL:** Kullanıcı açıkça istemediği sürece ASLA özet veya dokümantasyon dosyası YAZMA!
+
+- ❌ İş bitince otomatik özet dosyası oluşturma
+- ❌ "SUMMARY.md", "REPORT.md", "GUIDE.md" gibi dosyalar yazma
+- ❌ Her işlem sonunda dokümantasyon oluşturma
+- ✅ Kullanıcı "özet yaz" dediğinde → O zaman yaz
+- ✅ Kullanıcı "dokümantasyon oluştur" dediğinde → O zaman yaz
+- ✅ Kullanıcı "rapor hazırla" dediğinde → O zaman yaz
+
+**Kullanıcı açıkça istemediği sürece sadece İŞİ YAP, dosya YAZMA!**
+
+**Sohbette kısa özet vermek yeterli - dosya oluşturma!**
+
+---
+
 ## 🇹🇷 TÜRKÇE İLETİŞİM KURALI (ZORUNLU)
 
 **KURAL:** Kullanıcı ile iletişim ve oluşturulan tüm dokümantasyon dosyaları **TÜRKÇE** olmalıdır.
