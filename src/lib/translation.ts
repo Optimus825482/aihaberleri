@@ -282,6 +282,16 @@ export async function translateAndSaveArticle(
       try {
         await notifyGoogle(englishUrl, "URL_UPDATED");
         console.log(`   ✅ Google Indexing API: English URL submitted`);
+
+        // Update Google status for English translation
+        // Note: We track this on the main article, not translation table
+        await db.article.update({
+          where: { id: articleId },
+          data: {
+            googleIndexStatus: "SUBMITTED",
+            googleIndexedAt: new Date(),
+          },
+        });
       } catch (error) {
         console.warn(
           `   ⚠️ Google Indexing API failed for English URL:`,

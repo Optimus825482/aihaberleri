@@ -128,8 +128,13 @@ model Article {
   // Trend & Topic
   topic              String?              // Short topic identifier (e.g., nvidia_openai_investment)
   trendScore         Int                  @default(0)  // Trend score from SearXNG
+  
+  // SEO Indexing Status
   indexNowStatus     IndexStatus          @default(PENDING)
   indexedAt          DateTime?
+  googleIndexStatus  IndexStatus          @default(PENDING)  // Google Indexing API status
+  googleIndexedAt    DateTime?                               // Google notification timestamp
+  
   score              Int                  @default(0)
   seoScore           Int                  @default(0)
   readingTime        Int                  @default(0)

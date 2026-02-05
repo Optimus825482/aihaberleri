@@ -1005,12 +1005,29 @@ export async function publishArticle(
         console.error("Aggressive indexing error:", err),
       );
 
-      // 🆕 Google Indexing API - Notify Google immediately
+      // 🆕 Google Indexing API - Notify Google immediately and update status
       const { notifyNewsToGoogle } =
         await import("@/lib/seo/google-indexing-api");
-      notifyNewsToGoogle(article.slug).catch((err) =>
-        console.error("Google Indexing API error:", err),
-      );
+      notifyNewsToGoogle(article.slug)
+        .then(async () => {
+          // Update Google status on success
+          await db.article.update({
+            where: { id: article.id },
+            data: {
+              googleIndexStatus: "SUBMITTED",
+              googleIndexedAt: new Date(),
+            },
+          });
+          console.log(`✅ Google Indexing API: ${article.slug} - SUBMITTED`);
+        })
+        .catch(async (err) => {
+          console.error("Google Indexing API error:", err);
+          // Mark as failed
+          await db.article.update({
+            where: { id: article.id },
+            data: { googleIndexStatus: "FAILED" },
+          });
+        });
     } catch (e) {
       console.error("Failed to trigger aggressive indexing:", e);
     }

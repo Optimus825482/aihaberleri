@@ -78,6 +78,8 @@ export async function GET(request: NextRequest) {
           publishedAt: true,
           indexNowStatus: true,
           indexedAt: true,
+          googleIndexStatus: true,
+          googleIndexedAt: true,
           facebookShared: true,
           category: {
             select: {
@@ -96,27 +98,29 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Format response
-    const formattedArticles = articles.map((article) => ({
-      id: article.id,
-      title: article.title,
-      slug: article.slug,
-      publishedAt: article.publishedAt,
-      category: article.category.name,
-      notifications: {
-        indexNow: {
-          status: article.indexNowStatus,
-          sentAt: article.indexedAt,
+    const formattedArticles = articles.map((article) => {
+      return {
+        id: article.id,
+        title: article.title,
+        slug: article.slug,
+        publishedAt: article.publishedAt,
+        category: article.category.name,
+        notifications: {
+          indexNow: {
+            status: article.indexNowStatus,
+            sentAt: article.indexedAt,
+          },
+          google: {
+            status: article.googleIndexStatus || "PENDING",
+            sentAt: article.googleIndexedAt,
+          },
+          facebook: {
+            status: article.facebookShared ? "SUBMITTED" : "PENDING",
+            sentAt: article.facebookShared ? article.publishedAt : null,
+          },
         },
-        google: {
-          status: article.indexNowStatus, // We'll use same status for now
-          sentAt: article.indexedAt,
-        },
-        facebook: {
-          status: article.facebookShared ? "SUBMITTED" : "PENDING",
-          sentAt: article.facebookShared ? article.publishedAt : null,
-        },
-      },
-    }));
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -211,9 +215,24 @@ export async function POST(request: NextRequest) {
         try {
           await notifyNewsToGoogle(article.slug);
           results.google.success++;
+
+          // Update Google status in database
+          await db.article.update({
+            where: { id: article.id },
+            data: {
+              googleIndexStatus: "SUBMITTED",
+              googleIndexedAt: new Date(),
+            },
+          });
         } catch (error) {
           console.error(`Google Indexing failed for ${article.slug}:`, error);
           results.google.failed++;
+
+          // Mark as failed
+          await db.article.update({
+            where: { id: article.id },
+            data: { googleIndexStatus: "FAILED" },
+          });
         }
 
         // Facebook
@@ -256,8 +275,23 @@ export async function POST(request: NextRequest) {
         try {
           await notifyNewsToGoogle(article.slug);
           results.google.success++;
+
+          // Update Google status
+          await db.article.update({
+            where: { id: article.id },
+            data: {
+              googleIndexStatus: "SUBMITTED",
+              googleIndexedAt: new Date(),
+            },
+          });
         } catch (error) {
           results.google.failed++;
+
+          // Mark as failed
+          await db.article.update({
+            where: { id: article.id },
+            data: { googleIndexStatus: "FAILED" },
+          });
         }
       }
     } else if (action === "resend_facebook") {
