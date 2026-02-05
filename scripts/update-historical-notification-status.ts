@@ -1,102 +1,115 @@
-/**
- * Geçmiş Haberlerin Bildirim Durumlarını Güncelleme
- *
- * Bu script:
- * - IndexNow ve Facebook'u "SUBMITTED" olarak işaretler
- * - Google'ı "PENDING" olarak işaretler
- */
+import { PrismaClient } from "@prisma/client";
 
-import { db } from "@/lib/db";
+const prisma = new PrismaClient();
 
 async function updateHistoricalStatus() {
-  console.log("🔄 Geçmiş haberlerin bildirim durumları güncelleniyor...\n");
+  console.log("🔄 Geçmiş bildirim durumları güncelleniyor...\n");
 
   try {
-    // 1. Tüm yayınlanmış haberleri al
-    const articles = await db.article.findMany({
+    // Tüm yayınlanmış haberleri al
+    const articles = await prisma.article.findMany({
       where: {
         status: "PUBLISHED",
-        publishedAt: { not: null },
       },
       select: {
         id: true,
         title: true,
-        publishedAt: true,
+        titleEn: true,
         indexNowStatus: true,
-        googleIndexStatus: true,
         facebookShared: true,
+        googleIndexStatus: true,
+        indexNowStatusEn: true,
+        googleIndexStatusEn: true,
       },
     });
 
     console.log(`📊 Toplam ${articles.length} yayınlanmış haber bulundu\n`);
 
-    let indexNowUpdated = 0;
-    let googleUpdated = 0;
-    let facebookUpdated = 0;
+    let updatedCount = 0;
 
-    // 2. Her haberi güncelle
     for (const article of articles) {
       const updates: any = {};
 
-      // IndexNow - Eğer PENDING veya null ise SUBMITTED yap
-      if (!article.indexNowStatus || article.indexNowStatus === "PENDING") {
-        updates.indexNowStatus = "SUBMITTED";
-        updates.indexedAt = article.publishedAt; // Yayın tarihini kullan
-        indexNowUpdated++;
-      }
-
-      // Google - Eğer SUBMITTED ise PENDING yap (tekrar gönderilecek)
-      if (article.googleIndexStatus === "SUBMITTED") {
+      // Türkçe IndexNow durumu
+      if (
+        article.indexNowStatus === "SUBMITTED" &&
+        !article.googleIndexStatus
+      ) {
         updates.googleIndexStatus = "PENDING";
-        updates.googleIndexedAt = null;
-        googleUpdated++;
-      } else if (!article.googleIndexStatus) {
-        updates.googleIndexStatus = "PENDING";
-        googleUpdated++;
       }
 
-      // Facebook - Eğer false ise true yap
-      if (!article.facebookShared) {
-        updates.facebookShared = true;
-        facebookUpdated++;
+      // İngilizce IndexNow durumu (eğer İngilizce çeviri varsa)
+      if (
+        article.titleEn &&
+        article.indexNowStatusEn === "SUBMITTED" &&
+        !article.googleIndexStatusEn
+      ) {
+        updates.googleIndexStatusEn = "PENDING";
       }
 
-      // Güncelleme varsa uygula
+      // Güncelleme gerekiyorsa
       if (Object.keys(updates).length > 0) {
-        await db.article.update({
+        await prisma.article.update({
           where: { id: article.id },
           data: updates,
         });
+
+        updatedCount++;
+        console.log(`✅ Güncellendi: ${article.title}`);
+        if (updates.googleIndexStatusEn) {
+          console.log(`   └─ İngilizce: ${article.titleEn}`);
+        }
       }
     }
 
-    console.log("\n✅ Güncelleme tamamlandı!\n");
-    console.log(`📈 İstatistikler:`);
-    console.log(
-      `   - IndexNow: ${indexNowUpdated} haber "Gönderildi" olarak işaretlendi`,
-    );
-    console.log(
-      `   - Google: ${googleUpdated} haber "Gönderilmedi" olarak işaretlendi`,
-    );
-    console.log(
-      `   - Facebook: ${facebookUpdated} haber "Gönderildi" olarak işaretlendi`,
-    );
-    console.log(`\n🎯 Sonuç: Tüm geçmiş haberler güncellendi!`);
+    console.log(`\n✅ Toplam ${updatedCount} haber güncellendi`);
+    console.log(`📊 ${articles.length - updatedCount} haber zaten güncel\n`);
+
+    // Özet istatistikler
+    const stats = await prisma.article.groupBy({
+      by: ["googleIndexStatus"],
+      where: {
+        status: "PUBLISHED",
+      },
+      _count: true,
+    });
+
+    console.log("📈 Google Bildirim Durumu (Türkçe):");
+    stats.forEach((stat) => {
+      console.log(
+        `   ${stat.googleIndexStatus || "NULL"}: ${stat._count} haber`,
+      );
+    });
+
+    const statsEn = await prisma.article.groupBy({
+      by: ["googleIndexStatusEn"],
+      where: {
+        status: "PUBLISHED",
+        titleEn: { not: null },
+      },
+      _count: true,
+    });
+
+    console.log("\n📈 Google Bildirim Durumu (İngilizce):");
+    statsEn.forEach((stat) => {
+      console.log(
+        `   ${stat.googleIndexStatusEn || "NULL"}: ${stat._count} haber`,
+      );
+    });
   } catch (error) {
     console.error("❌ Hata:", error);
     throw error;
   } finally {
-    await db.$disconnect();
+    await prisma.$disconnect();
   }
 }
 
-// Script'i çalıştır
 updateHistoricalStatus()
   .then(() => {
-    console.log("\n✨ Script başarıyla tamamlandı!");
+    console.log("\n✅ İşlem tamamlandı!");
     process.exit(0);
   })
   .catch((error) => {
-    console.error("\n💥 Script başarısız:", error);
+    console.error("❌ İşlem başarısız:", error);
     process.exit(1);
   });
