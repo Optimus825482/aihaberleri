@@ -165,18 +165,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if there's already an active batch
-    const activeBatch = await db.socialShareBatch.findFirst({
+    // Check if there's already an active batch with overlapping platforms
+    const activeBatches = await db.socialShareBatch.findMany({
       where: { status: "PROCESSING" },
     });
 
-    if (activeBatch) {
-      return NextResponse.json(
-        {
-          error: "Aktif bir batch zaten çalışıyor",
-          activeBatchId: activeBatch.id,
-        },
-        { status: 400 },
+    if (activeBatches.length > 0) {
+      // Check for platform overlap
+      const activePlatforms = new Set<string>();
+      activeBatches.forEach((batch) => {
+        batch.platform.split(",").forEach((p) => activePlatforms.add(p.trim()));
+      });
+
+      const overlappingPlatforms = platforms.filter((p) =>
+        activePlatforms.has(p),
+      );
+
+      if (overlappingPlatforms.length > 0) {
+        return NextResponse.json(
+          {
+            error: `Bu platformlar için zaten aktif batch çalışıyor: ${overlappingPlatforms.join(", ")}`,
+            activeBatchIds: activeBatches.map((b) => b.id),
+          },
+          { status: 400 },
+        );
+      }
+      // Different platforms - allow parallel batch
+      console.log(
+        `📤 Allowing parallel batch. Active: ${activeBatches.length}, New platforms: ${platforms.join(", ")}`,
       );
     }
 
