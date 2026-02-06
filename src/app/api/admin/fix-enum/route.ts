@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -8,20 +8,26 @@ import { prisma } from "@/lib/prisma";
  * Sadece admin kullanabilir
  */
 export async function POST() {
-  const session = await auth();
-  if (!session) {
+  try {
+    await requireAdminAuth();
+  } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     // PostgreSQL'de enum değerlerini tek tek ekle
-    const enumValues = ["BLUESKY_EN", "MASTODON_EN", "FACEBOOK_EN", "TUMBLR_EN"];
+    const enumValues = [
+      "BLUESKY_EN",
+      "MASTODON_EN",
+      "FACEBOOK_EN",
+      "TUMBLR_EN",
+    ];
     const results: string[] = [];
 
     for (const value of enumValues) {
       try {
         await prisma.$executeRawUnsafe(
-          `ALTER TYPE "SocialPlatform" ADD VALUE IF NOT EXISTS '${value}'`
+          `ALTER TYPE "SocialPlatform" ADD VALUE IF NOT EXISTS '${value}'`,
         );
         results.push(`✅ ${value} eklendi`);
       } catch (error: any) {
@@ -47,7 +53,7 @@ export async function POST() {
     console.error("Enum fix error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to fix enum" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
