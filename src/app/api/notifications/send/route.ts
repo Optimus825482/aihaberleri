@@ -1,13 +1,15 @@
 import { sendPushNotification } from "@/lib/push";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
-    // Auth check for admin
+    // Auth check for admin - support both NextAuth and admin-session JWT
     const session = await auth();
-    if (!session) {
+    const adminSession = await getAdminSession();
+    if (!session && !adminSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -62,8 +64,10 @@ export async function POST(req: Request) {
  */
 export async function GET() {
   try {
+    // Auth check - support both NextAuth and admin-session JWT
     const session = await auth();
-    if (!session) {
+    const adminSession = await getAdminSession();
+    if (!session && !adminSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

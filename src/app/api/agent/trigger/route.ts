@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { executeNewsAgent } from "@/services/agent.service";
 import { getRedis } from "@/lib/redis";
@@ -8,9 +9,10 @@ import { apiLogger } from "@/lib/logger";
 export async function POST(request: Request) {
   const startTime = Date.now();
   try {
-    // Check authentication
+    // Check authentication - support both NextAuth and admin-session JWT
     const session = await auth();
-    if (!session) {
+    const adminSession = await getAdminSession();
+    if (!session && !adminSession) {
       apiLogger.response(
         "POST",
         "/api/agent/trigger",
@@ -20,12 +22,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
 
-    apiLogger.request("POST", "/api/agent/trigger", session.user);
+    const currentUser = session?.user || adminSession;
+    apiLogger.request("POST", "/api/agent/trigger", currentUser);
 
     // Rate limiting: Prevent spam clicks (30 second cooldown)
     const redis = getRedis();
     if (redis) {
-      const cooldownKey = `trigger-cooldown:${session.user?.id || "admin"}`;
+      const cooldownKey = `trigger-cooldown:${session?.user?.id || adminSession?.id || "admin"}`;
       const lastTrigger = await redis.get(cooldownKey);
 
       if (lastTrigger) {
@@ -95,7 +98,7 @@ export async function POST(request: Request) {
 
       if (newsAgentQueue) {
         console.log("📋 Queue available, adding job to BullMQ", {
-          userId: session.user?.id,
+          userId: session?.user?.id || adminSession?.id,
         });
         console.log("📋 Queue available, adding job...");
 

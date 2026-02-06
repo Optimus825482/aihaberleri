@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
@@ -47,8 +48,10 @@ function createNotification(
 }
 
 export async function GET() {
+  // Auth check - support both NextAuth and admin-session JWT
   const session = await auth();
-  if (!session) {
+  const adminSession = await getAdminSession();
+  if (!session && !adminSession) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

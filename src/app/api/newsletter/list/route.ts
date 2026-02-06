@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    // Check authentication
+    // Check authentication - support both NextAuth and admin-session JWT
     const session = await auth();
-    if (!session) {
+    const adminSession = await getAdminSession();
+    if (!session && !adminSession) {
       return NextResponse.json(
         { success: false, error: "Yetkisiz erişim" },
         { status: 401 },

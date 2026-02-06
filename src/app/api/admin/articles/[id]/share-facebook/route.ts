@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
 /**
@@ -11,9 +12,10 @@ export async function POST(
   { params }: { params: { id: string } },
 ) {
   try {
-    // Auth kontrolü
+    // Auth kontrolü - support both NextAuth and admin-session JWT
     const session = await auth();
-    if (!session) {
+    const adminSession = await getAdminSession();
+    if (!session && !adminSession) {
       return NextResponse.json(
         { success: false, error: "Unauthorized" },
         { status: 401 },

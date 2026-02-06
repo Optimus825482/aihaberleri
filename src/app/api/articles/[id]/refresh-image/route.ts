@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { generateImagePrompt } from "@/lib/deepseek";
 import { fetchPollinationsImage } from "@/lib/pollinations";
@@ -10,9 +11,10 @@ export async function POST(
   { params }: { params: { id: string } },
 ) {
   try {
-    // Check authentication
+    // Check authentication - support both NextAuth and admin-session JWT
     const session = await auth();
-    if (!session) {
+    const adminSession = await getAdminSession();
+    if (!session && !adminSession) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
 
