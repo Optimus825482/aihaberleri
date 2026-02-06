@@ -225,6 +225,7 @@ export default function SocialSharesPage() {
                     <select
                         value={selectedPlatform || ""}
                         onChange={(e) => setSelectedPlatform(e.target.value || null)}
+                        aria-label="Platform seçimi"
                         className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
                     >
                         <option value="">Tüm Platformlar</option>
@@ -314,6 +315,7 @@ export default function SocialSharesPage() {
                             <button
                                 onClick={() => setPagination((p) => ({ ...p, page: p.page - 1 }))}
                                 disabled={pagination.page <= 1}
+                                aria-label="Önceki sayfa"
                                 className="p-2 rounded-lg bg-white/10 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <ChevronLeft className="w-4 h-4" />
@@ -324,6 +326,7 @@ export default function SocialSharesPage() {
                             <button
                                 onClick={() => setPagination((p) => ({ ...p, page: p.page + 1 }))}
                                 disabled={pagination.page >= pagination.totalPages}
+                                aria-label="Sonraki sayfa"
                                 className="p-2 rounded-lg bg-white/10 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <ChevronRight className="w-4 h-4" />
@@ -351,9 +354,9 @@ export default function SocialSharesPage() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className={`px-2 py-0.5 rounded text-xs ${batch.status === "COMPLETED" ? "bg-green-500/20 text-green-400" :
-                                                batch.status === "PROCESSING" ? "bg-purple-500/20 text-purple-400" :
-                                                    batch.status === "FAILED" ? "bg-red-500/20 text-red-400" :
-                                                        "bg-gray-500/20 text-gray-400"
+                                            batch.status === "PROCESSING" ? "bg-purple-500/20 text-purple-400" :
+                                                batch.status === "FAILED" ? "bg-red-500/20 text-red-400" :
+                                                    "bg-gray-500/20 text-gray-400"
                                             }`}>
                                             {batch.status}
                                         </span>
@@ -378,8 +381,9 @@ export default function SocialSharesPage() {
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Platform</label>
+                                    <label htmlFor="batch-platform" className="block text-sm text-gray-400 mb-1">Platform</label>
                                     <select
+                                        id="batch-platform"
                                         value={batchPlatform}
                                         onChange={(e) => setBatchPlatform(e.target.value)}
                                         className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
@@ -391,8 +395,9 @@ export default function SocialSharesPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Batch Boyutu</label>
+                                    <label htmlFor="batch-size" className="block text-sm text-gray-400 mb-1">Batch Boyutu</label>
                                     <input
+                                        id="batch-size"
                                         type="number"
                                         value={batchSize}
                                         onChange={(e) => setBatchSize(parseInt(e.target.value) || 10)}
@@ -404,8 +409,9 @@ export default function SocialSharesPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm text-gray-400 mb-1">Paylaşım Aralığı (dakika)</label>
+                                    <label htmlFor="interval-minutes" className="block text-sm text-gray-400 mb-1">Paylaşım Aralığı (dakika)</label>
                                     <input
+                                        id="interval-minutes"
                                         type="number"
                                         value={intervalMinutes}
                                         onChange={(e) => setIntervalMinutes(parseInt(e.target.value) || 1)}

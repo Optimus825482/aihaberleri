@@ -23,7 +23,10 @@ import { translateAndSaveArticle } from "@/lib/translation";
 import { getCache } from "@/lib/cache";
 import { contentLogger } from "@/lib/logger";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
-import { recordShareSuccess, recordShareFailure } from "@/services/social-share.service";
+import {
+  recordShareSuccess,
+  recordShareFailure,
+} from "@/services/social-share.service";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 
 // Create module-specific loggers for live streaming
@@ -1038,7 +1041,12 @@ export async function publishArticle(
           }
         })
         .catch(async (err) => {
-          await recordShareFailure(article.id, "TWITTER", "tr", err?.message || "Unknown error");
+          await recordShareFailure(
+            article.id,
+            "TWITTER",
+            "tr",
+            err?.message || "Unknown error",
+          );
           console.error("Async tweet failed:", err);
         });
     } catch (e) {
@@ -1066,7 +1074,12 @@ export async function publishArticle(
           }
         })
         .catch(async (err) => {
-          await recordShareFailure(article.id, "FACEBOOK", "tr", err?.message || "Unknown error");
+          await recordShareFailure(
+            article.id,
+            "FACEBOOK",
+            "tr",
+            err?.message || "Unknown error",
+          );
           console.error("Async Facebook post failed:", err);
         });
     } catch (e) {
@@ -1089,7 +1102,12 @@ export async function publishArticle(
           }
         })
         .catch(async (err) => {
-          await recordShareFailure(article.id, "BLUESKY", "tr", err?.message || "Unknown error");
+          await recordShareFailure(
+            article.id,
+            "BLUESKY",
+            "tr",
+            err?.message || "Unknown error",
+          );
           console.error("Async Bluesky post failed:", err);
         });
     } catch (e) {
@@ -1112,7 +1130,12 @@ export async function publishArticle(
           }
         })
         .catch(async (err) => {
-          await recordShareFailure(article.id, "MASTODON", "tr", err?.message || "Unknown error");
+          await recordShareFailure(
+            article.id,
+            "MASTODON",
+            "tr",
+            err?.message || "Unknown error",
+          );
           console.error("Async Mastodon post failed:", err);
         });
     } catch (e) {
@@ -1135,7 +1158,12 @@ export async function publishArticle(
           }
         })
         .catch(async (err) => {
-          await recordShareFailure(article.id, "TUMBLR", "tr", err?.message || "Unknown error");
+          await recordShareFailure(
+            article.id,
+            "TUMBLR",
+            "tr",
+            err?.message || "Unknown error",
+          );
           console.error("Async Tumblr post failed:", err);
         });
     } catch (e) {

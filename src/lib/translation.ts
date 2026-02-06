@@ -8,7 +8,10 @@ import { postToBluesky } from "@/lib/social/bluesky";
 import { postToMastodon } from "@/lib/social/mastodon";
 import { postToTumblr } from "@/lib/social/tumblr";
 import { postToFacebookEN } from "@/lib/social/facebook";
-import { recordShareSuccess, recordShareFailure } from "@/services/social-share.service";
+import {
+  recordShareSuccess,
+  recordShareFailure,
+} from "@/services/social-share.service";
 
 export type SupportedLocale = "tr" | "en";
 
@@ -316,7 +319,12 @@ export async function translateAndSaveArticle(
           }
         })
         .catch(async (err) => {
-          await recordShareFailure(articleId, "BLUESKY", "en", err?.message || "Unknown error");
+          await recordShareFailure(
+            articleId,
+            "BLUESKY",
+            "en",
+            err?.message || "Unknown error",
+          );
           console.error(`   ❌ Bluesky EN failed:`, err.message);
         });
 
@@ -334,7 +342,12 @@ export async function translateAndSaveArticle(
           }
         })
         .catch(async (err) => {
-          await recordShareFailure(articleId, "MASTODON", "en", err?.message || "Unknown error");
+          await recordShareFailure(
+            articleId,
+            "MASTODON",
+            "en",
+            err?.message || "Unknown error",
+          );
           console.error(`   ❌ Mastodon EN failed:`, err.message);
         });
 
@@ -352,7 +365,12 @@ export async function translateAndSaveArticle(
           }
         })
         .catch(async (err) => {
-          await recordShareFailure(articleId, "TUMBLR", "en", err?.message || "Unknown error");
+          await recordShareFailure(
+            articleId,
+            "TUMBLR",
+            "en",
+            err?.message || "Unknown error",
+          );
           console.error(`   ❌ Tumblr EN failed:`, err.message);
         });
 
@@ -370,7 +388,12 @@ export async function translateAndSaveArticle(
           }
         })
         .catch(async (err) => {
-          await recordShareFailure(articleId, "FACEBOOK_EN", "en", err?.message || "Unknown error");
+          await recordShareFailure(
+            articleId,
+            "FACEBOOK_EN",
+            "en",
+            err?.message || "Unknown error",
+          );
           console.error(`   ❌ Facebook EN failed:`, err.message);
         });
     }
