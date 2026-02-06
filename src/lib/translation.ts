@@ -302,11 +302,17 @@ export async function translateAndSaveArticle(
       // They cover all language versions automatically via sitemap
 
       // 🆕 Share English version to social media
-      console.log(`📢 Sharing English version to social media...`);
+      console.log(
+        `📢 [EN-SHARE] Starting English social media shares for article: ${articleId}`,
+      );
+      console.log(`📢 [EN-SHARE] Title: ${translation.title}`);
+      console.log(`📢 [EN-SHARE] Slug: en/news/${translation.slug}`);
+      console.log(`📢 [EN-SHARE] Image: ${article.imageUrl || "none"}`);
 
       const enArticleUrl = `https://aihaberleri.org/en/news/${translation.slug}`;
 
       // Bluesky - English
+      console.log(`📢 [EN-SHARE] Calling postToBluesky...`);
       postToBluesky({
         title: translation.title,
         slug: `en/news/${translation.slug}`, // English URL path
@@ -317,7 +323,11 @@ export async function translateAndSaveArticle(
         .then(async (postId) => {
           if (postId) {
             await recordShareSuccess(articleId, "BLUESKY", "en", postId);
-            console.log(`   🦋 Bluesky EN: ${translation.slug}`);
+            console.log(`   🦋 [EN-SHARE] Bluesky EN SUCCESS: ${postId}`);
+          } else {
+            console.log(
+              `   ⚠️ [EN-SHARE] Bluesky EN returned null (disabled or no credentials)`,
+            );
           }
         })
         .catch(async (err) => {
@@ -327,10 +337,11 @@ export async function translateAndSaveArticle(
             "en",
             err?.message || "Unknown error",
           );
-          console.error(`   ❌ Bluesky EN failed:`, err.message);
+          console.error(`   ❌ [EN-SHARE] Bluesky EN FAILED:`, err.message);
         });
 
       // Mastodon - English
+      console.log(`📢 [EN-SHARE] Calling postToMastodon...`);
       postToMastodon({
         title: translation.title,
         slug: `en/news/${translation.slug}`,
@@ -341,7 +352,11 @@ export async function translateAndSaveArticle(
         .then(async (postId) => {
           if (postId) {
             await recordShareSuccess(articleId, "MASTODON", "en", postId);
-            console.log(`   🐘 Mastodon EN: ${translation.slug}`);
+            console.log(`   🐘 [EN-SHARE] Mastodon EN SUCCESS: ${postId}`);
+          } else {
+            console.log(
+              `   ⚠️ [EN-SHARE] Mastodon EN returned null (disabled or no credentials)`,
+            );
           }
         })
         .catch(async (err) => {
@@ -351,10 +366,11 @@ export async function translateAndSaveArticle(
             "en",
             err?.message || "Unknown error",
           );
-          console.error(`   ❌ Mastodon EN failed:`, err.message);
+          console.error(`   ❌ [EN-SHARE] Mastodon EN FAILED:`, err.message);
         });
 
       // Tumblr - English
+      console.log(`📢 [EN-SHARE] Calling postToTumblr...`);
       postToTumblr({
         title: translation.title,
         slug: `en/news/${translation.slug}`,
@@ -365,7 +381,11 @@ export async function translateAndSaveArticle(
         .then(async (postId) => {
           if (postId) {
             await recordShareSuccess(articleId, "TUMBLR", "en", postId);
-            console.log(`   📝 Tumblr EN: ${translation.slug}`);
+            console.log(`   📝 [EN-SHARE] Tumblr EN SUCCESS: ${postId}`);
+          } else {
+            console.log(
+              `   ⚠️ [EN-SHARE] Tumblr EN returned null (disabled or no credentials)`,
+            );
           }
         })
         .catch(async (err) => {
@@ -375,10 +395,11 @@ export async function translateAndSaveArticle(
             "en",
             err?.message || "Unknown error",
           );
-          console.error(`   ❌ Tumblr EN failed:`, err.message);
+          console.error(`   ❌ [EN-SHARE] Tumblr EN FAILED:`, err.message);
         });
 
       // Facebook EN Page - English
+      console.log(`📢 [EN-SHARE] Calling postToFacebookEN...`);
       postToFacebookEN({
         title: translation.title,
         slug: `en/news/${translation.slug}`,
@@ -389,7 +410,11 @@ export async function translateAndSaveArticle(
         .then(async (postId) => {
           if (postId) {
             await recordShareSuccess(articleId, "FACEBOOK_EN", "en", postId);
-            console.log(`   📘 Facebook EN: ${translation.slug}`);
+            console.log(`   📘 [EN-SHARE] Facebook EN SUCCESS: ${postId}`);
+          } else {
+            console.log(
+              `   ⚠️ [EN-SHARE] Facebook EN returned null (disabled or no credentials)`,
+            );
           }
         })
         .catch(async (err) => {

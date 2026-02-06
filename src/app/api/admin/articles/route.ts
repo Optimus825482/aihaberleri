@@ -45,6 +45,15 @@ export async function GET(request: NextRequest) {
     // Build include clause
     const includeClause: any = {
       category: true,
+      socialShares: {
+        select: {
+          platform: true,
+          language: true,
+          status: true,
+          sharedAt: true,
+          postUrl: true,
+        },
+      },
       _count: {
         select: {
           seoRecommendations: true,

@@ -37,8 +37,37 @@ import {
   Plus,
   Facebook,
   Loader2,
+  Twitter,
+  Globe,
 } from "lucide-react";
 import Image from "next/image";
+
+// Icons for social platforms
+const BlueskyIcon = () => (
+  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
+  </svg>
+);
+
+const MastodonIcon = () => (
+  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M23.268 5.313c-.35-2.578-2.617-4.61-5.304-5.004C17.51.242 15.792 0 11.813 0h-.03c-3.98 0-4.835.242-5.288.309C3.882.692 1.496 2.518.917 5.127.64 6.412.61 7.837.661 9.143c.074 1.874.088 3.745.26 5.611.118 1.24.325 2.47.62 3.68.55 2.237 2.777 4.098 4.96 4.857 2.336.792 4.849.923 7.256.38.265-.061.527-.132.786-.213.585-.184 1.27-.39 1.774-.753a.057.057 0 0 0 .023-.043v-1.809a.052.052 0 0 0-.02-.041.053.053 0 0 0-.046-.01 20.282 20.282 0 0 1-4.709.545c-2.73 0-3.463-1.284-3.674-1.818a5.593 5.593 0 0 1-.319-1.433.053.053 0 0 1 .066-.054c1.517.363 3.072.546 4.632.546.376 0 .75 0 1.125-.01 1.57-.044 3.224-.124 4.768-.422.038-.008.077-.015.11-.024 2.435-.464 4.753-1.92 4.989-5.604.008-.145.03-1.52.03-1.67.002-.512.167-3.63-.024-5.545zm-3.748 9.195h-2.561V8.29c0-1.309-.55-1.976-1.67-1.976-1.23 0-1.846.79-1.846 2.35v3.403h-2.546V8.663c0-1.56-.617-2.35-1.848-2.35-1.112 0-1.668.668-1.67 1.977v6.218H4.822V8.102c0-1.31.337-2.35 1.011-3.12.696-.77 1.608-1.164 2.74-1.164 1.311 0 2.302.5 2.962 1.498l.638 1.06.638-1.06c.66-.999 1.65-1.498 2.96-1.498 1.13 0 2.043.395 2.74 1.164.675.77 1.012 1.81 1.012 3.12z" />
+  </svg>
+);
+
+const TumblrIcon = () => (
+  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M14.563 24c-5.093 0-7.031-3.756-7.031-6.411V9.747H5.116V6.648c3.63-1.313 4.512-4.596 4.71-6.469C9.84.051 9.941 0 9.999 0h3.517v6.114h4.801v3.633h-4.82v7.47c.016 1.001.375 2.371 2.207 2.371h.09c.631-.02 1.486-.205 1.936-.419l1.156 3.425c-.436.636-2.4 1.374-4.156 1.404h-.217z" />
+  </svg>
+);
+
+interface SocialShare {
+  platform: string;
+  language: string;
+  status: string;
+  sharedAt: string | null;
+  postUrl: string | null;
+}
 
 interface Article {
   id: string;
@@ -56,6 +85,7 @@ interface Article {
   };
   score: number;
   facebookShared: boolean;
+  socialShares?: SocialShare[];
 }
 
 interface Category {
@@ -63,6 +93,82 @@ interface Category {
   name: string;
   slug: string;
 }
+
+// Helper component to show social share status
+const SocialShareBadges = ({ shares, facebookShared }: { shares?: SocialShare[]; facebookShared: boolean }) => {
+  // Platform configs
+  const platforms = [
+    { key: "FACEBOOK", label: "FB", icon: Facebook, color: "text-blue-600", lang: "tr" },
+    { key: "TWITTER", label: "X", icon: Twitter, color: "text-sky-500", lang: "tr" },
+    { key: "BLUESKY", label: "BS", icon: BlueskyIcon, color: "text-blue-400", lang: "tr" },
+    { key: "MASTODON", label: "M", icon: MastodonIcon, color: "text-purple-500", lang: "tr" },
+    { key: "TUMBLR", label: "T", icon: TumblrIcon, color: "text-indigo-500", lang: "tr" },
+    { key: "FACEBOOK_EN", label: "FB-EN", icon: Facebook, color: "text-blue-600", lang: "en" },
+    { key: "BLUESKY", label: "BS-EN", icon: BlueskyIcon, color: "text-blue-400", lang: "en" },
+    { key: "MASTODON", label: "M-EN", icon: MastodonIcon, color: "text-purple-500", lang: "en" },
+    { key: "TUMBLR", label: "T-EN", icon: TumblrIcon, color: "text-indigo-500", lang: "en" },
+  ];
+
+  const getShareStatus = (platform: string, lang: string) => {
+    if (!shares || shares.length === 0) {
+      // Fallback to facebookShared for backward compatibility
+      if (platform === "FACEBOOK" && lang === "tr") {
+        return facebookShared ? "SHARED" : null;
+      }
+      return null;
+    }
+    const share = shares.find(s => s.platform === platform && s.language === lang);
+    return share?.status || null;
+  };
+
+  // Group by language
+  const trShares = platforms.filter(p => p.lang === "tr");
+  const enShares = platforms.filter(p => p.lang === "en");
+
+  const renderPlatform = (p: typeof platforms[0]) => {
+    const status = getShareStatus(p.key, p.lang);
+    const Icon = p.icon;
+
+    if (status === "SHARED") {
+      return (
+        <span key={`${p.key}-${p.lang}`} className={`${p.color} flex-shrink-0`} title={`${p.label} paylaşıldı`}>
+          <Icon />
+        </span>
+      );
+    }
+    if (status === "FAILED") {
+      return (
+        <span key={`${p.key}-${p.lang}`} className="text-red-400 flex-shrink-0 opacity-50" title={`${p.label} başarısız`}>
+          <Icon />
+        </span>
+      );
+    }
+    return null;
+  };
+
+  const trIcons = trShares.map(renderPlatform).filter(Boolean);
+  const enIcons = enShares.map(renderPlatform).filter(Boolean);
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      {trIcons.length > 0 && (
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-muted-foreground">TR:</span>
+          <div className="flex items-center gap-1">{trIcons}</div>
+        </div>
+      )}
+      {enIcons.length > 0 && (
+        <div className="flex items-center gap-1">
+          <span className="text-[10px] text-muted-foreground">EN:</span>
+          <div className="flex items-center gap-1">{enIcons}</div>
+        </div>
+      )}
+      {trIcons.length === 0 && enIcons.length === 0 && (
+        <span className="text-xs text-muted-foreground">-</span>
+      )}
+    </div>
+  );
+};
 
 export default function ArticlesPage() {
   const router = useRouter();
@@ -361,13 +467,11 @@ export default function ArticlesPage() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        {article.facebookShared && (
-                          <Facebook className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
-                        )}
-                        <p className="font-semibold text-sm line-clamp-2 leading-tight">
+                      <div className="flex items-start gap-2">
+                        <p className="font-semibold text-sm line-clamp-2 leading-tight flex-1">
                           {article.title}
                         </p>
+                        <SocialShareBadges shares={article.socialShares} facebookShared={article.facebookShared} />
                       </div>
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         <Badge
@@ -469,6 +573,7 @@ export default function ArticlesPage() {
                   <TableRow>
                     <TableHead className="w-[60px]">Görsel</TableHead>
                     <TableHead className="w-auto min-w-[200px]">Başlık</TableHead>
+                    <TableHead className="w-[100px]">Sosyal</TableHead>
                     <TableHead className="w-[110px]">Kategori</TableHead>
                     <TableHead className="w-[85px]">Tarih</TableHead>
                     <TableHead className="w-[70px]">Skor</TableHead>
@@ -500,18 +605,16 @@ export default function ArticlesPage() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <div className="flex items-center gap-1.5">
-                            {article.facebookShared && (
-                              <Facebook className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
-                            )}
-                            <p className="font-medium line-clamp-1">
-                              {article.title}
-                            </p>
-                          </div>
+                          <p className="font-medium line-clamp-1">
+                            {article.title}
+                          </p>
                           <p className="text-sm text-muted-foreground line-clamp-1">
                             {article.excerpt}
                           </p>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <SocialShareBadges shares={article.socialShares} facebookShared={article.facebookShared} />
                       </TableCell>
                       <TableCell>
                         <Badge
