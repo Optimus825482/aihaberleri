@@ -5,24 +5,23 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // Connection pool settings for production
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
 model User {
-  id            String      @id @default(cuid())
-  email         String      @unique
+  id            String            @id @default(cuid())
+  email         String            @unique
   password      String
   name          String?
-  role          Role        @default(ADMIN)
-  permissions   String[]    @default([])
-  isActive      Boolean     @default(true)
+  role          Role              @default(ADMIN)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
   lastLogin     DateTime?
+  permissions   String[]          @default([])
+  isActive      Boolean           @default(true)
   deletedAt     DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
   accounts      Account[]
   articles      Article[]
   sessions      Session[]
@@ -82,123 +81,130 @@ model Category {
   articles    Article[]
 
   @@index([slug])
+  @@index([name])
+  @@index([order])
 }
 
 model Article {
-  id                 String               @id @default(cuid())
-  title              String
-  slug               String               @unique
-  excerpt            String
-  content            String               @db.Text
-  
-  // Language support (for Turkish/English versions)
-  language           String               @default("tr")  // "tr" or "en"
-  
-  // English translations (for multi-agent pipeline)
-  titleEn            String?
-  excerptEn          String?
-  contentEn          String?              @db.Text
-  
-  // Images
-  imageUrl           String?
-  imageUrlMedium     String?              // 800px optimized
-  imageUrlSmall      String?              // 400px optimized
-  imageUrlThumb      String?              // 200px optimized
-  
-  // Source info
-  sourceUrl          String?
-  sourceTitle        String?              // Original article title
-  sourceDescription  String?              // Original article description
-  
-  status             ArticleStatus        @default(DRAFT)
-  views              Int                  @default(0)
-  publishedAt        DateTime?
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  categoryId         String
-  authorId           String?
-  agentLogId         String?
-  
-  // SEO Turkish
-  metaTitle          String?
-  metaDescription    String?
-  keywords           String[]
-  
-  // SEO English
-  metaDescriptionEn  String?
-  keywordsEn         String[]             @default([])
-  
-  // Trend & Topic
-  topic              String?              // Short topic identifier (e.g., nvidia_openai_investment)
-  trendScore         Int                  @default(0)  // Trend score from SearXNG
-  
-  // SEO Indexing Status
-  indexNowStatus     IndexStatus          @default(PENDING)
-  indexedAt          DateTime?
-  googleIndexStatus  IndexStatus          @default(PENDING)  // Google Indexing API status
-  googleIndexedAt    DateTime?                               // Google notification timestamp
-  googleIndexed      Boolean              @default(false)    // Google indexing flag
-  googleIndexingScheduled    Boolean      @default(false)    // Scheduled for batch
-  googleIndexingScheduledAt  DateTime?                       // Batch schedule time
-  
-  score              Int                  @default(0)
-  seoScore           Int                  @default(0)
-  readingTime        Int                  @default(0)
-  scheduledPublishAt DateTime?
-  templateId         String?
-  facebookShared     Boolean              @default(false)
-  
-  // Title A/B Testing
-  titleABTest        Json?                // { titleVariants, activeVariant, variantViews, variantClicks }
-  
-  agentLog           AgentLog?            @relation(fields: [agentLogId], references: [id])
-  author             User?                @relation(fields: [authorId], references: [id])
-  category           Category             @relation(fields: [categoryId], references: [id])
-  template           ArticleTemplate?     @relation(fields: [templateId], references: [id], onDelete: SetNull)
-  analytics          ArticleAnalytics[]
-  translations       ArticleTranslation[]
-  seoRecommendations SEORecommendation[]
-  duplicatesAsOriginal  ArticleDuplicate[] @relation("OriginalArticle")
-  duplicatesAsDuplicate ArticleDuplicate[] @relation("DuplicateArticle")
-  googleIndexingBatchItems GoogleIndexingBatchItem[]
+  id                        String                    @id @default(cuid())
+  title                     String
+  slug                      String                    @unique
+  excerpt                   String
+  content                   String
+  imageUrl                  String?
+  sourceUrl                 String?
+  status                    ArticleStatus             @default(DRAFT)
+  views                     Int                       @default(0)
+  publishedAt               DateTime?
+  createdAt                 DateTime                  @default(now())
+  updatedAt                 DateTime                  @updatedAt
+  categoryId                String
+  authorId                  String?
+  agentLogId                String?
+  metaTitle                 String?
+  metaDescription           String?
+  keywords                  String[]
+  indexNowStatus            IndexStatus               @default(PENDING)
+  indexedAt                 DateTime?
+  score                     Int                       @default(0)
+  facebookShared            Boolean                   @default(false)
+  seoScore                  Int?                      @default(0)
+  readingTime               Int?                      @default(0)
+  scheduledPublishAt        DateTime?                 @db.Timestamp(6)
+  templateId                String?                   @db.VarChar(36)
+  imageUrlMedium            String?
+  imageUrlSmall             String?
+  imageUrlThumb             String?
+  topic                     String?
+  titleEn                   String?
+  excerptEn                 String?
+  contentEn                 String?
+  metaDescriptionEn         String?
+  sourceTitle               String?
+  sourceDescription         String?
+  trendScore                Int?                      @default(0)
+  keywordsEn                String[]                  @default([])
+  titleABTest               Json?
+  embedding                 Json?
+  googleIndexStatus         String?                   @default("PENDING")
+  googleIndexedAt           DateTime?
+  indexNowStatusEn          String?                   @default("PENDING")
+  indexedAtEn               DateTime?
+  googleIndexStatusEn       String?                   @default("PENDING")
+  googleIndexedAtEn         DateTime?
+  facebookSharedEn          Boolean?                  @default(false)
+  language                  String                    @default("tr")
+  googleIndexed             Boolean                   @default(false)
+  googleIndexingScheduled   Boolean                   @default(false)
+  googleIndexingScheduledAt DateTime?
+  indexNowSubmittedAt       DateTime?
+  indexNowRetryCount        Int                       @default(0)
+  indexNowNextRetryAt       DateTime?
+  indexNowLastError         String?
+  googleIndexRetryCount     Int                       @default(0)
+  googleIndexNextRetryAt    DateTime?
+  googleIndexLastError      String?
+  googleIndexBatchId        String?
+  agentLog                  AgentLog?                 @relation(fields: [agentLogId], references: [id])
+  author                    User?                     @relation(fields: [authorId], references: [id])
+  category                  Category                  @relation(fields: [categoryId], references: [id])
+  template                  ArticleTemplate?          @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  analytics                 ArticleAnalytics[]
+  translations              ArticleTranslation[]
+  seoRecommendations        SEORecommendation[]
+  duplicatesAsOriginal      ArticleDuplicate[]        @relation("OriginalArticle")
+  duplicatesAsDuplicate     ArticleDuplicate[]        @relation("DuplicateArticle")
+  googleIndexingBatchItems  GoogleIndexingBatchItem[]
+  socialShares              SocialShare[]
 
   @@index([slug])
   @@index([status, publishedAt])
   @@index([categoryId])
   @@index([publishedAt])
   @@index([indexNowStatus])
-  @@index([scheduledPublishAt])
-  @@index([templateId])
-  @@index([seoScore])
-  @@index([topic])                        // NEW: Index for topic-based queries
-  @@index([topic, publishedAt])           // NEW: Composite index for duplicate checks
-  @@index([language])                     // NEW: Index for language filtering
-  @@index([googleIndexed, language])      // NEW: Composite index for batch queries
+  @@index([topic])
+  @@index([topic, publishedAt(sort: Desc)])
+  @@index([language])
+  @@index([googleIndexed, language])
+  @@index([googleIndexBatchId])
+  @@index([googleIndexStatusEn])
+  @@index([googleIndexStatus, googleIndexNextRetryAt])
+  @@index([googleIndexStatus])
+  @@index([googleIndexStatus, publishedAt])
+  @@index([googleIndexedAtEn])
+  @@index([googleIndexedAt])
+  @@index([googleIndexingScheduled])
+  @@index([imageUrlMedium])
+  @@index([imageUrlSmall])
+  @@index([imageUrlThumb])
+  @@index([indexNowStatusEn])
+  @@index([indexNowStatus, indexNowNextRetryAt])
+  @@index([indexedAtEn])
+  @@index([status, googleIndexStatusEn])
+  @@index([status, googleIndexStatus])
+  @@index([seoScore], map: "idx_article_seo_score")
 }
 
-// i18n: Article translations for multi-language support
 model ArticleTranslation {
-  id        String   @id @default(cuid())
-  articleId String
-  locale    String   // "tr" | "en"
-  title     String
-  slug      String
-  excerpt   String?
-  content   String   @db.Text
-  
-  // SEO fields per locale
+  id              String   @id @default(cuid())
+  articleId       String
+  locale          String
+  title           String
+  slug            String
+  excerpt         String?
+  content         String
   metaTitle       String?
   metaDescription String?
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
   @@unique([articleId, locale])
   @@unique([slug, locale])
   @@index([locale])
   @@index([articleId])
+  @@index([articleId, locale])
+  @@index([locale, slug])
 }
 
 model ArticleAnalytics {
@@ -207,17 +213,14 @@ model ArticleAnalytics {
   ipAddress   String
   userAgent   String?
   duration    Int      @default(0)
-  
-  // GeoIP Location Data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   country     String?
   countryCode String?
   region      String?
   city        String?
   latitude    Float?
   longitude   Float?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
   article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@index([articleId])
@@ -225,6 +228,7 @@ model ArticleAnalytics {
   @@index([ipAddress])
   @@index([country])
   @@index([city])
+  @@index([articleId, createdAt(sort: Desc)])
 }
 
 model AgentLog {
@@ -240,6 +244,7 @@ model AgentLog {
 
   @@index([executionTime])
   @@index([status])
+  @@index([status, executionTime(sort: Desc)])
 }
 
 model Setting {
@@ -289,25 +294,342 @@ model PushSubscription {
   keys         Json
   userAgent    String?
   ipAddress    String?
-  language     String   @default("tr")
   subscribedAt DateTime @default(now())
   lastUsedAt   DateTime @default(now())
+  language     String   @default("tr")
 
   @@index([endpoint])
 }
 
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  isReplied Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isRead])
+  @@index([createdAt(sort: Desc)])
+}
+
+model Visitor {
+  id           String   @id @default(cuid())
+  ipAddress    String   @unique
+  userAgent    String?
+  currentPage  String
+  country      String?
+  countryCode  String?
+  city         String?
+  region       String?
+  lastActivity DateTime @default(now())
+  createdAt    DateTime @default(now())
+  isp          String?
+  latitude     Float?
+  longitude    Float?
+  timezone     String?
+  provider     String?
+
+  @@index([ipAddress])
+  @@index([lastActivity])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String
+  resource   String
+  resourceId String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt(sort: Desc)])
+}
+
+model ArticleTemplate {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(36)
+  name        String    @db.VarChar(255)
+  description String?
+  content     String
+  category    String?   @db.VarChar(100)
+  isActive    Boolean?  @default(true)
+  usageCount  Int?      @default(0)
+  createdBy   String    @db.VarChar(36)
+  createdAt   DateTime? @default(now()) @db.Timestamp(6)
+  updatedAt   DateTime? @default(now()) @updatedAt @db.Timestamp(6)
+  creator     User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  articles    Article[]
+
+  @@index([createdBy], map: "idx_template_creator")
+}
+
+model SEORecommendation {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(36)
+  articleId  String    @db.VarChar(36)
+  type       String    @db.VarChar(100)
+  severity   String    @db.VarChar(50)
+  message    String
+  suggestion String?
+  isResolved Boolean?  @default(false)
+  createdAt  DateTime? @default(now()) @db.Timestamp(6)
+  article    Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, isResolved, severity])
+  @@index([type, severity, isResolved])
+  @@index([articleId], map: "idx_seo_article")
+  @@index([severity], map: "idx_seo_severity")
+}
+
+model ArticleDuplicate {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(36)
+  originalId      String    @db.VarChar(36)
+  duplicateId     String    @db.VarChar(36)
+  similarityScore Decimal   @db.Decimal(5, 2)
+  status          String?   @default("pending") @db.VarChar(50)
+  mergedAt        DateTime? @db.Timestamp(6)
+  mergedBy        String?   @db.VarChar(36)
+  createdAt       DateTime? @default(now()) @db.Timestamp(6)
+  original        Article   @relation("OriginalArticle", fields: [originalId], references: [id], onDelete: Cascade)
+  duplicate       Article   @relation("DuplicateArticle", fields: [duplicateId], references: [id], onDelete: Cascade)
+
+  @@index([duplicateId], map: "idx_duplicate_duplicate")
+  @@index([originalId], map: "idx_duplicate_original")
+  @@index([status], map: "idx_duplicate_status")
+}
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  sessionToken String   @unique
+  ipAddress    String
+  userAgent    String?
+  country      String?
+  city         String?
+  device       String?
+  browser      String?
+  os           String?
+  isActive     Boolean  @default(true)
+  lastActivity DateTime @default(now())
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([isActive])
+  @@index([lastActivity])
+  @@index([expiresAt])
+  @@index([userId, isActive])
+}
+
+model SystemMetric {
+  id         String   @id @default(cuid())
+  metricType String
+  value      Float
+  unit       String
+  metadata   Json?
+  timestamp  DateTime @default(now())
+
+  @@index([metricType])
+  @@index([timestamp(sort: Desc)])
+  @@index([metricType, timestamp])
+}
+
+model ErrorLog {
+  id         String    @id @default(cuid())
+  level      String
+  message    String
+  stack      String?
+  context    Json?
+  userId     String?
+  ipAddress  String?
+  userAgent  String?
+  url        String?
+  method     String?
+  statusCode Int?
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime?
+  resolvedBy String?
+  createdAt  DateTime  @default(now())
+
+  @@index([level])
+  @@index([resolved])
+  @@index([createdAt(sort: Desc)])
+  @@index([userId])
+  @@index([level, resolved])
+}
+
+model BatchOperation {
+  id             String    @id @default(cuid())
+  operationType  String
+  status         String    @default("pending")
+  totalItems     Int
+  processedItems Int       @default(0)
+  successCount   Int       @default(0)
+  failureCount   Int       @default(0)
+  errors         Json?
+  metadata       Json?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdBy      String
+  createdAt      DateTime  @default(now())
+
+  @@index([status])
+  @@index([operationType])
+  @@index([createdBy])
+  @@index([createdAt(sort: Desc)])
+  @@index([status, operationType])
+}
+
+model FilterPreset {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  filters     Json
+  isDefault   Boolean  @default(false)
+  isPublic    Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isDefault])
+  @@index([isPublic])
+}
+
+model SearchProviderMetric {
+  id              String   @id @default(cuid())
+  provider        String
+  timestamp       DateTime @default(now())
+  requests        Int      @default(0)
+  errors          Int      @default(0)
+  avgResponseTime Float?
+  available       Boolean  @default(true)
+
+  @@index([provider, timestamp])
+  @@index([timestamp])
+}
+
+model GoogleIndexingBatch {
+  id                String                    @id @default(cuid())
+  scheduledFor      DateTime
+  status            String                    @default("PENDING")
+  totalArticles     Int
+  processedArticles Int                       @default(0)
+  failedArticles    Int                       @default(0)
+  startedAt         DateTime?
+  completedAt       DateTime?
+  error             String?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  batchType         String                    @default("MANUAL")
+  language          String                    @default("tr")
+  submittedCount    Int                       @default(0)
+  successCount      Int                       @default(0)
+  failedCount       Int                       @default(0)
+  skippedCount      Int                       @default(0)
+  scheduledAt       DateTime?
+  estimatedDuration Int?
+  actualDuration    Int?
+  rateLimitHit      Boolean                   @default(false)
+  rateLimitResetAt  DateTime?
+  requestsPerMinute Int                       @default(0)
+  errors            Json?
+  retryCount        Int                       @default(0)
+  maxRetries        Int                       @default(3)
+  nextRetryAt       DateTime?
+  metadata          Json?
+  createdBy         String?
+  items             GoogleIndexingBatchItem[]
+
+  @@index([scheduledFor])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([batchType])
+  @@index([completedAt])
+  @@index([createdBy])
+  @@index([language])
+  @@index([scheduledAt])
+  @@index([startedAt])
+  @@index([status, scheduledAt])
+}
+
+model GoogleIndexingBatchItem {
+  id          String              @id @default(cuid())
+  batchId     String
+  articleId   String
+  status      String              @default("PENDING")
+  error       String?
+  processedAt DateTime?
+  createdAt   DateTime            @default(now())
+  batch       GoogleIndexingBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  article     Article             @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([articleId])
+  @@index([status])
+}
+
+model IndexingHistory {
+  id             String      @id
+  articleId      String
+  batchId        String?
+  indexType      IndexType
+  action         IndexAction
+  status         IndexStatus
+  requestUrl     String?
+  requestPayload Json?
+  responseStatus Int?
+  responseBody   Json?
+  submittedAt    DateTime    @default(now())
+  respondedAt    DateTime?
+  duration       Int?
+  errorCode      String?
+  errorMessage   String?
+  errorDetails   Json?
+  retryAttempt   Int         @default(0)
+  isRetry        Boolean     @default(false)
+  originalId     String?
+  userAgent      String?
+  ipAddress      String?
+  metadata       Json?
+
+  @@index([articleId])
+  @@index([articleId, indexType, submittedAt])
+  @@index([batchId])
+  @@index([indexType])
+  @@index([status])
+  @@index([status, submittedAt])
+  @@index([submittedAt(sort: Desc)])
+}
+
 enum Role {
-  SUPER_ADMIN // Full access, can manage all users and settings
-  ADMIN       // Manage articles, categories, settings (no user management)
-  EDITOR      // Create/edit articles, limited settings access
-  VIEWER      // Read-only access to dashboard and reports
-  MODERATOR   // Manage comments, messages, moderate content
+  ADMIN
+  EDITOR
+  SUPER_ADMIN
+  VIEWER
+  MODERATOR
 }
 
 enum IndexStatus {
   PENDING
   SUBMITTED
   FAILED
+  SCHEDULED
+  RATE_LIMITED
+  SKIPPED
 }
 
 enum ArticleStatus {
@@ -337,297 +659,102 @@ enum EmailFrequency {
   MONTHLY
 }
 
-model ContactMessage {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  subject   String
-  message   String   @db.Text
-  isRead    Boolean  @default(false)
-  isReplied Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([isRead])
-  @@index([createdAt(sort: Desc)])
+enum BatchStatus {
+  PENDING
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  PAUSED
 }
 
-model Visitor {
-  id           String   @id @default(cuid())
-  ipAddress    String   @unique
-  userAgent    String?
-  currentPage  String
-  country      String?
-  countryCode  String?
-  city         String?
-  region       String?
-  isp          String?
-  latitude     Float?
-  longitude    Float?
-  timezone     String?
-  provider     String?
-  lastActivity DateTime @default(now())
-  createdAt    DateTime @default(now())
-
-  @@index([ipAddress])
-  @@index([lastActivity])
-  @@index([createdAt])
-  @@index([country])
-  @@index([city])
+enum BatchType {
+  MANUAL
+  SCHEDULED
+  AUTO_PUBLISH
+  RETRY
+  BULK_UPDATE
 }
 
-model AuditLog {
-  id          String   @id @default(cuid())
-  userId      String
-  action      String
-  resource    String
-  resourceId  String?
-  details     Json?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-  
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([action])
-  @@index([resource])
-  @@index([createdAt(sort: Desc)])
+enum IndexAction {
+  SUBMIT
+  UPDATE
+  REMOVE
 }
 
-// ArticleTemplate model
-model ArticleTemplate {
-  id          String    @id @default(cuid())
-  name        String
-  description String?
-  content     String
-  category    String?
-  isActive    Boolean   @default(true)
-  usageCount  Int       @default(0)
-  createdBy   String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  creator     User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  articles    Article[]
-
-  @@index([createdBy])
-  @@index([isActive])
+enum IndexType {
+  INDEXNOW
+  GOOGLE
 }
 
-// SEORecommendation model
-model SEORecommendation {
-  id         String   @id @default(cuid())
-  articleId  String
-  type       String
-  severity   String
-  message    String
-  suggestion String?
-  isResolved Boolean  @default(false)
-  createdAt  DateTime @default(now())
+// =============================================
+// Social Media Share Tracking
+// =============================================
+
+// Social Media Share Tracking - Her platform için ayrı kayıt
+model SocialShare {
+  id          String         @id @default(cuid())
+  articleId   String
+  platform    SocialPlatform
+  language    String         @default("tr") // "tr" or "en" - hangi dilde paylaşıldı
+  status      ShareStatus    @default(PENDING)
+  postId      String?        // Platform'dan dönen post ID
+  postUrl     String?        // Paylaşım URL'i
+  error       String?        @db.Text
+  retryCount  Int            @default(0)
+  scheduledAt DateTime?      // Batch için planlanmış zaman
+  sharedAt    DateTime?      // Paylaşıldığı zaman
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
   article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
-  @@index([articleId])
-  @@index([severity])
-  @@index([isResolved])
-}
-
-// ArticleDuplicate model
-model ArticleDuplicate {
-  id              String    @id @default(cuid())
-  originalId      String
-  duplicateId     String
-  similarityScore Float
-  status          String    @default("pending")
-  mergedAt        DateTime?
-  mergedBy        String?
-  createdAt       DateTime  @default(now())
-
-  original  Article @relation("OriginalArticle", fields: [originalId], references: [id], onDelete: Cascade)
-  duplicate Article @relation("DuplicateArticle", fields: [duplicateId], references: [id], onDelete: Cascade)
-
-  @@index([originalId])
-  @@index([duplicateId])
+  @@unique([articleId, platform, language]) // Her makale+platform+dil için tek kayıt
+  @@index([platform])
   @@index([status])
+  @@index([language])
+  @@index([scheduledAt])
+  @@index([articleId, platform])
 }
 
-// UserSession model - Admin panel için detaylı session tracking
-model UserSession {
-  id           String   @id @default(cuid())
-  userId       String
-  sessionToken String   @unique
-  ipAddress    String
-  userAgent    String?
-  country      String?
-  city         String?
-  device       String?
-  browser      String?
-  os           String?
-  isActive     Boolean  @default(true)
-  lastActivity DateTime @default(now())
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([sessionToken])
-  @@index([isActive])
-  @@index([lastActivity])
-  @@index([expiresAt])
-}
-
-// SystemMetric model - Sistem performans metrikleri
-model SystemMetric {
-  id              String   @id @default(cuid())
-  metricType      String   // "cpu", "memory", "disk", "database", "api_response_time"
-  value           Float
-  unit            String   // "%", "MB", "ms", etc.
-  metadata        Json?
-  timestamp       DateTime @default(now())
-
-  @@index([metricType])
-  @@index([timestamp(sort: Desc)])
-  @@index([metricType, timestamp])
-}
-
-// ErrorLog model - Detaylı hata loglama
-model ErrorLog {
-  id          String   @id @default(cuid())
-  level       String   // "error", "warning", "critical"
-  message     String   @db.Text
-  stack       String?  @db.Text
-  context     Json?
-  userId      String?
-  ipAddress   String?
-  userAgent   String?
-  url         String?
-  method      String?
-  statusCode  Int?
-  resolved    Boolean  @default(false)
-  resolvedAt  DateTime?
-  resolvedBy  String?
-  createdAt   DateTime @default(now())
-
-  @@index([level])
-  @@index([resolved])
-  @@index([createdAt(sort: Desc)])
-  @@index([userId])
-}
-
-// ApiMetric model - API performance tracking
-model ApiMetric {
-  id           String   @id @default(cuid())
-  endpoint     String
-  method       String
-  statusCode   Int
-  responseTime Int      // milliseconds
-  userId       String?
-  ipAddress    String?
-  userAgent    String?
-  error        String?  @db.Text
-  metadata     Json?
-  createdAt    DateTime @default(now())
-
-  @@index([endpoint])
-  @@index([method])
-  @@index([statusCode])
-  @@index([createdAt(sort: Desc)])
-  @@index([endpoint, createdAt])
-}
-
-// BatchOperation model - Toplu işlem takibi
-model BatchOperation {
-  id              String   @id @default(cuid())
-  operationType   String   // "bulk_publish", "bulk_delete", "bulk_update", etc.
-  status          String   @default("pending") // "pending", "processing", "completed", "failed"
+// Social Share Batch - Toplu paylaşım işleri
+model SocialShareBatch {
+  id              String         @id @default(cuid())
+  platform        SocialPlatform
+  language        String         @default("tr")
+  batchSize       Int            @default(10)
+  intervalMinutes Int            @default(5) // Paylaşımlar arası bekleme süresi
+  status          String         @default("PENDING") // "PENDING", "PROCESSING", "COMPLETED", "FAILED", "PAUSED"
   totalItems      Int
-  processedItems  Int      @default(0)
-  successCount    Int      @default(0)
-  failureCount    Int      @default(0)
-  errors          Json?
-  metadata        Json?
+  processedItems  Int            @default(0)
+  failedItems     Int            @default(0)
+  scheduledFor    DateTime?
   startedAt       DateTime?
   completedAt     DateTime?
-  createdBy       String
-  createdAt       DateTime @default(now())
+  error           String?        @db.Text
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
+  @@index([platform])
   @@index([status])
-  @@index([operationType])
-  @@index([createdBy])
-  @@index([createdAt(sort: Desc)])
-}
-
-// FilterPreset model - Kullanıcı filtre ayarları
-model FilterPreset {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  description String?
-  filters     Json     // Filtre ayarları (status, category, date range, etc.)
-  isDefault   Boolean  @default(false)
-  isPublic    Boolean  @default(false)
-  usageCount  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([isDefault])
-  @@index([isPublic])
-}
-
-// SearchProviderMetric model - Search provider monitoring
-model SearchProviderMetric {
-  id              String   @id @default(cuid())
-  provider        String   // "brave", "tavily", "searxng"
-  timestamp       DateTime @default(now())
-  requests        Int      @default(0)
-  errors          Int      @default(0)
-  avgResponseTime Float?
-  available       Boolean  @default(true)
-
-  @@index([provider, timestamp])
-  @@index([timestamp])
-}
-
-// GoogleIndexingBatch model - Toplu Google bildirim işlemleri
-model GoogleIndexingBatch {
-  id                String   @id @default(cuid())
-  scheduledFor      DateTime
-  status            String   @default("PENDING") // "PENDING", "PROCESSING", "COMPLETED", "FAILED"
-  totalArticles     Int
-  processedArticles Int      @default(0)
-  failedArticles    Int      @default(0)
-  startedAt         DateTime?
-  completedAt       DateTime?
-  error             String?  @db.Text
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  
-  items GoogleIndexingBatchItem[]
-
   @@index([scheduledFor])
-  @@index([status])
-  @@index([createdAt(sort: Desc)])
 }
 
-// GoogleIndexingBatchItem model - Batch içindeki her bir haber
-model GoogleIndexingBatchItem {
-  id          String   @id @default(cuid())
-  batchId     String
-  articleId   String
-  status      String   @default("PENDING") // "PENDING", "SUCCESS", "FAILED"
-  error       String?  @db.Text
-  processedAt DateTime?
-  createdAt   DateTime @default(now())
-  
-  batch   GoogleIndexingBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  article Article             @relation(fields: [articleId], references: [id], onDelete: Cascade)
+enum SocialPlatform {
+  FACEBOOK
+  FACEBOOK_EN
+  TWITTER
+  BLUESKY
+  MASTODON
+  TUMBLR
+}
 
-  @@index([batchId])
-  @@index([articleId])
-  @@index([status])
+enum ShareStatus {
+  PENDING
+  SCHEDULED
+  PROCESSING
+  SHARED
+  FAILED
+  SKIPPED
 }

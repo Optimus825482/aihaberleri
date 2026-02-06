@@ -30,6 +30,7 @@ import {
   Mail,
   Send,
   PlusCircle,
+  Share2,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,12 @@ const menuItems = [
     title: "SEO Bildirimleri",
     href: "/admin/seo-notifications",
     icon: Search,
+    requiredResource: null,
+  },
+  {
+    title: "Sosyal Medya",
+    href: "/admin/social-shares",
+    icon: Share2,
     requiredResource: null,
   },
   {

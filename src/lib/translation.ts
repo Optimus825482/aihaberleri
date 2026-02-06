@@ -8,6 +8,7 @@ import { postToBluesky } from "@/lib/social/bluesky";
 import { postToMastodon } from "@/lib/social/mastodon";
 import { postToTumblr } from "@/lib/social/tumblr";
 import { postToFacebookEN } from "@/lib/social/facebook";
+import { recordShareSuccess, recordShareFailure } from "@/services/social-share.service";
 
 export type SupportedLocale = "tr" | "en";
 
@@ -308,10 +309,16 @@ export async function translateAndSaveArticle(
         excerpt: translation.excerpt,
         categoryName: "AI News",
       })
-        .then((result) => {
-          if (result) console.log(`   🦋 Bluesky EN: ${translation.slug}`);
+        .then(async (postId) => {
+          if (postId) {
+            await recordShareSuccess(articleId, "BLUESKY", "en", postId);
+            console.log(`   🦋 Bluesky EN: ${translation.slug}`);
+          }
         })
-        .catch((err) => console.error(`   ❌ Bluesky EN failed:`, err.message));
+        .catch(async (err) => {
+          await recordShareFailure(articleId, "BLUESKY", "en", err?.message || "Unknown error");
+          console.error(`   ❌ Bluesky EN failed:`, err.message);
+        });
 
       // Mastodon - English
       postToMastodon({
@@ -320,12 +327,16 @@ export async function translateAndSaveArticle(
         excerpt: translation.excerpt,
         categoryName: "AI News",
       })
-        .then((result) => {
-          if (result) console.log(`   🐘 Mastodon EN: ${translation.slug}`);
+        .then(async (postId) => {
+          if (postId) {
+            await recordShareSuccess(articleId, "MASTODON", "en", postId);
+            console.log(`   🐘 Mastodon EN: ${translation.slug}`);
+          }
         })
-        .catch((err) =>
-          console.error(`   ❌ Mastodon EN failed:`, err.message),
-        );
+        .catch(async (err) => {
+          await recordShareFailure(articleId, "MASTODON", "en", err?.message || "Unknown error");
+          console.error(`   ❌ Mastodon EN failed:`, err.message);
+        });
 
       // Tumblr - English
       postToTumblr({
@@ -334,10 +345,16 @@ export async function translateAndSaveArticle(
         excerpt: translation.excerpt,
         categoryName: "AI News",
       })
-        .then((result) => {
-          if (result) console.log(`   📝 Tumblr EN: ${translation.slug}`);
+        .then(async (postId) => {
+          if (postId) {
+            await recordShareSuccess(articleId, "TUMBLR", "en", postId);
+            console.log(`   📝 Tumblr EN: ${translation.slug}`);
+          }
         })
-        .catch((err) => console.error(`   ❌ Tumblr EN failed:`, err.message));
+        .catch(async (err) => {
+          await recordShareFailure(articleId, "TUMBLR", "en", err?.message || "Unknown error");
+          console.error(`   ❌ Tumblr EN failed:`, err.message);
+        });
 
       // Facebook EN Page - English
       postToFacebookEN({
@@ -346,12 +363,16 @@ export async function translateAndSaveArticle(
         excerpt: translation.excerpt,
         categoryName: "AI News",
       })
-        .then((result) => {
-          if (result) console.log(`   📘 Facebook EN: ${translation.slug}`);
+        .then(async (postId) => {
+          if (postId) {
+            await recordShareSuccess(articleId, "FACEBOOK_EN", "en", postId);
+            console.log(`   📘 Facebook EN: ${translation.slug}`);
+          }
         })
-        .catch((err) =>
-          console.error(`   ❌ Facebook EN failed:`, err.message),
-        );
+        .catch(async (err) => {
+          await recordShareFailure(articleId, "FACEBOOK_EN", "en", err?.message || "Unknown error");
+          console.error(`   ❌ Facebook EN failed:`, err.message);
+        });
     }
   } catch (error) {
     console.error(`❌ Failed to translate article ${articleId}:`, error);

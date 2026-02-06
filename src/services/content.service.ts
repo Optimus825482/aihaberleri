@@ -23,6 +23,7 @@ import { translateAndSaveArticle } from "@/lib/translation";
 import { getCache } from "@/lib/cache";
 import { contentLogger } from "@/lib/logger";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
+import { recordShareSuccess, recordShareFailure } from "@/services/social-share.service";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 
 // Create module-specific loggers for live streaming
@@ -1029,7 +1030,17 @@ export async function publishArticle(
         slug: article.slug,
         excerpt: article.excerpt,
         categoryName: category.name,
-      }).catch((err) => console.error("Async tweet failed:", err));
+      })
+        .then(async (postId) => {
+          if (postId) {
+            await recordShareSuccess(article.id, "TWITTER", "tr", postId);
+            console.log("🐦 Twitter paylaşıldı:", article.slug);
+          }
+        })
+        .catch(async (err) => {
+          await recordShareFailure(article.id, "TWITTER", "tr", err?.message || "Unknown error");
+          console.error("Async tweet failed:", err);
+        });
     } catch (e) {
       console.error("Failed to trigger Twitter post:", e);
     }
@@ -1043,20 +1054,21 @@ export async function publishArticle(
         imageUrl: processedArticle.imageUrl,
         categoryName: category.name,
       })
-        .then(async (success) => {
-          if (success) {
-            // Facebook başarılıysa veritabanını güncelle
+        .then(async (postId) => {
+          if (postId) {
+            await recordShareSuccess(article.id, "FACEBOOK", "tr", postId);
+            // Eski flag'ı da güncelle (backward compatibility)
             await prisma.article.update({
               where: { id: article.id },
               data: { facebookShared: true },
             });
-            console.log(
-              "✅ Facebook paylaşıldı ve DB güncellendi:",
-              article.slug,
-            );
+            console.log("📘 Facebook paylaşıldı:", article.slug);
           }
         })
-        .catch((err) => console.error("Async Facebook post failed:", err));
+        .catch(async (err) => {
+          await recordShareFailure(article.id, "FACEBOOK", "tr", err?.message || "Unknown error");
+          console.error("Async Facebook post failed:", err);
+        });
     } catch (e) {
       console.error("Failed to trigger Facebook post:", e);
     }
@@ -1070,12 +1082,16 @@ export async function publishArticle(
         imageUrl: processedArticle.imageUrl,
         categoryName: category.name,
       })
-        .then((result) => {
-          if (result) {
+        .then(async (postId) => {
+          if (postId) {
+            await recordShareSuccess(article.id, "BLUESKY", "tr", postId);
             console.log("🦋 Bluesky paylaşıldı:", article.slug);
           }
         })
-        .catch((err) => console.error("Async Bluesky post failed:", err));
+        .catch(async (err) => {
+          await recordShareFailure(article.id, "BLUESKY", "tr", err?.message || "Unknown error");
+          console.error("Async Bluesky post failed:", err);
+        });
     } catch (e) {
       console.error("Failed to trigger Bluesky post:", e);
     }
@@ -1089,12 +1105,16 @@ export async function publishArticle(
         imageUrl: processedArticle.imageUrl,
         categoryName: category.name,
       })
-        .then((result) => {
-          if (result) {
+        .then(async (postId) => {
+          if (postId) {
+            await recordShareSuccess(article.id, "MASTODON", "tr", postId);
             console.log("🐘 Mastodon paylaşıldı:", article.slug);
           }
         })
-        .catch((err) => console.error("Async Mastodon post failed:", err));
+        .catch(async (err) => {
+          await recordShareFailure(article.id, "MASTODON", "tr", err?.message || "Unknown error");
+          console.error("Async Mastodon post failed:", err);
+        });
     } catch (e) {
       console.error("Failed to trigger Mastodon post:", e);
     }
@@ -1108,12 +1128,16 @@ export async function publishArticle(
         imageUrl: processedArticle.imageUrl,
         categoryName: category.name,
       })
-        .then((result) => {
-          if (result) {
+        .then(async (postId) => {
+          if (postId) {
+            await recordShareSuccess(article.id, "TUMBLR", "tr", postId);
             console.log("📝 Tumblr paylaşıldı:", article.slug);
           }
         })
-        .catch((err) => console.error("Async Tumblr post failed:", err));
+        .catch(async (err) => {
+          await recordShareFailure(article.id, "TUMBLR", "tr", err?.message || "Unknown error");
+          console.error("Async Tumblr post failed:", err);
+        });
     } catch (e) {
       console.error("Failed to trigger Tumblr post:", e);
     }
