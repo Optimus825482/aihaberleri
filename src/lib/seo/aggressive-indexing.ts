@@ -9,6 +9,7 @@
  * 3. WebSub/PubSubHubbub - RSS feed bildirimi
  * 4. Sitemap Ping - Legacy fallback
  * 5. Cloudflare Cache Purge - CDN güncellemesi
+ * 6. Ping-o-Matic - 20+ servise broadcast
  */
 
 import { submitArticleToIndexNow, pingSitemaps } from "./indexnow";
@@ -19,6 +20,7 @@ interface IndexingResult {
   webSub: boolean;
   sitemapPing: boolean;
   cloudflarePurge: boolean;
+  pingOMatic: boolean;
   timestamp: Date;
 }
 
@@ -149,6 +151,59 @@ async function notifyWebSub(feedUrl: string): Promise<boolean> {
 }
 
 /**
+ * Ping-o-Matic - 20+ servise aynı anda ping gönder
+ * Desteklenen servisler: Google Blog Search, Weblogs.com, Feed Burner, Technorati, vb.
+ * https://pingomatic.com/
+ */
+async function pingOMatic(
+  blogName: string,
+  blogUrl: string,
+  rssUrl: string,
+): Promise<boolean> {
+  try {
+    // Ping-o-Matic XML-RPC endpoint
+    const endpoint = "https://rpc.pingomatic.com/";
+
+    // XML-RPC weblogUpdates.ping request
+    const xmlBody = `<?xml version="1.0" encoding="UTF-8"?>
+<methodCall>
+  <methodName>weblogUpdates.extendedPing</methodName>
+  <params>
+    <param><value><string>${blogName}</string></value></param>
+    <param><value><string>${blogUrl}</string></value></param>
+    <param><value><string>${blogUrl}</string></value></param>
+    <param><value><string>${rssUrl}</string></value></param>
+  </params>
+</methodCall>`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/xml",
+        "User-Agent": "AIHaberleri/1.0",
+      },
+      body: xmlBody,
+    });
+
+    if (response.ok) {
+      const text = await response.text();
+      // Başarılı yanıt <value><boolean>0</boolean></value> içerir (0 = success in XML-RPC)
+      const success =
+        text.includes("<boolean>0</boolean>") || response.status === 200;
+      if (success) {
+        console.log("✅ Ping-o-Matic: Blog ping sent to 20+ services");
+      }
+      return success;
+    }
+
+    return false;
+  } catch (error) {
+    console.error("❌ Ping-o-Matic error:", error);
+    return false;
+  }
+}
+
+/**
  * AGGRESSIVE INDEXING - Her makale için TÜM yöntemleri kullan
  */
 export async function aggressivelyIndexArticle(
@@ -168,6 +223,7 @@ export async function aggressivelyIndexArticle(
     webSub: false,
     sitemapPing: false,
     cloudflarePurge: false,
+    pingOMatic: false,
     timestamp: new Date(),
   };
 
@@ -178,6 +234,7 @@ export async function aggressivelyIndexArticle(
     webSubResult,
     sitemapResult,
     cloudflareResult,
+    pingOMaticResult,
   ] = await Promise.allSettled([
     // 1. IndexNow (Bing, Yandex)
     submitArticleToIndexNow(slug, articleId),
@@ -199,6 +256,9 @@ export async function aggressivelyIndexArticle(
       newsSitemapUrl,
       `${baseUrl}/sitemap.xml`,
     ]),
+
+    // 6. Ping-o-Matic (20+ servise broadcast)
+    pingOMatic("AI Haberleri", baseUrl, feedUrl),
   ]);
 
   // Sonuçları kaydet
@@ -213,13 +273,15 @@ export async function aggressivelyIndexArticle(
     Object.values(sitemapResult.value).some((v) => v === true);
   result.cloudflarePurge =
     cloudflareResult.status === "fulfilled" && cloudflareResult.value === true;
+  result.pingOMatic =
+    pingOMaticResult.status === "fulfilled" && pingOMaticResult.value === true;
 
   // Özet log
   const successCount = Object.values(result).filter(
     (v) => typeof v === "boolean" && v === true,
   ).length;
 
-  console.log(`📊 AGGRESSIVE INDEXING tamamlandı: ${successCount}/5 başarılı`);
+  console.log(`📊 AGGRESSIVE INDEXING tamamlandı: ${successCount}/6 başarılı`);
   console.log(`   - IndexNow: ${result.indexNow ? "✅" : "❌"}`);
   console.log(
     `   - Google Search Console: ${result.googleSearchConsole ? "✅" : "❌"}`,
@@ -227,6 +289,7 @@ export async function aggressivelyIndexArticle(
   console.log(`   - WebSub: ${result.webSub ? "✅" : "❌"}`);
   console.log(`   - Sitemap Ping: ${result.sitemapPing ? "✅" : "❌"}`);
   console.log(`   - Cloudflare Purge: ${result.cloudflarePurge ? "✅" : "❌"}`);
+  console.log(`   - Ping-o-Matic: ${result.pingOMatic ? "✅" : "❌"}`);
 
   return result;
 }
