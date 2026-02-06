@@ -170,3 +170,49 @@ export async function wasSharedTo(
 
   return share?.status === "SHARED";
 }
+
+/**
+ * Initialize social share records for a newly published article
+ * Creates PENDING records for all platforms (TR and EN)
+ */
+export async function initializeShareRecords(articleId: string): Promise<void> {
+  // All platforms that we support
+  const platforms: SocialPlatform[] = [
+    "FACEBOOK",
+    "TWITTER",
+    "BLUESKY",
+    "MASTODON",
+    "TUMBLR",
+  ];
+
+  // Languages - TR for Turkish platforms, EN for English platforms
+  const languages = ["tr", "en"];
+
+  try {
+    const records = [];
+
+    for (const platform of platforms) {
+      for (const language of languages) {
+        records.push({
+          articleId,
+          platform,
+          language,
+          status: "PENDING" as ShareStatus,
+        });
+      }
+    }
+
+    // Use createMany with skipDuplicates to avoid errors if records exist
+    await db.socialShare.createMany({
+      data: records,
+      skipDuplicates: true,
+    });
+
+    console.log(
+      `   📋 Initialized ${records.length} share records for article`,
+    );
+  } catch (error) {
+    console.error("Failed to initialize share records:", error);
+    // Don't throw - this is a tracking operation
+  }
+}

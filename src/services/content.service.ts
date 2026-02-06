@@ -26,6 +26,7 @@ import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import {
   recordShareSuccess,
   recordShareFailure,
+  initializeShareRecords,
 } from "@/services/social-share.service";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 
@@ -989,6 +990,10 @@ export async function publishArticle(
 
     console.log(`✅ Haber yayınlandı: ${article.slug} (Skor: ${score})`);
 
+    // 📋 Initialize social share tracking records for all platforms
+    // This creates PENDING records so the admin panel shows accurate status
+    await initializeShareRecords(article.id);
+
     // Live log: Published
     await liveLog.publish.success(
       `✅ Yayınlandı: ${article.title.substring(0, 50)}... (Skor: ${score})`,
@@ -1066,7 +1071,7 @@ export async function publishArticle(
           if (postId) {
             await recordShareSuccess(article.id, "FACEBOOK", "tr", postId);
             // Eski flag'ı da güncelle (backward compatibility)
-            await prisma.article.update({
+            await db.article.update({
               where: { id: article.id },
               data: { facebookShared: true },
             });

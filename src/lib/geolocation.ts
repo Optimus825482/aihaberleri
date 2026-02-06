@@ -1,10 +1,6 @@
 /**
  * IP Geolocation Service
- * Dual-provider system for reliable IP-to-location conversion
- *
- * Providers:
- * 1. ipwho.is - Primary (no API key, unlimited)
- * 2. ip-api.com - Fallback (fast, 45 req/min HTTPS)
+ * Single provider: ip-api.com (fast, reliable, 45 req/min)
  */
 
 export interface GeolocationData {
@@ -17,57 +13,13 @@ export interface GeolocationData {
   longitude: number | null;
   isp: string | null;
   timezone: string | null;
-  provider: "ipwho" | "ip-api" | "unknown";
-}
-
-/**
- * Fetch geolocation from ipwho.is
- * Pros: No API key, HTTPS, unlimited, clean JSON
- * Cons: Sometimes slower
- */
-async function fetchFromIpwho(ip: string): Promise<GeolocationData | null> {
-  try {
-    const response = await fetch(`https://ipwho.is/${ip}`, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(5000), // 5s timeout
-    });
-
-    if (!response.ok) {
-      console.warn(`[IPWHO] HTTP ${response.status} for IP: ${ip}`);
-      return null;
-    }
-
-    const data = await response.json();
-
-    // Check if request was successful
-    if (!data.success) {
-      console.warn(`[IPWHO] Request failed for IP: ${ip}`, data.message);
-      return null;
-    }
-
-    return {
-      ip,
-      country: data.country || "Unknown",
-      countryCode: data.country_code || "XX",
-      region: data.region || "Unknown",
-      city: data.city || "Unknown",
-      latitude: data.latitude || null,
-      longitude: data.longitude || null,
-      isp: data.connection?.isp || null,
-      timezone: data.timezone?.id || null,
-      provider: "ipwho",
-    };
-  } catch (error) {
-    console.error("[IPWHO] Error:", error);
-    return null;
-  }
+  provider: "ip-api" | "unknown";
 }
 
 /**
  * Fetch geolocation from ip-api.com
  * Pros: Very fast, reliable, ISP data
- * Cons: 45 req/min on HTTPS (150 req/min on HTTP)
+ * Rate limit: 45 req/min on HTTPS (150 req/min on HTTP)
  */
 async function fetchFromIpApi(ip: string): Promise<GeolocationData | null> {
   try {
@@ -109,11 +61,11 @@ async function fetchFromIpApi(ip: string): Promise<GeolocationData | null> {
 }
 
 /**
- * Get geolocation data with automatic fallback
- * Strategy: Try ipwho.is first, fallback to ip-api.com
+ * Get geolocation data
+ * Uses ip-api.com directly
  *
  * @param ip - IP address to lookup
- * @returns GeolocationData or null if both providers fail
+ * @returns GeolocationData or null if provider fails
  */
 export async function getGeolocation(
   ip: string,
@@ -141,27 +93,15 @@ export async function getGeolocation(
     };
   }
 
-  // Try ipwho.is first (primary)
-  const ipwhoResult = await fetchFromIpwho(ip);
-  if (ipwhoResult) {
-    console.log(
-      `[GEO] Success via ipwho.is: ${ip} -> ${ipwhoResult.city}, ${ipwhoResult.country}`,
-    );
-    return ipwhoResult;
+  // Use ip-api.com directly
+  const result = await fetchFromIpApi(ip);
+  if (result) {
+    console.log(`[GEO] Success: ${ip} -> ${result.city}, ${result.country}`);
+    return result;
   }
 
-  // Fallback to ip-api.com
-  console.warn(`[GEO] ipwho.is failed, trying ip-api.com for ${ip}`);
-  const ipApiResult = await fetchFromIpApi(ip);
-  if (ipApiResult) {
-    console.log(
-      `[GEO] Success via ip-api.com: ${ip} -> ${ipApiResult.city}, ${ipApiResult.country}`,
-    );
-    return ipApiResult;
-  }
-
-  // Both providers failed
-  console.error(`[GEO] All providers failed for IP: ${ip}`);
+  // Provider failed
+  console.error(`[GEO] ip-api.com failed for IP: ${ip}`);
   return null;
 }
 
@@ -255,28 +195,18 @@ export async function batchGetGeolocation(
 }
 
 /**
- * Compare providers (for testing/monitoring)
- * Returns response time and success for both
+ * Test provider (for monitoring)
+ * Returns response time and success
  */
-export async function compareProviders(ip: string) {
-  const start1 = Date.now();
-  const ipwho = await fetchFromIpwho(ip);
-  const time1 = Date.now() - start1;
-
-  const start2 = Date.now();
-  const ipApi = await fetchFromIpApi(ip);
-  const time2 = Date.now() - start2;
+export async function testProvider(ip: string) {
+  const start = Date.now();
+  const result = await fetchFromIpApi(ip);
+  const time = Date.now() - start;
 
   return {
-    ipwho: {
-      success: !!ipwho,
-      responseTime: time1,
-      data: ipwho,
-    },
-    ipApi: {
-      success: !!ipApi,
-      responseTime: time2,
-      data: ipApi,
-    },
+    provider: "ip-api",
+    success: !!result,
+    responseTime: time,
+    data: result,
   };
 }

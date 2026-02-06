@@ -350,15 +350,15 @@ export async function isDuplicateNews(
             };
           }
 
-          // 🆕 NEW CHECK: 2+ same entities within 24h + ANY title similarity (40%+)
+          // 🔧 RELAXED: 24h→12h, 40%→50% similarity (06.02.2026)
           // This catches: "Nvidia CEO OpenAI yatırım X" vs "Nvidia CEO OpenAI yatırım Y"
           if (
             entityIntersection.length >= 2 &&
-            hoursDiff < 24 &&
-            titleSimilarity > 0.4
+            hoursDiff < 12 &&
+            titleSimilarity > 0.5
           ) {
             console.log(
-              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] + ${(titleSimilarity * 100).toFixed(1)}% similarity within 24h`,
+              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] + ${(titleSimilarity * 100).toFixed(1)}% similarity within 12h`,
             );
             console.log(`   New: "${title}"`);
             console.log(`   Existing: "${article.title}"`);
@@ -369,11 +369,11 @@ export async function isDuplicateNews(
             };
           }
 
-          // RELAXED: 3+ same entities within 12 hours (same story, different angle)
-          // Changed from 2+ entities, 24h to 3+ entities, 12h (01.02.2026)
-          if (entityIntersection.length >= 3 && hoursDiff < 12) {
+          // 🔧 RELAXED: 3+ entity 12h → 4+ entity 6h (06.02.2026)
+          // Changed from 3+ entities, 12h to 4+ entities, 6h - allows more unique angles
+          if (entityIntersection.length >= 4 && hoursDiff < 6) {
             console.log(
-              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] within 12h`,
+              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] within 6h`,
             );
             console.log(`   New: "${title}"`);
             console.log(`   Existing: "${article.title}"`);

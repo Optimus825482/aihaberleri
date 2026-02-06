@@ -398,6 +398,49 @@ export async function selectUniqueTopicArticles(
   console.log(`   Atlanan (duplicate): ${skippedDuplicate}`);
   console.log(`   Toplam işlenen: ${sortedArticles.length}`);
 
+  // 🔧 RECOVERY MECHANISM: Eğer 0 haber seçildiyse, relaxed mode ile tekrar dene
+  if (selected.length === 0 && articles.length > 0) {
+    console.log(
+      `\n⚠️  RECOVERY MODE: Tüm haberler elendi, relaxed seçim yapılıyor...`,
+    );
+
+    // Relaxed retry: AI relevance check'i kaldır, sadece URL duplicate kontrolü yap
+    for (const article of sortedArticles) {
+      if (selected.length >= Math.min(1, targetCount)) break; // En az 1 haber garantisi
+
+      const topic = article.topic || "unknown";
+
+      // Sadece URL duplicate kontrolü
+      if (article.url) {
+        const urlWithoutParams = article.url.split("?")[0];
+        const existingByUrl = await db.article.findFirst({
+          where: {
+            OR: [
+              { sourceUrl: article.url },
+              { sourceUrl: { startsWith: urlWithoutParams } },
+            ],
+          },
+          select: { id: true },
+        });
+
+        if (existingByUrl) continue;
+      }
+
+      // Topic batch içinde daha önce seçildi mi?
+      if (seenTopics.has(topic)) continue;
+
+      // RELAXED: AI check ve topic duplicate check atlanıyor
+      selected.push(article);
+      seenTopics.add(topic);
+      console.log(
+        `   🔄 RECOVERY SELECTED: ${topic} (score: ${article.trendScore || 0})`,
+      );
+      console.log(`      "${article.title.substring(0, 60)}...")`);
+    }
+
+    console.log(`\n📊 Recovery sonucu: ${selected.length} haber seçildi`);
+  }
+
   return selected;
 }
 

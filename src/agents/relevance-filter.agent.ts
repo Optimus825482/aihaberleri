@@ -24,7 +24,9 @@ export interface ScoredArticle extends CollectedArticle {
   suggestedTags?: string[];
 }
 
-const RELEVANCE_THRESHOLD = 60; // Minimum score to pass
+// 🔧 RELAXED: 60 → 50 to allow more articles through (06.02.2026)
+// Duplicate detection will catch truly duplicates, relevance filter should be permissive
+const RELEVANCE_THRESHOLD = 50; // Minimum score to pass
 const BATCH_SIZE = 10; // Articles per batch
 
 // BYPASS MODE: If Gemini fails, pass all articles with high scores (based on trend)

@@ -106,6 +106,65 @@ export class DuplicateDetectorAgent extends BaseAgent<
         }
       }
 
+      // 🔧 RECOVERY MECHANISM: Minimum 1 article guarantee (06.02.2026)
+      // If ALL articles were rejected as duplicates, pick the highest scored one with ONLY URL check
+      if (uniqueArticles.length === 0 && articles.length > 0) {
+        this.logger.warn(
+          `⚠️ RECOVERY MODE: All ${articles.length} articles were duplicates. Attempting relaxed selection...`,
+        );
+
+        // Sort by relevance score and try each article with URL-only check
+        const sortedByScore = [...articles].sort(
+          (a, b) => b.relevanceScore - a.relevanceScore,
+        );
+
+        for (const article of sortedByScore) {
+          // Only check URL duplicate (most strict, fastest)
+          const normalizedUrl = this.normalizeUrl(article.url);
+          const existingByUrl = await db.article.findFirst({
+            where: {
+              OR: [
+                { sourceUrl: normalizedUrl },
+                { sourceUrl: { startsWith: normalizedUrl.split("?")[0] } },
+              ],
+            },
+            select: { id: true },
+          });
+
+          if (!existingByUrl) {
+            // Found one that's not a URL duplicate - use it!
+            const topic = this.extractTopic(article.title);
+            let embedding: number[] | undefined;
+            try {
+              const combinedText =
+                `${article.title}. ${article.description || ""}`.trim();
+              embedding = await generateEmbedding(combinedText);
+            } catch {
+              // Ignore embedding errors
+            }
+
+            uniqueArticles.push({
+              ...article,
+              topic,
+              isDuplicate: false,
+              duplicateReason: "RECOVERY_MODE_URL_ONLY",
+              embedding,
+            });
+
+            this.logger.success(
+              `🔄 RECOVERY: Selected "${article.title.substring(0, 50)}..." (score: ${article.relevanceScore})`,
+            );
+            break;
+          }
+        }
+
+        if (uniqueArticles.length === 0) {
+          this.logger.error(
+            `❌ RECOVERY FAILED: All articles have URL duplicates in database`,
+          );
+        }
+      }
+
       const duplicateRate = ((duplicateCount / articles.length) * 100).toFixed(
         1,
       );
