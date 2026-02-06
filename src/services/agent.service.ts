@@ -60,12 +60,36 @@ async function updateJobProgress(
         "EX",
         3600, // Expire after 1 hour
       );
+
+      // Also add to log stream for live viewing
+      await redis.rpush(
+        `job:${agentLogId}:logs`,
+        `[${step.toUpperCase()}] ${message}`,
+      );
+      // Keep only last 100 logs
+      await redis.ltrim(`job:${agentLogId}:logs`, -100, -1);
+      // Set expiry on logs
+      await redis.expire(`job:${agentLogId}:logs`, 3600);
     }
   } catch (error) {
     // Non-critical, just log
     agentLogger.error(agentLogId, error as Error, {
       context: "update_job_progress",
     });
+  }
+}
+
+// Helper to add log message to Redis stream
+async function addLogMessage(agentLogId: string, message: string) {
+  try {
+    const redis = getRedis();
+    if (redis) {
+      await redis.rpush(`job:${agentLogId}:logs`, message);
+      await redis.ltrim(`job:${agentLogId}:logs`, -100, -1);
+      await redis.expire(`job:${agentLogId}:logs`, 3600);
+    }
+  } catch (error) {
+    // Non-critical, ignore
   }
 }
 
@@ -109,6 +133,12 @@ export async function executeNewsAgent(
     categorySlug: categorySlug || null,
   });
 
+  // Add to Redis log stream
+  await addLogMessage(
+    agentLog.id,
+    `🚀 Agent başlatıldı - ${new Date().toLocaleString("tr-TR")}`,
+  );
+
   console.log(`
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃           🤖 AGENT EXECUTION START                ┃
@@ -128,6 +158,10 @@ export async function executeNewsAgent(
       20,
     );
     console.log("📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...");
+    await addLogMessage(
+      agentLog.id,
+      "📰 RSS kaynaklarından haberler toplanıyor...",
+    );
     await updateJobProgress(
       agentLog.id,
       "fetching",
@@ -150,9 +184,17 @@ export async function executeNewsAgent(
 
     // Live log: Articles fetched
     await liveLog.rss.success(`📰 ${articlesScraped} unique haber bulundu`);
+    await addLogMessage(
+      agentLog.id,
+      `✅ ${articlesScraped} unique haber bulundu`,
+    );
 
     if (newsArticles.length === 0) {
       console.log(`\n⚠️  Tüm haberler duplicate! Yeni haber yok.`);
+      await addLogMessage(
+        agentLog.id,
+        "⚠️ Tüm haberler duplicate - yeni haber yok",
+      );
       throw new Error("Tüm haberler duplicate - yeni haber bulunamadı");
     }
 
@@ -167,6 +209,7 @@ export async function executeNewsAgent(
       40,
     );
     console.log("🎯 Adım 2: Akıllı filtreleme başlatılıyor...");
+    await addLogMessage(agentLog.id, "🎯 Akıllı filtreleme başlatılıyor...");
     await updateJobProgress(
       agentLog.id,
       "filtering",
@@ -228,6 +271,10 @@ export async function executeNewsAgent(
     console.log(
       `   Duplicate rate: ${(filteringResult.stats.duplicate_rate * 100).toFixed(1)}%`,
     );
+    await addLogMessage(
+      agentLog.id,
+      `✅ ${selectedArticles.length} haber seçildi (duplicate: ${(filteringResult.stats.duplicate_rate * 100).toFixed(1)}%)`,
+    );
 
     // Live log: Articles selected
     await liveLog.deepseek.success(
@@ -270,15 +317,27 @@ export async function executeNewsAgent(
     await liveLog.agent.info(
       `🤖 Multi-agent pipeline başlatıldı: ${selectedArticles.length} haber işlenecek`,
     );
+    await addLogMessage(
+      agentLog.id,
+      `🤖 Multi-agent pipeline başlatıldı: ${selectedArticles.length} haber işlenecek`,
+    );
 
     // Wait for pipeline completion
     console.log("⏳ Multi-agent pipeline tamamlanması bekleniyor...");
+    await addLogMessage(
+      agentLog.id,
+      "⏳ Haberler işleniyor (içerik + görsel + çeviri)...",
+    );
     const pipelineResult = await waitForPipelineCompletion(
       agentLog.id,
       20 * 60 * 1000, // 20 minutes timeout
     );
 
     if (!pipelineResult.success) {
+      await addLogMessage(
+        agentLog.id,
+        `❌ Pipeline hatası: ${pipelineResult.errors.join(", ")}`,
+      );
       throw new Error(
         `Multi-agent pipeline failed: ${pipelineResult.errors.join(", ")}`,
       );
@@ -305,6 +364,10 @@ export async function executeNewsAgent(
       `✅ MULTI-AGENT PIPELINE COMPLETED: ${articlesCreated} haber yayınlandı`,
     );
     console.log(`${"=".repeat(60)}\n`);
+    await addLogMessage(
+      agentLog.id,
+      `🎉 ${articlesCreated} haber başarıyla yayınlandı!`,
+    );
 
     // Live log: Articles created
     await liveLog.publish.success(`✅ ${articlesCreated} haber yayında!`);

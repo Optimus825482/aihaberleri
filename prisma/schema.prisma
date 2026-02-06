@@ -746,8 +746,11 @@ enum SocialPlatform {
   FACEBOOK_EN
   TWITTER
   BLUESKY
+  BLUESKY_EN
   MASTODON
+  MASTODON_EN
   TUMBLR
+  TUMBLR_EN
 }
 
 enum ShareStatus {

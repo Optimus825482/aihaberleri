@@ -225,3 +225,109 @@ export function getMastodonStatus(): {
     instanceUrl: MASTODON_INSTANCE_URL || null,
   };
 }
+
+/**
+ * Post to Mastodon in English (Toot)
+ *
+ * @param article - Article data to post (English content)
+ * @returns Status ID if successful, null otherwise
+ */
+export async function postToMastodonEN(article: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  imageUrl?: string | null;
+  categoryName?: string;
+}): Promise<string | null> {
+  // Check if Mastodon is enabled
+  if (!MASTODON_ENABLED) {
+    return null; // Silent skip
+  }
+
+  // Check credentials
+  if (!MASTODON_INSTANCE_URL || !MASTODON_ACCESS_TOKEN) {
+    console.warn("⚠️ Mastodon credentials missing. Skipping EN post.");
+    return null;
+  }
+
+  try {
+    // Get client
+    const client = getClient();
+    if (!client) {
+      return null;
+    }
+
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+    // EN articles use /en/news/ path
+    const articleUrl = article.slug.startsWith("en/")
+      ? `${siteUrl}/${article.slug}`
+      : `${siteUrl}/en/news/${article.slug}`;
+
+    // Create English hashtags (Mastodon hashtags are important for discovery)
+    const categoryTag = article.categoryName
+      ? `#${article.categoryName.replace(/\s+/g, "")}`
+      : "#ArtificialIntelligence";
+    const tags = `${categoryTag} #AI #Technology #MachineLearning #TechNews`;
+
+    // Build post text (max 500 chars default)
+    let postText = `📰 ${article.title}\n\n`;
+
+    // Add excerpt if there's room
+    const linkAndTags = `\n\n${tags}\n\n🔗 ${articleUrl}`;
+    const remainingChars = MAX_CHARS - postText.length - linkAndTags.length;
+
+    if (remainingChars > 50 && article.excerpt) {
+      const excerptLength = Math.min(
+        article.excerpt.length,
+        remainingChars - 3,
+      );
+      postText += `${article.excerpt.substring(0, excerptLength)}...`;
+    }
+
+    postText += linkAndTags;
+
+    // Ensure we don't exceed character limit
+    if (postText.length > MAX_CHARS) {
+      postText = postText.substring(0, MAX_CHARS - 3) + "...";
+    }
+
+    // Upload media if available
+    let mediaIds: string[] = [];
+    if (article.imageUrl) {
+      const media = await uploadMedia(client, article.imageUrl, article.title);
+      if (media) {
+        mediaIds = [media.id];
+      }
+    }
+
+    console.log("🐘 Posting to Mastodon (EN)...");
+
+    // Create the status (toot) - language is 'en' for English
+    const status = await client.v1.statuses.create({
+      status: postText,
+      visibility: "public",
+      language: "en",
+      ...(mediaIds.length > 0 && { mediaIds }),
+    });
+
+    console.log(`✅ Mastodon EN toot successful! ID: ${status.id}`);
+    return status.id;
+  } catch (error: any) {
+    // Handle specific errors
+    if (error?.statusCode === 429) {
+      console.warn("⚠️ Mastodon rate limit exceeded. Try again later.");
+      return null;
+    }
+
+    if (error?.statusCode === 401) {
+      console.error(
+        "❌ Mastodon authentication failed. Check MASTODON_ACCESS_TOKEN.",
+      );
+      return null;
+    }
+
+    console.error("❌ Mastodon EN post failed:", error?.message || error);
+    return null;
+  }
+}

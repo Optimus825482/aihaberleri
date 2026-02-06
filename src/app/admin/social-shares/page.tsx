@@ -27,9 +27,12 @@ import {
 const platformConfig: Record<string, { icon: string; color: string; label: string }> = {
     FACEBOOK: { icon: "📘", color: "bg-blue-600", label: "Facebook TR" },
     FACEBOOK_EN: { icon: "📘", color: "bg-blue-500", label: "Facebook EN" },
-    BLUESKY: { icon: "🦋", color: "bg-blue-400", label: "Bluesky" },
-    MASTODON: { icon: "🐘", color: "bg-purple-600", label: "Mastodon" },
-    TUMBLR: { icon: "📝", color: "bg-indigo-600", label: "Tumblr" },
+    BLUESKY: { icon: "🦋", color: "bg-sky-500", label: "Bluesky TR" },
+    BLUESKY_EN: { icon: "🦋", color: "bg-sky-400", label: "Bluesky EN" },
+    MASTODON: { icon: "🐘", color: "bg-purple-600", label: "Mastodon TR" },
+    MASTODON_EN: { icon: "🐘", color: "bg-purple-500", label: "Mastodon EN" },
+    TUMBLR: { icon: "📝", color: "bg-indigo-600", label: "Tumblr TR" },
+    TUMBLR_EN: { icon: "📝", color: "bg-indigo-500", label: "Tumblr EN" },
 };
 
 // Status badge component
@@ -68,8 +71,13 @@ export default function SocialSharesPage() {
 
     // Batch settings
     const [showBatchModal, setShowBatchModal] = useState(false);
-    const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["FACEBOOK", "FACEBOOK_EN", "BLUESKY", "MASTODON", "TUMBLR"]);
-    const [batchSize, setBatchSize] = useState(10);
+    const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([
+        "FACEBOOK", "FACEBOOK_EN",
+        "BLUESKY", "BLUESKY_EN",
+        "MASTODON", "MASTODON_EN",
+        "TUMBLR", "TUMBLR_EN"
+    ]);
+    const [batchSize, setBatchSize] = useState(50);
     const [intervalSeconds, setIntervalSeconds] = useState(10);
 
     // Active batch tracking
@@ -198,7 +206,7 @@ export default function SocialSharesPage() {
     // Cancel batch
     const cancelBatch = async () => {
         if (!activeBatch) return;
-        
+
         if (!confirm("Batch'i iptal etmek istediğinizden emin misiniz?")) return;
 
         try {
@@ -467,12 +475,16 @@ export default function SocialSharesPage() {
                                         <span className="text-gray-400">Başarısız:</span>
                                         <span className="text-red-400">{activeBatch.progress.progress?.failed || 0}</span>
                                     </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-400">Atlanan (zaten paylaşıldı):</span>
+                                        <span className="text-yellow-400">{activeBatch.progress.progress?.skipped || 0}</span>
+                                    </div>
                                     <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
                                         <div
                                             className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-500"
                                             style={{
-                                                width: `${activeBatch.progress.progress?.total > 0
-                                                    ? ((activeBatch.progress.progress?.processed + activeBatch.progress.progress?.failed) / activeBatch.progress.progress?.total) * 100
+                                                width: `${activeBatch.progress.progress?.totalArticles > 0
+                                                    ? (activeBatch.progress.progress?.currentArticle / activeBatch.progress.progress?.totalArticles) * 100
                                                     : 0}%`
                                             }}
                                         />
@@ -588,7 +600,8 @@ export default function SocialSharesPage() {
                                 {/* Info Box */}
                                 <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
                                     <p className="text-xs text-blue-300">
-                                        <strong>Not:</strong> Her haber için seçili tüm platformlara aynı anda paylaşım yapılır.
+                                        <strong>Paralel Paylaşım:</strong> Her haber için seçili tüm platformlara <span className="text-white">aynı anda</span> paylaşım yapılır.
+                                        TR ve EN içerikler paralel gönderilir. Zaten paylaşılmış platformlar otomatik atlanır.
                                         İşlem arka planda çalışır, sayfa kapatılsa bile devam eder.
                                     </p>
                                 </div>

@@ -34,6 +34,7 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import { AgentPipelineStepper } from "@/components/admin/AgentPipelineStepper";
+import { SystemGauge } from "@/components/admin/SystemGauge";
 import {
     AreaChart,
     Area,
@@ -92,6 +93,19 @@ interface LogEntry {
     emoji?: string;
 }
 
+interface SystemStats {
+    memory: {
+        percent: number;
+        usedFormatted: string;
+        totalFormatted: string;
+    };
+    disk: {
+        percent: number;
+        usedFormatted: string;
+        totalFormatted: string;
+    };
+}
+
 export default function AdminDashboard() {
     const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
     const [agentStats, setAgentStats] = useState<AgentStats | null>(null);
@@ -104,6 +118,7 @@ export default function AdminDashboard() {
     const [isConnected, setIsConnected] = useState(false);
     const [isPaused, setIsPaused] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [systemStats, setSystemStats] = useState<SystemStats | null>(null);
     const logsEndRef = useRef<HTMLDivElement>(null);
     const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -191,19 +206,24 @@ export default function AdminDashboard() {
         else setRefreshing(true);
 
         try {
-            const [dashboardRes, agentRes] = await Promise.all([
+            const [dashboardRes, agentRes, systemRes] = await Promise.all([
                 fetch("/api/admin/dashboard"),
                 fetch("/api/agent/stats"),
+                fetch("/api/admin/system-stats"),
             ]);
 
             const dashboardData = await dashboardRes.json();
             const agentData = await agentRes.json();
+            const systemData = await systemRes.json();
 
             if (dashboardData.success) {
                 setDashboardStats(dashboardData.data);
             }
             if (agentData.success) {
                 setAgentStats(agentData.data);
+            }
+            if (systemData.success) {
+                setSystemStats(systemData.data);
             }
         } catch (error) {
             console.error("Failed to fetch stats:", error);
@@ -341,6 +361,33 @@ export default function AdminDashboard() {
 
                 {/* Agent Pipeline Stepper - Real-time Progress */}
                 <AgentPipelineStepper />
+
+                {/* System Resources - RAM & Disk Gauges */}
+                <Card className="border-indigo-500/20 bg-gradient-to-br from-indigo-500/5 to-transparent">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 bg-indigo-500/10 rounded-lg">
+                                <Activity className="h-4 w-4 text-indigo-500" />
+                            </div>
+                            <div>
+                                <CardTitle className="text-base font-black uppercase tracking-tight">
+                                    Sunucu Kaynakları
+                                </CardTitle>
+                                <CardDescription className="text-xs">
+                                    RAM ve Disk kullanım durumu
+                                </CardDescription>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                        <SystemGauge
+                            ramPercent={systemStats?.memory.percent || 0}
+                            diskPercent={systemStats?.disk.percent || 0}
+                            ramInfo={systemStats?.memory}
+                            diskInfo={systemStats?.disk}
+                        />
+                    </CardContent>
+                </Card>
 
                 {/* Pipeline Status & Otonom Sistem */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -626,10 +673,10 @@ export default function AdminDashboard() {
                                         <div
                                             key={index}
                                             className={`flex items-start gap-2 py-0.5 hover:bg-zinc-900/50 rounded px-1 ${log.level === "error" ? "text-red-400" :
-                                                    log.level === "warn" ? "text-yellow-400" :
-                                                        log.level === "success" ? "text-emerald-400" :
-                                                            log.level === "info" ? "text-blue-400" :
-                                                                "text-zinc-400"
+                                                log.level === "warn" ? "text-yellow-400" :
+                                                    log.level === "success" ? "text-emerald-400" :
+                                                        log.level === "info" ? "text-blue-400" :
+                                                            "text-zinc-400"
                                                 }`}
                                         >
                                             <span className="text-zinc-600 shrink-0 select-none">

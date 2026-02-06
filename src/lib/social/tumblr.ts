@@ -289,3 +289,108 @@ export function getTumblrStatus(): {
     blogName: TUMBLR_BLOG_NAME || null,
   };
 }
+
+/**
+ * Post to Tumblr as a link post (English content)
+ *
+ * @param article - Article data to post (English)
+ * @returns Post ID if successful, null otherwise
+ */
+export async function postToTumblrEN(article: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  imageUrl?: string | null;
+  categoryName?: string;
+}): Promise<string | null> {
+  // Check if Tumblr is enabled
+  if (!TUMBLR_ENABLED) {
+    return null; // Silent skip
+  }
+
+  // Check credentials
+  if (
+    !TUMBLR_CONSUMER_KEY ||
+    !TUMBLR_CONSUMER_SECRET ||
+    !TUMBLR_ACCESS_TOKEN ||
+    !TUMBLR_ACCESS_TOKEN_SECRET ||
+    !TUMBLR_BLOG_NAME
+  ) {
+    console.warn("⚠️ Tumblr credentials missing. Skipping EN post.");
+    return null;
+  }
+
+  try {
+    // Get client
+    const client = getClient();
+    if (!client) {
+      return null;
+    }
+
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+    // EN articles use /en/news/ path
+    const articleUrl = article.slug.startsWith("en/")
+      ? `${siteUrl}/${article.slug}`
+      : `${siteUrl}/en/news/${article.slug}`;
+
+    // Create English tags (Tumblr tags don't use # prefix)
+    const tags: string[] = [
+      "artificial intelligence",
+      "AI",
+      "technology",
+      "tech news",
+    ];
+    if (article.categoryName) {
+      tags.unshift(article.categoryName.toLowerCase());
+    }
+
+    console.log("📝 Posting to Tumblr (EN)...");
+
+    // Use legacy API format (type-based)
+    const blogIdentifier = `${TUMBLR_BLOG_NAME}.tumblr.com`;
+
+    return new Promise((resolve, reject) => {
+      // Legacy link post format with thumbnail
+      const postData: any = {
+        type: "link",
+        title: `📰 ${article.title}`,
+        url: articleUrl,
+        description: article.excerpt,
+        tags: tags.join(","),
+      };
+
+      // Add thumbnail if image URL is provided
+      if (article.imageUrl) {
+        postData.thumbnail = article.imageUrl;
+      }
+
+      client.createLegacyPost(
+        blogIdentifier,
+        postData,
+        (err: any, data: any) => {
+          if (err) {
+            console.error("❌ Tumblr EN post failed:", err?.message || err);
+
+            // Handle specific errors
+            if (err?.statusCode === 401) {
+              console.error("   📌 Token might be expired. Refresh the token.");
+            } else if (err?.statusCode === 429) {
+              console.warn("   📌 Rate limit exceeded. Try again later.");
+            }
+
+            resolve(null);
+            return;
+          }
+
+          const postId = data?.id?.toString() || data?.id_string;
+          console.log(`✅ Tumblr EN post successful! ID: ${postId}`);
+          resolve(postId);
+        },
+      );
+    });
+  } catch (error: any) {
+    console.error("❌ Tumblr EN post error:", error?.message || error);
+    return null;
+  }
+}

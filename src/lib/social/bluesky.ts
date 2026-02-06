@@ -256,3 +256,108 @@ export function getBlueskyStatus(): {
     handle: BLUESKY_HANDLE || null,
   };
 }
+
+/**
+ * Post to Bluesky in English
+ *
+ * @param article - Article data to post (English content)
+ * @returns Post URI if successful, null otherwise
+ */
+export async function postToBlueskyEN(article: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  imageUrl?: string | null;
+  categoryName?: string;
+}): Promise<string | null> {
+  // Check if Bluesky is enabled
+  if (!BLUESKY_ENABLED) {
+    return null; // Silent skip
+  }
+
+  // Check credentials
+  if (!BLUESKY_HANDLE || !BLUESKY_APP_PASSWORD) {
+    console.warn("⚠️ Bluesky credentials missing. Skipping EN post.");
+    return null;
+  }
+
+  try {
+    // Get authenticated agent
+    const agent = await getAgent();
+    if (!agent) {
+      return null;
+    }
+
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+    // EN articles use /en/news/ path
+    const articleUrl = article.slug.startsWith("en/")
+      ? `${siteUrl}/${article.slug}`
+      : `${siteUrl}/en/news/${article.slug}`;
+
+    // Create English hashtags
+    const categoryTag = article.categoryName
+      ? `#${article.categoryName.replace(/\s+/g, "")}`
+      : "#ArtificialIntelligence";
+    const tags = `${categoryTag} #AI #Tech #News`;
+
+    // Build post text (max 300 chars)
+    let postText = `📰 ${article.title}\n\n`;
+
+    // Add excerpt if there's room
+    const remainingChars = MAX_CHARS - postText.length - tags.length - 5;
+    if (remainingChars > 50 && article.excerpt) {
+      const excerptLength = Math.min(article.excerpt.length, remainingChars);
+      postText += `${article.excerpt.substring(0, excerptLength)}...\n\n`;
+    }
+
+    postText += tags;
+
+    // Ensure we don't exceed character limit
+    if (postText.length > MAX_CHARS) {
+      postText = postText.substring(0, MAX_CHARS - 3) + "...";
+    }
+
+    // Create rich text with facets (for hashtags and links)
+    const rt = new RichText({ text: postText });
+    await rt.detectFacets(agent);
+
+    // Create link embed card
+    const embed = await fetchLinkCard(
+      agent,
+      articleUrl,
+      article.title,
+      article.excerpt || "",
+      article.imageUrl,
+    );
+
+    console.log("🦋 Posting to Bluesky (EN)...");
+
+    // Create the post
+    const response = await agent.post({
+      text: rt.text,
+      facets: rt.facets,
+      ...(embed && { embed }),
+      createdAt: new Date().toISOString(),
+    });
+
+    console.log(`✅ Bluesky EN post successful! URI: ${response.uri}`);
+    return response.uri;
+  } catch (error: any) {
+    // Handle specific errors
+    if (error?.status === 429) {
+      console.warn("⚠️ Bluesky rate limit exceeded. Try again later.");
+      return null;
+    }
+
+    if (error?.message?.includes("Invalid identifier or password")) {
+      console.error(
+        "❌ Bluesky authentication failed. Check BLUESKY_HANDLE and BLUESKY_APP_PASSWORD.",
+      );
+      return null;
+    }
+
+    console.error("❌ Bluesky EN post failed:", error?.message || error);
+    return null;
+  }
+}

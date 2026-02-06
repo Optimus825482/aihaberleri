@@ -69,6 +69,7 @@ interface RecentLog {
   id: string;
   status: string;
   articlesCreated: number;
+  articlesScraped?: number;
   duration: number;
   executionTime: string;
   errors?: string[];
@@ -97,6 +98,22 @@ export default function AgentSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [triggering, setTriggering] = useState(false);
   const { toast } = useToast();
+
+  // Live log states
+  const [showLiveLog, setShowLiveLog] = useState(false);
+  const [liveLogData, setLiveLogData] = useState<{
+    isRunning: boolean;
+    progress: { step: string; message: string; progress: number } | null;
+    logs: string[];
+    latestLog: RecentLog | null;
+  }>({
+    isRunning: false,
+    progress: null,
+    logs: [],
+    latestLog: null,
+  });
+  const liveLogRef = useRef<HTMLDivElement>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -229,15 +246,13 @@ export default function AgentSettingsPage() {
 
       if (data.success) {
         toast({
-          title: "Başarılı",
-          description:
-            "Agent tetiklendi, tarama ekranına yönlendiriliyorsunuz...",
+          title: "✅ Agent Başlatıldı",
+          description: "Haber tarama işlemi arka planda başlatıldı. Logları aşağıda takip edebilirsiniz.",
         });
 
-        // redirect to scan page with jobId parameter
-        setTimeout(() => {
-          window.location.href = `/admin/scan?autoStart=true&jobId=${data.data.jobId}`;
-        }, 1500);
+        // Open live log panel and start polling
+        setShowLiveLog(true);
+        startLiveLogPolling();
       } else {
         toast({
           title: "Hata",
@@ -255,6 +270,70 @@ export default function AgentSettingsPage() {
       setTriggering(false);
     }
   };
+
+  // Live log polling function
+  const fetchLiveLogProgress = useCallback(async () => {
+    try {
+      const response = await fetch("/api/agent/job-progress");
+      const data = await response.json();
+
+      if (data.success) {
+        setLiveLogData(data.data);
+
+        // Auto-scroll to bottom
+        if (liveLogRef.current) {
+          liveLogRef.current.scrollTop = liveLogRef.current.scrollHeight;
+        }
+
+        // Stop polling if job completed
+        if (!data.data.isRunning && pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+
+          // Refresh recent logs
+          fetchRecentLogs();
+
+          // Show completion toast
+          if (data.data.latestLog?.status === "SUCCESS") {
+            toast({
+              title: "🎉 Agent Tamamlandı",
+              description: `${data.data.latestLog.articlesCreated} haber oluşturuldu.`,
+            });
+          } else if (data.data.latestLog?.status === "FAILED") {
+            toast({
+              title: "❌ Agent Başarısız",
+              description: "Haber oluşturulurken hata oluştu. Detaylar için logları inceleyin.",
+              variant: "destructive",
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch live log progress:", error);
+    }
+  }, [toast]);
+
+  const startLiveLogPolling = useCallback(() => {
+    // Clear existing polling
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+    }
+
+    // Initial fetch
+    fetchLiveLogProgress();
+
+    // Poll every 2 seconds
+    pollingRef.current = setInterval(fetchLiveLogProgress, 2000);
+  }, [fetchLiveLogProgress]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, []);
 
   const toggleCategory = (categoryId: string) => {
     setSettings((prev) => ({
@@ -399,6 +478,117 @@ export default function AgentSettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Live Agent Log Panel - Shows when agent is triggered */}
+        {showLiveLog && (
+          <Card className="border-2 border-blue-500/50 bg-blue-500/5">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Terminal className="h-5 w-5 text-blue-500" />
+                  {liveLogData.isRunning ? (
+                    <>
+                      <span className="animate-pulse">🔄</span>
+                      Agent Çalışıyor...
+                    </>
+                  ) : (
+                    <>
+                      {liveLogData.latestLog?.status === "SUCCESS" ? "✅" : liveLogData.latestLog?.status === "FAILED" ? "❌" : "📋"}
+                      Agent Log
+                    </>
+                  )}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  {liveLogData.isRunning && (
+                    <Badge variant="default" className="bg-blue-500 animate-pulse">
+                      Çalışıyor
+                    </Badge>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowLiveLog(false);
+                      if (pollingRef.current) {
+                        clearInterval(pollingRef.current);
+                        pollingRef.current = null;
+                      }
+                    }}
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              {liveLogData.progress && (
+                <div className="mt-3">
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-muted-foreground">{liveLogData.progress.message}</span>
+                    <span className="font-medium">{liveLogData.progress.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="bg-blue-500 h-full transition-all duration-500"
+                      style={{ width: `${liveLogData.progress.progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div
+                ref={liveLogRef}
+                className="h-[200px] overflow-y-auto bg-black/30 rounded-lg p-3 font-mono text-xs space-y-1"
+              >
+                {liveLogData.logs.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-gray-500">
+                    <div className="text-center">
+                      {liveLogData.isRunning ? (
+                        <>
+                          <RefreshCw className="h-8 w-8 mx-auto mb-2 animate-spin opacity-50" />
+                          <p>Loglar yükleniyor...</p>
+                        </>
+                      ) : (
+                        <>
+                          <Info className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                          <p>Henüz log yok</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  liveLogData.logs.map((log, index) => (
+                    <div key={index} className="text-gray-300 flex items-start gap-2">
+                      <span className="text-gray-600 shrink-0">
+                        {new Date().toLocaleTimeString("tr-TR")}
+                      </span>
+                      <span>{log}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              {liveLogData.latestLog && !liveLogData.isRunning && (
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-4">
+                    <span className="text-muted-foreground">
+                      Toplam: <span className="text-white font-medium">{liveLogData.latestLog.articlesScraped}</span> haber tarandı
+                    </span>
+                    <span className="text-muted-foreground">
+                      Oluşturulan: <span className="text-green-400 font-medium">{liveLogData.latestLog.articlesCreated}</span> haber
+                    </span>
+                    {liveLogData.latestLog.duration && (
+                      <span className="text-muted-foreground">
+                        Süre: <span className="text-white font-medium">{Math.round(liveLogData.latestLog.duration / 1000)}s</span>
+                      </span>
+                    )}
+                  </div>
+                  <Badge variant={liveLogData.latestLog.status === "SUCCESS" ? "default" : "destructive"}>
+                    {liveLogData.latestLog.status}
+                  </Badge>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Basic Settings */}

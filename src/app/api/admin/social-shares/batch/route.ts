@@ -16,13 +16,16 @@ import {
 
 export const dynamic = "force-dynamic";
 
-// Valid platforms
+// Valid platforms (TR and EN versions)
 const validPlatforms = [
   "FACEBOOK",
   "FACEBOOK_EN",
   "BLUESKY",
+  "BLUESKY_EN",
   "MASTODON",
+  "MASTODON_EN",
   "TUMBLR",
+  "TUMBLR_EN",
 ];
 
 // GET: List batches with progress
@@ -137,8 +140,17 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const {
-      platforms = ["FACEBOOK", "FACEBOOK_EN", "BLUESKY", "MASTODON", "TUMBLR"], // All platforms by default
-      batchSize = 10,
+      platforms = [
+        "FACEBOOK",
+        "FACEBOOK_EN",
+        "BLUESKY",
+        "BLUESKY_EN",
+        "MASTODON",
+        "MASTODON_EN",
+        "TUMBLR",
+        "TUMBLR_EN",
+      ], // All platforms by default (TR + EN)
+      batchSize = 50, // Increased default batch size
       intervalSeconds = 10, // Default 10 seconds between articles
     } = body;
 
