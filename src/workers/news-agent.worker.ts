@@ -653,7 +653,10 @@ async function startWorker() {
     console.log("\n📤 Initializing Social Batch Worker...");
 
     // Platform posting functions map
-    const platformPosters: Record<string, (article: any) => Promise<string | null>> = {
+    const platformPosters: Record<
+      string,
+      (article: any) => Promise<string | null>
+    > = {
       FACEBOOK: postToFacebook,
       FACEBOOK_EN: postToFacebookEN,
       BLUESKY: postToBluesky,
@@ -685,7 +688,9 @@ async function startWorker() {
             select: { articleId: true },
           });
 
-          const sharedIds = [...new Set(sharedArticleIds.map((s) => s.articleId))];
+          const sharedIds = [
+            ...new Set(sharedArticleIds.map((s) => s.articleId)),
+          ];
 
           const unsharedArticles = await db.article.findMany({
             where: {
@@ -730,9 +735,13 @@ async function startWorker() {
 
           for (let i = 0; i < unsharedArticles.length; i++) {
             const article = unsharedArticles[i];
-            const enTranslation = article.translations?.find((t: any) => t.language === "en");
+            const enTranslation = article.translations?.find(
+              (t: any) => t.language === "en",
+            );
 
-            console.log(`\n📰 [${i + 1}/${unsharedArticles.length}] ${article.title}`);
+            console.log(
+              `\n📰 [${i + 1}/${unsharedArticles.length}] ${article.title}`,
+            );
 
             for (const platform of platforms) {
               const poster = platformPosters[platform];
@@ -747,21 +756,22 @@ async function startWorker() {
               const language = isEnglish ? "en" : "tr";
 
               // For EN platforms, use translation if available
-              const articleData = isEnglish && enTranslation
-                ? {
-                    title: enTranslation.title,
-                    slug: enTranslation.slug,
-                    excerpt: enTranslation.excerpt,
-                    imageUrl: article.imageUrl,
-                    categoryName: article.category?.name,
-                  }
-                : {
-                    title: article.title,
-                    slug: article.slug,
-                    excerpt: article.excerpt,
-                    imageUrl: article.imageUrl,
-                    categoryName: article.category?.name,
-                  };
+              const articleData =
+                isEnglish && enTranslation
+                  ? {
+                      title: enTranslation.title,
+                      slug: enTranslation.slug,
+                      excerpt: enTranslation.excerpt,
+                      imageUrl: article.imageUrl,
+                      categoryName: article.category?.name,
+                    }
+                  : {
+                      title: article.title,
+                      slug: article.slug,
+                      excerpt: article.excerpt,
+                      imageUrl: article.imageUrl,
+                      categoryName: article.category?.name,
+                    };
 
               try {
                 console.log(`   📤 Posting to ${platform} (${language})...`);
@@ -860,7 +870,9 @@ async function startWorker() {
             // Wait before next article (except for last one)
             if (i < unsharedArticles.length - 1) {
               console.log(`   ⏳ Waiting ${intervalSeconds} seconds...`);
-              await new Promise((resolve) => setTimeout(resolve, intervalSeconds * 1000));
+              await new Promise((resolve) =>
+                setTimeout(resolve, intervalSeconds * 1000),
+              );
             }
           }
 
@@ -903,7 +915,9 @@ async function startWorker() {
     );
 
     socialBatchWorker.on("completed", (job, result) => {
-      console.log(`✅ Social batch ${job.id} completed: ${result?.processed || 0} shared, ${result?.failed || 0} failed`);
+      console.log(
+        `✅ Social batch ${job.id} completed: ${result?.processed || 0} shared, ${result?.failed || 0} failed`,
+      );
     });
 
     socialBatchWorker.on("failed", (job, error) => {
@@ -911,7 +925,9 @@ async function startWorker() {
     });
 
     socialBatchWorker.on("progress", (job, progress: any) => {
-      console.log(`📊 Batch progress: ${progress.currentArticle}/${progress.totalArticles} articles, ${progress.processed}/${progress.total} posts`);
+      console.log(
+        `📊 Batch progress: ${progress.currentArticle}/${progress.totalArticles} articles, ${progress.processed}/${progress.total} posts`,
+      );
     });
 
     console.log("✅ Social batch worker started");

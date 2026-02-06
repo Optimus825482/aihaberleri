@@ -481,8 +481,8 @@ export default function SocialSharesPage() {
                                             <label
                                                 key={key}
                                                 className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${selectedPlatforms.includes(key)
-                                                        ? "bg-purple-500/20 border-purple-500"
-                                                        : "bg-white/5 border-white/10 hover:border-white/30"
+                                                    ? "bg-purple-500/20 border-purple-500"
+                                                    : "bg-white/5 border-white/10 hover:border-white/30"
                                                     }`}
                                             >
                                                 <input

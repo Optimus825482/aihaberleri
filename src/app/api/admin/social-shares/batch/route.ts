@@ -77,7 +77,11 @@ export async function GET(req: NextRequest) {
       }
       if (s.status === "SHARED") {
         platformStats[s.platform].shared = s._count.id;
-      } else if (s.status === "PENDING" || s.status === "SCHEDULED" || s.status === "PROCESSING") {
+      } else if (
+        s.status === "PENDING" ||
+        s.status === "SCHEDULED" ||
+        s.status === "PROCESSING"
+      ) {
         platformStats[s.platform].pending += s._count.id;
       } else if (s.status === "FAILED") {
         platformStats[s.platform].failed = s._count.id;
@@ -135,7 +139,9 @@ export async function POST(req: NextRequest) {
     } = body;
 
     // Validate platforms
-    const invalidPlatforms = platforms.filter((p: string) => !validPlatforms.includes(p));
+    const invalidPlatforms = platforms.filter(
+      (p: string) => !validPlatforms.includes(p),
+    );
     if (invalidPlatforms.length > 0) {
       return NextResponse.json(
         { error: `Geçersiz platformlar: ${invalidPlatforms.join(", ")}` },

@@ -359,7 +359,9 @@ export const getSocialBatchQueue = (): Queue | null => {
 
   const redis = getRedis();
   if (!redis) {
-    console.warn("⚠️  Redis not available, social batch queue cannot be created");
+    console.warn(
+      "⚠️  Redis not available, social batch queue cannot be created",
+    );
     return null;
   }
 
@@ -402,14 +404,10 @@ export async function addSocialBatchJob(data: {
   }
 
   try {
-    const job = await queue.add(
-      "social-batch-share",
-      data,
-      {
-        jobId: `social-batch-${data.batchId}`,
-        removeOnComplete: false, // Keep for progress tracking
-      },
-    );
+    const job = await queue.add("social-batch-share", data, {
+      jobId: `social-batch-${data.batchId}`,
+      removeOnComplete: false, // Keep for progress tracking
+    });
 
     console.log(`📤 Social batch job added: ${job.id}`);
     return { jobId: job.id, batchId: data.batchId };
