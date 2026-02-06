@@ -117,16 +117,23 @@ export async function postToTumblr(article: {
     const blogIdentifier = `${TUMBLR_BLOG_NAME}.tumblr.com`;
 
     return new Promise((resolve, reject) => {
-      // Legacy link post format
+      // Legacy link post format with thumbnail
+      const postData: any = {
+        type: "link",
+        title: `📰 ${article.title}`,
+        url: articleUrl,
+        description: article.excerpt,
+        tags: tags.join(","),
+      };
+
+      // Add thumbnail if image URL is provided
+      if (article.imageUrl) {
+        postData.thumbnail = article.imageUrl;
+      }
+
       client.createLegacyPost(
         blogIdentifier,
-        {
-          type: "link",
-          title: `📰 ${article.title}`,
-          url: articleUrl,
-          description: article.excerpt,
-          tags: tags.join(","),
-        },
+        postData,
         (err: any, data: any) => {
           if (err) {
             console.error("❌ Tumblr post failed:", err?.message || err);
