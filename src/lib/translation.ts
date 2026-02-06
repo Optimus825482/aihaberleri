@@ -297,9 +297,9 @@ export async function translateAndSaveArticle(
 
       // 🆕 Share English version to social media
       console.log(`📢 Sharing English version to social media...`);
-      
+
       const enArticleUrl = `https://aihaberleri.org/en/news/${translation.slug}`;
-      
+
       // Bluesky - English
       postToBluesky({
         title: translation.title,
@@ -322,7 +322,9 @@ export async function translateAndSaveArticle(
         .then((result) => {
           if (result) console.log(`   🐘 Mastodon EN: ${translation.slug}`);
         })
-        .catch((err) => console.error(`   ❌ Mastodon EN failed:`, err.message));
+        .catch((err) =>
+          console.error(`   ❌ Mastodon EN failed:`, err.message),
+        );
 
       // Tumblr - English
       postToTumblr({
