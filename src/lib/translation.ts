@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { postToBluesky } from "@/lib/social/bluesky";
 import { postToMastodon } from "@/lib/social/mastodon";
 import { postToTumblr } from "@/lib/social/tumblr";
+import { postToFacebookEN } from "@/lib/social/facebook";
 
 export type SupportedLocale = "tr" | "en";
 
@@ -337,6 +338,20 @@ export async function translateAndSaveArticle(
           if (result) console.log(`   📝 Tumblr EN: ${translation.slug}`);
         })
         .catch((err) => console.error(`   ❌ Tumblr EN failed:`, err.message));
+
+      // Facebook EN Page - English
+      postToFacebookEN({
+        title: translation.title,
+        slug: `en/news/${translation.slug}`,
+        excerpt: translation.excerpt,
+        categoryName: "AI News",
+      })
+        .then((result) => {
+          if (result) console.log(`   📘 Facebook EN: ${translation.slug}`);
+        })
+        .catch((err) =>
+          console.error(`   ❌ Facebook EN failed:`, err.message),
+        );
     }
   } catch (error) {
     console.error(`❌ Failed to translate article ${articleId}:`, error);

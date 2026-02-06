@@ -17,6 +17,12 @@ import axios from "axios";
 const FACEBOOK_ENABLED = process.env.FACEBOOK_ENABLED === "true";
 const FACEBOOK_PAGE_ID = process.env.FACEBOOK_PAGE_ID;
 const FACEBOOK_PAGE_ACCESS_TOKEN = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
+
+// English Facebook Page (separate page for EN content)
+const FACEBOOK_EN_ENABLED = process.env.FACEBOOK_EN_ENABLED === "true";
+const FACEBOOK_EN_PAGE_ID = process.env.FACEBOOK_EN_PAGE_ID;
+const FACEBOOK_EN_PAGE_ACCESS_TOKEN = process.env.FACEBOOK_EN_PAGE_ACCESS_TOKEN;
+
 const GRAPH_API_URL = "https://graph.facebook.com/v18.0";
 
 /**
@@ -183,8 +189,99 @@ export async function verifyFacebookCredentials(): Promise<boolean> {
   }
 }
 
+/**
+ * Post to Facebook EN Page (English content)
+ */
+export async function postToFacebookEN(article: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  imageUrl?: string | null;
+  categoryName?: string;
+}): Promise<string | null> {
+  // Check if Facebook EN is enabled
+  if (!FACEBOOK_EN_ENABLED) {
+    return null; // Silent skip
+  }
+
+  // Check credentials
+  if (!FACEBOOK_EN_PAGE_ID || !FACEBOOK_EN_PAGE_ACCESS_TOKEN) {
+    console.warn("⚠️ Facebook EN credentials missing. Skipping post.");
+    return null;
+  }
+
+  try {
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+    const articleUrl = `${siteUrl}/en/news/${article.slug}`;
+
+    // Create post message (English)
+    const hashtags = article.categoryName
+      ? `#${article.categoryName.replace(/\s+/g, "")} #AI #ArtificialIntelligence`
+      : "#AI #ArtificialIntelligence #Tech";
+
+    const message = `📰 ${article.title}\n\n${article.excerpt}\n\n${hashtags}`;
+
+    console.log("📘 Posting to Facebook EN Page...");
+
+    let postId: string;
+
+    // If we have an image, post with image (link post)
+    if (article.imageUrl) {
+      const response = await axios.post(
+        `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/feed`,
+        {
+          message,
+          link: articleUrl,
+          access_token: FACEBOOK_EN_PAGE_ACCESS_TOKEN,
+        },
+      );
+      postId = response.data.id;
+    } else {
+      const response = await axios.post(
+        `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/feed`,
+        {
+          message: `${message}\n\n🔗 ${articleUrl}`,
+          access_token: FACEBOOK_EN_PAGE_ACCESS_TOKEN,
+        },
+      );
+      postId = response.data.id;
+    }
+
+    console.log(`✅ Facebook EN post successful! ID: ${postId}`);
+    return postId;
+  } catch (error: any) {
+    const errorData = error?.response?.data?.error;
+
+    if (errorData) {
+      console.error("❌ Facebook EN API Error:", {
+        message: errorData.message,
+        type: errorData.type,
+        code: errorData.code,
+      });
+    } else {
+      console.error("❌ Facebook EN post failed:", error?.message || error);
+    }
+
+    return null;
+  }
+}
+
+/**
+ * Check if Facebook EN is configured
+ */
+export function isFacebookENConfigured(): boolean {
+  return !!(
+    FACEBOOK_EN_ENABLED &&
+    FACEBOOK_EN_PAGE_ID &&
+    FACEBOOK_EN_PAGE_ACCESS_TOKEN
+  );
+}
+
 export default {
   postToFacebook,
   postImageToFacebook,
   verifyFacebookCredentials,
+  postToFacebookEN,
+  isFacebookENConfigured,
 };
