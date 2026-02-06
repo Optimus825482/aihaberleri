@@ -122,7 +122,7 @@ export async function POST(request: Request) {
     // Check authentication - support both NextAuth and admin-session JWT
     const session = await auth();
     const adminSession = await getAdminSession();
-    
+
     if (!session && !adminSession) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
