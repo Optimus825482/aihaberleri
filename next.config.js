@@ -32,6 +32,17 @@ const nextConfig = {
     ];
   },
 
+  // Ezoic ads.txt redirect - automatically managed by Ezoic
+  async redirects() {
+    return [
+      {
+        source: "/ads.txt",
+        destination: "https://srv.adstxtmanager.com/19390/aihaberleri.org",
+        permanent: true,
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       {
