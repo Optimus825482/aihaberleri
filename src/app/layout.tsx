@@ -129,6 +129,26 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
+        {/* Ezoic Privacy Scripts - Must load first for GDPR/consent compliance */}
+        <script
+          data-cfasync="false"
+          src="https://cmp.gatekeeperconsent.com/min.js"
+        />
+        <script
+          data-cfasync="false"
+          src="https://the.gatekeeperconsent.com/cmp.min.js"
+        />
+        {/* Ezoic Header Script - Ad system initialization */}
+        <script async src="//www.ezojs.com/ezoic/sa.min.js" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.ezstandalone = window.ezstandalone || {};
+              ezstandalone.cmd = ezstandalone.cmd || [];
+            `,
+          }}
+        />
+
         {/* Preconnect for LCP/FCP optimization */}
         <link rel="preconnect" href="https://images.aihaberleri.org" />
         <link
@@ -136,6 +156,8 @@ export default function RootLayout({
           href="https://image.pollinations.ai"
           crossOrigin="anonymous"
         />
+        <link rel="preconnect" href="https://www.ezojs.com" />
+        <link rel="dns-prefetch" href="https://cmp.gatekeeperconsent.com" />
         <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
