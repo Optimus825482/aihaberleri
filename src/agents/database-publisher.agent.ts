@@ -20,6 +20,10 @@ import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 import type { ArticleWithVisuals } from "./visual-generator.agent";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
+import {
+  recordShareSuccess,
+  recordShareFailure,
+} from "@/services/social-share.service";
 
 export interface PublishedArticle {
   id: string;
@@ -295,10 +299,26 @@ export class DatabasePublisherAgent extends BaseAgent<
               imageUrl: article.imageUrl,
               categoryName: category.name,
             })
-              .then(() => this.logger.info(`📘 Facebook post created`))
-              .catch((err) =>
-                this.logger.warn(`Facebook post failed: ${err.message}`),
-              );
+              .then(async (postId) => {
+                if (postId) {
+                  await recordShareSuccess(
+                    createdArticle.id,
+                    "FACEBOOK",
+                    "tr",
+                    postId,
+                  );
+                }
+                this.logger.info(`📘 Facebook post created`);
+              })
+              .catch(async (err) => {
+                await recordShareFailure(
+                  createdArticle.id,
+                  "FACEBOOK",
+                  "tr",
+                  err?.message || "Unknown error",
+                );
+                this.logger.warn(`Facebook post failed: ${err.message}`);
+              });
           } catch (facebookError) {
             this.logger.warn(
               `Facebook setup failed: ${(facebookError as Error).message}`,
@@ -315,10 +335,26 @@ export class DatabasePublisherAgent extends BaseAgent<
               imageUrl: article.imageUrl,
               categoryName: category.name,
             })
-              .then(() => this.logger.info(`🦋 Bluesky post created`))
-              .catch((err) =>
-                this.logger.warn(`Bluesky post failed: ${err.message}`),
-              );
+              .then(async (postId) => {
+                if (postId) {
+                  await recordShareSuccess(
+                    createdArticle.id,
+                    "BLUESKY",
+                    "tr",
+                    postId,
+                  );
+                }
+                this.logger.info(`🦋 Bluesky post created`);
+              })
+              .catch(async (err) => {
+                await recordShareFailure(
+                  createdArticle.id,
+                  "BLUESKY",
+                  "tr",
+                  err?.message || "Unknown error",
+                );
+                this.logger.warn(`Bluesky post failed: ${err.message}`);
+              });
           } catch (blueskyError) {
             this.logger.warn(
               `Bluesky setup failed: ${(blueskyError as Error).message}`,
@@ -335,10 +371,26 @@ export class DatabasePublisherAgent extends BaseAgent<
               imageUrl: article.imageUrl,
               categoryName: category.name,
             })
-              .then(() => this.logger.info(`🐘 Mastodon post created`))
-              .catch((err) =>
-                this.logger.warn(`Mastodon post failed: ${err.message}`),
-              );
+              .then(async (postId) => {
+                if (postId) {
+                  await recordShareSuccess(
+                    createdArticle.id,
+                    "MASTODON",
+                    "tr",
+                    postId,
+                  );
+                }
+                this.logger.info(`🐘 Mastodon post created`);
+              })
+              .catch(async (err) => {
+                await recordShareFailure(
+                  createdArticle.id,
+                  "MASTODON",
+                  "tr",
+                  err?.message || "Unknown error",
+                );
+                this.logger.warn(`Mastodon post failed: ${err.message}`);
+              });
           } catch (mastodonError) {
             this.logger.warn(
               `Mastodon setup failed: ${(mastodonError as Error).message}`,
@@ -355,14 +407,191 @@ export class DatabasePublisherAgent extends BaseAgent<
               imageUrl: article.imageUrl,
               categoryName: category.name,
             })
-              .then(() => this.logger.info(`📝 Tumblr post created`))
-              .catch((err) =>
-                this.logger.warn(`Tumblr post failed: ${err.message}`),
-              );
+              .then(async (postId) => {
+                if (postId) {
+                  await recordShareSuccess(
+                    createdArticle.id,
+                    "TUMBLR",
+                    "tr",
+                    postId,
+                  );
+                }
+                this.logger.info(`📝 Tumblr post created`);
+              })
+              .catch(async (err) => {
+                await recordShareFailure(
+                  createdArticle.id,
+                  "TUMBLR",
+                  "tr",
+                  err?.message || "Unknown error",
+                );
+                this.logger.warn(`Tumblr post failed: ${err.message}`);
+              });
           } catch (tumblrError) {
             this.logger.warn(
               `Tumblr setup failed: ${(tumblrError as Error).message}`,
             );
+          }
+
+          // ============================================================
+          // ENGLISH SOCIAL MEDIA SHARES
+          // ============================================================
+          if (enSlugFinal && article.synthesizedContent.en?.title) {
+            const enExcerpt = article.synthesizedContent.en.excerpt || "";
+            const enTitle = article.synthesizedContent.en.title;
+
+            // Post to Bluesky EN (async)
+            try {
+              const { postToBluesky } = await import("@/lib/social/bluesky");
+              postToBluesky({
+                title: enTitle,
+                slug: `en/news/${enSlugFinal}`,
+                excerpt: enExcerpt,
+                imageUrl: article.imageUrl,
+                categoryName: "AI News",
+              })
+                .then(async (postId) => {
+                  if (postId) {
+                    await recordShareSuccess(
+                      createdArticle.id,
+                      "BLUESKY",
+                      "en",
+                      postId,
+                    );
+                    this.logger.info(`🦋 Bluesky EN post created`);
+                  } else {
+                    this.logger.info(`🦋 Bluesky EN skipped (disabled)`);
+                  }
+                })
+                .catch(async (err) => {
+                  await recordShareFailure(
+                    createdArticle.id,
+                    "BLUESKY",
+                    "en",
+                    err?.message || "Unknown error",
+                  );
+                  this.logger.warn(`Bluesky EN post failed: ${err.message}`);
+                });
+            } catch (blueskyEnError) {
+              this.logger.warn(
+                `Bluesky EN setup failed: ${(blueskyEnError as Error).message}`,
+              );
+            }
+
+            // Post to Mastodon EN (async)
+            try {
+              const { postToMastodon } = await import("@/lib/social/mastodon");
+              postToMastodon({
+                title: enTitle,
+                slug: `en/news/${enSlugFinal}`,
+                excerpt: enExcerpt,
+                imageUrl: article.imageUrl,
+                categoryName: "AI News",
+              })
+                .then(async (postId) => {
+                  if (postId) {
+                    await recordShareSuccess(
+                      createdArticle.id,
+                      "MASTODON",
+                      "en",
+                      postId,
+                    );
+                    this.logger.info(`🐘 Mastodon EN post created`);
+                  } else {
+                    this.logger.info(`🐘 Mastodon EN skipped (disabled)`);
+                  }
+                })
+                .catch(async (err) => {
+                  await recordShareFailure(
+                    createdArticle.id,
+                    "MASTODON",
+                    "en",
+                    err?.message || "Unknown error",
+                  );
+                  this.logger.warn(`Mastodon EN post failed: ${err.message}`);
+                });
+            } catch (mastodonEnError) {
+              this.logger.warn(
+                `Mastodon EN setup failed: ${(mastodonEnError as Error).message}`,
+              );
+            }
+
+            // Post to Tumblr EN (async)
+            try {
+              const { postToTumblr } = await import("@/lib/social/tumblr");
+              postToTumblr({
+                title: enTitle,
+                slug: `en/news/${enSlugFinal}`,
+                excerpt: enExcerpt,
+                imageUrl: article.imageUrl,
+                categoryName: "AI News",
+              })
+                .then(async (postId) => {
+                  if (postId) {
+                    await recordShareSuccess(
+                      createdArticle.id,
+                      "TUMBLR",
+                      "en",
+                      postId,
+                    );
+                    this.logger.info(`📝 Tumblr EN post created`);
+                  } else {
+                    this.logger.info(`📝 Tumblr EN skipped (disabled)`);
+                  }
+                })
+                .catch(async (err) => {
+                  await recordShareFailure(
+                    createdArticle.id,
+                    "TUMBLR",
+                    "en",
+                    err?.message || "Unknown error",
+                  );
+                  this.logger.warn(`Tumblr EN post failed: ${err.message}`);
+                });
+            } catch (tumblrEnError) {
+              this.logger.warn(
+                `Tumblr EN setup failed: ${(tumblrEnError as Error).message}`,
+              );
+            }
+
+            // Post to Facebook EN (async)
+            try {
+              const { postToFacebookEN } =
+                await import("@/lib/social/facebook");
+              postToFacebookEN({
+                title: enTitle,
+                slug: `en/news/${enSlugFinal}`,
+                excerpt: enExcerpt,
+                imageUrl: article.imageUrl,
+                categoryName: "AI News",
+              })
+                .then(async (postId) => {
+                  if (postId) {
+                    await recordShareSuccess(
+                      createdArticle.id,
+                      "FACEBOOK_EN",
+                      "en",
+                      postId,
+                    );
+                    this.logger.info(`📘 Facebook EN post created`);
+                  } else {
+                    this.logger.info(`📘 Facebook EN skipped (disabled)`);
+                  }
+                })
+                .catch(async (err) => {
+                  await recordShareFailure(
+                    createdArticle.id,
+                    "FACEBOOK_EN",
+                    "en",
+                    err?.message || "Unknown error",
+                  );
+                  this.logger.warn(`Facebook EN post failed: ${err.message}`);
+                });
+            } catch (facebookEnError) {
+              this.logger.warn(
+                `Facebook EN setup failed: ${(facebookEnError as Error).message}`,
+              );
+            }
           }
 
           // Invalidate cache (async - don't block)

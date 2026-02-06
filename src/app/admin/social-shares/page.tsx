@@ -345,9 +345,10 @@ export default function SocialSharesPage() {
                     </button>
                 </div>
 
-                {/* Articles Table */}
+                {/* Articles Table - Desktop */}
                 <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
-                    <div className="overflow-x-auto">
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block overflow-x-auto">
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-white/10">
@@ -362,14 +363,14 @@ export default function SocialSharesPage() {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                                        <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
                                             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                                             Yükleniyor...
                                         </td>
                                     </tr>
                                 ) : articles.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
+                                        <td colSpan={9} className="px-4 py-8 text-center text-gray-400">
                                             Haber bulunamadı
                                         </td>
                                     </tr>
@@ -396,6 +397,41 @@ export default function SocialSharesPage() {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden">
+                        {loading ? (
+                            <div className="px-4 py-8 text-center text-gray-400">
+                                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                                Yükleniyor...
+                            </div>
+                        ) : articles.length === 0 ? (
+                            <div className="px-4 py-8 text-center text-gray-400">
+                                Haber bulunamadı
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-white/5">
+                                {articles.map((article) => (
+                                    <div key={article.id} className="p-4 hover:bg-white/5 transition-colors">
+                                        <p className="text-white text-sm font-medium mb-1 line-clamp-2">
+                                            {article.title}
+                                        </p>
+                                        <p className="text-gray-500 text-xs mb-3">
+                                            {article.category?.name} • {article.publishedAt ? new Date(article.publishedAt).toLocaleDateString("tr-TR") : "-"}
+                                        </p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.entries(platformConfig).map(([platform, config]) => (
+                                                <div key={platform} className="flex items-center gap-1">
+                                                    <span className="text-xs">{config.icon}</span>
+                                                    <StatusBadge status={article.shares?.[platform]?.status || "NOT_CREATED"} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Pagination */}
