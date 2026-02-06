@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { getRedis } from "@/lib/redis";
 import { getRecentAgentLogs, LOG_CHANNEL_NAME } from "@/lib/agent-log-stream";
 import Redis from "ioredis";
@@ -12,10 +13,14 @@ export const dynamic = "force-dynamic";
  * Server-Sent Events endpoint for real-time agent logs
  */
 export async function GET(request: NextRequest) {
-  // Check authentication
-  const session = await requireAdminAuth();
-  if (session instanceof NextResponse) {
-    return session;
+  // Check authentication - support both NextAuth and admin-session JWT
+  const session = await auth();
+  const adminSession = await getAdminSession();
+  if (!session && !adminSession) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const redis = getRedis();

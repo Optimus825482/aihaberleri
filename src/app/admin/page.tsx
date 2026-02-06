@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
     Card,
@@ -23,6 +23,11 @@ import {
     Play,
     Loader2,
     Newspaper,
+    Terminal,
+    Pause,
+    Trash2,
+    Maximize2,
+    Minimize2,
 } from "lucide-react";
 import Link from "next/link";
 import { CountdownTimer } from "@/components/CountdownTimer";
@@ -78,14 +83,93 @@ interface AgentStats {
     };
 }
 
+interface LogEntry {
+    type: string;
+    level?: string;
+    message?: string;
+    timestamp: string;
+    step?: string;
+    emoji?: string;
+}
+
 export default function AdminDashboard() {
     const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
     const [agentStats, setAgentStats] = useState<AgentStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const refreshInterval = useRef<NodeJS.Timeout | null>(null);
+    
+    // Live Log States
+    const [logs, setLogs] = useState<LogEntry[]>([]);
+    const [isConnected, setIsConnected] = useState(false);
+    const [isPaused, setIsPaused] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
+    const logsEndRef = useRef<HTMLDivElement>(null);
+    const eventSourceRef = useRef<EventSource | null>(null);
 
     const isAgentEnabled = agentStats?.agent.enabled ?? false;
+
+    // Scroll to bottom when new logs arrive
+    const scrollToBottom = useCallback(() => {
+        if (!isPaused && logsEndRef.current) {
+            logsEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [isPaused]);
+
+    // Connect to live logs SSE
+    useEffect(() => {
+        const connectToLogs = () => {
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+            }
+
+            const eventSource = new EventSource("/api/agent/live-logs");
+            eventSourceRef.current = eventSource;
+
+            eventSource.onopen = () => {
+                setIsConnected(true);
+            };
+
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === "connected") {
+                        setIsConnected(true);
+                    } else if (data.type === "heartbeat") {
+                        // Heartbeat received, connection alive
+                    } else if (data.type === "log") {
+                        setLogs((prev) => {
+                            const newLogs = [...prev, data].slice(-200); // Keep last 200 logs
+                            return newLogs;
+                        });
+                    }
+                } catch (e) {
+                    console.error("Failed to parse log:", e);
+                }
+            };
+
+            eventSource.onerror = () => {
+                setIsConnected(false);
+                eventSource.close();
+                // Reconnect after 5 seconds
+                setTimeout(connectToLogs, 5000);
+            };
+        };
+
+        connectToLogs();
+
+        return () => {
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+            }
+        };
+    }, []);
+
+    // Scroll when logs change
+    useEffect(() => {
+        scrollToBottom();
+    }, [logs, scrollToBottom]);
 
     useEffect(() => {
         fetchAllStats();
@@ -475,6 +559,110 @@ export default function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* Live Worker Log Stream */}
+                <Card className={`border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent ${isExpanded ? "fixed inset-4 z-50" : ""}`}>
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-emerald-500/10 rounded-lg">
+                                    <Terminal className="h-4 w-4 text-emerald-500" />
+                                </div>
+                                <div>
+                                    <CardTitle className="text-base font-black uppercase tracking-tight flex items-center gap-2">
+                                        Worker Log Akışı
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${isConnected ? "bg-emerald-500/20 text-emerald-500" : "bg-red-500/20 text-red-500"}`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}></span>
+                                            {isConnected ? "CANLI" : "BAĞLANTI YOK"}
+                                        </span>
+                                    </CardTitle>
+                                    <CardDescription className="text-xs">
+                                        AI News Agent realtime işlem logları
+                                    </CardDescription>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsPaused(!isPaused)}
+                                    className="h-8 w-8 p-0"
+                                    title={isPaused ? "Devam Et" : "Duraklat"}
+                                >
+                                    {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setLogs([])}
+                                    className="h-8 w-8 p-0"
+                                    title="Temizle"
+                                >
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setIsExpanded(!isExpanded)}
+                                    className="h-8 w-8 p-0"
+                                    title={isExpanded ? "Küçült" : "Büyüt"}
+                                >
+                                    {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                                </Button>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className={`bg-zinc-950 rounded-lg border border-zinc-800 font-mono text-xs overflow-hidden ${isExpanded ? "h-[calc(100vh-180px)]" : "h-[300px]"}`}>
+                            <div className="h-full overflow-y-auto p-3 space-y-0.5 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+                                {logs.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-zinc-500">
+                                        <Terminal className="h-8 w-8 mb-2 opacity-50" />
+                                        <p>Henüz log yok</p>
+                                        <p className="text-[10px] mt-1">Agent çalıştığında loglar burada görünecek</p>
+                                    </div>
+                                ) : (
+                                    logs.map((log, index) => (
+                                        <div
+                                            key={index}
+                                            className={`flex items-start gap-2 py-0.5 hover:bg-zinc-900/50 rounded px-1 ${
+                                                log.level === "error" ? "text-red-400" :
+                                                log.level === "warn" ? "text-yellow-400" :
+                                                log.level === "success" ? "text-emerald-400" :
+                                                log.level === "info" ? "text-blue-400" :
+                                                "text-zinc-400"
+                                            }`}
+                                        >
+                                            <span className="text-zinc-600 shrink-0 select-none">
+                                                {new Date(log.timestamp).toLocaleTimeString("tr-TR", { 
+                                                    hour: "2-digit", 
+                                                    minute: "2-digit", 
+                                                    second: "2-digit" 
+                                                })}
+                                            </span>
+                                            {log.emoji && <span className="shrink-0">{log.emoji}</span>}
+                                            {log.step && (
+                                                <span className="shrink-0 px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 text-[10px] uppercase font-bold">
+                                                    {log.step}
+                                                </span>
+                                            )}
+                                            <span className="break-all">{log.message}</span>
+                                        </div>
+                                    ))
+                                )}
+                                <div ref={logsEndRef} />
+                            </div>
+                        </div>
+                        {isPaused && (
+                            <div className="mt-2 text-center">
+                                <Badge variant="secondary" className="text-xs">
+                                    <Pause className="h-3 w-3 mr-1" />
+                                    Otomatik kaydırma duraklatıldı
+                                </Badge>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
         </AdminLayout>
     );
