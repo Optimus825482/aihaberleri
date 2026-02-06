@@ -85,7 +85,9 @@ export default function SocialSharesPage() {
                 ...(unsharedOnly && { unsharedOnly: "true" }),
             });
 
-            const res = await fetch(`/api/admin/social-shares?${params}`);
+            const res = await fetch(`/api/admin/social-shares?${params}`, {
+                credentials: "include",
+            });
             const data = await res.json();
 
             if (data.articles) {
@@ -101,7 +103,9 @@ export default function SocialSharesPage() {
     // Fetch batch stats
     const fetchStats = useCallback(async () => {
         try {
-            const res = await fetch("/api/admin/social-shares/batch");
+            const res = await fetch("/api/admin/social-shares/batch", {
+                credentials: "include",
+            });
             const data = await res.json();
 
             if (data.stats) setStats(data.stats);
@@ -125,6 +129,7 @@ export default function SocialSharesPage() {
         try {
             const res = await fetch("/api/admin/social-shares/batch", {
                 method: "POST",
+                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     platform: batchPlatform,
