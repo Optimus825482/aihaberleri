@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
@@ -118,9 +119,11 @@ export async function GET(request: Request) {
 // POST - Create new article
 export async function POST(request: Request) {
   try {
-    // Check authentication
+    // Check authentication - support both NextAuth and admin-session JWT
     const session = await auth();
-    if (!session) {
+    const adminSession = await getAdminSession();
+    
+    if (!session && !adminSession) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
 

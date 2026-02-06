@@ -6,6 +6,7 @@
 
 import { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin-auth";
 import {
   callDeepSeek,
   rewriteArticle,
@@ -191,9 +192,10 @@ async function determineCategory(
 }
 
 export async function POST(request: NextRequest) {
-  // Auth check
+  // Auth check - support both NextAuth and admin-session JWT
   const session = await auth();
-  if (!session) {
+  const adminSession = await getAdminSession();
+  if (!session && !adminSession) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
       headers: { "Content-Type": "application/json" },

@@ -298,10 +298,10 @@ export default function PrivacyPage() {
               <section className="mb-8">
                 <h2 className="text-2xl font-bold mb-4">12. Reklam Ortaklarımız (Ezoic)</h2>
                 <p className="text-muted-foreground leading-relaxed mb-4">
-                  Web sitemizde reklam gösterimi için Ezoic hizmetini kullanmaktayız. 
-                  Ezoic ve iş ortakları, size özelleştirilmiş reklamlar sunmak için 
-                  çerezler ve benzeri teknolojiler kullanabilir. Ezoic&apos;in gizlilik 
-                  uygulamaları ve kullanılan çerezler hakkında detaylı bilgi için 
+                  Web sitemizde reklam gösterimi için Ezoic hizmetini kullanmaktayız.
+                  Ezoic ve iş ortakları, size özelleştirilmiş reklamlar sunmak için
+                  çerezler ve benzeri teknolojiler kullanabilir. Ezoic&apos;in gizlilik
+                  uygulamaları ve kullanılan çerezler hakkında detaylı bilgi için
                   aşağıdaki bölümü inceleyiniz:
                 </p>
                 <div className="bg-card border rounded-lg p-6">
@@ -313,9 +313,9 @@ export default function PrivacyPage() {
                   </noscript>
                   <p className="text-sm text-muted-foreground mt-4">
                     Detaylı bilgi için:{" "}
-                    <a 
-                      href="http://g.ezoic.net/privacy/aihaberleri.org" 
-                      target="_blank" 
+                    <a
+                      href="http://g.ezoic.net/privacy/aihaberleri.org"
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline"
                     >
