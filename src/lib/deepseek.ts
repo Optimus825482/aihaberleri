@@ -432,107 +432,171 @@ function detectEntityForVisual(title: string): string | null {
 /**
  * Generate AI image prompt from article content
  * ENHANCED: Realistic, journalistic, topic-specific prompts
+ * V2: Better keyword extraction and subject detection
  */
 export async function generateImagePrompt(
   title: string,
   content: string,
   category: string,
 ): Promise<string> {
-  const prompt = `Sen dünya çapında ödüllü bir haber fotoğrafçısısın. Bu yapay zeka haberi için REALISTIC, DIVERSE ve CONTENT-FOCUSED bir görsel prompt oluştur.
+  // Pre-analyze content for key subjects
+  const combinedText = `${title} ${content.substring(0, 800)}`.toLowerCase();
+
+  // Extract key entities for better prompt targeting
+  const entityHints: string[] = [];
+
+  // Company detection
+  const companies = [
+    "openai",
+    "google",
+    "microsoft",
+    "apple",
+    "nvidia",
+    "tesla",
+    "meta",
+    "amazon",
+    "anthropic",
+    "deepseek",
+    "mistral",
+    "hugging face",
+    "stability ai",
+    "midjourney",
+    "adobe",
+    "samsung",
+    "intel",
+    "amd",
+    "qualcomm",
+    "ibm",
+    "oracle",
+    "salesforce",
+  ];
+  for (const company of companies) {
+    if (combinedText.includes(company)) {
+      entityHints.push(`COMPANY: ${company.toUpperCase()}`);
+    }
+  }
+
+  // Product/Tech detection
+  const products = [
+    "chatgpt",
+    "gpt-4",
+    "gpt-5",
+    "gemini",
+    "claude",
+    "copilot",
+    "sora",
+    "dall-e",
+    "midjourney",
+    "stable diffusion",
+    "llama",
+    "mistral",
+    "iphone",
+    "pixel",
+    "vision pro",
+    "quest",
+    "robot",
+    "drone",
+    "ev",
+    "chip",
+    "gpu",
+    "cpu",
+    "server",
+    "quantum",
+  ];
+  for (const product of products) {
+    if (combinedText.includes(product)) {
+      entityHints.push(`PRODUCT/TECH: ${product.toUpperCase()}`);
+    }
+  }
+
+  // Event/Topic detection
+  const events = [
+    "launch",
+    "release",
+    "announce",
+    "funding",
+    "acquisition",
+    "partnership",
+    "lawsuit",
+    "ban",
+    "regulation",
+    "breach",
+    "hack",
+    "layoff",
+    "ipo",
+    "conference",
+  ];
+  for (const event of events) {
+    if (combinedText.includes(event)) {
+      entityHints.push(`EVENT: ${event.toUpperCase()}`);
+    }
+  }
+
+  const entityContext =
+    entityHints.length > 0
+      ? `\n\n### DETECTED KEY SUBJECTS (USE THESE!):\n${entityHints.join("\n")}`
+      : "";
+
+  const prompt = `Sen dünya çapında ödüllü bir haber fotoğrafçısısın. Bu yapay zeka haberi için REALISTIC, UNIQUE ve KONU-ODAKLI görsel prompt oluştur.
 
 Haber Başlığı: ${title}
 Kategori: ${category}
-İçerik Özeti: ${content.substring(0, 500)}
+İçerik Özeti: ${content.substring(0, 600)}
+${entityContext}
 
-### CRITICAL RULES:
+### PROMPT OLUŞTURMA ADIMLARI:
 
-1. **CONTENT ANALYSIS (MOST IMPORTANT!):**
-   - Başlık ve içeriği DİKKATLİCE oku
-   - Haberin ANA KONUSUNU belirle (şirket adı, ürün adı, olay)
-   - O konuya ÖZEL görsel seç
-   - Generic ofis/toplantı odası YASAK!
+**ADIM 1 - ANA KONU BELİRLE:**
+Haberin EN ÖNEMLİ öğesini seç (öncelik sırası):
+1. Şirket adı varsa → O şirketin ürünü/binası/logosu ile ilgili görsel
+2. Ürün adı varsa → O ürünün kendisi veya kullanım ortamı
+3. Robot/cihaz varsa → O robotun/cihazın görseli
+4. Olay tipi varsa → O olayı temsil eden sembolik görsel
 
-2. **DIVERSITY - AVOID REPETITION:**
-   ❌ BANNED (overused): "empty office", "conference room", "meeting room", "workstation"
-   ✅ PREFERRED: Specific objects, devices, architecture, environments related to the news
+**ADIM 2 - GÖRSEL TİPİ SEÇ:**
+- Macro shot (chip, devre, cihaz detayı)
+- Exterior shot (bina, fabrika, kampüs)
+- Product shot (cihaz, robot, ürün)
+- Environment shot (data center, lab, factory)
+- Aerial view (fabrika, kampüs, şehir)
+- Conceptual (soyut teknoloji görseli)
 
-3. **CONTENT-SPECIFIC VISUALS:**
+**ADIM 3 - STİL EKLE:**
+Lighting: golden hour | blue hour | studio | natural
+Quality: photorealistic | 8k | sharp focus | editorial
 
-   **Şirket/Yatırım haberleri:**
-   - Şirket adı varsa → O şirketin ürünü/logosu/binası
-   - Örnek: "OpenAI" → "OpenAI headquarters building exterior, modern architecture"
-   - Örnek: "Tesla" → "Tesla electric vehicle charging station, futuristic design"
-   - Örnek: "Nvidia" → "Nvidia GPU chip close-up, green circuit board"
+### YASAKLAR (KESINLIKLE KULLANMA!):
+❌ İnsan, yüz, el, parmak, vücut parçası
+❌ "empty office", "conference room", "meeting room" 
+❌ "holographic brain", "neon glow", "futuristic"
+❌ Yazı, metin, logo yazısı
+❌ Generic stock photo tarzı görseller
 
-   **Ürün lansmanı:**
-   - Ürün adı varsa → O ürünün görseli
-   - Örnek: "iPhone 16" → "iPhone device on pedestal, minimalist studio"
-   - Örnek: "ChatGPT" → "Chat interface on laptop screen, modern workspace"
-   - Örnek: "Gemini" → "AI assistant interface on tablet, clean background"
+### KONU-GÖRSEL EŞLEŞTİRME ÖRNEKLERİ:
 
-   **Güvenlik/Hack:**
-   - Spesifik tehdit → İlgili görsel
-   - Örnek: "data breach" → "Broken digital lock, red warning symbols"
-   - Örnek: "ransomware" → "Encrypted files visualization, red alert screen"
-   - Örnek: "phishing" → "Email security warning interface, danger symbols"
+ROBOT HABERİ → "bipedal robot standing in clean lab, white chassis, professional lighting"
+NVIDIA HABERİ → "Nvidia H100 GPU close-up, green PCB, macro photography"
+OPENAI HABERİ → "Modern glass office building exterior, San Francisco skyline"
+GOOGLE HABERİ → "Googleplex campus courtyard, Android statue, sunny day"
+TESLA HABERİ → "Tesla Model S charging at Supercharger station, sunset"
+EV/ARAÇ HABERİ → "Electric vehicle charging port close-up, LED indicator"
+CHIP HABERİ → "Silicon wafer with microchips, clean room photography"
+DATA CENTER → "Server room corridor, blue LED rack lights, symmetrical"
+DRONE HABERİ → "Autonomous delivery drone in flight, clear sky background"
+QUANTUM → "Quantum computer cooling chamber, golden wiring, cryogenic"
+SIBER GÜVENLİK → "Digital padlock visualization, circuit pattern background"
+STARTUP/YATIRIM → "Modern tech startup office lobby, glass and steel"
 
-   **Regülasyon/Yasak:**
-   - Ülke/kurum adı → O ülkenin/kurumun binası
-   - Örnek: "EU ban" → "European Parliament building exterior, Brussels"
-   - Örnek: "China regulation" → "Beijing government district, modern architecture"
-   - Örnek: "US law" → "US Capitol building, Washington DC"
+### SON KONTROL:
+✅ Haberin ana konusuyla DOĞRUDAN ilgili mi?
+✅ Generic değil, SPESIFIK mi?
+✅ İnsan içermiyor mu?
+✅ 120 karakter altında mı?
 
-   **Robot/AI:**
-   - Robot tipi → Spesifik robot görseli
-   - Örnek: "humanoid robot" → "White humanoid robot standing, clean lab"
-   - Örnek: "industrial robot" → "Robotic arm in factory, precision work"
-   - Örnek: "drone" → "Autonomous drone in flight, outdoor setting"
+### FORMAT:
+[Ana Konu] + [Detay/Ortam] + [Açı/Stil] + ", no people, no humans"
 
-   **Veri/Teknoloji:**
-   - Teknoloji tipi → İlgili ekipman
-   - Örnek: "cloud computing" → "Server farm aerial view, massive data center"
-   - Örnek: "quantum computing" → "Quantum computer chamber, cryogenic cooling"
-   - Örnek: "5G network" → "Cell tower with 5G antennas, urban skyline"
-
-4. **VISUAL VARIETY - USE DIFFERENT ANGLES:**
-   - Aerial views (drone shots)
-   - Close-ups (product details)
-   - Wide shots (architecture)
-   - Interior shots (facilities)
-   - Exterior shots (buildings)
-   - Abstract (visualizations)
-
-5. **STYLE MODIFIERS:**
-   - Quality: "photorealistic, professional photography, 8k, sharp focus"
-   - Lighting: "natural lighting, golden hour, dramatic lighting, studio lighting"
-   - Composition: "wide angle, macro shot, aerial view, centered composition"
-   - Mood: "professional, clean, modern, editorial style, journalistic"
-
-6. **ABSOLUTE BANS:**
-   ❌ **NO HUMANS, NO FACES, NO HANDS, NO BODY PARTS**
-   ❌ "empty office" (overused!)
-   ❌ "conference room" (overused!)
-   ❌ "meeting room" (overused!)
-   ❌ "workstation" (overused!)
-   ❌ "holographic brain" (generic!)
-   ❌ "neon lights" (too futuristic!)
-   ❌ Text or writing
-
-7. **LENGTH:** MAX 150 characters
-
-8. **MANDATORY SUFFIX:** Add ", no people, no humans" to every prompt
-
-EXAMPLES (DIVERSE & CONTENT-SPECIFIC):
-- "Nvidia GPU chip macro shot, green circuit board, professional lighting, no people"
-- "Tesla Gigafactory aerial view, solar panels on roof, industrial architecture, no humans"
-- "ChatGPT interface on MacBook screen, modern minimalist desk, natural light, no people"
-- "European Parliament building exterior, Brussels, blue hour photography, no humans"
-- "Quantum computer cryogenic chamber, blue glow, scientific facility, no people"
-- "5G cell tower close-up, urban skyline background, sunset lighting, no humans"
-- "Robotic arm assembling circuit board, factory floor, precision work, no people"
-- "Data center server corridor, blue LED lights, symmetrical composition, no humans"
-
-RESPOND WITH PROMPT ONLY. NO EXPLANATION.`;
+SADECE PROMPT YAZ. AÇIKLAMA YAPMA.`;
 
   const response = await callDeepSeek(
     [

@@ -98,7 +98,7 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const refreshInterval = useRef<NodeJS.Timeout | null>(null);
-    
+
     // Live Log States
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [isConnected, setIsConnected] = useState(false);
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
             eventSource.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    
+
                     if (data.type === "connected") {
                         setIsConnected(true);
                     } else if (data.type === "heartbeat") {
@@ -625,19 +625,18 @@ export default function AdminDashboard() {
                                     logs.map((log, index) => (
                                         <div
                                             key={index}
-                                            className={`flex items-start gap-2 py-0.5 hover:bg-zinc-900/50 rounded px-1 ${
-                                                log.level === "error" ? "text-red-400" :
-                                                log.level === "warn" ? "text-yellow-400" :
-                                                log.level === "success" ? "text-emerald-400" :
-                                                log.level === "info" ? "text-blue-400" :
-                                                "text-zinc-400"
-                                            }`}
+                                            className={`flex items-start gap-2 py-0.5 hover:bg-zinc-900/50 rounded px-1 ${log.level === "error" ? "text-red-400" :
+                                                    log.level === "warn" ? "text-yellow-400" :
+                                                        log.level === "success" ? "text-emerald-400" :
+                                                            log.level === "info" ? "text-blue-400" :
+                                                                "text-zinc-400"
+                                                }`}
                                         >
                                             <span className="text-zinc-600 shrink-0 select-none">
-                                                {new Date(log.timestamp).toLocaleTimeString("tr-TR", { 
-                                                    hour: "2-digit", 
-                                                    minute: "2-digit", 
-                                                    second: "2-digit" 
+                                                {new Date(log.timestamp).toLocaleTimeString("tr-TR", {
+                                                    hour: "2-digit",
+                                                    minute: "2-digit",
+                                                    second: "2-digit"
                                                 })}
                                             </span>
                                             {log.emoji && <span className="shrink-0">{log.emoji}</span>}

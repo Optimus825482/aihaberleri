@@ -19,6 +19,7 @@ import { fetchPollinationsImage } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import { translateAndSaveArticle } from "@/lib/translation";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
+import { postToFacebook } from "@/lib/social/facebook";
 import axios from "axios";
 import * as cheerio from "cheerio";
 
@@ -387,13 +388,13 @@ export async function POST(request: NextRequest) {
             message: "✅ Görsel oluşturuldu ve optimize edildi",
           });
 
-          // Step 6: Create source references
+          // Step 6: Create source references (dark mode compatible)
           const sourcesHtml =
             sourceContents.length > 1
-              ? `<div class="sources-box" style="margin-top: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1rem; font-weight: 600;">📚 Kaynaklar</h3>
+              ? `<div class="sources-box" style="margin-top: 2rem; padding: 1rem; background: var(--card-bg, rgba(100, 100, 100, 0.1)); backdrop-filter: blur(10px); border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <h3 style="margin-bottom: 0.75rem; font-size: 1rem; font-weight: 600; color: var(--text-primary, inherit);">📚 Kaynaklar</h3>
                 <ul style="margin: 0; padding-left: 1.5rem; list-style-type: disc;">
-                  ${sourceContents.map((s) => `<li><a href="${s.url}" target="_blank" rel="noopener noreferrer">${s.title}</a></li>`).join("\n")}
+                  ${sourceContents.map((s) => `<li style="margin-bottom: 0.25rem;"><a href="${s.url}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: none;">${s.title}</a></li>`).join("\n")}
                 </ul>
               </div>`
               : "";
@@ -406,6 +407,15 @@ export async function POST(request: NextRequest) {
             step: "save",
             message: "💾 Haber veritabanına kaydediliyor...",
           });
+
+          // Calculate trend score based on sources and content quality
+          const calculatedTrendScore = Math.min(
+            100,
+            sourceContents.length * 15 + // Bonus per source
+              (rewritten.keywords?.length || 0) * 3 + // Keywords bonus
+              Math.floor(Math.random() * 10) +
+              10, // Base variation
+          );
 
           const article = await db.article.create({
             data: {
@@ -423,6 +433,8 @@ export async function POST(request: NextRequest) {
               keywords: rewritten.keywords,
               status: "PUBLISHED",
               publishedAt: new Date(),
+              score: 850, // Default high score for curated content
+              trendScore: calculatedTrendScore, // Dynamic trend score
               category: {
                 connect: { slug: category.slug },
               },
@@ -474,6 +486,50 @@ export async function POST(request: NextRequest) {
             });
           } catch {
             // Non-critical, continue
+          }
+
+          // Step 10: Share to Facebook
+          sendSSE(controller, {
+            type: "progress",
+            step: "facebook",
+            message: "📘 Facebook'ta paylaşılıyor...",
+          });
+
+          try {
+            const fbResult = await postToFacebook({
+              title: rewritten.title,
+              slug,
+              excerpt: rewritten.excerpt,
+              imageUrl: imageSizes.large,
+              categoryName: category.name,
+            });
+
+            if (fbResult) {
+              // Update article to mark as shared
+              await db.article.update({
+                where: { id: article.id },
+                data: { facebookShared: true },
+              });
+              sendSSE(controller, {
+                type: "progress",
+                step: "facebook-done",
+                message: "✅ Facebook'ta paylaşıldı",
+              });
+            } else {
+              sendSSE(controller, {
+                type: "progress",
+                step: "facebook-skip",
+                message:
+                  "⚠️ Facebook paylaşımı atlandı (devre dışı veya credentials eksik)",
+              });
+            }
+          } catch (fbError) {
+            console.error("Facebook share error:", fbError);
+            sendSSE(controller, {
+              type: "progress",
+              step: "facebook-error",
+              message: "⚠️ Facebook paylaşımı başarısız (devam ediliyor)",
+            });
           }
 
           // Complete!
