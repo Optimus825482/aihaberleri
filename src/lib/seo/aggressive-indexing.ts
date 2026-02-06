@@ -279,11 +279,9 @@ export async function indexPendingArticlesAggressively(): Promise<{
         publishedAt: {
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Son 24 saat
         },
-        OR: [
-          { indexNowStatus: "PENDING" },
-          { indexNowStatus: "FAILED" },
-          { indexNowStatus: null },
-        ],
+        indexNowStatus: {
+          in: ["PENDING", "FAILED"],
+        },
       },
       select: { id: true, slug: true },
       take: 50, // Batch size
