@@ -238,6 +238,7 @@ export async function translateAndSaveArticle(
         content: true,
         metaTitle: true,
         metaDescription: true,
+        imageUrl: true,
       },
     });
 
@@ -310,6 +311,7 @@ export async function translateAndSaveArticle(
         title: translation.title,
         slug: `en/news/${translation.slug}`, // English URL path
         excerpt: translation.excerpt,
+        imageUrl: article.imageUrl,
         categoryName: "AI News",
       })
         .then(async (postId) => {
@@ -333,6 +335,7 @@ export async function translateAndSaveArticle(
         title: translation.title,
         slug: `en/news/${translation.slug}`,
         excerpt: translation.excerpt,
+        imageUrl: article.imageUrl,
         categoryName: "AI News",
       })
         .then(async (postId) => {
@@ -356,6 +359,7 @@ export async function translateAndSaveArticle(
         title: translation.title,
         slug: `en/news/${translation.slug}`,
         excerpt: translation.excerpt,
+        imageUrl: article.imageUrl,
         categoryName: "AI News",
       })
         .then(async (postId) => {
@@ -379,6 +383,7 @@ export async function translateAndSaveArticle(
         title: translation.title,
         slug: `en/news/${translation.slug}`,
         excerpt: translation.excerpt,
+        imageUrl: article.imageUrl,
         categoryName: "AI News",
       })
         .then(async (postId) => {

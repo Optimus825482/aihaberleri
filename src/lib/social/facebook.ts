@@ -191,6 +191,7 @@ export async function verifyFacebookCredentials(): Promise<boolean> {
 
 /**
  * Post to Facebook EN Page (English content)
+ * Uses photo post for reliable image display
  */
 export async function postToFacebookEN(article: {
   title: string;
@@ -213,35 +214,40 @@ export async function postToFacebookEN(article: {
   try {
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-    const articleUrl = `${siteUrl}/en/news/${article.slug}`;
+    // Fix: slug already contains 'en/news/' prefix, so just use it directly
+    const articleUrl = article.slug.startsWith("en/")
+      ? `${siteUrl}/${article.slug}`
+      : `${siteUrl}/en/news/${article.slug}`;
 
     // Create post message (English)
     const hashtags = article.categoryName
       ? `#${article.categoryName.replace(/\s+/g, "")} #AI #ArtificialIntelligence`
       : "#AI #ArtificialIntelligence #Tech";
 
-    const message = `📰 ${article.title}\n\n${article.excerpt}\n\n${hashtags}`;
-
     console.log("📘 Posting to Facebook EN Page...");
 
     let postId: string;
 
-    // If we have an image, post with image (link post)
+    // If we have an image, post as PHOTO (more reliable image display)
     if (article.imageUrl) {
+      const caption = `📰 ${article.title}\n\n${article.excerpt}\n\n${hashtags}\n\n🔗 ${articleUrl}`;
+
       const response = await axios.post(
-        `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/feed`,
+        `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/photos`,
         {
-          message,
-          link: articleUrl,
+          url: article.imageUrl,
+          caption,
           access_token: FACEBOOK_EN_PAGE_ACCESS_TOKEN,
         },
       );
       postId = response.data.id;
     } else {
+      // No image - post as text
+      const message = `📰 ${article.title}\n\n${article.excerpt}\n\n${hashtags}\n\n🔗 ${articleUrl}`;
       const response = await axios.post(
         `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/feed`,
         {
-          message: `${message}\n\n🔗 ${articleUrl}`,
+          message,
           access_token: FACEBOOK_EN_PAGE_ACCESS_TOKEN,
         },
       );
