@@ -274,6 +274,66 @@ async function publishArticlesToDatabase(
             logger.error(`Facebook failed for ${slug}:`, err);
           }
         })();
+
+        // Bluesky paylaşımı
+        (async () => {
+          try {
+            const { postToBluesky } = await import("@/lib/social/bluesky");
+            const blueskyResult = await postToBluesky({
+              title: synthesizedContent.tr.title,
+              slug,
+              excerpt: synthesizedContent.tr.excerpt || "",
+              imageUrl: imageUrl,
+              categoryName: category.name,
+            });
+
+            if (blueskyResult) {
+              logger.success(`Bluesky: ${slug} paylaşıldı`);
+            }
+          } catch (err) {
+            logger.error(`Bluesky failed for ${slug}:`, err);
+          }
+        })();
+
+        // Mastodon paylaşımı
+        (async () => {
+          try {
+            const { postToMastodon } = await import("@/lib/social/mastodon");
+            const mastodonResult = await postToMastodon({
+              title: synthesizedContent.tr.title,
+              slug,
+              excerpt: synthesizedContent.tr.excerpt || "",
+              imageUrl: imageUrl,
+              categoryName: category.name,
+            });
+
+            if (mastodonResult) {
+              logger.success(`Mastodon: ${slug} paylaşıldı`);
+            }
+          } catch (err) {
+            logger.error(`Mastodon failed for ${slug}:`, err);
+          }
+        })();
+
+        // Tumblr paylaşımı
+        (async () => {
+          try {
+            const { postToTumblr } = await import("@/lib/social/tumblr");
+            const tumblrResult = await postToTumblr({
+              title: synthesizedContent.tr.title,
+              slug,
+              excerpt: synthesizedContent.tr.excerpt || "",
+              imageUrl: imageUrl,
+              categoryName: category.name,
+            });
+
+            if (tumblrResult) {
+              logger.success(`Tumblr: ${slug} paylaşıldı`);
+            }
+          } catch (err) {
+            logger.error(`Tumblr failed for ${slug}:`, err);
+          }
+        })();
       }
 
       // Create translations (TR + EN)

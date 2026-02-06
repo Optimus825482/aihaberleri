@@ -11,6 +11,9 @@ import {
 } from "@/lib/seo/google-indexing-api";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postToFacebook } from "@/lib/social/facebook";
+import { postToBluesky } from "@/lib/social/bluesky";
+import { postToMastodon } from "@/lib/social/mastodon";
+import { postToTumblr } from "@/lib/social/tumblr";
 
 /**
  * Bugün kaç Google Indexing API isteği yapıldığını hesapla
@@ -517,6 +520,7 @@ export async function POST(request: NextRequest) {
       indexNow: { success: 0, failed: 0 },
       google: { success: 0, failed: 0 },
       facebook: { success: 0, failed: 0 },
+      bluesky: { success: 0, failed: 0 },
     };
 
     if (action === "resend_indexnow") {
@@ -565,6 +569,55 @@ export async function POST(request: NextRequest) {
           });
         } catch (error) {
           results.facebook.failed++;
+        }
+      }
+    } else if (action === "resend_bluesky") {
+      for (const article of articles) {
+        try {
+          await postToBluesky({
+            title: article.title,
+            slug: article.slug,
+            excerpt: article.excerpt,
+            imageUrl: article.imageUrl,
+            categoryName: article.category.name,
+          });
+          results.bluesky.success++;
+        } catch (error) {
+          results.bluesky.failed++;
+        }
+      }
+    } else if (action === "resend_mastodon") {
+      for (const article of articles) {
+        try {
+          await postToMastodon({
+            title: article.title,
+            slug: article.slug,
+            excerpt: article.excerpt,
+            imageUrl: article.imageUrl,
+            categoryName: article.category.name,
+          });
+          results.mastodon = results.mastodon || { success: 0, failed: 0 };
+          results.mastodon.success++;
+        } catch (error) {
+          results.mastodon = results.mastodon || { success: 0, failed: 0 };
+          results.mastodon.failed++;
+        }
+      }
+    } else if (action === "resend_tumblr") {
+      for (const article of articles) {
+        try {
+          await postToTumblr({
+            title: article.title,
+            slug: article.slug,
+            excerpt: article.excerpt,
+            imageUrl: article.imageUrl,
+            categoryName: article.category.name,
+          });
+          results.tumblr = results.tumblr || { success: 0, failed: 0 };
+          results.tumblr.success++;
+        } catch (error) {
+          results.tumblr = results.tumblr || { success: 0, failed: 0 };
+          results.tumblr.failed++;
         }
       }
     }

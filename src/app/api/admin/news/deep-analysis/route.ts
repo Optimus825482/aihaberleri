@@ -20,6 +20,9 @@ import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import { translateAndSaveArticle } from "@/lib/translation";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postToFacebook } from "@/lib/social/facebook";
+import { postToBluesky } from "@/lib/social/bluesky";
+import { postToMastodon } from "@/lib/social/mastodon";
+import { postToTumblr } from "@/lib/social/tumblr";
 import axios from "axios";
 import * as cheerio from "cheerio";
 
@@ -529,6 +532,123 @@ export async function POST(request: NextRequest) {
               type: "progress",
               step: "facebook-error",
               message: "⚠️ Facebook paylaşımı başarısız (devam ediliyor)",
+            });
+          }
+
+          // Step 11: Share to Bluesky
+          sendSSE(controller, {
+            type: "progress",
+            step: "bluesky",
+            message: "🦋 Bluesky'da paylaşılıyor...",
+          });
+
+          try {
+            const bskyResult = await postToBluesky({
+              title: rewritten.title,
+              slug,
+              excerpt: rewritten.excerpt,
+              imageUrl: imageSizes.large,
+              categoryName: category.name,
+            });
+
+            if (bskyResult) {
+              sendSSE(controller, {
+                type: "progress",
+                step: "bluesky-done",
+                message: "✅ Bluesky'da paylaşıldı",
+              });
+            } else {
+              sendSSE(controller, {
+                type: "progress",
+                step: "bluesky-skip",
+                message:
+                  "⚠️ Bluesky paylaşımı atlandı (devre dışı veya credentials eksik)",
+              });
+            }
+          } catch (bskyError) {
+            console.error("Bluesky share error:", bskyError);
+            sendSSE(controller, {
+              type: "progress",
+              step: "bluesky-error",
+              message: "⚠️ Bluesky paylaşımı başarısız (devam ediliyor)",
+            });
+          }
+
+          // Step 12: Share to Mastodon
+          sendSSE(controller, {
+            type: "progress",
+            step: "mastodon",
+            message: "🐘 Mastodon'da paylaşılıyor...",
+          });
+
+          try {
+            const mastodonResult = await postToMastodon({
+              title: rewritten.title,
+              slug,
+              excerpt: rewritten.excerpt,
+              imageUrl: imageSizes.large,
+              categoryName: category.name,
+            });
+
+            if (mastodonResult) {
+              sendSSE(controller, {
+                type: "progress",
+                step: "mastodon-done",
+                message: "✅ Mastodon'da paylaşıldı",
+              });
+            } else {
+              sendSSE(controller, {
+                type: "progress",
+                step: "mastodon-skip",
+                message:
+                  "⚠️ Mastodon paylaşımı atlandı (devre dışı veya credentials eksik)",
+              });
+            }
+          } catch (mastodonError) {
+            console.error("Mastodon share error:", mastodonError);
+            sendSSE(controller, {
+              type: "progress",
+              step: "mastodon-error",
+              message: "⚠️ Mastodon paylaşımı başarısız (devam ediliyor)",
+            });
+          }
+
+          // Step 13: Share to Tumblr
+          sendSSE(controller, {
+            type: "progress",
+            step: "tumblr",
+            message: "📝 Tumblr'da paylaşılıyor...",
+          });
+
+          try {
+            const tumblrResult = await postToTumblr({
+              title: rewritten.title,
+              slug,
+              excerpt: rewritten.excerpt,
+              imageUrl: imageSizes.large,
+              categoryName: category.name,
+            });
+
+            if (tumblrResult) {
+              sendSSE(controller, {
+                type: "progress",
+                step: "tumblr-done",
+                message: "✅ Tumblr'da paylaşıldı",
+              });
+            } else {
+              sendSSE(controller, {
+                type: "progress",
+                step: "tumblr-skip",
+                message:
+                  "⚠️ Tumblr paylaşımı atlandı (devre dışı veya credentials eksik)",
+              });
+            }
+          } catch (tumblrError) {
+            console.error("Tumblr share error:", tumblrError);
+            sendSSE(controller, {
+              type: "progress",
+              step: "tumblr-error",
+              message: "⚠️ Tumblr paylaşımı başarısız (devam ediliyor)",
             });
           }
 

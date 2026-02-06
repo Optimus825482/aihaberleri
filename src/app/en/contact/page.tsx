@@ -145,7 +145,7 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Social Media</h3>
-                  <div className="flex gap-3 mt-2">
+                  <div className="flex flex-wrap gap-3 mt-2">
                     <a
                       href="https://twitter.com/aihaberleri"
                       target="_blank"
@@ -153,6 +153,30 @@ export default function ContactPage() {
                       className="text-gray-600 hover:text-blue-500"
                     >
                       Twitter/X
+                    </a>
+                    <a
+                      href="https://bsky.app/profile/aihaberleri.bsky.social"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-blue-500"
+                    >
+                      Bluesky
+                    </a>
+                    <a
+                      href="https://mastodon.social/@aihaberleri"
+                      target="_blank"
+                      rel="noopener noreferrer me"
+                      className="text-gray-600 hover:text-purple-500"
+                    >
+                      Mastodon
+                    </a>
+                    <a
+                      href="https://aihaberleri-org.tumblr.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-600 hover:text-blue-800"
+                    >
+                      Tumblr
                     </a>
                     <a
                       href="https://linkedin.com/company/aihaberleri"

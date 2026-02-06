@@ -305,6 +305,66 @@ export class DatabasePublisherAgent extends BaseAgent<
             );
           }
 
+          // Post to Bluesky (async - don't block publishing)
+          try {
+            const { postToBluesky } = await import("@/lib/social/bluesky");
+            postToBluesky({
+              title: createdArticle.title,
+              slug: createdArticle.slug,
+              excerpt: article.synthesizedContent.tr.excerpt || "",
+              imageUrl: article.imageUrl,
+              categoryName: category.name,
+            })
+              .then(() => this.logger.info(`🦋 Bluesky post created`))
+              .catch((err) =>
+                this.logger.warn(`Bluesky post failed: ${err.message}`),
+              );
+          } catch (blueskyError) {
+            this.logger.warn(
+              `Bluesky setup failed: ${(blueskyError as Error).message}`,
+            );
+          }
+
+          // Post to Mastodon (async - don't block publishing)
+          try {
+            const { postToMastodon } = await import("@/lib/social/mastodon");
+            postToMastodon({
+              title: createdArticle.title,
+              slug: createdArticle.slug,
+              excerpt: article.synthesizedContent.tr.excerpt || "",
+              imageUrl: article.imageUrl,
+              categoryName: category.name,
+            })
+              .then(() => this.logger.info(`🐘 Mastodon post created`))
+              .catch((err) =>
+                this.logger.warn(`Mastodon post failed: ${err.message}`),
+              );
+          } catch (mastodonError) {
+            this.logger.warn(
+              `Mastodon setup failed: ${(mastodonError as Error).message}`,
+            );
+          }
+
+          // Post to Tumblr (async - don't block publishing)
+          try {
+            const { postToTumblr } = await import("@/lib/social/tumblr");
+            postToTumblr({
+              title: createdArticle.title,
+              slug: createdArticle.slug,
+              excerpt: article.synthesizedContent.tr.excerpt || "",
+              imageUrl: article.imageUrl,
+              categoryName: category.name,
+            })
+              .then(() => this.logger.info(`📝 Tumblr post created`))
+              .catch((err) =>
+                this.logger.warn(`Tumblr post failed: ${err.message}`),
+              );
+          } catch (tumblrError) {
+            this.logger.warn(
+              `Tumblr setup failed: ${(tumblrError as Error).message}`,
+            );
+          }
+
           // Invalidate cache (async - don't block)
           try {
             const { getCache } = await import("@/lib/cache");

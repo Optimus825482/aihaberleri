@@ -16,6 +16,9 @@ import { fetchArticleContent, isDuplicateNews } from "./news.service";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postTweet } from "@/lib/social/twitter";
 import { postToFacebook } from "@/lib/social/facebook";
+import { postToBluesky } from "@/lib/social/bluesky";
+import { postToMastodon } from "@/lib/social/mastodon";
+import { postToTumblr } from "@/lib/social/tumblr";
 import { translateAndSaveArticle } from "@/lib/translation";
 import { getCache } from "@/lib/cache";
 import { contentLogger } from "@/lib/logger";
@@ -1056,6 +1059,63 @@ export async function publishArticle(
         .catch((err) => console.error("Async Facebook post failed:", err));
     } catch (e) {
       console.error("Failed to trigger Facebook post:", e);
+    }
+
+    // Post to Bluesky (Async)
+    try {
+      postToBluesky({
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        imageUrl: processedArticle.imageUrl,
+        categoryName: category.name,
+      })
+        .then((result) => {
+          if (result) {
+            console.log("🦋 Bluesky paylaşıldı:", article.slug);
+          }
+        })
+        .catch((err) => console.error("Async Bluesky post failed:", err));
+    } catch (e) {
+      console.error("Failed to trigger Bluesky post:", e);
+    }
+
+    // Post to Mastodon (Async)
+    try {
+      postToMastodon({
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        imageUrl: processedArticle.imageUrl,
+        categoryName: category.name,
+      })
+        .then((result) => {
+          if (result) {
+            console.log("🐘 Mastodon paylaşıldı:", article.slug);
+          }
+        })
+        .catch((err) => console.error("Async Mastodon post failed:", err));
+    } catch (e) {
+      console.error("Failed to trigger Mastodon post:", e);
+    }
+
+    // Post to Tumblr (Async)
+    try {
+      postToTumblr({
+        title: article.title,
+        slug: article.slug,
+        excerpt: article.excerpt,
+        imageUrl: processedArticle.imageUrl,
+        categoryName: category.name,
+      })
+        .then((result) => {
+          if (result) {
+            console.log("📝 Tumblr paylaşıldı:", article.slug);
+          }
+        })
+        .catch((err) => console.error("Async Tumblr post failed:", err));
+    } catch (e) {
+      console.error("Failed to trigger Tumblr post:", e);
     }
 
     // Translate article to English (Async)

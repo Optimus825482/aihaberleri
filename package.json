@@ -33,6 +33,7 @@
     "test:search-providers": "tsx scripts/test-search-provider-monitoring.ts"
   },
   "dependencies": {
+    "@atproto/api": "^0.18.20",
     "@auth/prisma-adapter": "^2.7.4",
     "@bull-board/api": "^6.16.4",
     "@bull-board/express": "^6.16.4",
@@ -91,6 +92,7 @@
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "lucide-react": "^0.469.0",
+    "masto": "^7.10.1",
     "nanoid": "^5.0.9",
     "next": "^14.2.35",
     "next-auth": "^5.0.0-beta.30",
@@ -116,6 +118,7 @@
     "swr": "^2.4.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "tumblr.js": "^5.0.1",
     "twitter-api-v2": "^1.19.0",
     "web-push": "^3.6.7",
     "winston": "^3.17.0",
