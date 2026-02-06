@@ -721,10 +721,10 @@ model SocialShare {
 // Social Share Batch - Toplu paylaşım işleri
 model SocialShareBatch {
   id              String         @id @default(cuid())
-  platform        SocialPlatform
+  platform        String         // Comma-separated platforms: "FACEBOOK,BLUESKY,MASTODON"
   language        String         @default("tr")
   batchSize       Int            @default(10)
-  intervalMinutes Int            @default(5) // Paylaşımlar arası bekleme süresi
+  intervalMinutes Float          @default(5) // Paylaşımlar arası bekleme süresi (dakika)
   status          String         @default("PENDING") // "PENDING", "PROCESSING", "COMPLETED", "FAILED", "PAUSED"
   totalItems      Int
   processedItems  Int            @default(0)
@@ -736,7 +736,6 @@ model SocialShareBatch {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  @@index([platform])
   @@index([status])
   @@index([scheduledFor])
 }
