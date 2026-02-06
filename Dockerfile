@@ -42,6 +42,12 @@ ENV NEXTAUTH_SECRET="build-secret"
 ENV NEXTAUTH_URL="http://localhost:3000"
 ENV NODE_ENV=production
 
+# Limit build parallelism to prevent OOM on low-memory servers
+# - max-old-space-size: Limit Node.js heap to 2GB
+# - NEXT_BUILD_WORKERS: Limit parallel workers
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+ENV NEXT_BUILD_WORKERS=1
+
 RUN npm run build
 
 # ===========================
