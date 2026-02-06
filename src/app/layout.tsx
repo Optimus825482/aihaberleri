@@ -11,6 +11,7 @@ import {
   GoogleTagManager,
   GoogleTagManagerNoScript,
 } from "@/components/GoogleTagManager";
+import { YandexMetrika } from "@/components/YandexMetrika";
 import { SiteHeader } from "@/components/site-header";
 import { Footer } from "@/components/Footer";
 import { LayoutWrapper } from "@/components/layout-wrapper";
@@ -177,6 +178,7 @@ export default function RootLayout({
               <GoogleTagManagerNoScript />
               <GoogleAnalytics />
               <GoogleTagManager />
+              <YandexMetrika />
               <VisitorTracker />
               <LayoutWrapper header={<SiteHeader />} footer={<Footer />}>
                 {children}
