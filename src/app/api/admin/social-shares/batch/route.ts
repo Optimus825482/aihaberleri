@@ -121,7 +121,6 @@ export async function POST(req: NextRequest) {
     const validPlatforms = [
       "FACEBOOK",
       "FACEBOOK_EN",
-      "TWITTER",
       "BLUESKY",
       "MASTODON",
       "TUMBLR",

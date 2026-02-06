@@ -27,7 +27,6 @@ import {
 const platformConfig: Record<string, { icon: string; color: string; label: string }> = {
     FACEBOOK: { icon: "📘", color: "bg-blue-600", label: "Facebook TR" },
     FACEBOOK_EN: { icon: "📘", color: "bg-blue-500", label: "Facebook EN" },
-    TWITTER: { icon: "🐦", color: "bg-sky-500", label: "Twitter" },
     BLUESKY: { icon: "🦋", color: "bg-blue-400", label: "Bluesky" },
     MASTODON: { icon: "🐘", color: "bg-purple-600", label: "Mastodon" },
     TUMBLR: { icon: "📝", color: "bg-indigo-600", label: "Tumblr" },

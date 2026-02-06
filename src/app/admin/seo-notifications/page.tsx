@@ -28,7 +28,6 @@ interface Article {
   notifications: {
     indexNow: Notification;
     google: Notification;
-    facebook: Notification;
   };
 }
 
@@ -51,7 +50,7 @@ export default function SEONotificationsPage() {
   const [quota, setQuota] = useState<{ limit: number; used: number; remaining: number } | null>(null);
   const [filter, setFilter] = useState<"all" | "pending" | "sent">("all");
   const [platformFilter, setPlatformFilter] = useState<
-    "all" | "indexnow" | "google" | "facebook"
+    "all" | "indexnow" | "google"
   >("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(
@@ -123,7 +122,7 @@ export default function SEONotificationsPage() {
   // Resend notification
   const resendNotification = async (
     articleId: string,
-    platform: "indexnow" | "google" | "facebook",
+    platform: "indexnow" | "google",
   ) => {
     setProcessing(true);
     try {
@@ -181,7 +180,7 @@ export default function SEONotificationsPage() {
 
       if (data.success) {
         alert(
-          `✅ Toplu bildirim tamamlandı!\n\nIndexNow: ${data.results.indexNow.success} başarılı, ${data.results.indexNow.failed} başarısız\nGoogle: ${data.results.google.success} başarılı, ${data.results.google.failed} başarısız\nFacebook: ${data.results.facebook.success} başarılı, ${data.results.facebook.failed} başarısız`,
+          `✅ Toplu bildirim tamamlandı!\n\nIndexNow: ${data.results.indexNow.success} başarılı, ${data.results.indexNow.failed} başarısız\nGoogle: ${data.results.google.success} başarılı, ${data.results.google.failed} başarısız`,
         );
         setSelectedArticles(new Set());
         fetchArticles(pagination.page);
@@ -287,8 +286,7 @@ export default function SEONotificationsPage() {
     const pendingArticles = articles.filter(
       (a) =>
         a.notifications.indexNow.status === "PENDING" ||
-        a.notifications.google.status === "PENDING" ||
-        a.notifications.facebook.status === "PENDING",
+        a.notifications.google.status === "PENDING",
     );
 
     if (pendingArticles.length === 0) {
@@ -319,7 +317,7 @@ export default function SEONotificationsPage() {
 
       if (data.success) {
         alert(
-          `✅ Gönderilmemiş haberler için bildirim tamamlandı!\n\nIndexNow: ${data.results.indexNow.success} başarılı\nGoogle: ${data.results.google.success} başarılı\nFacebook: ${data.results.facebook.success} başarılı`,
+          `✅ Gönderilmemiş haberler için bildirim tamamlandı!\n\nIndexNow: ${data.results.indexNow.success} başarılı\nGoogle: ${data.results.google.success} başarılı`,
         );
         fetchArticles(pagination.page);
       } else {
@@ -386,7 +384,7 @@ export default function SEONotificationsPage() {
             SEO & Sosyal Medya Bildirimleri
           </h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            Haberlerin IndexNow, Google Indexing API ve Facebook paylaşım
+            Haberlerin IndexNow ve Google Indexing API bildirim
             durumlarını yönetin
           </p>
         </div>
@@ -439,8 +437,7 @@ export default function SEONotificationsPage() {
                     e.target.value as
                     | "all"
                     | "indexnow"
-                    | "google"
-                    | "facebook",
+                    | "google",
                   )
                 }
                 className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
@@ -448,7 +445,6 @@ export default function SEONotificationsPage() {
                 <option value="all">Tüm Platformlar</option>
                 <option value="indexnow">IndexNow</option>
                 <option value="google">Google</option>
-                <option value="facebook">Facebook</option>
               </select>
             </div>
 
@@ -601,9 +597,6 @@ export default function SEONotificationsPage() {
                         Google
                       </th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Facebook
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         İşlemler
                       </th>
                     </tr>
@@ -682,23 +675,6 @@ export default function SEONotificationsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <StatusBadge
-                              status={article.notifications.facebook.status}
-                            />
-                            {article.notifications.facebook.sentAt && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {format(
-                                  new Date(
-                                    article.notifications.facebook.sentAt,
-                                  ),
-                                  "dd/MM HH:mm",
-                                )}
-                              </span>
-                            )}
-                          </div>
-                        </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-center gap-1">
                             <button
@@ -718,16 +694,6 @@ export default function SEONotificationsPage() {
                               disabled={processing}
                               className="p-1.5 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 rounded disabled:opacity-50 transition-colors"
                               title="Google'a tekrar gönder"
-                            >
-                              <RefreshCw className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() =>
-                                resendNotification(article.id, "facebook")
-                              }
-                              disabled={processing}
-                              className="p-1.5 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded disabled:opacity-50 transition-colors"
-                              title="Facebook'a tekrar gönder"
                             >
                               <RefreshCw className="h-4 w-4" />
                             </button>
@@ -858,24 +824,6 @@ export default function SEONotificationsPage() {
                         </div>
                       )}
                     </div>
-
-                    {/* Facebook */}
-                    <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2">
-                      <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-                        Facebook
-                      </div>
-                      <StatusBadge
-                        status={article.notifications.facebook.status}
-                      />
-                      {article.notifications.facebook.sentAt && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          {format(
-                            new Date(article.notifications.facebook.sentAt),
-                            "dd/MM HH:mm",
-                          )}
-                        </div>
-                      )}
-                    </div>
                   </div>
 
                   {/* Action Buttons */}
@@ -895,14 +843,6 @@ export default function SEONotificationsPage() {
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                       Google
-                    </button>
-                    <button
-                      onClick={() => resendNotification(article.id, "facebook")}
-                      disabled={processing}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-purple-600 bg-purple-50 dark:bg-purple-900/30 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/50 disabled:opacity-50 transition-colors"
-                    >
-                      <RefreshCw className="h-3.5 w-3.5" />
-                      Facebook
                     </button>
                   </div>
                 </div>
@@ -968,7 +908,7 @@ export default function SEONotificationsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold">🎯 Strateji:</span>
-                  <span>Sadece Google'a gönderim (Facebook/IndexNow yok)</span>
+                  <span>Sadece Google'a gönderim</span>
                 </div>
               </div>
             </div>
@@ -1065,14 +1005,13 @@ export default function SEONotificationsPage() {
                 articles.filter(
                   (a) =>
                     a.notifications.indexNow.status === "PENDING" ||
-                    a.notifications.google.status === "PENDING" ||
-                    a.notifications.facebook.status === "PENDING",
+                    a.notifications.google.status === "PENDING",
                 ).length
               }
             </div>
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </AdminLayout >
   );
 }
