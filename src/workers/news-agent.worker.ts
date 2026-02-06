@@ -21,8 +21,13 @@ import {
   scheduleNewsAgentJob,
   scheduleNewsletterJob,
   getNewsletterQueue,
+  getSocialBatchQueue,
 } from "@/lib/queue";
 import { sendDailyDigest } from "@/services/newsletter.service";
+import { postToFacebook, postToFacebookEN } from "@/lib/social/facebook";
+import { postToBluesky } from "@/lib/social/bluesky";
+import { postToMastodon } from "@/lib/social/mastodon";
+import { postToTumblr } from "@/lib/social/tumblr";
 import { db } from "@/lib/db";
 import { PrismaClient } from "@prisma/client";
 import { workerLogger } from "@/lib/logger";
@@ -638,6 +643,280 @@ async function startWorker() {
     console.log("✅ Newsletter worker started");
   } else {
     console.warn("⚠️ Newsletter queue not available");
+  }
+
+  // =====================================================
+  // SOCIAL BATCH WORKER - Background social media sharing
+  // =====================================================
+  const socialBatchQueue = getSocialBatchQueue();
+  if (socialBatchQueue) {
+    console.log("\n📤 Initializing Social Batch Worker...");
+
+    // Platform posting functions map
+    const platformPosters: Record<string, (article: any) => Promise<string | null>> = {
+      FACEBOOK: postToFacebook,
+      FACEBOOK_EN: postToFacebookEN,
+      BLUESKY: postToBluesky,
+      MASTODON: postToMastodon,
+      TUMBLR: postToTumblr,
+    };
+
+    const socialBatchWorker = new Worker(
+      "social-batch",
+      async (job) => {
+        const { batchId, platforms, intervalSeconds, batchSize } = job.data;
+
+        console.log(`\n${"=".repeat(60)}`);
+        console.log(`📤 Processing social batch job: ${job.id}`);
+        console.log(`   Batch ID: ${batchId}`);
+        console.log(`   Platforms: ${platforms.join(", ")}`);
+        console.log(`   Interval: ${intervalSeconds} seconds`);
+        console.log(`   Batch Size: ${batchSize}`);
+        console.log(`${"=".repeat(60)}\n`);
+
+        try {
+          // Get all unshared articles for TR (base language)
+          const sharedArticleIds = await db.socialShare.findMany({
+            where: {
+              platform: { in: platforms },
+              language: "tr",
+              status: "SHARED",
+            },
+            select: { articleId: true },
+          });
+
+          const sharedIds = [...new Set(sharedArticleIds.map((s) => s.articleId))];
+
+          const unsharedArticles = await db.article.findMany({
+            where: {
+              status: "PUBLISHED",
+              id: { notIn: sharedIds },
+            },
+            include: {
+              category: true,
+              translations: true,
+            },
+            orderBy: { publishedAt: "desc" },
+            take: batchSize,
+          });
+
+          console.log(`📰 Found ${unsharedArticles.length} unshared articles`);
+
+          if (unsharedArticles.length === 0) {
+            await db.socialShareBatch.update({
+              where: { id: batchId },
+              data: {
+                status: "COMPLETED",
+                processedItems: 0,
+                completedAt: new Date(),
+              },
+            });
+            return { success: true, processed: 0, failed: 0 };
+          }
+
+          // Update batch status
+          await db.socialShareBatch.update({
+            where: { id: batchId },
+            data: {
+              status: "PROCESSING",
+              startedAt: new Date(),
+              totalItems: unsharedArticles.length * platforms.length,
+            },
+          });
+
+          let processed = 0;
+          let failed = 0;
+          const totalOperations = unsharedArticles.length * platforms.length;
+
+          for (let i = 0; i < unsharedArticles.length; i++) {
+            const article = unsharedArticles[i];
+            const enTranslation = article.translations?.find((t: any) => t.language === "en");
+
+            console.log(`\n📰 [${i + 1}/${unsharedArticles.length}] ${article.title}`);
+
+            for (const platform of platforms) {
+              const poster = platformPosters[platform];
+              if (!poster) {
+                console.log(`   ⚠️ No poster for platform: ${platform}`);
+                failed++;
+                continue;
+              }
+
+              // Determine language and article data based on platform
+              const isEnglish = platform === "FACEBOOK_EN";
+              const language = isEnglish ? "en" : "tr";
+
+              // For EN platforms, use translation if available
+              const articleData = isEnglish && enTranslation
+                ? {
+                    title: enTranslation.title,
+                    slug: enTranslation.slug,
+                    excerpt: enTranslation.excerpt,
+                    imageUrl: article.imageUrl,
+                    categoryName: article.category?.name,
+                  }
+                : {
+                    title: article.title,
+                    slug: article.slug,
+                    excerpt: article.excerpt,
+                    imageUrl: article.imageUrl,
+                    categoryName: article.category?.name,
+                  };
+
+              try {
+                console.log(`   📤 Posting to ${platform} (${language})...`);
+
+                const postId = await poster(articleData);
+
+                if (postId) {
+                  // Create or update share record
+                  await db.socialShare.upsert({
+                    where: {
+                      articleId_platform_language: {
+                        articleId: article.id,
+                        platform: platform as any,
+                        language,
+                      },
+                    },
+                    create: {
+                      articleId: article.id,
+                      platform: platform as any,
+                      language,
+                      status: "SHARED",
+                      postId,
+                      sharedAt: new Date(),
+                    },
+                    update: {
+                      status: "SHARED",
+                      postId,
+                      sharedAt: new Date(),
+                      error: null,
+                    },
+                  });
+                  processed++;
+                  console.log(`   ✅ ${platform}: ${postId}`);
+                } else {
+                  await db.socialShare.upsert({
+                    where: {
+                      articleId_platform_language: {
+                        articleId: article.id,
+                        platform: platform as any,
+                        language,
+                      },
+                    },
+                    create: {
+                      articleId: article.id,
+                      platform: platform as any,
+                      language,
+                      status: "FAILED",
+                      error: "No post ID returned",
+                    },
+                    update: {
+                      status: "FAILED",
+                      error: "No post ID returned",
+                      retryCount: { increment: 1 },
+                    },
+                  });
+                  failed++;
+                  console.log(`   ❌ ${platform}: No post ID`);
+                }
+              } catch (error: any) {
+                console.error(`   ❌ ${platform} error:`, error?.message);
+                await db.socialShare.upsert({
+                  where: {
+                    articleId_platform_language: {
+                      articleId: article.id,
+                      platform: platform as any,
+                      language,
+                    },
+                  },
+                  create: {
+                    articleId: article.id,
+                    platform: platform as any,
+                    language,
+                    status: "FAILED",
+                    error: error?.message || "Unknown error",
+                  },
+                  update: {
+                    status: "FAILED",
+                    error: error?.message || "Unknown error",
+                    retryCount: { increment: 1 },
+                  },
+                });
+                failed++;
+              }
+            }
+
+            // Update progress
+            const progress = {
+              processed,
+              failed,
+              total: totalOperations,
+              currentArticle: i + 1,
+              totalArticles: unsharedArticles.length,
+            };
+            await job.updateProgress(progress);
+
+            // Wait before next article (except for last one)
+            if (i < unsharedArticles.length - 1) {
+              console.log(`   ⏳ Waiting ${intervalSeconds} seconds...`);
+              await new Promise((resolve) => setTimeout(resolve, intervalSeconds * 1000));
+            }
+          }
+
+          // Update batch as completed
+          await db.socialShareBatch.update({
+            where: { id: batchId },
+            data: {
+              status: "COMPLETED",
+              processedItems: processed,
+              failedItems: failed,
+              completedAt: new Date(),
+            },
+          });
+
+          console.log(`\n📊 Social Batch Summary:`);
+          console.log(`   Processed: ${processed}`);
+          console.log(`   Failed: ${failed}`);
+          console.log(`   Total: ${totalOperations}`);
+
+          return { success: true, processed, failed, total: totalOperations };
+        } catch (error) {
+          console.error("❌ Social batch job error:", error);
+
+          await db.socialShareBatch.update({
+            where: { id: batchId },
+            data: {
+              status: "FAILED",
+              completedAt: new Date(),
+            },
+          });
+
+          throw error;
+        }
+      },
+      {
+        connection: redis!,
+        concurrency: 1, // Only one batch at a time
+        lockDuration: 1800000, // 30 minutes
+      },
+    );
+
+    socialBatchWorker.on("completed", (job, result) => {
+      console.log(`✅ Social batch ${job.id} completed: ${result?.processed || 0} shared, ${result?.failed || 0} failed`);
+    });
+
+    socialBatchWorker.on("failed", (job, error) => {
+      console.error(`❌ Social batch ${job?.id} failed:`, error.message);
+    });
+
+    socialBatchWorker.on("progress", (job, progress: any) => {
+      console.log(`📊 Batch progress: ${progress.currentArticle}/${progress.totalArticles} articles, ${progress.processed}/${progress.total} posts`);
+    });
+
+    console.log("✅ Social batch worker started");
+  } else {
+    console.warn("⚠️ Social batch queue not available");
   }
 
   // Keep the process running

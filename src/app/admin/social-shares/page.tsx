@@ -68,9 +68,13 @@ export default function SocialSharesPage() {
 
     // Batch settings
     const [showBatchModal, setShowBatchModal] = useState(false);
-    const [batchPlatform, setBatchPlatform] = useState("FACEBOOK");
+    const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["FACEBOOK", "FACEBOOK_EN", "BLUESKY", "MASTODON", "TUMBLR"]);
     const [batchSize, setBatchSize] = useState(10);
-    const [intervalMinutes, setIntervalMinutes] = useState(1);
+    const [intervalSeconds, setIntervalSeconds] = useState(10);
+
+    // Active batch tracking
+    const [activeBatch, setActiveBatch] = useState<any>(null);
+    const [progressPolling, setProgressPolling] = useState<NodeJS.Timeout | null>(null);
 
     // Fetch articles
     const fetchArticles = useCallback(async () => {
@@ -109,10 +113,25 @@ export default function SocialSharesPage() {
 
             if (data.stats) setStats(data.stats);
             if (data.batches) setBatches(data.batches);
+            if (data.activeBatch) {
+                setActiveBatch(data.activeBatch);
+                // Start polling if active batch exists
+                if (!progressPolling) {
+                    const interval = setInterval(fetchStats, 3000); // Poll every 3 seconds
+                    setProgressPolling(interval);
+                }
+            } else {
+                setActiveBatch(null);
+                // Stop polling if no active batch
+                if (progressPolling) {
+                    clearInterval(progressPolling);
+                    setProgressPolling(null);
+                }
+            }
         } catch (error) {
             console.error("Stats fetch error:", error);
         }
-    }, []);
+    }, [progressPolling]);
 
     useEffect(() => {
         fetchArticles();
@@ -123,7 +142,12 @@ export default function SocialSharesPage() {
     }, [fetchStats]);
 
     // Start batch
-    const startBatch = async (executeNow: boolean) => {
+    const startBatch = async () => {
+        if (selectedPlatforms.length === 0) {
+            alert("En az bir platform seçmelisiniz");
+            return;
+        }
+
         setBatchLoading(true);
         try {
             const res = await fetch("/api/admin/social-shares/batch", {
@@ -131,11 +155,9 @@ export default function SocialSharesPage() {
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    platform: batchPlatform,
-                    language: batchPlatform === "FACEBOOK_EN" ? "en" : "tr",
+                    platforms: selectedPlatforms,
                     batchSize,
-                    intervalMinutes,
-                    executeNow,
+                    intervalSeconds,
                 }),
             });
 
@@ -155,6 +177,24 @@ export default function SocialSharesPage() {
         }
         setBatchLoading(false);
     };
+
+    // Toggle platform selection
+    const togglePlatform = (platform: string) => {
+        setSelectedPlatforms(prev =>
+            prev.includes(platform)
+                ? prev.filter(p => p !== platform)
+                : [...prev, platform]
+        );
+    };
+
+    // Cleanup polling on unmount
+    useEffect(() => {
+        return () => {
+            if (progressPolling) {
+                clearInterval(progressPolling);
+            }
+        };
+    }, [progressPolling]);
 
     return (
         <AdminLayout>
@@ -339,6 +379,55 @@ export default function SocialSharesPage() {
                     </div>
                 </div>
 
+                {/* Active Batch Progress */}
+                {activeBatch && (
+                    <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 backdrop-blur-sm rounded-xl border border-purple-500/30 p-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
+                                Aktif Batch Çalışıyor
+                            </h3>
+                            <span className="text-sm text-purple-300">
+                                Sayfa kapatılsa bile devam edecek
+                            </span>
+                        </div>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-400">Platformlar:</span>
+                                <span className="text-white">{activeBatch.platform}</span>
+                            </div>
+                            {activeBatch.progress && (
+                                <>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-400">İlerleme:</span>
+                                        <span className="text-white">
+                                            {activeBatch.progress.progress?.currentArticle || 0} / {activeBatch.progress.progress?.totalArticles || activeBatch.totalItems} haber
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-400">Paylaşılan:</span>
+                                        <span className="text-green-400">{activeBatch.progress.progress?.processed || 0}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="text-gray-400">Başarısız:</span>
+                                        <span className="text-red-400">{activeBatch.progress.progress?.failed || 0}</span>
+                                    </div>
+                                    <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                                        <div
+                                            className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-500"
+                                            style={{
+                                                width: `${activeBatch.progress.progress?.total > 0
+                                                    ? ((activeBatch.progress.progress?.processed + activeBatch.progress.progress?.failed) / activeBatch.progress.progress?.total) * 100
+                                                    : 0}%`
+                                            }}
+                                        />
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Recent Batches */}
                 {batches.length > 0 && (
                     <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4">
@@ -384,18 +473,30 @@ export default function SocialSharesPage() {
                             </h2>
 
                             <div className="space-y-4">
+                                {/* Platform Selection */}
                                 <div>
-                                    <label htmlFor="batch-platform" className="block text-sm text-gray-400 mb-1">Platform</label>
-                                    <select
-                                        id="batch-platform"
-                                        value={batchPlatform}
-                                        onChange={(e) => setBatchPlatform(e.target.value)}
-                                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                                    >
+                                    <label className="block text-sm text-gray-400 mb-2">Platformlar</label>
+                                    <div className="grid grid-cols-2 gap-2">
                                         {Object.entries(platformConfig).map(([key, config]) => (
-                                            <option key={key} value={key}>{config.label}</option>
+                                            <label
+                                                key={key}
+                                                className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${selectedPlatforms.includes(key)
+                                                        ? "bg-purple-500/20 border-purple-500"
+                                                        : "bg-white/5 border-white/10 hover:border-white/30"
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedPlatforms.includes(key)}
+                                                    onChange={() => togglePlatform(key)}
+                                                    className="sr-only"
+                                                />
+                                                <span className="text-lg">{config.icon}</span>
+                                                <span className="text-sm text-white">{config.label}</span>
+                                            </label>
                                         ))}
-                                    </select>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Seçili: {selectedPlatforms.length} platform</p>
                                 </div>
 
                                 <div>
@@ -406,24 +507,35 @@ export default function SocialSharesPage() {
                                         value={batchSize}
                                         onChange={(e) => setBatchSize(parseInt(e.target.value) || 10)}
                                         min={1}
-                                        max={50}
+                                        max={100}
                                         className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">Tek seferde kaç haber paylaşılacak</p>
+                                    <p className="text-xs text-gray-500 mt-1">Kaç haber paylaşılacak</p>
                                 </div>
 
                                 <div>
-                                    <label htmlFor="interval-minutes" className="block text-sm text-gray-400 mb-1">Paylaşım Aralığı (dakika)</label>
-                                    <input
-                                        id="interval-minutes"
-                                        type="number"
-                                        value={intervalMinutes}
-                                        onChange={(e) => setIntervalMinutes(parseInt(e.target.value) || 1)}
-                                        min={0}
-                                        max={60}
+                                    <label htmlFor="interval-seconds" className="block text-sm text-gray-400 mb-1">Paylaşım Aralığı (saniye)</label>
+                                    <select
+                                        id="interval-seconds"
+                                        value={intervalSeconds}
+                                        onChange={(e) => setIntervalSeconds(parseInt(e.target.value))}
                                         className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                                    />
-                                    <p className="text-xs text-gray-500 mt-1">Her paylaşım arasında beklenecek süre (rate limit için)</p>
+                                    >
+                                        <option value={5}>5 saniye</option>
+                                        <option value={10}>10 saniye</option>
+                                        <option value={15}>15 saniye</option>
+                                        <option value={30}>30 saniye</option>
+                                        <option value={60}>1 dakika</option>
+                                    </select>
+                                    <p className="text-xs text-gray-500 mt-1">Her haber arasında beklenecek süre</p>
+                                </div>
+
+                                {/* Info Box */}
+                                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                                    <p className="text-xs text-blue-300">
+                                        <strong>Not:</strong> Her haber için seçili tüm platformlara aynı anda paylaşım yapılır.
+                                        İşlem arka planda çalışır, sayfa kapatılsa bile devam eder.
+                                    </p>
                                 </div>
                             </div>
 
@@ -435,14 +547,16 @@ export default function SocialSharesPage() {
                                     İptal
                                 </button>
                                 <button
-                                    onClick={() => startBatch(true)}
-                                    disabled={batchLoading}
+                                    onClick={startBatch}
+                                    disabled={batchLoading || selectedPlatforms.length === 0 || !!activeBatch}
                                     className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white hover:from-purple-700 hover:to-pink-700 disabled:opacity-50"
                                 >
                                     {batchLoading ? (
                                         <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                                    ) : activeBatch ? (
+                                        "Batch Çalışıyor"
                                     ) : (
-                                        "Şimdi Başlat"
+                                        "Başlat"
                                     )}
                                 </button>
                             </div>

@@ -1,34 +1,27 @@
 /**
  * Social Share Batch API
- * POST: Create a batch job for sharing unshared articles
- * GET: Get batch status and list
+ * POST: Create a batch job for sharing unshared articles (runs in background)
+ * GET: Get batch status and list with progress
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
-import { postToFacebook, postToFacebookEN } from "@/lib/social/facebook";
-import { postToBluesky } from "@/lib/social/bluesky";
-import { postToMastodon } from "@/lib/social/mastodon";
-import { postToTumblr } from "@/lib/social/tumblr";
+import { addSocialBatchJob, getSocialBatchProgress } from "@/lib/queue";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // 5 minutes max
 
-// Platform posting functions map
-const platformPosters: Record<
-  string,
-  (article: any) => Promise<string | null>
-> = {
-  FACEBOOK: postToFacebook,
-  FACEBOOK_EN: postToFacebookEN,
-  BLUESKY: postToBluesky,
-  MASTODON: postToMastodon,
-  TUMBLR: postToTumblr,
-};
+// Valid platforms
+const validPlatforms = [
+  "FACEBOOK",
+  "FACEBOOK_EN",
+  "BLUESKY",
+  "MASTODON",
+  "TUMBLR",
+];
 
-// GET: List batches
+// GET: List batches with progress
 export async function GET(req: NextRequest) {
   try {
     // Check authentication - support both NextAuth and admin-session JWT
@@ -36,6 +29,23 @@ export async function GET(req: NextRequest) {
     const adminSession = await getAdminSession();
     if (!session && !adminSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get batch ID from query if checking specific progress
+    const { searchParams } = new URL(req.url);
+    const batchId = searchParams.get("batchId");
+
+    if (batchId) {
+      // Get specific batch progress from BullMQ
+      const progress = await getSocialBatchProgress(batchId);
+      const batch = await db.socialShareBatch.findUnique({
+        where: { id: batchId },
+      });
+
+      return NextResponse.json({
+        batch,
+        progress,
+      });
     }
 
     const batches = await db.socialShareBatch.findMany({
@@ -67,7 +77,7 @@ export async function GET(req: NextRequest) {
       }
       if (s.status === "SHARED") {
         platformStats[s.platform].shared = s._count.id;
-      } else if (s.status === "PENDING" || s.status === "SCHEDULED") {
+      } else if (s.status === "PENDING" || s.status === "SCHEDULED" || s.status === "PROCESSING") {
         platformStats[s.platform].pending += s._count.id;
       } else if (s.status === "FAILED") {
         platformStats[s.platform].failed = s._count.id;
@@ -80,10 +90,23 @@ export async function GET(req: NextRequest) {
       stat.unshared = totalArticles - stat.shared - stat.pending - stat.failed;
     });
 
+    // Check for active batches
+    const activeBatch = batches.find((b) => b.status === "PROCESSING");
+    let activeProgress = null;
+    if (activeBatch) {
+      activeProgress = await getSocialBatchProgress(activeBatch.id);
+    }
+
     return NextResponse.json({
       batches,
       stats: platformStats,
       totalArticles,
+      activeBatch: activeBatch
+        ? {
+            ...activeBatch,
+            progress: activeProgress,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Batch list error:", error);
@@ -94,7 +117,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: Create and optionally start a batch
+// POST: Create and start a batch job in background
 export async function POST(req: NextRequest) {
   try {
     // Check authentication - support both NextAuth and admin-session JWT
@@ -106,63 +129,58 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const {
-      platform,
-      language = "tr",
+      platforms = ["FACEBOOK", "FACEBOOK_EN", "BLUESKY", "MASTODON", "TUMBLR"], // All platforms by default
       batchSize = 10,
-      intervalMinutes = 5,
-      executeNow = false,
+      intervalSeconds = 10, // Default 10 seconds between articles
     } = body;
 
-    if (!platform) {
-      return NextResponse.json({ error: "Platform gerekli" }, { status: 400 });
+    // Validate platforms
+    const invalidPlatforms = platforms.filter((p: string) => !validPlatforms.includes(p));
+    if (invalidPlatforms.length > 0) {
+      return NextResponse.json(
+        { error: `Geçersiz platformlar: ${invalidPlatforms.join(", ")}` },
+        { status: 400 },
+      );
     }
 
-    // Validate platform
-    const validPlatforms = [
-      "FACEBOOK",
-      "FACEBOOK_EN",
-      "BLUESKY",
-      "MASTODON",
-      "TUMBLR",
-    ];
-    if (!validPlatforms.includes(platform)) {
-      return NextResponse.json({ error: "Geçersiz platform" }, { status: 400 });
+    // Check if there's already an active batch
+    const activeBatch = await db.socialShareBatch.findFirst({
+      where: { status: "PROCESSING" },
+    });
+
+    if (activeBatch) {
+      return NextResponse.json(
+        {
+          error: "Aktif bir batch zaten çalışıyor",
+          activeBatchId: activeBatch.id,
+        },
+        { status: 400 },
+      );
     }
 
-    // Find unshared articles for this platform
-    // Articles that don't have a share record or have PENDING/FAILED status
+    // Count unshared articles (based on TR platform - base check)
     const sharedArticleIds = await db.socialShare.findMany({
       where: {
-        platform,
-        language,
+        platform: { in: platforms },
+        language: "tr",
         status: "SHARED",
       },
       select: { articleId: true },
     });
 
-    const sharedIds = sharedArticleIds.map((s) => s.articleId);
+    const sharedIds = [...new Set(sharedArticleIds.map((s) => s.articleId))];
 
-    const unsharedArticles = await db.article.findMany({
+    const unsharedCount = await db.article.count({
       where: {
         status: "PUBLISHED",
         id: { notIn: sharedIds },
       },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        excerpt: true,
-        imageUrl: true,
-        category: { select: { name: true } },
-      },
-      orderBy: { publishedAt: "desc" },
-      take: batchSize,
     });
 
-    if (unsharedArticles.length === 0) {
+    if (unsharedCount === 0) {
       return NextResponse.json({
         success: true,
-        message: "Bu platform için paylaşılmamış haber bulunamadı",
+        message: "Paylaşılmamış haber bulunamadı",
         created: 0,
       });
     }
@@ -170,62 +188,48 @@ export async function POST(req: NextRequest) {
     // Create batch record
     const batch = await db.socialShareBatch.create({
       data: {
-        platform,
-        language,
+        platform: platforms.join(","), // Store all platforms
+        language: "tr,en", // Both languages
         batchSize,
-        intervalMinutes,
-        totalItems: unsharedArticles.length,
-        status: executeNow ? "PROCESSING" : "PENDING",
-        startedAt: executeNow ? new Date() : null,
+        intervalMinutes: intervalSeconds / 60, // Convert to minutes for storage
+        totalItems: Math.min(unsharedCount, batchSize) * platforms.length,
+        status: "PROCESSING",
+        startedAt: new Date(),
       },
     });
 
-    // Create share records for each article
-    await db.socialShare.createMany({
-      data: unsharedArticles.map((article) => ({
-        articleId: article.id,
-        platform,
-        language,
-        status: executeNow ? "PROCESSING" : "SCHEDULED",
-        scheduledAt: new Date(),
-      })),
-      skipDuplicates: true,
+    // Add job to BullMQ queue - runs in background even if page is closed
+    const jobResult = await addSocialBatchJob({
+      batchId: batch.id,
+      platforms,
+      intervalSeconds,
+      batchSize,
     });
 
-    // If executeNow, process the batch immediately
-    if (executeNow) {
-      const results = await processBatch(
-        batch.id,
-        platform,
-        unsharedArticles,
-        intervalMinutes,
-      );
-
-      // Update batch status
+    if (!jobResult) {
+      // Queue not available, update batch as failed
       await db.socialShareBatch.update({
         where: { id: batch.id },
         data: {
-          status: "COMPLETED",
-          processedItems: results.success,
-          failedItems: results.failed,
+          status: "FAILED",
           completedAt: new Date(),
         },
       });
 
-      return NextResponse.json({
-        success: true,
-        batchId: batch.id,
-        processed: results.success,
-        failed: results.failed,
-        message: `${results.success} haber paylaşıldı, ${results.failed} başarısız`,
-      });
+      return NextResponse.json(
+        { error: "Job kuyruğu kullanılamıyor. Worker çalışıyor mu?" },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
       success: true,
       batchId: batch.id,
-      totalItems: unsharedArticles.length,
-      message: `${unsharedArticles.length} haber için batch oluşturuldu`,
+      jobId: jobResult.jobId,
+      totalArticles: Math.min(unsharedCount, batchSize),
+      platforms,
+      intervalSeconds,
+      message: `Batch başlatıldı! ${Math.min(unsharedCount, batchSize)} haber, ${platforms.length} platform. Her ${intervalSeconds} saniyede bir paylaşılacak. Sayfa kapatılsa bile arka planda çalışmaya devam edecek.`,
     });
   } catch (error) {
     console.error("Batch create error:", error);
@@ -234,96 +238,4 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-// Process batch - share articles to platform
-async function processBatch(
-  batchId: string,
-  platform: string,
-  articles: any[],
-  intervalMinutes: number,
-): Promise<{ success: number; failed: number }> {
-  const poster = platformPosters[platform];
-  if (!poster) {
-    console.error(`No poster found for platform: ${platform}`);
-    return { success: 0, failed: articles.length };
-  }
-
-  let success = 0;
-  let failed = 0;
-
-  for (let i = 0; i < articles.length; i++) {
-    const article = articles[i];
-
-    try {
-      console.log(
-        `[Batch ${batchId}] Sharing ${i + 1}/${articles.length}: ${article.title}`,
-      );
-
-      const postId = await poster({
-        title: article.title,
-        slug: article.slug,
-        excerpt: article.excerpt,
-        imageUrl: article.imageUrl,
-        categoryName: article.category?.name,
-      });
-
-      if (postId) {
-        // Update share record as successful
-        await db.socialShare.updateMany({
-          where: {
-            articleId: article.id,
-            platform: platform as any,
-          },
-          data: {
-            status: "SHARED",
-            postId,
-            sharedAt: new Date(),
-            error: null,
-          },
-        });
-        success++;
-        console.log(`   ✅ Shared: ${postId}`);
-      } else {
-        // Mark as failed
-        await db.socialShare.updateMany({
-          where: {
-            articleId: article.id,
-            platform: platform as any,
-          },
-          data: {
-            status: "FAILED",
-            error: "No post ID returned",
-            retryCount: { increment: 1 },
-          },
-        });
-        failed++;
-        console.log(`   ❌ Failed: No post ID`);
-      }
-
-      // Wait between posts to avoid rate limiting (except for last item)
-      if (i < articles.length - 1 && intervalMinutes > 0) {
-        const waitMs = Math.min(intervalMinutes * 60 * 1000, 30000); // Max 30 seconds for API timeout
-        console.log(`   ⏳ Waiting ${waitMs / 1000}s...`);
-        await new Promise((resolve) => setTimeout(resolve, waitMs));
-      }
-    } catch (error: any) {
-      console.error(`   ❌ Error sharing:`, error?.message);
-
-      await db.socialShare.updateMany({
-        where: {
-          articleId: article.id,
-          platform: platform as any,
-        },
-        data: {
-          status: "FAILED",
-          error: error?.message || "Unknown error",
-          retryCount: { increment: 1 },
-        },
-      });
-      failed++;
-    }
-  }
-
-  return { success, failed };
 }

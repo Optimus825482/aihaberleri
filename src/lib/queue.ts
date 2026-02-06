@@ -345,3 +345,102 @@ export async function getUpcomingJobs() {
 }
 
 export default getNewsAgentQueue;
+
+// =====================================================
+// SOCIAL BATCH QUEUE - Background social media sharing
+// =====================================================
+
+let socialBatchQueueInstance: Queue | null = null;
+
+export const getSocialBatchQueue = (): Queue | null => {
+  if (socialBatchQueueInstance) {
+    return socialBatchQueueInstance;
+  }
+
+  const redis = getRedis();
+  if (!redis) {
+    console.warn("⚠️  Redis not available, social batch queue cannot be created");
+    return null;
+  }
+
+  try {
+    socialBatchQueueInstance = new Queue("social-batch", {
+      connection: redis,
+      defaultJobOptions: {
+        attempts: 1, // Don't retry - each article shares once
+        removeOnComplete: {
+          count: 100,
+          age: 24 * 3600, // 24 hours
+        },
+        removeOnFail: {
+          count: 50,
+        },
+      },
+    });
+    console.log("✅ Social batch queue created");
+    return socialBatchQueueInstance;
+  } catch (error) {
+    console.error("❌ Failed to create social batch queue:", error);
+    return null;
+  }
+};
+
+/**
+ * Add social batch job to queue
+ * Runs in background even if user closes page
+ */
+export async function addSocialBatchJob(data: {
+  batchId: string;
+  platforms: string[];
+  intervalSeconds: number;
+  batchSize: number;
+}) {
+  const queue = getSocialBatchQueue();
+  if (!queue) {
+    console.warn("⚠️  Social batch queue not available");
+    return null;
+  }
+
+  try {
+    const job = await queue.add(
+      "social-batch-share",
+      data,
+      {
+        jobId: `social-batch-${data.batchId}`,
+        removeOnComplete: false, // Keep for progress tracking
+      },
+    );
+
+    console.log(`📤 Social batch job added: ${job.id}`);
+    return { jobId: job.id, batchId: data.batchId };
+  } catch (error) {
+    console.error("❌ Social batch job add failed:", error);
+    return null;
+  }
+}
+
+/**
+ * Get social batch job progress
+ */
+export async function getSocialBatchProgress(batchId: string) {
+  const queue = getSocialBatchQueue();
+  if (!queue) return null;
+
+  try {
+    const job = await queue.getJob(`social-batch-${batchId}`);
+    if (!job) return null;
+
+    const state = await job.getState();
+    const progress = job.progress as any;
+
+    return {
+      state,
+      progress: progress || { processed: 0, total: 0, failed: 0 },
+      finishedOn: job.finishedOn,
+      failedReason: job.failedReason,
+    };
+  } catch (error) {
+    console.error("❌ Get social batch progress failed:", error);
+    return null;
+  }
+}
