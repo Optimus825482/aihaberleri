@@ -14,6 +14,8 @@ FROM base AS deps
 RUN apk add --no-cache python3 make g++ vips-dev openssl
 
 COPY package.json package-lock.json* ./
+# Copy prisma schema for postinstall script (prisma generate)
+COPY prisma ./prisma
 
 # Install all dependencies
 RUN npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \

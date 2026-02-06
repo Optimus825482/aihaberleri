@@ -77,7 +77,7 @@ export async function GET() {
     const agentSettings = {
       enabled:
         settingsMap["agent.enabled"] === "true" || DEFAULT_SETTINGS.enabled,
-      intervalHours: parseInt(
+      intervalHours: parseFloat(
         settingsMap["agent.intervalHours"] ||
           String(DEFAULT_SETTINGS.intervalHours),
       ),
@@ -127,6 +127,12 @@ export async function PUT(request: Request) {
 
     // Parse and validate request body
     const body = await request.json();
+
+    // Ensure intervalHours is a valid number
+    if (body.intervalHours !== undefined) {
+      body.intervalHours = Number(body.intervalHours);
+    }
+
     const validatedSettings = settingsSchema.parse(body);
 
     // Update settings in database

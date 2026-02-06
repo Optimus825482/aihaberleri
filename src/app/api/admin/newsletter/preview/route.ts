@@ -31,7 +31,7 @@ export async function GET() {
         excerpt: true,
         imageUrl: true,
         publishedAt: true,
-        viewCount: true,
+        views: true,
         category: {
           select: {
             name: true,
@@ -39,7 +39,7 @@ export async function GET() {
         },
       },
       orderBy: [
-        { viewCount: "desc" }, // Primary: Most viewed
+        { views: "desc" }, // Primary: Most viewed
         { publishedAt: "desc" }, // Secondary: Newest
       ],
       take: 30, // Top 30 most-read articles
@@ -73,9 +73,9 @@ export async function GET() {
       category: article.category.name,
       publishedAt: article.publishedAt?.toISOString() || "",
       imageUrl: article.imageUrl,
-      viewCount: article.viewCount || 0,
+      viewCount: article.views || 0,
       trendRank: index + 1, // 1-based rank
-      isTrending: (article.viewCount || 0) > 100, // Mark as trending if >100 views
+      isTrending: (article.views || 0) > 100, // Mark as trending if >100 views
     }));
 
     return NextResponse.json({
@@ -86,8 +86,8 @@ export async function GET() {
         articles: formattedArticles,
         subscriberCount,
         scheduledTime: "19:00",
-        sortedBy: "viewCount", // Indicate sorting method
-        totalViews: articles.reduce((sum, a) => sum + (a.viewCount || 0), 0),
+        sortedBy: "views", // Indicate sorting method
+        totalViews: articles.reduce((sum, a) => sum + (a.views || 0), 0),
       },
     });
   } catch (error) {
