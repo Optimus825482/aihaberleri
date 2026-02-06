@@ -830,7 +830,7 @@ async function startWorker() {
 
             const article = allArticles[i];
             const enTranslation = article.translations?.find(
-              (t: any) => t.language === "en",
+              (t: any) => t.locale === "en",
             );
 
             console.log(
