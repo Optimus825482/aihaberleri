@@ -280,3 +280,119 @@ export async function notifyMultipleNewsToGoogle(newsSlugs: string[]) {
 
   return await notifyGoogleBatch(urls);
 }
+
+// ============================================
+// GÜNLÜK LİMİT TAKİBİ (200 istek/gün)
+// ============================================
+
+const DAILY_LIMIT = 200;
+
+/**
+ * Bugün kaç Google Indexing API isteği yapıldığını hesapla
+ * Article tablosundaki googleIndexedAt alanına bakarak sayar
+ */
+export async function getTodayIndexingCount(): Promise<number> {
+  try {
+    // Dynamic import to avoid circular dependency
+    const { db } = await import("@/lib/db");
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const count = await db.article.count({
+      where: {
+        googleIndexedAt: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+    });
+
+    return count;
+  } catch (error) {
+    console.error("❌ Günlük indexing sayısı alınamadı:", error);
+    return 0;
+  }
+}
+
+/**
+ * Kalan günlük indexing kotasını hesapla
+ */
+export async function getRemainingDailyQuota(): Promise<number> {
+  const todayCount = await getTodayIndexingCount();
+  const remaining = Math.max(0, DAILY_LIMIT - todayCount);
+  console.log(
+    `📊 Günlük Google Indexing: ${todayCount}/${DAILY_LIMIT} kullanıldı, ${remaining} kaldı`,
+  );
+  return remaining;
+}
+
+/**
+ * Limit-aware batch gönderim - günlük limiti aşmaz
+ */
+export async function notifyGoogleBatchWithLimit(
+  urls: Array<{ url: string; type: "URL_UPDATED" | "URL_DELETED" }>,
+): Promise<{
+  success: boolean;
+  total: number;
+  sent: number;
+  skipped: number;
+  successCount: number;
+  failCount: number;
+  results: any[];
+  remainingQuota: number;
+}> {
+  const remaining = await getRemainingDailyQuota();
+
+  if (remaining === 0) {
+    console.log("⚠️ Günlük Google Indexing limiti doldu (200/200)");
+    return {
+      success: false,
+      total: urls.length,
+      sent: 0,
+      skipped: urls.length,
+      successCount: 0,
+      failCount: 0,
+      results: [],
+      remainingQuota: 0,
+    };
+  }
+
+  // Sadece kalan kotaya kadar gönder
+  const urlsToSend = urls.slice(0, remaining);
+  const skipped = urls.length - urlsToSend.length;
+
+  if (skipped > 0) {
+    console.log(`⚠️ ${skipped} URL limit nedeniyle atlandı`);
+  }
+
+  if (urlsToSend.length === 0) {
+    return {
+      success: true,
+      total: urls.length,
+      sent: 0,
+      skipped: urls.length,
+      successCount: 0,
+      failCount: 0,
+      results: [],
+      remainingQuota: remaining,
+    };
+  }
+
+  const result = await notifyGoogleBatch(urlsToSend);
+  const successCount = result.successCount ?? 0;
+
+  return {
+    success: result.success,
+    total: result.total ?? urlsToSend.length,
+    sent: urlsToSend.length,
+    skipped,
+    successCount,
+    failCount: result.failCount ?? 0,
+    results: result.results ?? [],
+    remainingQuota: remaining - successCount,
+  };
+}

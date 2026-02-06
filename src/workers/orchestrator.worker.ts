@@ -256,6 +256,45 @@ async function publishArticlesToDatabase(
           }
         })();
 
+        // Google Indexing API bildirimi (günlük limit kontrolü ile)
+        (async () => {
+          try {
+            const { notifyGoogle, getRemainingDailyQuota } =
+              await import("@/lib/seo/google-indexing-api");
+
+            // Önce kalan kotayı kontrol et
+            const remainingQuota = await getRemainingDailyQuota();
+
+            if (remainingQuota === 0) {
+              logger.warn(
+                `Google Indexing API: ${slug} - günlük limit doldu, atlanıyor`,
+              );
+              return;
+            }
+
+            const baseUrl =
+              process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+            const articleUrl = `${baseUrl}/news/${slug}`;
+
+            const result = await notifyGoogle(articleUrl, "URL_UPDATED");
+
+            if (result.success) {
+              await db.article.update({
+                where: { id: trArticle.id },
+                data: {
+                  googleIndexStatus: "SUBMITTED",
+                  googleIndexedAt: new Date(),
+                },
+              });
+              logger.success(
+                `Google Indexing API: ${slug} bildirildi (kota: ${remainingQuota - 1})`,
+              );
+            }
+          } catch (err) {
+            logger.error(`Google Indexing API failed for ${slug}:`, err);
+          }
+        })();
+
         // Facebook paylaşımı
         (async () => {
           try {

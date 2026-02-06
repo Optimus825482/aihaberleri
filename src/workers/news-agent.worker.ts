@@ -506,6 +506,77 @@ async function startWorker() {
         console.error("⚠️ SEO senkronizasyon hatası:", seoErr);
       }
 
+      // 1.5 Google Indexing API Senkronizasyonu (PENDING olan haberler - günlük limit: 200)
+      try {
+        const { notifyGoogleBatchWithLimit, getRemainingDailyQuota } =
+          await import("@/lib/seo/google-indexing-api");
+
+        // Önce kalan kotayı kontrol et
+        const remainingQuota = await getRemainingDailyQuota();
+
+        if (remainingQuota === 0) {
+          console.log("⚠️ Günlük Google Indexing limiti doldu, atlanıyor.");
+        } else {
+          const baseUrl =
+            process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+
+          // PENDING olan haberleri bul (sadece bugünkü - günlük limitten tasarruf için)
+          const pendingArticles = await db.article.findMany({
+            where: {
+              googleIndexStatus: "PENDING",
+              status: "PUBLISHED",
+              createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Son 24 saat
+            },
+            select: { id: true, slug: true },
+            take: Math.min(remainingQuota, 50), // Kota veya 50, hangisi küçükse
+          });
+
+          if (pendingArticles.length > 0) {
+            const urls = pendingArticles.map((a) => ({
+              url: `${baseUrl}/news/${a.slug}`,
+              type: "URL_UPDATED" as const,
+            }));
+
+            const result = await notifyGoogleBatchWithLimit(urls);
+
+            if (result.successCount > 0) {
+              // Başarılı olanları güncelle
+              const successfulSlugs = result.results
+                .filter((r: any) => r.success)
+                .map((r: any) => r.url.replace(`${baseUrl}/news/`, ""));
+
+              await db.article.updateMany({
+                where: { slug: { in: successfulSlugs } },
+                data: {
+                  googleIndexStatus: "SUBMITTED",
+                  googleIndexedAt: new Date(),
+                },
+              });
+
+              console.log(
+                `✅ ${result.successCount} haber Google Indexing API'ye bildirildi. Kalan kota: ${result.remainingQuota}`,
+              );
+            }
+
+            if (result.failCount > 0) {
+              console.log(
+                `⚠️ ${result.failCount} haber Google'a bildirilemedi.`,
+              );
+            }
+
+            if (result.skipped > 0) {
+              console.log(
+                `⏭️ ${result.skipped} haber limit nedeniyle atlandı.`,
+              );
+            }
+          } else {
+            console.log("ℹ️ Google Indexing için bekleyen haber bulunmadı.");
+          }
+        }
+      } catch (googleErr) {
+        console.error("⚠️ Google Indexing senkronizasyon hatası:", googleErr);
+      }
+
       // 2. Agent İş Takvimi Kontrolü - Repeatable Job Setup
       const [enabledSetting, nextRunSetting] = await Promise.all([
         db.setting.findUnique({ where: { key: "agent.enabled" } }),
