@@ -11,7 +11,7 @@ DeepSeek Reasoner kullanarak günde iki kez yapay zeka haberlerini tarayan, yeni
 - ✅ Görsel optimizasyonu ile hızlı yükleme
 - ✅ Kategori tabanlı navigasyon
 - ✅ Makale görüntüleme takibi
-- ✅ Google AdSense entegrasyonu hazır
+- ✅ Ezoic reklam entegrasyonu hazır
 - ✅ RSS feed desteği
 
 ### Otonom Agent
@@ -105,7 +105,6 @@ cp .env.example .env
 - `DEEPSEEK_API_KEY` - DeepSeek API anahtarınız (gerekli)
 - `NEXTAUTH_SECRET` - Şununla oluşturun: `openssl rand -base64 32`
 - `UNSPLASH_ACCESS_KEY` - Unsplash API anahtarı (opsiyonel)
-- `NEXT_PUBLIC_ADSENSE_CLIENT_ID` - Google AdSense ID (opsiyonel)
 
 4. **Servisleri başlatın**
 
@@ -287,7 +286,6 @@ Opsiyonel:
 
 - `UNSPLASH_ACCESS_KEY` - Görseller için
 - `PEXELS_API_KEY` - Görseller için yedek
-- `NEXT_PUBLIC_ADSENSE_CLIENT_ID` - Google AdSense
 - `BRAVE_API_KEY` - Brave Search API
 
 ## 🧪 Test

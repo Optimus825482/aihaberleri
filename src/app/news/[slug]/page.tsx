@@ -13,7 +13,7 @@ import {
   combineSchemas,
   generateArticleMetadata,
 } from "@/lib/seo";
-import { AdUnit } from "@/components/AdUnit";
+import { EzoicAd } from "@/components/EzoicAd";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { AudioPromo } from "@/components/AudioPromo";
 import { HighlightedText } from "@/components/audio/HighlightedText";
@@ -144,11 +144,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
-          {/* Top Ad Banner */}
+          {/* Top Ad Banner - Ezoic */}
           <div className="w-full flex justify-center mb-8">
-            <AdUnit
-              slotId="TOP_BANNER_SLOT_ID"
-              format="auto"
+            <EzoicAd
+              placeholderId={101}
               className="w-full max-w-[970px]"
             />
           </div>
@@ -231,11 +230,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   articleTitle={article.title}
                 />
 
-                {/* IN-CONTENT AD */}
+                {/* IN-CONTENT AD - Ezoic */}
                 <div className="my-8 py-4 bg-muted/10 border-y border-muted flex flex-col items-center">
-                  <AdUnit
-                    slotId="IN_ARTICLE_SLOT_ID"
-                    format="auto"
+                  <EzoicAd
+                    placeholderId={103}
                     className="w-full"
                   />
                   <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest">
@@ -282,9 +280,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   />
                 </div>
 
-                {/* Sidebar Ad */}
+                {/* Sidebar Ad - Ezoic */}
                 <div className="bg-muted/10 rounded-xl p-4 min-h-[300px] flex items-center justify-center border border-muted/50">
-                  <AdUnit slotId="SIDEBAR_SLOT_ID" format="rectangle" />
+                  <EzoicAd placeholderId={102} />
                 </div>
 
                 {/* Trending / Related */}

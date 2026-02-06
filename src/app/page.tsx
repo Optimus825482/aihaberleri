@@ -180,15 +180,7 @@ export default async function HomePage() {
           )}
         </section>
 
-        {/* AdSense Placeholder */}
-        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
-          <section className="container mx-auto px-4 py-8">
-            <div className="bg-muted rounded-lg p-8 text-center">
-              <p className="text-sm text-muted-foreground">Reklam</p>
-              {/* AdSense ad unit would go here */}
-            </div>
-          </section>
-        )}
+
       </main>
     </div>
   );

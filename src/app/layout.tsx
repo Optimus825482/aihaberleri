@@ -158,15 +158,7 @@ export default function RootLayout({
         />
         <link rel="preconnect" href="https://www.ezojs.com" />
         <link rel="dns-prefetch" href="https://cmp.gatekeeperconsent.com" />
-        <link rel="dns-prefetch" href="https://pagead2.googlesyndication.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
-          <script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
-            crossOrigin="anonymous"
-          />
-        )}
       </head>
       <body
         className={cn(
