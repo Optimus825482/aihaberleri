@@ -4,6 +4,9 @@
  */
 
 import { db } from "@/lib/db";
+import { postToBluesky } from "@/lib/social/bluesky";
+import { postToMastodon } from "@/lib/social/mastodon";
+import { postToTumblr } from "@/lib/social/tumblr";
 
 export type SupportedLocale = "tr" | "en";
 
@@ -291,6 +294,47 @@ export async function translateAndSaveArticle(
 
       // Note: WebSub and sitemap pings are already done for the main article
       // They cover all language versions automatically via sitemap
+
+      // 🆕 Share English version to social media
+      console.log(`📢 Sharing English version to social media...`);
+      
+      const enArticleUrl = `https://aihaberleri.org/en/news/${translation.slug}`;
+      
+      // Bluesky - English
+      postToBluesky({
+        title: translation.title,
+        slug: `en/news/${translation.slug}`, // English URL path
+        excerpt: translation.excerpt,
+        categoryName: "AI News",
+      })
+        .then((result) => {
+          if (result) console.log(`   🦋 Bluesky EN: ${translation.slug}`);
+        })
+        .catch((err) => console.error(`   ❌ Bluesky EN failed:`, err.message));
+
+      // Mastodon - English
+      postToMastodon({
+        title: translation.title,
+        slug: `en/news/${translation.slug}`,
+        excerpt: translation.excerpt,
+        categoryName: "AI News",
+      })
+        .then((result) => {
+          if (result) console.log(`   🐘 Mastodon EN: ${translation.slug}`);
+        })
+        .catch((err) => console.error(`   ❌ Mastodon EN failed:`, err.message));
+
+      // Tumblr - English
+      postToTumblr({
+        title: translation.title,
+        slug: `en/news/${translation.slug}`,
+        excerpt: translation.excerpt,
+        categoryName: "AI News",
+      })
+        .then((result) => {
+          if (result) console.log(`   📝 Tumblr EN: ${translation.slug}`);
+        })
+        .catch((err) => console.error(`   ❌ Tumblr EN failed:`, err.message));
     }
   } catch (error) {
     console.error(`❌ Failed to translate article ${articleId}:`, error);
