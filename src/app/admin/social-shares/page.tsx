@@ -117,10 +117,18 @@ export default function SocialSharesPage() {
                 setActiveBatch(data.activeBatch);
                 // Start polling if active batch exists
                 if (!progressPolling) {
-                    const interval = setInterval(fetchStats, 3000); // Poll every 3 seconds
+                    const interval = setInterval(() => {
+                        fetchStats();
+                        fetchArticles(); // Also refresh articles during active batch
+                    }, 3000); // Poll every 3 seconds
                     setProgressPolling(interval);
                 }
             } else {
+                // Batch completed or stopped
+                if (activeBatch) {
+                    // Was active, now stopped - refresh articles one more time
+                    fetchArticles();
+                }
                 setActiveBatch(null);
                 // Stop polling if no active batch
                 if (progressPolling) {
@@ -131,7 +139,7 @@ export default function SocialSharesPage() {
         } catch (error) {
             console.error("Stats fetch error:", error);
         }
-    }, [progressPolling]);
+    }, [progressPolling, activeBatch, fetchArticles]);
 
     useEffect(() => {
         fetchArticles();
@@ -185,6 +193,38 @@ export default function SocialSharesPage() {
                 ? prev.filter(p => p !== platform)
                 : [...prev, platform]
         );
+    };
+
+    // Cancel batch
+    const cancelBatch = async () => {
+        if (!activeBatch) return;
+        
+        if (!confirm("Batch'i iptal etmek istediğinizden emin misiniz?")) return;
+
+        try {
+            const res = await fetch(`/api/admin/social-shares/batch?batchId=${activeBatch.id}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Batch iptal edildi");
+                setActiveBatch(null);
+                if (progressPolling) {
+                    clearInterval(progressPolling);
+                    setProgressPolling(null);
+                }
+                fetchStats();
+                fetchArticles();
+            } else {
+                alert(data.error || "Batch iptal edilemedi");
+            }
+        } catch (error) {
+            console.error("Cancel batch error:", error);
+            alert("Batch iptal edilirken hata oluştu");
+        }
     };
 
     // Cleanup polling on unmount
@@ -387,21 +427,36 @@ export default function SocialSharesPage() {
                                 <Loader2 className="w-5 h-5 animate-spin text-purple-400" />
                                 Aktif Batch Çalışıyor
                             </h3>
-                            <span className="text-sm text-purple-300">
-                                Sayfa kapatılsa bile devam edecek
-                            </span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-purple-300">
+                                    Sayfa kapatılsa bile devam edecek
+                                </span>
+                                <button
+                                    onClick={cancelBatch}
+                                    className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm transition-colors flex items-center gap-1"
+                                >
+                                    <XCircle className="w-4 h-4" />
+                                    İptal Et
+                                </button>
+                            </div>
                         </div>
                         <div className="space-y-3">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-400">Platformlar:</span>
-                                <span className="text-white">{activeBatch.platform}</span>
+                                <div className="flex items-center gap-2">
+                                    {activeBatch.platform?.split(",").map((p: string) => (
+                                        <span key={p} className="text-white bg-white/10 px-2 py-0.5 rounded text-xs">
+                                            {platformConfig[p]?.icon} {platformConfig[p]?.label || p}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
                             {activeBatch.progress && (
                                 <>
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-gray-400">İlerleme:</span>
                                         <span className="text-white">
-                                            {activeBatch.progress.progress?.currentArticle || 0} / {activeBatch.progress.progress?.totalArticles || activeBatch.totalItems} haber
+                                            {activeBatch.progress.progress?.currentArticle || 0} / {activeBatch.progress.progress?.totalArticles || Math.ceil(activeBatch.totalItems / (activeBatch.platform?.split(",").length || 1))} haber
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-between text-sm">

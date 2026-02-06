@@ -8,7 +8,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
-import { addSocialBatchJob, getSocialBatchProgress } from "@/lib/queue";
+import {
+  addSocialBatchJob,
+  getSocialBatchProgress,
+  cancelSocialBatchJob,
+} from "@/lib/queue";
 
 export const dynamic = "force-dynamic";
 
@@ -241,6 +245,65 @@ export async function POST(req: NextRequest) {
     console.error("Batch create error:", error);
     return NextResponse.json(
       { error: "Batch oluşturulamadı" },
+      { status: 500 },
+    );
+  }
+}
+
+// DELETE: Cancel an active batch
+export async function DELETE(req: NextRequest) {
+  try {
+    // Check authentication
+    const session = await auth();
+    const adminSession = await getAdminSession();
+    if (!session && !adminSession) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const batchId = searchParams.get("batchId");
+
+    if (!batchId) {
+      return NextResponse.json({ error: "Batch ID gerekli" }, { status: 400 });
+    }
+
+    // Get the batch
+    const batch = await db.socialShareBatch.findUnique({
+      where: { id: batchId },
+    });
+
+    if (!batch) {
+      return NextResponse.json({ error: "Batch bulunamadı" }, { status: 404 });
+    }
+
+    if (batch.status !== "PROCESSING") {
+      return NextResponse.json(
+        { error: "Sadece çalışan batch iptal edilebilir" },
+        { status: 400 },
+      );
+    }
+
+    // Cancel the job in queue
+    const cancelResult = await cancelSocialBatchJob(batchId);
+
+    // Update batch status regardless
+    await db.socialShareBatch.update({
+      where: { id: batchId },
+      data: {
+        status: "CANCELLED",
+        completedAt: new Date(),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Batch iptal edildi",
+      cancelResult,
+    });
+  } catch (error) {
+    console.error("Batch cancel error:", error);
+    return NextResponse.json(
+      { error: "Batch iptal edilemedi" },
       { status: 500 },
     );
   }

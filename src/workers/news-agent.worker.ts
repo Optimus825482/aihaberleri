@@ -734,6 +734,22 @@ async function startWorker() {
           const totalOperations = unsharedArticles.length * platforms.length;
 
           for (let i = 0; i < unsharedArticles.length; i++) {
+            // Check if job was cancelled
+            const currentJobData = await job.data;
+            if (currentJobData.cancelled) {
+              console.log("🛑 Batch cancelled by user");
+              await db.socialShareBatch.update({
+                where: { id: batchId },
+                data: {
+                  status: "CANCELLED",
+                  processedItems: processed,
+                  failedItems: failed,
+                  completedAt: new Date(),
+                },
+              });
+              return { success: false, processed, failed, cancelled: true };
+            }
+
             const article = unsharedArticles[i];
             const enTranslation = article.translations?.find(
               (t: any) => t.language === "en",
@@ -744,6 +760,7 @@ async function startWorker() {
             );
 
             for (const platform of platforms) {
+              console.log(`   🔍 Processing platform: ${platform}`);
               const poster = platformPosters[platform];
               if (!poster) {
                 console.log(`   ⚠️ No poster for platform: ${platform}`);

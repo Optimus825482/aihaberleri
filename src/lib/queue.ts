@@ -442,3 +442,39 @@ export async function getSocialBatchProgress(batchId: string) {
     return null;
   }
 }
+
+/**
+ * Cancel social batch job
+ */
+export async function cancelSocialBatchJob(batchId: string) {
+  const queue = getSocialBatchQueue();
+  if (!queue) return { success: false, error: "Queue not available" };
+
+  try {
+    const job = await queue.getJob(`social-batch-${batchId}`);
+    if (!job) {
+      return { success: false, error: "Job not found" };
+    }
+
+    const state = await job.getState();
+
+    // If job is active, we can't cancel it directly
+    // But we can mark it for cancellation via job data
+    if (state === "active") {
+      // Update job data to signal cancellation
+      await job.updateData({ ...job.data, cancelled: true });
+      return { success: true, message: "Job cancellation requested" };
+    }
+
+    // If waiting or delayed, remove it
+    if (state === "waiting" || state === "delayed") {
+      await job.remove();
+      return { success: true, message: "Job removed from queue" };
+    }
+
+    return { success: false, error: `Cannot cancel job in state: ${state}` };
+  } catch (error) {
+    console.error("❌ Cancel social batch job failed:", error);
+    return { success: false, error: String(error) };
+  }
+}
