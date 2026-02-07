@@ -45,10 +45,12 @@ ENV NEXTAUTH_URL="http://localhost:3000"
 ENV NODE_ENV=production
 
 # Limit build parallelism to prevent OOM on low-memory servers
-# - max-old-space-size: Limit Node.js heap to 2GB
-# - NEXT_BUILD_WORKERS: Limit parallel workers
-ENV NODE_OPTIONS="--max-old-space-size=2048"
+# - max-old-space-size: 4GB for large projects with heavy deps (Puppeteer, Firebase, Sentry)
+# - gc-flags: Optimize garbage collection to prevent thrashing
+# - NEXT_BUILD_WORKERS: Limit parallel workers to 1
+ENV NODE_OPTIONS="--max-old-space-size=4096 --gc-interval=100 --optimize-for-size"
 ENV NEXT_BUILD_WORKERS=1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
 

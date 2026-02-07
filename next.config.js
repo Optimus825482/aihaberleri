@@ -7,7 +7,26 @@ const nextConfig = {
     return `build-${Date.now()}`;
   },
 
-  // Webpack configuration to ignore OpenTelemetry
+  // Exclude heavy server-only packages from client bundling (CRITICAL for memory)
+  // This prevents Puppeteer, Firebase Admin etc from being analyzed during build
+  serverExternalPackages: [
+    "puppeteer",
+    "puppeteer-core",
+    "firebase-admin",
+    "@sentry/nextjs",
+    "sharp",
+    "bullmq",
+    "ioredis",
+    "pg",
+    "googleapis",
+    "@prisma/client",
+    "winston",
+  ],
+
+  // Use SWC for faster, more memory-efficient minification
+  swcMinify: true,
+
+  // Webpack configuration to ignore OpenTelemetry and optimize memory
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.ignoreWarnings = [
@@ -15,6 +34,14 @@ const nextConfig = {
         { module: /node_modules\/require-in-the-middle/ },
       ];
     }
+
+    // Reduce memory usage during build
+    config.cache = {
+      type: "filesystem",
+      compression: "gzip",
+      maxAge: 60000, // Reduce cache retention
+    };
+
     return config;
   },
 
@@ -70,6 +97,7 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
+  // Experimental features (consolidated - no duplicates)
   experimental: {
     serverActions: {
       bodySizeLimit: "2mb",
@@ -80,6 +108,14 @@ const nextConfig = {
     },
     // Disable instrumentation to prevent OpenTelemetry errors
     instrumentationHook: false,
+    // Optimize page data loading
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "date-fns",
+      "@radix-ui/react-icons",
+      "framer-motion",
+    ],
   },
   eslint: {
     // Production builds will fail on ESLint errors
