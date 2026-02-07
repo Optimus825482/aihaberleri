@@ -8,17 +8,17 @@ export const dynamic = "force-dynamic";
 // Settings schema
 const settingsSchema = z.object({
   enabled: z.boolean(),
-  intervalHours: z.number().min(0.25).max(24), // 0.25 = 15min, 0.5 = 30min
+  intervalHours: z.number().min(0.083).max(24), // 0.083 = 5min, supports aggressive intervals
   articlesPerRun: z.number().min(1).max(10),
   categories: z.array(z.string()),
   emailNotifications: z.boolean(),
   adminEmail: z.string().email(),
 });
 
-// Default settings
+// Default settings - optimized for freshness
 const DEFAULT_SETTINGS = {
   enabled: true,
-  intervalHours: 6,
+  intervalHours: 0.167, // 10 minutes default
   articlesPerRun: 3,
   categories: [],
   emailNotifications: true,

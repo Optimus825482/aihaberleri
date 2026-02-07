@@ -632,9 +632,9 @@ async function startWorker() {
             const setting = await db.setting.findUnique({
               where: { key: "agent.intervalHours" },
             });
-            const intervalHours = setting ? parseFloat(setting.value) : 6;
+            const intervalHours = setting ? parseFloat(setting.value) : 0.167; // 10 min default
             console.log(
-              `✅ Repeatable job mevcut (her ${intervalHours} saatte bir).`,
+              `✅ Repeatable job mevcut (her ${intervalHours < 1 ? Math.round(intervalHours * 60) + " dakikada" : intervalHours + " saatte"} bir).`,
             );
             if (nextRunStr) {
               console.log(

@@ -92,12 +92,12 @@ export async function scheduleNewsAgentJob() {
   }
 
   try {
-    // Get interval from settings (default to 6 if not found)
+    // Get interval from settings (default to 10 minutes for freshness)
     const setting = await db.setting.findUnique({
       where: { key: "agent.intervalHours" },
     });
 
-    const intervalHours = setting ? parseFloat(setting.value) : 6;
+    const intervalHours = setting ? parseFloat(setting.value) : 0.167; // 10 minutes default
     const intervalMs = Math.round(intervalHours * 60 * 60 * 1000); // Support decimal hours (0.25 = 15 min)
 
     // Remove all existing repeatable and delayed jobs first
@@ -149,6 +149,9 @@ export async function scheduleNewsAgentJob() {
     });
 
     const queueLength = await queue.count();
+    const intervalMinutes = Math.round(intervalHours * 60);
+    const intervalDisplay =
+      intervalHours < 1 ? `${intervalMinutes} dakika` : `${intervalHours} saat`;
 
     console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -156,8 +159,8 @@ export async function scheduleNewsAgentJob() {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⏰ Current time:  ${new Date().toLocaleString("tr-TR")}
 ⏰ Next run time: ${nextTime.toLocaleString("tr-TR")}
-⚙️  Interval:      ${intervalHours} hours (${intervalMs}ms)
-🆔 Job Type:      Repeatable (every ${intervalHours}h)
+⚙️  Interval:      ${intervalDisplay} (${intervalMs}ms)
+🆔 Job Type:      Repeatable (every ${intervalDisplay})
 📊 Queue length:  ${queueLength}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `);

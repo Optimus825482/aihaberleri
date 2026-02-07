@@ -78,7 +78,7 @@ interface RecentLog {
 export default function AgentSettingsPage() {
   const [settings, setSettings] = useState<AgentSettings>({
     enabled: true,
-    intervalHours: 6,
+    intervalHours: 0.167, // 10 minutes default
     articlesPerRun: 3,
     categories: [],
     lastRun: null,
@@ -642,6 +642,9 @@ export default function AgentSettingsPage() {
                   }
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background/50 backdrop-blur-sm text-foreground"
                 >
+                  <option value="0.1">6 Dakikada Bir</option>
+                  <option value="0.133">8 Dakikada Bir</option>
+                  <option value="0.167">10 Dakikada Bir</option>
                   <option value="0.25">15 Dakikada Bir</option>
                   <option value="0.5">30 Dakikada Bir</option>
                   <option value="1">Saatte Bir</option>

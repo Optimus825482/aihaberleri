@@ -26,7 +26,9 @@ export async function GET() {
     const lastRun = lastRunSetting?.value
       ? new Date(lastRunSetting.value)
       : null;
-    const intervalHours = intervalSetting ? parseInt(intervalSetting.value) : 6;
+    const intervalHours = intervalSetting
+      ? parseFloat(intervalSetting.value)
+      : 0.167; // 10 min default
 
     // Check queue stats
     const queueStats = await getQueueStats();

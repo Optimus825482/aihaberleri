@@ -386,6 +386,9 @@ export default function SettingsPage() {
                   }
                   className="w-full px-3 py-2 border rounded-lg bg-background"
                 >
+                  <option value="0.1">6 Dakikada Bir</option>
+                  <option value="0.133">8 Dakikada Bir</option>
+                  <option value="0.167">10 Dakikada Bir</option>
                   <option value="0.25">15 Dakikada Bir</option>
                   <option value="0.5">30 Dakikada Bir</option>
                   <option value="1">Saatte Bir</option>
