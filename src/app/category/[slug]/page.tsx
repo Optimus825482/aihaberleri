@@ -66,7 +66,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   type ArticleWithCategory = (typeof articles)[0];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-ai-background-dark">
       <main className="flex-1">
         {/* Category Hero */}
         <CategoryHero
@@ -85,7 +85,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">
+                <p className="text-ai-text-secondary">
                 Bu kategoride henüz haber yok.
               </p>
             </div>

@@ -53,31 +53,19 @@ export default function ContactForm() {
 
   if (status === "success") {
     return (
-      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-6 text-center">
-        <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg
-            className="w-8 h-8 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
+      <div className="bg-ai-surface-card border border-green-700/50 rounded-xl p-6 text-center">
+        <div className="w-16 h-16 bg-green-900/30 border border-green-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span className="material-symbols-outlined text-[32px] text-green-500">check_circle</span>
         </div>
-        <h3 className="text-xl font-semibold text-green-800 dark:text-green-200 mb-2">
+        <h3 className="text-xl font-semibold text-green-400 mb-2">
           Mesajınız Gönderildi!
         </h3>
-        <p className="text-green-700 dark:text-green-300">
+        <p className="text-green-300/80">
           En kısa sürede size geri dönüş yapacağız.
         </p>
         <button
           onClick={() => setStatus("idle")}
-          className="mt-4 text-green-600 hover:text-green-800 underline"
+          className="mt-4 text-ai-primary hover:text-ai-primary-hover transition-colors"
         >
           Yeni mesaj gönder
         </button>
@@ -88,13 +76,13 @@ export default function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {status === "error" && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-700 dark:text-red-300">
+        <div className="bg-red-900/20 border border-red-700/50 rounded-lg p-4 text-red-400">
           {errorMessage}
         </div>
       )}
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium mb-2">
+        <label htmlFor="name" className="block text-sm font-medium mb-2 text-white">
           Ad Soyad *
         </label>
         <input
@@ -103,13 +91,13 @@ export default function ContactForm() {
           required
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          className="w-full px-4 py-3 border border-ai-surface-border rounded-xl bg-ai-surface-dark text-white placeholder:text-ai-text-muted focus:ring-2 focus:ring-ai-primary focus:border-transparent transition"
           placeholder="Adınız Soyadınız"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-2">
+        <label htmlFor="email" className="block text-sm font-medium mb-2 text-white">
           E-posta *
         </label>
         <input
@@ -118,13 +106,13 @@ export default function ContactForm() {
           required
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          className="w-full px-4 py-3 border border-ai-surface-border rounded-xl bg-ai-surface-dark text-white placeholder:text-ai-text-muted focus:ring-2 focus:ring-ai-primary focus:border-transparent transition"
           placeholder="ornek@email.com"
         />
       </div>
 
       <div>
-        <label htmlFor="subject" className="block text-sm font-medium mb-2">
+        <label htmlFor="subject" className="block text-sm font-medium mb-2 text-white">
           Konu *
         </label>
         <select
@@ -134,7 +122,7 @@ export default function ContactForm() {
           onChange={(e) =>
             setFormData({ ...formData, subject: e.target.value })
           }
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          className="w-full px-4 py-3 border border-ai-surface-border rounded-xl bg-ai-surface-dark text-white focus:ring-2 focus:ring-ai-primary focus:border-transparent transition"
         >
           <option value="">Konu seçin...</option>
           <option value="Genel Soru">Genel Soru</option>
@@ -147,7 +135,7 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium mb-2">
+        <label htmlFor="message" className="block text-sm font-medium mb-2 text-white">
           Mesajınız *
         </label>
         <textarea
@@ -158,7 +146,7 @@ export default function ContactForm() {
           onChange={(e) =>
             setFormData({ ...formData, message: e.target.value })
           }
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+          className="w-full px-4 py-3 border border-ai-surface-border rounded-xl bg-ai-surface-dark text-white placeholder:text-ai-text-muted focus:ring-2 focus:ring-ai-primary focus:border-transparent transition resize-none"
           placeholder="Mesajınızı buraya yazın..."
         />
       </div>
@@ -166,7 +154,7 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={status === "loading"}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        className="w-full bg-ai-primary hover:bg-ai-primary-hover text-white font-semibold py-3 px-6 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
         {status === "loading" ? (
           <>
@@ -190,19 +178,7 @@ export default function ContactForm() {
           </>
         ) : (
           <>
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-              />
-            </svg>
+              <span className="material-symbols-outlined text-[20px]">send</span>
             Mesaj Gönder
           </>
         )}

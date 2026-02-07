@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hakkımızda - AI Haberleri</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1179d4",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101a22",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-x-hidden">
+<div class="relative flex min-h-screen w-full flex-col">
+<!-- Header -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-[#283139] px-4 lg:px-40 py-3 bg-white dark:bg-[#111518]">
+<div class="flex items-center gap-8">
+<a class="flex items-center gap-4 text-slate-900 dark:text-white" href="#">
+<div class="size-8 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">AI Haberleri</h2>
+</a>
+<nav class="hidden md:flex items-center gap-9">
+<a class="text-slate-600 dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Haberler</a>
+<a class="text-slate-600 dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Analizler</a>
+<a class="text-primary text-sm font-medium leading-normal" href="#">Hakkımızda</a>
+<a class="text-slate-600 dark:text-white text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">İletişim</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full border border-slate-200 dark:border-transparent">
+<div class="text-slate-400 dark:text-[#9dacb9] flex bg-slate-50 dark:bg-[#283139] items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg rounded-l-none text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border-none bg-slate-50 dark:bg-[#283139] h-full placeholder:text-slate-400 dark:placeholder:text-[#9dacb9] px-4 pl-2 text-sm font-normal leading-normal" placeholder="Ara" value=""/>
+</div>
+</label>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal hover:bg-blue-600 transition-colors">
+<span class="truncate">Abone Ol</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col items-center">
+<!-- Hero Section -->
+<section class="w-full max-w-[960px] px-4 md:px-10 py-12 md:py-20 flex flex-col gap-6 text-center">
+<div class="inline-flex items-center justify-center gap-2 self-center rounded-full bg-primary/10 px-4 py-1.5 text-xs font-medium text-primary ring-1 ring-inset ring-primary/20">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+                    Güvenilir Kaynak, Net Bilgi
+                </div>
+<h1 class="text-4xl md:text-6xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
+                    Yapay Zeka Dünyasını <br class="hidden md:block"/> <span class="text-primary">Anlaşılır Kılıyoruz</span>
+</h1>
+<p class="text-lg md:text-xl text-slate-600 dark:text-[#9dacb9] max-w-2xl mx-auto leading-relaxed">
+                    Teknoloji dünyasındaki gürültüyü filtreliyor, karmaşık gelişmeleri sadeleştiriyor ve size sadece bilmeniz gereken en saf bilgiyi sunuyoruz.
+                </p>
+</section>
+<!-- Founder & Mission Grid -->
+<section class="w-full max-w-[960px] px-4 md:px-10 pb-20">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+<!-- Founder Image -->
+<div class="relative group">
+<div class="absolute -inset-1 bg-gradient-to-r from-primary to-blue-400 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+<div class="relative w-full aspect-[4/5] md:aspect-square lg:aspect-[4/5] bg-slate-200 dark:bg-[#1c2227] rounded-xl overflow-hidden shadow-2xl">
+<img alt="Erkan Erdem Founder Portrait" class="object-cover w-full h-full grayscale hover:grayscale-0 transition-all duration-500" data-alt="Portrait of a professional man looking confident in a studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbS-fVbYJ2de0XPDA5dxcQWSfa-reuSBR79-voEpU8wv8EncoDz5AxBeRLJiFbVvsttuqowL8FskzJS2tBBwQQ91twyCmv71LjbmymcAOdY9JjeqYh9W69ltAEpFqPJ1nS_rrbLydFa__VgjpK_qxXm1goQT7a3a8D34jVt1_l8KPQRc2WSLFziVYuXSsrFT2pFCnZCah_jGm6n-MWfEoczY7OWHwBknSjYHnCWo7e52XGz30Gkn0x0Tc181ccwfKcnFxNKDAbkqQ"/>
+<div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent">
+<h3 class="text-white text-xl font-bold">Erkan ERDEM</h3>
+<p class="text-primary text-sm font-medium">Kurucu &amp; Genel Yayın Yönetmeni</p>
+</div>
+</div>
+</div>
+<!-- Founder Story -->
+<div class="flex flex-col gap-6">
+<h2 class="text-3xl font-bold text-slate-900 dark:text-white">Neden AI Haberleri?</h2>
+<div class="space-y-4 text-slate-600 dark:text-[#9dacb9] leading-relaxed">
+<p>
+                                "Yapay zeka devrimi başladığında, Türkçe kaynaklarda büyük bir boşluk fark ettim. Haberler ya çok teknik ve anlaşılmazdı ya da sadece heyecan yaratan abartılı başlıklardan ibaretti."
+                            </p>
+<p>
+                                Amacımız, Türkiye'de yapay zeka okuryazarlığını artırmak. Karmaşık algoritmaları, model güncellemelerini ve endüstriyel devrimleri, bir mühendisin anlayabileceği derinlikte ama bir öğrencinin de kavrayabileceği sadelikte sunuyoruz.
+                            </p>
+<p>
+                                MIT Tech Review, TechCrunch ve global akademik makaleleri her sabah tarıyor, teyit ediyor ve sizin için özetliyoruz. Bilgi kirliliğine karşı bir kalkan görevi görüyoruz.
+                            </p>
+</div>
+<div class="flex gap-4 pt-4">
+<a class="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0077b5] hover:bg-[#006396] text-white text-sm font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">work</span>
+                                LinkedIn
+                            </a>
+<a class="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-200 dark:bg-[#283139] text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-[#3b4854] text-sm font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]">alternate_email</span>
+                                Twitter / X
+                            </a>
+</div>
+</div>
+</div>
+</section>
+<!-- Metrics / Appeal Section -->
+<section class="w-full bg-white dark:bg-[#111518] border-y border-slate-200 dark:border-[#283139]">
+<div class="max-w-[960px] mx-auto px-4 md:px-10 py-16">
+<div class="flex flex-col md:flex-row gap-12">
+<!-- Audience List -->
+<div class="flex-1">
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">groups</span>
+                                Kimlere Hitap Ediyoruz?
+                            </h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div class="flex items-start gap-3 p-4 rounded-lg bg-slate-50 dark:bg-[#1c2227] border border-slate-100 dark:border-[#283139]">
+<div class="mt-1 text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white text-sm">Yazılım Geliştiriciler</h4>
+<p class="text-xs text-slate-500 dark:text-[#9dacb9] mt-1">Yeni araçları ve kütüphaneleri takip etmek isteyenler.</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-4 rounded-lg bg-slate-50 dark:bg-[#1c2227] border border-slate-100 dark:border-[#283139]">
+<div class="mt-1 text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white text-sm">İş Dünyası Liderleri</h4>
+<p class="text-xs text-slate-500 dark:text-[#9dacb9] mt-1">AI'ın sektörel etkilerini anlamak isteyen yöneticiler.</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-4 rounded-lg bg-slate-50 dark:bg-[#1c2227] border border-slate-100 dark:border-[#283139]">
+<div class="mt-1 text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white text-sm">Akademisyenler</h4>
+<p class="text-xs text-slate-500 dark:text-[#9dacb9] mt-1">Literatürdeki son gelişmeleri kaçırmak istemeyenler.</p>
+</div>
+</div>
+<div class="flex items-start gap-3 p-4 rounded-lg bg-slate-50 dark:bg-[#1c2227] border border-slate-100 dark:border-[#283139]">
+<div class="mt-1 text-primary">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white text-sm">Teknoloji Meraklıları</h4>
+<p class="text-xs text-slate-500 dark:text-[#9dacb9] mt-1">Geleceği bugünden yakalamak isteyen herkes.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Trusted Sources Compact -->
+<div class="flex-1">
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">travel_explore</span>
+                                Takip Ettiğimiz Kaynaklar
+                            </h3>
+<p class="text-slate-600 dark:text-[#9dacb9] mb-6 text-sm">
+                                Haberlerimizi oluştururken global otoriteleri referans alıyoruz. Asılsız iddialara ve doğrulanmamış içeriklere yer vermiyoruz.
+                            </p>
+<div class="flex flex-wrap gap-3">
+<span class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-[#283139] text-slate-700 dark:text-slate-300 text-sm font-medium border border-slate-200 dark:border-slate-700">MIT Tech Review</span>
+<span class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-[#283139] text-slate-700 dark:text-slate-300 text-sm font-medium border border-slate-200 dark:border-slate-700">TechCrunch</span>
+<span class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-[#283139] text-slate-700 dark:text-slate-300 text-sm font-medium border border-slate-200 dark:border-slate-700">The Verge</span>
+<span class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-[#283139] text-slate-700 dark:text-slate-300 text-sm font-medium border border-slate-200 dark:border-slate-700">Wired</span>
+<span class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-[#283139] text-slate-700 dark:text-slate-300 text-sm font-medium border border-slate-200 dark:border-slate-700">ArXiv.org</span>
+<span class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-[#283139] text-slate-700 dark:text-slate-300 text-sm font-medium border border-slate-200 dark:border-slate-700">OpenAI Blog</span>
+<span class="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-[#283139] text-slate-700 dark:text-slate-300 text-sm font-medium border border-slate-200 dark:border-slate-700">Google AI</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Newsletter CTA -->
+<section class="w-full max-w-[960px] px-4 md:px-10 py-20 text-center">
+<div class="bg-gradient-to-b from-[#1c2227] to-[#111518] border border-[#283139] rounded-2xl p-8 md:p-12 relative overflow-hidden">
+<!-- Decorational background elements -->
+<div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+<div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
+<div class="relative z-10 flex flex-col items-center gap-6">
+<div class="p-3 bg-primary/20 rounded-full text-primary">
+<span class="material-symbols-outlined text-[32px]">mail</span>
+</div>
+<h2 class="text-3xl font-bold text-white">Haftalık AI Özetine Katılın</h2>
+<p class="text-[#9dacb9] max-w-lg mx-auto">
+                            Her hafta Cuma günü, haftanın en kritik yapay zeka gelişmelerini derleyip posta kutunuza bırakıyoruz. Spam yok, sadece bilgi.
+                        </p>
+<form class="flex flex-col sm:flex-row gap-3 w-full max-w-md mt-2">
+<input class="flex-1 rounded-lg bg-[#283139] border border-[#3b4854] text-white px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent outline-none placeholder:text-[#9dacb9]" placeholder="E-posta adresiniz" type="email"/>
+<button class="bg-primary hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors whitespace-nowrap" type="button">
+                                Abone Ol
+                            </button>
+</form>
+<p class="text-xs text-[#586474] mt-2">10.000+ teknoloji lideri aramıza katıldı.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="border-t border-slate-200 dark:border-[#283139] bg-white dark:bg-[#111518] py-12 px-4 md:px-10">
+<div class="max-w-[960px] mx-auto flex flex-col md:flex-row justify-between gap-10">
+<div class="flex flex-col gap-4 max-w-xs">
+<div class="flex items-center gap-2 text-slate-900 dark:text-white">
+<div class="size-6 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-lg font-bold">AI Haberleri</h2>
+</div>
+<p class="text-sm text-slate-500 dark:text-[#9dacb9]">
+                        Yapay zeka teknolojilerini herkes için erişilebilir ve anlaşılır kılmak için buradayız.
+                    </p>
+</div>
+<div class="flex gap-12 flex-wrap">
+<div class="flex flex-col gap-3">
+<h4 class="text-slate-900 dark:text-white font-bold text-sm">Platform</h4>
+<a class="text-sm text-slate-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">Haberler</a>
+<a class="text-sm text-slate-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">Analizler</a>
+<a class="text-sm text-slate-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">Röportajlar</a>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-slate-900 dark:text-white font-bold text-sm">Kurumsal</h4>
+<a class="text-sm text-slate-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">Hakkımızda</a>
+<a class="text-sm text-slate-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">Reklam</a>
+<a class="text-sm text-slate-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">İletişim</a>
+</div>
+<div class="flex flex-col gap-3">
+<h4 class="text-slate-900 dark:text-white font-bold text-sm">Sosyal</h4>
+<a class="text-sm text-slate-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">Twitter</a>
+<a class="text-sm text-slate-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">LinkedIn</a>
+<a class="text-sm text-slate-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">Instagram</a>
+</div>
+</div>
+</div>
+<div class="max-w-[960px] mx-auto mt-12 pt-8 border-t border-slate-100 dark:border-[#283139] flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-400 dark:text-[#586474]">
+<p>© 2023 AI Haberleri. Tüm hakları saklıdır.</p>
+<div class="flex gap-6">
+<a class="hover:text-slate-600 dark:hover:text-[#9dacb9]" href="#">Gizlilik Politikası</a>
+<a class="hover:text-slate-600 dark:hover:text-[#9dacb9]" href="#">Kullanım Şartları</a>
+</div>
+</div>
+</footer>
+</div>
+</body></html>

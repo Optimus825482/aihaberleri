@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html class="dark" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>OpenAI, Beklenen Dil Modeli GPT-5'in Yeteneklerini Resmen Duyurdu - AI Haberleri</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1179d4",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#0B1015","surface-dark": "#151b23","border-dark": "#232b35",
+                        "player-bg": "#151b23",
+                        "player-bar": "#283445",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111518;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #283139;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f4a53;
+        }
+        .ai-pulse {
+            animation: pulse-blue 2s infinite;
+        }
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(17, 121, 212, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(17, 121, 212, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(17, 121, 212, 0); }
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display selection:bg-primary selection:text-white">
+<div class="fixed top-0 left-0 w-full h-1 z-50 bg-transparent">
+<div class="h-full bg-primary w-2/3 shadow-[0_0_10px_rgba(17,121,212,0.5)]"></div>
+</div>
+<header class="sticky top-0 z-40 bg-background-light dark:bg-background-dark border-b border-gray-200 dark:border-border-dark backdrop-blur-md bg-opacity-90 dark:bg-opacity-90">
+<div class="px-4 md:px-10 py-3 flex items-center justify-between whitespace-nowrap max-w-[1440px] mx-auto w-full">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 dark:text-white text-slate-900">
+<div class="size-8 text-primary">
+<span class="material-symbols-outlined !text-[32px]">smart_toy</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">AI Haberleri</h2>
+</div>
+<div class="hidden lg:flex items-center gap-9">
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Haberler</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Analiz</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Röportajlar</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Etkinlikler</a>
+<a class="text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Hakkımızda</a>
+</div>
+</div>
+<div class="flex flex-1 justify-end gap-4 md:gap-8">
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full border border-gray-200 dark:border-border-dark bg-white dark:bg-surface-dark overflow-hidden transition-colors focus-within:border-primary">
+<div class="flex items-center justify-center pl-4 text-gray-500 dark:text-[#9dacb9]">
+<span class="material-symbols-outlined" style="font-size: 20px;">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden text-base font-normal leading-normal placeholder:text-gray-400 dark:placeholder:text-[#9dacb9] text-slate-900 dark:text-white focus:outline-0 focus:ring-0 border-none bg-transparent h-full px-4" placeholder="Ara" value=""/>
+</div>
+</label>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-blue-600 transition-colors text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-lg shadow-primary/20">
+<span class="truncate">Abone Ol</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-grow w-full max-w-[1440px] mx-auto px-4 md:px-10 py-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+<div class="lg:col-span-8 flex flex-col">
+<nav class="flex flex-wrap items-center gap-2 mb-4 text-sm font-medium">
+<a class="text-gray-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">Anasayfa</a>
+<span class="text-gray-600 dark:text-[#586472] material-symbols-outlined !text-xs">chevron_right</span>
+<a class="text-gray-500 dark:text-[#9dacb9] hover:text-primary transition-colors" href="#">Yapay Zeka</a>
+<span class="text-gray-600 dark:text-[#586472] material-symbols-outlined !text-xs">chevron_right</span>
+<span class="text-primary dark:text-blue-400">Teknoloji</span>
+</nav>
+<h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold leading-[1.1] tracking-tight mb-6 text-slate-900 dark:text-white">
+                    OpenAI, Beklenen Dil Modeli GPT-5'in Yeteneklerini Resmen Duyurdu
+                </h1>
+<div class="flex flex-wrap items-center gap-y-3 gap-x-6 text-sm text-gray-500 dark:text-gray-400 mb-6 font-medium">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined !text-[18px] text-primary">calendar_month</span>
+<span>14 Ekim 2023, 14:30</span>
+</div>
+<div class="w-1 h-1 rounded-full bg-gray-600"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined !text-[18px] text-primary">timer</span>
+<span>5 dk okuma</span>
+</div>
+<div class="w-1 h-1 rounded-full bg-gray-600"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined !text-[18px] text-primary">visibility</span>
+<span>24.5B görüntülenme</span>
+</div>
+<div class="w-1 h-1 rounded-full bg-gray-600"></div>
+<div class="flex items-center gap-2 text-green-500">
+<span class="material-symbols-outlined !text-[18px]">trending_up</span>
+<span>Trend Skor: 98/100</span>
+</div>
+</div>
+<p class="text-xl md:text-2xl text-gray-700 dark:text-gray-300 leading-relaxed mb-8 font-light border-l-4 border-primary pl-4">
+                    Yapay zeka dünyasında kartlar yeniden dağıtılıyor. Yeni model, mantıksal çıkarım ve çok modlu yeteneklerde devrim yaratmayı vaat ediyor.
+                </p>
+<div class="flex items-center gap-3 mb-8">
+<div class="size-10 rounded-full overflow-hidden bg-gray-300 relative ring-2 ring-primary/20">
+<img alt="Author Erkan Erdem portrait" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4cZ1G2cVuOwzr_WiQ4gWWRJqnRfYK-1KkA64CKqBCp0rd9k4lHw5nqEV1Kmi7ffDg-m-vLOHLQ9ztGRVyYaoO6hhT8eArzj94CYk5paI7cUEVEGG2btB5nufUtnB0Qfr9udBdI3150WovGDAuoey7tiYs5UtDZhvNl18yqo_uvvOBz9PvyxMdIls43dEAMDDw3xSqlwP5ZxBvHSe9EW-Mv8NnvhHu6wjfIb1bdJf2LuADAuBdYxTm1T3aeBJpq13FPRgedj2WtnY"/>
+</div>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-900 dark:text-white hover:text-primary cursor-pointer transition-colors">Erkan ERDEM</span>
+<span class="text-xs text-gray-500 dark:text-gray-400">Teknoloji Editörü @ AI Haberleri</span>
+</div>
+<button class="ml-auto px-3 py-1 text-xs font-bold text-primary border border-primary rounded-full hover:bg-primary hover:text-white transition-all">Takip Et</button>
+</div>
+<figure class="mb-8 w-full">
+<div class="aspect-video w-full rounded-2xl overflow-hidden bg-surface-dark relative shadow-2xl shadow-black/50 group">
+<img alt="Abstract visualization of artificial intelligence neural network glowing blue" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzU_J5ikBUCwg2PauNJFYvXpK3vE9PIOyJ_0TEHfZHZ4dX_f2YaofBLJlVor8zPaxzWm5tvKY8wkYbZWRHt3DGoVuOFlGdVM1nyPpFCJHly4llYUV1pWY-A8qnTlimo0SEbjvQ6GbQ0h8L4riCW0D2GEmFUirzc9qcg1CYGAwy0l37Nj5DqqYhEkVPHpKWLPHKwvyvbbU0mXbG5pQlUAlwOdkcj3tws_vR-OuaNO3aX8eQZ73zdb2AokrOirOLW8CNhc6tJwARbrE"/>
+<div class="absolute bottom-4 left-4 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-medium text-white flex items-center gap-2 border border-white/10">
+<span class="material-symbols-outlined !text-sm">photo_camera</span>
+                            Görsel: OpenAI Basın Odası
+                        </div>
+</div>
+<figcaption class="mt-3 text-center text-sm text-gray-500 dark:text-gray-400">
+                        GPT-5 mimarisinin sembolik görselleştirmesi.
+                    </figcaption>
+</figure>
+<div class="bg-player-bg border border-border-dark rounded-xl p-5 mb-10 shadow-lg relative overflow-hidden group">
+<div class="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-[50px] pointer-events-none"></div>
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<div class="flex space-x-1">
+<div class="w-0.5 h-3 bg-primary animate-pulse"></div>
+<div class="w-0.5 h-4 bg-primary animate-pulse delay-75"></div>
+<div class="w-0.5 h-2 bg-primary animate-pulse delay-150"></div>
+</div>
+<span class="text-xs font-bold text-primary uppercase tracking-wider">Yapay Zeka Spikeri</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative inline-block text-left">
+<button class="flex items-center gap-1 text-xs font-medium text-gray-400 bg-surface-dark border border-border-dark px-2 py-1 rounded hover:text-white hover:border-gray-500 transition-colors">
+                    1.0x
+                    <span class="material-symbols-outlined !text-sm">expand_more</span>
+</button>
+</div>
+<button class="text-gray-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined !text-[20px]">download</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="size-12 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white flex items-center justify-center transition-all ai-pulse shrink-0">
+<span class="material-symbols-outlined !text-[32px] ml-1">play_arrow</span>
+</button>
+<div class="flex-1 min-w-0">
+<h3 class="text-white font-bold text-sm md:text-base truncate mb-1">OpenAI ve Anthropic, Kurumsal Müşteriler İçin Danışmanlığa Dönüşüyor</h3>
+<div class="flex items-center gap-3 w-full">
+<span class="text-[10px] text-gray-500 font-mono w-8 text-right">0:00</span>
+<div class="h-1.5 flex-1 bg-player-bar rounded-full overflow-hidden cursor-pointer group/bar relative">
+<div class="absolute top-0 left-0 h-full w-[0%] bg-primary group-hover/bar:bg-blue-400 transition-all"></div>
+</div>
+<span class="text-[10px] text-gray-500 font-mono w-8">3:42</span>
+</div>
+</div>
+</div>
+<div class="mt-3 flex items-center gap-2 ml-[64px]">
+<span class="material-symbols-outlined text-gray-500 !text-sm">volume_up</span>
+<div class="w-20 h-1 bg-player-bar rounded-full overflow-hidden cursor-pointer">
+<div class="h-full w-[70%] bg-gray-500 hover:bg-gray-400"></div>
+</div>
+</div>
+</div>
+<div class="relative flex gap-8">
+<div class="hidden lg:flex flex-col gap-4 sticky top-24 h-fit min-w-[48px]">
+<button aria-label="Share on Twitter" class="size-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-surface-dark text-slate-700 dark:text-gray-400 hover:bg-black hover:text-white transition-colors border border-gray-200 dark:border-border-dark group shadow-sm">
+<span class="text-lg font-bold">X</span>
+</button>
+<button aria-label="Share on LinkedIn" class="size-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-surface-dark text-slate-700 dark:text-gray-400 hover:bg-[#0a66c2] hover:text-white transition-colors border border-gray-200 dark:border-border-dark shadow-sm">
+<span class="font-bold text-lg">in</span>
+</button>
+<button aria-label="Share on WhatsApp" class="size-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-surface-dark text-slate-700 dark:text-gray-400 hover:bg-[#25D366] hover:text-white transition-colors border border-gray-200 dark:border-border-dark shadow-sm">
+<span class="font-bold text-base">Wa</span>
+</button>
+<div class="w-full h-px bg-gray-200 dark:border-border-dark my-2"></div>
+<button aria-label="Copy Link" class="size-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-surface-dark text-slate-700 dark:text-gray-400 hover:bg-primary hover:text-white transition-colors border border-gray-200 dark:border-border-dark shadow-sm">
+<span class="material-symbols-outlined !text-[20px]">link</span>
+</button>
+<button aria-label="Bookmark" class="size-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-surface-dark text-slate-700 dark:text-gray-400 hover:bg-yellow-500 hover:text-white transition-colors border border-gray-200 dark:border-border-dark shadow-sm mt-auto">
+<span class="material-symbols-outlined !text-[20px]">bookmark_add</span>
+</button>
+</div>
+<article class="prose prose-lg dark:prose-invert prose-slate max-w-none text-slate-800 dark:text-gray-300">
+<p class="lead text-xl font-medium text-slate-900 dark:text-white mb-6">
+                            San Francisco merkezli yapay zeka araştırma şirketi OpenAI, bugün düzenlediği "Spring Update" etkinliğinde, uzun süredir beklenen yeni dil modeli GPT-5'i tanıttı. Şirket CEO'su Sam Altman, bu modelin "yapay zeka tarihinde yeni bir sayfa açacağını" belirtti.
+                        </p>
+<p class="mb-6 leading-8">
+                            GPT-4'ün başarısının ardından geliştirilen yeni model, özellikle <span class="text-primary font-bold bg-primary/10 px-1 rounded">muhakeme yeteneği</span> ve <span class="text-primary font-bold bg-primary/10 px-1 rounded">çok modlu işlem</span> kapasitesinde %40'a varan artış sunuyor. Model, artık sadece metin ve görsel değil, video ve ses verilerini de eş zamanlı olarak işleyip analiz edebiliyor. Bu durum, özellikle sağlık, eğitim ve finans sektörlerinde devrim niteliğinde uygulamaların önünü açabilir.
+                        </p>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white mt-10 mb-4 flex items-center gap-2">
+<span class="w-1 h-6 bg-primary rounded-full"></span>
+    Öne Çıkan Özellikler
+</h2>
+<p class="mb-4 leading-8">
+                            Yeni mimari, önceki versiyonlara göre daha az enerji tüketerek daha karmaşık işlemleri gerçekleştirebiliyor. OpenAI Baş Teknoloji Sorumlusu Mira Murati, modelin eğitim sürecinde kullanılan yeni veri setlerinin, halüsinasyon oranını (yapay zekanın yanlış bilgi üretmesi) %70 oranında azalttığını vurguladı.
+                        </p>
+<ul class="list-none space-y-3 mb-8 text-gray-700 dark:text-gray-300">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span><strong class="text-slate-900 dark:text-white">Gelişmiş Hafıza:</strong> GPT-5, kullanıcıyla yaptığı önceki konuşmaları 128k token'a kadar hatırlayabiliyor.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span><strong class="text-slate-900 dark:text-white">Gerçek Zamanlı İnternet Erişimi:</strong> Bilgi kesim tarihi olmaksızın, internete doğrudan bağlanarak anlık verileri yorumlayabiliyor.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary mt-1">check_circle</span>
+<span><strong class="text-slate-900 dark:text-white">Kişiselleştirilebilir Ajanlar:</strong> Geliştiriciler, kendi veri setleriyle eğitilmiş özel GPT-5 sürümlerini daha kolay oluşturabilecek.</span>
+</li>
+</ul>
+<blockquote class="border-l-4 border-primary bg-gradient-to-r from-blue-50 to-transparent dark:from-primary/10 dark:to-transparent pl-6 py-6 pr-4 italic my-8 rounded-r-xl relative">
+<span class="material-symbols-outlined absolute top-2 right-2 text-primary/20 !text-6xl">format_quote</span>
+<p class="text-xl font-medium text-slate-900 dark:text-white relative z-10">
+                                "Amacımız sadece daha zeki bir model yaratmak değil, aynı zamanda insan değerleriyle uyumlu ve güvenli bir yapay zeka ekosistemi oluşturmak."
+                            </p>
+<footer class="text-sm mt-4 text-primary font-bold flex items-center gap-2">
+<div class="w-8 h-px bg-primary"></div>
+    Sam Altman, CEO
+</footer>
+</blockquote>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-white mt-10 mb-4 flex items-center gap-2">
+<span class="w-1 h-6 bg-primary rounded-full"></span>
+    Sektör Uzmanlarının Görüşleri
+</h2>
+<p class="mb-6 leading-8">
+                            Teknoloji dünyası bu duyuruyu heyecanla karşılarken, bazı uzmanlar güvenlik endişelerini dile getirmeye devam ediyor. Stanford Üniversitesi'nden Prof. Dr. Fei-Fei Li, modelin yeteneklerinin artmasıyla birlikte kötüye kullanım potansiyelinin de arttığına dikkat çekti. Ancak OpenAI, yeni "Red Teaming" protokolleri ile güvenlik açıklarını minimize ettiklerini savunuyor.
+                        </p>
+<div class="bg-surface-dark border border-border-dark rounded-xl p-6 my-8 shadow-inner">
+<h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">info</span>
+                                Editörün Notu
+                            </h3>
+<p class="text-sm text-gray-400">
+                                GPT-5'in beta sürümü şu anda sadece "Plus" ve "Enterprise" kullanıcıları için sınırlı erişime açılmıştır. Genel kullanıma sunulma tarihi 2024 son çeyreği olarak planlanmaktadır.
+                            </p>
+</div>
+<p class="leading-8">
+                            Önümüzdeki günlerde, geliştiricilerin bu yeni API'yi kullanarak ne tür uygulamalar geliştireceğini görmek heyecan verici olacak. AI Haberleri olarak gelişmeleri yakından takip etmeye devam edeceğiz.
+                        </p>
+</article>
+</div>
+<div class="mt-12 flex flex-col gap-6">
+<div class="bg-[#1a212a] border border-[#2d3748] rounded-2xl p-6">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary !text-[20px]">smart_toy</span>
+<h3 class="text-primary font-medium text-sm">Yapay Zeka Destekli İçerik</h3>
+</div>
+<div class="text-sm text-gray-400">
+            Kaynaklar: <a class="text-gray-300 hover:text-primary transition-colors" href="#">venturebeat.com</a> • <a class="text-gray-300 hover:text-primary transition-colors" href="#">observer.com</a> • <a class="text-gray-300 hover:text-primary transition-colors" href="#">openai.com</a>
+</div>
+</div>
+<div class="bg-[#0f141a] border border-[#1e2631] rounded-2xl p-8 flex flex-col items-center justify-center text-center">
+<h3 class="text-xl font-bold text-white mb-4">Bu haberi nasıl buldunuz?</h3>
+<div class="flex gap-2 mb-3">
+<button class="group">
+<span class="material-symbols-outlined text-gray-600 !text-4xl group-hover:text-yellow-400 transition-colors">star</span>
+</button>
+<button class="group">
+<span class="material-symbols-outlined text-gray-600 !text-4xl group-hover:text-yellow-400 transition-colors">star</span>
+</button>
+<button class="group">
+<span class="material-symbols-outlined text-gray-600 !text-4xl group-hover:text-yellow-400 transition-colors">star</span>
+</button>
+<button class="group">
+<span class="material-symbols-outlined text-gray-600 !text-4xl group-hover:text-yellow-400 transition-colors">star</span>
+</button>
+<button class="group">
+<span class="material-symbols-outlined text-gray-600 !text-4xl group-hover:text-yellow-400 transition-colors">star</span>
+</button>
+</div>
+<p class="text-sm text-gray-500">İlk oylayan siz olun!</p>
+</div>
+</div>
+<div class="mt-10 pt-6 border-t border-gray-200 dark:border-border-dark">
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-gray-100 dark:bg-surface-dark text-gray-600 dark:text-gray-400 text-sm rounded-lg border border-gray-200 dark:border-border-dark hover:border-primary hover:text-primary cursor-pointer transition-colors font-medium">#YapayZeka</span>
+<span class="px-3 py-1 bg-gray-100 dark:bg-surface-dark text-gray-600 dark:text-gray-400 text-sm rounded-lg border border-gray-200 dark:border-border-dark hover:border-primary hover:text-primary cursor-pointer transition-colors font-medium">#OpenAI</span>
+<span class="px-3 py-1 bg-gray-100 dark:bg-surface-dark text-gray-600 dark:text-gray-400 text-sm rounded-lg border border-gray-200 dark:border-border-dark hover:border-primary hover:text-primary cursor-pointer transition-colors font-medium">#GPT5</span>
+<span class="px-3 py-1 bg-gray-100 dark:bg-surface-dark text-gray-600 dark:text-gray-400 text-sm rounded-lg border border-gray-200 dark:border-border-dark hover:border-primary hover:text-primary cursor-pointer transition-colors font-medium">#Teknoloji</span>
+</div>
+</div>
+<div class="lg:hidden flex items-center justify-between gap-4 mt-8 py-4 bg-gray-50 dark:bg-surface-dark px-4 rounded-lg">
+<span class="text-sm font-medium text-slate-700 dark:text-white">Bu haberi paylaş:</span>
+<div class="flex gap-2">
+<button class="size-9 rounded-full bg-white dark:bg-background-dark flex items-center justify-center shadow-sm text-slate-700 dark:text-white">X</button>
+<button class="size-9 rounded-full bg-white dark:bg-background-dark flex items-center justify-center shadow-sm text-slate-700 dark:text-white">in</button>
+<button class="size-9 rounded-full bg-white dark:bg-background-dark flex items-center justify-center shadow-sm text-slate-700 dark:text-white">
+<span class="material-symbols-outlined text-sm">link</span>
+</button>
+</div>
+</div>
+<section class="mt-16">
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                        Yorumlar <span class="px-2 py-0.5 bg-gray-200 dark:bg-border-dark text-base font-bold rounded-full text-slate-700 dark:text-white">12</span>
+</h3>
+<div class="bg-white dark:bg-surface-dark rounded-xl p-6 shadow-sm border border-gray-200 dark:border-border-dark mb-8">
+<div class="flex gap-4">
+<div class="size-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden shrink-0">
+<span class="material-symbols-outlined text-gray-400">person</span>
+</div>
+<div class="flex-1">
+<textarea class="w-full bg-gray-50 dark:bg-background-dark border border-gray-200 dark:border-border-dark rounded-lg p-3 text-slate-900 dark:text-white placeholder:text-gray-400 focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all min-h-[100px] resize-y" placeholder="Düşüncelerinizi paylaşın..."></textarea>
+<div class="flex justify-end mt-3">
+<button class="px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30">
+                                        Yorum Yap
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="size-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
+<img alt="User avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAGpqOvUeXrmRQ_IkQY8BVdDAICbBbG6wfzL37HYLZy6Zj_bAmsSM4Vp6Y8nWCM8KdE1kAe1eAfoLedZyugX1s055k8erPz2mmaG9t11HrK7I2P289C-D1PuOfgmxIit8wbDQgNOSlR-nxBbSgWhLoBuF49F3TQd9XHAeFor5HRY4YkvlZcZilsG9TDjmJICtggG2TSiaPrLbYzLNoCrf2FYx0GQIZ3P4fiauPoncQN3v_vspK7N9A1PlvWbTIMXInQq8aY_WAKxfg"/>
+</div>
+<div class="flex-1">
+<div class="bg-gray-50 dark:bg-surface-dark/50 p-4 rounded-lg rounded-tl-none border border-gray-100 dark:border-border-dark">
+<div class="flex items-center justify-between mb-2">
+<h4 class="font-bold text-sm text-slate-900 dark:text-white">Ahmet Yılmaz</h4>
+<span class="text-xs text-gray-500">2 saat önce</span>
+</div>
+<p class="text-sm text-gray-600 dark:text-gray-300">
+                                        GPT-5'in yetenekleri inanılmaz görünüyor, özellikle hafıza konusu büyük bir sorun. Eğer gerçekten söylendiği gibi çalışıyorsa, iş dünyasında büyük değişimler göreceğiz.
+                                    </p>
+</div>
+<div class="flex gap-4 mt-2 pl-2">
+<button class="text-xs font-medium text-gray-500 hover:text-primary flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined !text-sm">thumb_up</span> Beğen (5)
+                                    </button>
+<button class="text-xs font-medium text-gray-500 hover:text-primary transition-colors">Yanıtla</button>
+</div>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="size-10 rounded-full overflow-hidden bg-gray-200 shrink-0">
+<img alt="User avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAR3toR1Z1k26J8q2w8WQM_AltoJ1jspmDp3yPIGmjpwRvqlAFWWW3So1gdra3MCHLtxvZslhPKlTGvFg6AbS4XYAzHiZT_TairQQ0rWpqE_3PRz2lUoRzZ8F5b49S0owV9lNhzuBeIT-ZYgn9Wx_Ba2UiL0hkzlEY1xOknoqdYOnzn4Tg87v2zcRQ9J4cO-JIc8pEIADIri1qLD1MP8Ec1Yb9Lkh7hvISQktrks9xeDm9yHIjBt-wtmc_YDaLsvuLoZPhha3yKpQ"/>
+</div>
+<div class="flex-1">
+<div class="bg-gray-50 dark:bg-surface-dark/50 p-4 rounded-lg rounded-tl-none border border-gray-100 dark:border-border-dark">
+<div class="flex items-center justify-between mb-2">
+<h4 class="font-bold text-sm text-slate-900 dark:text-white">Zeynep Kaya</h4>
+<span class="text-xs text-gray-500">5 saat önce</span>
+</div>
+<p class="text-sm text-gray-600 dark:text-gray-300">
+                                        Hala halüsinasyon sorununun tamamen çözüldüğünü düşünmüyorum. Kritik kararlarda AI kullanımına dikkat edilmeli.
+                                    </p>
+</div>
+<div class="flex gap-4 mt-2 pl-2">
+<button class="text-xs font-medium text-gray-500 hover:text-primary flex items-center gap-1 transition-colors">
+<span class="material-symbols-outlined !text-sm">thumb_up</span> Beğen (12)
+                                    </button>
+<button class="text-xs font-medium text-gray-500 hover:text-primary transition-colors">Yanıtla</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="lg:col-span-4 flex flex-col gap-8">
+<div class="bg-blue-50 dark:bg-surface-dark border border-blue-100 dark:border-border-dark rounded-xl p-6 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-[100px] text-primary">mail</span>
+</div>
+<div class="relative z-10">
+<div class="size-12 bg-primary text-white rounded-lg flex items-center justify-center mb-4 shadow-lg shadow-blue-500/30">
+<span class="material-symbols-outlined">mail</span>
+</div>
+<h3 class="text-xl font-bold text-slate-900 dark:text-white mb-2">Gündemi Kaçırma</h3>
+<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Her hafta en önemli AI gelişmelerini, analizleri ve röportajları e-posta kutuna gönderiyoruz.
+                        </p>
+<form class="flex flex-col gap-3">
+<input class="w-full rounded-lg bg-white dark:bg-background-dark border border-gray-200 dark:border-gray-700 text-slate-900 dark:text-white px-4 py-2 focus:ring-1 focus:ring-primary focus:border-primary outline-none" placeholder="E-posta adresin" type="email"/>
+<button class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-2 rounded-lg transition-colors shadow-md">
+                                Hemen Kaydol
+                            </button>
+</form>
+<p class="text-xs text-gray-400 mt-3 text-center">Spam yok, istediğin zaman ayrılabilirsin.</p>
+</div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-4 border-b border-gray-200 dark:border-border-dark pb-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-white">Trend Haberler</h3>
+<a class="text-xs font-bold text-primary hover:underline" href="#">Tümünü Gör</a>
+</div>
+<div class="flex flex-col gap-5">
+<a class="group flex gap-3 items-start" href="#">
+<div class="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-200 relative shadow-sm">
+<img alt="Abstract blue digital network connections" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqswEvbe3sB7XO-E57AuED8dwdoX3OwIi7kPFP0JZfx3w_Hz_bY1sGEhM7x1pj57PT2muzRo_c8Kzq6M2ssxD87dlNerafHmxL_veWuYh9ayj-4GMI8CFC15X-7gypYaJyAQSbvBBrsU8UEw_AmYMma1SYpKbEroIh9gyvUgd9dbNejZeH-3_C23T3lTtZgvt-X0k7yFVGiB4FEssEwxTKHFMEp9WMnfpAf49eRsb9P5kt6L4a7BK-pAj76MGsy8_dBz1eO705ZMQ"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-slate-800 dark:text-gray-200 group-hover:text-primary transition-colors line-clamp-2">
+                                    Google DeepMind, Robotik Kodlama İçin Yeni Bir Model Geliştirdi
+                                </h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">Robotik</span>
+<span class="text-xs text-gray-500">2 Saat Önce</span>
+</div>
+</div>
+</a>
+<a class="group flex gap-3 items-start" href="#">
+<div class="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-200 relative shadow-sm">
+<img alt="Futuristic processor chip with neon lights" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOaCdtlLM0fgmLRdeKAcjyefeZOEVtlA8WuwvYXL3pC4JIB2CiX6pAOWCzkKbCCOVcBVZ8tViRhaCWza_sZFR2UMGSpqtOQu5xUrrf-B4cBq7XiWbdPAfFdjeDZGkjFfK9SASSd_bdHf2jVF3MGzvjkTwrvnBzpEUNWe9tZLFS7rf-tMNScpZgeOzB4PmRmJPNDuykRtuSmasukoUGRh1Lcdl0mGQAleVHX6yVsXfWipd-VoTGaF35QKRTCoSF5du09nGLd-LasBM"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-slate-800 dark:text-gray-200 group-hover:text-primary transition-colors line-clamp-2">
+                                    NVIDIA Hisseleri AI Talebiyle Rekor Tazeledi
+                                </h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] font-bold text-green-500 bg-green-500/10 px-1.5 py-0.5 rounded">Finans</span>
+<span class="text-xs text-gray-500">4 Saat Önce</span>
+</div>
+</div>
+</a>
+<a class="group flex gap-3 items-start" href="#">
+<div class="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-gray-200 relative shadow-sm">
+<img alt="Person interacting with holographic data interface" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZnTELfcLOY32SJqqkjOPfP5QoY_kM5xZIb8OPokX6V6QsD55lrFg6rN6Ss-UQePlarOose2ViVE_6H3dcL11r0gVO4eg3-_ijJWyvZyDqO6lPXQx-gAsFvmzGB6JJFOTDOns_Ae50cTsDvtK6B00DZsL8Conmtu0-pWo215Vx5lsXT_6DH1H6i3ReMMOC1VHDqem9Il_zfHQa4dNu3lKWmpJUpZTY-VsMKUGEO_ZBMr2MZ3vstU4thfbbjy1QV6KCwUauHS80CBM"/>
+<div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+</div>
+<div>
+<h4 class="text-sm font-semibold text-slate-800 dark:text-gray-200 group-hover:text-primary transition-colors line-clamp-2">
+                                    Avrupa Birliği Yapay Zeka Yasası Son Aşamada
+                                </h4>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-[10px] font-bold text-purple-500 bg-purple-500/10 px-1.5 py-0.5 rounded">Yasal</span>
+<span class="text-xs text-gray-500">Dün</span>
+</div>
+</div>
+</a>
+</div>
+</div>
+<div class="w-full h-auto min-h-[250px] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-surface-dark dark:to-black border border-dashed border-gray-300 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center text-center p-6 relative overflow-hidden group">
+<div class="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary via-transparent to-transparent"></div>
+<span class="text-[10px] uppercase tracking-widest text-gray-400 mb-2 border border-gray-300 dark:border-gray-700 px-2 py-0.5 rounded">Sponsorlu</span>
+<h4 class="text-lg font-bold text-slate-800 dark:text-white mb-2 z-10">TechConference 2024</h4>
+<p class="text-sm text-gray-500 dark:text-gray-400 z-10 mb-4">Geleceği Şekillendiren Zirve</p>
+<button class="z-10 px-5 py-2 text-xs font-bold text-white bg-black dark:bg-white dark:text-black rounded hover:opacity-80 transition-opacity">Bilet Al</button>
+</div>
+</div>
+</div>
+<section class="mt-20 pt-10 border-t border-gray-200 dark:border-border-dark">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-2xl font-bold text-slate-900 dark:text-white">Bunlar da İlginizi Çekebilir</h3>
+<a class="hidden md:flex items-center gap-1 text-sm font-bold text-primary hover:underline" href="#">
+        Daha Fazla Göster <span class="material-symbols-outlined !text-sm">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<article class="flex flex-col group cursor-pointer">
+<div class="aspect-[16/9] rounded-xl overflow-hidden mb-4 bg-gray-200 relative shadow-md">
+<img alt="Robot hand touching human hand close up" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgxcskANEqD0QUYBAb7mkdk6iPscgNngbDNVmUoaOOW_e8jm-ciAEXjYFjrysK22GGjEcOsY6PAiTPyCbQNiBxcES5XC8OcBF-eOp3QIRziotgqoGUtqmRbSbRhFN6vMflAn7qurg0fqOiamir4FF5VzazJ79eIhOJHIjkg_DCUT6AZAUOuPzTVynNHgr_ix2VYSB9tK0bV0z9MGgtlwEvV5btImt2KiuiwhitUYRB-7cvLpF7UWMf_tDADuF5o5UThbSVulyAULE"/>
+<div class="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow-sm">Analiz</div>
+</div>
+<div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+<span>Canan YILDIZ</span> • <span>12 Ekim 2023</span>
+</div>
+<h4 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors leading-snug">
+                        Yapay Zeka Etik Kurulları Ne Kadar Etkili?
+                    </h4>
+</article>
+<article class="flex flex-col group cursor-pointer">
+<div class="aspect-[16/9] rounded-xl overflow-hidden mb-4 bg-gray-200 relative shadow-md">
+<img alt="Digital matrix code rain green background" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDE12Q43lFskMFZvgrc3bB1iNDvD36HQNyp8ki0-GXBKq0Q4-Cx8bTOXoJVByn2Tq6vUpFoRUE2KkLQOpZaW_Z8u6ISMmc-dI66GbCpkF2F4zMRXlTyyI2-FvvU8C-uLe3GUQdJpwpjZAuC9K1OM1EQBG5mJGtzcL0lgIUAVxJJhgGpPcs0OaWQK9O3mnrghewAgAUZBx6yciAb4EOiX76zQLXNkztPH0eTBHgUOu_oC17UL3_o-P8acZY1uDRjQ5MZ5HWVr1B2W60"/>
+</div>
+<div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+<span>Mehmet DEMİR</span> • <span>11 Ekim 2023</span>
+</div>
+<h4 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors leading-snug">
+                        Siber Güvenlikte AI Destekli Tehditler Yükselişte
+                    </h4>
+</article>
+<article class="flex flex-col group cursor-pointer">
+<div class="aspect-[16/9] rounded-xl overflow-hidden mb-4 bg-gray-200 relative shadow-md">
+<img alt="Virtual reality headset user interaction" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDF4cxbAOLFaUrAxgGGLc4kXrLDa3WOf6E0olStrST1hnwx7HqBa9nOJCoGQgYX7yKAFFmGXvF-qesFJIgS6sLtd46lP-7RUA5aUsINfXDJniCImPKUhjXBS6YPqQjGN8GN-fsHc9UUOkaSNUWLtjKU9C7aEibEmBSNg9-7eAyGSwC5d7rYCOlNCgxDtztBqeUOl02n5mbpzDc5dXcDvWlQnCimSBAVZS7F007vHFZaqYohxa52a1zW2Uxx2gxtrQcCfTQldc1kMKw"/>
+<div class="absolute top-3 left-3 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider shadow-sm">Röportaj</div>
+</div>
+<div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+<span>Elif KAYA</span> • <span>10 Ekim 2023</span>
+</div>
+<h4 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors leading-snug">
+                        Metaverse ve AI Entegrasyonu: Geleceğin İş Modelleri
+                    </h4>
+</article>
+</div>
+</section>
+</main>
+<footer class="bg-surface-dark border-t border-border-dark mt-auto relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+<div class="max-w-[1440px] mx-auto px-4 md:px-10 py-12 relative z-10">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+<div class="col-span-1 md:col-span-1">
+<div class="flex items-center gap-2 text-white mb-6">
+<span class="material-symbols-outlined text-primary !text-[32px]">smart_toy</span>
+<h2 class="text-xl font-bold tracking-tight">AI Haberleri</h2>
+</div>
+<p class="text-gray-400 text-sm leading-relaxed mb-6">
+                        Yapay zeka dünyasındaki en güncel gelişmeleri, derinlemesine analizleri ve uzman görüşlerini okuyucularımızla buluşturuyoruz. Geleceği bugünden yakalayın.
+                    </p>
+</div>
+<div>
+<h4 class="text-white font-bold mb-6 text-base tracking-wide uppercase">Kurumsal</h4>
+<ul class="space-y-3 text-sm text-gray-400">
+<li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span>Hakkımızda</a></li>
+<li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span>Künye</a></li>
+<li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span>İletişim</a></li>
+<li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span>Kariyer</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-white font-bold mb-6 text-base tracking-wide uppercase">Kategoriler</h4>
+<ul class="space-y-3 text-sm text-gray-400">
+<li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span>Haberler</a></li>
+<li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span>Analiz</a></li>
+<li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span>Röportajlar</a></li>
+<li><a class="hover:text-primary transition-colors flex items-center gap-2" href="#"><span class="w-1 h-1 bg-primary rounded-full"></span>Etkinlikler</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-white font-bold mb-6 text-base tracking-wide uppercase">Takip Edin</h4>
+<div class="flex gap-4">
+<a class="size-10 rounded-lg bg-background-dark border border-border-dark flex items-center justify-center text-gray-400 hover:text-white hover:bg-black hover:border-black transition-all" href="#">
+                            X
+                        </a>
+<a class="size-10 rounded-lg bg-background-dark border border-border-dark flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#0a66c2] hover:border-[#0a66c2] transition-all" href="#">
+                            in
+                        </a>
+<a class="size-10 rounded-lg bg-background-dark border border-border-dark flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#c13584] hover:border-[#c13584] transition-all" href="#">
+                            Ig
+                        </a>
+<a class="size-10 rounded-lg bg-background-dark border border-border-dark flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-600 hover:border-red-600 transition-all" href="#">
+                            Yt
+                        </a>
+</div>
+</div>
+</div>
+<div class="border-t border-border-dark pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+<p>© 2023 AI Haberleri. Tüm hakları saklıdır.</p>
+<div class="flex gap-6">
+<a class="hover:text-white transition-colors" href="#">Gizlilik Politikası</a>
+<a class="hover:text-white transition-colors" href="#">Kullanım Şartları</a>
+<a class="hover:text-white transition-colors" href="#">Çerez Politikası</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

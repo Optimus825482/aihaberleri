@@ -212,7 +212,7 @@ export default async function EnglishArticlePage({ params }: Props) {
   const combinedSchema = combineSchemas(newsArticleSchema, breadcrumbSchema);
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <main className="min-h-screen bg-ai-background-dark">
       {/* Structured Data */}
       <script
         type="application/ld+json"
@@ -220,21 +220,22 @@ export default async function EnglishArticlePage({ params }: Props) {
       />
 
       {/* Breadcrumb */}
-      <div className="bg-white dark:bg-gray-800 border-b">
+      <div className="bg-ai-surface-dark border-b border-ai-surface-border">
         <div className="container mx-auto px-4 py-3">
-          <nav className="text-sm text-gray-500">
-            <Link href="/en" className="hover:text-blue-600">
+          <nav className="text-sm text-ai-text-secondary flex items-center gap-2">
+            <Link href="/en" className="hover:text-ai-primary transition-colors flex items-center gap-1">
+              <span className="material-symbols-outlined text-[16px]">home</span>
               Home
             </Link>
-            <span className="mx-2">/</span>
+            <span className="text-ai-text-muted">/</span>
             <Link
               href={`/en/category/${article.category.slug}`}
-              className="hover:text-blue-600"
+              className="hover:text-ai-primary transition-colors"
             >
               {article.category.name}
             </Link>
-            <span className="mx-2">/</span>
-            <span className="text-gray-900 dark:text-white">
+            <span className="text-ai-text-muted">/</span>
+            <span className="text-white truncate max-w-[200px]">
               {article.title}
             </span>
           </nav>
@@ -245,40 +246,47 @@ export default async function EnglishArticlePage({ params }: Props) {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <header className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <Link
                 href={`/en/category/${article.category.slug}`}
-                className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+                className="bg-ai-primary text-white px-3 py-1 rounded-full text-sm font-medium hover:bg-ai-primary-hover transition-colors"
               >
                 {article.category.name}
               </Link>
-              <span className="text-gray-500 text-sm">
-                {article.views} views
+              <span className="text-ai-text-secondary text-sm flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">visibility</span>
+                {article.views.toLocaleString()} views
               </span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               {article.title}
             </h1>
 
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-4">
+            <p className="text-xl text-ai-text-secondary mb-4">
               {article.excerpt}
             </p>
 
-            <div className="flex items-center gap-4 text-sm text-gray-500">
+            <div className="flex items-center gap-4 text-sm text-ai-text-secondary border-b border-ai-surface-border pb-6">
               {article.publishedAt && (
-                <time dateTime={article.publishedAt.toISOString()}>
-                  {formatDate(article.publishedAt)}
-                </time>
+                <span className="flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                  <time dateTime={article.publishedAt.toISOString()}>
+                    {formatDate(article.publishedAt)}
+                  </time>
+                </span>
               )}
               {article.author && (
-                <span>By {article.author.name || "AI News Team"}</span>
+                <span className="flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">person</span>
+                  By {article.author.name || "AI News Team"}
+                </span>
               )}
               <Link
-                href={`/haber/${article.originalSlug}`}
-                className="text-blue-600 hover:text-blue-700"
-              >
-                🇹🇷 Türkçe versiyonu
+                href={`/news/${article.originalSlug}`}
+                className="text-ai-primary hover:text-ai-primary-hover transition-colors flex items-center gap-1 ml-auto">
+                <span className="text-lg">🇹🇷</span>
+                Türkçe versiyonu
               </Link>
             </div>
           </header>
@@ -299,19 +307,22 @@ export default async function EnglishArticlePage({ params }: Props) {
 
           {/* Content */}
           <div
-            className="prose prose-lg dark:prose-invert max-w-none mb-12"
+            className="prose prose-lg prose-invert max-w-none mb-12 prose-headings:text-white prose-p:text-ai-text-secondary prose-a:text-ai-primary prose-strong:text-white"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
 
           {/* Share */}
-          <div className="border-t border-b py-6 mb-12">
+          <div className="border-t border-b border-ai-surface-border py-6 mb-12">
             <div className="flex items-center gap-4">
-              <span className="font-semibold">Share:</span>
+              <span className="font-semibold text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-ai-primary">share</span>
+                Share:
+              </span>
               <a
                 href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(`https://aihaberleri.org/en/news/${article.slug}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-blue-500"
+                className="text-ai-text-secondary hover:text-ai-primary transition-colors"
               >
                 Twitter
               </a>
@@ -319,7 +330,7 @@ export default async function EnglishArticlePage({ params }: Props) {
                 href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://aihaberleri.org/en/news/${article.slug}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-blue-600"
+                className="text-ai-text-secondary hover:text-ai-primary transition-colors"
               >
                 Facebook
               </a>
@@ -327,7 +338,7 @@ export default async function EnglishArticlePage({ params }: Props) {
                 href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(`https://aihaberleri.org/en/news/${article.slug}`)}&title=${encodeURIComponent(article.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-blue-700"
+                className="text-ai-text-secondary hover:text-ai-primary transition-colors"
               >
                 LinkedIn
               </a>
@@ -338,21 +349,24 @@ export default async function EnglishArticlePage({ params }: Props) {
         {/* Related Articles */}
         {relatedArticles.length > 0 && (
           <section className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold mb-6">Related Articles</h2>
+            <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
+              <span className="material-symbols-outlined text-[24px] text-ai-primary">recommend</span>
+              Related Articles
+            </h2>
             <div className="grid md:grid-cols-3 gap-6">
               {relatedArticles.map((related) => (
                 <Link
                   key={related.id}
                   href={`/en/news/${related.slug}`}
-                  className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow"
+                  className="bg-ai-surface-card rounded-xl overflow-hidden border border-ai-surface-border hover:border-ai-primary/40 transition-all group"
                 >
                   {related.imageUrl && (
-                    <div className="relative aspect-video">
+                    <div className="relative aspect-video overflow-hidden">
                       <Image
                         src={related.imageUrl}
                         alt={related.title}
                         fill
-                        className="object-cover"
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
                         unoptimized={
                           related.imageUrl.includes("pollinations.ai") ||
                           related.imageUrl.includes("r2.dev") ||
@@ -362,7 +376,7 @@ export default async function EnglishArticlePage({ params }: Props) {
                     </div>
                   )}
                   <div className="p-4">
-                    <h3 className="font-semibold line-clamp-2">
+                    <h3 className="font-semibold line-clamp-2 text-white group-hover:text-ai-primary transition-colors">
                       {related.title}
                     </h3>
                   </div>

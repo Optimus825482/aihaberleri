@@ -14,10 +14,12 @@ export function CategoryHero({
   articleCount,
 }: CategoryHeroProps) {
   return (
-    <section className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16 overflow-hidden">
+    <section className="relative bg-ai-surface-dark py-16 overflow-hidden">
       {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[url('/logos/banners/banner-1.png')] bg-cover bg-center mix-blend-overlay" />
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-ai-primary/20 via-transparent to-ai-primary/10" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-ai-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-ai-primary/5 rounded-full blur-3xl" />
       </div>
 
       {/* Category Image (if provided) */}
@@ -48,27 +50,15 @@ export function CategoryHero({
       {/* Content */}
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-3xl">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">{title}</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">{title}</h1>
           {description && (
-            <p className="text-lg md:text-xl text-white/90 mb-6">
+            <p className="text-lg md:text-xl text-ai-text-secondary mb-6">
               {description}
             </p>
           )}
           {articleCount !== undefined && (
-            <div className="flex items-center gap-2 text-white/80">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
+            <div className="flex items-center gap-2 text-ai-text-muted">
+              <span className="material-symbols-outlined text-[20px]">description</span>
               <span className="text-sm font-medium">
                 {articleCount} haber bulundu
               </span>
@@ -77,8 +67,8 @@ export function CategoryHero({
         </div>
       </div>
 
-      {/* Decorative Elements */}
-      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background/20 to-transparent" />
+      {/* Bottom fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-ai-background-dark to-transparent" />
     </section>
   );
 }

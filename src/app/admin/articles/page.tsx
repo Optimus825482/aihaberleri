@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
@@ -50,6 +51,7 @@ import {
   Globe,
   Share2,
   TrendingUp,
+  RotateCcw,
 } from "lucide-react";
 import Image from "next/image";
 import {
@@ -279,6 +281,13 @@ export default function ArticlesPage() {
     id: string;
     title: string;
   } | null>(null);
+  const [reEvaluate, setReEvaluate] = useState<{
+    id: string;
+    title: string;
+    note: string;
+    loading: boolean;
+    regenerateImage: boolean;
+  } | null>(null);
 
   // Bulk Share State
   const [showBatchModal, setShowBatchModal] = useState(false);
@@ -506,6 +515,65 @@ export default function ArticlesPage() {
     }
   };
 
+  // Re-evaluate handlers
+  const openReEvaluate = (id: string, title: string) => {
+    setReEvaluate({ id, title, note: "", loading: false, regenerateImage: false });
+  };
+
+  const cancelReEvaluate = () => {
+    setReEvaluate(null);
+  };
+
+  const confirmReEvaluate = async () => {
+    if (!reEvaluate || !reEvaluate.note.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Lütfen bir not girin",
+      });
+      return;
+    }
+
+    setReEvaluate((prev) => (prev ? { ...prev, loading: true } : null));
+
+    try {
+      const response = await fetch(`/api/admin/articles/${reEvaluate.id}/re-evaluate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          note: reEvaluate.note,
+          regenerateImage: reEvaluate.regenerateImage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast({
+          title: "✅ Başarılı",
+          description: `"${data.article?.title?.substring(0, 30)}..." yeniden değerlendirildi`,
+        });
+        fetchData(); // Refresh list
+        setReEvaluate(null);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: data.error || "Yeniden değerlendirme başarısız",
+        });
+        setReEvaluate((prev) => (prev ? { ...prev, loading: false } : null));
+      }
+    } catch (error) {
+      console.error("Re-evaluate error:", error);
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Bir hata oluştu",
+      });
+      setReEvaluate((prev) => (prev ? { ...prev, loading: false } : null));
+    }
+  };
+
   // Server-side filtering - no client-side filtering needed
   const displayArticles = articles;
   const totalPages = Math.ceil(totalArticles / pageSize);
@@ -559,6 +627,11 @@ export default function ArticlesPage() {
         deleteArticle={deleteArticle}
         refreshImage={refreshImage}
         shareFacebook={shareFacebook}
+        reEvaluate={reEvaluate}
+        setReEvaluate={setReEvaluate}
+        openReEvaluate={openReEvaluate}
+        cancelReEvaluate={cancelReEvaluate}
+        confirmReEvaluate={confirmReEvaluate}
         router={router}
       />
     </BatchSelectionProvider>
@@ -591,6 +664,11 @@ interface ArticlesPageContentProps {
   deleteArticle: (id: string, title: string) => void;
   refreshImage: (id: string) => Promise<void>;
   shareFacebook: (id: string) => Promise<void>;
+  reEvaluate: { id: string; title: string; note: string; loading: boolean; regenerateImage: boolean } | null;
+  setReEvaluate: React.Dispatch<React.SetStateAction<{ id: string; title: string; note: string; loading: boolean; regenerateImage: boolean } | null>>;
+  openReEvaluate: (id: string, title: string) => void;
+  cancelReEvaluate: () => void;
+  confirmReEvaluate: () => Promise<void>;
   router: any;
 }
 
@@ -621,6 +699,11 @@ function ArticlesPageContent({
   deleteArticle,
   refreshImage,
   shareFacebook,
+  reEvaluate,
+  setReEvaluate,
+  openReEvaluate,
+  cancelReEvaluate,
+  confirmReEvaluate,
   router,
 }: ArticlesPageContentProps) {
   const { selectedIds, clearSelection } = useBatchSelection();
@@ -698,6 +781,69 @@ function ArticlesPageContent({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Evet, Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Re-Evaluate Dialog */}
+      <AlertDialog
+        open={!!reEvaluate}
+        onOpenChange={(open) => !open && cancelReEvaluate()}
+      >
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Yeniden Değerlendir</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  <span className="font-medium">{reEvaluate?.title}</span> başlıklı haber yapay zeka tarafından yeniden değerlendirilecek.
+                </p>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Not (yapay zekaya talimat)</label>
+                  <Textarea
+                    placeholder="Örn: Haberde 2024 yazıyor ama 2026 olmalı, tarihleri güncelle..."
+                    value={reEvaluate?.note || ""}
+                    onChange={(e) => setReEvaluate(prev => prev ? { ...prev, note: e.target.value } : null)}
+                    className="min-h-[100px]"
+                    disabled={reEvaluate?.loading}
+                  />
+                  <p className="text-xs text-muted-foreground">Minimum 10 karakter</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="regenerateImage"
+                    checked={reEvaluate?.regenerateImage || false}
+                    onChange={(e) => setReEvaluate(prev => prev ? { ...prev, regenerateImage: e.target.checked } : null)}
+                    disabled={reEvaluate?.loading}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <label htmlFor="regenerateImage" className="text-sm">Görseli de yeniden oluştur</label>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelReEvaluate} disabled={reEvaluate?.loading}>
+              İptal
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmReEvaluate}
+              disabled={reEvaluate?.loading || (reEvaluate?.note?.length || 0) < 10}
+              className="bg-blue-600 text-white hover:bg-blue-700"
+            >
+              {reEvaluate?.loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  İşleniyor...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Yeniden Değerlendir
+                </>
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -921,6 +1067,14 @@ function ArticlesPageContent({
                       )}
                     <Button
                       size="sm"
+                      variant="outline"
+                      onClick={() => openReEvaluate(article.id, article.title)}
+                      title="Yeniden Değerlendir"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
                       variant="ghost"
                       onClick={() => deleteArticle(article.id, article.title)}
                       className="text-destructive hover:text-destructive"
@@ -1126,6 +1280,16 @@ function ArticlesPageContent({
                             title="Düzenle"
                           >
                             <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              openReEvaluate(article.id, article.title)
+                            }
+                            title="Yeniden Değerlendir"
+                          >
+                            <RotateCcw className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"

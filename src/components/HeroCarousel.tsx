@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Article {
   id: string;
@@ -88,9 +87,10 @@ export function HeroCarousel({
 
   if (articles.length === 0) {
     return (
-      <section className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white overflow-hidden h-[500px] md:h-[600px]">
+      <section className="relative bg-gradient-to-br from-ai-primary via-ai-primary-hover to-ai-surface-dark text-white overflow-hidden h-[500px] md:h-[600px]">
         <div className="container mx-auto px-4 h-full flex items-center justify-center">
           <div className="text-center">
+            <span className="material-symbols-outlined text-[64px] text-white/50 mb-4 block">newspaper</span>
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
               {t.emptyTitle}
             </h1>
@@ -112,7 +112,7 @@ export function HeroCarousel({
     locale === "en" ? `/en/news/${slug}` : `/news/${slug}`;
 
   return (
-    <section className="relative bg-black text-white overflow-hidden h-[500px] md:h-[600px] group">
+    <section className="relative bg-ai-background-dark text-white overflow-hidden h-[500px] md:h-[600px] group">
       {/* Background Images with Smooth Transition */}
       {articles.map((article, index) => (
         <div
@@ -145,7 +145,7 @@ export function HeroCarousel({
             )
           )}
           {/* Dark Overlay with Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/70 to-ai-background-dark/30" />
         </div>
       ))}
 
@@ -161,8 +161,9 @@ export function HeroCarousel({
             >
               <Link
                 href={getCategoryLink(currentArticle.category.slug)}
-                className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-full text-sm font-semibold transition-all hover:scale-105 shadow-lg"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-ai-primary hover:bg-ai-primary-hover rounded-full text-sm font-semibold transition-all hover:scale-105 shadow-lg"
               >
+                <span className="material-symbols-outlined text-[16px]">category</span>
                 {currentArticle.category.name}
               </Link>
             </div>
@@ -178,7 +179,7 @@ export function HeroCarousel({
             {/* Excerpt with Fade */}
             <p
               key={`excerpt-${currentArticle.id}`}
-              className="text-base md:text-xl text-white/90 mb-6 line-clamp-2 drop-shadow-lg animate-slide-up-fade"
+              className="text-base md:text-xl text-ai-text-secondary mb-6 line-clamp-2 drop-shadow-lg animate-slide-up-fade"
               style={{ animationDelay: "0.3s" }}
             >
               {currentArticle.excerpt}
@@ -192,22 +193,10 @@ export function HeroCarousel({
             >
               <Link
                 href={getArticleLink(currentArticle.slug)}
-                className="inline-flex items-center gap-2 bg-white text-black px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold text-base md:text-lg hover:bg-white/90 transition-all hover:scale-105 hover:shadow-2xl shadow-xl"
+                className="inline-flex items-center gap-2 bg-ai-primary hover:bg-ai-primary-hover text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold text-base md:text-lg transition-all hover:scale-105 hover:shadow-2xl shadow-xl"
               >
                 {t.readMore}
-                <svg
-                  className="w-5 h-5 transition-transform group-hover:translate-x-1"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                <span className="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1">arrow_forward</span>
               </Link>
             </div>
           </div>
@@ -219,17 +208,17 @@ export function HeroCarousel({
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 hover:scale-110 backdrop-blur-sm"
-            aria-label="Önceki haber"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-ai-surface-card/70 hover:bg-ai-surface-hover text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 hover:scale-110 backdrop-blur-sm border border-ai-surface-border"
+            aria-label={t.prev}
           >
-            <ChevronLeft className="w-6 h-6" />
+            <span className="material-symbols-outlined text-[24px]">chevron_left</span>
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 hover:scale-110 backdrop-blur-sm"
-            aria-label="Sonraki haber"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-ai-surface-card/70 hover:bg-ai-surface-hover text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 hover:scale-110 backdrop-blur-sm border border-ai-surface-border"
+            aria-label={t.next}
           >
-            <ChevronRight className="w-6 h-6" />
+            <span className="material-symbols-outlined text-[24px]">chevron_right</span>
           </button>
         </>
       )}
@@ -242,10 +231,10 @@ export function HeroCarousel({
               key={index}
               onClick={() => goToSlide(index)}
               className={`transition-all duration-300 ${index === currentIndex
-                ? "w-8 bg-white scale-110"
+                ? "w-8 bg-ai-primary scale-110"
                 : "w-2 bg-white/50 hover:bg-white/70 hover:scale-110"
                 } h-2 rounded-full`}
-              aria-label={`${index + 1}. habere git`}
+              aria-label={t.goTo(index)}
             />
           ))}
         </div>
@@ -253,10 +242,10 @@ export function HeroCarousel({
 
       {/* Animated Progress Bar */}
       {articles.length > 1 && isAutoPlaying && (
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 z-20 overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-ai-surface-border z-20 overflow-hidden">
           <div
             key={currentIndex}
-            className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-progress"
+            className="h-full bg-gradient-to-r from-ai-primary via-ai-primary-hover to-ai-primary animate-progress"
             style={{
               animationDuration: `${autoPlayInterval}ms`,
             }}

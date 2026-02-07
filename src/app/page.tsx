@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { MostReadSidebarClient } from "@/components/MostReadSidebarClient";
-import { Newspaper } from "lucide-react";
+import Link from "next/link";
 
 import {
   generateOrganizationSchema,
@@ -22,7 +22,7 @@ export default async function HomePage() {
   // Skip database queries during build
   if (process.env.SKIP_ENV_VALIDATION === "1") {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-ai-background-dark">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={generateJsonLd({
@@ -31,10 +31,10 @@ export default async function HomePage() {
           })}
         />
         <main className="flex-1">
-          <section className="container mx-auto px-4 py-12">
-            <h2 className="text-3xl font-bold mb-8">Son Haberler</h2>
+          <section className="container mx-auto px-4 py-12 max-w-7xl">
+            <h2 className="text-3xl font-bold mb-8 text-white">Son Haberler</h2>
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Yükleniyor...</p>
+              <p className="text-ai-text-secondary">Yükleniyor...</p>
             </div>
           </section>
         </main>
@@ -42,17 +42,17 @@ export default async function HomePage() {
     );
   }
 
-  // Fetch settings and articles in PARALLEL for better performance
+  // Fetch settings, articles, and categories in PARALLEL
   let settings = {
     heroCarouselCount: 5,
     heroCarouselInterval: 6000,
   };
   let articles: any[] = [];
   let heroArticles: any[] = [];
+  let categories: any[] = [];
 
   try {
-    // PARALLEL QUERIES - Much faster than sequential
-    const [settingsFromDb, articlesFromDb, heroArticlesFromDb] =
+    const [settingsFromDb, articlesFromDb, heroArticlesFromDb, categoriesFromDb] =
       await Promise.all([
         // Query 1: Settings
         db.setting.findMany({
@@ -114,7 +114,12 @@ export default async function HomePage() {
             },
           },
           orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
-          take: 5, // Use default instead of settings for faster query
+          take: 5,
+        }),
+        // Query 4: Categories for filter chips
+        db.category.findMany({
+          orderBy: { order: "asc" },
+          take: 8,
         }),
       ]);
 
@@ -134,13 +139,13 @@ export default async function HomePage() {
 
     articles = articlesFromDb;
     heroArticles = heroArticlesFromDb;
+    categories = categoriesFromDb;
   } catch (error) {
     console.error("Failed to fetch data:", error);
-    // Fallbacks are already set
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-ai-background-dark">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={generateJsonLd({
@@ -156,42 +161,143 @@ export default async function HomePage() {
           locale="tr"
         />
 
+        {/* Category Filter Chips */}
+        <section className="border-b border-ai-surface-border bg-ai-surface-dark/50">
+          <div className="container mx-auto px-4 py-4 max-w-7xl">
+            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              <Link
+                href="/"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-ai-primary text-white text-sm font-medium whitespace-nowrap transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">apps</span>
+                Tümü
+              </Link>
+              {categories.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/category/${category.slug}`}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-ai-surface-card hover:bg-ai-surface-hover text-ai-text-secondary hover:text-white text-sm font-medium whitespace-nowrap transition-colors border border-ai-surface-border"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Main Content Area - Two Column Layout */}
-        <section className="container mx-auto px-4 py-12 lg:py-16">
-          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+        <section className="container mx-auto px-4 py-10 lg:py-14 max-w-7xl">
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
             {/* Left Column - Latest News */}
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Newspaper className="w-5 h-5 text-primary" />
+              {/* Section Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-primary/10">
+                    <span className="material-symbols-outlined text-ai-primary text-[22px]">
+                      newspaper
+                    </span>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Son Haberler</h2>
+                    <p className="text-sm text-ai-text-muted">Güncel AI gelişmeleri</p>
+                  </div>
                 </div>
-                <h2 className="text-2xl font-bold">Son Haberler</h2>
+                <Link
+                  href="/haberler"
+                  className="flex items-center gap-1 text-sm text-ai-primary hover:text-ai-primary-hover transition-colors group"
+                >
+                  Tümünü Gör
+                  <span className="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform">
+                    arrow_forward
+                  </span>
+                </Link>
               </div>
 
-              {/* Horizontal Scrolling News Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* News Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {articles.map((article, index: number) => (
                   <ArticleCard
                     key={article.id}
                     article={article}
-                    priority={index < 3}
+                    priority={index < 4}
                   />
                 ))}
               </div>
 
               {articles.length === 0 && (
-                <div className="text-center py-12 bg-muted/30 rounded-xl">
-                  <p className="text-muted-foreground">
-                    Henüz haber yok. Otonom agent yakında haber yayınlamaya
-                    başlayacak!
+                <div className="text-center py-16 bg-ai-surface-card rounded-xl border border-ai-surface-border">
+                  <span className="material-symbols-outlined text-[48px] text-ai-text-muted mb-4">
+                    article
+                  </span>
+                  <p className="text-ai-text-secondary">
+                    Henüz haber yok. Otonom agent yakında haber yayınlamaya başlayacak!
                   </p>
+                </div>
+              )}
+
+              {/* Load More Button */}
+              {articles.length > 0 && (
+                <div className="mt-8 text-center">
+                  <Link
+                    href="/haberler"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-ai-surface-card hover:bg-ai-surface-hover border border-ai-surface-border rounded-xl text-white font-medium transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">expand_more</span>
+                    Daha Fazla Haber
+                  </Link>
                 </div>
               )}
             </div>
 
-            {/* Right Column - Most Read Sidebar */}
-            <div className="w-full lg:w-96 xl:w-[420px] flex-shrink-0">
+            {/* Right Column - Sidebars */}
+            <div className="w-full lg:w-[380px] xl:w-[420px] flex-shrink-0 space-y-6">
+              {/* Most Read Sidebar */}
               <MostReadSidebarClient />
+
+              {/* AI Tools CTA Card */}
+              <div className="bg-gradient-to-br from-ai-primary/20 to-ai-surface-card rounded-xl border border-ai-surface-border p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-primary/20">
+                    <span className="material-symbols-outlined text-ai-primary text-[22px]">
+                      psychology
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white">AI Araçları</h3>
+                </div>
+                <p className="text-sm text-ai-text-secondary mb-4">
+                  En popüler yapay zeka araçlarını keşfedin ve üretkenliğinizi artırın.
+                </p>
+                <Link
+                  href="/category/ai-araclari"
+                  className="inline-flex items-center gap-2 text-sm text-ai-primary hover:text-ai-primary-hover font-medium transition-colors"
+                >
+                  Araçları İncele
+                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </Link>
+              </div>
+
+              {/* Newsletter Card */}
+              <div className="bg-ai-surface-card rounded-xl border border-ai-surface-border p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-primary/20">
+                    <span className="material-symbols-outlined text-ai-primary text-[22px]">
+                      mail
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Haftalık Bülten</h3>
+                </div>
+                <p className="text-sm text-ai-text-secondary mb-4">
+                  Her hafta en önemli AI haberlerini e-posta kutunuza alalım.
+                </p>
+                <Link
+                  href="#newsletter"
+                  className="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 bg-ai-primary hover:bg-ai-primary-hover text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">notifications</span>
+                  Abone Ol
+                </Link>
+              </div>
             </div>
           </div>
         </section>

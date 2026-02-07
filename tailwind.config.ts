@@ -10,6 +10,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Stitch Design System Colors
+        "ai-primary": "#1179d4",
+        "ai-primary-hover": "#0f6bc0",
+        "ai-primary-light": "rgba(17, 121, 212, 0.1)",
+        "ai-background-light": "#f6f7f8",
+        "ai-background-dark": "#101a22",
+        "ai-surface-dark": "#111518",
+        "ai-surface-card": "#1c2227",
+        "ai-surface-border": "#283139",
+        "ai-surface-hover": "#3b4854",
+        "ai-text-secondary": "#9dacb9",
+        "ai-text-muted": "#5f6d7a",
+        // Shadcn compatibility
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -51,10 +64,16 @@ const config: Config = {
           "5": "hsl(var(--chart-5))",
         },
       },
+      fontFamily: {
+        display: ["Inter", "sans-serif"],
+        body: ["Inter", "sans-serif"],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "0.75rem",
+        "2xl": "1rem",
       },
       keyframes: {
         "slide-up": {

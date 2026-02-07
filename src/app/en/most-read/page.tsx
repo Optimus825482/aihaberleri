@@ -1,5 +1,4 @@
 import { db } from "@/lib/db";
-import { Eye, Clock, TrendingUp, Calendar, Flame } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatDate } from "@/lib/utils";
@@ -78,32 +77,37 @@ export default async function MostReadEnPage({
     month: "This Month",
   };
 
+  const periodIcons: Record<string, string> = {
+    today: "local_fire_department",
+    week: "calendar_today",
+    month: "trending_up",
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-ai-background-dark">
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8 max-w-6xl">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/10 rounded-xl">
-                <TrendingUp className="w-7 h-7 text-primary" />
+              <div className="p-3 bg-ai-primary/10 rounded-xl">
+                <span className="material-symbols-outlined text-[28px] text-ai-primary">trending_up</span>
               </div>
               <div>
-                <h1 className="text-3xl font-bold">Most Read</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-3xl font-bold text-white">Most Read</h1>
+                <p className="text-ai-text-secondary">
                   {periodLabels[period]} most popular AI articles
                 </p>
               </div>
             </div>
 
             {/* Period Filter Tabs */}
-            <div className="flex items-center gap-2 bg-secondary/30 p-1 rounded-lg">
+            <div className="flex items-center gap-2 bg-ai-surface-dark p-1 rounded-lg">
               {[
-                { key: "today", label: "Today", icon: Flame },
-                { key: "week", label: "This Week", icon: Calendar },
-                { key: "month", label: "This Month", icon: TrendingUp },
+                { key: "today", label: "Today", icon: "local_fire_department" },
+                { key: "week", label: "This Week", icon: "calendar_today" },
+                { key: "month", label: "This Month", icon: "trending_up" },
               ].map((item) => {
-                const Icon = item.icon;
                 const isActive = period === item.key;
                 return (
                   <Link
@@ -111,11 +115,11 @@ export default async function MostReadEnPage({
                     href={`/en/most-read?period=${item.key}`}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
                       isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                      ? "bg-ai-primary text-white shadow-sm"
+                      : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-hover"
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <span className="material-symbols-outlined text-[16px]">{item.icon}</span>
                     <span className="hidden sm:inline">{item.label}</span>
                   </Link>
                 );
@@ -129,7 +133,7 @@ export default async function MostReadEnPage({
               {mostReadArticles.map((article, index) => (
                 <article
                   key={article.id}
-                  className="group flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-xl border border-border/50 hover:border-primary/30 hover:shadow-lg transition-all"
+                  className="group flex flex-col sm:flex-row gap-4 p-4 bg-ai-surface-card rounded-xl border border-ai-surface-border hover:border-ai-primary/30 hover:shadow-lg transition-all"
                 >
                   {/* Rank Badge */}
                   <div className="flex-shrink-0 flex items-start sm:items-center">
@@ -137,7 +141,7 @@ export default async function MostReadEnPage({
                       className={`w-10 h-10 flex items-center justify-center font-bold rounded-full text-lg ${
                         index < 3
                           ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-md"
-                          : "bg-secondary text-muted-foreground"
+                        : "bg-ai-surface-dark text-ai-text-muted"
                       }`}
                     >
                       {index + 1}
@@ -163,8 +167,8 @@ export default async function MostReadEnPage({
                         }
                       />
                     ) : (
-                      <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <TrendingUp className="w-8 h-8 text-muted-foreground/30" />
+                        <div className="w-full h-full bg-ai-surface-dark flex items-center justify-center">
+                          <span className="material-symbols-outlined text-[32px] text-ai-text-muted/30">trending_up</span>
                       </div>
                     )}
                   </Link>
@@ -175,7 +179,7 @@ export default async function MostReadEnPage({
                     {article.category && (
                       <Link
                         href={`/en/category/${article.category.slug}`}
-                        className="text-xs font-medium text-primary hover:underline w-fit"
+                        className="text-xs font-medium text-ai-primary hover:underline w-fit"
                       >
                         {article.category.name}
                       </Link>
@@ -183,27 +187,27 @@ export default async function MostReadEnPage({
 
                     {/* Title */}
                     <Link href={`/en/news/${article.slug}`}>
-                      <h2 className="text-lg font-semibold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                      <h2 className="text-lg font-semibold leading-tight line-clamp-2 text-white group-hover:text-ai-primary transition-colors">
                         {article.titleEn || article.title}
                       </h2>
                     </Link>
 
                     {/* Excerpt */}
                     {(article.excerptEn || article.excerpt) && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-ai-text-secondary line-clamp-2">
                         {article.excerptEn || article.excerpt}
                       </p>
                     )}
 
                     {/* Meta */}
-                    <div className="flex items-center flex-wrap gap-3 text-xs text-muted-foreground mt-auto pt-2">
+                    <div className="flex items-center flex-wrap gap-3 text-xs text-ai-text-muted mt-auto pt-2">
                       <span className="flex items-center gap-1">
-                        <Eye className="w-3.5 h-3.5" />
-                        <strong className="text-foreground">{article.views.toLocaleString("en-US")}</strong> views
+                        <span className="material-symbols-outlined text-[14px]">visibility</span>
+                        <strong className="text-white">{article.views.toLocaleString("en-US")}</strong> views
                       </span>
                       {article.publishedAt && (
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
+                          <span className="material-symbols-outlined text-[14px]">schedule</span>
                           {formatDate(article.publishedAt)}
                         </span>
                       )}
@@ -214,15 +218,15 @@ export default async function MostReadEnPage({
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 bg-muted/30 rounded-xl">
-              <TrendingUp className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No Data Yet</h3>
-              <p className="text-muted-foreground">
+              <div className="text-center py-16 bg-ai-surface-dark/30 rounded-xl">
+                <span className="material-symbols-outlined text-[48px] text-ai-text-muted/30 mx-auto mb-4 block">trending_up</span>
+                <h3 className="text-xl font-semibold mb-2 text-white">No Data Yet</h3>
+                <p className="text-ai-text-secondary">
                 Not enough reading data available for the selected period.
               </p>
               <Link
                 href="/en"
-                className="inline-block mt-4 text-primary hover:underline"
+                  className="inline-block mt-4 text-ai-primary hover:underline"
               >
                 Back to Home
               </Link>

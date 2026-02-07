@@ -1,6 +1,3 @@
-import { TrendingUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-
 interface TrendScoreBadgeProps {
   trendScore: number | null | undefined;
   size?: "sm" | "md" | "lg";
@@ -22,30 +19,35 @@ export function TrendScoreBadge({
   // Determine badge color based on score
   const getBadgeColor = () => {
     if (score >= 80) {
-      return "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30";
+      return "bg-green-500/20 text-green-400 border-green-500/30";
     } else if (score >= 60) {
-      return "bg-lime-500/20 text-lime-700 dark:text-lime-300 border-lime-500/30";
+      return "bg-lime-500/20 text-lime-400 border-lime-500/30";
     } else if (score >= 40) {
-      return "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30";
+      return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
     } else {
-      return "bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30";
+      return "bg-orange-500/20 text-orange-400 border-orange-500/30";
     }
   };
 
   // Size variants
   const sizeClasses = {
-    sm: "text-xs",
-    md: "text-sm",
-    lg: "text-base",
+    sm: "text-xs px-1.5 py-0.5",
+    md: "text-sm px-2 py-1",
+    lg: "text-base px-2.5 py-1",
+  };
+
+  const iconSizes = {
+    sm: "text-[12px]",
+    md: "text-[14px]",
+    lg: "text-[16px]",
   };
 
   return (
-    <Badge
-      className={`${sizeClasses[size]} font-bold tabular-nums ${getBadgeColor()}`}
-      variant="outline"
+    <span
+      className={`inline-flex items-center gap-1 ${sizeClasses[size]} font-bold tabular-nums rounded-md border ${getBadgeColor()}`}
     >
-      {showIcon && <TrendingUp className="h-3 w-3 mr-1" />}
+      {showIcon && <span className={`material-symbols-outlined ${iconSizes[size]}`}>trending_up</span>}
       {score}
-    </Badge>
+    </span>
   );
 }

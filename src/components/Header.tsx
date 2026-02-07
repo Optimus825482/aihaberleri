@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
-import { Menu, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,235 +37,179 @@ export function Header({ categories }: HeaderProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Implement search functionality here or redirect to search page
-      // For now, just close the search bar
-      console.log("Searching for:", searchQuery);
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setIsSearchOpen(false);
+      setSearchQuery("");
     }
   };
 
   const isActive = (path: string) => pathname === path;
 
+  const navLinks = [
+    { href: "/", label: "Ana Sayfa", icon: "home" },
+    { href: "/haberler", label: "Haberler", icon: "newspaper" },
+    { href: "/categories", label: "Kategoriler", icon: "category" },
+    { href: "/about", label: "Hakkımızda", icon: "info" },
+    { href: "/contact", label: "İletişim", icon: "mail" },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-ai-surface-border bg-ai-surface-dark/95 backdrop-blur supports-[backdrop-filter]:bg-ai-surface-dark/80">
       <div className="container mx-auto px-4 max-w-7xl">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo Section */}
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center space-x-2">
-              <Logo size="md" showText={true} />
-            </Link>
-          </div>
+          <Link href="/" className="flex items-center gap-3 shrink-0">
+            <Logo size="md" showText={false} />
+            <span className="text-lg font-bold text-white tracking-tight hidden sm:block">
+              AI Haberleri
+            </span>
+          </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6">
-            <Link
-              href="/"
-              className={cn(
-                "text-base font-medium transition-colors hover:text-primary",
-                isActive("/")
-                  ? "text-primary font-bold"
-                  : "text-muted-foreground",
-              )}
-            >
-              Ana Sayfa
-            </Link>
-            <Link
-              href="/en-cok-okunanlar"
-              className={cn(
-                "text-base font-medium transition-colors hover:text-primary",
-                isActive("/en-cok-okunanlar")
-                  ? "text-primary font-bold"
-                  : "text-muted-foreground",
-              )}
-            >
-              Son Haberler
-            </Link>
-            <Link
-              href="/categories"
-              className={cn(
-                "text-base font-medium transition-colors hover:text-primary",
-                isActive("/categories")
-                  ? "text-primary font-bold"
-                  : "text-muted-foreground",
-              )}
-            >
-              Kategoriler
-            </Link>
-            <Link
-              href="/about"
-              className={cn(
-                "text-base font-medium transition-colors hover:text-primary",
-                isActive("/about")
-                  ? "text-primary font-bold"
-                  : "text-muted-foreground",
-              )}
-            >
-              Hakkımızda
-            </Link>
-            <Link
-              href="/contact"
-              className={cn(
-                "text-base font-medium transition-colors hover:text-primary",
-                isActive("/contact")
-                  ? "text-primary font-bold"
-                  : "text-muted-foreground",
-              )}
-            >
-              İletişim
-            </Link>
+          <nav className="hidden lg:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                  isActive(link.href)
+                    ? "bg-ai-primary text-white"
+                    : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card"
+                )}
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  {link.icon}
+                </span>
+                {link.label}
+              </Link>
+            ))}
           </nav>
 
-          {/* Right Actions: Search & Subscribe & Mobile Menu */}
-          <div className="flex items-center gap-3">
-            {/* Search Bar - Always visible on desktop, toggle on mobile */}
+          {/* Right Actions */}
+          <div className="flex items-center gap-2">
+            {/* Search Bar - Desktop */}
             <div className="hidden md:flex items-center">
-              <form
-                onSubmit={handleSearch}
-                className="flex items-center gap-2"
-              >
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Haber ara..."
-                    className="h-9 w-48 lg:w-56 pl-9"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
+              <form onSubmit={handleSearch} className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-ai-text-muted text-[20px]">
+                  search
+                </span>
+                <Input
+                  placeholder="Haber ara..."
+                  className="h-10 w-48 lg:w-56 pl-10 bg-ai-surface-card border-ai-surface-border text-white placeholder:text-ai-text-muted focus:border-ai-primary focus:ring-ai-primary/20"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </form>
             </div>
 
             {/* Mobile Search Toggle */}
-            <div
-              className={cn(
-                "md:hidden flex items-center",
-                isSearchOpen
-                  ? "w-full absolute left-0 top-0 h-16 bg-background px-4 z-50"
-                  : "",
-              )}
+            <button
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-ai-text-secondary hover:text-white hover:bg-ai-surface-card transition-colors"
             >
-              {isSearchOpen ? (
-                <form
-                  onSubmit={handleSearch}
-                  className="flex w-full items-center gap-2"
-                >
-                  <Input
-                    autoFocus
-                    placeholder="Haber ara..."
-                    className="h-9 flex-1"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    type="button"
-                    onClick={() => setIsSearchOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </form>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-primary"
-                  onClick={() => setIsSearchOpen(true)}
-                >
-                  <Search className="h-5 w-5" />
-                  <span className="sr-only">Arama</span>
-                </Button>
-              )}
-            </div>
+              <span className="material-symbols-outlined text-[22px]">
+                {isSearchOpen ? "close" : "search"}
+              </span>
+            </button>
+
+            {/* Notification Bell */}
+            <button className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg text-ai-text-secondary hover:text-white hover:bg-ai-surface-card transition-colors relative">
+              <span className="material-symbols-outlined text-[22px]">notifications</span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-ai-primary rounded-full"></span>
+            </button>
 
             {/* Language Switcher */}
-            <LanguageSwitcher variant="inline" />
+            <div className="hidden sm:block">
+              <LanguageSwitcher variant="inline" />
+            </div>
 
-            {/* Subscribe Button - Visible on all sizes */}
-            <Button size="sm" className="font-semibold bg-primary hover:bg-primary/90">
-              Abone Ol
+            {/* Subscribe Button */}
+            <Button
+              size="sm"
+              className="bg-ai-primary hover:bg-ai-primary-hover text-white font-semibold px-4 h-10 rounded-lg transition-colors"
+            >
+              <span className="material-symbols-outlined text-[18px] mr-1.5">bookmark_add</span>
+              <span className="hidden sm:inline">Abone Ol</span>
             </Button>
 
-            {/* Mobile Menu (Sheet) */}
+            {/* Mobile Menu */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="lg:hidden text-muted-foreground hover:text-primary"
-                >
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Menü</span>
-                </Button>
+                <button className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg text-ai-text-secondary hover:text-white hover:bg-ai-surface-card transition-colors">
+                  <span className="material-symbols-outlined text-[24px]">menu</span>
+                </button>
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[300px] sm:w-[400px] pr-0"
+                className="w-[300px] sm:w-[350px] bg-ai-surface-dark border-ai-surface-border p-0"
               >
-                <SheetHeader className="px-1 text-left">
-                  <SheetTitle className="flex items-center gap-2 ml-4">
-                    <Logo size="sm" showText={true} />
+                <SheetHeader className="p-4 border-b border-ai-surface-border">
+                  <SheetTitle className="flex items-center gap-3">
+                    <Logo size="sm" showText={false} />
+                    <span className="text-lg font-bold text-white">AI Haberleri</span>
                   </SheetTitle>
                 </SheetHeader>
-                <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
-                  <div className="flex flex-col space-y-4">
-                    <div className="flex flex-col space-y-3 pt-4">
-                      <h4 className="font-medium leading-none">Menü</h4>
-                      <SheetClose asChild>
-                        <Link
-                          href="/"
-                          className={cn(
-                            "block py-2 text-lg font-medium transition-colors hover:text-primary",
-                            isActive("/")
-                              ? "text-primary"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          Anasayfa
-                        </Link>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <Link
-                          href="/about"
-                          className={cn(
-                            "block py-2 text-lg font-medium transition-colors hover:text-primary",
-                            isActive("/about")
-                              ? "text-primary"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          Hakkımızda
-                        </Link>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <Link
-                          href="/contact"
-                          className={cn(
-                            "block py-2 text-lg font-medium transition-colors hover:text-primary",
-                            isActive("/contact")
-                              ? "text-primary"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          İletişim
-                        </Link>
-                      </SheetClose>
-                    </div>
 
-                    <div className="flex flex-col space-y-3 pt-4 border-t">
-                      <h4 className="font-medium leading-none">Kategoriler</h4>
+                {/* Mobile Search */}
+                <div className="p-4 border-b border-ai-surface-border">
+                  <form onSubmit={handleSearch} className="relative">
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-ai-text-muted text-[20px]">
+                      search
+                    </span>
+                    <Input
+                      placeholder="Haber ara..."
+                      className="h-10 w-full pl-10 bg-ai-surface-card border-ai-surface-border text-white placeholder:text-ai-text-muted"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </form>
+                </div>
+
+                <ScrollArea className="h-[calc(100vh-180px)]">
+                  <div className="p-4 space-y-1">
+                    {/* Navigation Links */}
+                    <p className="text-xs font-medium text-ai-text-muted uppercase tracking-wider mb-3 px-3">
+                      Menü
+                    </p>
+                    {navLinks.map((link) => (
+                      <SheetClose key={link.href} asChild>
+                        <Link
+                          href={link.href}
+                          className={cn(
+                            "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors",
+                            isActive(link.href)
+                              ? "bg-ai-primary text-white"
+                              : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card"
+                          )}
+                        >
+                          <span className="material-symbols-outlined text-[20px]">
+                            {link.icon}
+                          </span>
+                          {link.label}
+                        </Link>
+                      </SheetClose>
+                    ))}
+
+                    {/* Categories */}
+                    <div className="pt-4 mt-4 border-t border-ai-surface-border">
+                      <p className="text-xs font-medium text-ai-text-muted uppercase tracking-wider mb-3 px-3">
+                        Kategoriler
+                      </p>
                       {categories.map((category) => (
                         <SheetClose key={category.id} asChild>
                           <Link
                             href={`/category/${category.slug}`}
                             className={cn(
-                              "block py-2 text-base transition-colors hover:text-primary",
+                              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
                               isActive(`/category/${category.slug}`)
-                                ? "text-primary font-medium"
-                                : "text-muted-foreground",
+                                ? "bg-ai-primary/10 text-ai-primary"
+                                : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card"
                             )}
                           >
+                            <span className="material-symbols-outlined text-[18px]">
+                              tag
+                            </span>
                             {category.name}
                           </Link>
                         </SheetClose>
@@ -274,22 +217,48 @@ export function Header({ categories }: HeaderProps) {
                     </div>
 
                     {/* Language Switcher - Mobile */}
-                    <div className="pt-4 border-t mr-6">
-                      <h4 className="font-medium leading-none mb-3">
+                    <div className="pt-4 mt-4 border-t border-ai-surface-border">
+                      <p className="text-xs font-medium text-ai-text-muted uppercase tracking-wider mb-3 px-3">
                         Dil / Language
-                      </h4>
-                      <LanguageSwitcher variant="inline" />
-                    </div>
-
-                    <div className="pt-4 border-t mr-6">
-                      <Button className="w-full font-semibold">Abone Ol</Button>
+                      </p>
+                      <div className="px-3">
+                        <LanguageSwitcher variant="inline" />
+                      </div>
                     </div>
                   </div>
                 </ScrollArea>
+
+                {/* Mobile Subscribe Button */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-ai-surface-border bg-ai-surface-dark">
+                  <SheetClose asChild>
+                    <Button className="w-full bg-ai-primary hover:bg-ai-primary-hover text-white font-semibold h-11 rounded-lg">
+                      <span className="material-symbols-outlined text-[20px] mr-2">bookmark_add</span>
+                      Abone Ol
+                    </Button>
+                  </SheetClose>
+                </div>
               </SheetContent>
             </Sheet>
           </div>
         </div>
+
+        {/* Mobile Search Dropdown */}
+        {isSearchOpen && (
+          <div className="md:hidden pb-4 pt-2 border-t border-ai-surface-border animate-in slide-in-from-top-2 duration-200">
+            <form onSubmit={handleSearch} className="relative">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-ai-text-muted text-[20px]">
+                search
+              </span>
+              <Input
+                autoFocus
+                placeholder="Haber ara..."
+                className="h-10 w-full pl-10 bg-ai-surface-card border-ai-surface-border text-white placeholder:text-ai-text-muted"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
+          </div>
+        )}
       </div>
     </header>
   );

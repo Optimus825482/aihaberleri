@@ -4,8 +4,6 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { ShareButtons } from "@/components/ShareButtons";
 import { formatDate, calculateReadingTime } from "@/lib/utils";
-import { Clock, Eye, Calendar, TrendingUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import type { Metadata } from "next";
 import {
   generateNewsArticleSchema,
@@ -150,44 +148,45 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             {/* Main Content Column (8 cols) */}
             <article className="lg:col-span-8">
               {/* Breadcrumb */}
-              <nav className="mb-6 text-sm text-muted-foreground">
-                <Link href="/" className="hover:text-primary">
+              <nav className="mb-6 text-sm text-ai-text-secondary flex items-center gap-2">
+                <Link href="/" className="hover:text-ai-primary transition-colors flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[16px]">home</span>
                   Ana Sayfa
                 </Link>
-                {" / "}
+                <span className="text-ai-text-muted">/</span>
                 <Link
                   href={`/category/${article.category.slug}`}
-                  className="hover:text-primary"
+                  className="hover:text-ai-primary transition-colors"
                 >
                   {article.category.name}
                 </Link>
-                {" / "}
-                <span className="text-foreground">{article.title}</span>
+                <span className="text-ai-text-muted">/</span>
+                <span className="text-white truncate max-w-[200px]">{article.title}</span>
               </nav>
 
               {/* Title & Meta */}
-              <h1 className="text-3xl md:text-5xl font-bold mb-6 text-foreground leading-tight">
+              <h1 className="text-3xl md:text-5xl font-bold mb-6 text-white leading-tight">
                 {article.title}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6 border-b pb-6">
+              <div className="flex flex-wrap items-center gap-4 text-sm text-ai-text-secondary mb-6 border-b border-ai-surface-border pb-6">
                 {article.publishedAt && (
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
+                    <span className="material-symbols-outlined text-[16px]">calendar_today</span>
                     <time dateTime={article.publishedAt.toISOString()}>
                       {formatDate(article.publishedAt)}
                     </time>
                   </div>
                 )}
                 <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
+                  <span className="material-symbols-outlined text-[16px]">schedule</span>
                   <span>{readingTime} dk okuma</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" />
-                  <span>{article.views} görüntülenme</span>
+                  <span className="material-symbols-outlined text-[16px]">visibility</span>
+                  <span>{article.views.toLocaleString('tr-TR')} görüntülenme</span>
                 </div>
-                <div className="flex items-center gap-1 border-l pl-4 ml-2">
+                <div className="flex items-center gap-1 border-l border-ai-surface-border pl-4 ml-2">
                   <LikeButton
                     articleId={article.id}
                     initialLikes={(article as any).likes || 0}
@@ -196,21 +195,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </div>
                 {/* Trend Score Badge */}
                 {(article.trendScore ?? 0) > 0 && (
-                  <div className="flex items-center gap-1 border-l pl-4 ml-2">
-                    <Badge
-                      className={`text-xs font-bold tabular-nums ${(article.trendScore ?? 0) >= 80
-                          ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+                  <div className="flex items-center gap-1 border-l border-ai-surface-border pl-4 ml-2">
+                    <span
+                      className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 font-bold tabular-nums rounded-md border ${(article.trendScore ?? 0) >= 80
+                        ? "bg-green-500/20 text-green-400 border-green-500/30"
                           : (article.trendScore ?? 0) >= 60
-                            ? "bg-lime-500/20 text-lime-700 dark:text-lime-300 border-lime-500/30"
+                          ? "bg-lime-500/20 text-lime-400 border-lime-500/30"
                             : (article.trendScore ?? 0) >= 40
-                              ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
-                              : "bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30"
+                            ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                            : "bg-orange-500/20 text-orange-400 border-orange-500/30"
                         }`}
-                      variant="outline"
                     >
-                      <TrendingUp className="h-3 w-3 mr-1" />
+                      <span className="material-symbols-outlined text-[12px]">trending_up</span>
                       {article.trendScore}
-                    </Badge>
+                    </span>
                   </div>
                 )}
               </div>
@@ -257,8 +255,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
 
               {/* Rating Section */}
-              <div className="my-8 p-6 bg-secondary/10 dark:bg-secondary/5 rounded-xl border border-border/50">
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <div className="my-8 p-6 bg-ai-surface-card rounded-xl border border-ai-surface-border">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-white">
+                  <span className="material-symbols-outlined text-[20px] text-ai-primary">star</span>
                   Bu haberi nasıl buldunuz?
                 </h3>
                 <StarRating
@@ -270,15 +269,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
               {/* Tags */}
               {article.keywords.length > 0 && (
-                <div className="mt-12 pt-6 border-t">
-                  <h3 className="text-sm font-semibold mb-3 text-muted-foreground">
+                <div className="mt-12 pt-6 border-t border-ai-surface-border">
+                  <h3 className="text-sm font-semibold mb-3 text-ai-text-secondary uppercase tracking-wider">
                     KONULAR:
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {article.keywords.map((keyword: string) => (
                       <span
                         key={keyword}
-                        className="px-3 py-1 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full text-sm transition-colors cursor-pointer"
+                        className="px-3 py-1 bg-ai-surface-dark hover:bg-ai-surface-hover border border-ai-surface-border text-ai-text-secondary hover:text-white rounded-full text-sm transition-colors cursor-pointer"
                       >
                         #{keyword}
                       </span>
@@ -292,8 +291,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <aside className="hidden lg:block lg:col-span-4 space-y-8">
               {/* Share Widget */}
               <div className="sticky top-24 space-y-8">
-                <div className="bg-card rounded-xl p-6 shadow-sm border">
-                  <h3 className="font-semibold mb-4">Paylaş</h3>
+                <div className="bg-ai-surface-card rounded-xl p-6 border border-ai-surface-border">
+                  <h3 className="font-semibold mb-4 text-white flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-ai-primary">share</span>
+                    Paylaş
+                  </h3>
                   <ShareButtons
                     title={article.title}
                     url={articleUrl}
@@ -302,8 +304,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 </div>
 
                 {/* Trending / Related */}
-                <div className="bg-card rounded-xl p-6 shadow-sm border">
-                  <h3 className="font-bold text-lg mb-4">İlginizi Çekebilir</h3>
+                <div className="bg-ai-surface-card rounded-xl p-6 border border-ai-surface-border">
+                  <h3 className="font-bold text-lg mb-4 text-white flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[20px] text-ai-primary">recommend</span>
+                    İlginizi Çekebilir
+                  </h3>
                   <div className="space-y-4">
                     {sidebarArticles.map((related: RelatedArticle) => (
                       <Link
@@ -312,7 +317,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                         className="flex gap-3 group"
                       >
                         {related.imageUrl && (
-                          <div className="relative w-20 h-20 rounded-md overflow-hidden flex-shrink-0">
+                          <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-ai-surface-border">
                             <Image
                               src={related.imageUrl}
                               alt={related.title}
@@ -329,10 +334,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                           </div>
                         )}
                         <div>
-                          <h4 className="text-sm font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                          <h4 className="text-sm font-semibold line-clamp-2 group-hover:text-ai-primary transition-colors text-white">
                             {related.title}
                           </h4>
-                          <span className="text-xs text-muted-foreground mt-1 block">
+                          <span className="text-xs text-ai-text-muted mt-1 block">
                             {related.publishedAt
                               ? formatDate(related.publishedAt)
                               : ""}
@@ -349,17 +354,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
         {/* Bottom Related Articles (Read Next) */}
         {bottomArticles.length > 0 && (
-          <section className="bg-muted/10 py-16 mt-12 border-t">
+          <section className="bg-ai-surface-dark py-16 mt-12 border-t border-ai-surface-border">
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold tracking-tight">
+                <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+                  <span className="material-symbols-outlined text-[32px] text-ai-primary">auto_stories</span>
                   Bunları da Okuyun
                 </h2>
                 <Link
                   href={`/category/${article.category.slug}`}
-                  className="text-primary hover:underline font-medium"
+                  className="text-ai-primary hover:text-ai-primary-hover font-medium flex items-center gap-1 transition-colors"
                 >
-                  {article.category.name} Haberleri &rarr;
+                  {article.category.name} Haberleri
+                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
                 </Link>
               </div>
 
@@ -368,7 +375,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <Link
                     key={related.id}
                     href={`/news/${related.slug}`}
-                    className={`group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border hover:border-primary/20 flex flex-col h-full ${
+                    className={`group bg-ai-surface-card rounded-2xl overflow-hidden border border-ai-surface-border hover:border-ai-primary/40 transition-all duration-300 flex flex-col h-full ${
                       idx === 0 ? "md:col-span-2 lg:col-span-1" : ""
                     }`}
                   >
@@ -385,21 +392,21 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                             related.imageUrl.includes("images.aihaberleri.org")
                           }
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-                        <span className="absolute bottom-4 left-4 bg-primary text-primary-foreground text-xs px-2 py-1 rounded font-medium">
+                        <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark/80 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                        <span className="absolute bottom-4 left-4 bg-ai-primary text-white text-xs px-2 py-1 rounded font-medium">
                           {related.category.name}
                         </span>
                       </div>
                     )}
                     <div className="p-6 flex-1 flex flex-col">
-                      <h3 className="text-xl font-bold leading-snug group-hover:text-primary transition-colors mb-3">
+                      <h3 className="text-xl font-bold leading-snug group-hover:text-ai-primary transition-colors mb-3 text-white">
                         {related.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-3 mb-4 flex-1">
+                      <p className="text-sm text-ai-text-secondary line-clamp-3 mb-4 flex-1">
                         {related.excerpt}
                       </p>
-                      <div className="flex items-center text-xs text-muted-foreground mt-auto pt-4 border-t">
-                        <Calendar className="w-3 h-3 mr-1" />
+                      <div className="flex items-center text-xs text-ai-text-muted mt-auto pt-4 border-t border-ai-surface-border">
+                        <span className="material-symbols-outlined text-[14px] mr-1">calendar_today</span>
                         {related.publishedAt && (
                           <time dateTime={related.publishedAt.toISOString()}>
                             {formatDate(related.publishedAt)}

@@ -883,10 +883,113 @@ JSON formatında yanıt ver:
   return aggregatedResult;
 }
 
+/**
+ * Rewrite article with admin note/instruction
+ * Used for re-evaluating existing articles with specific corrections
+ */
+export async function rewriteArticleWithNote(
+  originalTitle: string,
+  originalContent: string,
+  category: string,
+  adminNote: string,
+  contextArticles: Array<{ title: string; excerpt: string; keywords: string[] }> = [],
+): Promise<{
+  title: string;
+  excerpt: string;
+  content: string;
+  keywords: string[];
+  metaTitle: string;
+  metaDescription: string;
+  score: number;
+}> {
+  const contextText =
+    contextArticles.length > 0
+      ? `\n\n### SON HABERLER (Tekrar Etme):\n${contextArticles
+          .slice(0, 5)
+          .map((a) => `- ${a.title}`)
+          .join("\n")}`
+      : "";
+
+  const prompt = `Sen profesyonel bir haber editörüsün. Sana verilen haberi, ADMİN NOTU'ndaki talimatları dikkate alarak yeniden düzenleyeceksin.
+
+### ADMİN NOTU (ÖNCELİKLİ TALİMAT):
+${adminNote}
+
+### ⚠️ KRİTİK: Admin notundaki düzeltmeleri/talepleri MUTLAKA uygula!
+
+---
+
+Orijinal Başlık: ${originalTitle}
+Kategori: ${category}
+${contextText}
+
+Orijinal İçerik:
+${originalContent}
+
+---
+
+### GÖREV:
+1. Admin notundaki talimatları ÖNCELİKLİ olarak uygula
+2. Haberin doğruluğunu, güncelliğini ve kalitesini artır
+3. Türkçe dil bilgisi ve akıcılığı kontrol et
+4. SEO uyumluluğunu sağla
+5. Haber Değeri Puanı (0-1000) ver
+
+### ÇIKTI FORMATI (JSON):
+{
+  "title": "Düzeltilmiş/Güncellenmiş başlık (50-70 karakter)",
+  "excerpt": "Özet (1-2 cümle)",
+  "content": "HTML formatlı (<p>, <h2>, <ul>) tam içerik",
+  "keywords": ["anahtar1", "anahtar2", "..."],
+  "metaTitle": "SEO başlık (50-60 karakter)",
+  "metaDescription": "Meta açıklama (150-160 karakter)",
+  "score": 850
+}`;
+
+  const response = await callDeepSeek(
+    [
+      {
+        role: "system",
+        content:
+          "Sen uzman bir haber editörüsün. Admin talimatlarını harfiyen uygulayarak haberi güncelle. Sadece geçerli JSON yanıtı ver.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+    {
+      model: "deepseek-chat",
+      maxTokens: 4000,
+      temperature: 0.7,
+    },
+  );
+
+  // Extract JSON from response
+  const jsonMatch = response.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error("Failed to parse DeepSeek response for re-evaluation");
+  }
+
+  const parsedResult = JSON.parse(jsonMatch[0]);
+  
+  // Ensure all fields exist with defaults
+  return {
+    title: parsedResult.title || originalTitle,
+    excerpt: parsedResult.excerpt || "",
+    content: parsedResult.content || originalContent,
+    keywords: parsedResult.keywords || [],
+    metaTitle: parsedResult.metaTitle || parsedResult.title || originalTitle,
+    metaDescription: parsedResult.metaDescription || parsedResult.excerpt || "",
+    score: parsedResult.score || 700,
+  };
+}
+
 export default {
   callDeepSeek,
   analyzeNewsArticles,
   rewriteArticle,
+  rewriteArticleWithNote,
   generateImagePrompt,
   aggregateMultiSourceArticles,
 };

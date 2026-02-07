@@ -1,6 +1,5 @@
 "use client";
 
-import { Eye, TrendingUp, Clock, Flame, Calendar } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -62,42 +61,42 @@ export function MostReadSidebarClient() {
   };
 
   return (
-    <aside className="bg-secondary/5 dark:bg-secondary/10 rounded-xl border border-border/50 p-5 sticky top-24">
+    <aside className="bg-ai-surface-card rounded-xl border border-ai-surface-border p-5 sticky top-24">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-border/50">
-        <div className="p-2.5 bg-primary/10 rounded-lg">
-          <TrendingUp className="w-6 h-6 text-primary" />
+      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-ai-surface-border">
+        <div className="p-2.5 bg-ai-primary/10 rounded-lg">
+          <span className="material-symbols-outlined text-[24px] text-ai-primary">trending_up</span>
         </div>
         <div className="flex-1">
-          <h3 className="text-xl font-bold tracking-tight">En Çok Okunanlar</h3>
-          <p className="text-xs text-muted-foreground">
+          <h3 className="text-xl font-bold tracking-tight text-white">En Çok Okunanlar</h3>
+          <p className="text-xs text-ai-text-secondary">
             {period === "today" ? "Bugün" : "Bu hafta"} en popüler
           </p>
         </div>
       </div>
 
       {/* Period Toggle */}
-      <div className="flex items-center gap-1 p-1 bg-secondary/30 rounded-lg mb-4">
+      <div className="flex items-center gap-1 p-1 bg-ai-surface-dark rounded-lg mb-4">
         <button
           onClick={() => setPeriod("today")}
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
             period === "today"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+            ? "bg-ai-primary text-white shadow-sm"
+            : "text-ai-text-secondary hover:text-white"
           }`}
         >
-          <Flame className="w-4 h-4" />
+          <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
           Bugün
         </button>
         <button
           onClick={() => setPeriod("week")}
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
             period === "week"
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
+            ? "bg-ai-primary text-white shadow-sm"
+            : "text-ai-text-secondary hover:text-white"
           }`}
         >
-          <Calendar className="w-4 h-4" />
+          <span className="material-symbols-outlined text-[16px]">calendar_today</span>
           Bu Hafta
         </button>
       </div>
@@ -108,11 +107,11 @@ export function MostReadSidebarClient() {
           // Loading skeleton
           Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="flex gap-3 animate-pulse">
-              <div className="w-20 h-16 bg-muted rounded-lg" />
+              <div className="w-20 h-16 bg-ai-surface-dark rounded-lg" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-muted rounded w-full" />
-                <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="h-3 bg-muted rounded w-1/2" />
+                <div className="h-4 bg-ai-surface-dark rounded w-full" />
+                <div className="h-4 bg-ai-surface-dark rounded w-3/4" />
+                <div className="h-3 bg-ai-surface-dark rounded w-1/2" />
               </div>
             </div>
           ))
@@ -124,7 +123,7 @@ export function MostReadSidebarClient() {
                 className={`absolute -left-1 -top-1 w-6 h-6 flex items-center justify-center font-bold rounded-full shadow-md z-10 text-sm ${
                   index < 3
                     ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white"
-                    : "bg-primary text-primary-foreground"
+                  : "bg-ai-primary text-white"
                 }`}
               >
                 {index + 1}
@@ -149,8 +148,8 @@ export function MostReadSidebarClient() {
                     }
                   />
                 ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-muted-foreground/30" />
+                    <div className="w-full h-full bg-ai-surface-dark flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[24px] text-ai-text-muted">trending_up</span>
                   </div>
                 )}
               </Link>
@@ -159,24 +158,24 @@ export function MostReadSidebarClient() {
               <div className="flex flex-col gap-1 min-w-0">
                 <Link
                   href={`/haber/${article.slug}`}
-                  className="group-hover:text-primary transition-colors"
+                  className="group-hover:text-ai-primary transition-colors"
                 >
                   <h4
-                    className="font-semibold text-sm leading-tight line-clamp-2"
+                    className="font-semibold text-sm leading-tight line-clamp-2 text-white"
                     title={article.title}
                   >
                     {article.title}
                   </h4>
                 </Link>
 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto flex-wrap">
+                <div className="flex items-center gap-2 text-xs text-ai-text-secondary mt-auto flex-wrap">
                   <span className="flex items-center gap-1">
-                    <Eye className="w-3 h-3" />
+                    <span className="material-symbols-outlined text-[12px]">visibility</span>
                     {article.views.toLocaleString("tr-TR")}
                   </span>
                   {article.publishedAt && (
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                      <span className="material-symbols-outlined text-[12px]">schedule</span>
                       {formatDate(article.publishedAt)}
                     </span>
                   )}
@@ -186,7 +185,7 @@ export function MostReadSidebarClient() {
             </div>
           ))
         ) : (
-          <div className="text-center py-6 text-muted-foreground text-sm">
+              <div className="text-center py-6 text-ai-text-secondary text-sm">
             {period === "today" ? "Bugün henüz veri yok" : "Bu hafta veri yok"}
           </div>
         )}
@@ -195,9 +194,10 @@ export function MostReadSidebarClient() {
       {/* View All Link */}
       <Link
         href={`/en-cok-okunanlar?period=${period}`}
-        className="block mt-4 pt-3 border-t border-border/50 text-center text-sm font-medium text-primary hover:underline"
+        className="group block mt-4 pt-3 border-t border-ai-surface-border text-center text-sm font-medium text-ai-primary hover:text-ai-primary-hover transition-colors"
       >
-        Tümünü Gör →
+        Tümünü Gör
+        <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
       </Link>
     </aside>
   );
