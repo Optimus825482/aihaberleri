@@ -326,7 +326,27 @@ Aşağıdaki haberler sitemizde mevcut. **SADECE GERÇEKTEN İLGİLİYSE** ve **
           .join("\n")}`
       : "";
 
+  // Get current date for accurate reporting
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.toLocaleDateString("tr-TR", {
+    month: "long",
+  });
+  const formattedDate = currentDate.toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   const prompt = `Sen profesyonel, saygın ve güvenilir bir TV Haber Sunucusu ve Editörüsün. Görevin, sana verilen ham haberi alıp, geniş kitleler için anlaşılır, akıcı ve tamamen tarafsız bir haber metnine dönüştürmek.${contextText}
+
+⚠️ KRİTİK TARİH BİLGİSİ:
+- BUGÜNÜN TARİHİ: ${formattedDate}
+- MEVCUT YIL: ${currentYear}
+- İçerikte geçen "2024", "2023", "geçen yıl" gibi eski tarih referansları MUTLAKA güncellenmeli!
+- Eğer orijinal haberde eski bir tarih varsa, haberi ${currentYear} yılı perspektifinden yaz.
+- Başlıkta YIL KULLANIYORSAN mutlaka ${currentYear} yaz (2024, 2023 gibi eski yıllar YASAK).
+- "Bu yıl" derken ${currentYear}'ı kastet, "geçen yıl" derken ${currentYear - 1}'u kastet.
 
 HEDEF: Bu yazıyı okuyan kişi, ciddi bir haber bültenini izliyormuş gibi hissetmeli. "Ben", "Biz", "Kanaatimce" gibi ifadeler ASLA kullanılmamalı. Tamamen 3. tekil şahıs objektif anlatım kullanılmalı.
 
@@ -773,6 +793,15 @@ export async function aggregateMultiSourceArticles(
 
   const MIN_AGGREGATION_ARTICLES = 2; // Minimum sources for aggregation
 
+  // Get current date for accurate year references
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const formattedDate = currentDate.toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   const sourcesText = articles
     .map(
       (a, i) =>
@@ -781,6 +810,12 @@ export async function aggregateMultiSourceArticles(
     .join("\n\n");
 
   const prompt = `Sen deneyimli bir haber editörüsün. Aşağıda AYNI KONU hakkında ${articles.length} FARKLI KAYNAKTAN haberler var.
+
+⚠️ KRİTİK TARİH BİLGİSİ:
+- BUGÜNÜN TARİHİ: ${formattedDate}
+- MEVCUT YIL: ${currentYear}
+- Başlık veya içerikte yıl kullanıyorsan MUTLAKA ${currentYear} yaz!
+- Kaynaklardaki eski tarih referansları (2024, 2023 gibi) varsa ${currentYear}'a GÜNCELLE!
 
 Görevin: Bu haberleri BİRLEŞTİREREK tek bir kapsamlı, özgün ve derin analiz içeren haber makalesi oluştur.
 
@@ -892,7 +927,11 @@ export async function rewriteArticleWithNote(
   originalContent: string,
   category: string,
   adminNote: string,
-  contextArticles: Array<{ title: string; excerpt: string; keywords: string[] }> = [],
+  contextArticles: Array<{
+    title: string;
+    excerpt: string;
+    keywords: string[];
+  }> = [],
 ): Promise<{
   title: string;
   excerpt: string;
@@ -902,6 +941,15 @@ export async function rewriteArticleWithNote(
   metaDescription: string;
   score: number;
 }> {
+  // Get current date for accurate reporting
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const formattedDate = currentDate.toLocaleDateString("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   const contextText =
     contextArticles.length > 0
       ? `\n\n### SON HABERLER (Tekrar Etme):\n${contextArticles
@@ -911,6 +959,12 @@ export async function rewriteArticleWithNote(
       : "";
 
   const prompt = `Sen profesyonel bir haber editörüsün. Sana verilen haberi, ADMİN NOTU'ndaki talimatları dikkate alarak yeniden düzenleyeceksin.
+
+### ⚠️ KRİTİK TARİH BİLGİSİ:
+- BUGÜNÜN TARİHİ: ${formattedDate}
+- MEVCUT YIL: ${currentYear}
+- Eski tarih referansları (2024, 2023 gibi) varsa ${currentYear}'a GÜNCELLE!
+- Başlıkta yıl varsa MUTLAKA ${currentYear} olmalı!
 
 ### ADMİN NOTU (ÖNCELİKLİ TALİMAT):
 ${adminNote}
@@ -931,9 +985,10 @@ ${originalContent}
 ### GÖREV:
 1. Admin notundaki talimatları ÖNCELİKLİ olarak uygula
 2. Haberin doğruluğunu, güncelliğini ve kalitesini artır
-3. Türkçe dil bilgisi ve akıcılığı kontrol et
-4. SEO uyumluluğunu sağla
-5. Haber Değeri Puanı (0-1000) ver
+3. TARİHLERİ KONTROL ET - Eski yılları (2024, 2023) ${currentYear}'a güncelle
+4. Türkçe dil bilgisi ve akıcılığı kontrol et
+5. SEO uyumluluğunu sağla
+6. Haber Değeri Puanı (0-1000) ver
 
 ### ÇIKTI FORMATI (JSON):
 {
@@ -972,7 +1027,7 @@ ${originalContent}
   }
 
   const parsedResult = JSON.parse(jsonMatch[0]);
-  
+
   // Ensure all fields exist with defaults
   return {
     title: parsedResult.title || originalTitle,

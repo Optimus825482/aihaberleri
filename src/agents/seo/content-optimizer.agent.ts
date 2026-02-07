@@ -69,7 +69,22 @@ export class ContentOptimizerAgent extends BaseSEOAgent {
         `✍️ Content Optimizer: "${article.title.substring(0, 50)}..." için çalışıyor`,
       );
 
+      // Get current date for accurate year references
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const formattedDate = currentDate.toLocaleDateString("tr-TR", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
       const prompt = `Sen dünya çapında ödüllü bir content writer ve SEO uzmanısın.
+
+⚠️ KRİTİK TARİH BİLGİSİ:
+- BUGÜNÜN TARİHİ: ${formattedDate}
+- MEVCUT YIL: ${currentYear}
+- Başlık veya içerikte yıl kullanıyorsan MUTLAKA ${currentYear} yaz!
+- Eski yıllar (2024, 2023, 2022) ile ilgili referansları ${currentYear}'a güncelle!
 
 Görevin: Bu makaleyi SEO açısından optimize et.
 
@@ -89,12 +104,12 @@ OPTİMİZASYON KURALLARI:
 1. **BAŞLIK (Title Tag):**
    - Uzunluk: 50-60 karakter (optimal)
    - Sayı ekle: "5 Yeni Gelişme", "10 İpucu" (CTR artar)
-   - Yıl ekle: "2026 Rehberi" (freshness)
+   - Yıl ekle: "${currentYear} Rehberi" (freshness) - SADECE ${currentYear} KULLAN!
    - Keyword başta: Ana keyword ilk 5 kelimede
    - Clickbait dengesi: Merak uyandır ama dürüst ol
    - Örnekler:
      * KÖTÜ: "AI Haberleri" (çok kısa, generic)
-     * İYİ: "AI Teknolojisinde Çığır Açan 5 Yeni Gelişme: 2026 Rehberi" (58 char)
+     * İYİ: "AI Teknolojisinde Çığır Açan 5 Yeni Gelişme: ${currentYear} Rehberi" (58 char)
 
 2. **META AÇIKLAMA (Meta Description):**
    - Uzunluk: 150-160 karakter (optimal)
@@ -103,7 +118,7 @@ OPTİMİZASYON KURALLARI:
    - Özet: Makaleyi özetle, merak uyandır
    - Örnekler:
      * KÖTÜ: "Bu makalede AI hakkında bilgi var." (çok kısa)
-     * İYİ: "2026'da yapay zeka dünyasını değiştirecek 5 yeni gelişmeyi keşfedin. OpenAI, Google ve daha fazlası. Detaylı analiz." (155 char)
+     * İYİ: "${currentYear}'da yapay zeka dünyasını değiştirecek 5 yeni gelişmeyi keşfedin. OpenAI, Google ve daha fazlası. Detaylı analiz." (155 char)
 
 3. **İÇERİK YAPISI:**
    - H2 başlıklar: Minimum 2-3 tane (ana bölümler)
@@ -128,7 +143,7 @@ JSON formatında yanıt ver:
 {
   "title": {
     "original": "${article.title}",
-    "optimized": "Optimize edilmiş başlık buraya (50-60 char)",
+    "optimized": "Optimize edilmiş başlık buraya (50-60 char) - YIL KULLANIYORSAN ${currentYear} YAZ!",
     "improvements": ["Sayı eklendi", "Yıl eklendi", "Keyword başa alındı"],
     "score": 85
   },
@@ -226,7 +241,7 @@ SADECE GEÇERLİ JSON YANIT VER.`;
       );
 
       return changes;
-    }, "Content optimization failed");
+    };, "Content optimization failed");
   }
 
   /**
