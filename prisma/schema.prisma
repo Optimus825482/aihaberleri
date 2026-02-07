@@ -123,6 +123,10 @@ model Article {
   sourceTitle               String?
   sourceDescription         String?
   trendScore                Int?                      @default(0)
+  isTrending                Boolean                   @default(false)
+  trendBadgeTr              String?                   // "🔥 Gündem"
+  trendBadgeEn              String?                   // "🔥 Trending"
+  trendHashtags             String[]                  @default([]) // Sosyal paylaşım için
   keywordsEn                String[]                  @default([])
   titleABTest               Json?
   embedding                 Json?
@@ -156,6 +160,7 @@ model Article {
   duplicatesAsDuplicate     ArticleDuplicate[]        @relation("DuplicateArticle")
   googleIndexingBatchItems  GoogleIndexingBatchItem[]
   socialShares              SocialShare[]
+  trendMatches              TrendArticleMatch[]       // Trend eşleşmeleri
 
   @@index([slug])
   @@index([status, publishedAt])
@@ -759,4 +764,80 @@ enum ShareStatus {
   SHARED
   FAILED
   SKIPPED
+}
+
+// =============================================
+// Social Media Trend Tracking
+// =============================================
+
+// Twitter & Reddit trend verileri (Dataset olarak saklanır)
+model SocialTrend {
+  id            String   @id @default(cuid())
+  platform      String   // "twitter" | "reddit"
+  topic         String   // Trend konusu
+  hashtag       String?  // #hashtag (varsa)
+  volume        Int      @default(0) // Tweet/Comment sayısı
+  score         Int      @default(0) // Platform trend skoru (1-100)
+  sentiment     String   @default("neutral") // "positive" | "negative" | "neutral"
+  region        String   @default("TR") // "TR" | "US" | "global"
+  language      String   @default("tr") // "tr" | "en"
+  
+  // Keywords for soft matching
+  keywords      String[] // Extracted keywords for fuzzy matching
+  
+  // Metadata
+  rank          Int?     // Trend sıralaması
+  url           String?  // Trend URL (Reddit post, Twitter trend page)
+  subreddit     String?  // Reddit için subreddit adı
+  
+  // Timestamps
+  fetchedAt     DateTime @default(now())
+  expiresAt     DateTime // fetchedAt + 1 hour
+  
+  // Relations
+  snapshots     TrendSnapshot[]
+  articleMatches TrendArticleMatch[]
+  
+  @@index([platform, region])
+  @@index([topic])
+  @@index([fetchedAt])
+  @@index([expiresAt])
+  @@index([platform, language])
+  @@index([score(sort: Desc)])
+}
+
+// Trend tarihçesi (Dataset için - uzun süreli saklama)
+model TrendSnapshot {
+  id          String   @id @default(cuid())
+  trendId     String
+  trend       SocialTrend @relation(fields: [trendId], references: [id], onDelete: Cascade)
+  
+  volume      Int      // O anki tweet/comment sayısı
+  score       Int      // O anki skor
+  rank        Int      // O anki sıralama
+  
+  capturedAt  DateTime @default(now())
+  
+  @@index([trendId, capturedAt])
+  @@index([capturedAt(sort: Desc)])
+}
+
+// Haber-Trend eşleşmeleri
+model TrendArticleMatch {
+  id              String   @id @default(cuid())
+  articleId       String
+  article         Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  trendId         String
+  trend           SocialTrend @relation(fields: [trendId], references: [id], onDelete: Cascade)
+  
+  matchScore      Float    // 0-1 arası benzerlik skoru
+  matchType       String   @default("keyword") // "keyword" | "hashtag" | "entity"
+  matchedKeywords String[] // Eşleşen keyword'ler
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([articleId, trendId])
+  @@index([articleId])
+  @@index([trendId])
+  @@index([matchScore(sort: Desc)])
 }

@@ -47,7 +47,7 @@ export class VisualGeneratorAgent extends BaseAgent<
   protected config = {
     name: "visual-generator",
     queueName: QUEUE_NAMES.ARTICLES_WITH_VISUALS,
-    nextQueueName: "database-publisher", // NEW: Send to publisher
+    nextQueueName: QUEUE_NAMES.SEO_OPTIMIZATION, // NEW: Send to SEO Optimizer first, then to publisher
     enableMetrics: true,
   };
 
@@ -122,7 +122,7 @@ export class VisualGeneratorAgent extends BaseAgent<
       return {
         success: true,
         data: articlesWithVisuals,
-        nextQueue: "database-publisher", // NEW: Send to publisher
+        nextQueue: QUEUE_NAMES.SEO_OPTIMIZATION, // NEW: Send to SEO Optimizer first
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls,

@@ -39,7 +39,13 @@ import { RelevanceFilterAgent } from "@/agents/relevance-filter.agent";
 import { DuplicateDetectorAgent } from "@/agents/duplicate-detector.agent";
 import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
+import { SEOOptimizerAgent } from "@/agents/seo-optimizer.agent"; // NEW: SEO before publish
 import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
+import {
+  startSEOCalculatorWorker,
+  queuePendingSEOCalculations,
+} from "@/agents/seo-calculator.agent";
+import type { Worker as BullMQWorker } from "bullmq";
 
 // ============================================================================
 // WORKER CONSTANTS
@@ -64,10 +70,21 @@ let relevanceFilter: RelevanceFilterAgent;
 let duplicateDetector: DuplicateDetectorAgent;
 let contentEnricher: ContentEnricherAgent;
 let visualGenerator: VisualGeneratorAgent;
+let seoOptimizer: SEOOptimizerAgent; // NEW: SEO Optimizer before publish
 let databasePublisher: DatabasePublisherAgent;
+let seoCalculatorWorker: BullMQWorker | null = null;
 
 /**
  * Initialize multi-agent pipeline agents
+ *
+ * PIPELINE ORDER:
+ * 1. RelevanceFilter → filter irrelevant articles
+ * 2. DuplicateDetector → remove duplicates
+ * 3. ContentEnricher → add full content + translate
+ * 4. VisualGenerator → generate images
+ * 5. SEOOptimizer → optimize for SEO (BEFORE publish)
+ * 6. DatabasePublisher → save to database
+ * + SEOCalculator (background) → calculate SEO scores
  */
 async function initializeMultiAgentPipeline(): Promise<void> {
   console.log("🤖 Initializing multi-agent pipeline agents...");
@@ -84,8 +101,9 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     duplicateDetector = new DuplicateDetectorAgent();
     contentEnricher = new ContentEnricherAgent();
     visualGenerator = new VisualGeneratorAgent();
+    seoOptimizer = new SEOOptimizerAgent(); // NEW
     databasePublisher = new DatabasePublisherAgent();
-    console.log("   ✅ Agent instances created");
+    console.log("   ✅ Agent instances created (6 agents)");
 
     console.log("   🚀 Starting all agents...");
     await Promise.all([
@@ -101,12 +119,41 @@ async function initializeMultiAgentPipeline(): Promise<void> {
       visualGenerator
         .start()
         .then(() => console.log("   ✅ VisualGenerator started")),
+      seoOptimizer
+        .start()
+        .then(() => console.log("   ✅ SEOOptimizer started")), // NEW
       databasePublisher
         .start()
         .then(() => console.log("   ✅ DatabasePublisher started")),
     ]);
 
-    console.log("✅ Multi-agent pipeline (5 agents) started successfully");
+    // Start SEO Calculator Worker (background, non-blocking)
+    console.log("   🎯 Starting SEO Calculator Worker...");
+    try {
+      seoCalculatorWorker = await startSEOCalculatorWorker();
+      if (seoCalculatorWorker) {
+        console.log("   ✅ SEO Calculator Worker started");
+
+        // Queue any pending SEO calculations (articles without SEO scores)
+        const pending = await queuePendingSEOCalculations(20);
+        if (pending > 0) {
+          console.log(`   📊 Queued ${pending} pending SEO calculations`);
+        }
+      } else {
+        console.log("   ⚠️ SEO Calculator Worker not available (Redis issue)");
+      }
+    } catch (seoError) {
+      console.warn(
+        "   ⚠️ SEO Calculator failed to start:",
+        (seoError as Error).message,
+      );
+      // Non-critical - continue without SEO
+    }
+
+    console.log("✅ Multi-agent pipeline (6+1 agents) started successfully");
+    console.log(
+      "   Pipeline: Relevance → Duplicate → Enrich → Visual → SEO → Publish",
+    );
   } catch (error) {
     console.error("❌ Failed to initialize multi-agent pipeline:");
     console.error(
@@ -134,7 +181,9 @@ async function stopMultiAgentPipeline(): Promise<void> {
     duplicateDetector?.stop(),
     contentEnricher?.stop(),
     visualGenerator?.stop(),
+    seoOptimizer?.stop(), // NEW
     databasePublisher?.stop(),
+    seoCalculatorWorker?.close(),
   ]);
 
   console.log("✅ Multi-agent pipeline stopped");
@@ -271,10 +320,7 @@ function startHeartbeat() {
   updateHeartbeat();
 
   // Then update periodically
-  setInterval(
-    updateHeartbeat,
-    WORKER_CONSTANTS.HEARTBEAT_INTERVAL_MS,
-  );
+  setInterval(updateHeartbeat, WORKER_CONSTANTS.HEARTBEAT_INTERVAL_MS);
 }
 
 async function startWorker() {
@@ -347,22 +393,19 @@ async function startWorker() {
         let progressInterval: NodeJS.Timeout | null = null;
 
         const createProgressInterval = () => {
-          return setInterval(
-            async () => {
-              try {
-                const currentProgress = (await job.progress) as number;
-                if (currentProgress < 80) {
-                  await job.updateProgress(Math.min(currentProgress + 10, 80));
-                  console.log(
-                    `📊Progress: ${Math.min(currentProgress + 10, 80)}% - Agent still running...`,
-                  );
-                }
-              } catch (err) {
-                console.warn("⚠️ Progress update failed:", err);
+          return setInterval(async () => {
+            try {
+              const currentProgress = (await job.progress) as number;
+              if (currentProgress < 80) {
+                await job.updateProgress(Math.min(currentProgress + 10, 80));
+                console.log(
+                  `📊Progress: ${Math.min(currentProgress + 10, 80)}% - Agent still running...`,
+                );
               }
-            },
-            WORKER_CONSTANTS.PROGRESS_UPDATE_INTERVAL_MS,
-          );
+            } catch (err) {
+              console.warn("⚠️ Progress update failed:", err);
+            }
+          }, WORKER_CONSTANTS.PROGRESS_UPDATE_INTERVAL_MS);
         };
 
         progressInterval = createProgressInterval();

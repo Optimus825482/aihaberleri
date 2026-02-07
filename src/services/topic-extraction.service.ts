@@ -638,12 +638,14 @@ function extractKeywords(title: string): string[] {
  */
 export async function filterDuplicatesByTopicAndUrl(
   articles: ArticleWithTopic[],
-  timeWindowDays: number = 2, // Topic için 2 gün
+  timeWindowDays: number = 0.5, // 12 saate düşürüldü (daha esnek)
 ): Promise<ArticleWithTopic[]> {
-  console.log(`\n🔍 ====== EARLY DUPLICATE FILTERING (CRITICAL) ======`);
+  console.log(`\n🔍 ====== EARLY DUPLICATE FILTERING (RELAXED MODE) ======`);
   console.log(`   Input: ${articles.length} haber`);
-  console.log(`   Topic time window: ${timeWindowDays} gün`);
-  console.log(`   URL check: TÜM VERİTABANI (limitsiz)`);
+  console.log(
+    `   Topic time window: ${timeWindowDays} gün (${timeWindowDays * 24} saat)`,
+  );
+  console.log(`   URL check: Son 24 saat (esnek mod)`);
 
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - timeWindowDays);
@@ -653,22 +655,26 @@ export async function filterDuplicatesByTopicAndUrl(
   let topicDuplicateCount = 0;
   let batchDuplicateCount = 0;
 
-  // 🔴 CRITICAL: Fetch ALL URLs from database (no time limit!)
-  // This is the main fix - URL duplicates should be checked against ENTIRE history
-  console.log(`   📡 Fetching ALL URLs from database...`);
+  // 🔄 RELAXED: Fetch URLs from last 24 hours only (instead of entire DB)
+  // This allows similar topics from different days to pass through
+  const urlCutoffDate = new Date();
+  urlCutoffDate.setHours(urlCutoffDate.getHours() - 24); // Son 24 saat
+
+  console.log(`   📡 Fetching URLs from last 24 hours...`);
   const allUrls = await db.article.findMany({
     select: {
       sourceUrl: true,
     },
     where: {
       sourceUrl: { not: null },
+      createdAt: { gte: urlCutoffDate },
     },
   });
 
   // Create a Set for O(1) lookup + normalized URL prefix set
   const existingUrls = new Set<string>();
   const existingUrlPrefixes = new Set<string>();
-  
+
   for (const article of allUrls) {
     if (article.sourceUrl) {
       existingUrls.add(article.sourceUrl);
@@ -677,7 +683,7 @@ export async function filterDuplicatesByTopicAndUrl(
       existingUrlPrefixes.add(urlWithoutParams);
     }
   }
-  
+
   console.log(`   📚 URL Database: ${existingUrls.size} unique URLs loaded`);
 
   // Fetch recent articles for TOPIC check (time-limited)
@@ -705,9 +711,12 @@ export async function filterDuplicatesByTopicAndUrl(
     // 🔴 FIRST: URL-based check (ENTIRE DATABASE - most important!)
     if (article.url) {
       const urlWithoutParams = article.url.split("?")[0];
-      
+
       // Check against FULL database URLs (Set lookup - O(1))
-      if (existingUrls.has(article.url) || existingUrlPrefixes.has(urlWithoutParams)) {
+      if (
+        existingUrls.has(article.url) ||
+        existingUrlPrefixes.has(urlWithoutParams)
+      ) {
         console.log(
           `   ⏭️  URL DUPLICATE (DB): ${article.url.substring(0, 60)}...`,
         );
@@ -718,7 +727,8 @@ export async function filterDuplicatesByTopicAndUrl(
 
       // Check URL against ALREADY SELECTED articles in this batch
       const batchUrlDuplicate = unique.find(
-        (u) => u.url === article.url || u.url?.split("?")[0] === urlWithoutParams,
+        (u) =>
+          u.url === article.url || u.url?.split("?")[0] === urlWithoutParams,
       );
       if (batchUrlDuplicate) {
         console.log(
@@ -748,9 +758,7 @@ export async function filterDuplicatesByTopicAndUrl(
       // Check topic against ALREADY SELECTED articles in this batch
       const batchDuplicate = unique.find((u) => u.topic === article.topic);
       if (batchDuplicate) {
-        console.log(
-          `   ⏭️  TOPIC DUPLICATE (BATCH): ${article.topic}`,
-        );
+        console.log(`   ⏭️  TOPIC DUPLICATE (BATCH): ${article.topic}`);
         batchDuplicateCount++;
         isDuplicate = true;
         continue;
@@ -781,7 +789,8 @@ export async function filterDuplicatesByTopicAndUrl(
               commonKeywords.length / Math.max(keywords.length, 1);
 
             // If 50%+ keyword similarity with same entities = duplicate (esnek modda)
-            if (similarity >= 0.5) {
+            if (similarity >= 0.65) {
+              // %50'den %65'e çıkarıldı (daha esnek)
               console.log(
                 `   ⏭️  ENTITY DUPLICATE (DB): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
               );
@@ -811,7 +820,8 @@ export async function filterDuplicatesByTopicAndUrl(
                 commonKeywords.length / Math.max(keywords.length, 1);
 
               // If 50%+ keyword similarity with same entities = duplicate (esnek modda)
-              if (similarity >= 0.5) {
+              if (similarity >= 0.65) {
+                // %50'den %65'e çıkarıldı (daha esnek)
                 console.log(
                   `   ⏭️  ENTITY DUPLICATE (BATCH): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
                 );
@@ -835,8 +845,9 @@ export async function filterDuplicatesByTopicAndUrl(
     unique.push(article);
   }
 
-  const totalDuplicates = urlDuplicateCount + topicDuplicateCount + batchDuplicateCount;
-  
+  const totalDuplicates =
+    urlDuplicateCount + topicDuplicateCount + batchDuplicateCount;
+
   console.log(`\n📊 ====== EARLY FILTERING SONUÇLARI ======`);
   console.log(`   Input: ${articles.length} haber`);
   console.log(`   ❌ URL Duplicates (DB): ${urlDuplicateCount}`);

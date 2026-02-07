@@ -130,6 +130,7 @@ export async function postToBluesky(article: {
   excerpt: string;
   imageUrl?: string | null;
   categoryName?: string;
+  trendHashtags?: string[];
 }): Promise<string | null> {
   // Check if Bluesky is enabled
   if (!BLUESKY_ENABLED) {
@@ -153,11 +154,21 @@ export async function postToBluesky(article: {
       process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
     const articleUrl = `${siteUrl}/news/${article.slug}`;
 
-    // Create hashtags
+    // Create hashtags - include trend hashtags if available
     const categoryTag = article.categoryName
       ? `#${article.categoryName.replace(/\s+/g, "")}`
       : "#YapayZeka";
-    const tags = `${categoryTag} #AI #Teknoloji`;
+
+    // Add trend hashtags (limit to 3 to avoid spam)
+    const trendTags =
+      article.trendHashtags
+        ?.slice(0, 3)
+        .map((t) => (t.startsWith("#") ? t : `#${t}`))
+        .join(" ") || "";
+
+    const tags = trendTags
+      ? `${categoryTag} ${trendTags} #AI`
+      : `${categoryTag} #AI #Teknoloji`;
 
     // Build post text (max 300 chars)
     let postText = `📰 ${article.title}\n\n`;

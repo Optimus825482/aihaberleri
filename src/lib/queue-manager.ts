@@ -26,7 +26,9 @@ export const QUEUE_NAMES = {
   COLLECTED_ARTICLES: "collected-articles",
   RELEVANT_ARTICLES: "relevant-articles",
   UNIQUE_ARTICLES: "unique-articles",
+  TREND_ENRICHMENT: "trend-enrichment", // NEW: Trend matching & enrichment
   ENRICHED_ARTICLES: "enriched-articles",
+  CONTENT_ENRICHER: "enriched-articles", // Alias for backward compatibility
   ARTICLES_WITH_VISUALS: "articles-with-visuals",
   DATABASE_PUBLISHER: "database-publisher", // NEW: Final publishing step
   SEO_CALCULATION: "seo-calculation", // NEW: Bulk SEO calculation
@@ -85,6 +87,15 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 90000, // 1.5 minutes
+    attempts: 3,
+  },
+  [QUEUE_NAMES.TREND_ENRICHMENT]: {
+    concurrency: 10, // Trend matching is fast (local DB lookup)
+    rateLimit: {
+      max: 20,
+      duration: 1000,
+    },
+    lockDuration: 30000, // 30 seconds
     attempts: 3,
   },
   [QUEUE_NAMES.ENRICHED_ARTICLES]: {
@@ -219,7 +230,10 @@ function setupQueueEvents(queueName: string, queue: Queue): void {
 
     queueEvents.set(queueName, events);
   } catch (error) {
-    logger.error(`Failed to setup events for ${queueName}:`, formatError(error));
+    logger.error(
+      `Failed to setup events for ${queueName}:`,
+      formatError(error),
+    );
   }
 }
 
@@ -334,7 +348,10 @@ export async function obliterateQueue(queueName: string): Promise<boolean> {
     logger.info(`Queue obliterated: ${queueName}`);
     return true;
   } catch (error) {
-    logger.error(`Failed to obliterate queue ${queueName}:`, formatError(error));
+    logger.error(
+      `Failed to obliterate queue ${queueName}:`,
+      formatError(error),
+    );
     return false;
   }
 }

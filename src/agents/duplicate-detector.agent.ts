@@ -39,7 +39,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
   protected config = {
     name: "duplicate-detector",
     queueName: QUEUE_NAMES.UNIQUE_ARTICLES,
-    nextQueueName: QUEUE_NAMES.ENRICHED_ARTICLES,
+    nextQueueName: QUEUE_NAMES.TREND_ENRICHMENT, // Route to TrendEnricher before ContentEnricher
     enableMetrics: true,
   };
 
@@ -176,7 +176,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
       return {
         success: true,
         data: uniqueArticles,
-        nextQueue: QUEUE_NAMES.ENRICHED_ARTICLES,
+        nextQueue: QUEUE_NAMES.TREND_ENRICHMENT, // Route to TrendEnricher
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls: 0,

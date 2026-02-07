@@ -23,6 +23,7 @@ export async function postTweet(article: {
   slug: string;
   excerpt: string;
   categoryName?: string;
+  trendHashtags?: string[];
 }): Promise<string | null> {
   // Check if Twitter is explicitly enabled
   if (!TWITTER_ENABLED) {
@@ -58,11 +59,21 @@ export async function postTweet(article: {
       process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
     const articleUrl = `${siteUrl}/news/${article.slug}`;
 
-    // Create hashtags
+    // Create hashtags with trend support
     const categoryTag = article.categoryName
       ? `#${article.categoryName.replace(/\s+/g, "")}`
       : "#YapayZeka";
-    const tags = `${categoryTag} #AI #Teknoloji #Haber`;
+
+    // Add trend hashtags (limit to 3)
+    const trendTags =
+      article.trendHashtags
+        ?.slice(0, 3)
+        .map((t) => (t.startsWith("#") ? t : `#${t}`))
+        .join(" ") || "";
+
+    const tags = trendTags
+      ? `${categoryTag} ${trendTags} #AI`
+      : `${categoryTag} #AI #Teknoloji #Haber`;
 
     // Format tweet (Max 280 chars)
     let tweetText = `📰 ${article.title}\n\n`;
@@ -99,6 +110,7 @@ export function generateTwitterIntentUrl(article: {
   title: string;
   slug: string;
   categoryName?: string;
+  trendHashtags?: string[];
 }): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
   const articleUrl = `${siteUrl}/news/${article.slug}`;
@@ -107,7 +119,18 @@ export function generateTwitterIntentUrl(article: {
     ? `#${article.categoryName.replace(/\s+/g, "")}`
     : "#YapayZeka";
 
-  const tweetText = `📰 ${article.title}\n\n${categoryTag} #AI #Teknoloji\n${articleUrl}`;
+  // Add trend hashtags to the intent URL
+  const trendTags =
+    article.trendHashtags
+      ?.slice(0, 3)
+      .map((t) => (t.startsWith("#") ? t : `#${t}`))
+      .join(" ") || "";
+
+  const hashtagSection = trendTags
+    ? `${categoryTag} ${trendTags} #AI`
+    : `${categoryTag} #AI #Teknoloji`;
+
+  const tweetText = `📰 ${article.title}\n\n${hashtagSection}\n${articleUrl}`;
 
   return `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 }

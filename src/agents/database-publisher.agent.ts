@@ -604,6 +604,22 @@ export class DatabasePublisherAgent extends BaseAgent<
             // Cache invalidation is not critical
           }
 
+          // Queue SEO calculation (async - don't block)
+          try {
+            const { queueSEOCalculation } =
+              await import("@/agents/seo-calculator.agent");
+            queueSEOCalculation({
+              articleId: createdArticle.id,
+              slug: createdArticle.slug,
+              title: createdArticle.title,
+              priority: "high",
+            }).catch((err) => {
+              this.logger.warn(`SEO queue failed: ${err.message}`);
+            });
+          } catch (seoError) {
+            // SEO calculation is not critical
+          }
+
           publishedArticles.push({
             id: createdArticle.id,
             slug: createdArticle.slug,

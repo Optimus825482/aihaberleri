@@ -6,6 +6,7 @@ import { formatRelativeTime, calculateReadingTime } from "@/lib/utils";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Clock, Eye, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TrendingBadge } from "@/components/TrendingBadge";
 
 interface ArticleCardProps {
   article: {
@@ -17,6 +18,8 @@ interface ArticleCardProps {
     publishedAt: Date | null;
     views: number;
     content?: string;
+    isTrending?: boolean;
+    trendScore?: number;
     category: {
       name: string;
       slug: string;
@@ -42,7 +45,11 @@ const texts = {
   },
 };
 
-export function ArticleCard({ article, locale = "tr", priority = false }: ArticleCardProps) {
+export function ArticleCard({
+  article,
+  locale = "tr",
+  priority = false,
+}: ArticleCardProps) {
   const readingTime = article.content
     ? calculateReadingTime(article.content)
     : 3;
@@ -84,7 +91,20 @@ export function ArticleCard({ article, locale = "tr", priority = false }: Articl
       <Link href={`/${newsPath}/${article.slug}`}>
         {article.imageUrl && (
           <div className="relative h-48 w-full overflow-hidden">
-            {article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev') || article.imageUrl.includes('images.aihaberleri.org') ? (
+            {/* Trending Badge - positioned at top-left */}
+            {article.isTrending && (
+              <div className="absolute top-3 left-3 z-10">
+                <TrendingBadge
+                  isTrending={true}
+                  locale={locale}
+                  score={article.trendScore}
+                  size="sm"
+                />
+              </div>
+            )}
+            {article.imageUrl.includes("pollinations.ai") ||
+            article.imageUrl.includes("r2.dev") ||
+            article.imageUrl.includes("images.aihaberleri.org") ? (
               // Use native img for Pollinations and R2 to avoid Next.js optimization issues
               // eslint-disable-next-line @next/next/no-img-element
               <img

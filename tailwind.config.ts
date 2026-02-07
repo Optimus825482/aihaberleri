@@ -69,11 +69,27 @@ const config: Config = {
           "0%": { transform: "scale(0.9)", opacity: "0" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
+        "trending-pulse": {
+          "0%, 100%": {
+            boxShadow:
+              "0 0 15px rgba(249, 115, 22, 0.4), 0 0 30px rgba(239, 68, 68, 0.2)",
+          },
+          "50%": {
+            boxShadow:
+              "0 0 25px rgba(249, 115, 22, 0.6), 0 0 50px rgba(239, 68, 68, 0.4)",
+          },
+        },
+        shimmer: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "slide-up": "slide-up 0.3s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
+        "trending-pulse": "trending-pulse 2s ease-in-out infinite",
+        shimmer: "shimmer 2s ease-in-out infinite",
       },
     },
   },

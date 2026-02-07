@@ -30,6 +30,7 @@ import {
   Mail,
   PlusCircle,
   Share2,
+  TrendingUp,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -93,6 +94,12 @@ const menuItems = [
     title: "Pipeline",
     href: "/admin/pipeline",
     icon: GitBranch,
+    requiredResource: null,
+  },
+  {
+    title: "Haber Trendleri",
+    href: "/admin/trends",
+    icon: TrendingUp,
     requiredResource: null,
   },
   {
@@ -336,11 +343,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             {visibleMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
-              const hasSubmenu = "submenu" in item && Array.isArray((item as any).submenu) && (item as any).submenu.length > 0;
+              const hasSubmenu =
+                "submenu" in item &&
+                Array.isArray((item as any).submenu) &&
+                (item as any).submenu.length > 0;
               const isExpanded = expandedMenus[item.title];
               const isSubmenuActive =
                 hasSubmenu &&
-                (item as any).submenu?.some((sub: any) => pathname === sub.href);
+                (item as any).submenu?.some(
+                  (sub: any) => pathname === sub.href,
+                );
 
               return (
                 <div key={item.href}>
@@ -352,10 +364,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden w-full
                       touch-manipulation active:scale-[0.98]
-                      ${isSubmenuActive
+                      ${
+                        isSubmenuActive
                           ? "bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary shadow-lg shadow-primary/10"
                           : "hover:bg-primary/5 hover:translate-x-1"
-                        }
+                      }
                     `}
                     >
                       {/* Active Indicator */}
@@ -395,10 +408,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden
                       touch-manipulation active:scale-[0.98]
-                      ${isActive
+                      ${
+                        isActive
                           ? "bg-gradient-to-r from-primary to-purple-500 text-white shadow-lg shadow-primary/20"
                           : "hover:bg-primary/5 hover:translate-x-1"
-                        }
+                      }
                     `}
                     >
                       {/* Active Indicator */}
@@ -441,10 +455,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                             group flex items-center gap-2 px-3 py-2.5 rounded-lg
                             transition-all duration-200 relative
                             touch-manipulation active:scale-[0.98]
-                            ${isSubActive
+                            ${
+                              isSubActive
                                 ? "bg-primary text-white shadow-md"
                                 : "hover:bg-primary/10 hover:translate-x-1"
-                              }
+                            }
                           `}
                           >
                             <div

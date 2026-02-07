@@ -28,6 +28,7 @@ import {
 import { ContentCollectorAgent } from "@/agents/content-collector.agent";
 import { RelevanceFilterAgent } from "@/agents/relevance-filter.agent";
 import { DuplicateDetectorAgent } from "@/agents/duplicate-detector.agent";
+import { TrendEnricherAgent } from "@/agents/trend-enricher.agent";
 import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
 import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
@@ -40,12 +41,19 @@ import {
   type ScheduleInfo,
 } from "@/lib/smart-scheduler";
 
+// Trend Fetcher service for social media trends
+import {
+  startTrendFetcher,
+  stopTrendFetcher,
+} from "@/services/trend-fetcher.service";
+
 const logger = createModuleLogger("orchestrator");
 
 // Agent instances
 let contentCollector: ContentCollectorAgent;
 let relevanceFilter: RelevanceFilterAgent;
 let duplicateDetector: DuplicateDetectorAgent;
+let trendEnricher: TrendEnricherAgent;
 let contentEnricher: ContentEnricherAgent;
 let visualGenerator: VisualGeneratorAgent;
 let databasePublisher: DatabasePublisherAgent;
@@ -60,11 +68,12 @@ let dynamicScheduler: {
  * Initialize all agents
  */
 async function initializeAgents(): Promise<void> {
-  logger.info("Initializing 6-agent pipeline...");
+  logger.info("Initializing 7-agent pipeline (with TrendEnricher)...");
 
   contentCollector = new ContentCollectorAgent();
   relevanceFilter = new RelevanceFilterAgent();
   duplicateDetector = new DuplicateDetectorAgent();
+  trendEnricher = new TrendEnricherAgent();
   contentEnricher = new ContentEnricherAgent();
   visualGenerator = new VisualGeneratorAgent();
   databasePublisher = new DatabasePublisherAgent();
@@ -73,12 +82,13 @@ async function initializeAgents(): Promise<void> {
     contentCollector.start(),
     relevanceFilter.start(),
     duplicateDetector.start(),
+    trendEnricher.start(),
     contentEnricher.start(),
     visualGenerator.start(),
     databasePublisher.start(),
   ]);
 
-  logger.success("All 6 agents started successfully");
+  logger.success("All 7 agents started successfully");
 }
 
 /**
@@ -91,6 +101,7 @@ async function stopAgents(): Promise<void> {
     contentCollector?.stop(),
     relevanceFilter?.stop(),
     duplicateDetector?.stop(),
+    trendEnricher?.stop(),
     contentEnricher?.stop(),
     visualGenerator?.stop(),
     databasePublisher?.stop(),
@@ -147,6 +158,7 @@ async function monitorPipelineHealth(): Promise<void> {
     contentCollector?.healthCheck(),
     relevanceFilter?.healthCheck(),
     duplicateDetector?.healthCheck(),
+    trendEnricher?.healthCheck(),
     contentEnricher?.healthCheck(),
     visualGenerator?.healthCheck(),
     databasePublisher?.healthCheck(),
@@ -320,7 +332,9 @@ async function publishArticlesToDatabase(
               logger.success(`Facebook: ${slug} paylaşıldı`);
             }
           } catch (err) {
-            logger.error(`Facebook failed for ${slug}:`, { error: err instanceof Error ? err.message : String(err) });
+            logger.error(`Facebook failed for ${slug}:`, {
+              error: err instanceof Error ? err.message : String(err),
+            });
           }
         })();
 
@@ -554,6 +568,11 @@ async function main() {
     logger.info(
       `📅 Next run at: ${initialInfo.nextRun.toLocaleString("tr-TR")} (${initialInfo.interval} min)`,
     );
+
+    // Start Trend Fetcher cron job
+    logger.info("🔥 Starting Trend Fetcher for social media trends...");
+    startTrendFetcher();
+    logger.success("✅ Trend Fetcher started (every 15 minutes)");
   } else {
     logger.info("Agent disabled, skipping scheduled collection");
   }
@@ -565,6 +584,7 @@ async function main() {
 process.on("SIGTERM", async () => {
   logger.info("SIGTERM received, shutting down...");
   dynamicScheduler?.stop();
+  stopTrendFetcher();
   await stopAgents();
   await (db as PrismaClient).$disconnect();
   await getRedis()?.quit();
@@ -574,6 +594,7 @@ process.on("SIGTERM", async () => {
 process.on("SIGINT", async () => {
   logger.info("SIGINT received, shutting down...");
   dynamicScheduler?.stop();
+  stopTrendFetcher();
   await stopAgents();
   await (db as PrismaClient).$disconnect();
   await getRedis()?.quit();
