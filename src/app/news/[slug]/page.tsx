@@ -13,7 +13,6 @@ import {
   combineSchemas,
   generateArticleMetadata,
 } from "@/lib/seo";
-import { EzoicAd } from "@/components/EzoicAd";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { AudioPromo } from "@/components/AudioPromo";
 import { HighlightedText } from "@/components/audio/HighlightedText";
@@ -144,14 +143,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
       <main className="flex-1 bg-background">
         <div className="container mx-auto px-4 py-8">
-          {/* Top Ad Banner - Ezoic */}
-          <div className="w-full flex justify-center mb-8">
-            <EzoicAd
-              placeholderId={101}
-              className="w-full max-w-[970px]"
-            />
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Main Content Column (8 cols) */}
             <article className="lg:col-span-8">
@@ -230,17 +221,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   articleTitle={article.title}
                 />
 
-                {/* IN-CONTENT AD - Ezoic */}
-                <div className="my-8 py-4 bg-muted/10 border-y border-muted flex flex-col items-center">
-                  <EzoicAd
-                    placeholderId={103}
-                    className="w-full"
-                  />
-                  <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest">
-                    REKLAM
-                  </p>
-                </div>
-
                 <HighlightedText
                   htmlContent={secondPart}
                   articleTitle={article.title}
@@ -278,11 +258,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     url={articleUrl}
                     description={article.excerpt}
                   />
-                </div>
-
-                {/* Sidebar Ad - Ezoic */}
-                <div className="bg-muted/10 rounded-xl p-4 min-h-[300px] flex items-center justify-center border border-muted/50">
-                  <EzoicAd placeholderId={102} />
                 </div>
 
                 {/* Trending / Related */}

@@ -6,14 +6,14 @@
  * 2. Breaking news mode (5 min interval)
  * 3. Database configurable settings
  *
- * Interval Schedule:
- * - Morning: 08:00-10:00 → 10 min (peak)
- * - Lunch: 12:00-14:00 → 10 min (peak)
- * - Evening: 18:00-22:00 → 10 min (peak)
- * - Night: 00:00-07:00 → 15 min (consistent)
- * - Normal: other times → 15 min
+ * Interval Schedule (Optimized for freshness):
+ * - Morning: 08:00-10:00 → 8 min (peak)
+ * - Lunch: 12:00-14:00 → 8 min (peak)
+ * - Evening: 18:00-22:00 → 8 min (peak)
+ * - Night: 00:00-07:00 → 10 min (consistent)
+ * - Normal: other times → 10 min
  *
- * NOTE: No slowdown on weekends/holidays - consistent 15 min
+ * NOTE: No slowdown on weekends/holidays - consistent 10 min
  */
 
 import { db } from "@/lib/db";
@@ -68,11 +68,11 @@ const DEFAULT_CONFIG: SchedulerConfig = {
   enabled: true,
   breakingNewsMode: false,
   breakingNewsInterval: 5,
-  peakMorningInterval: 10,
-  peakLunchInterval: 10,
-  peakEveningInterval: 10,
-  nightInterval: 15, // FIXED: 15 min even at night (was 60)
-  normalInterval: 15,
+  peakMorningInterval: 8,   // 10 → 8 dakika (daha sık)
+  peakLunchInterval: 8,     // 10 → 8 dakika (daha sık)
+  peakEveningInterval: 8,   // 10 → 8 dakika (daha sık)
+  nightInterval: 10,        // 15 → 10 dakika (daha sık)
+  normalInterval: 10,       // 15 → 10 dakika (daha sık)
   weekendMultiplier: 1.0, // FIXED: No slowdown on weekends (was 1.5)
   holidayMultiplier: 1.0, // FIXED: No slowdown on holidays (was 2.0)
 };

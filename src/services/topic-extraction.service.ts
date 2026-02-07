@@ -248,7 +248,7 @@ export function groupByTopic(
  */
 export async function checkTopicDuplicate(
   topic: string,
-  timeWindowDays: number = 2, // 7 günden 2 güne düşürüldü
+  timeWindowDays: number = 0.5, // 12 saate düşürüldü (0.5 gün)
 ): Promise<{
   isDuplicate: boolean;
   existingArticle?: { id: string; title: string; publishedAt: Date | null };
@@ -295,7 +295,7 @@ export async function checkTopicDuplicate(
 export async function selectUniqueTopicArticles(
   articles: ArticleWithTopic[],
   targetCount: number = 5,
-  timeWindowDays: number = 2, // 7 günden 2 güne düşürüldü
+  timeWindowDays: number = 0.5, // 12 saate düşürüldü (0.5 gün)
 ): Promise<ArticleWithTopic[]> {
   console.log(`\n🎯 Akıllı haber seçimi başlatılıyor...`);
   console.log(`   Aday sayısı: ${articles.length}`);
@@ -638,7 +638,7 @@ function extractKeywords(title: string): string[] {
  */
 export async function filterDuplicatesByTopicAndUrl(
   articles: ArticleWithTopic[],
-  timeWindowDays: number = 2,
+  timeWindowDays: number = 0.5, // 12 saate düşürüldü
 ): Promise<ArticleWithTopic[]> {
   console.log(`\n🔍 Early duplicate filtering başlatılıyor...`);
   console.log(`   Input: ${articles.length} haber`);
@@ -757,8 +757,8 @@ export async function filterDuplicatesByTopicAndUrl(
             const similarity =
               commonKeywords.length / Math.max(keywords.length, 1);
 
-            // If 30%+ keyword similarity with same entities = duplicate
-            if (similarity >= 0.3) {
+            // If 50%+ keyword similarity with same entities = duplicate (esnek modda)
+            if (similarity >= 0.5) {
               console.log(
                 `   ⏭️  SKIP (entity+keyword duplicate in DB): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
               );
@@ -791,8 +791,8 @@ export async function filterDuplicatesByTopicAndUrl(
               const similarity =
                 commonKeywords.length / Math.max(keywords.length, 1);
 
-              // If 30%+ keyword similarity with same entities = duplicate
-              if (similarity >= 0.3) {
+              // If 50%+ keyword similarity with same entities = duplicate (esnek modda)
+              if (similarity >= 0.5) {
                 console.log(
                   `   ⏭️  SKIP (entity+keyword duplicate in BATCH): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
                 );

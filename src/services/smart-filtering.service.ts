@@ -115,7 +115,7 @@ export async function extractTopicsStage(
 export async function smartSelectionStage(
   articles: ArticleWithTopic[],
   targetCount: number = 5,
-  timeWindowDays: number = 2,
+  timeWindowDays: number = 0.5, // 12 saate düşürüldü
   skipDuplicateCheck: boolean = false, // NEW: Skip if already filtered
 ): Promise<ArticleWithTopic[]> {
   console.log(`\n🔍 STAGE 3: TOPIC-BASED DUPLICATE CHECK & SMART SELECTION`);
@@ -163,7 +163,7 @@ export async function runSmartFiltering(
     batchSize = 10,
     topPerBatch = 5,
     targetCount = 5,
-    timeWindowDays = 2,
+    timeWindowDays = 0.5, // 12 saate düşürüldü
     skipDuplicateCheck = false, // NEW
   } = options;
 

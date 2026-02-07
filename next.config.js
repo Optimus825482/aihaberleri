@@ -32,15 +32,9 @@ const nextConfig = {
     ];
   },
 
-  // Ezoic ads.txt redirect - automatically managed by Ezoic
+  // Redirects removed (Ezoic ads.txt redirect removed)
   async redirects() {
-    return [
-      {
-        source: "/ads.txt",
-        destination: "https://srv.adstxtmanager.com/19390/aihaberleri.org",
-        permanent: true,
-      },
-    ];
+    return [];
   },
 
   images: {

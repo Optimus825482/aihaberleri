@@ -11,7 +11,6 @@ DeepSeek Reasoner kullanarak günde iki kez yapay zeka haberlerini tarayan, yeni
 - ✅ Görsel optimizasyonu ile hızlı yükleme
 - ✅ Kategori tabanlı navigasyon
 - ✅ Makale görüntüleme takibi
-- ✅ Ezoic reklam entegrasyonu hazır
 - ✅ RSS feed desteği
 
 ### Otonom Agent
