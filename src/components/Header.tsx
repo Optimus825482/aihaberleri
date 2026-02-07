@@ -63,32 +63,40 @@ export function Header({ categories }: HeaderProps) {
             <Link
               href="/"
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
+                "text-base font-medium transition-colors hover:text-primary",
                 isActive("/")
                   ? "text-primary font-bold"
                   : "text-muted-foreground",
               )}
             >
-              Anasayfa
+              Ana Sayfa
             </Link>
-            {categories.slice(0, 5).map((category) => (
-              <Link
-                key={category.id}
-                href={`/category/${category.slug}`}
-                className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
-                  isActive(`/category/${category.slug}`)
-                    ? "text-primary font-bold"
-                    : "text-muted-foreground",
-                )}
-              >
-                {category.name}
-              </Link>
-            ))}
+            <Link
+              href="/en-cok-okunanlar"
+              className={cn(
+                "text-base font-medium transition-colors hover:text-primary",
+                isActive("/en-cok-okunanlar")
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground",
+              )}
+            >
+              Son Haberler
+            </Link>
+            <Link
+              href="/categories"
+              className={cn(
+                "text-base font-medium transition-colors hover:text-primary",
+                isActive("/categories")
+                  ? "text-primary font-bold"
+                  : "text-muted-foreground",
+              )}
+            >
+              Kategoriler
+            </Link>
             <Link
               href="/about"
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
+                "text-base font-medium transition-colors hover:text-primary",
                 isActive("/about")
                   ? "text-primary font-bold"
                   : "text-muted-foreground",
@@ -99,7 +107,7 @@ export function Header({ categories }: HeaderProps) {
             <Link
               href="/contact"
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
+                "text-base font-medium transition-colors hover:text-primary",
                 isActive("/contact")
                   ? "text-primary font-bold"
                   : "text-muted-foreground",
@@ -107,36 +115,46 @@ export function Header({ categories }: HeaderProps) {
             >
               İletişim
             </Link>
-            {categories.length > 5 && (
-              <Link
-                href="/categories"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                Diğer
-              </Link>
-            )}
           </nav>
 
           {/* Right Actions: Search & Subscribe & Mobile Menu */}
-          <div className="flex items-center gap-2">
-            {/* Search Bar - Desktop Expanded / Mobile Toggle */}
+          <div className="flex items-center gap-3">
+            {/* Search Bar - Always visible on desktop, toggle on mobile */}
+            <div className="hidden md:flex items-center">
+              <form
+                onSubmit={handleSearch}
+                className="flex items-center gap-2"
+              >
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Haber ara..."
+                    className="h-9 w-48 lg:w-56 pl-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </form>
+            </div>
+
+            {/* Mobile Search Toggle */}
             <div
               className={cn(
-                "flex items-center",
+                "md:hidden flex items-center",
                 isSearchOpen
-                  ? "w-full absolute left-0 top-0 h-16 bg-background px-4 z-50 lg:static lg:w-auto lg:bg-transparent lg:p-0"
+                  ? "w-full absolute left-0 top-0 h-16 bg-background px-4 z-50"
                   : "",
               )}
             >
               {isSearchOpen ? (
                 <form
                   onSubmit={handleSearch}
-                  className="flex w-full items-center gap-2 lg:w-64"
+                  className="flex w-full items-center gap-2"
                 >
                   <Input
                     autoFocus
                     placeholder="Haber ara..."
-                    className="h-9"
+                    className="h-9 flex-1"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -165,11 +183,10 @@ export function Header({ categories }: HeaderProps) {
             {/* Language Switcher */}
             <LanguageSwitcher variant="inline" />
 
-            <div className="hidden sm:flex">
-              <Button size="sm" className="hidden md:flex font-semibold">
-                Abone Ol
-              </Button>
-            </div>
+            {/* Subscribe Button - Visible on all sizes */}
+            <Button size="sm" className="font-semibold bg-primary hover:bg-primary/90">
+              Abone Ol
+            </Button>
 
             {/* Mobile Menu (Sheet) */}
             <Sheet>

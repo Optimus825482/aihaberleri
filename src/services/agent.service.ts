@@ -309,12 +309,20 @@ export async function executeNewsAgent(
     );
 
     // NEW: Run smart filtering pipeline with UNIQUE articles only
-    const { runSmartFiltering } = await import("./smart-filtering.service");
+    const { runSmartFiltering, calculateDynamicTimeWindow } =
+      await import("./smart-filtering.service");
+
+    // Dinamik zaman penceresi: Kalan haber sayısına göre ayarla
+    const dynamicTimeWindow = calculateDynamicTimeWindow(uniqueArticles.length);
+    console.log(
+      `📊 Dinamik zaman penceresi: ${(dynamicTimeWindow * 24).toFixed(1)} saat (${uniqueArticles.length} haber için)`,
+    );
+
     const filteringResult = await runSmartFiltering(uniqueArticles, {
       batchSize: 10,
       topPerBatch: 5,
       targetCount: targetCount,
-      timeWindowDays: 2,
+      timeWindowDays: dynamicTimeWindow, // Dinamik hesaplanan süre
       skipDuplicateCheck: false, // Check duplicates in smart filtering!
     });
 

@@ -716,11 +716,11 @@ export async function fetchAINews(
       10,
     );
 
-    // Filter duplicates
-    console.log(`🔍 Duplicate check: Son 2 günde yayınlananlar eleniyor...`);
+    // Filter duplicates - 1 güne düşürüldü (daha esnek)
+    console.log(`🔍 Duplicate check: Son 1 günde yayınlananlar eleniyor...`);
     const uniqueArticles = await filterDuplicatesByTopicAndUrl(
       articlesWithTopics,
-      2,
+      1, // 2 günden 1 güne düşürüldü
     );
 
     console.log(`\n📊 Early filtering sonuçları:`);

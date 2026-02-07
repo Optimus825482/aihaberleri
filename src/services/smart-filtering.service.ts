@@ -30,6 +30,61 @@ export interface SmartFilteringResult {
 }
 
 /**
+ * 🕐 DYNAMIC TIME WINDOW CALCULATOR
+ * 
+ * Kalan haber sayısına göre akıllı zaman penceresi hesaplar.
+ * Daha az haber = daha kısa zaman penceresi (daha sıkı duplicate kontrolü)
+ * Daha çok haber = daha uzun zaman penceresi (daha geniş kapsamlı kontrol)
+ * 
+ * Formül: logaritmik ölçekleme + minimum/maksimum sınırlar
+ * 
+ * @param articleCount - Kalan haber sayısı
+ * @returns Zaman penceresi (gün cinsinden, ondalıklı)
+ * 
+ * Örnekler:
+ * - 5 haber  → 0.0625 gün (1.5 saat)
+ * - 10 haber → 0.167 gün (4 saat)  
+ * - 20 haber → 0.25 gün (6 saat)
+ * - 30 haber → 0.333 gün (8 saat)
+ * - 50 haber → 0.5 gün (12 saat)
+ * - 75+ haber → 0.75 gün (18 saat) max
+ */
+export function calculateDynamicTimeWindow(articleCount: number): number {
+  // Sınırlar
+  const MIN_HOURS = 1.5;   // Minimum 1.5 saat (çok az haber için)
+  const MAX_HOURS = 18;    // Maksimum 18 saat (çok fazla haber için)
+  
+  // Referans noktaları
+  const REF_ARTICLES = 50; // 50 haber = 12 saat (orta nokta)
+  const REF_HOURS = 12;
+  
+  if (articleCount <= 0) {
+    return MIN_HOURS / 24; // 1.5 saat
+  }
+  
+  // Logaritmik ölçekleme: log(articleCount) / log(50) * 12
+  // Bu formül:
+  // - 5 haber için ~1.5 saat
+  // - 10 haber için ~4 saat
+  // - 25 haber için ~8 saat
+  // - 50 haber için 12 saat
+  // - 75+ haber için 18 saat (max)
+  
+  const logScale = Math.log(Math.max(articleCount, 1)) / Math.log(REF_ARTICLES);
+  let hours = REF_HOURS * logScale;
+  
+  // Alt ve üst sınır uygula
+  hours = Math.max(MIN_HOURS, Math.min(MAX_HOURS, hours));
+  
+  // Gün cinsine çevir
+  const days = hours / 24;
+  
+  console.log(`📊 Dynamic Time Window: ${articleCount} haber → ${hours.toFixed(1)} saat (${(days * 24).toFixed(1)}h)`);
+  
+  return days;
+}
+
+/**
  * STAGE 1: Batch Filtering
  *
  * 79 haberi 8 batch'e böl, her batch'ten en iyi 5'ini seç
@@ -172,7 +227,7 @@ export async function runSmartFiltering(
   console.log(`${"=".repeat(60)}`);
   console.log(`   Input: ${articles.length} haber`);
   console.log(`   Target: ${targetCount} unique haber`);
-  console.log(`   Time window: ${timeWindowDays} gün`);
+  console.log(`   Time window: ${(timeWindowDays * 24).toFixed(1)} saat (${timeWindowDays.toFixed(3)} gün)`);
   console.log(`   Skip duplicate check: ${skipDuplicateCheck}`);
 
   // STAGE 1: Batch Filtering
@@ -246,4 +301,5 @@ export default {
   extractTopicsStage,
   smartSelectionStage,
   runSmartFiltering,
+  calculateDynamicTimeWindow,
 };

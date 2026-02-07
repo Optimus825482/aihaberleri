@@ -297,10 +297,13 @@ export async function selectUniqueTopicArticles(
   targetCount: number = 5,
   timeWindowDays: number = 0.5, // 12 saate düşürüldü (0.5 gün)
 ): Promise<ArticleWithTopic[]> {
+  const timeWindowHours = timeWindowDays * 24;
   console.log(`\n🎯 Akıllı haber seçimi başlatılıyor...`);
   console.log(`   Aday sayısı: ${articles.length}`);
   console.log(`   Hedef: ${targetCount} unique topic`);
-  console.log(`   Zaman penceresi: ${timeWindowDays} gün`);
+  console.log(
+    `   Zaman penceresi: ${timeWindowHours.toFixed(1)} saat (${timeWindowDays.toFixed(3)} gün)`,
+  );
 
   // Puana göre sırala (en yüksek önce)
   const sortedArticles = [...articles].sort(
@@ -640,10 +643,11 @@ export async function filterDuplicatesByTopicAndUrl(
   articles: ArticleWithTopic[],
   timeWindowDays: number = 0.5, // 12 saate düşürüldü (daha esnek)
 ): Promise<ArticleWithTopic[]> {
+  const timeWindowHours = timeWindowDays * 24;
   console.log(`\n🔍 ====== EARLY DUPLICATE FILTERING (RELAXED MODE) ======`);
   console.log(`   Input: ${articles.length} haber`);
   console.log(
-    `   Topic time window: ${timeWindowDays} gün (${timeWindowDays * 24} saat)`,
+    `   Topic time window: ${timeWindowHours.toFixed(1)} saat (${timeWindowDays.toFixed(2)} gün)`,
   );
   console.log(`   URL check: Son 24 saat (esnek mod)`);
 

@@ -111,26 +111,25 @@ export function LanguageSwitcher({
 
   if (variant === "inline") {
     return (
-      <div className="flex items-center gap-2 text-sm">
-        {languages.map((lang, index) => {
+      <div className="flex items-center gap-1">
+        {languages.map((lang) => {
           const Flag = FlagIcon[lang.code];
+          const isActive = activeLocale === lang.code;
           return (
-            <span key={lang.code} className="flex items-center">
-              {index > 0 && <span className="mx-2 text-gray-400">|</span>}
-              <Link
-                href={getAlternateUrl(pathname, lang.code)}
-                className={`flex items-center gap-1 transition-colors ${activeLocale === lang.code
-                  ? "font-semibold text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-                  }`}
-                title={lang.label}
-              >
-                <Flag className="w-5 h-5" />
-                <span className="hidden sm:inline">
-                  {lang.code.toUpperCase()}
-                </span>
-              </Link>
-            </span>
+            <Link
+              key={lang.code}
+              href={getAlternateUrl(pathname, lang.code)}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-all ${isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                }`}
+              title={lang.label}
+            >
+              <Flag className="w-5 h-5" />
+              <span className="text-sm font-medium">
+                {lang.code.toUpperCase()}
+              </span>
+            </Link>
           );
         })}
       </div>

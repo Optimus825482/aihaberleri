@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
-import { MostReadSidebar } from "@/components/MostReadSidebar";
+import { MostReadSidebarClient } from "@/components/MostReadSidebarClient";
 import { Newspaper } from "lucide-react";
 
 import {
@@ -190,8 +190,8 @@ export default async function HomePage() {
             </div>
 
             {/* Right Column - Most Read Sidebar */}
-            <div className="w-full lg:w-80 flex-shrink-0">
-              <MostReadSidebar />
+            <div className="w-full lg:w-96 xl:w-[420px] flex-shrink-0">
+              <MostReadSidebarClient />
             </div>
           </div>
         </section>
