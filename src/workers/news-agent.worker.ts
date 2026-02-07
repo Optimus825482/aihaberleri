@@ -37,6 +37,7 @@ import { trackWorkerError } from "@/lib/sentry";
 import { initializeQueues } from "@/lib/queue-manager";
 import { RelevanceFilterAgent } from "@/agents/relevance-filter.agent";
 import { DuplicateDetectorAgent } from "@/agents/duplicate-detector.agent";
+import { TrendEnricherAgent } from "@/agents/trend-enricher.agent"; // FIX: Missing agent causing pipeline break
 import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
 import { SEOOptimizerAgent } from "@/agents/seo-optimizer.agent"; // NEW: SEO before publish
@@ -68,6 +69,7 @@ const WORKER_CONSTANTS = {
 // Multi-agent pipeline instances
 let relevanceFilter: RelevanceFilterAgent;
 let duplicateDetector: DuplicateDetectorAgent;
+let trendEnricher: TrendEnricherAgent; // FIX: Missing agent causing pipeline break
 let contentEnricher: ContentEnricherAgent;
 let visualGenerator: VisualGeneratorAgent;
 let seoOptimizer: SEOOptimizerAgent; // NEW: SEO Optimizer before publish
@@ -99,11 +101,12 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     console.log("   🔧 Creating agent instances...");
     relevanceFilter = new RelevanceFilterAgent();
     duplicateDetector = new DuplicateDetectorAgent();
+    trendEnricher = new TrendEnricherAgent(); // FIX: Connects duplicate-detector to content-enricher
     contentEnricher = new ContentEnricherAgent();
     visualGenerator = new VisualGeneratorAgent();
-    seoOptimizer = new SEOOptimizerAgent(); // NEW
+    seoOptimizer = new SEOOptimizerAgent();
     databasePublisher = new DatabasePublisherAgent();
-    console.log("   ✅ Agent instances created (6 agents)");
+    console.log("   ✅ Agent instances created (7 agents)");
 
     console.log("   🚀 Starting all agents...");
     await Promise.all([
@@ -113,6 +116,9 @@ async function initializeMultiAgentPipeline(): Promise<void> {
       duplicateDetector
         .start()
         .then(() => console.log("   ✅ DuplicateDetector started")),
+      trendEnricher
+        .start()
+        .then(() => console.log("   ✅ TrendEnricher started")), // FIX: Critical for pipeline flow
       contentEnricher
         .start()
         .then(() => console.log("   ✅ ContentEnricher started")),
@@ -121,7 +127,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
         .then(() => console.log("   ✅ VisualGenerator started")),
       seoOptimizer
         .start()
-        .then(() => console.log("   ✅ SEOOptimizer started")), // NEW
+        .then(() => console.log("   ✅ SEOOptimizer started")),
       databasePublisher
         .start()
         .then(() => console.log("   ✅ DatabasePublisher started")),
@@ -150,7 +156,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
       // Non-critical - continue without SEO
     }
 
-    console.log("✅ Multi-agent pipeline (6+1 agents) started successfully");
+    console.log("✅ Multi-agent pipeline (7+1 agents) started successfully");
     console.log(
       "   Pipeline: Relevance → Duplicate → Enrich → Visual → SEO → Publish",
     );
