@@ -1,8 +1,8 @@
 import { db } from "@/lib/db";
-import { HeaderWrapper } from "@/components/HeaderWrapper";
 import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
-import { MostReadSection } from "@/components/MostReadSection";
+import { MostReadSidebar } from "@/components/MostReadSidebar";
+import { Newspaper } from "lucide-react";
 
 import {
   generateOrganizationSchema,
@@ -30,7 +30,6 @@ export default async function HomePage() {
             "@graph": [organizationSchema, websiteSchema],
           })}
         />
-        <HeaderWrapper />
         <main className="flex-1">
           <section className="container mx-auto px-4 py-12">
             <h2 className="text-3xl font-bold mb-8">Son Haberler</h2>
@@ -149,7 +148,6 @@ export default async function HomePage() {
           "@graph": [organizationSchema, websiteSchema],
         })}
       />
-      <HeaderWrapper />
       <main className="flex-1">
         {/* Hero Carousel - Manşet Haberleri */}
         <HeroCarousel
@@ -158,30 +156,44 @@ export default async function HomePage() {
           locale="tr"
         />
 
-        {/* Most Read Section - Günün En Çok Okunanları */}
-        <MostReadSection />
+        {/* Main Content Area - Two Column Layout */}
+        <section className="container mx-auto px-4 py-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Left Column - Latest News */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Newspaper className="w-5 h-5 text-primary" />
+                </div>
+                <h2 className="text-2xl font-bold">Son Haberler</h2>
+              </div>
 
-        {/* Latest Articles */}
-        <section id="latest-news" className="container mx-auto px-4 py-12">
-          <h2 className="text-3xl font-bold mb-8">Son Haberler</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map((article, index: number) => (
-              <ArticleCard
-                key={article.id}
-                article={article}
-                priority={index < 3} // LCP optimization: prioritize first 3 cards
-              />
-            ))}
-          </div>
+              {/* Horizontal Scrolling News Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {articles.map((article, index: number) => (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    priority={index < 3}
+                  />
+                ))}
+              </div>
 
-          {articles.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                Henüz haber yok. Otonom agent yakında haber yayınlamaya
-                başlayacak!
-              </p>
+              {articles.length === 0 && (
+                <div className="text-center py-12 bg-muted/30 rounded-xl">
+                  <p className="text-muted-foreground">
+                    Henüz haber yok. Otonom agent yakında haber yayınlamaya
+                    başlayacak!
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Right Column - Most Read Sidebar */}
+            <div className="w-full lg:w-80 flex-shrink-0">
+              <MostReadSidebar />
+            </div>
+          </div>
         </section>
       </main>
     </div>
