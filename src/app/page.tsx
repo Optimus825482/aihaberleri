@@ -47,10 +47,10 @@ export default async function HomePage() {
   // Fetch data
   let settings = {
     heroCarouselCount: 5,
-    heroCarouselInterval: 6000,
+    heroCarouselInterval: 8000,
   };
   let articles: any[] = [];
-  let featuredArticle: any = null;
+  let featuredArticles: any[] = [];
   let categories: any[] = [];
 
   try {
@@ -95,8 +95,8 @@ export default async function HomePage() {
           },
           take: 8,
         }),
-        // Query 3: Featured article (highest views + recent)
-        db.article.findFirst({
+        // Query 3: Featured articles (multiple for slider)
+        db.article.findMany({
           where: {
             status: "PUBLISHED",
             publishedAt: { not: null },
@@ -118,6 +118,7 @@ export default async function HomePage() {
             },
           },
           orderBy: [{ views: "desc" }, { publishedAt: "desc" }],
+          take: 5,
         }),
         // Query 4: Categories for filter chips
         db.category.findMany({
@@ -137,11 +138,11 @@ export default async function HomePage() {
 
     settings = {
       heroCarouselCount: settingsMap.heroCarouselCount || 5,
-      heroCarouselInterval: settingsMap.heroCarouselInterval || 6000,
+      heroCarouselInterval: settingsMap.heroCarouselInterval || 8000,
     };
 
     articles = articlesFromDb;
-    featuredArticle = featuredFromDb;
+    featuredArticles = featuredFromDb;
     categories = categoriesFromDb;
   } catch (error) {
     console.error("Failed to fetch data:", error);
@@ -158,9 +159,9 @@ export default async function HomePage() {
       />
       <main className="flex-grow">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {/* Hero Section - Öne Çıkan Haber */}
+          {/* Hero Section - Öne Çıkan Haberler (Slider) */}
           <HeroSection
-            featuredArticle={featuredArticle}
+            featuredArticles={featuredArticles}
             locale="tr"
           />
 

@@ -98,16 +98,6 @@ export function ArticleCard({
     return formatRelativeTime(date);
   };
 
-  // Generate star rating based on trend score (0-10 scale -> 0-5 stars)
-  const getStarRating = (score: number | null | undefined) => {
-    const rating = score ? (score / 2) : 3.5;
-    const fullStars = Math.floor(rating);
-    const hasHalf = rating % 1 >= 0.5;
-    return { fullStars, hasHalf };
-  };
-
-  const { fullStars, hasHalf } = getStarRating(article.trendScore);
-
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl bg-white dark:bg-ai-surface-card shadow-sm border border-gray-100 dark:border-ai-surface-border hover:shadow-lg dark:hover:border-ai-primary/50 transition-all duration-300">
       {/* Image Section */}
@@ -168,19 +158,12 @@ export function ArticleCard({
             <span className="material-symbols-outlined text-[14px]">calendar_today</span>
             <span>{formatDate(article.publishedAt)}</span>
           </div>
-          {/* Star Rating */}
-          {article.trendScore && (
-            <div className="flex text-yellow-400">
-              {Array.from({ length: fullStars }).map((_, i) => (
-                <span key={`full-${i}`} className="material-symbols-outlined text-[16px] fill-current">star</span>
-              ))}
-              {hasHalf && (
-                <span className="material-symbols-outlined text-[16px] fill-current">star_half</span>
-              )}
-              {Array.from({ length: 5 - fullStars - (hasHalf ? 1 : 0) }).map((_, i) => (
-                <span key={`empty-${i}`} className="material-symbols-outlined text-[16px]">star_border</span>
-              ))}
-            </div>
+          {/* Trend Score Badge */}
+          {article.trendScore && article.trendScore > 7 && (
+            <span className="flex items-center gap-1 rounded bg-gradient-to-r from-amber-500/10 to-orange-500/10 px-2 py-1 text-[10px] font-bold text-amber-500 border border-amber-500/20">
+              <span className="material-symbols-outlined text-[10px]">trending_up</span>
+              {article.trendScore.toFixed(1)}
+            </span>
           )}
         </div>
 

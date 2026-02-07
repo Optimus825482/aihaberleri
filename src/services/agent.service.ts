@@ -250,35 +250,20 @@ export async function executeNewsAgent(
       throw new Error("Tüm haberler duplicate - yeni haber bulunamadı");
     }
 
-    // Use newsArticles directly (already filtered for duplicates in fetchAINews)
-    const uniqueArticles = newsArticles;
-
-    // Step 2: Smart Filtering Pipeline (NEW!)
-    agentLogger.step(
-      agentLog.id,
-      "smart_filtering",
-      "Akıllı filtreleme ve topic extraction",
-      40,
-    );
-    console.log("🎯 Adım 2: Akıllı filtreleme başlatılıyor...");
-    await addLogMessage(agentLog.id, "🎯 Akıllı filtreleme başlatılıyor...");
-    await updateJobProgress(
-      agentLog.id,
-      "filtering",
-      "Akıllı filtreleme ve topic extraction...",
-      40,
-    );
-
-    // Emit progress
-    emitToAdmin(SocketEvents.AGENT_PROGRESS, {
-      step: "filtering",
-      message: "Akıllı filtreleme ve topic extraction...",
-      progress: 40,
-    });
+    // ═══════════════════════════════════════════════════════════════════
+    // 🆕 YENİ YAKLAŞIM: Content Variation - Duplicate'leri Engelleme, Çeşitlendir!
+    // ═══════════════════════════════════════════════════════════════════
+    //
+    // ESKİ SİSTEM: Duplicate haberler tamamen engelleniyordu → %100 duplicate oranı
+    // YENİ SİSTEM: Aynı konulardan FARKLI AÇILARDAN içerik üret
+    //
+    // Adım 1: Mevcut yayınlanmış haberleri getir
+    // Adım 2: Aday haberleri kontrol et
+    // Adım 3: Benzer konu varsa → VARIATION oluştur
+    // Adım 4: Benzer konu yoksa → Normal akış
+    // ═══════════════════════════════════════════════════════════════════
 
     // Get article count from database settings (priority) or env vars (fallback)
-    // OPTIMIZED: Select ONLY 1 BEST article BEFORE expensive processing!
-    // This prevents wasting API calls on 3-5 articles when only 1 is published.
     const minSetting = await db.setting.findUnique({
       where: { key: "agent.minArticles" },
     });
@@ -286,9 +271,6 @@ export async function executeNewsAgent(
       where: { key: "agent.maxArticles" },
     });
 
-    // FIXED: Always process exactly 1 article to maximize efficiency
-    // Before: 3-5 articles → ALL processed → only 1 published = 75% waste!
-    // After:  1 article → processed → published = 100% efficient!
     const envMin = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "1");
     const envMax = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "1");
 
@@ -296,56 +278,145 @@ export async function executeNewsAgent(
     const minArticles = minSetting ? parseInt(minSetting.value) : envMin;
     const maxArticles = maxSetting ? parseInt(maxSetting.value) : envMax;
 
-    // CRITICAL: Select THE BEST 1 article before expensive pipeline
-    // Selection quality is ensured by: Duplicate → Trend Score → Topic Diversity
-    const targetCount = Math.min(
+    // 🎯 15 dk = 0.25 saat. En az 1 haber garanti!
+    const targetCount = Math.max(1, Math.min(
       Math.floor(Math.random() * (maxArticles - minArticles + 1)) + minArticles,
-      1, // HARD LIMIT: Never process more than 1 article!
-    );
+      3, // Maksimum 3 article (her biri farklı açı)
+    ));
 
     console.log(
       `📊 Haber sayısı ayarları: min=${minArticles}, max=${maxArticles}`,
     );
     console.log(
-      `🎯 Hedef haber sayısı: ${targetCount} (optimized single-article mode)`,
+      `🎯 Hedef haber sayısı: ${targetCount} (content variation mode aktif)`,
     );
 
-    // Live log: Smart filtering
-    await liveLog.deepseek.info(
-      `🚀 Akıllı filtreleme: ${uniqueArticles.length} unique haber → ${targetCount} seçilecek`,
+    // Step 2: Content Variation Check
+    agentLogger.step(
+      agentLog.id,
+      "content_variation",
+      "İçerik çeşitlendirme kontrolü",
+      40,
+    );
+    console.log("🔄 Adım 2: İçerik çeşitlendirme stratejisi...");
+    await addLogMessage(agentLog.id, "🔄 İçerik çeşitlendirme kontrolü yapılıyor...");
+    await updateJobProgress(
+      agentLog.id,
+      "variation",
+      "Benzer konular için farklı açılar araştırılıyor...",
+      40,
     );
 
-    // NEW: Run smart filtering pipeline with UNIQUE articles only
-    const { runSmartFiltering, calculateDynamicTimeWindow } =
-      await import("./smart-filtering.service");
-
-    // Dinamik zaman penceresi: Kalan haber sayısına göre ayarla
-    const dynamicTimeWindow = calculateDynamicTimeWindow(uniqueArticles.length);
-    console.log(
-      `📊 Dinamik zaman penceresi: ${(dynamicTimeWindow * 24).toFixed(1)} saat (${uniqueArticles.length} haber için)`,
-    );
-
-    const filteringResult = await runSmartFiltering(uniqueArticles, {
-      batchSize: 10,
-      topPerBatch: 5,
-      targetCount: targetCount,
-      timeWindowDays: dynamicTimeWindow, // Dinamik hesaplanan süre
-      skipDuplicateCheck: false, // Check duplicates in smart filtering!
+    // Emit progress
+    emitToAdmin(SocketEvents.AGENT_PROGRESS, {
+      step: "variation",
+      message: "İçerik çeşitlendirme stratejisi uygulanıyor...",
+      progress: 40,
     });
 
-    const selectedArticles = filteringResult.stage3_unique;
-    console.log(`✅ ${selectedArticles.length} unique topic haberi seçildi`);
-    console.log(
-      `   Duplicate rate: ${(filteringResult.stats.duplicate_rate * 100).toFixed(1)}%`,
-    );
+    // 🆕 Mevcut haberleri getir (son 48 saat)
+    const recentHours = 48;
+    const recentArticles = await db.article.findMany({
+      where: {
+        publishedAt: {
+          gte: new Date(Date.now() - recentHours * 60 * 60 * 1000),
+        },
+        status: "PUBLISHED",
+      },
+      select: {
+        id: true,
+        title: true,
+        topic: true,
+        publishedAt: true,
+        slug: true,
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 100,
+    });
+
+    console.log(`📚 Son ${recentHours} saatte ${recentArticles.length} haber yayınlanmış`);
+
+    // 🆕 Content Variation Service ile kontrol et
+    const { findOrCreateVariation, createVariationArticle } = await import("./content-variation.service");
+
+    // Tüm aday haberleri kontrol et ve variation planı oluştur
+    const variationPlan: Array<{
+      article: any;
+      needsVariation: boolean;
+      variation?: any;
+      baseArticle?: any;
+    }> = [];
+
+    for (const candidate of newsArticles.slice(0, 10)) { // İlk 10 adayı kontrol et
+      const result = await findOrCreateVariation(
+        candidate.title,
+        candidate.description,
+        candidate.url,
+        recentArticles,
+        recentHours
+      );
+
+      if (result.shouldCreateVariation) {
+        console.log(`🔄 VARIATION NEEDED: "${candidate.title.substring(0, 50)}..."`);
+        console.log(`   → ${result.variation.angle} açısı ile içerik üretilecek`);
+
+        variationPlan.push({
+          article: candidate,
+          needsVariation: true,
+          variation: result.variation,
+          baseArticle: result.baseArticle
+        });
+      } else {
+        console.log(`✅ ORIGINAL OK: "${candidate.title.substring(0, 50)}..."`);
+        variationPlan.push({
+          article: candidate,
+          needsVariation: false
+        });
+      }
+
+      if (variationPlan.length >= targetCount) break;
+    }
+
+    console.log(`\n📊 Variation Plan: ${variationPlan.length} haber`);
+    console.log(`   - Original: ${variationPlan.filter(p => !p.needsVariation).length}`);
+    console.log(`   - Variation: ${variationPlan.filter(p => p.needsVariation).length}`);
+
+    if (variationPlan.length === 0) {
+      console.log(`⚠️ Hiç haber planlanamadı! En az 1 variation oluşturulacak...`);
+
+      // Force create variation from first candidate
+      const firstCandidate = newsArticles[0];
+      if (firstCandidate) {
+        const variations = await import("./content-variation.service");
+        const defaultVariations = await variations.generateContentAngles(
+          firstCandidate.title,
+          firstCandidate.description,
+          recentArticles.map(a => a.topic)
+        );
+        variationPlan.push({
+          article: firstCandidate,
+          needsVariation: true,
+          variation: defaultVariations[0]
+        });
+      }
+    }
+
+    const selectedArticles = variationPlan.map((plan, index) => ({
+      ...plan.article,
+      _variation: plan.variation,
+      _needsVariation: plan.needsVariation,
+      _baseArticle: plan.baseArticle,
+      _index: index
+    }));
+
     await addLogMessage(
       agentLog.id,
-      `✅ ${selectedArticles.length} haber seçildi (duplicate: ${(filteringResult.stats.duplicate_rate * 100).toFixed(1)}%)`,
+      `✅ ${selectedArticles.length} haber planlandı (${variationPlan.filter(p => p.needsVariation).length} variation)`,
     );
 
-    // Live log: Articles selected
+    // Live log: Articles planned
     await liveLog.deepseek.success(
-      `✅ ${selectedArticles.length} unique topic seçildi (duplicate rate: ${(filteringResult.stats.duplicate_rate * 100).toFixed(1)}%)`,
+      `✅ ${selectedArticles.length} haber planlandı (${variationPlan.filter(p => p.needsVariation).length} variation)`,
     );
 
     // Step 3: Start Multi-Agent Pipeline (NEW!)

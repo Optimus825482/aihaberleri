@@ -11,21 +11,24 @@ export async function GET(request: NextRequest) {
 
     // Calculate date limit based on period
     const dateLimit = new Date();
+    let whereClause: any = {
+      status: "PUBLISHED",
+    };
+
     if (period === "today") {
       dateLimit.setHours(0, 0, 0, 0); // Start of today
+      whereClause.publishedAt = { gte: dateLimit };
     } else if (period === "week") {
       dateLimit.setDate(dateLimit.getDate() - 7);
+      whereClause.publishedAt = { gte: dateLimit };
     } else if (period === "month") {
       dateLimit.setDate(dateLimit.getDate() - 30);
+      whereClause.publishedAt = { gte: dateLimit };
     }
+    // For "all" period, don't filter by date
 
     const articles = await db.article.findMany({
-      where: {
-        status: "PUBLISHED",
-        publishedAt: {
-          gte: dateLimit,
-        },
-      },
+      where: whereClause,
       orderBy: {
         views: "desc",
       },

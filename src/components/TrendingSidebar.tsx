@@ -22,6 +22,8 @@ interface TrendingSidebarProps {
   locale?: "tr" | "en";
 }
 
+type TimePeriod = "today" | "week" | "month" | "all";
+
 const aiTools: AITool[] = [
   { id: "1", name: "ChatGPT Plus", category: "Chatbot", pricingType: "free" },
   { id: "2", name: "Midjourney", category: "Image Gen", pricingType: "paid" },
@@ -42,6 +44,12 @@ const texts = {
     specialReport: "Özel Rapor",
     reportDesc: "Yapay Zeka Sektör Raporu 2024 Yayında! Hemen indirin.",
     downloadReport: "Raporu İndir",
+    periods: {
+      today: "Bugün",
+      week: "Bu Hafta",
+      month: "Bu Ay",
+      all: "Tüm Zamanlar",
+    },
   },
   en: {
     trendingNews: "Trending News",
@@ -54,6 +62,12 @@ const texts = {
     specialReport: "Special Report",
     reportDesc: "AI Sector Report 2024 is now available! Download now.",
     downloadReport: "Download Report",
+    periods: {
+      today: "Today",
+      week: "This Week",
+      month: "This Month",
+      all: "All Time",
+    },
   },
 };
 
@@ -69,13 +83,20 @@ const getPricingLabel = (type: AITool["pricingType"]) => {
 export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
   const [articles, setArticles] = useState<TrendingArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>("week");
   const t = texts[locale];
 
   useEffect(() => {
     const fetchArticles = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/most-read?period=week&limit=5`);
+        const periodMap: Record<TimePeriod, string> = {
+          today: "today",
+          week: "week",
+          month: "month",
+          all: "all",
+        };
+        const res = await fetch(`/api/most-read?period=${periodMap[timePeriod]}&limit=5`);
         if (res.ok) {
           const data = await res.json();
           setArticles(data.articles || []);
@@ -88,7 +109,7 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
     };
 
     fetchArticles();
-  }, []);
+  }, [timePeriod]);
 
   const getArticleLink = (slug: string) => {
     return locale === "en" ? `/en/news/${slug}` : `/news/${slug}`;
@@ -113,6 +134,26 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
           <span className="text-xs font-semibold text-ai-primary bg-ai-primary/10 px-2 py-1 rounded">
             {t.top5}
           </span>
+        </div>
+
+        {/* Time Period Tabs */}
+        <div className="flex border-b border-gray-100 dark:border-ai-surface-border">
+          {(Object.keys(t.periods) as TimePeriod[]).map((period) => (
+            <button
+              key={period}
+              onClick={() => setTimePeriod(period)}
+              className={`flex-1 px-2 py-2 text-xs font-medium transition-colors relative ${
+                timePeriod === period
+                  ? "text-ai-primary"
+                  : "text-ai-text-secondary hover:text-white"
+              }`}
+            >
+              {t.periods[period]}
+              {timePeriod === period && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-ai-primary"></span>
+              )}
+            </button>
+          ))}
         </div>
 
         <div className="flex flex-col">
@@ -169,7 +210,7 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
           ) : (
             <div className="p-8 text-center text-ai-text-secondary text-sm">
               <span className="material-symbols-outlined text-[32px] mb-2 block">trending_up</span>
-              Henüz trend verisi yok
+              Bu dönem için haber yok
             </div>
           )}
         </div>
