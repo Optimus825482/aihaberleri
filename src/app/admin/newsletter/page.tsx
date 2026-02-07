@@ -19,6 +19,16 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
     Send,
@@ -354,6 +364,7 @@ function NewsletterLogsSection() {
 function SubscribersSection() {
     const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; email: string } | null>(null);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -375,8 +386,16 @@ function SubscribersSection() {
         }
     };
 
-    const removeSubscriber = async (id: string) => {
-        if (!confirm("Bu aboneyi silmek istediğinize emin misiniz?")) return;
+    const removeSubscriber = async (id: string, email: string) => {
+        // Show confirm dialog
+        setDeleteConfirm({ id, email });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirm) return;
+
+        const { id } = deleteConfirm;
+        setDeleteConfirm(null);
 
         try {
             const res = await fetch(`/api/admin/newsletter/subscribers?id=${id}`, {
@@ -403,6 +422,10 @@ function SubscribersSection() {
         }
     };
 
+    const cancelDelete = () => {
+        setDeleteConfirm(null);
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
@@ -412,7 +435,26 @@ function SubscribersSection() {
     }
 
     return (
-        <div className="space-y-4">
+        <>
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && cancelDelete()}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Aboneyi Sil</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {deleteConfirm?.email} adresli aboneyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={cancelDelete}>İptal</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Evet, Sil
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <div className="space-y-4">
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-green-500/10 border-green-500/20">
@@ -484,7 +526,7 @@ function SubscribersSection() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => removeSubscriber(subscriber.id)}
+                                            onClick={() => removeSubscriber(subscriber.id, subscriber.email)}
                                         >
                                             <Trash2 className="h-4 w-4 text-destructive" />
                                         </Button>
@@ -501,6 +543,7 @@ function SubscribersSection() {
                 </div>
             )}
         </div>
+        </>
     );
 }
 

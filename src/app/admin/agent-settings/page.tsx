@@ -76,6 +76,8 @@ interface RecentLog {
 }
 
 export default function AgentSettingsPage() {
+  const defaultAdminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@example.com";
+
   const [settings, setSettings] = useState<AgentSettings>({
     enabled: true,
     intervalHours: 0.167, // 10 minutes default
@@ -84,7 +86,7 @@ export default function AgentSettingsPage() {
     lastRun: null,
     nextRun: null,
     emailNotifications: true,
-    adminEmail: "ikinciyenikitap54@gmail.com",
+    adminEmail: defaultAdminEmail,
   });
   const [availableCategories, setAvailableCategories] = useState<Category[]>(
     [],

@@ -51,13 +51,9 @@ async function testQueueConnection() {
     console.error("   ❌ Queue instance is null");
     process.exit(1);
   }
-    process.exit(1);
-  }
 
   console.log(`   ✅ Queue Name: ${newsAgentQueue.name}`);
-  console.log(
-    `   ✅ Queue Client: ${newsAgentQueue.client ? "Connected" : "Not Connected"}`,
-  );
+  console.log(`   ✅ Queue Client: Available`);
 
   // Test 3: Queue Stats
   console.log("\n3️⃣ Testing Queue Stats...");

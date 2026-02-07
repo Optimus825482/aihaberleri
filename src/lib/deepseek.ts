@@ -225,9 +225,7 @@ URL: ${article.url}
 
   // Validate AI response with Zod schema to prevent invalid data
   const parsedResults = JSON.parse(jsonMatch[0]);
-  const results = z
-    .array(AnalysisResultSchema)
-    .safeParse(parsedResults);
+  const results = z.array(AnalysisResultSchema).safeParse(parsedResults);
 
   if (!results.success) {
     console.error("❌ AI response validation failed:", results.error);
@@ -237,7 +235,7 @@ URL: ${article.url}
   }
 
   // Filter by AI relevance score (must be >= 80 for strict AI filtering)
-  const filtered = results.filter((item: any) => {
+  const filtered = results.data.filter((item: any) => {
     const relevance = item.aiRelevance || 0;
     const title = articles[item.index]?.title?.toLowerCase() || "";
 
@@ -292,7 +290,7 @@ URL: ${article.url}
   });
 
   console.log(
-    `✅ ${filtered.length}/${results.length} haber AI relevance kontrolünden geçti`,
+    `✅ ${filtered.length}/${results.data.length} haber AI relevance kontrolünden geçti`,
   );
 
   return filtered;
@@ -868,18 +866,21 @@ JSON formatında yanıt ver:
     );
   }
 
-  // Add source references
-  result.sources = articles.map((a) => ({
-    name: a.source,
-    url: a.url,
-  }));
+  // Add source references and create final result
+  const aggregatedResult = {
+    ...result.data,
+    sources: articles.map((a) => ({
+      name: a.source,
+      url: a.url,
+    })),
+  };
 
-  console.log(`✅ Aggregated article: ${result.title}`);
+  console.log(`✅ Aggregated article: ${aggregatedResult.title}`);
   console.log(
-    `   Sources: ${result.sources.map((s: { name: string }) => s.name).join(", ")}`,
+    `   Sources: ${aggregatedResult.sources.map((s: { name: string }) => s.name).join(", ")}`,
   );
 
-  return result;
+  return aggregatedResult;
 }
 
 export default {

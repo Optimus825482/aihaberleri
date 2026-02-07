@@ -21,6 +21,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Tags,
   Plus,
   Edit,
@@ -30,6 +40,7 @@ import {
   ExternalLink,
   Loader2,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -62,6 +73,7 @@ interface Article {
 }
 
 export default function CategoriesPage() {
+  const { toast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("");
@@ -69,6 +81,7 @@ export default function CategoriesPage() {
   const [articlesLoading, setArticlesLoading] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -144,17 +157,36 @@ export default function CategoriesPage() {
       if (result.success) {
         fetchCategories();
         resetForm();
+        toast({
+          title: "Başarılı",
+          description: editingCategory ? "Kategori güncellendi" : "Kategori oluşturuldu",
+        });
       } else {
-        alert(result.error || "Bir hata oluştu");
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: result.error || "Bir hata oluştu",
+        });
       }
     } catch (error) {
       console.error("Failed to save category:", error);
-      alert("Bir hata oluştu");
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Bir hata oluştu",
+      });
     }
   };
 
-  const deleteCategory = async (id: string) => {
-    if (!confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) return;
+  const deleteCategory = async (id: string, name: string) => {
+    setDeleteConfirm({ id, name });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
+    const { id } = deleteConfirm;
+    setDeleteConfirm(null);
 
     try {
       const response = await fetch(`/api/admin/categories?id=${id}`, {
@@ -165,13 +197,29 @@ export default function CategoriesPage() {
 
       if (result.success) {
         fetchCategories();
+        toast({
+          title: "Başarılı",
+          description: "Kategori silindi",
+        });
       } else {
-        alert(result.error || "Kategori silinemedi");
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: result.error || "Kategori silinemedi",
+        });
       }
     } catch (error) {
       console.error("Failed to delete category:", error);
-      alert("Bir hata oluştu");
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Bir hata oluştu",
+      });
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null);
   };
 
   const editCategory = (category: Category) => {
@@ -221,6 +269,24 @@ export default function CategoriesPage() {
 
   return (
     <AdminLayout>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && cancelDelete()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kategoriyi Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteConfirm?.name} kategorisini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Evet, Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -446,7 +512,7 @@ export default function CategoriesPage() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => deleteCategory(category.id)}
+                          onClick={() => deleteCategory(category.id, category.name)}
                           disabled={category._count.articles > 0}
                         >
                           <Trash2 className="h-4 w-4" />

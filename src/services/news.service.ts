@@ -19,6 +19,7 @@ export interface NewsArticle {
   publishedDate?: string;
   source?: string;
   trendScore?: number;
+  topic?: string; // Topic from smart filtering
 }
 
 /**

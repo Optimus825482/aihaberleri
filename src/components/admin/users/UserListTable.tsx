@@ -12,6 +12,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  KeyRound,
 } from "lucide-react";
 import RoleAssignmentDropdown from "./RoleAssignmentDropdown";
 import UserActivityTimeline from "./UserActivityTimeline";
@@ -45,7 +46,8 @@ interface Props {
   selectedUsers: string[];
   onSelectUsers: (ids: string[]) => void;
   onRoleChange: (userId: string, newRole: string) => void;
-  onDeleteUser: (userId: string) => void;
+  onDeleteUser: (userId: string, userName: string) => void;
+  onPasswordReset?: (userId: string, email: string) => void;
   pagination: PaginationInfo;
   onPageChange: (page: number) => void;
 }
@@ -57,6 +59,7 @@ export default function UserListTable({
   onSelectUsers,
   onRoleChange,
   onDeleteUser,
+  onPasswordReset,
   pagination,
   onPageChange,
 }: Props) {
@@ -292,10 +295,23 @@ export default function UserListTable({
                             <Edit className="w-4 h-4" />
                             Düzenle
                           </button>
+                          {onPasswordReset && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onPasswordReset(user.id, user.email);
+                                setActionMenuOpen(null);
+                              }}
+                              className="w-full px-4 py-2 text-left text-white hover:bg-white/10 flex items-center gap-2"
+                            >
+                              <KeyRound className="w-4 h-4" />
+                              Şifre Sıfırla
+                            </button>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              onDeleteUser(user.id);
+                              onDeleteUser(user.id, user.name);
                               setActionMenuOpen(null);
                             }}
                             className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-500/10 flex items-center gap-2 rounded-b-lg"

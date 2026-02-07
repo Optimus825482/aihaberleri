@@ -5,8 +5,10 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import {
     Share2,
     RefreshCw,
@@ -22,6 +24,16 @@ import {
     Settings,
     Loader2,
 } from "lucide-react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // Platform icons and colors
 const platformConfig: Record<string, { icon: string; color: string; label: string }> = {
@@ -57,6 +69,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function SocialSharesPage() {
+    const { toast } = useToast();
     const [articles, setArticles] = useState<any[]>([]);
     const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 0 });
     const [loading, setLoading] = useState(true);
@@ -82,7 +95,10 @@ export default function SocialSharesPage() {
 
     // Active batch tracking
     const [activeBatch, setActiveBatch] = useState<any>(null);
-    const [progressPolling, setProgressPolling] = useState<NodeJS.Timeout | null>(null);
+    const progressPollingRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Cancel confirmation dialog
+    const [cancelConfirm, setCancelConfirm] = useState(false);
 
     // Fetch articles
     const fetchArticles = useCallback(async () => {
@@ -124,30 +140,34 @@ export default function SocialSharesPage() {
             if (data.activeBatch) {
                 setActiveBatch(data.activeBatch);
                 // Start polling if active batch exists
-                if (!progressPolling) {
+                if (!progressPollingRef.current) {
                     const interval = setInterval(() => {
                         fetchStats();
                         fetchArticles(); // Also refresh articles during active batch
                     }, 3000); // Poll every 3 seconds
-                    setProgressPolling(interval);
+                    progressPollingRef.current = interval;
                 }
             } else {
                 // Batch completed or stopped
                 if (activeBatch) {
                     // Was active, now stopped - refresh articles one more time
                     fetchArticles();
+                    toast({
+                        title: "Batch Tamamlandı",
+                        description: "Paylaşım işlemi tamamlandı",
+                    });
                 }
                 setActiveBatch(null);
                 // Stop polling if no active batch
-                if (progressPolling) {
-                    clearInterval(progressPolling);
-                    setProgressPolling(null);
+                if (progressPollingRef.current) {
+                    clearInterval(progressPollingRef.current);
+                    progressPollingRef.current = null;
                 }
             }
         } catch (error) {
             console.error("Stats fetch error:", error);
         }
-    }, [progressPolling, activeBatch, fetchArticles]);
+    }, [activeBatch, fetchArticles, toast]);
 
     useEffect(() => {
         fetchArticles();
@@ -160,7 +180,11 @@ export default function SocialSharesPage() {
     // Start batch
     const startBatch = async () => {
         if (selectedPlatforms.length === 0) {
-            alert("En az bir platform seçmelisiniz");
+            toast({
+                variant: "destructive",
+                title: "Hata",
+                description: "En az bir platform seçmelisiniz",
+            });
             return;
         }
 
@@ -180,16 +204,27 @@ export default function SocialSharesPage() {
             const data = await res.json();
 
             if (data.success) {
-                alert(data.message);
+                toast({
+                    title: "Başarılı",
+                    description: data.message,
+                });
                 setShowBatchModal(false);
                 fetchArticles();
                 fetchStats();
             } else {
-                alert(data.error || "Batch başlatılamadı");
+                toast({
+                    variant: "destructive",
+                    title: "Hata",
+                    description: data.error || "Batch başlatılamadı",
+                });
             }
         } catch (error) {
             console.error("Batch error:", error);
-            alert("Batch başlatılırken hata oluştu");
+            toast({
+                variant: "destructive",
+                title: "Hata",
+                description: "Batch başlatılırken hata oluştu",
+            });
         }
         setBatchLoading(false);
     };
@@ -203,11 +238,16 @@ export default function SocialSharesPage() {
         );
     };
 
-    // Cancel batch
+    // Request cancel batch (show confirmation dialog)
+    const requestCancelBatch = () => {
+        if (!activeBatch) return;
+        setCancelConfirm(true);
+    };
+
+    // Cancel batch (actual execution)
     const cancelBatch = async () => {
         if (!activeBatch) return;
-
-        if (!confirm("Batch'i iptal etmek istediğinizden emin misiniz?")) return;
+        setCancelConfirm(false);
 
         try {
             const res = await fetch(`/api/admin/social-shares/batch?batchId=${activeBatch.id}`, {
@@ -218,34 +258,63 @@ export default function SocialSharesPage() {
             const data = await res.json();
 
             if (data.success) {
-                alert("Batch iptal edildi");
+                toast({
+                    title: "Başarılı",
+                    description: "Batch iptal edildi",
+                });
                 setActiveBatch(null);
-                if (progressPolling) {
-                    clearInterval(progressPolling);
-                    setProgressPolling(null);
+                if (progressPollingRef.current) {
+                    clearInterval(progressPollingRef.current);
+                    progressPollingRef.current = null;
                 }
                 fetchStats();
                 fetchArticles();
             } else {
-                alert(data.error || "Batch iptal edilemedi");
+                toast({
+                    variant: "destructive",
+                    title: "Hata",
+                    description: data.error || "Batch iptal edilemedi",
+                });
             }
         } catch (error) {
             console.error("Cancel batch error:", error);
-            alert("Batch iptal edilirken hata oluştu");
+            toast({
+                variant: "destructive",
+                title: "Hata",
+                description: "Batch iptal edilirken hata oluştu",
+            });
         }
     };
 
     // Cleanup polling on unmount
     useEffect(() => {
         return () => {
-            if (progressPolling) {
-                clearInterval(progressPolling);
+            if (progressPollingRef.current) {
+                clearInterval(progressPollingRef.current);
             }
         };
-    }, [progressPolling]);
+    }, []);
 
     return (
         <AdminLayout>
+            {/* Cancel Confirmation Dialog */}
+            <AlertDialog open={cancelConfirm} onOpenChange={setCancelConfirm}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Batch'i İptal Et</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Aktif paylaşım batch'ini iptal etmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+                        <AlertDialogAction onClick={cancelBatch} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Evet, İptal Et
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             <div className="p-6 space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -476,7 +545,7 @@ export default function SocialSharesPage() {
                                     Sayfa kapatılsa bile devam edecek
                                 </span>
                                 <button
-                                    onClick={cancelBatch}
+                                    onClick={requestCancelBatch}
                                     className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-white text-sm transition-colors flex items-center gap-1"
                                 >
                                     <XCircle className="w-4 h-4" />

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Settings as SettingsIcon,
   Globe,
@@ -66,6 +67,7 @@ export default function SettingsPage() {
   const [data, setData] = useState<SettingsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
   const [activeTab, setActiveTab] = useState<
     "general" | "seo" | "email" | "social" | "agent"
   >("general");
@@ -342,13 +344,46 @@ export default function SettingsPage() {
                     <label htmlFor={field.key} className="text-sm font-bold mb-2 block">
                       {field.label}
                     </label>
-                    <input
-                      id={field.key}
-                      type={field.type}
-                      defaultValue={setting?.value || ""}
-                      onBlur={(e) => saveSetting(field.key, e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg bg-background"
-                    />
+                    <div className="relative">
+                      <Input
+                        id={field.key}
+                        type={
+                          field.type === "password" && !showPasswords[field.key]
+                            ? "password"
+                            : field.type === "password"
+                            ? "text"
+                            : field.type
+                        }
+                        defaultValue={
+                          field.type === "password" && setting?.value
+                            ? "••••••••"
+                            : setting?.value || ""
+                        }
+                        onBlur={(e) => {
+                          // Only save if value was actually changed
+                          if (e.target.value !== "••••••••") {
+                            saveSetting(field.key, e.target.value);
+                          }
+                        }}
+                        className="pr-20"
+                      />
+                      {field.type === "password" && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowPasswords((prev) => ({
+                                ...prev,
+                                [field.key]: !prev[field.key],
+                              }))
+                            }
+                            className="text-xs text-muted-foreground hover:text-foreground px-2 py-1"
+                          >
+                            {showPasswords[field.key] ? "Gizle" : "Göster"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 );
               })}

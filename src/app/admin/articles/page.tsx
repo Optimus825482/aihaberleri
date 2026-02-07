@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 import {
   Table,
   TableBody,
@@ -20,6 +21,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -172,6 +183,7 @@ const SocialShareBadges = ({ shares, facebookShared }: { shares?: SocialShare[];
 
 export default function ArticlesPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [articles, setArticles] = useState<Article[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -182,6 +194,7 @@ export default function ArticlesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalArticles, setTotalArticles] = useState(0);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -232,12 +245,20 @@ export default function ArticlesPage() {
     }
   };
 
-  const deleteArticle = async (id: string) => {
-    if (!confirm("Bu haberi silmek istediğinizden emin misiniz?")) return;
+  const deleteArticle = async (id: string, title: string) => {
+    // Show confirm dialog
+    setDeleteConfirm({ id, title });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+
+    const { id } = deleteConfirm;
+    const previousArticles = [...articles];
 
     // Optimistic update - immediately remove from UI
-    const previousArticles = [...articles];
     setArticles((prev) => prev.filter((article) => article.id !== id));
+    setDeleteConfirm(null);
 
     try {
       const response = await fetch(`/api/articles/${id}`, {
@@ -247,22 +268,36 @@ export default function ArticlesPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Success - show confirmation
-        alert("Haber başarıyla silindi");
+        toast({
+          title: "Başarılı",
+          description: "Haber başarıyla silindi",
+        });
         // Refresh to get updated counts
         fetchData();
       } else {
         // Rollback on error
         console.error("Silme hatası:", data);
         setArticles(previousArticles);
-        alert(`Haber silinemedi: ${data.error || "Bilinmeyen hata"}`);
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: data.error || "Haber silinemedi",
+        });
       }
     } catch (error) {
       // Rollback on error
       console.error("Silme hatası:", error);
       setArticles(previousArticles);
-      alert("Bir hata oluştu");
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Bir hata oluştu",
+      });
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm(null);
   };
 
   const refreshImage = async (id: string) => {
@@ -278,9 +313,16 @@ export default function ArticlesPage() {
       if (response.ok && data.success) {
         // Check if fallback was used
         if (data.usedFallback) {
-          alert("⚠️ Görsel servisi yanıt vermedi. Varsayılan görsel kullanıldı.\nBirkaç dakika sonra tekrar deneyin.");
+          toast({
+            variant: "destructive",
+            title: "⚠️ Görsel Servisi Hatası",
+            description: "Görsel servisi yanıt vermedi. Varsayılan görsel kullanıldı. Birkaç dakika sonra tekrar deneyin.",
+          });
         } else {
-          alert("✅ Görsel başarıyla güncellendi!");
+          toast({
+            title: "Başarılı",
+            description: "Görsel başarıyla güncellendi",
+          });
         }
         // Optimistic update - refresh only this article
         const updatedArticle = await fetch(`/api/articles/${id}`).then((r) =>
@@ -296,10 +338,18 @@ export default function ArticlesPage() {
           );
         }
       } else {
-        alert("❌ Görsel güncellenemedi: " + (data.error || "Bilinmeyen hata"));
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: "Görsel güncellenemedi: " + (data.error || "Bilinmeyen hata"),
+        });
       }
     } catch (error) {
-      alert("❌ Bir hata oluştu");
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Bir hata oluştu",
+      });
     } finally {
       setRefreshingImage(null);
     }
@@ -322,17 +372,28 @@ export default function ArticlesPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        alert("Facebook'ta başarıyla paylaşıldı!");
+        toast({
+          title: "Başarılı",
+          description: "Facebook'ta başarıyla paylaşıldı",
+        });
       } else {
         // Rollback on error
         setArticles(previousArticles);
-        alert(data.error || "Facebook paylaşımı başarısız");
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: data.error || "Facebook paylaşımı başarısız",
+        });
       }
     } catch (error) {
       // Rollback on error
       console.error("Facebook share error:", error);
       setArticles(previousArticles);
-      alert("Bir hata oluştu");
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Bir hata oluştu",
+      });
     } finally {
       setSharingFacebook(null);
     }
@@ -365,6 +426,24 @@ export default function ArticlesPage() {
 
   return (
     <AdminLayout>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && cancelDelete()}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Haberi Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteConfirm?.title || "Bu haberi silmek istediğinizden emin misiniz?"} başlıklı haberi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Evet, Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -556,7 +635,7 @@ export default function ArticlesPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => deleteArticle(article.id)}
+                      onClick={() => deleteArticle(article.id, article.title)}
                       className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -707,7 +786,7 @@ export default function ArticlesPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => deleteArticle(article.id)}
+                            onClick={() => deleteArticle(article.id, article.title)}
                             title="Sil"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />

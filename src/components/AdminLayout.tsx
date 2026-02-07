@@ -28,7 +28,6 @@ import {
   GitBranch,
   Rocket,
   Mail,
-  Send,
   PlusCircle,
   Share2,
 } from "lucide-react";
@@ -130,12 +129,6 @@ const menuItems = [
     title: "Sosyal Medya",
     href: "/admin/social-shares",
     icon: Share2,
-    requiredResource: null,
-  },
-  {
-    title: "Google Indexing Batch",
-    href: "/admin/google-indexing-batch",
-    icon: Send,
     requiredResource: null,
   },
   {
@@ -343,11 +336,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             {visibleMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
-              const hasSubmenu = item.submenu && item.submenu.length > 0;
+              const hasSubmenu = "submenu" in item && Array.isArray((item as any).submenu) && (item as any).submenu.length > 0;
               const isExpanded = expandedMenus[item.title];
               const isSubmenuActive =
                 hasSubmenu &&
-                item.submenu?.some((sub) => pathname === sub.href);
+                (item as any).submenu?.some((sub: any) => pathname === sub.href);
 
               return (
                 <div key={item.href}>
@@ -435,7 +428,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   {/* Submenu Items */}
                   {hasSubmenu && isExpanded && (
                     <div className="ml-4 mt-1 space-y-1 border-l-2 border-primary/10 pl-2">
-                      {item.submenu?.map((subItem) => {
+                      {(item as any).submenu?.map((subItem: any) => {
                         const SubIcon = subItem.icon;
                         const isSubActive = pathname === subItem.href;
 

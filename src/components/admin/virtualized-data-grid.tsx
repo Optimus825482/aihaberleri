@@ -67,7 +67,9 @@ export function VirtualizedDataGrid<T extends Record<string, any>>({
         const value = item[key];
         if (value === null || value === undefined) return "-";
         if (typeof value === "boolean") return value ? "Evet" : "Hayır";
-        if (typeof value === "object" && value instanceof Date) return value.toLocaleDateString("tr-TR");
+        if (typeof value === "object" && value !== null && Object.prototype.toString.call(value) === "[object Date]") {
+            return (value as Date).toLocaleDateString("tr-TR");
+        }
         return String(value);
     }, [data]);
 

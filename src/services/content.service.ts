@@ -940,6 +940,7 @@ export async function processArticle(
     throw new Error(
       `Failed to process article "${article.title}": ${errorMessage}`,
     );
+  }
 }
 
 /**
