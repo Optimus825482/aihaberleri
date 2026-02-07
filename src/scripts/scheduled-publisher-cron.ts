@@ -8,7 +8,7 @@
  * 
  * Kullanım:
  * - Manuel: node src/scripts/scheduled-publisher-cron.ts
- * - Cron: */5 * * * * node src/scripts/scheduled-publisher-cron.ts
+ * - Cron: Her 5 dakika (crontab: 0,5,10,... * * * *)
  */
 
 import { checkScheduledArticles } from '../lib/scheduled-publisher';
@@ -23,25 +23,11 @@ async function main() {
     const duration = Date.now() - startTime;
     
     console.log(`[${new Date().toISOString()}] Tamamlandı (${duration}ms)`);
-    console.log(`  ✅ Yayınlanan: ${result.published.length}`);
-    console.log(`  ❌ Başarısız: ${result.failed.length}`);
-    
-    if (result.published.length > 0) {
-      console.log('\n  Yayınlanan makaleler:');
-      result.published.forEach((article) => {
-        console.log(`    - ${article.title} (${article.id})`);
-      });
-    }
-    
-    if (result.failed.length > 0) {
-      console.error('\n  Başarısız makaleler:');
-      result.failed.forEach((failure) => {
-        console.error(`    - ${failure.article.title}: ${failure.error}`);
-      });
-    }
+    console.log(`  ✅ Yayınlanan: ${result.published}`);
+    console.log(`  ❌ Başarısız: ${result.failed}`);
     
     // Exit with error code if any failures
-    process.exit(result.failed.length > 0 ? 1 : 0);
+    process.exit(result.failed > 0 ? 1 : 0);
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Fatal error:`, error);
     process.exit(1);

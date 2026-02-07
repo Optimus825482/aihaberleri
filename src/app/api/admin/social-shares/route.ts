@@ -100,8 +100,17 @@ export async function GET(req: NextRequest) {
         });
 
         // Fill in existing shares
+        // Platform enum may be FACEBOOK or FACEBOOK_EN
+        // Also handle legacy data where language field determines EN variant
         article.socialShares.forEach((share) => {
-          shareMap[share.platform] = share;
+          let key = share.platform;
+          
+          // If platform doesn't end with _EN but language is "en", map to _EN variant
+          if (!share.platform.endsWith('_EN') && share.language === 'en') {
+            key = `${share.platform}_EN` as any;
+          }
+          
+          shareMap[key] = share;
         });
 
         // Apply filters if specified

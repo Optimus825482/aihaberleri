@@ -128,16 +128,14 @@ async function processBatch(
         where: { id: articleId },
         data: {
           score,
-          // Store issues in metadata if needed
-          metadata: {
-            seoIssues: issues,
-            lastSEOCheck: new Date().toISOString(),
-          },
+          seoScore: score,
         },
       });
 
       processed++;
-      logger.info(`✅ SEO calculated for article ${articleId}: ${score}/100`);
+      logger.info(
+        `✅ SEO calculated for article ${articleId}: ${score}/100 (${issues.length} issues)`,
+      );
     } catch (error) {
       failed++;
       const errorMsg = error instanceof Error ? error.message : "Unknown error";
