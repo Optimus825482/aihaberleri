@@ -29,6 +29,16 @@ import {
     Code2,
     ArrowRight,
     Rocket,
+    Bell,
+    Share2,
+    TrendingUp,
+    DollarSign,
+    Users,
+    Image,
+    Search,
+    Globe,
+    Cpu,
+    MapPin,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -37,31 +47,33 @@ interface Improvement {
     title: string;
     description: string;
     icon: React.ReactNode;
-    priority: "high" | "medium" | "low";
+    priority: "critical" | "high" | "medium" | "low";
     status: "completed" | "in-progress" | "planned";
     category: string;
     features: string[];
     implementationFile?: string;
     docsLink?: string;
     progress?: number;
+    completedDate?: string;
 }
 
 const improvements: Improvement[] = [
+    // ========== TAMAMLANAN ÖZELLİKLER ==========
     {
         id: "circuit-breaker",
         title: "Circuit Breaker Pattern",
         description:
-            "Tüm harici API çağrıları için otomatik hata toleransı ve kurtarma mekanizması. 3 durum: CLOSED → OPEN → HALF_OPEN",
+            "Tüm harici API çağrıları için otomatik hata toleransı ve kurtarma mekanizması.",
         icon: <Shield className="w-6 h-6" />,
         priority: "high",
         status: "completed",
         category: "Resilience",
         progress: 100,
+        completedDate: "2026-01",
         features: [
             "DeepSeek, Gemini, Brave, SearXNG için ayrı circuit breaker",
             "5 başarısız çağrıda devre açılır",
             "30 saniye cooldown süresi",
-            "Metriks: Toplam çağrı, başarı oranı, ortalama yanıt süresi",
             "Redis üzerinde durum persistansı",
         ],
         implementationFile: "src/lib/circuit-breaker.ts",
@@ -70,38 +82,36 @@ const improvements: Improvement[] = [
         id: "smart-scheduler",
         title: "Smart Scheduling",
         description:
-            "Türkiye saat dilimine göre akıllı zamanlama. Peak saatlerde daha sık, gece daha seyrek içerik üretimi.",
+            "Türkiye saat dilimine göre akıllı zamanlama. Peak saatlerde daha sık içerik üretimi.",
         icon: <Timer className="w-6 h-6" />,
         priority: "high",
         status: "completed",
         category: "Scheduling",
         progress: 100,
+        completedDate: "2026-01",
         features: [
             "Türkiye saat dilimine göre (UTC+3)",
             "Peak saatler: 08:00-10:00, 12:00-14:00, 18:00-22:00",
             "Breaking news modu: 5 dakika aralık",
-            "Normal mod: 15 dakika aralık",
-            "Off-peak: 30 dakika aralık",
         ],
         implementationFile: "src/lib/smart-scheduler.ts",
         docsLink: "/admin/pipeline",
     },
     {
         id: "pgvector-duplicate",
-        title: "Pgvector Semantic Duplicate Detection",
+        title: "Semantic Duplicate Detection",
         description:
-            "Semantik benzerlik ile akıllı duplicate tespiti. Aynı konuyu farklı kelimelerle anlatan haberleri yakalama.",
+            "Pgvector ile semantik benzerlik analizi. Aynı konuyu farklı kelimelerle anlatan haberleri yakalama.",
         icon: <Database className="w-6 h-6" />,
         priority: "high",
         status: "completed",
         category: "AI/ML",
         progress: 100,
+        completedDate: "2026-01",
         features: [
             "OpenAI text-embedding-3-small modeli",
             "1536 boyutlu vektör embeddings",
-            "Cosine similarity ile benzerlik hesabı",
             "0.85 threshold ile duplicate tespiti",
-            "PostgreSQL pgvector extension",
         ],
         implementationFile: "src/lib/embeddings.ts",
     },
@@ -109,18 +119,17 @@ const improvements: Improvement[] = [
         id: "pipeline-dashboard",
         title: "Pipeline Dashboard",
         description:
-            "Multi-agent pipeline'ın gerçek zamanlı görselleştirmesi. Agent durumları, circuit breaker metrikleri, zamanlama bilgileri.",
+            "Multi-agent pipeline'ın gerçek zamanlı görselleştirmesi ve monitoring.",
         icon: <BarChart3 className="w-6 h-6" />,
         priority: "high",
         status: "completed",
         category: "Monitoring",
         progress: 100,
+        completedDate: "2026-01",
         features: [
-            "6 agent'ın akış diyagramı",
+            "6 agent akış diyagramı",
             "Circuit breaker durum göstergesi",
-            "Son çalışma zamanı ve sonucu",
             "Smart scheduler bilgileri",
-            "Breaking news mode toggle",
         ],
         implementationFile: "src/app/admin/pipeline/page.tsx",
         docsLink: "/admin/pipeline",
@@ -129,26 +138,122 @@ const improvements: Improvement[] = [
         id: "title-ab-testing",
         title: "Title A/B Testing",
         description:
-            "Her haber için 3 alternatif başlık üretimi ve en iyi performansı gösteren başlığın seçimi.",
+            "Her haber için 3 alternatif başlık üretimi ve performans takibi.",
         icon: <Beaker className="w-6 h-6" />,
         priority: "medium",
         status: "completed",
         category: "Optimization",
         progress: 100,
+        completedDate: "2026-01",
         features: [
             "3 başlık varyantı: Primary, Clickbait, SEO",
             "CTR (Click-through rate) takibi",
-            "Otomatik kazanan seçimi",
             "A/B test dashboard",
-            "Statistiksel anlamlılık hesabı",
         ],
         implementationFile: "src/lib/title-ab-testing.ts",
     },
     {
+        id: "seo-automation",
+        title: "SEO Automation Suite",
+        description:
+            "Tam otomatik SEO: Schema.org JSON-LD, sitemap, meta tags, internal linking.",
+        icon: <Search className="w-6 h-6" />,
+        priority: "high",
+        status: "completed",
+        category: "SEO",
+        progress: 100,
+        completedDate: "2026-02",
+        features: [
+            "NewsArticle, BreadcrumbList, Organization JSON-LD",
+            "Dynamic sitemap.xml generation",
+            "AI-generated meta descriptions",
+            "Internal linking system",
+        ],
+        implementationFile: "src/lib/seo/structured-data.ts",
+    },
+    {
+        id: "image-optimization",
+        title: "Image Optimization & CDN",
+        description:
+            "Sharp ile görsel optimizasyonu, WebP dönüşümü, Cloudflare R2 CDN desteği.",
+        icon: <Image className="w-6 h-6" />,
+        priority: "high",
+        status: "completed",
+        category: "Performance",
+        progress: 100,
+        completedDate: "2026-02",
+        features: [
+            "Sharp ile WebP conversion",
+            "Multiple size variants (large, medium, small, thumb)",
+            "Cloudflare R2 CDN support",
+            "Local storage fallback",
+        ],
+        implementationFile: "src/lib/image-optimizer.ts",
+    },
+    {
+        id: "multi-level-cache",
+        title: "Multi-Level Caching",
+        description:
+            "L1 Memory + L2 Redis çok katmanlı cache sistemi. Tag-based invalidation.",
+        icon: <Cpu className="w-6 h-6" />,
+        priority: "high",
+        status: "completed",
+        category: "Performance",
+        progress: 100,
+        completedDate: "2026-02",
+        features: [
+            "L1: Memory cache (30s TTL)",
+            "L2: Redis cache (custom TTL)",
+            "Tag-based cache invalidation",
+            "Automatic cache warming",
+        ],
+        implementationFile: "src/lib/cache.ts",
+    },
+    {
+        id: "websocket-realtime",
+        title: "WebSocket Real-time Updates",
+        description:
+            "Socket.io ile gerçek zamanlı dashboard güncellemeleri ve bildirimler.",
+        icon: <Zap className="w-6 h-6" />,
+        priority: "high",
+        status: "completed",
+        category: "Real-time",
+        progress: 100,
+        completedDate: "2026-02",
+        features: [
+            "Agent progress notifications",
+            "Article published events",
+            "Admin dashboard live updates",
+            "Visitor tracking real-time",
+        ],
+        implementationFile: "src/lib/socket.ts",
+    },
+    {
+        id: "ghostwriter-engine",
+        title: "Ghostwriter Engine",
+        description:
+            "Anti-AI detection içerik üretimi. Burstiness, perplexity, emotional hooks.",
+        icon: <Brain className="w-6 h-6" />,
+        priority: "high",
+        status: "completed",
+        category: "AI/ML",
+        progress: 100,
+        completedDate: "2026-02",
+        features: [
+            "Complex sentence variation (burstiness)",
+            "Emotional hooks integration",
+            "Forbidden AI patterns filtering",
+            "Human-like content generation",
+        ],
+        implementationFile: "src/lib/deepseek.ts",
+    },
+
+    // ========== DEVAM EDEN ÖZELLİKLER ==========
+    {
         id: "multi-language-rss",
         title: "Multi-Language RSS Feeds",
         description:
-            "İngilizce dışında Almanca, Fransızca, Japonca ve Çince AI haber kaynakları.",
+            "İngilizce dışında Almanca, Fransızca, Japonca AI haber kaynakları.",
         icon: <Languages className="w-6 h-6" />,
         priority: "medium",
         status: "in-progress",
@@ -158,81 +263,172 @@ const improvements: Improvement[] = [
             "5+ dilde RSS kaynakları",
             "Otomatik dil tespiti",
             "Türkçeye çeviri",
-            "Kaynak çeşitliliği",
             "Coğrafi haber dağılımı",
         ],
         implementationFile: "src/lib/rss.ts",
+    },
+
+    // ========== YENİ PLANLANAN ÖZELLİKLER (2026 Q1-Q2) ==========
+    {
+        id: "ai-personalization",
+        title: "AI Personalization Engine",
+        description:
+            "Kullanıcı tercihlerine göre kişiselleştirilmiş içerik önerileri ve 'For You' feed.",
+        icon: <Users className="w-6 h-6" />,
+        priority: "critical",
+        status: "planned",
+        category: "AI/ML",
+        progress: 0,
+        features: [
+            "User preference tracking",
+            "Reading history analysis",
+            "Category affinity scoring",
+            "Personalized homepage feed",
+            "'For You' section",
+            "Email digest personalization",
+        ],
+    },
+    {
+        id: "push-notifications",
+        title: "Push Notification System",
+        description:
+            "Firebase FCM ile web push bildirimleri. Breaking news alerts, personalized updates.",
+        icon: <Bell className="w-6 h-6" />,
+        priority: "critical",
+        status: "planned",
+        category: "Engagement",
+        progress: 0,
+        features: [
+            "Web Push Notifications (PWA)",
+            "Breaking news alerts",
+            "Personalized updates",
+            "Topic-based subscriptions",
+            "Scheduled notifications (08:00, 18:00)",
+        ],
+    },
+    {
+        id: "social-auto-post",
+        title: "Automated Social Media Posting",
+        description:
+            "Yayın sonrası otomatik sosyal medya paylaşımı. Platform-specific formatting.",
+        icon: <Share2 className="w-6 h-6" />,
+        priority: "high",
+        status: "planned",
+        category: "Social",
+        progress: 0,
+        features: [
+            "Auto-post on publish",
+            "Twitter thread format + hashtags",
+            "LinkedIn professional tone",
+            "Best time scheduling",
+            "Performance tracking",
+        ],
+    },
+    {
+        id: "ml-ranking",
+        title: "ML-Based Article Ranking",
+        description:
+            "Machine learning ile engagement tahmini. AI + ML hybrid scoring sistemi.",
+        icon: <TrendingUp className="w-6 h-6" />,
+        priority: "high",
+        status: "planned",
+        category: "AI/ML",
+        progress: 0,
+        features: [
+            "RandomForestRegressor model",
+            "Historical data training",
+            "Engagement prediction",
+            "Hybrid scoring: AI (60%) + ML (40%)",
+            "Continuous learning",
+        ],
+    },
+    {
+        id: "advanced-analytics",
+        title: "Advanced Analytics Dashboard",
+        description:
+            "Detaylı kullanıcı davranış analizi: retention, session depth, scroll tracking.",
+        icon: <Eye className="w-6 h-6" />,
+        priority: "high",
+        status: "planned",
+        category: "Analytics",
+        progress: 0,
+        features: [
+            "Retention rate tracking",
+            "Session depth (articles read)",
+            "Scroll depth tracking",
+            "Time on page analytics",
+            "Conversion funnel visualization",
+        ],
     },
     {
         id: "content-quality-scoring",
         title: "Content Quality Scoring",
         description:
-            "AI ile içerik kalitesi değerlendirmesi. Okunabilirlik, SEO uyumu, özgünlük ve engagement potansiyeli.",
+            "AI ile içerik kalitesi değerlendirmesi. Readability, SEO uyumu, AI detection.",
         icon: <Sparkles className="w-6 h-6" />,
         priority: "medium",
         status: "planned",
         category: "AI/ML",
         progress: 0,
         features: [
-            "Flesch-Kincaid okunabilirlik skoru",
-            "SEO uyumluluk kontrolü",
-            "Özgünlük analizi (plagiarism check)",
-            "Engagement tahmini",
-            "Otomatik iyileştirme önerileri",
+            "Flesch-Kincaid readability (TR variant)",
+            "Originality score",
+            "SEO compliance check",
+            "AI detection score",
+            "Auto-improve suggestions",
         ],
     },
     {
-        id: "real-time-analytics",
-        title: "Real-time Analytics Integration",
+        id: "monetization",
+        title: "Monetization Infrastructure",
         description:
-            "Gerçek zamanlı kullanıcı davranış analizi ve içerik performans metrikleri.",
-        icon: <Eye className="w-6 h-6" />,
-        priority: "low",
+            "Premium membership, newsletter sponsorship, native ads, API access.",
+        icon: <DollarSign className="w-6 h-6" />,
+        priority: "medium",
+        status: "planned",
+        category: "Business",
+        progress: 0,
+        features: [
+            "Stripe integration",
+            "Premium membership (ad-free)",
+            "Newsletter sponsorship",
+            "API access (B2B)",
+            "Paywall component",
+        ],
+    },
+    {
+        id: "live-visitor-map",
+        title: "Live Visitor Map",
+        description:
+            "Leaflet.js ile gerçek zamanlı ziyaretçi haritası ve coğrafi istatistikler.",
+        icon: <MapPin className="w-6 h-6" />,
+        priority: "medium",
         status: "planned",
         category: "Analytics",
         progress: 0,
         features: [
-            "Sayfa görüntülenme heatmap",
-            "Scroll depth tracking",
-            "Ortalama okuma süresi",
-            "Bounce rate analizi",
-            "Real-time dashboard",
+            "Real-time visitor pins",
+            "Country/city aggregation",
+            "Heatmap overlay",
+            "Geographic insights",
         ],
     },
     {
-        id: "ai-image-enhancement",
-        title: "AI Image Enhancement",
+        id: "multi-language-content",
+        title: "Multi-Language Content Generation",
         description:
-            "Üretilen görsellerin kalite kontrolü ve otomatik iyileştirmesi.",
-        icon: <Brain className="w-6 h-6" />,
+            "Almanca, İspanyolca, Arapça AI içerik üretimi. RTL support.",
+        icon: <Globe className="w-6 h-6" />,
         priority: "low",
         status: "planned",
-        category: "AI/ML",
+        category: "Content",
         progress: 0,
         features: [
-            "Görsel kalite skoru",
-            "Otomatik renk düzeltme",
-            "Watermark ekleme",
-            "Format optimizasyonu",
-            "CDN cache invalidation",
-        ],
-    },
-    {
-        id: "social-analytics",
-        title: "Social Media Analytics",
-        description:
-            "Twitter ve Facebook paylaşımlarının performans analizi ve optimizasyonu.",
-        icon: <Zap className="w-6 h-6" />,
-        priority: "low",
-        status: "planned",
-        category: "Social",
-        progress: 0,
-        features: [
-            "Post engagement metrikleri",
-            "En iyi paylaşım zamanı analizi",
-            "Hashtag performansı",
-            "Viral içerik tespiti",
-            "Rakip analizi",
+            "German (DE) - EU market",
+            "Spanish (ES) - LATAM market",
+            "Arabic (AR) - MENA market",
+            "RTL layout support",
+            "Hreflang SEO tags",
         ],
     },
 ];
@@ -271,12 +467,14 @@ const StatusBadge = ({ status }: { status: Improvement["status"] }) => {
 
 const PriorityBadge = ({ priority }: { priority: Improvement["priority"] }) => {
     const variants = {
+        critical: "bg-purple-500/20 text-purple-400 border-purple-500/30",
         high: "bg-red-500/20 text-red-400 border-red-500/30",
         medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
         low: "bg-gray-500/20 text-gray-400 border-gray-500/30",
     };
 
     const labels = {
+        critical: "🔥 Kritik",
         high: "Yüksek Öncelik",
         medium: "Orta Öncelik",
         low: "Düşük Öncelik",
