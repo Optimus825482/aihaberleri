@@ -945,6 +945,134 @@ export const KOREAN_SOURCES: RSSSource[] = [
 ];
 
 // ============================================
+// TURKISH SOURCES (Native Language - No Translation)
+// ============================================
+
+export const TURKISH_SOURCES: RSSSource[] = [
+  // Major Turkish Tech Publications
+  {
+    id: "shiftdelete",
+    name: "ShiftDelete.Net",
+    url: "https://shiftdelete.net/feed",
+    language: "tr",
+    category: "major_tech",
+    reliabilityScore: 92,
+    averageArticlesPerDay: 25,
+    requiresTranslation: false,
+    priority: 5,
+    isActive: true,
+    tags: ["teknoloji", "yapay-zeka", "yazilim", "donanim"],
+  },
+  {
+    id: "webtekno",
+    name: "Webtekno",
+    url: "https://www.webtekno.com/rss.xml",
+    language: "tr",
+    category: "major_tech",
+    reliabilityScore: 90,
+    averageArticlesPerDay: 30,
+    requiresTranslation: false,
+    priority: 5,
+    isActive: true,
+    tags: ["teknoloji", "mobil", "oyun", "yapay-zeka"],
+  },
+  {
+    id: "donanimhaber",
+    name: "DonanımHaber",
+    url: "https://www.donanimhaber.com/rss",
+    language: "tr",
+    category: "major_tech",
+    reliabilityScore: 91,
+    averageArticlesPerDay: 20,
+    requiresTranslation: false,
+    priority: 5,
+    isActive: true,
+    tags: ["donanim", "teknoloji", "oyun", "inceleme"],
+  },
+  {
+    id: "teknoloji-gundem",
+    name: "Teknolojigundem.com",
+    url: "https://www.teknolojigundem.com/feed",
+    language: "tr",
+    category: "major_tech",
+    reliabilityScore: 85,
+    averageArticlesPerDay: 15,
+    requiresTranslation: false,
+    priority: 4,
+    isActive: true,
+    tags: ["teknoloji", "gundem", "yapay-zeka"],
+  },
+  {
+    id: "log",
+    name: "LOG - Teknoloji",
+    url: "https://www.log.com.tr/feed/",
+    language: "tr",
+    category: "major_tech",
+    reliabilityScore: 88,
+    averageArticlesPerDay: 12,
+    requiresTranslation: false,
+    priority: 4,
+    isActive: true,
+    tags: ["teknoloji", "bilim", "yapay-zeka"],
+  },
+  {
+    id: "chip-online",
+    name: "Chip Online Türkiye",
+    url: "https://www.chip.com.tr/rss/haberler.xml",
+    language: "tr",
+    category: "major_tech",
+    reliabilityScore: 87,
+    averageArticlesPerDay: 10,
+    requiresTranslation: false,
+    priority: 4,
+    isActive: true,
+    tags: ["teknoloji", "inceleme", "rehber"],
+  },
+  {
+    id: "tamindir",
+    name: "Tamindir",
+    url: "https://www.tamindir.com/rss/haber/",
+    language: "tr",
+    category: "general_tech",
+    reliabilityScore: 84,
+    averageArticlesPerDay: 15,
+    requiresTranslation: false,
+    priority: 3,
+    isActive: true,
+    tags: ["yazilim", "uygulama", "teknoloji"],
+  },
+  // Turkish Business & Finance Tech
+  {
+    id: "webrazzi",
+    name: "Webrazzi",
+    url: "https://webrazzi.com/feed/",
+    language: "tr",
+    category: "business",
+    reliabilityScore: 93,
+    averageArticlesPerDay: 8,
+    requiresTranslation: false,
+    priority: 5,
+    isActive: true,
+    tags: ["girisimcilik", "startup", "yatirim", "teknoloji"],
+  },
+  // Turkish AI-Focused
+  {
+    id: "yapay-zeka-turkiye",
+    name: "Yapay Zeka Türkiye",
+    url: "https://yapayzekaturkiye.com/feed/",
+    language: "tr",
+    category: "ai_focused",
+    reliabilityScore: 82,
+    averageArticlesPerDay: 3,
+    requiresTranslation: false,
+    priority: 5,
+    isActive: true,
+    tags: ["yapay-zeka", "makine-ogrenmesi", "veri-bilimi"],
+  },
+
+];
+
+// ============================================
 // ALL SOURCES COMBINED
 // ============================================
 
@@ -955,6 +1083,7 @@ export const ALL_INTERNATIONAL_SOURCES: RSSSource[] = [
   ...CHINESE_SOURCES,
   ...JAPANESE_SOURCES,
   ...KOREAN_SOURCES,
+  ...TURKISH_SOURCES,
 ];
 
 // ============================================
@@ -1031,6 +1160,7 @@ export function getSourceStatistics() {
       zh: getSourcesByLanguage("zh").length,
       ja: getSourcesByLanguage("ja").length,
       ko: getSourcesByLanguage("ko").length,
+      tr: getSourcesByLanguage("tr").length,
     },
     byCategory: {
       major_tech: getSourcesByCategory("major_tech").length,
@@ -1055,6 +1185,7 @@ export default {
   CHINESE_SOURCES,
   JAPANESE_SOURCES,
   KOREAN_SOURCES,
+  TURKISH_SOURCES,
   ALL_INTERNATIONAL_SOURCES,
   getSourcesByLanguage,
   getSourcesByCategory,

@@ -338,14 +338,42 @@ export class DuplicateDetectorAgent extends BaseAgent<
       { pattern: /deepseek/i, entity: "deepseek" },
       { pattern: /mistral/i, entity: "mistral" },
       { pattern: /xai|grok/i, entity: "xai" },
+      // NEW: Additional AI companies (2026 update)
+      { pattern: /cohere/i, entity: "cohere" },
+      { pattern: /stability|stable diffusion/i, entity: "stability" },
+      { pattern: /midjourney/i, entity: "midjourney" },
+      { pattern: /perplexity/i, entity: "perplexity" },
+      { pattern: /runway/i, entity: "runway" },
+      { pattern: /hugging\s*face/i, entity: "huggingface" },
+      { pattern: /alibaba|qwen/i, entity: "alibaba" },
+      { pattern: /baidu|ernie/i, entity: "baidu" },
+      { pattern: /samsung/i, entity: "samsung" },
+      { pattern: /intel/i, entity: "intel" },
+      { pattern: /amd/i, entity: "amd" },
+      { pattern: /qualcomm/i, entity: "qualcomm" },
+      // Turkish tech companies
+      { pattern: /turkcell/i, entity: "turkcell" },
+      { pattern: /türk telekom/i, entity: "turktelekom" },
+      { pattern: /getir/i, entity: "getir" },
+      { pattern: /trendyol/i, entity: "trendyol" },
     ];
 
     const actionPatterns = [
       { pattern: /ban|yasak|yasakla/i, entity: "ban" },
       { pattern: /launch|release|tanıt|duyur/i, entity: "launch" },
       { pattern: /acquisition|satın al|merge|birleş/i, entity: "acquisition" },
-      { pattern: /investment|yatırım|fund/i, entity: "investment" },
-      { pattern: /partnership|ortaklık|collab/i, entity: "partnership" },
+      { pattern: /investment|yatırım|fund|fon/i, entity: "investment" },
+      {
+        pattern: /partnership|ortaklık|collab|işbirliği/i,
+        entity: "partnership",
+      },
+      // NEW: Additional action patterns
+      { pattern: /düzenleme|regülasyon|regulation/i, entity: "regulation" },
+      { pattern: /ipo|halka arz/i, entity: "ipo" },
+      { pattern: /lawsuit|dava|sue/i, entity: "legal" },
+      { pattern: /hack|sızıntı|breach|ihlal/i, entity: "security" },
+      { pattern: /record|rekor/i, entity: "record" },
+      { pattern: /layoff|işten çıkar|downsiz/i, entity: "layoff" },
     ];
 
     const countryPatterns = [
@@ -353,12 +381,32 @@ export class DuplicateDetectorAgent extends BaseAgent<
       { pattern: /china|çin/i, entity: "china" },
       { pattern: /eu|avrupa birliği|european union/i, entity: "eu" },
       { pattern: /usa|amerika|united states/i, entity: "usa" },
+      // NEW: Additional countries
+      { pattern: /türkiye|turkey/i, entity: "turkey" },
+      { pattern: /japan|japonya/i, entity: "japan" },
+      { pattern: /korea|güney kore/i, entity: "korea" },
+      { pattern: /india|hindistan/i, entity: "india" },
+      { pattern: /uk|ingiltere|britain/i, entity: "uk" },
+      { pattern: /germany|almanya/i, entity: "germany" },
+      { pattern: /france|fransa/i, entity: "france" },
+    ];
+
+    // NEW: Technology/product patterns
+    const techPatterns = [
+      { pattern: /robot|robotik/i, entity: "robotics" },
+      { pattern: /autonomous|otonom/i, entity: "autonomous" },
+      { pattern: /quantum|kuantum/i, entity: "quantum" },
+      { pattern: /semiconductor|yarı iletken|chip/i, entity: "semiconductor" },
+      { pattern: /5g|6g/i, entity: "mobile_network" },
+      { pattern: /blockchain|kripto|crypto/i, entity: "blockchain" },
+      { pattern: /ar|vr|metaverse|sanal gerçeklik/i, entity: "xr" },
     ];
 
     const allPatterns = [
       ...companyPatterns,
       ...actionPatterns,
       ...countryPatterns,
+      ...techPatterns,
     ];
 
     for (const { pattern, entity } of allPatterns) {
