@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
         imageUrl: true,
         views: true,
         publishedAt: true,
+        trendScore: true,
         category: {
           select: {
             name: true,

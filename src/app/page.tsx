@@ -157,8 +157,8 @@ export default async function HomePage() {
         />
 
         {/* Main Content Area - Two Column Layout */}
-        <section className="container mx-auto px-4 py-8">
-          <div className="flex flex-col lg:flex-row gap-8">
+        <section className="container mx-auto px-4 py-12 lg:py-16">
+          <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
             {/* Left Column - Latest News */}
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-6">

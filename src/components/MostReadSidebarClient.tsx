@@ -4,6 +4,7 @@ import { Eye, TrendingUp, Clock, Flame, Calendar } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 
 interface MostReadArticle {
   id: string;
@@ -12,6 +13,7 @@ interface MostReadArticle {
   imageUrl: string | null;
   views: number;
   publishedAt: string | null;
+  trendScore?: number | null;
   category?: {
     name: string;
     slug: string;
@@ -68,6 +70,9 @@ export function MostReadSidebarClient() {
         </div>
         <div className="flex-1">
           <h3 className="text-xl font-bold tracking-tight">En Çok Okunanlar</h3>
+          <p className="text-xs text-muted-foreground">
+            {period === "today" ? "Bugün" : "Bu hafta"} en popüler
+          </p>
         </div>
       </div>
 
@@ -164,7 +169,7 @@ export function MostReadSidebarClient() {
                   </h4>
                 </Link>
 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto flex-wrap">
                   <span className="flex items-center gap-1">
                     <Eye className="w-3 h-3" />
                     {article.views.toLocaleString("tr-TR")}
@@ -175,6 +180,7 @@ export function MostReadSidebarClient() {
                       {formatDate(article.publishedAt)}
                     </span>
                   )}
+                  <TrendScoreBadge trendScore={article.trendScore} size="sm" />
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@ import { Eye, TrendingUp, Clock } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatDate } from "@/lib/utils";
+import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 
 // Server Component - Sidebar variant for Most Read
 export async function MostReadSidebar() {
@@ -28,6 +29,7 @@ export async function MostReadSidebar() {
       imageUrl: true,
       views: true,
       publishedAt: true,
+      trendScore: true,
       category: {
         select: {
           name: true,
@@ -40,17 +42,17 @@ export async function MostReadSidebar() {
   if (mostReadArticles.length === 0) return null;
 
   return (
-    <aside className="bg-secondary/5 dark:bg-secondary/10 rounded-xl border border-border/50 p-4 sticky top-24">
+    <aside className="bg-secondary/5 dark:bg-secondary/10 rounded-xl border border-border/50 p-5 sticky top-24">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-border/50">
-        <div className="p-2 bg-primary/10 rounded-lg">
-          <TrendingUp className="w-5 h-5 text-primary" />
+      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-border/50">
+        <div className="p-2.5 bg-primary/10 rounded-lg">
+          <TrendingUp className="w-6 h-6 text-primary" />
         </div>
-        <div>
-          <h3 className="text-lg font-bold tracking-tight">
+        <div className="flex-1">
+          <h3 className="text-xl font-bold tracking-tight">
             En Çok Okunanlar
           </h3>
-          <p className="text-xs text-muted-foreground">Bu hafta</p>
+          <p className="text-xs text-muted-foreground">Bu hafta en popüler</p>
         </div>
       </div>
 
@@ -62,7 +64,13 @@ export async function MostReadSidebar() {
             className="group flex gap-3 relative"
           >
             {/* Rank Number */}
-            <span className="absolute -left-1 -top-1 w-6 h-6 flex items-center justify-center bg-primary text-primary-foreground font-bold rounded-full shadow-md z-10 text-sm">
+            <span
+              className={`absolute -left-1 -top-1 w-6 h-6 flex items-center justify-center font-bold rounded-full shadow-md z-10 text-sm ${
+                index < 3
+                  ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white"
+                  : "bg-primary text-primary-foreground"
+              }`}
+            >
               {index + 1}
             </span>
 
@@ -105,7 +113,7 @@ export async function MostReadSidebar() {
                 </h4>
               </Link>
 
-              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto flex-wrap">
                 <span className="flex items-center gap-1">
                   <Eye className="w-3 h-3" />
                   {article.views.toLocaleString("tr-TR")}
@@ -116,6 +124,7 @@ export async function MostReadSidebar() {
                     {formatDate(article.publishedAt)}
                   </span>
                 )}
+                <TrendScoreBadge trendScore={article.trendScore} size="sm" />
               </div>
             </div>
           </div>
