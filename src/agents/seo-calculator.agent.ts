@@ -102,9 +102,11 @@ async function processSEOJob(
       };
     }
 
-    // Already has SEO score? Skip recalculation
+    // Already has valid SEO score? Skip recalculation
     if (article.seoScore !== null && article.seoScore > 0) {
-      logger.info(`SEO score already exists (${article.seoScore}), skipping`);
+      logger.info(
+        `SEO score already calculated (${article.seoScore}), skipping`,
+      );
       return {
         articleId,
         score: article.seoScore,
@@ -212,7 +214,7 @@ export async function queuePendingSEOCalculations(
   const articles = await db.article.findMany({
     where: {
       status: "PUBLISHED",
-      seoScore: null,
+      OR: [{ seoScore: null }, { seoScore: 0 }],
     },
     select: {
       id: true,

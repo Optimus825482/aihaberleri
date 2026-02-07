@@ -49,6 +49,7 @@ import {
   Twitter,
   Globe,
   Share2,
+  TrendingUp,
 } from "lucide-react";
 import Image from "next/image";
 import {
@@ -103,6 +104,8 @@ interface Article {
     slug: string;
   };
   score: number;
+  seoScore: number | null;
+  trendScore: number | null;
   facebookShared: boolean;
   socialShares?: SocialShare[];
 }
@@ -947,6 +950,7 @@ function ArticlesPageContent({
                     <TableHead className="w-[110px]">Kategori</TableHead>
                     <TableHead className="w-[85px]">Tarih</TableHead>
                     <TableHead className="w-[70px]">Skor</TableHead>
+                    <TableHead className="w-[70px]">Trend</TableHead>
                     <TableHead className="w-[75px] text-right">
                       Görüntü
                     </TableHead>
@@ -1063,6 +1067,26 @@ function ArticlesPageContent({
                         >
                           {article.score || 0}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(article.trendScore ?? 0) > 0 ? (
+                          <Badge
+                            className={`text-xs font-bold tabular-nums ${(article.trendScore ?? 0) >= 80
+                                ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                                : (article.trendScore ?? 0) >= 60
+                                  ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30"
+                                  : (article.trendScore ?? 0) >= 40
+                                    ? "bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-500/30"
+                                    : "bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30"
+                              }`}
+                            variant="outline"
+                          >
+                            <TrendingUp className="h-3 w-3 mr-1" />
+                            {article.trendScore}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">

@@ -70,6 +70,8 @@ export async function GET(request: Request) {
         views: true,
         publishedAt: true,
         score: true,
+        seoScore: true,
+        trendScore: true,
         createdAt: true,
         facebookShared: true,
         category: {

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { ShareButtons } from "@/components/ShareButtons";
 import { formatDate, calculateReadingTime } from "@/lib/utils";
-import { Clock, Eye, Calendar } from "lucide-react";
+import { Clock, Eye, Calendar, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import type { Metadata } from "next";
 import {
   generateNewsArticleSchema,
@@ -193,6 +194,25 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     size="sm"
                   />
                 </div>
+                {/* Trend Score Badge */}
+                {(article.trendScore ?? 0) > 0 && (
+                  <div className="flex items-center gap-1 border-l pl-4 ml-2">
+                    <Badge
+                      className={`text-xs font-bold tabular-nums ${(article.trendScore ?? 0) >= 80
+                          ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+                          : (article.trendScore ?? 0) >= 60
+                            ? "bg-lime-500/20 text-lime-700 dark:text-lime-300 border-lime-500/30"
+                            : (article.trendScore ?? 0) >= 40
+                              ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
+                              : "bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30"
+                        }`}
+                      variant="outline"
+                    >
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      {article.trendScore}
+                    </Badge>
+                  </div>
+                )}
               </div>
 
               {/* Featured Image - LCP Optimized with Responsive Sizes */}

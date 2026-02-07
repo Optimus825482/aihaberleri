@@ -6,10 +6,10 @@ import { formatDate } from "@/lib/utils";
 
 // Server Component
 export async function MostReadSection() {
-  // Fetch articles published in the last 7 days sorted by views
-  // This is a proxy for "Today's Most Read" as currently we only track total views
+  // Fetch articles published in the last 24 hours sorted by views
+  // "Günün En Çok Okunanları" - Today's most read articles
   const dateLimit = new Date();
-  dateLimit.setDate(dateLimit.getDate() - 7);
+  dateLimit.setHours(dateLimit.getHours() - 24);
 
   const mostReadArticles = await db.article.findMany({
     where: {
