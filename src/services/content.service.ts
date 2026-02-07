@@ -30,6 +30,37 @@ import {
 } from "@/services/social-share.service";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 
+// ============================================================================
+// CONTENT CONSTANTS - Magic numbers extracted for maintainability
+// ============================================================================
+
+const CONTENT_CONSTANTS = {
+  // Duplicate check window (hours)
+  DUPLICATE_CHECK_WINDOW_HOURS: 48,
+  // Duplicate check window for aggregated content (hours)
+  AGGREGATE_DUPLICATE_WINDOW_HOURS: 48,
+  // Topic recency check window (hours)
+  TOPIC_RECENCY_WINDOW_HOURS: 24,
+  // Minimum articles for cluster aggregation
+  MIN_CLUSTER_ARTICLES: 2,
+  // Maximum sources per aggregation
+  MAX_AGGREGATION_SOURCES: 5,
+  // Maximum recent articles for AI context
+  MAX_RECENT_CONTEXT: 20,
+  // Maximum recent articles for internal linking
+  MAX_INTERNAL_LINKS: 3,
+  // Recent article window for diversity (hours)
+  DIVERSITY_WINDOW_HOURS: 48,
+  // Score threshold for auto-publishing
+  PUBLISH_SCORE_THRESHOLD: 750,
+  // Image fetch timeout (ms)
+  IMAGE_FETCH_TIMEOUT: 30000,
+} as const;
+
+// ============================================================================
+// END CONSTANTS
+// ============================================================================
+
 // Create module-specific loggers for live streaming
 const liveLog = {
   content: createModuleLogger("content"),
@@ -109,7 +140,7 @@ async function isDuplicate(article: NewsArticle): Promise<boolean> {
   const duplicateCheck = await isDuplicateNews(
     article.title,
     article.description,
-    48, // Check last 48 hours (increased from 24)
+    CONTENT_CONSTANTS.DUPLICATE_CHECK_WINDOW_HOURS,
   );
 
   if (duplicateCheck.isDuplicate) {
@@ -243,7 +274,7 @@ function extractTopic(title: string): string {
  */
 async function isTopicRecent(
   topic: string,
-  hoursWindow: number = 24,
+  hoursWindow: number = CONTENT_CONSTANTS.TOPIC_RECENCY_WINDOW_HOURS,
 ): Promise<boolean> {
   const recentArticles = await db.article.findMany({
     where: {
@@ -284,7 +315,7 @@ function clusterArticlesByTopic(articles: NewsArticle[]): ArticleCluster[] {
   // Filter clusters with 2+ articles (aggregation candidates)
   const result: ArticleCluster[] = [];
   for (const [topic, arts] of clusters) {
-    if (arts.length >= 2) {
+    if (arts.length >= CONTENT_CONSTANTS.MIN_CLUSTER_ARTICLES) {
       // Extract common keywords from cluster
       const allWords = arts.flatMap((a) => a.title.toLowerCase().split(/\s+/));
       const wordCounts = new Map<string, number>();
@@ -329,26 +360,41 @@ async function processAggregatedCluster(
 
   try {
     // Fetch full content for each article in cluster
-    const articlesWithContent = await Promise.all(
-      cluster.articles.slice(0, 5).map(async (article) => {
-        // Max 5 sources
-        let content = article.description;
-        try {
-          const fullContent = await fetchArticleContent(article.url);
-          if (fullContent && fullContent.length > content.length) {
-            content = fullContent;
-          }
-        } catch (e) {
-          console.warn(`⚠️ Could not fetch full content for ${article.url}`);
+    // CHANGED: Sequential processing with individual timeout to prevent Promise.all blocking
+    // Previously: Promise.all() - single slow request blocked entire operation
+    const articlesWithContent = [];
+    for (const article of cluster.articles.slice(
+      0,
+      CONTENT_CONSTANTS.MAX_AGGREGATION_SOURCES,
+    )) {
+      // Max 5 sources
+      let content = article.description;
+      try {
+        // Individual timeout per article (30s max)
+        const fullContent = await Promise.race([
+          fetchArticleContent(article.url),
+          new Promise<string>((_, reject) =>
+            setTimeout(
+              () => reject(new Error("Article fetch timeout")),
+              30000,
+            ),
+          ),
+        ]) as string;
+        if (fullContent && fullContent.length > content.length) {
+          content = fullContent;
         }
-        return {
-          title: article.title,
-          content,
-          source: article.source || "Unknown",
-          url: article.url,
-        };
-      }),
-    );
+      } catch (e) {
+        console.warn(
+          `⚠️ Could not fetch full content for ${article.url}: ${(e as Error).message}`,
+        );
+      }
+      articlesWithContent.push({
+        title: article.title,
+        content,
+        source: article.source || "Unknown",
+        url: article.url,
+      });
+    }
 
     // Use DeepSeek to aggregate sources
     const aggregated = await aggregateMultiSourceArticles(
@@ -501,7 +547,10 @@ export async function selectBestArticles(
         );
 
         // Check if this topic was recently published
-        const isRecent = await isTopicRecent(cluster.topic, 24);
+        const isRecent = await isTopicRecent(
+          cluster.topic,
+          CONTENT_CONSTANTS.TOPIC_RECENCY_WINDOW_HOURS,
+        );
         if (isRecent) {
           console.log(
             `🚫 Cluster topic "${cluster.topic}" was recently published - skipping`,
@@ -575,7 +624,11 @@ export async function selectBestArticles(
     const recentPublished = await db.article.findMany({
       where: {
         publishedAt: {
-          gte: new Date(Date.now() - 48 * 60 * 60 * 1000), // Last 48 hours
+          gte:
+            new Date(
+              Date.now() -
+                CONTENT_CONSTANTS.DIVERSITY_WINDOW_HOURS * 60 * 60 * 1000,
+            ),
         },
         status: "PUBLISHED",
       },
@@ -584,7 +637,7 @@ export async function selectBestArticles(
         publishedAt: true,
       },
       orderBy: { publishedAt: "desc" },
-      take: 20,
+      take: CONTENT_CONSTANTS.MAX_RECENT_CONTEXT,
     });
 
     console.log(
@@ -593,7 +646,7 @@ export async function selectBestArticles(
 
     // Analyze only remaining articles (not used in aggregation) WITH context of recent publications
     const analysis = await analyzeNewsArticles(
-      remainingArticles.slice(0, 20),
+      remainingArticles.slice(0, CONTENT_CONSTANTS.MAX_RECENT_CONTEXT),
       recentPublished
         .filter((a) => a.publishedAt !== null)
         .map((a) => ({
@@ -617,7 +670,10 @@ export async function selectBestArticles(
     // Phase 2.2: Topic clustering - filter out topics published within 24 hours
     const diverseSelected = [];
     for (const item of selected) {
-      const isRecent = await isTopicRecent(item.topic, 24);
+      const isRecent = await isTopicRecent(
+        item.topic,
+        CONTENT_CONSTANTS.TOPIC_RECENCY_WINDOW_HOURS,
+      );
       if (!isRecent) {
         diverseSelected.push(item);
         console.log(`✅ Topic "${item.topic}" is fresh - including`);
@@ -733,7 +789,7 @@ export async function processArticle(
         category: { name: category },
       },
       select: { title: true, slug: true },
-      take: 3,
+      take: CONTENT_CONSTANTS.MAX_INTERNAL_LINKS,
       orderBy: { createdAt: "desc" },
     });
 
@@ -873,9 +929,17 @@ export async function processArticle(
       score,
     };
   } catch (error) {
-    console.error("Haber işleme hatası:", error);
-    throw error;
-  }
+    // Enhanced error handling with context
+    const errorMessage =
+      error instanceof Error ? error.message : "Bilinmeyen hata";
+    console.error("Haber işleme hatası:", {
+      article: article.title,
+      url: article.url,
+      error: errorMessage,
+    });
+    throw new Error(
+      `Failed to process article "${article.title}": ${errorMessage}`,
+    );
 }
 
 /**
@@ -945,7 +1009,7 @@ export async function publishArticle(
     const duplicateCheck = await isDuplicateNews(
       processedArticle.title,
       processedArticle.content,
-      48, // 48 hour window
+      CONTENT_CONSTANTS.AGGREGATE_DUPLICATE_WINDOW_HOURS, // 48 hour window
     );
 
     if (duplicateCheck.isDuplicate) {
@@ -962,7 +1026,10 @@ export async function publishArticle(
 
     // Determine status based on score
     const score = processedArticle.score || 0;
-    const status = score >= 750 ? "PUBLISHED" : "DRAFT";
+    const status =
+      score >= CONTENT_CONSTANTS.PUBLISH_SCORE_THRESHOLD
+        ? "PUBLISHED"
+        : "DRAFT";
 
     // Create article
     const article = await db.article.create({
@@ -1176,12 +1243,19 @@ export async function publishArticle(
     }
 
     // Translate article to English (Async)
+    // FIXED: Properly handle async translation to avoid unhandled promise rejections
     try {
-      translateAndSaveArticle(article.id, "tr").catch((err) =>
-        console.error("Async translation failed:", err),
-      );
+      translateAndSaveArticle(article.id, "tr").catch((err) => {
+        // Log with context for debugging
+        console.error(`[Translation] Failed for article ${article.id}:`, {
+          title: article.title,
+          slug: article.slug,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        // Note: Translation failure is non-critical, article remains published
+      });
     } catch (e) {
-      console.error("Failed to trigger translation:", e);
+      console.error("[Translation] Failed to trigger:", e);
     }
 
     // Trigger Web Push Notification (Async)

@@ -41,6 +41,24 @@ import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
 import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
 
+// ============================================================================
+// WORKER CONSTANTS
+// ============================================================================
+
+const WORKER_CONSTANTS = {
+  // Agent execution timeout (ms) - 18 minutes for complex processing
+  AGENT_TIMEOUT_MS: 18 * 60 * 1000,
+  // Progress update interval (ms) - every 2 minutes
+  PROGRESS_UPDATE_INTERVAL_MS: 2 * 60 * 1000,
+  // Heartbeat interval (ms) - every 30 seconds
+  HEARTBEAT_INTERVAL_MS: 30000,
+  // Heartbeat expiry (seconds) - 60 seconds
+  HEARTBEAT_EXPIRY_SECONDS: 60,
+  // Database connection retry settings
+  DB_MAX_RETRIES: 10,
+  DB_RETRY_DELAY_MS: 5000,
+} as const;
+
 // Multi-agent pipeline instances
 let relevanceFilter: RelevanceFilterAgent;
 let duplicateDetector: DuplicateDetectorAgent;
@@ -178,7 +196,10 @@ async function testDatabaseConnection() {
 }
 
 // Wait for database to be ready
-async function waitForDatabase(maxRetries = 10, delayMs = 5000) {
+async function waitForDatabase(
+  maxRetries = WORKER_CONSTANTS.DB_MAX_RETRIES,
+  delayMs = WORKER_CONSTANTS.DB_RETRY_DELAY_MS,
+) {
   for (let i = 1; i <= maxRetries; i++) {
     console.log(`🔄 Database connection attempt ${i}/${maxRetries}...`);
     const isConnected = await testDatabaseConnection();
@@ -229,7 +250,12 @@ function startHeartbeat() {
   const updateHeartbeat = async () => {
     try {
       if (redis) {
-        await redis.set("worker:heartbeat", Date.now().toString(), "EX", 60);
+        await redis.set(
+          "worker:heartbeat",
+          Date.now().toString(),
+          "EX",
+          WORKER_CONSTANTS.HEARTBEAT_EXPIRY_SECONDS,
+        );
         workerLogger.heartbeat();
         console.log(
           `💓 Heartbeat updated: ${new Date().toLocaleString("tr-TR")}`,
@@ -244,8 +270,11 @@ function startHeartbeat() {
   // Update immediately
   updateHeartbeat();
 
-  // Then update every 30 seconds
-  setInterval(updateHeartbeat, 30000);
+  // Then update periodically
+  setInterval(
+    updateHeartbeat,
+    WORKER_CONSTANTS.HEARTBEAT_INTERVAL_MS,
+  );
 }
 
 async function startWorker() {
@@ -301,31 +330,42 @@ async function startWorker() {
         console.log("📊 Progress: 10% - Starting agent execution...");
 
         // Execute the news agent with timeout protection
-        const AGENT_TIMEOUT = 18 * 60 * 1000; // 18 minutes (increased from 15min)
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(
-            () => reject(new Error("Agent execution timeout (18 minutes)")),
-            AGENT_TIMEOUT,
+            () =>
+              reject(
+                new Error(
+                  `Agent execution timeout (${Math.round(WORKER_CONSTANTS.AGENT_TIMEOUT_MS / 60000)} minutes)`,
+                ),
+              ),
+            WORKER_CONSTANTS.AGENT_TIMEOUT_MS,
           );
         });
 
         // Progress update interval (every 2 minutes)
-        const progressInterval = setInterval(
-          async () => {
-            try {
-              const currentProgress = (await job.progress) as number;
-              if (currentProgress < 80) {
-                await job.updateProgress(Math.min(currentProgress + 10, 80));
-                console.log(
-                  `📊Progress: ${Math.min(currentProgress + 10, 80)}% - Agent still running...`,
-                );
+        // FIXED: Store interval ID for proper cleanup in finally block
+        let progressInterval: NodeJS.Timeout | null = null;
+
+        const createProgressInterval = () => {
+          return setInterval(
+            async () => {
+              try {
+                const currentProgress = (await job.progress) as number;
+                if (currentProgress < 80) {
+                  await job.updateProgress(Math.min(currentProgress + 10, 80));
+                  console.log(
+                    `📊Progress: ${Math.min(currentProgress + 10, 80)}% - Agent still running...`,
+                  );
+                }
+              } catch (err) {
+                console.warn("⚠️ Progress update failed:", err);
               }
-            } catch (err) {
-              console.warn("⚠️ Progress update failed:", err);
-            }
-          },
-          2 * 60 * 1000,
-        ); // Every 2 minutes
+            },
+            WORKER_CONSTANTS.PROGRESS_UPDATE_INTERVAL_MS,
+          );
+        };
+
+        progressInterval = createProgressInterval();
 
         try {
           result = (await Promise.race([

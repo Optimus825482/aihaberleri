@@ -11,9 +11,26 @@ import {
 } from "./middleware/security-headers";
 import { jwtVerify } from "jose";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-);
+// CRITICAL: JWT_SECRET must be set in production
+// Using fallback in development is acceptable but not in production
+const getJwtSecret = (): Uint8Array => {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "NEXTAUTH_SECRET must be set in production environment",
+      );
+    }
+    // Development-only fallback with clear warning
+    console.warn(
+      "⚠️ WARNING: Using dev-only JWT secret. Set NEXTAUTH_SECRET in production!",
+    );
+    return new TextEncoder().encode("dev-only-secret-change-in-production");
+  }
+  return new TextEncoder().encode(secret);
+};
+
+const JWT_SECRET = getJwtSecret();
 
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

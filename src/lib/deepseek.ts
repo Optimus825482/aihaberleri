@@ -1,4 +1,30 @@
 import axios from "axios";
+import { z } from "zod";
+
+// Zod schemas for validating AI responses
+const AnalysisResultSchema = z.object({
+  index: z.number().int().min(0),
+  reason: z.string(),
+  category: z.string(),
+  aiRelevance: z.number().int().min(0).max(100).optional(),
+});
+
+const RewriteResultSchema = z.object({
+  title: z.string().min(1),
+  excerpt: z.string().min(1),
+  content: z.string().min(1),
+  keywords: z.array(z.string()),
+  metaDescription: z.string().min(1),
+  score: z.number().int().min(0).max(1000).optional(),
+});
+
+const AggregationResultSchema = z.object({
+  title: z.string().min(1),
+  excerpt: z.string().min(1),
+  content: z.string().min(1),
+  keywords: z.array(z.string()),
+  metaDescription: z.string().min(1),
+});
 
 const DEEPSEEK_API_URL =
   process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1";
@@ -197,7 +223,18 @@ URL: ${article.url}
     throw new Error("Failed to parse DeepSeek response");
   }
 
-  const results = JSON.parse(jsonMatch[0]);
+  // Validate AI response with Zod schema to prevent invalid data
+  const parsedResults = JSON.parse(jsonMatch[0]);
+  const results = z
+    .array(AnalysisResultSchema)
+    .safeParse(parsedResults);
+
+  if (!results.success) {
+    console.error("❌ AI response validation failed:", results.error);
+    throw new Error(
+      `Invalid AI response structure: ${results.error.issues[0]?.message}`,
+    );
+  }
 
   // Filter by AI relevance score (must be >= 80 for strict AI filtering)
   const filtered = results.filter((item: any) => {
@@ -367,7 +404,18 @@ JSON formatında yanıt ver:
     throw new Error("Failed to parse DeepSeek response");
   }
 
-  return JSON.parse(jsonMatch[0]);
+  // Validate AI response with Zod schema
+  const parsedResult = JSON.parse(jsonMatch[0]);
+  const result = RewriteResultSchema.safeParse(parsedResult);
+
+  if (!result.success) {
+    console.error("❌ Rewrite response validation failed:", result.error);
+    throw new Error(
+      `Invalid rewrite response: ${result.error.issues[0]?.message}`,
+    );
+  }
+
+  return result.data;
 }
 
 /**
@@ -725,6 +773,8 @@ export async function aggregateMultiSourceArticles(
     throw new Error("Aggregation requires at least 2 articles");
   }
 
+  const MIN_AGGREGATION_ARTICLES = 2; // Minimum sources for aggregation
+
   const sourcesText = articles
     .map(
       (a, i) =>
@@ -807,7 +857,16 @@ JSON formatında yanıt ver:
     throw new Error("Failed to parse DeepSeek aggregation response");
   }
 
-  const result = JSON.parse(jsonMatch[0]);
+  // Validate AI response with Zod schema
+  const parsedResult = JSON.parse(jsonMatch[0]);
+  const result = AggregationResultSchema.safeParse(parsedResult);
+
+  if (!result.success) {
+    console.error("❌ Aggregation response validation failed:", result.error);
+    throw new Error(
+      `Invalid aggregation response: ${result.error.issues[0]?.message}`,
+    );
+  }
 
   // Add source references
   result.sources = articles.map((a) => ({

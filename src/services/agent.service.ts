@@ -30,6 +30,60 @@ const liveLog = {
   publish: createModuleLogger("publish"),
 };
 
+// ============================================================================
+// UI UTILITIES - Box drawing for console output
+// ============================================================================
+
+/**
+ * Create a formatted box header for agent execution logs
+ */
+function createAgentBoxHeader(data: {
+  logId: string;
+  startTime: Date;
+  category: string;
+}): string {
+  const shortId = data.logId.substring(0, 12);
+  const startTimeStr = data.startTime.toLocaleString("tr-TR").padEnd(25);
+  const category = (data.category || "All").padEnd(28);
+
+  return `
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃           🤖 AGENT EXECUTION START                ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  Log ID:       ${shortId}                    ┃
+┃  Start Time:   ${startTimeStr}┃
+┃  Category:     ${category}┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
+}
+
+/**
+ * Create a formatted box footer for agent execution logs
+ */
+function createAgentBoxFooter(data: {
+  status: string;
+  duration: number;
+  articlesScraped: number;
+  articlesCreated: number;
+  nextRun: Date;
+}): string {
+  const status = data.status.padEnd(31);
+  const duration = `${data.duration}s${" ".repeat(31 - String(data.duration).length)}`;
+  const scraped = `${data.articlesScraped}${" ".repeat(31 - String(data.articlesScraped).length)}`;
+  const created = `${data.articlesCreated}${" ".repeat(31 - String(data.articlesCreated).length)}`;
+  const nextRun = data.nextRun.toLocaleString("tr-TR").padEnd(25);
+
+  return `
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃           ✅ AGENT EXECUTION SUCCESS              ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  Status:         ${status}┃
+┃  Duration:       ${duration}┃
+┃  Articles Found: ${scraped}┃
+┃  Articles Made:  ${created}┃
+┃  Next Run:       ${nextRun}┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
+}
+
 export interface AgentExecutionResult {
   success: boolean;
   articlesCreated: number;
@@ -139,15 +193,13 @@ export async function executeNewsAgent(
     `🚀 Agent başlatıldı - ${new Date().toLocaleString("tr-TR")}`,
   );
 
-  console.log(`
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃           🤖 AGENT EXECUTION START                ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  Log ID:       ${agentLog.id.substring(0, 12)}...                    ┃
-┃  Start Time:   ${new Date().toLocaleString("tr-TR").padEnd(25)}┃
-┃  Category:     ${(categorySlug || "All").padEnd(28)}┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-`);
+  console.log(
+    createAgentBoxHeader({
+      logId: agentLog.id,
+      startTime: new Date(),
+      category: categorySlug || "All",
+    }),
+  );
 
   try {
     // Step 1: Search for AI news (RSS + Trend Analysis)
@@ -453,11 +505,16 @@ export async function executeNewsAgent(
       emailSettings.find((s: any) => s.key === "agent.emailNotifications")
         ?.value !== "false";
     const adminEmail =
-      emailSettings.find((s: any) => s.key === "agent.adminEmail")?.value ||
-      "ikinciyenikitap54@gmail.com";
+      emailSettings.find((s: any) => s.key === "agent.adminEmail")?.value;
+
+    if (!adminEmail) {
+      console.warn(
+        "⚠️ Agent admin email not configured in settings. Email notification skipped.",
+      );
+    }
 
     // Send email report
-    if (emailNotify) {
+    if (emailNotify && adminEmail) {
       try {
         const articlesWithTitles = await db.article.findMany({
           where: { id: { in: publishedArticles.map((a) => a.id) } },
@@ -607,11 +664,16 @@ export async function executeNewsAgent(
         emailSettings.find((s: any) => s.key === "agent.emailNotifications")
           ?.value !== "false";
       const adminEmail =
-        emailSettings.find((s: any) => s.key === "agent.adminEmail")?.value ||
-        "ikinciyenikitap54@gmail.com";
+        emailSettings.find((s: any) => s.key === "agent.adminEmail")?.value;
+
+      if (!adminEmail) {
+        console.warn(
+          "⚠️ Agent admin email not configured. Error email notification skipped.",
+        );
+      }
 
       // Send email report
-      if (emailNotify) {
+      if (emailNotify && adminEmail) {
         try {
           const articlesWithTitles = await db.article.findMany({
             where: { id: { in: publishedArticles.map((a) => a.id) } },

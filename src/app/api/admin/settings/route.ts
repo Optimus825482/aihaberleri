@@ -2,6 +2,33 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { scheduleNewsAgentJob } from "@/lib/queue";
+import { checkRateLimit, getRateLimitHeaders } from "@/lib/rate-limit";
+
+// Rate limit: 30 requests per minute for admin settings
+const SETTINGS_RATE_LIMIT = 30;
+const SETTINGS_WINDOW = 60; // seconds
+
+/**
+ * Get client IP from request
+ */
+function getClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) {
+    return realIp;
+  }
+
+  const cfConnectingIp = request.headers.get("cf-connecting-ip");
+  if (cfConnectingIp) {
+    return cfConnectingIp;
+  }
+
+  return "unknown";
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -60,6 +87,24 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check rate limit first (before auth to prevent abuse)
+    const clientIp = getClientIp(request);
+    const rateLimitResult = await checkRateLimit(
+      `admin:settings:${clientIp}`,
+      SETTINGS_RATE_LIMIT,
+      SETTINGS_WINDOW,
+    );
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult, SETTINGS_RATE_LIMIT),
+        },
+      );
+    }
+
     // Check authentication with JWT
     const session = await requireAdminAuth();
     if (session instanceof NextResponse) {
@@ -114,6 +159,24 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Check rate limit first (before auth to prevent abuse)
+    const clientIp = getClientIp(request);
+    const rateLimitResult = await checkRateLimit(
+      `admin:settings:${clientIp}`,
+      SETTINGS_RATE_LIMIT,
+      SETTINGS_WINDOW,
+    );
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult, SETTINGS_RATE_LIMIT),
+        },
+      );
+    }
+
     // Check authentication with JWT
     const session = await requireAdminAuth();
     if (session instanceof NextResponse) {

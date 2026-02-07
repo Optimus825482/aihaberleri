@@ -101,10 +101,22 @@ export async function scheduleNewsAgentJob() {
     const intervalMs = Math.round(intervalHours * 60 * 60 * 1000); // Support decimal hours (0.25 = 15 min)
 
     // Remove all existing repeatable and delayed jobs first
+    // FIXED: Use Promise.allSettled to handle race conditions during parallel removal
     const existingRepeatableJobs = await queue.getRepeatableJobs();
-    for (const job of existingRepeatableJobs) {
-      await queue.removeRepeatableByKey(job.key);
-      console.log(`🗑️ Removed existing repeatable job: ${job.key}`);
+    const removalResults = await Promise.allSettled(
+      existingRepeatableJobs.map((job) =>
+        queue.removeRepeatableByKey(job.key).then(() => {
+          console.log(`🗑️ Removed existing repeatable job: ${job.key}`);
+        }),
+      ),
+    );
+
+    // Log any failed removals (non-critical)
+    const failedRemovals = removalResults.filter((r) => r.status === "rejected");
+    if (failedRemovals.length > 0) {
+      console.warn(
+        `⚠️ ${failedRemovals.length} repeatable jobs failed to remove (non-critical)`,
+      );
     }
 
     // Also check for any pending/waiting/delayed jobs and remove them

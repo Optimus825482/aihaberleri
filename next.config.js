@@ -82,16 +82,14 @@ const nextConfig = {
     instrumentationHook: false,
   },
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
+    // Production builds will fail on ESLint errors
+    // Run `npm run lint` to check locally before building
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
+    // CRITICAL: Type errors cause build failures in production
+    // This prevents runtime crashes from type mismatches
+    ignoreBuildErrors: false,
   },
 };
 

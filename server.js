@@ -41,7 +41,11 @@ app.prepare().then(() => {
   const io = new SocketIOServer(server, {
     path: '/api/socket',
     cors: {
-      origin: process.env.NEXTAUTH_URL || '*',
+      // CRITICAL: In production, use specific origin from NEXTAUTH_URL
+      // In development, allow localhost for testing
+      origin: dev
+        ? ['http://localhost:3000', 'http://127.0.0.1:3000']
+        : (process.env.NEXTAUTH_URL || 'https://aihaberleri.org'),
       methods: ['GET', 'POST'],
       credentials: true
     },
