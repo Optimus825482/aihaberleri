@@ -842,6 +842,8 @@ async function startWorker() {
       "social-batch",
       async (job) => {
         const { batchId, platforms, intervalSeconds, batchSize } = job.data;
+        // Check for articleIds in job data (for selective sharing)
+        const articleIds = job.data.articleIds;
 
         console.log(`\n${"=".repeat(60)}`);
         console.log(`📤 Processing social batch job: ${job.id}`);
@@ -849,14 +851,28 @@ async function startWorker() {
         console.log(`   Platforms: ${platforms.join(", ")}`);
         console.log(`   Interval: ${intervalSeconds} seconds`);
         console.log(`   Batch Size: ${batchSize}`);
+        if (articleIds?.length)
+          console.log(`   Target Articles: ${articleIds.length} selected`);
         console.log(`${"=".repeat(60)}\n`);
 
         try {
-          // Get ALL published articles ordered by date (oldest first to share chronologically)
+          // Prepare where clause
+          const whereClause: any = {
+            status: "PUBLISHED",
+          };
+
+          // Filter by specific IDs if provided
+          if (
+            articleIds &&
+            Array.isArray(articleIds) &&
+            articleIds.length > 0
+          ) {
+            whereClause.id = { in: articleIds };
+          }
+
+          // Get articles ordered by date (oldest first to share chronologically)
           const allArticles = await db.article.findMany({
-            where: {
-              status: "PUBLISHED",
-            },
+            where: whereClause,
             include: {
               category: true,
               translations: true,

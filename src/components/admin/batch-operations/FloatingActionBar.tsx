@@ -11,6 +11,7 @@ interface FloatingActionBarProps {
   onPublish?: (ids: string[]) => Promise<void>;
   onUnpublish?: (ids: string[]) => Promise<void>;
   onProgressStart?: () => void;
+  children?: React.ReactNode;
 }
 
 export const FloatingActionBar = memo(function FloatingActionBar({
@@ -19,6 +20,7 @@ export const FloatingActionBar = memo(function FloatingActionBar({
   onPublish,
   onUnpublish,
   onProgressStart,
+  children,
 }: FloatingActionBarProps) {
   const { selectedIds, selectedCount, clearSelection } = useBatchSelection();
   const [isVisible, setIsVisible] = useState(false);
@@ -130,6 +132,7 @@ export const FloatingActionBar = memo(function FloatingActionBar({
                 <span className="text-sm font-medium">Sil</span>
               </button>
             )}
+            {children}
           </div>
         </div>
       </div>

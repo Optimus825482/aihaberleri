@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { HeaderWrapper } from "@/components/HeaderWrapper";
 import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { MostReadSection } from "@/components/MostReadSection";
 
 import {
   generateOrganizationSchema,
@@ -148,7 +149,7 @@ export default async function HomePage() {
           "@graph": [organizationSchema, websiteSchema],
         })}
       />
-
+      <HeaderWrapper />
       <main className="flex-1">
         {/* Hero Carousel - Manşet Haberleri */}
         <HeroCarousel
@@ -156,6 +157,9 @@ export default async function HomePage() {
           autoPlayInterval={settings.heroCarouselInterval}
           locale="tr"
         />
+
+        {/* Most Read Section - Günün En Çok Okunanları */}
+        <MostReadSection />
 
         {/* Latest Articles */}
         <section id="latest-news" className="container mx-auto px-4 py-12">
@@ -179,8 +183,6 @@ export default async function HomePage() {
             </div>
           )}
         </section>
-
-
       </main>
     </div>
   );

@@ -19,7 +19,7 @@ interface ArticleCardProps {
     views: number;
     content?: string;
     isTrending?: boolean;
-    trendScore?: number;
+    trendScore?: number | null;
     category: {
       name: string;
       slug: string;
@@ -97,7 +97,7 @@ export function ArticleCard({
                 <TrendingBadge
                   isTrending={true}
                   locale={locale}
-                  score={article.trendScore}
+                  score={article.trendScore ?? undefined}
                   size="sm"
                 />
               </div>

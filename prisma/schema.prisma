@@ -143,6 +143,14 @@ model Article {
   googleIndexingScheduledAt DateTime?
   indexNowSubmittedAt       DateTime?
   indexNowRetryCount        Int                       @default(0)
+  
+  // Interaction Metrics
+  likes                     Int                       @default(0)
+  rating                    Float                     @default(0)
+  ratingCount               Int                       @default(0)
+  
+  // Relations
+  interactions              ArticleInteraction[]
   indexNowNextRetryAt       DateTime?
   indexNowLastError         String?
   googleIndexRetryCount     Int                       @default(0)
@@ -188,6 +196,20 @@ model Article {
   @@index([status, googleIndexStatusEn])
   @@index([status, googleIndexStatus])
   @@index([seoScore], map: "idx_article_seo_score")
+}
+
+model ArticleInteraction {
+  id        String   @id @default(cuid())
+  articleId String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  type      String   // "LIKE", "RATING", "VIEW"
+  value     Int?     // RATING için 1-5 arası puan
+  ipAddress String?  // Anonim kontrol için
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([articleId])
+  @@index([ipAddress, articleId, type])
 }
 
 model ArticleTranslation {

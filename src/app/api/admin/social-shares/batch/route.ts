@@ -152,6 +152,7 @@ export async function POST(req: NextRequest) {
       ], // All platforms by default (TR + EN)
       batchSize = 50, // Increased default batch size
       intervalSeconds = 10, // Default 10 seconds between articles
+      articleIds, // Optional selected article IDs
     } = body;
 
     // Validate platforms
@@ -196,31 +197,62 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Count unshared articles (based on TR platform - base check)
-    const sharedArticleIds = await db.socialShare.findMany({
-      where: {
-        platform: { in: platforms },
-        language: "tr",
-        status: "SHARED",
-      },
-      select: { articleId: true },
-    });
+    let actualBatchSize = batchSize;
+    let totalItems = 0;
+    let unsharedCount = 0;
 
-    const sharedIds = [...new Set(sharedArticleIds.map((s) => s.articleId))];
+    // Different logic for selective vs automatic batch
+    if (articleIds && Array.isArray(articleIds) && articleIds.length > 0) {
+      // Selective Mode (Manual Selection)
+      actualBatchSize = articleIds.length;
+      totalItems = articleIds.length * platforms.length;
 
-    const unsharedCount = await db.article.count({
-      where: {
-        status: "PUBLISHED",
-        id: { notIn: sharedIds },
-      },
-    });
-
-    if (unsharedCount === 0) {
-      return NextResponse.json({
-        success: true,
-        message: "Paylaşılmamış haber bulunamadı",
-        created: 0,
+      // Verify articles exist (optional, but good practice)
+      const existingCount = await db.article.count({
+        where: { id: { in: articleIds } },
       });
+
+      if (existingCount === 0) {
+        return NextResponse.json(
+          {
+            error: "Selected articles not found",
+          },
+          { status: 404 },
+        );
+      }
+
+      unsharedCount = existingCount; // Used for message
+    } else {
+      // Automatic Mode (Find unshared)
+      // Count unshared articles (based on TR platform - base check)
+      const sharedArticleIds = await db.socialShare.findMany({
+        where: {
+          platform: { in: platforms },
+          language: "tr",
+          status: "SHARED",
+        },
+        select: { articleId: true },
+      });
+
+      const sharedIds = [...new Set(sharedArticleIds.map((s) => s.articleId))];
+
+      unsharedCount = await db.article.count({
+        where: {
+          status: "PUBLISHED",
+          id: { notIn: sharedIds },
+        },
+      });
+
+      if (unsharedCount === 0) {
+        return NextResponse.json({
+          success: true,
+          message: "Paylaşılmamış haber bulunamadı",
+          created: 0,
+        });
+      }
+
+      totalItems = Math.min(unsharedCount, batchSize) * platforms.length;
+      actualBatchSize = batchSize;
     }
 
     // Create batch record
@@ -228,9 +260,9 @@ export async function POST(req: NextRequest) {
       data: {
         platform: platforms.join(","), // Store all platforms
         language: "tr,en", // Both languages
-        batchSize,
+        batchSize: actualBatchSize,
         intervalMinutes: intervalSeconds / 60, // Convert to minutes for storage
-        totalItems: Math.min(unsharedCount, batchSize) * platforms.length,
+        totalItems: totalItems,
         status: "PROCESSING",
         startedAt: new Date(),
       },
@@ -241,7 +273,8 @@ export async function POST(req: NextRequest) {
       batchId: batch.id,
       platforms,
       intervalSeconds,
-      batchSize,
+      batchSize: actualBatchSize,
+      articleIds: articleIds && articleIds.length > 0 ? articleIds : undefined,
     });
 
     if (!jobResult) {
@@ -267,7 +300,7 @@ export async function POST(req: NextRequest) {
       totalArticles: Math.min(unsharedCount, batchSize),
       platforms,
       intervalSeconds,
-      message: `Batch başlatıldı! ${Math.min(unsharedCount, batchSize)} haber, ${platforms.length} platform. Her ${intervalSeconds} saniyede bir paylaşılacak. Sayfa kapatılsa bile arka planda çalışmaya devam edecek.`,
+      message: `Batch başlatıldı! ${Math.min(unsharedCount, actualBatchSize)} haber, ${platforms.length} platform. Her ${intervalSeconds} saniyede bir paylaşılacak. Sayfa kapatılsa bile arka planda çalışmaya devam edecek.`,
     });
   } catch (error) {
     console.error("Batch create error:", error);

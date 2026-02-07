@@ -18,6 +18,8 @@ import { AudioPromo } from "@/components/AudioPromo";
 import { HighlightedText } from "@/components/audio/HighlightedText";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ArticleImage } from "@/components/ResponsiveImage";
+import { LikeButton } from "@/components/interactions/LikeButton";
+import { StarRating } from "@/components/interactions/StarRating";
 // AI Disclaimer is now embedded in article content footer (see content.service.ts)
 
 interface ArticlePageProps {
@@ -61,12 +63,12 @@ export async function generateMetadata({
       canonical: `${baseUrl}/news/${article.slug}`,
       languages: hasEnglish
         ? {
-          tr: `${baseUrl}/news/${article.slug}`,
-          en: `${baseUrl}/en/news/${enTranslation[0].slug}`,
-        }
+            tr: `${baseUrl}/news/${article.slug}`,
+            en: `${baseUrl}/en/news/${enTranslation[0].slug}`,
+          }
         : {
-          tr: `${baseUrl}/news/${article.slug}`,
-        },
+            tr: `${baseUrl}/news/${article.slug}`,
+          },
     },
   };
 }
@@ -184,6 +186,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <Eye className="h-4 w-4" />
                   <span>{article.views} görüntülenme</span>
                 </div>
+                <div className="flex items-center gap-1 border-l pl-4 ml-2">
+                  <LikeButton
+                    articleId={article.id}
+                    initialLikes={(article as any).likes || 0}
+                    size="sm"
+                  />
+                </div>
               </div>
 
               {/* Featured Image - LCP Optimized with Responsive Sizes */}
@@ -224,6 +233,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <HighlightedText
                   htmlContent={secondPart}
                   articleTitle={article.title}
+                />
+              </div>
+
+              {/* Rating Section */}
+              <div className="my-8 p-6 bg-secondary/10 dark:bg-secondary/5 rounded-xl border border-border/50">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  Bu haberi nasıl buldunuz?
+                </h3>
+                <StarRating
+                  articleId={article.id}
+                  initialRating={(article as any).rating || 0}
+                  initialCount={(article as any).ratingCount || 0}
                 />
               </div>
 
@@ -277,7 +298,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                               alt={related.title}
                               fill
                               className="object-cover group-hover:scale-110 transition-transform"
-                              unoptimized={related.imageUrl.includes('pollinations.ai') || related.imageUrl.includes('r2.dev') || related.imageUrl.includes('images.aihaberleri.org')}
+                              unoptimized={
+                                related.imageUrl.includes("pollinations.ai") ||
+                                related.imageUrl.includes("r2.dev") ||
+                                related.imageUrl.includes(
+                                  "images.aihaberleri.org",
+                                )
+                              }
                             />
                           </div>
                         )}
@@ -321,8 +348,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <Link
                     key={related.id}
                     href={`/news/${related.slug}`}
-                    className={`group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border hover:border-primary/20 flex flex-col h-full ${idx === 0 ? "md:col-span-2 lg:col-span-1" : ""
-                      }`}
+                    className={`group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border hover:border-primary/20 flex flex-col h-full ${
+                      idx === 0 ? "md:col-span-2 lg:col-span-1" : ""
+                    }`}
                   >
                     {related.imageUrl && (
                       <div className="relative h-56 w-full overflow-hidden">
@@ -331,7 +359,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                           alt={related.title}
                           fill
                           className="object-cover transition-transform duration-700 group-hover:scale-110"
-                          unoptimized={related.imageUrl.includes('pollinations.ai') || related.imageUrl.includes('r2.dev') || related.imageUrl.includes('images.aihaberleri.org')}
+                          unoptimized={
+                            related.imageUrl.includes("pollinations.ai") ||
+                            related.imageUrl.includes("r2.dev") ||
+                            related.imageUrl.includes("images.aihaberleri.org")
+                          }
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
                         <span className="absolute bottom-4 left-4 bg-primary text-primary-foreground text-xs px-2 py-1 rounded font-medium">

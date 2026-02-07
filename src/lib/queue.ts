@@ -112,7 +112,9 @@ export async function scheduleNewsAgentJob() {
     );
 
     // Log any failed removals (non-critical)
-    const failedRemovals = removalResults.filter((r) => r.status === "rejected");
+    const failedRemovals = removalResults.filter(
+      (r) => r.status === "rejected",
+    );
     if (failedRemovals.length > 0) {
       console.warn(
         `⚠️ ${failedRemovals.length} repeatable jobs failed to remove (non-critical)`,
@@ -411,6 +413,7 @@ export async function addSocialBatchJob(data: {
   platforms: string[];
   intervalSeconds: number;
   batchSize: number;
+  articleIds?: string[];
 }) {
   const queue = getSocialBatchQueue();
   if (!queue) {

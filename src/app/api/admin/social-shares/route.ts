@@ -104,17 +104,17 @@ export async function GET(req: NextRequest) {
         // Also handle legacy data where language field determines EN variant
         article.socialShares.forEach((share) => {
           let key = share.platform;
-          
+
           // If platform doesn't end with _EN but language is "en", map to _EN variant
-          if (!share.platform.endsWith('_EN') && share.language === 'en') {
+          if (!share.platform.endsWith("_EN") && share.language === "en") {
             key = `${share.platform}_EN` as any;
           }
-          
+
           shareMap[key] = share;
         });
 
         // Apply filters if specified
-        if (platform && shareMap[platform]?.status !== status) {
+        if (platform && status && shareMap[platform]?.status !== status) {
           return null;
         }
 

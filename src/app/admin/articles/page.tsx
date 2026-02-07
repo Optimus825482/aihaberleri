@@ -46,12 +46,20 @@ import {
   Eye,
   Search,
   Plus,
-  Facebook,
-  Loader2,
   Twitter,
   Globe,
+  Share2,
 } from "lucide-react";
 import Image from "next/image";
+import {
+  BatchSelectionProvider,
+  BatchCheckbox,
+  BatchSelectAll,
+  FloatingActionBar,
+  useBatchSelection,
+} from "@/components/admin/batch-operations";
+import { SocialShareBatchModal } from "@/components/admin/SocialShareBatchModal";
+import { Loader2, Facebook } from "lucide-react";
 
 // Icons for social platforms
 const BlueskyIcon = () => (
@@ -106,18 +114,78 @@ interface Category {
 }
 
 // Helper component to show social share status
-const SocialShareBadges = ({ shares, facebookShared }: { shares?: SocialShare[]; facebookShared: boolean }) => {
+const SocialShareBadges = ({
+  shares,
+  facebookShared,
+}: {
+  shares?: SocialShare[];
+  facebookShared: boolean;
+}) => {
   // Platform configs
   const platforms = [
-    { key: "FACEBOOK", label: "FB", icon: Facebook, color: "text-blue-600", lang: "tr" },
-    { key: "TWITTER", label: "X", icon: Twitter, color: "text-sky-500", lang: "tr" },
-    { key: "BLUESKY", label: "BS", icon: BlueskyIcon, color: "text-blue-400", lang: "tr" },
-    { key: "MASTODON", label: "M", icon: MastodonIcon, color: "text-purple-500", lang: "tr" },
-    { key: "TUMBLR", label: "T", icon: TumblrIcon, color: "text-indigo-500", lang: "tr" },
-    { key: "FACEBOOK_EN", label: "FB-EN", icon: Facebook, color: "text-blue-600", lang: "en" },
-    { key: "BLUESKY", label: "BS-EN", icon: BlueskyIcon, color: "text-blue-400", lang: "en" },
-    { key: "MASTODON", label: "M-EN", icon: MastodonIcon, color: "text-purple-500", lang: "en" },
-    { key: "TUMBLR", label: "T-EN", icon: TumblrIcon, color: "text-indigo-500", lang: "en" },
+    {
+      key: "FACEBOOK",
+      label: "FB",
+      icon: Facebook,
+      color: "text-blue-600",
+      lang: "tr",
+    },
+    {
+      key: "TWITTER",
+      label: "X",
+      icon: Twitter,
+      color: "text-sky-500",
+      lang: "tr",
+    },
+    {
+      key: "BLUESKY",
+      label: "BS",
+      icon: BlueskyIcon,
+      color: "text-blue-400",
+      lang: "tr",
+    },
+    {
+      key: "MASTODON",
+      label: "M",
+      icon: MastodonIcon,
+      color: "text-purple-500",
+      lang: "tr",
+    },
+    {
+      key: "TUMBLR",
+      label: "T",
+      icon: TumblrIcon,
+      color: "text-indigo-500",
+      lang: "tr",
+    },
+    {
+      key: "FACEBOOK_EN",
+      label: "FB-EN",
+      icon: Facebook,
+      color: "text-blue-600",
+      lang: "en",
+    },
+    {
+      key: "BLUESKY",
+      label: "BS-EN",
+      icon: BlueskyIcon,
+      color: "text-blue-400",
+      lang: "en",
+    },
+    {
+      key: "MASTODON",
+      label: "M-EN",
+      icon: MastodonIcon,
+      color: "text-purple-500",
+      lang: "en",
+    },
+    {
+      key: "TUMBLR",
+      label: "T-EN",
+      icon: TumblrIcon,
+      color: "text-indigo-500",
+      lang: "en",
+    },
   ];
 
   const getShareStatus = (platform: string, lang: string) => {
@@ -128,28 +196,38 @@ const SocialShareBadges = ({ shares, facebookShared }: { shares?: SocialShare[];
       }
       return null;
     }
-    const share = shares.find(s => s.platform === platform && s.language === lang);
+    const share = shares.find(
+      (s) => s.platform === platform && s.language === lang,
+    );
     return share?.status || null;
   };
 
   // Group by language
-  const trShares = platforms.filter(p => p.lang === "tr");
-  const enShares = platforms.filter(p => p.lang === "en");
+  const trShares = platforms.filter((p) => p.lang === "tr");
+  const enShares = platforms.filter((p) => p.lang === "en");
 
-  const renderPlatform = (p: typeof platforms[0]) => {
+  const renderPlatform = (p: (typeof platforms)[0]) => {
     const status = getShareStatus(p.key, p.lang);
     const Icon = p.icon;
 
     if (status === "SHARED") {
       return (
-        <span key={`${p.key}-${p.lang}`} className={`${p.color} flex-shrink-0`} title={`${p.label} paylaşıldı`}>
+        <span
+          key={`${p.key}-${p.lang}`}
+          className={`${p.color} flex-shrink-0`}
+          title={`${p.label} paylaşıldı`}
+        >
           <Icon />
         </span>
       );
     }
     if (status === "FAILED") {
       return (
-        <span key={`${p.key}-${p.lang}`} className="text-red-400 flex-shrink-0 opacity-50" title={`${p.label} başarısız`}>
+        <span
+          key={`${p.key}-${p.lang}`}
+          className="text-red-400 flex-shrink-0 opacity-50"
+          title={`${p.label} başarısız`}
+        >
           <Icon />
         </span>
       );
@@ -194,7 +272,31 @@ export default function ArticlesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalArticles, setTotalArticles] = useState(0);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+
+  // Bulk Share State
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [batchLoading, setBatchLoading] = useState(false);
+  // We'll use a ref to access selectedIds inside handlers without recompiling
+  // (though useBatchSelection exposes it, we need to access it from parent component context if possible,
+  // but since Provider is inside this component, we need to split it or use a wrapper.
+  // Actually, standard pattern is to wrap the content.
+  // Let's refactor: create a InnerArticlesPage component or just wrap the return.)
+
+  // Wait, if I wrap inside return, I can't access `selectedIds` here in `ArticlesPage` easily
+  // unless I move the state up or logic down.
+  // `FloatingActionBar` is inside the provider so it has access.
+  // I can pass a custom action component to `FloatingActionBar` that uses the context.
+
+  const handleBatchShare = async (selectedIds: string[]) => {
+    // This function will be called by FloatingActionBar's child with IDs
+    setShowBatchModal(true);
+    // We need to store selectedIds somewhere to use them in onConfirm
+    // But wait, the modal is outside.
+  };
 
   useEffect(() => {
     fetchData();
@@ -316,7 +418,8 @@ export default function ArticlesPage() {
           toast({
             variant: "destructive",
             title: "⚠️ Görsel Servisi Hatası",
-            description: "Görsel servisi yanıt vermedi. Varsayılan görsel kullanıldı. Birkaç dakika sonra tekrar deneyin.",
+            description:
+              "Görsel servisi yanıt vermedi. Varsayılan görsel kullanıldı. Birkaç dakika sonra tekrar deneyin.",
           });
         } else {
           toast({
@@ -341,7 +444,8 @@ export default function ArticlesPage() {
         toast({
           variant: "destructive",
           title: "Hata",
-          description: "Görsel güncellenemedi: " + (data.error || "Bilinmeyen hata"),
+          description:
+            "Görsel güncellenemedi: " + (data.error || "Bilinmeyen hata"),
         });
       }
     } catch (error) {
@@ -425,19 +529,171 @@ export default function ArticlesPage() {
   }
 
   return (
+    <BatchSelectionProvider>
+      <ArticlesPageContent
+        articles={articles}
+        categories={categories}
+        loading={loading}
+        totalArticles={totalArticles}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        search={search}
+        categoryFilter={categoryFilter}
+        refreshingImage={refreshingImage}
+        sharingFacebook={sharingFacebook}
+        deleteConfirm={deleteConfirm}
+        setSearch={setSearch}
+        setCategoryFilter={setCategoryFilter}
+        setPageSize={setPageSize}
+        setCurrentPage={setCurrentPage}
+        setDeleteConfirm={setDeleteConfirm}
+        setRefreshingImage={setRefreshingImage}
+        setSharingFacebook={setSharingFacebook}
+        setArticles={setArticles}
+        fetchData={fetchData}
+        cancelDelete={cancelDelete}
+        confirmDelete={confirmDelete}
+        deleteArticle={deleteArticle}
+        refreshImage={refreshImage}
+        shareFacebook={shareFacebook}
+        router={router}
+      />
+    </BatchSelectionProvider>
+  );
+}
+
+interface ArticlesPageContentProps {
+  articles: Article[];
+  categories: Category[];
+  loading: boolean;
+  totalArticles: number;
+  currentPage: number;
+  pageSize: number;
+  search: string;
+  categoryFilter: string;
+  refreshingImage: string | null;
+  sharingFacebook: string | null;
+  deleteConfirm: { id: string; title: string } | null;
+  setSearch: (value: string) => void;
+  setCategoryFilter: (value: string) => void;
+  setPageSize: (value: number) => void;
+  setCurrentPage: (value: number) => void;
+  setDeleteConfirm: (value: { id: string; title: string } | null) => void;
+  setRefreshingImage: (value: string | null) => void;
+  setSharingFacebook: (value: string | null) => void;
+  setArticles: React.Dispatch<React.SetStateAction<Article[]>>;
+  fetchData: () => Promise<void>;
+  cancelDelete: () => void;
+  confirmDelete: () => Promise<void>;
+  deleteArticle: (id: string, title: string) => void;
+  refreshImage: (id: string) => Promise<void>;
+  shareFacebook: (id: string) => Promise<void>;
+  router: any;
+}
+
+// Inner component to access BatchSelectionContext
+function ArticlesPageContent({
+  articles,
+  categories,
+  loading,
+  totalArticles,
+  currentPage,
+  pageSize,
+  search,
+  categoryFilter,
+  refreshingImage,
+  sharingFacebook,
+  deleteConfirm,
+  setSearch,
+  setCategoryFilter,
+  setPageSize,
+  setCurrentPage,
+  setDeleteConfirm,
+  setRefreshingImage,
+  setSharingFacebook,
+  setArticles,
+  fetchData,
+  cancelDelete,
+  confirmDelete,
+  deleteArticle,
+  refreshImage,
+  shareFacebook,
+  router,
+}: ArticlesPageContentProps) {
+  const { selectedIds, clearSelection } = useBatchSelection();
+  const [showBatchModal, setShowBatchModal] = useState(false);
+  const [batchLoading, setBatchLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleBulkShare = async (data: {
+    platforms: string[];
+    batchSize: number;
+    intervalSeconds: number;
+  }) => {
+    setBatchLoading(true);
+    try {
+      const ids = Array.from(selectedIds);
+      const res = await fetch("/api/admin/social-shares/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          articleIds: ids,
+        }),
+      });
+
+      const result = await res.json();
+      if (result.success) {
+        toast({
+          title: "Başarılı",
+          description: `${ids.length} haber için toplu paylaşım başlatıldı`,
+        });
+        setShowBatchModal(false);
+        clearSelection();
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Hata",
+          description: result.error || "Batch başlatılamadı",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Bir hata oluştu",
+      });
+    } finally {
+      setBatchLoading(false);
+    }
+  };
+
+  const displayArticles = articles;
+  const totalPages = Math.ceil(totalArticles / pageSize);
+
+  return (
     <AdminLayout>
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteConfirm} onOpenChange={(open) => !open && cancelDelete()}>
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={(open) => !open && cancelDelete()}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Haberi Sil</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteConfirm?.title || "Bu haberi silmek istediğinizden emin misiniz?"} başlıklı haberi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+              {deleteConfirm?.title ||
+                "Bu haberi silmek istediğinizden emin misiniz?"}{" "}
+              başlıklı haberi silmek istediğinizden emin misiniz? Bu işlem geri
+              alınamaz.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelDelete}>İptal</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Evet, Sil
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -537,12 +793,18 @@ export default function ArticlesPage() {
                           alt={article.title}
                           fill
                           className="object-cover"
-                          unoptimized={article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev') || article.imageUrl.includes('images.aihaberleri.org')}
+                          unoptimized={
+                            article.imageUrl.includes("pollinations.ai") ||
+                            article.imageUrl.includes("r2.dev") ||
+                            article.imageUrl.includes("images.aihaberleri.org")
+                          }
                         />
                       </div>
                     ) : (
                       <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs text-muted-foreground">Yok</span>
+                        <span className="text-xs text-muted-foreground">
+                          Yok
+                        </span>
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -550,27 +812,40 @@ export default function ArticlesPage() {
                         <p className="font-semibold text-sm line-clamp-2 leading-tight flex-1">
                           {article.title}
                         </p>
-                        <SocialShareBadges shares={article.socialShares} facebookShared={article.facebookShared} />
+                        <SocialShareBadges
+                          shares={article.socialShares}
+                          facebookShared={article.facebookShared}
+                        />
                       </div>
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         <Badge
-                          className={`text-xs font-bold ${article.category.slug === 'yapay-zeka' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30' :
-                            article.category.slug === 'robotik' ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30' :
-                              article.category.slug === 'otomasyon' ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30' :
-                                article.category.slug === 'makine-ogrenimi' ? 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30' :
-                                  'bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30'
-                            }`}
+                          className={`text-xs font-bold ${
+                            article.category.slug === "yapay-zeka"
+                              ? "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
+                              : article.category.slug === "robotik"
+                                ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30"
+                                : article.category.slug === "otomasyon"
+                                  ? "bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30"
+                                  : article.category.slug === "makine-ogrenimi"
+                                    ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+                                    : "bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30"
+                          }`}
                           variant="outline"
                         >
                           {article.category.name}
                         </Badge>
                         <Badge
-                          className={`text-xs font-bold tabular-nums ${(article.score || 0) >= 800 ? 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30' :
-                            (article.score || 0) >= 700 ? 'bg-lime-500/20 text-lime-700 dark:text-lime-300 border-lime-500/30' :
-                              (article.score || 0) >= 600 ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30' :
-                                (article.score || 0) >= 500 ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30' :
-                                  'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30'
-                            }`}
+                          className={`text-xs font-bold tabular-nums ${
+                            (article.score || 0) >= 800
+                              ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+                              : (article.score || 0) >= 700
+                                ? "bg-lime-500/20 text-lime-700 dark:text-lime-300 border-lime-500/30"
+                                : (article.score || 0) >= 600
+                                  ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
+                                  : (article.score || 0) >= 500
+                                    ? "bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30"
+                                    : "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
+                          }`}
                           variant="outline"
                         >
                           {article.score || 0}
@@ -586,7 +861,9 @@ export default function ArticlesPage() {
                       <span>{article.views}</span>
                     </div>
                     <div>
-                      {new Date(article.publishedAt || article.createdAt).toLocaleDateString("tr-TR")}
+                      {new Date(
+                        article.publishedAt || article.createdAt,
+                      ).toLocaleDateString("tr-TR")}
                     </div>
                   </div>
 
@@ -595,7 +872,9 @@ export default function ArticlesPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => window.open(`/news/${article.slug}`, "_blank")}
+                      onClick={() =>
+                        window.open(`/news/${article.slug}`, "_blank")
+                      }
                       className="flex-1"
                     >
                       <Eye className="h-4 w-4 mr-1" />
@@ -604,7 +883,9 @@ export default function ArticlesPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => router.push(`/admin/articles/${article.id}/edit`)}
+                      onClick={() =>
+                        router.push(`/admin/articles/${article.id}/edit`)
+                      }
                       className="flex-1"
                     >
                       <Edit className="h-4 w-4 mr-1" />
@@ -616,22 +897,25 @@ export default function ArticlesPage() {
                       onClick={() => refreshImage(article.id)}
                       disabled={refreshingImage === article.id}
                     >
-                      <RefreshCw className={`h-4 w-4 ${refreshingImage === article.id ? "animate-spin" : ""}`} />
+                      <RefreshCw
+                        className={`h-4 w-4 ${refreshingImage === article.id ? "animate-spin" : ""}`}
+                      />
                     </Button>
-                    {!article.facebookShared && article.status === "PUBLISHED" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => shareFacebook(article.id)}
-                        disabled={sharingFacebook === article.id}
-                      >
-                        {sharingFacebook === article.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Facebook className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
+                    {!article.facebookShared &&
+                      article.status === "PUBLISHED" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => shareFacebook(article.id)}
+                          disabled={sharingFacebook === article.id}
+                        >
+                          {sharingFacebook === article.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Facebook className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     <Button
                       size="sm"
                       variant="ghost"
@@ -650,19 +934,33 @@ export default function ArticlesPage() {
               <Table className="min-w-[750px] table-fixed">
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[40px]">
+                      <BatchSelectAll
+                        allIds={displayArticles.map((a: any) => a.id)}
+                      />
+                    </TableHead>
                     <TableHead className="w-[60px]">Görsel</TableHead>
-                    <TableHead className="w-auto min-w-[200px]">Başlık</TableHead>
+                    <TableHead className="w-auto min-w-[200px]">
+                      Başlık
+                    </TableHead>
                     <TableHead className="w-[100px]">Sosyal</TableHead>
                     <TableHead className="w-[110px]">Kategori</TableHead>
                     <TableHead className="w-[85px]">Tarih</TableHead>
                     <TableHead className="w-[70px]">Skor</TableHead>
-                    <TableHead className="w-[75px] text-right">Görüntü</TableHead>
-                    <TableHead className="w-[130px] text-right sticky right-0 bg-background shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.1)]">İşlemler</TableHead>
+                    <TableHead className="w-[75px] text-right">
+                      Görüntü
+                    </TableHead>
+                    <TableHead className="w-[130px] text-right sticky right-0 bg-background shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.1)]">
+                      İşlemler
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {displayArticles.map((article) => (
                     <TableRow key={article.id}>
+                      <TableCell>
+                        <BatchCheckbox id={article.id} />
+                      </TableCell>
                       <TableCell>
                         {article.imageUrl ? (
                           <div className="relative w-16 h-16 rounded overflow-hidden">
@@ -671,7 +969,13 @@ export default function ArticlesPage() {
                               alt={article.title}
                               fill
                               className="object-cover"
-                              unoptimized={article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev') || article.imageUrl.includes('images.aihaberleri.org')}
+                              unoptimized={
+                                article.imageUrl.includes("pollinations.ai") ||
+                                article.imageUrl.includes("r2.dev") ||
+                                article.imageUrl.includes(
+                                  "images.aihaberleri.org",
+                                )
+                              }
                             />
                           </div>
                         ) : (
@@ -693,20 +997,33 @@ export default function ArticlesPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <SocialShareBadges shares={article.socialShares} facebookShared={article.facebookShared} />
+                        <SocialShareBadges
+                          shares={article.socialShares}
+                          facebookShared={article.facebookShared}
+                        />
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={`text-xs font-bold ${article.category.slug === 'yapay-zeka' ? 'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30' :
-                            article.category.slug === 'robotik' ? 'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30' :
-                              article.category.slug === 'otomasyon' ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30' :
-                                article.category.slug === 'makine-ogrenimi' ? 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30' :
-                                  article.category.slug === 'derin-ogrenme' ? 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30' :
-                                    article.category.slug === 'nlp' ? 'bg-pink-500/20 text-pink-700 dark:text-pink-300 border-pink-500/30' :
-                                      article.category.slug === 'bilgisayarli-goru' ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30' :
-                                        article.category.slug === 'etik' ? 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30' :
-                                          'bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30'
-                            }`}
+                          className={`text-xs font-bold ${
+                            article.category.slug === "yapay-zeka"
+                              ? "bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30"
+                              : article.category.slug === "robotik"
+                                ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30"
+                                : article.category.slug === "otomasyon"
+                                  ? "bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30"
+                                  : article.category.slug === "makine-ogrenimi"
+                                    ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+                                    : article.category.slug === "derin-ogrenme"
+                                      ? "bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30"
+                                      : article.category.slug === "nlp"
+                                        ? "bg-pink-500/20 text-pink-700 dark:text-pink-300 border-pink-500/30"
+                                        : article.category.slug ===
+                                            "bilgisayarli-goru"
+                                          ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                                          : article.category.slug === "etik"
+                                            ? "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
+                                            : "bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30"
+                          }`}
                           variant="outline"
                         >
                           {article.category.name}
@@ -731,12 +1048,17 @@ export default function ArticlesPage() {
                       </TableCell>
                       <TableCell>
                         <Badge
-                          className={`text-xs font-bold tabular-nums ${(article.score || 0) >= 800 ? 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30' :
-                            (article.score || 0) >= 700 ? 'bg-lime-500/20 text-lime-700 dark:text-lime-300 border-lime-500/30' :
-                              (article.score || 0) >= 600 ? 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30' :
-                                (article.score || 0) >= 500 ? 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30' :
-                                  'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30'
-                            }`}
+                          className={`text-xs font-bold tabular-nums ${
+                            (article.score || 0) >= 800
+                              ? "bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30"
+                              : (article.score || 0) >= 700
+                                ? "bg-lime-500/20 text-lime-700 dark:text-lime-300 border-lime-500/30"
+                                : (article.score || 0) >= 600
+                                  ? "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30"
+                                  : (article.score || 0) >= 500
+                                    ? "bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30"
+                                    : "bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30"
+                          }`}
                           variant="outline"
                         >
                           {article.score || 0}
@@ -775,9 +1097,7 @@ export default function ArticlesPage() {
                             size="sm"
                             variant="ghost"
                             onClick={() =>
-                              router.push(
-                                `/admin/articles/${article.id}/edit`,
-                              )
+                              router.push(`/admin/articles/${article.id}/edit`)
                             }
                             title="Düzenle"
                           >
@@ -786,7 +1106,9 @@ export default function ArticlesPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => deleteArticle(article.id, article.title)}
+                            onClick={() =>
+                              deleteArticle(article.id, article.title)
+                            }
                             title="Sil"
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -908,8 +1230,29 @@ export default function ArticlesPage() {
               </div>
             )}
           </CardContent>
-        </Card >
-      </div >
-    </AdminLayout >
+        </Card>
+
+        <FloatingActionBar>
+          <button
+            onClick={() => setShowBatchModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all hover:scale-105 active:scale-95 shadow-md"
+            title="Seçili öğeleri paylaş"
+          >
+            <Share2 className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              Paylaş ({selectedIds.size})
+            </span>
+          </button>
+        </FloatingActionBar>
+
+        <SocialShareBatchModal
+          isOpen={showBatchModal}
+          onClose={() => setShowBatchModal(false)}
+          onConfirm={handleBulkShare}
+          loading={batchLoading}
+          articleCount={selectedIds.size}
+        />
+      </div>
+    </AdminLayout>
   );
 }

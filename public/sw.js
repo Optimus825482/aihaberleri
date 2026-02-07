@@ -41,6 +41,7 @@ self.addEventListener("fetch", (event) => {
 
   if (
     url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/admin/") ||
     url.pathname.startsWith("/_next/") ||
     url.pathname.includes("extension:")
   ) {
@@ -109,4 +110,3 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(clients.openWindow(event.notification.data));
 });
-
