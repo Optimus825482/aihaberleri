@@ -14,9 +14,9 @@ export function LayoutWrapper({
   footer,
 }: LayoutWrapperProps) {
   const pathname = usePathname();
-  // Check if current route is English
+  // Check if current route is English (strictly /en or /en/...)
   // Also check admin routes if created separate layout for admin
-  const isEnglish = pathname?.startsWith("/en");
+  const isEnglish = pathname === "/en" || pathname?.startsWith("/en/");
   const isAdmin = pathname?.startsWith("/admin");
 
   // Don't show global header/footer on English pages (they assume en layout handles it)

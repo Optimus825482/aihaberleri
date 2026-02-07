@@ -8,7 +8,8 @@ import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 
 export const metadata: Metadata = {
   title: "En Çok Okunan Haberler | AI Haberleri",
-  description: "AI Haberleri'nde bu hafta en çok okunan yapay zeka haberleri. Teknoloji dünyasının en popüler AI gelişmeleri.",
+  description:
+    "AI Haberleri'nde bu hafta en çok okunan yapay zeka haberleri. Teknoloji dünyasının en popüler AI gelişmeleri.",
   openGraph: {
     title: "En Çok Okunan AI Haberleri",
     description: "Bu hafta en çok okunan yapay zeka haberleri",
@@ -30,7 +31,7 @@ export default async function MostReadPage({
 }) {
   const params = await searchParams;
   const period = params.period || "week";
-  
+
   // Calculate date limit based on period
   const dateLimit = new Date();
   if (period === "today") {
@@ -77,25 +78,32 @@ export default async function MostReadPage({
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1">
-        <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Background Decorative Elements */}
+      <div className="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pointer-events-none" />
+      <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[100px] opacity-40 pointer-events-none" />
+      <div className="absolute top-40 -left-20 w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[80px] opacity-30 pointer-events-none" />
+
+      <main className="flex-1 relative z-10">
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/10 rounded-xl">
-                <TrendingUp className="w-7 h-7 text-primary" />
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div className="flex items-center gap-4">
+              <div className="p-4 bg-gradient-to-br from-primary/20 to-primary/5 rounded-2xl backdrop-blur-md border border-primary/10 shadow-lg">
+                <TrendingUp className="w-8 h-8 text-primary" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold">En Çok Okunanlar</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+                  En Çok Okunanlar
+                </h1>
+                <p className="text-muted-foreground mt-2 text-lg">
                   {periodLabels[period]} en popüler AI haberleri
                 </p>
               </div>
             </div>
 
             {/* Period Filter Tabs */}
-            <div className="flex items-center gap-2 bg-secondary/30 p-1 rounded-lg">
+            <div className="flex items-center gap-1 bg-secondary/50 backdrop-blur-sm p-1.5 rounded-xl border border-border/50 shadow-sm">
               {[
                 { key: "today", label: "Bugün", icon: Flame },
                 { key: "week", label: "Bu Hafta", icon: Calendar },
@@ -107,10 +115,10 @@ export default async function MostReadPage({
                   <Link
                     key={item.key}
                     href={`/en-cok-okunanlar?period=${item.key}`}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "text-muted-foreground hover:text-foreground hover:bg-background/80"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -127,14 +135,14 @@ export default async function MostReadPage({
               {mostReadArticles.map((article, index) => (
                 <article
                   key={article.id}
-                  className="group flex flex-col sm:flex-row gap-4 p-4 bg-card rounded-xl border border-border/50 hover:border-primary/30 hover:shadow-lg transition-all"
+                  className="group relative flex flex-col sm:flex-row gap-5 p-4 bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50 hover:border-primary/30 hover:bg-card/80 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
                 >
                   {/* Rank Badge */}
-                  <div className="flex-shrink-0 flex items-start sm:items-center">
+                  <div className="absolute top-4 left-4 z-20 sm:static sm:z-auto flex-shrink-0 flex items-start sm:items-center">
                     <span
-                      className={`w-10 h-10 flex items-center justify-center font-bold rounded-full text-lg ${
+                      className={`w-10 h-10 flex items-center justify-center font-bold rounded-full text-lg shadow-sm border border-border/50 ${
                         index < 3
-                          ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-md"
+                          ? "bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 text-white shadow-orange-500/20 border-transparent relative overflow-hidden after:absolute after:inset-0 after:bg-white/20 after:animate-pulse-slow"
                           : "bg-secondary text-muted-foreground"
                       }`}
                     >
@@ -145,15 +153,15 @@ export default async function MostReadPage({
                   {/* Image */}
                   <Link
                     href={`/haber/${article.slug}`}
-                    className="relative flex-shrink-0 w-full sm:w-48 h-32 rounded-lg overflow-hidden"
+                    className="relative flex-shrink-0 w-full sm:w-56 h-48 sm:h-36 rounded-xl overflow-hidden shadow-sm group-hover:shadow-md transition-shadow"
                   >
                     {article.imageUrl ? (
                       <Image
                         src={article.imageUrl}
                         alt={article.title}
                         fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                        sizes="(max-width: 640px) 100vw, 192px"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, 224px"
                         unoptimized={
                           article.imageUrl.includes("pollinations.ai") ||
                           article.imageUrl.includes("r2.dev") ||
@@ -168,59 +176,78 @@ export default async function MostReadPage({
                   </Link>
 
                   {/* Content */}
-                  <div className="flex-1 flex flex-col gap-2">
-                    {/* Category */}
-                    {article.category && (
-                      <Link
-                        href={`/kategori/${article.category.slug}`}
-                        className="text-xs font-medium text-primary hover:underline w-fit"
-                      >
-                        {article.category.name}
-                      </Link>
-                    )}
+                  <div className="flex-1 flex flex-col gap-2 min-w-0">
+                    <div className="flex items-center justify-between gap-4">
+                      {/* Category */}
+                      {article.category && (
+                        <Link
+                          href={`/kategori/${article.category.slug}`}
+                          className="px-2.5 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/20 transition-colors w-fit"
+                        >
+                          {article.category.name}
+                        </Link>
+                      )}
+
+                      {/* Mobile Rank (Hidden on Desktop) */}
+                      <div className="sm:hidden text-xs text-muted-foreground">
+                        #{index + 1} Sırada
+                      </div>
+                    </div>
 
                     {/* Title */}
                     <Link href={`/haber/${article.slug}`}>
-                      <h2 className="text-lg font-semibold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+                      <h2 className="text-lg md:text-xl font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
                         {article.title}
                       </h2>
                     </Link>
 
                     {/* Excerpt */}
                     {article.excerpt && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                         {article.excerpt}
                       </p>
                     )}
 
                     {/* Meta */}
-                    <div className="flex items-center flex-wrap gap-3 text-xs text-muted-foreground mt-auto pt-2">
-                      <span className="flex items-center gap-1">
-                        <Eye className="w-3.5 h-3.5" />
-                        <strong className="text-foreground">{article.views.toLocaleString("tr-TR")}</strong> görüntülenme
-                      </span>
-                      {article.publishedAt && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {formatDate(article.publishedAt)}
+                    <div className="flex items-center flex-wrap gap-4 text-xs text-muted-foreground mt-auto pt-3 border-t border-border/30">
+                      <div className="flex items-center gap-1.5 bg-secondary/30 px-2 py-1 rounded-md">
+                        <Eye className="w-3.5 h-3.5 text-primary/70" />
+                        <span className="text-foreground font-medium">
+                          {article.views.toLocaleString("tr-TR")}
                         </span>
+                      </div>
+
+                      {article.publishedAt && (
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{formatDate(article.publishedAt)}</span>
+                        </div>
                       )}
-                      <TrendScoreBadge trendScore={article.trendScore} size="sm" />
+
+                      <div className="ml-auto">
+                        <TrendScoreBadge
+                          trendScore={article.trendScore}
+                          size="sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 </article>
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 bg-muted/30 rounded-xl">
-              <TrendingUp className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Henüz Veri Yok</h3>
-              <p className="text-muted-foreground">
-                Seçili dönemde henüz yeterli okuma verisi bulunmuyor.
+            <div className="text-center py-20 bg-card/30 backdrop-blur-sm rounded-3xl border border-dashed border-border">
+              <div className="w-20 h-20 bg-secondary/50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <TrendingUp className="w-10 h-10 text-muted-foreground/40" />
+              </div>
+              <h3 className="text-2xl font-bold mb-3">Henüz Veri Yok</h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-8">
+                Seçili dönemde ({periodLabels[period]}) henüz yeterli okuma
+                verisi bulunmuyor. Daha sonra tekrar deneyin.
               </p>
               <Link
                 href="/"
-                className="inline-block mt-4 text-primary hover:underline"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
               >
                 Ana Sayfaya Dön
               </Link>
