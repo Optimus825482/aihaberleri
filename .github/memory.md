@@ -54,6 +54,20 @@
 - "Neden ben köprü oluyorum?" mantığı önemli
 - Agent'lar arası otonom çalışma istiyor
 - Test etmeden "çalışır" denilmesini istemiyor
+- **🔴 PROTOKOL ZORUNLULUĞU**: Agent aktivasyonunda GERÇEKTEN read_file yapılmalı, sadece "uygulanıyor" yazılmamalı
+
+---
+
+## 🔴 PROTOKOL ENFORCEMENT (7 Şubat 2026)
+
+**Kullanıcı Talebi:** Agent ve skill protokolü GERÇEKTEN uygulanmalı, sadece metin olarak yazılmamalı.
+
+**Çözüm:** HARD GATE sistemi GEMINI.md'ye eklendi:
+- GATE 1: Agent dosyası read_file ile okunmalı
+- GATE 2: PROTOKOL KANITI bloğu gösterilmeli
+- GATE 3: Self-check yapılmalı
+
+**Tetikleme:** Kullanıcı "protokolü uygulamıyorsun" derse → HEMEN düzelt ve kanıt göster
 
 ---
 

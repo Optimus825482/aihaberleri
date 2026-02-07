@@ -78,13 +78,16 @@ export async function GET(req: NextRequest) {
     });
 
     // Transform data for frontend - add missing platforms
+    // CRITICAL: Must match SocialPlatform enum in Prisma schema
     const platforms = [
       "FACEBOOK",
       "FACEBOOK_EN",
-      "TWITTER",
       "BLUESKY",
+      "BLUESKY_EN",
       "MASTODON",
+      "MASTODON_EN",
       "TUMBLR",
+      "TUMBLR_EN",
     ];
 
     const transformedArticles = articles

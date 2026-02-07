@@ -131,9 +131,6 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
-        {/* Monetag Verification */}
-        <meta name="monetag" content="fafd2571ef3afa004030a9d1e9bf206a" />
-
         {/* Preconnect for LCP/FCP optimization */}
         <link rel="preconnect" href="https://images.aihaberleri.org" />
         <link

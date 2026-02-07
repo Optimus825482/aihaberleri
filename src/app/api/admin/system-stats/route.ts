@@ -1,6 +1,7 @@
 /**
  * System Stats API
  * Returns server RAM and Disk usage for admin dashboard
+ * 🚀 OPTIMIZED: Added 30-second in-memory cache to prevent blocking execSync calls
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -13,6 +14,10 @@ export const dynamic = "force-dynamic";
 const JWT_SECRET = new TextEncoder().encode(
   process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
 );
+
+// 🚀 PERFORMANCE: In-memory cache for system stats (30 seconds TTL)
+let cachedStats: { data: any; timestamp: number } | null = null;
+const CACHE_TTL_MS = 30000; // 30 seconds
 
 interface DiskInfo {
   total: number;
@@ -100,6 +105,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Geçersiz oturum" }, { status: 401 });
     }
 
+    // 🚀 PERFORMANCE: Return cached data if still valid
+    const now = Date.now();
+    if (cachedStats && now - cachedStats.timestamp < CACHE_TTL_MS) {
+      const response = NextResponse.json(cachedStats.data);
+      response.headers.set("X-Cache", "HIT");
+      return response;
+    }
+
     // RAM Info (from os module - no external calls)
     const totalMemory = os.totalmem();
     const freeMemory = os.freemem();
@@ -146,7 +159,12 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    return NextResponse.json(response);
+    // 🚀 PERFORMANCE: Cache the response
+    cachedStats = { data: response, timestamp: Date.now() };
+
+    const jsonResponse = NextResponse.json(response);
+    jsonResponse.headers.set("X-Cache", "MISS");
+    return jsonResponse;
   } catch (error) {
     console.error("System stats error:", error);
     return NextResponse.json(
