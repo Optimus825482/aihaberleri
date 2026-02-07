@@ -35,7 +35,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!hasPermission(userRole, Permission.VIEW_ARTICLE)) {
+    if (!hasPermission(userRole, Permission.VIEW_ARTICLES)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

@@ -16,7 +16,10 @@ export type AuditAction =
   | "BULK_UPDATE"
   | "BULK_DELETE"
   | "PUBLISH"
-  | "UNPUBLISH";
+  | "UNPUBLISH"
+  | "SCHEDULED_PUBLISH"
+  | "SCHEDULE_PUBLISH"
+  | "CANCEL_SCHEDULE";
 
 export type AuditResource =
   | "ARTICLE"

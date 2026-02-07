@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
 
     // Log operation
     console.log("[SEO_RECALCULATION]", {
-      user: session.user?.email,
+      user: session.email,
       processed: results.processed,
       failed: results.failed,
       duration: results.duration,

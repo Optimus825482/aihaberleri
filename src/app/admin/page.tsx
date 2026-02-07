@@ -110,6 +110,7 @@ export default function AdminDashboard() {
     const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
     const [agentStats, setAgentStats] = useState<AgentStats | null>(null);
     const [loading, setLoading] = useState(true);
+    const [apiError, setApiError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const refreshInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -205,29 +206,52 @@ export default function AdminDashboard() {
         if (!silent) setLoading(true);
         else setRefreshing(true);
 
+        // Create abort controller with 10s timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         try {
-            const [dashboardRes, agentRes, systemRes] = await Promise.all([
-                fetch("/api/admin/dashboard"),
-                fetch("/api/agent/stats"),
-                fetch("/api/admin/system-stats"),
+            // Fetch with timeout and individual error handling
+            const fetchWithTimeout = async (url: string) => {
+                try {
+                    const res = await fetch(url, { signal: controller.signal });
+                    if (!res.ok) {
+                        console.warn(`API ${url} returned ${res.status}`);
+                        return null;
+                    }
+                    return await res.json();
+                } catch (e) {
+                    console.warn(`Failed to fetch ${url}:`, e);
+                    return null;
+                }
+            };
+
+            const [dashboardData, agentData, systemData] = await Promise.all([
+                fetchWithTimeout("/api/admin/dashboard"),
+                fetchWithTimeout("/api/agent/stats"),
+                fetchWithTimeout("/api/admin/system-stats"),
             ]);
 
-            const dashboardData = await dashboardRes.json();
-            const agentData = await agentRes.json();
-            const systemData = await systemRes.json();
-
-            if (dashboardData.success) {
+            if (dashboardData?.success) {
                 setDashboardStats(dashboardData.data);
+                setApiError(null);
             }
-            if (agentData.success) {
+            if (agentData?.success) {
                 setAgentStats(agentData.data);
             }
-            if (systemData.success) {
+            if (systemData?.success) {
                 setSystemStats(systemData.data);
+            }
+
+            // Set error if all APIs failed
+            if (!dashboardData && !agentData && !systemData) {
+                setApiError("API'lere bağlanılamadı. Sunucu durumunu kontrol edin.");
             }
         } catch (error) {
             console.error("Failed to fetch stats:", error);
+            setApiError("Veri yüklenirken hata oluştu.");
         } finally {
+            clearTimeout(timeoutId);
             setLoading(false);
             setRefreshing(false);
         }
@@ -240,6 +264,7 @@ export default function AdminDashboard() {
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                         <p className="mt-4 text-muted-foreground">Yükleniyor...</p>
+                        <p className="mt-2 text-xs text-muted-foreground/70">Maksimum 10 saniye beklenecek...</p>
                     </div>
                 </div>
             </AdminLayout>
@@ -249,6 +274,25 @@ export default function AdminDashboard() {
     return (
         <AdminLayout>
             <div className="space-y-6">
+                {/* API Error Banner */}
+                {apiError && (
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
+                        <ShieldAlert className="h-5 w-5 text-red-500" />
+                        <div className="flex-1">
+                            <p className="text-red-400 font-medium">{apiError}</p>
+                            <p className="text-red-400/70 text-sm">Bazı veriler yüklenemedi. Sayfa yenilenmeye devam edecek.</p>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fetchAllStats()}
+                            className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+                        >
+                            Tekrar Dene
+                        </Button>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>

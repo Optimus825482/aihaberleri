@@ -36,15 +36,8 @@ export const db =
         },
         // Connection pool settings for long-running operations
         // Prevents "Connection closed" errors during agent execution
-        __internal: {
-          engine: {
-            // Connection timeout: 20 minutes (for long-running agent jobs)
-            connection_timeout: 1200,
-            // Pool timeout: 20 minutes
-            pool_timeout: 1200,
-          },
-        } as any,
-      }));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any));
 
 // 🚀 PERFORMANCE MONITORING: Log slow queries (> 100ms)
 if (

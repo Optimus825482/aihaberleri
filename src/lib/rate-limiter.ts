@@ -90,8 +90,13 @@ export class RateLimiter {
           withScores: true,
         });
 
-        if (oldestRequest.length > 0) {
-          const oldestTimestamp = oldestRequest[0].score;
+        if (
+          oldestRequest.length > 0 &&
+          typeof oldestRequest[0] === "object" &&
+          oldestRequest[0] !== null
+        ) {
+          const entry = oldestRequest[0] as { score: number; value: string };
+          const oldestTimestamp = entry.score;
           const retryAfterMs = oldestTimestamp + config.windowMs - now;
           result.retryAfter = Math.ceil(retryAfterMs / 1000);
         }

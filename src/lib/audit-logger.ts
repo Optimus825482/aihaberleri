@@ -22,15 +22,17 @@ export type AuditAction =
   | "TRIGGER_AGENT"
   | "CLEAR_CACHE"
   | "EXPORT_DATA"
-  | "IMPORT_DATA";
+  | "IMPORT_DATA"
+  | "SCHEDULED_PUBLISH"
+  | "SCHEDULE_PUBLISH"
+  | "CANCEL_SCHEDULE";
 
 export interface AuditLogData {
   userId: string;
   action: AuditAction;
   resource: string;
   resourceId?: string;
-  resourceIds?: string[];
-  metadata?: Record<string, any>;
+  details?: Record<string, any>;
   ipAddress?: string;
   userAgent?: string;
 }
@@ -49,8 +51,7 @@ export async function createAuditLog(data: AuditLogData) {
         action: data.action,
         resource: data.resource,
         resourceId: data.resourceId,
-        resourceIds: data.resourceIds,
-        metadata: data.metadata || {},
+        details: data.details || {},
         ipAddress: data.ipAddress || "unknown",
         userAgent: data.userAgent || "unknown",
       },
@@ -59,7 +60,6 @@ export async function createAuditLog(data: AuditLogData) {
     console.log(`[AUDIT] ${data.action} by user ${data.userId}`, {
       resource: data.resource,
       resourceId: data.resourceId,
-      resourceIds: data.resourceIds,
     });
 
     return auditLog;
@@ -155,7 +155,7 @@ export async function getResourceAuditLogs(
     db.auditLog.findMany({
       where: {
         resource,
-        OR: [{ resourceId }, { resourceIds: { has: resourceId } }],
+        resourceId,
       },
       skip,
       take: limit,
@@ -173,7 +173,7 @@ export async function getResourceAuditLogs(
     db.auditLog.count({
       where: {
         resource,
-        OR: [{ resourceId }, { resourceIds: { has: resourceId } }],
+        resourceId,
       },
     }),
   ]);

@@ -516,7 +516,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const results = {
+    const results: {
+      indexNow: { success: number; failed: number };
+      google: { success: number; failed: number };
+      facebook: { success: number; failed: number };
+      bluesky: { success: number; failed: number };
+      mastodon?: { success: number; failed: number };
+      tumblr?: { success: number; failed: number };
+    } = {
       indexNow: { success: 0, failed: 0 },
       google: { success: 0, failed: 0 },
       facebook: { success: 0, failed: 0 },

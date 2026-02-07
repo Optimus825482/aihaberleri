@@ -151,15 +151,22 @@ export async function POST(
           optimizations.content = contentResult.content.optimizedContent;
         }
 
-        if (contentResult.keywords?.optimized) {
+        if (
+          contentResult.keywords?.primary &&
+          contentResult.keywords.primary.length > 0
+        ) {
+          const optimizedKeywords = [
+            ...contentResult.keywords.primary,
+            ...(contentResult.keywords.lsi || []),
+          ];
           diffs.push({
             field: "keywords",
             label: "Anahtar Kelimeler",
             before: (article.keywords || []).join(", "),
-            after: contentResult.keywords.optimized.join(", "),
+            after: optimizedKeywords.join(", "),
             type: "text",
           });
-          optimizations.keywords = contentResult.keywords.optimized;
+          optimizations.keywords = optimizedKeywords;
         }
       }
     }

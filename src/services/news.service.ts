@@ -322,7 +322,9 @@ export async function isDuplicateNews(
         );
 
         if (entityIntersection.length > 0) {
-          const timeDiff = Date.now() - new Date(article.publishedAt).getTime();
+          const timeDiff = article.publishedAt
+            ? Date.now() - new Date(article.publishedAt).getTime()
+            : Date.now();
           const hoursDiff = timeDiff / (60 * 60 * 1000);
 
           // NEW: Check for same financial numbers (10 milyar, 500 milyon, etc.)

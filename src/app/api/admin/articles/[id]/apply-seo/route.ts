@@ -76,6 +76,7 @@ export async function POST(
     // Recalculate SEO score
     const analyzer = new SEOAnalyzerAgent();
     const updatedArticle = await db.article.findUnique({ where: { id } });
+    let newScore: number | null = null;
 
     if (updatedArticle) {
       const analysis = await analyzer.analyze({
@@ -86,6 +87,8 @@ export async function POST(
         keywords: updatedArticle.keywords || undefined,
         imageUrl: updatedArticle.imageUrl || undefined,
       });
+
+      newScore = analysis.score;
 
       await db.article.update({
         where: { id },
@@ -107,7 +110,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       fieldsApplied: fields.length,
-      newScore: updatedArticle ? analysis.score : null,
+      newScore,
     });
   } catch (error) {
     console.error("Apply SEO error:", error);

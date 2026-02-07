@@ -144,6 +144,15 @@ async function getSystemHealth() {
 // Helper: Cache Stats
 async function getCacheStats() {
   try {
+    if (!redis) {
+      return {
+        hitRate: 0,
+        missRate: 0,
+        evictions: 0,
+        memoryUsage: 0,
+      };
+    }
+    
     const info = await redis.info("stats");
     const lines = info.split("\r\n");
 

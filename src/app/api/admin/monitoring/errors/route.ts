@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
           level: true,
           message: true,
           stack: true,
-          metadata: true,
+          context: true,
           createdAt: true,
           userId: true,
           ipAddress: true,

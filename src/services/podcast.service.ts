@@ -65,7 +65,7 @@ export async function createPodcastScript(
     take: articleCount,
     select: {
       title: true,
-      summary: true,
+      excerpt: true,
       content: true,
     },
   });
@@ -99,7 +99,7 @@ export async function createPodcastScript(
   articles.forEach((article, index) => {
     const newsLabel =
       language === "tr" ? `Haber ${index + 1}` : `News ${index + 1}`;
-    const summary = article.summary || article.content?.slice(0, 400) || "";
+    const summary = article.excerpt || article.content?.slice(0, 400) || "";
 
     script += `${newsLabel}: ${article.title}.\n`;
     script += `${summary}\n\n`;

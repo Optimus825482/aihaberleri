@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
       title: article.title,
       slug: article.slug,
       language: article.language,
-      publishedAt: article.publishedAt.toISOString(),
+      publishedAt: article.publishedAt?.toISOString() || null,
       category: article.category?.name || "Uncategorized",
       googleIndexed: article.googleIndexed,
       googleIndexedAt: article.googleIndexedAt?.toISOString() || null,

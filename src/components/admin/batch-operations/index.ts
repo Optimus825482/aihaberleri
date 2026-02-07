@@ -2,7 +2,7 @@ export {
   BatchSelectionProvider,
   useBatchSelection,
 } from "./BatchSelectionProvider";
-export { BatchCheckbox } from "./BatchCheckbox";
+export { default as BatchCheckbox } from "./BatchCheckbox";
 export { BatchSelectAll } from "./BatchSelectAll";
 export { FloatingActionBar } from "./FloatingActionBar";
 export { BatchProgressModal } from "./BatchProgressModal";

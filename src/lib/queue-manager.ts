@@ -13,6 +13,14 @@ import { createModuleLogger } from "./agent-log-stream";
 
 const logger = createModuleLogger("queue-manager");
 
+// Helper to format error for logger
+function formatError(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    return { error: error.message, stack: error.stack };
+  }
+  return { error: String(error) };
+}
+
 // Queue names
 export const QUEUE_NAMES = {
   COLLECTED_ARTICLES: "collected-articles",
@@ -174,7 +182,7 @@ export function getQueue(queueName: string): Queue | null {
 
     return queue;
   } catch (error) {
-    logger.error(`Failed to create queue ${queueName}:`, error);
+    logger.error(`Failed to create queue ${queueName}:`, formatError(error));
     return null;
   }
 }
@@ -206,12 +214,12 @@ function setupQueueEvents(queueName: string, queue: Queue): void {
       if (error.message && error.message.includes("NOAUTH")) {
         return;
       }
-      logger.error(`[${queueName}] Queue error:`, error);
+      logger.error(`[${queueName}] Queue error:`, formatError(error));
     });
 
     queueEvents.set(queueName, events);
   } catch (error) {
-    logger.error(`Failed to setup events for ${queueName}:`, error);
+    logger.error(`Failed to setup events for ${queueName}:`, formatError(error));
   }
 }
 
@@ -243,7 +251,7 @@ export async function getQueueStats(queueName: string) {
       total: waiting + active + completed + failed + delayed,
     };
   } catch (error) {
-    logger.error(`Failed to get stats for ${queueName}:`, error);
+    logger.error(`Failed to get stats for ${queueName}:`, formatError(error));
     return null;
   }
 }
@@ -271,7 +279,7 @@ export async function pauseQueue(queueName: string): Promise<boolean> {
     logger.info(`Queue paused: ${queueName}`);
     return true;
   } catch (error) {
-    logger.error(`Failed to pause queue ${queueName}:`, error);
+    logger.error(`Failed to pause queue ${queueName}:`, formatError(error));
     return false;
   }
 }
@@ -288,7 +296,7 @@ export async function resumeQueue(queueName: string): Promise<boolean> {
     logger.info(`Queue resumed: ${queueName}`);
     return true;
   } catch (error) {
-    logger.error(`Failed to resume queue ${queueName}:`, error);
+    logger.error(`Failed to resume queue ${queueName}:`, formatError(error));
     return false;
   }
 }
@@ -309,7 +317,7 @@ export async function cleanQueue(
     logger.info(`Queue cleaned: ${queueName}`);
     return true;
   } catch (error) {
-    logger.error(`Failed to clean queue ${queueName}:`, error);
+    logger.error(`Failed to clean queue ${queueName}:`, formatError(error));
     return false;
   }
 }
@@ -326,7 +334,7 @@ export async function obliterateQueue(queueName: string): Promise<boolean> {
     logger.info(`Queue obliterated: ${queueName}`);
     return true;
   } catch (error) {
-    logger.error(`Failed to obliterate queue ${queueName}:`, error);
+    logger.error(`Failed to obliterate queue ${queueName}:`, formatError(error));
     return false;
   }
 }
@@ -343,7 +351,7 @@ export async function closeAllQueues(): Promise<void> {
       await events.close();
       logger.info(`Queue events closed: ${name}`);
     } catch (error) {
-      logger.error(`Failed to close events for ${name}:`, error);
+      logger.error(`Failed to close events for ${name}:`, formatError(error));
     }
   }
 
@@ -353,7 +361,7 @@ export async function closeAllQueues(): Promise<void> {
       await queue.close();
       logger.info(`Queue closed: ${name}`);
     } catch (error) {
-      logger.error(`Failed to close queue ${name}:`, error);
+      logger.error(`Failed to close queue ${name}:`, formatError(error));
     }
   }
 

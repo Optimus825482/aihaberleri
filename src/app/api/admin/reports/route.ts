@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
     // Export based on format
     if (format === "excel") {
       const buffer = generateExcelReport(reportData, type);
-      return new NextResponse(buffer, {
+      return new NextResponse(new Uint8Array(buffer), {
         headers: {
           "Content-Type":
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

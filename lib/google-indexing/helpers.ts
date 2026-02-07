@@ -5,6 +5,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { IndexStatus as PrismaIndexStatus } from "@prisma/client";
 import {
   IndexStatus,
   IndexType,
@@ -151,7 +152,7 @@ export async function getActiveBatches() {
     },
     include: {
       _count: {
-        select: { articles: true },
+        select: { items: true },
       },
     },
     orderBy: { startedAt: "desc" },
@@ -258,7 +259,8 @@ export async function updateArticleIndexStatus(
       select: { [retryCountField]: true },
     });
 
-    const currentRetryCount = article?.[retryCountField] || 0;
+    const retryValue = article?.[retryCountField];
+    const currentRetryCount = typeof retryValue === "number" ? retryValue : 0;
     const newRetryCount = currentRetryCount + 1;
 
     updateData[retryCountField] = newRetryCount;
@@ -290,9 +292,13 @@ export async function updateBatchStats(batchId: string) {
   const batch = await prisma.googleIndexingBatch.findUnique({
     where: { id: batchId },
     include: {
-      articles: {
-        select: {
-          googleIndexStatus: true,
+      items: {
+        include: {
+          article: {
+            select: {
+              googleIndexStatus: true,
+            },
+          },
         },
       },
     },
@@ -300,9 +306,18 @@ export async function updateBatchStats(batchId: string) {
 
   if (!batch) return null;
 
-  const stats = batch.articles.reduce(
-    (acc, article) => {
-      switch (article.googleIndexStatus) {
+  const stats = batch.items.reduce(
+    (
+      acc: {
+        successCount: number;
+        failedCount: number;
+        skippedCount: number;
+        submittedCount: number;
+      },
+      item,
+    ) => {
+      const status = item.article.googleIndexStatus;
+      switch (status) {
         case IndexStatus.SUCCESS:
           acc.successCount++;
           break;
@@ -314,7 +329,7 @@ export async function updateBatchStats(batchId: string) {
           break;
       }
 
-      if (article.googleIndexStatus !== IndexStatus.PENDING) {
+      if (status !== IndexStatus.PENDING) {
         acc.submittedCount++;
       }
 
@@ -353,13 +368,17 @@ export async function createIndexingHistory(data: {
   isRetry?: boolean;
   originalId?: string;
 }) {
+  // Generate unique ID for indexing history
+  const id = `idx_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+
   return await prisma.indexingHistory.create({
     data: {
+      id,
       articleId: data.articleId,
       batchId: data.batchId,
       indexType: data.indexType,
       action: data.action,
-      status: data.status,
+      status: data.status as unknown as PrismaIndexStatus,
       requestUrl: data.requestUrl,
       requestPayload: data.requestPayload,
       responseStatus: data.responseStatus,

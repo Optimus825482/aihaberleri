@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Only SUPER_ADMIN and ADMIN can view audit logs
-    if (!["SUPER_ADMIN", "ADMIN"].includes(session.user.role)) {
+    if (!(["SUPER_ADMIN", "ADMIN"] as string[]).includes(session.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

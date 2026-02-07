@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
         batch.platform.split(",").forEach((p) => activePlatforms.add(p.trim()));
       });
 
-      const overlappingPlatforms = platforms.filter((p) =>
+      const overlappingPlatforms = platforms.filter((p: string) =>
         activePlatforms.has(p),
       );
 

@@ -24,19 +24,20 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. Authentication check
-    const session = await auth();
-    if (!session?.user) {
-      return NextResponse.json(
-        { success: false, error: "Yetkisiz erişim" },
-        { status: 401 },
-      );
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
 
     // 2. Parse and validate query parameters
     const { searchParams } = new URL(request.url);
     const queryParams = Object.fromEntries(searchParams.entries());
 
-    const validation = safeValidateRequest(AdvancedFiltersSchema, queryParams);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const validation = safeValidateRequest(
+      AdvancedFiltersSchema as any,
+      queryParams,
+    );
 
     if (!validation.success) {
       return NextResponse.json(
@@ -49,6 +50,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = validation.data as any;
     const {
       page,
       limit,
@@ -63,7 +66,7 @@ export async function GET(request: NextRequest) {
       search,
       sortBy,
       sortOrder,
-    } = validation.data;
+    } = data;
 
     // 3. Check cache
     const cacheKey = `articles:advanced:${JSON.stringify(validation.data)}`;

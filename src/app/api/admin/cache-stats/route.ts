@@ -127,14 +127,14 @@ export async function POST(request: Request) {
 
     if (action === "clear") {
       await cache.clearAll();
-      logger.info("Cache cleared by admin", { userId: session.user?.id });
+      logger.info("Cache cleared by admin", { userId: session.id });
       return NextResponse.json({
         success: true,
         message: "Cache cleared successfully",
       });
     } else if (action === "reset") {
       cache.resetStats();
-      logger.info("Cache stats reset by admin", { userId: session.user?.id });
+      logger.info("Cache stats reset by admin", { userId: session.id });
       return NextResponse.json({
         success: true,
         message: "Stats reset successfully",

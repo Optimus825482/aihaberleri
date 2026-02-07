@@ -11,7 +11,6 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
 import { withAuth } from "@/lib/auth/middleware";
 import { Role } from "@prisma/client";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
@@ -20,116 +19,119 @@ import { withSecurity, auditLog } from "@/middleware/security";
 import {
   bulkOptimizeSchema,
   validateRequest,
-  createValidationErrorResponse,
 } from "@/lib/validation-schemas";
 
 export async function POST(request: NextRequest) {
   // Apply security middleware (rate limiting + input sanitization)
-  return withSecurity(request, "bulkOptimize", async (req) => {
-    // Authentication & Authorization check - ADMIN only
-    const authResult = await withAuth(req, {
-      roles: [Role.ADMIN],
-    });
-
-    if (authResult instanceof NextResponse) {
-      await auditLog(req, "bulk-optimize", "failure", {
-        reason: "unauthorized",
+  return withSecurity(
+    request,
+    "bulkOptimize",
+    async (req): Promise<NextResponse> => {
+      // Authentication & Authorization check - ADMIN only
+      const authResult = await withAuth(req, {
+        roles: [Role.ADMIN],
       });
-      return authResult;
-    }
 
-    try {
-      // Validate request body with Zod schema (Fix #15)
-      const validation = await validateRequest(req, bulkOptimizeSchema);
-
-      if (!validation.success) {
+      if (authResult instanceof NextResponse) {
         await auditLog(req, "bulk-optimize", "failure", {
-          reason: "validation-error",
-          errors: validation.error.issues,
+          reason: "unauthorized",
         });
-        return createValidationErrorResponse(validation.error);
+        return authResult;
       }
 
-      const { articleIds } = validation.data;
+      try {
+        // Validate request body with Zod schema (Fix #15)
+        const validation = await validateRequest(req, bulkOptimizeSchema);
 
-      // Get SEO optimization queue
-      const queue = getQueue(QUEUE_NAMES.SEO_OPTIMIZATION);
-      if (!queue) {
-        await auditLog(req, "bulk-optimize", "failure", {
-          reason: "queue-unavailable",
+        if (!validation.success) {
+          await auditLog(req, "bulk-optimize", "failure", {
+            reason: "validation-error",
+            errors: validation.error.issues,
+          });
+          return NextResponse.json({ error: "Validation error", issues: validation.error.issues }, { status: 400 });
+        }
+
+        const { articleIds } = validation.data;
+
+        // Get SEO optimization queue
+        const queue = getQueue(QUEUE_NAMES.SEO_OPTIMIZATION);
+        if (!queue) {
+          await auditLog(req, "bulk-optimize", "failure", {
+            reason: "queue-unavailable",
+          });
+          return NextResponse.json(
+            { error: "SEO optimization queue not available" },
+            { status: 503 },
+          );
+        }
+
+        // Generate unique job ID
+        const jobId = nanoid();
+
+        // Add job to queue
+        const job = await queue.add(
+          "bulk-optimize",
+          {
+            articleIds,
+            jobId,
+            batchSize: 10, // Default batch size
+          },
+          {
+            jobId: `seo-optimize-${jobId}`,
+            removeOnComplete: {
+              count: 100,
+              age: 24 * 3600, // 24 hours
+            },
+            removeOnFail: {
+              count: 50,
+            },
+            attempts: 3,
+            backoff: {
+              type: "exponential",
+              delay: 5000,
+            },
+          },
+        );
+
+        await auditLog(req, "bulk-optimize", "success", {
+          jobId,
+          articleCount: articleIds.length,
         });
+
         return NextResponse.json(
-          { error: "SEO optimization queue not available" },
-          { status: 503 },
+          {
+            success: true,
+            jobId,
+            bullJobId: job.id,
+            status: "queued",
+            message: `${articleIds.length} makale optimizasyon kuyruğuna eklendi`,
+            progress: {
+              current: 0,
+              total: articleIds.length,
+              percentage: 0,
+            },
+          },
+          { status: 202 }, // Accepted
+        );
+      } catch (error) {
+        console.error("Bulk optimize error:", error);
+
+        await auditLog(req, "bulk-optimize", "failure", {
+          reason: "internal-error",
+          error: error instanceof Error ? error.message : "unknown",
+        });
+
+        return NextResponse.json(
+          {
+            error: "Internal server error",
+            message:
+              error instanceof Error ? error.message : "Unknown error occurred",
+          },
+          { status: 500 },
         );
       }
-
-      // Generate unique job ID
-      const jobId = nanoid();
-
-      // Add job to queue
-      const job = await queue.add(
-        "bulk-optimize",
-        {
-          articleIds,
-          jobId,
-          batchSize: 10, // Default batch size
-        },
-        {
-          jobId: `seo-optimize-${jobId}`,
-          removeOnComplete: {
-            count: 100,
-            age: 24 * 3600, // 24 hours
-          },
-          removeOnFail: {
-            count: 50,
-          },
-          attempts: 3,
-          backoff: {
-            type: "exponential",
-            delay: 5000,
-          },
-        },
-      );
-
-      await auditLog(req, "bulk-optimize", "success", {
-        jobId,
-        articleCount: articleIds.length,
-      });
-
-      return NextResponse.json(
-        {
-          success: true,
-          jobId,
-          bullJobId: job.id,
-          status: "queued",
-          message: `${articleIds.length} makale optimizasyon kuyruğuna eklendi`,
-          progress: {
-            current: 0,
-            total: articleIds.length,
-            percentage: 0,
-          },
-        },
-        { status: 202 }, // Accepted
-      );
-    } catch (error) {
-      console.error("Bulk optimize error:", error);
-
-      await auditLog(req, "bulk-optimize", "failure", {
-        reason: "internal-error",
-        error: error instanceof Error ? error.message : "unknown",
-      });
-
-      return NextResponse.json(
-        {
-          error: "Internal server error",
-          message:
-            error instanceof Error ? error.message : "Unknown error occurred",
-        },
-        { status: 500 },
-      );
-    }
-  });
+    },
+  );
 }
 
 // GET method to check queue status

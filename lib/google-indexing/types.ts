@@ -270,32 +270,36 @@ export interface IndexNowApiRequest {
 // HELPER TYPES
 // ============================================================================
 
-export type ArticleWithIndexing = Prisma.ArticleGetPayload<{
-  include: {
-    googleIndexBatch: true;
-    indexingHistory: {
-      orderBy: { submittedAt: "desc" };
-      take: 5;
-    };
-  };
-}>;
+// Note: Using simple interfaces instead of Prisma.GetPayload to avoid schema mismatches
+export interface ArticleWithIndexing {
+  id: string;
+  title: string;
+  slug: string;
+  googleIndexStatus: IndexStatus | null;
+  googleIndexBatchId: string | null;
+  googleIndexingBatchItems?: Array<{
+    id: string;
+    batchId: string;
+    status: string;
+  }>;
+}
 
-export type BatchWithDetails = Prisma.GoogleIndexingBatchGetPayload<{
-  include: {
-    articles: {
-      select: {
-        id: true;
-        title: true;
-        slug: true;
-        googleIndexStatus: true;
-      };
+export interface BatchWithDetails {
+  id: string;
+  status: string;
+  totalArticles: number;
+  processedArticles: number;
+  failedArticles: number;
+  items: Array<{
+    id: string;
+    article: {
+      id: string;
+      title: string;
+      slug: string;
+      googleIndexStatus: IndexStatus | null;
     };
-    history: {
-      orderBy: { submittedAt: "desc" };
-      take: 10;
-    };
-  };
-}>;
+  }>;
+}
 
 // ============================================================================
 // UTILITY TYPES

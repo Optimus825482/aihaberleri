@@ -13,7 +13,11 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 interface VisitorRecord {
-  createdAt: Date;
+  createdAt?: Date;
+  ipAddress: string | null;
+}
+
+interface AnalyticsRecord {
   ipAddress: string | null;
 }
 
@@ -295,6 +299,7 @@ export async function GET(request: NextRequest) {
       );
 
       const count = realtimeVisitors.filter((v: VisitorRecord) => {
+        if (!v.createdAt) return false;
         const vTime = new Date(v.createdAt).getTime();
         return (
           vTime >= intervalStart.getTime() && vTime < intervalEnd.getTime()
@@ -332,7 +337,7 @@ export async function GET(request: NextRequest) {
     const uniqueIPs = [
       ...new Set(
         recentAnalytics
-          .map((a: VisitorRecord) => a.ipAddress)
+          .map((a: AnalyticsRecord) => a.ipAddress)
           .filter(Boolean) as string[],
       ),
     ].slice(0, 100);

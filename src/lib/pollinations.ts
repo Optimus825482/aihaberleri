@@ -19,6 +19,7 @@ interface PollinationsOptions {
     | "flux"
     | "gptimage";
   enhance?: boolean;
+  nologo?: boolean;
 }
 
 // API Configuration

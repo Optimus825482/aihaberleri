@@ -695,10 +695,4 @@ export function setupCircuitBreakerLogging(): void {
 // Export Types
 // ============================================================================
 
-export type {
-  CircuitBreakerOptions,
-  CircuitMetrics,
-  StateTransition,
-  CircuitBreakerEvents,
-  FallbackOptions,
-};
+// Types already exported at definition site above

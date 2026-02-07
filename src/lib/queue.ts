@@ -34,7 +34,7 @@ export const getNewsAgentQueue = (): Queue | null => {
         removeOnFail: {
           count: 50,
         },
-        timeout: 600000, // 10 minutes timeout for job execution
+        // Note: timeout is set per-job in worker, not in defaultJobOptions
       },
     });
     console.log("✅ News agent queue created");
@@ -208,7 +208,7 @@ export const getNewsletterQueue = (): Queue | null => {
         removeOnFail: {
           count: 20,
         },
-        timeout: 300000, // 5 minutes timeout
+        // Note: timeout is set per-job in worker, not in defaultJobOptions
       },
     });
     console.log("✅ Newsletter queue created");

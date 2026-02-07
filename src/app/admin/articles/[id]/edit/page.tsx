@@ -423,7 +423,7 @@ export default function EditArticlePage({
               <CardContent>
                 <SchedulePublish
                   articleId={id}
-                  currentSchedule={article.scheduledPublishAt}
+                  currentSchedule={article.scheduledPublishAt ? new Date(article.scheduledPublishAt) : null}
                   onScheduled={() => {
                     // Refresh article data
                     fetch(`/api/admin/articles/${id}`)

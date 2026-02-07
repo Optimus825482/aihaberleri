@@ -13,13 +13,13 @@ interface DuplicateGroup {
     id: string;
     title: string;
     views: number;
-    publishedAt: Date;
+    publishedAt: Date | null;
   };
   deleteArticles: Array<{
     id: string;
     title: string;
     views: number;
-    publishedAt: Date;
+    publishedAt: Date | null;
   }>;
 }
 
@@ -98,7 +98,8 @@ async function findDuplicateGroups(): Promise<DuplicateGroup[]> {
         }
         // Second priority: most recent
         return (
-          b.article.publishedAt.getTime() - a.article.publishedAt.getTime()
+          (b.article.publishedAt?.getTime() ?? 0) -
+          (a.article.publishedAt?.getTime() ?? 0)
         );
       });
 
@@ -127,13 +128,13 @@ async function findDuplicateGroups(): Promise<DuplicateGroup[]> {
       console.log(`\n📦 Duplicate Group Found:`);
       console.log(`   ✅ KEEP: "${keepArticle.title}"`);
       console.log(
-        `      Views: ${keepArticle.views}, Published: ${keepArticle.publishedAt.toLocaleString("tr-TR")}`,
+        `      Views: ${keepArticle.views}, Published: ${keepArticle.publishedAt?.toLocaleString("tr-TR") ?? "N/A"}`,
       );
       console.log(`   ❌ DELETE (${deleteArticles.length}):`);
       deleteArticles.forEach((a) => {
         console.log(`      - "${a.title}"`);
         console.log(
-          `        Views: ${a.views}, Published: ${a.publishedAt.toLocaleString("tr-TR")}`,
+          `        Views: ${a.views}, Published: ${a.publishedAt?.toLocaleString("tr-TR") ?? "N/A"}`,
         );
       });
     }

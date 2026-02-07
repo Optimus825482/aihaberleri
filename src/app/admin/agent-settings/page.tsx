@@ -167,9 +167,13 @@ export default function AgentSettingsPage() {
   const fetchRecentLogs = async () => {
     try {
       const response = await fetch("/api/agent/logs?limit=5");
+      if (!response.ok) {
+        console.warn("Agent logs API returned:", response.status);
+        return;
+      }
       const data = await response.json();
-      if (data.success) {
-        setRecentLogs(data.data.logs);
+      if (data.success && data.logs) {
+        setRecentLogs(data.logs);
       }
     } catch (error) {
       console.error("Failed to fetch recent logs:", error);

@@ -54,6 +54,10 @@ export interface SearXNGResult {
   positions: number[];
   score: number;
   category: string;
+  // Optional fields that may be returned by SearXNG
+  publishedDate?: string;
+  thumbnail?: string;
+  img_src?: string;
 }
 
 export interface SearXNGResponse {

@@ -57,7 +57,10 @@ export async function requireAuth(request: NextRequest) {
 /**
  * Authorization check - Role-based access control (RBAC)
  */
-export async function requireRole(request: NextRequest, allowedRoles: Role[]) {
+export async function requireRole(
+  request: NextRequest,
+  allowedRoles: readonly Role[],
+) {
   const authResult = await requireAuth(request);
 
   if (authResult instanceof NextResponse) {

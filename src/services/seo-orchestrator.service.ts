@@ -328,10 +328,10 @@ export class SEOOrchestratorService {
         title: updatedArticle.title,
         content: updatedArticle.content || "",
         excerpt: updatedArticle.excerpt || "",
-        metaDescription: updatedArticle.metaDescription || undefined,
+        metaDescription: updatedArticle.metaDescription || null,
         slug: updatedArticle.slug,
-        keywords: updatedArticle.keywords || undefined,
-        imageUrl: updatedArticle.imageUrl || undefined,
+        keywords: updatedArticle.keywords || null,
+        imageUrl: updatedArticle.imageUrl || null,
       });
 
       // Update SEO score
@@ -348,10 +348,10 @@ export class SEOOrchestratorService {
       await db.sEORecommendation.updateMany({
         where: {
           articleId,
-          status: "PENDING",
+          isResolved: false,
         },
         data: {
-          status: "RESOLVED",
+          isResolved: true,
         },
       });
 

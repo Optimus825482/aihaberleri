@@ -6,7 +6,10 @@ import "dotenv/config";
  */
 
 import { fetchAllRSSFeeds, filterRecentArticles } from "../src/lib/rss";
-import { rankArticlesByTrend, getTrendingAITopics } from "../src/lib/brave";
+import {
+  rankArticlesByTrendBrave,
+  getTrendingAITopics,
+} from "../src/lib/brave";
 import { fetchAINews } from "../src/services/news.service";
 
 async function testRSSTrendIntegration() {

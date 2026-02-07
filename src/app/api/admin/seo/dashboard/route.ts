@@ -55,20 +55,28 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Filter articles with valid seoScore
+    const articlesWithScore = articles.filter((a) => a.seoScore !== null);
     const totalArticles = articles.length;
     const averageScore =
-      totalArticles > 0
+      articlesWithScore.length > 0
         ? Math.round(
-            articles.reduce((sum, a) => sum + a.seoScore, 0) / totalArticles,
+            articlesWithScore.reduce((sum, a) => sum + (a.seoScore ?? 0), 0) /
+              articlesWithScore.length,
           )
         : 0;
 
-    // Score distribution
+    // Score distribution (only articles with scores)
     const scoreDistribution = {
-      excellent: articles.filter((a) => a.seoScore >= 90).length,
-      good: articles.filter((a) => a.seoScore >= 70 && a.seoScore < 90).length,
-      fair: articles.filter((a) => a.seoScore >= 50 && a.seoScore < 70).length,
-      poor: articles.filter((a) => a.seoScore < 50).length,
+      excellent: articlesWithScore.filter((a) => (a.seoScore ?? 0) >= 90)
+        .length,
+      good: articlesWithScore.filter(
+        (a) => (a.seoScore ?? 0) >= 70 && (a.seoScore ?? 0) < 90,
+      ).length,
+      fair: articlesWithScore.filter(
+        (a) => (a.seoScore ?? 0) >= 50 && (a.seoScore ?? 0) < 70,
+      ).length,
+      poor: articlesWithScore.filter((a) => (a.seoScore ?? 0) < 50).length,
     };
 
     // Get unresolved recommendations
@@ -144,7 +152,7 @@ export async function GET(request: NextRequest) {
     // Group by date
     const trendByDate = recentArticles.reduce(
       (acc, article) => {
-        if (!article.publishedAt) return acc;
+        if (!article.publishedAt || article.seoScore === null) return acc;
         const date = article.publishedAt.toISOString().split("T")[0];
         if (!acc[date]) {
           acc[date] = { scores: [], count: 0 };

@@ -126,11 +126,11 @@ async function calculateAllSEOScores() {
     console.log("\n⚠️ En Düşük SEO Skorlu Makaleler:");
     lowestScores.forEach(
       (
-        article: { title: string; seoScore: number; slug: string },
+        article: { title: string; seoScore: number | null; slug: string },
         index: number,
       ) => {
         console.log(
-          `  ${index + 1}. ${article.title.substring(0, 50)}... (${article.seoScore}/100)`,
+          `  ${index + 1}. ${article.title.substring(0, 50)}... (${article.seoScore ?? 0}/100)`,
         );
       },
     );

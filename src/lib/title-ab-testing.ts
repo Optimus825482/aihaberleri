@@ -13,6 +13,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { callDeepSeek } from "@/lib/deepseek";
 
 // ============================================================================
@@ -232,7 +233,7 @@ export async function selectActiveVariant(articleId: string): Promise<string> {
       titleABTest: {
         ...abTest,
         activeVariant: nextVariant,
-      },
+      } as unknown as Prisma.InputJsonValue,
     },
   });
 
@@ -433,7 +434,7 @@ export async function lockWinner(articleId: string): Promise<{
         ...abTest,
         activeVariant: winner,
         locked: true,
-      },
+      } as unknown as Prisma.InputJsonValue,
     },
   });
 
@@ -480,7 +481,7 @@ export async function processWinners(): Promise<{
   // Find articles with A/B test data and enough views
   const articles = await prisma.article.findMany({
     where: {
-      titleABTest: { not: null },
+      titleABTest: { not: Prisma.JsonNull },
       status: "PUBLISHED",
     },
     select: {

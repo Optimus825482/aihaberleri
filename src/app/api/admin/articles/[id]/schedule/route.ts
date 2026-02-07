@@ -43,11 +43,7 @@ export async function POST(
       );
     }
 
-    const article = await scheduleArticle(
-      params.id,
-      publishDate,
-      session.user.id,
-    );
+    const article = await scheduleArticle(params.id, publishDate, session.id);
 
     return NextResponse.json({
       success: true,
@@ -81,7 +77,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const article = await cancelScheduledPublish(params.id, session.user.id);
+    const article = await cancelScheduledPublish(params.id, session.id);
 
     return NextResponse.json({
       success: true,
