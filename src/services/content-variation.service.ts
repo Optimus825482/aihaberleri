@@ -139,9 +139,9 @@ function getDefaultVariations(): ContentVariation[] {
   return [
     {
       angle: "Derinlemesine Analiz",
-      targetAudience: Teknoloji meraklıları,
-      focus: Teknik detaylar ve spesifikasyonlar,
-      titleModifier: "Detaylı İnceleme:"
+      targetAudience: "Teknoloji meraklıları",
+      focus: "Teknik detaylar ve spesifikasyonlar",
+      titleModifier: "Detaylı İnceleme: "
     },
     {
       angle: "Pratik Uygulamalar",
