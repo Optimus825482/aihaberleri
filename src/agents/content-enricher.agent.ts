@@ -421,15 +421,25 @@ export class ContentEnricherAgent extends BaseAgent<
       metaDescription: string;
     };
   }> {
+    // Sanitize text to prevent JSON parsing errors in API calls
+    const sanitizeForPrompt = (text: string): string => {
+      return text
+        .replace(/\\/g, '/')          // Replace backslashes
+        .replace(/[\r\n]+/g, ' ')       // Replace newlines with spaces
+        .replace(/[\x00-\x1f]/g, '')    // Remove control characters
+        .replace(/[\u2028\u2029]/g, ' ')// Remove line/paragraph separators
+        .trim();
+    };
+
     const sourcesText = sources
       .slice(0, 6)
       .map(
         (s, i) => `
 --- SOURCE ${i + 1}: ${new URL(s.url).hostname} ---
-Title: ${s.title}
+Title: ${sanitizeForPrompt(s.title)}
 URL: ${s.url}
 Content:
-${s.content.substring(0, 2000)}
+${sanitizeForPrompt(s.content.substring(0, 1500))}
 `,
       )
       .join("\n");
@@ -545,11 +555,21 @@ Respond in JSON:
       );
       usedProvider = "DeepSeek";
 
-      const enResponseDeepSeek = await callDeepSeek(enPrompt, {
-        model: "deepseek-chat",
-        maxTokens: 6000,
-        temperature: 0.9,
-      });
+      const enResponseDeepSeek = await callDeepSeek(
+        [
+          {
+            role: "system",
+            content:
+              "You are a world-class English news editor. Respond only with valid JSON.",
+          },
+          { role: "user", content: enPrompt },
+        ],
+        {
+          model: "deepseek-chat",
+          maxTokens: 6000,
+          temperature: 0.9,
+        },
+      );
 
       const enJsonMatchDeepSeek = enResponseDeepSeek.match(/\{[\s\S]*\}/);
       if (!enJsonMatchDeepSeek) {
