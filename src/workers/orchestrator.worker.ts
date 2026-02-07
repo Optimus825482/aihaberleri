@@ -252,7 +252,9 @@ async function publishArticlesToDatabase(
               logger.success(`IndexNow: ${slug} bildirildi`);
             }
           } catch (err) {
-            logger.error(`IndexNow failed for ${slug}:`, err);
+            logger.error(`IndexNow failed for ${slug}:`, {
+              error: err instanceof Error ? err.message : String(err),
+            });
           }
         })();
 
@@ -291,7 +293,9 @@ async function publishArticlesToDatabase(
               );
             }
           } catch (err) {
-            logger.error(`Google Indexing API failed for ${slug}:`, err);
+            logger.error(`Google Indexing API failed for ${slug}:`, {
+              error: err instanceof Error ? err.message : String(err),
+            });
           }
         })();
 
@@ -299,7 +303,13 @@ async function publishArticlesToDatabase(
         (async () => {
           try {
             const { postToFacebook } = await import("@/lib/social/facebook");
-            const facebookSuccess = await postToFacebook(trArticle.id);
+            const facebookSuccess = await postToFacebook({
+              title: synthesizedContent.tr.title,
+              slug,
+              excerpt: synthesizedContent.tr.excerpt || "",
+              imageUrl: imageUrl,
+              categoryName: categoryRecord.name,
+            });
 
             // Facebook başarılıysa facebookShared'i true yap
             if (facebookSuccess) {
@@ -310,7 +320,7 @@ async function publishArticlesToDatabase(
               logger.success(`Facebook: ${slug} paylaşıldı`);
             }
           } catch (err) {
-            logger.error(`Facebook failed for ${slug}:`, err);
+            logger.error(`Facebook failed for ${slug}:`, { error: err instanceof Error ? err.message : String(err) });
           }
         })();
 
@@ -323,14 +333,16 @@ async function publishArticlesToDatabase(
               slug,
               excerpt: synthesizedContent.tr.excerpt || "",
               imageUrl: imageUrl,
-              categoryName: category.name,
+              categoryName: categoryRecord.name,
             });
 
             if (blueskyResult) {
               logger.success(`Bluesky: ${slug} paylaşıldı`);
             }
           } catch (err) {
-            logger.error(`Bluesky failed for ${slug}:`, err);
+            logger.error(`Bluesky failed for ${slug}:`, {
+              error: err instanceof Error ? err.message : String(err),
+            });
           }
         })();
 
@@ -343,14 +355,16 @@ async function publishArticlesToDatabase(
               slug,
               excerpt: synthesizedContent.tr.excerpt || "",
               imageUrl: imageUrl,
-              categoryName: category.name,
+              categoryName: categoryRecord.name,
             });
 
             if (mastodonResult) {
               logger.success(`Mastodon: ${slug} paylaşıldı`);
             }
           } catch (err) {
-            logger.error(`Mastodon failed for ${slug}:`, err);
+            logger.error(`Mastodon failed for ${slug}:`, {
+              error: err instanceof Error ? err.message : String(err),
+            });
           }
         })();
 
@@ -363,14 +377,16 @@ async function publishArticlesToDatabase(
               slug,
               excerpt: synthesizedContent.tr.excerpt || "",
               imageUrl: imageUrl,
-              categoryName: category.name,
+              categoryName: categoryRecord.name,
             });
 
             if (tumblrResult) {
               logger.success(`Tumblr: ${slug} paylaşıldı`);
             }
           } catch (err) {
-            logger.error(`Tumblr failed for ${slug}:`, err);
+            logger.error(`Tumblr failed for ${slug}:`, {
+              error: err instanceof Error ? err.message : String(err),
+            });
           }
         })();
       }
@@ -428,7 +444,9 @@ async function publishArticlesToDatabase(
       );
     } catch (error) {
       failedCount++;
-      logger.error(`Failed to publish article:`, error);
+      logger.error(`Failed to publish article:`, {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 
@@ -455,7 +473,9 @@ async function main() {
     await db.$queryRaw`SELECT 1`;
     logger.success("Database connected");
   } catch (error) {
-    logger.error("Database connection failed:", error);
+    logger.error("Database connection failed:", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     process.exit(1);
   }
 
@@ -476,7 +496,9 @@ async function main() {
       );
       logger.info(`💓 Heartbeat: ${new Date().toLocaleString("tr-TR")}`);
     } catch (error) {
-      logger.error("Heartbeat failed:", error);
+      logger.error("Heartbeat failed:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }, 30000);
 
@@ -486,7 +508,9 @@ async function main() {
       try {
         await monitorPipelineHealth();
       } catch (error) {
-        logger.error("Health check failed:", error);
+        logger.error("Health check failed:", {
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     },
     5 * 60 * 1000,
@@ -558,11 +582,16 @@ process.on("SIGINT", async () => {
 
 // Error handlers
 process.on("unhandledRejection", (reason, promise) => {
-  logger.error("Unhandled Rejection:", reason);
+  logger.error("Unhandled Rejection:", {
+    reason: reason instanceof Error ? reason.message : String(reason),
+  });
 });
 
 process.on("uncaughtException", (error) => {
-  logger.error("Uncaught Exception:", error);
+  logger.error("Uncaught Exception:", {
+    error: error.message,
+    stack: error.stack,
+  });
   setTimeout(() => {
     process.exit(1);
   }, 1000);
@@ -570,6 +599,8 @@ process.on("uncaughtException", (error) => {
 
 // Start orchestrator
 main().catch((error) => {
-  logger.error("Fatal error:", error);
+  logger.error("Fatal error:", {
+    error: error instanceof Error ? error.message : String(error),
+  });
   process.exit(1);
 });
