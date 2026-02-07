@@ -46,9 +46,9 @@ ENV NODE_ENV=production
 
 # Limit build parallelism to prevent OOM on low-memory servers
 # - max-old-space-size: 4GB for large projects with heavy deps (Puppeteer, Firebase, Sentry)
-# - gc-flags: Optimize garbage collection to prevent thrashing
 # - NEXT_BUILD_WORKERS: Limit parallel workers to 1
-ENV NODE_OPTIONS="--max-old-space-size=4096 --gc-interval=100 --optimize-for-size"
+# Note: --gc-interval and --optimize-for-size are NOT allowed in NODE_OPTIONS
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV NEXT_BUILD_WORKERS=1
 ENV NEXT_TELEMETRY_DISABLED=1
 
