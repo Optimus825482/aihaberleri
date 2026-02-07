@@ -5,9 +5,9 @@
 @tailwind utilities;
 
 @layer base {
-  /* Light mode - for potential future use */
+  /* Light mode - Stitch Design System */
   :root {
-    --background: 210 6% 97%;
+    --background: 0 0% 100%;
       --foreground: 210 11% 15%;
     --card: 0 0% 100%;
     --card-foreground: 210 11% 15%;
@@ -77,8 +77,12 @@
     @apply border-border;
   }
 
+  html {
+    @apply dark;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-ai-background-dark text-foreground;
   }
 }
 
@@ -177,4 +181,13 @@
   .active\:scale-\[0\.98\]:active {
     transform: scale(0.98);
   }
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

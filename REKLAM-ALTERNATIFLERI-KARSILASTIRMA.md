@@ -501,3 +501,7 @@ AdSense ve Ezoic'ten red almak cesaret kırıcı olabilir, ancak birçok güçl�
 **Hazırlayan:** AI Haberleri Geliştirme Ekibi  
 **Kaynak:** Resmi ağ web siteleri, blogger deneyimleri, sektör karşılaştırmaları
 
+
+
+claude mcp add stitch --transport http https://stitch.googleapis.com/mcp --header "X-Goog-Api-Key: AQ.Ab8RN6LHPQ9g_gVI454eh27wTWhjZmJAjgJu8xbYhGrnboyp4Q" -s user
+

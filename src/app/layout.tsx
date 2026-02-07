@@ -129,7 +129,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang="tr" className="dark" suppressHydrationWarning>
       <head>
         {/* Preconnect for LCP/FCP optimization */}
         <link rel="preconnect" href="https://images.aihaberleri.org" />

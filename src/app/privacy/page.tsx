@@ -1,7 +1,8 @@
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Gizlilik Politikası | AI Haberleri",
+  title: "Gizlilik ve Hizmet Şartları | AI Haberleri",
   description:
     "AI Haberleri gizlilik politikası. Kişisel verilerinizin nasıl toplandığını, kullanıldığını ve korunduğunu öğrenin.",
   keywords: ["gizlilik politikası", "KVKK", "kişisel veri", "çerez politikası", "AI Haberleri"],
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Gizlilik Politikası | AI Haberleri",
+    title: "Gizlilik ve Hizmet Şartları | AI Haberleri",
     description: "AI Haberleri gizlilik politikası ve kişisel veri koruma uygulamaları.",
     url: "https://aihaberleri.org/privacy",
     siteName: "AI Haberleri",
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Gizlilik Politikası | AI Haberleri",
+    title: "Gizlilik ve Hizmet Şartları | AI Haberleri",
     description: "AI Haberleri gizlilik politikası ve kişisel veri koruma uygulamaları.",
     site: "@AiHaberleri",
   },
@@ -38,269 +39,261 @@ export const dynamic = "force-dynamic";
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen flex flex-col bg-ai-background-dark">
-      <main className="flex-1 py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl font-bold mb-8 text-white">Gizlilik Politikası</h1>
+      <main className="flex-grow">
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          {/* Page Header */}
+          <div className="mb-12">
+            <div className="flex items-center gap-2 text-ai-primary font-medium text-sm mb-4">
+              <span className="material-symbols-outlined text-[18px]">verified_user</span>
+              <span>Yasal Merkez</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight mb-4 text-white">
+              Gizlilik ve Hizmet Şartları
+            </h1>
+            <p className="text-lg text-ai-text-secondary leading-relaxed max-w-3xl">
+              AI Haberleri platformunu kullanırken haklarınızı ve sorumluluklarınızı anlamanız bizim için önemlidir.
+              Şeffaflık ilkemiz gereği tüm detayları aşağıda bulabilirsiniz.
+            </p>
+            <div className="mt-6 inline-flex items-center gap-2 text-sm text-ai-text-secondary bg-ai-surface-card px-4 py-2 rounded-full border border-ai-surface-border">
+              <span className="material-symbols-outlined text-[16px]">schedule</span>
+              Son Güncelleme: {new Date().toLocaleDateString("tr-TR", { year: "numeric", month: "long", day: "numeric" })}
+            </div>
+          </div>
 
-            <div className="prose prose-lg max-w-none prose-invert">
-              <p className="text-ai-text-secondary mb-6">
-                Son güncelleme:{" "}
-                {new Date().toLocaleDateString("tr-TR", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            {/* Sidebar Navigation */}
+            <aside className="hidden lg:block lg:col-span-3">
+              <nav className="sticky top-28 space-y-1">
+                <p className="px-3 text-xs font-bold text-ai-text-muted uppercase tracking-wider mb-4">İçindekiler</p>
+                {[
+                  { id: "giris", title: "1. Giriş" },
+                  { id: "veri", title: "2. Toplanan Veriler" },
+                  { id: "ai", title: "3. AI ve Model Eğitimi" },
+                  { id: "cerez", title: "4. Çerez Politikası" },
+                  { id: "haklar", title: "5. Kullanıcı Hakları" },
+                  { id: "iletisim", title: "6. İletişim" },
+                ].map((item) => (
+                  <a
+                    key={item.id}
+                    href={`#${item.id}`}
+                    className="group flex items-center px-3 py-2 text-sm font-medium text-ai-text-secondary hover:text-white hover:bg-ai-surface-card rounded-lg transition-colors"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-transparent group-hover:bg-ai-primary mr-3 transition-colors"></span>
+                    {item.title}
+                  </a>
+                ))}
+              </nav>
+            </aside>
 
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">1. Giriş</h2>
-                <p className="text-ai-text-secondary leading-relaxed">
-                  AI Haberleri olarak, kullanıcılarımızın gizliliğine saygı
-                  duyuyoruz. Bu gizlilik politikası, web sitemizi ziyaret
-                  ettiğinizde hangi bilgilerin toplandığını, nasıl
-                  kullanıldığını ve korunduğunu açıklamaktadır.
-                </p>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">
-                  2. Toplanan Bilgiler
-                </h2>
-
-                <h3 className="text-xl font-semibold mb-3 mt-6 text-white">
-                  2.1. Otomatik Olarak Toplanan Bilgiler
-                </h3>
-                <p className="text-ai-text-secondary leading-relaxed mb-4">
-                  Web sitemizi ziyaret ettiğinizde, tarayıcınız otomatik olarak
-                  bazı bilgileri paylaşır:
-                </p>
-                <ul className="list-disc pl-6 text-ai-text-secondary space-y-2">
-                  <li>IP adresi</li>
-                  <li>Tarayıcı türü ve versiyonu</li>
-                  <li>İşletim sistemi</li>
-                  <li>Ziyaret edilen sayfalar ve ziyaret süresi</li>
-                  <li>Referans URL (sitemize nereden geldiğiniz)</li>
-                </ul>
-
-                <h3 className="text-xl font-semibold mb-3 mt-6 text-white">
-                  2.2. Bülten Aboneliği
-                </h3>
-                <p className="text-ai-text-secondary leading-relaxed">
-                  Bültenimize abone olduğunuzda, e-posta adresinizi topluyoruz.
-                  Bu bilgi sadece size haber bülteni göndermek için kullanılır.
-                </p>
-
-                <h3 className="text-xl font-semibold mb-3 mt-6 text-white">
-                  2.3. Bildirim İzinleri
-                </h3>
-                <p className="text-ai-text-secondary leading-relaxed">
-                  Push bildirimlerine izin verdiğinizde, cihazınıza bildirim
-                  göndermek için gerekli token bilgisi saklanır. Bu bilgi üçüncü
-                  taraflarla paylaşılmaz.
-                </p>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">
-                  3. Bilgilerin Kullanımı
-                </h2>
-                <p className="text-ai-text-secondary leading-relaxed mb-4">
-                  Topladığımız bilgileri şu amaçlarla kullanıyoruz:
-                </p>
-                <ul className="list-disc pl-6 text-ai-text-secondary space-y-2">
-                  <li>Web sitesinin işlevselliğini sağlamak ve iyileştirmek</li>
-                  <li>Kullanıcı deneyimini kişiselleştirmek</li>
-                  <li>Bülten abonelerine haber göndermek</li>
-                  <li>Push bildirimleri göndermek (izin verildiğinde)</li>
-                  <li>
-                    Site trafiğini analiz etmek ve istatistikler oluşturmak
-                  </li>
-                  <li>Teknik sorunları tespit etmek ve çözmek</li>
-                </ul>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">
-                  4. Çerezler (Cookies)
-                </h2>
-                <p className="text-ai-text-secondary leading-relaxed mb-4">
-                  Web sitemiz, kullanıcı deneyimini iyileştirmek için çerezler
-                  kullanır:
-                </p>
-
-                <h3 className="text-xl font-semibold mb-3 mt-6 text-white">
-                  4.1. Zorunlu Çerezler
-                </h3>
-                <p className="text-ai-text-secondary leading-relaxed">
-                  Web sitesinin temel işlevlerini sağlamak için gereklidir. Bu
-                  çerezler olmadan site düzgün çalışmaz.
-                </p>
-
-                <h3 className="text-xl font-semibold mb-3 mt-6 text-white">
-                  4.2. Tercih Çerezleri
-                </h3>
-                <p className="text-ai-text-secondary leading-relaxed">
-                  Dil tercihi, tema (açık/koyu mod) gibi ayarlarınızı hatırlar.
-                </p>
-
-                <h3 className="text-xl font-semibold mb-3 mt-6 text-white">
-                  4.3. Analitik Çerezler
-                </h3>
-                <p className="text-ai-text-secondary leading-relaxed">
-                  Site kullanımını analiz etmek ve iyileştirmeler yapmak için
-                  kullanılır.
-                </p>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">5. Bilgi Güvenliği</h2>
-                <p className="text-ai-text-secondary leading-relaxed mb-4">
-                  Kişisel bilgilerinizi korumak için endüstri standardı güvenlik
-                  önlemleri alıyoruz:
-                </p>
-                <ul className="list-disc pl-6 text-ai-text-secondary space-y-2">
-                  <li>SSL/TLS şifreleme ile güvenli veri iletimi</li>
-                  <li>Güvenli sunucu altyapısı</li>
-                  <li>Düzenli güvenlik güncellemeleri</li>
-                  <li>Sınırlı erişim kontrolleri</li>
-                  <li>Veri yedekleme sistemleri</li>
-                </ul>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">
-                  6. Üçüncü Taraf Hizmetler
-                </h2>
-                <p className="text-ai-text-secondary leading-relaxed mb-4">
-                  Web sitemiz aşağıdaki üçüncü taraf hizmetleri kullanabilir:
-                </p>
-                <ul className="list-disc pl-6 text-ai-text-secondary space-y-2">
-                  <li>
-                    <strong className="text-white">Firebase Cloud Messaging:</strong> Push bildirimleri
-                    için
-                  </li>
-                  <li>
-                    <strong>Vercel Analytics:</strong> Site performansı ve
-                    kullanım istatistikleri için
-                  </li>
-                </ul>
-                <p className="text-ai-text-secondary leading-relaxed mt-4">
-                  Bu hizmetlerin kendi gizlilik politikaları vardır ve bu
-                  politikalar tarafından yönetilirler.
-                </p>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">
-                  7. Kullanıcı Hakları
-                </h2>
-                <p className="text-ai-text-secondary leading-relaxed mb-4">
-                  KVKK (Kişisel Verilerin Korunması Kanunu) kapsamında aşağıdaki
-                  haklara sahipsiniz:
-                </p>
-                <ul className="list-disc pl-6 text-ai-text-secondary space-y-2">
-                  <li>Kişisel verilerinizin işlenip işlenmediğini öğrenme</li>
-                  <li>İşlenmişse buna ilişkin bilgi talep etme</li>
-                  <li>
-                    İşlenme amacını ve amacına uygun kullanılıp kullanılmadığını
-                    öğrenme
-                  </li>
-                  <li>
-                    Yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri
-                    bilme
-                  </li>
-                  <li>Eksik veya yanlış işlenmişse düzeltilmesini isteme</li>
-                  <li>Verilerin silinmesini veya yok edilmesini isteme</li>
-                  <li>Bülten aboneliğinden çıkma</li>
-                  <li>Push bildirimlerini devre dışı bırakma</li>
-                </ul>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">
-                  8. Çocukların Gizliliği
-                </h2>
-                <p className="text-ai-text-secondary leading-relaxed">
-                  Web sitemiz 13 yaşın altındaki çocuklardan bilerek kişisel
-                  bilgi toplamaz. Eğer 13 yaşından küçükseniz, lütfen ebeveyn
-                  veya vasinizin izni olmadan kişisel bilgi paylaşmayın.
-                </p>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">
-                  9. Veri Saklama Süresi
-                </h2>
-                <p className="text-ai-text-secondary leading-relaxed">
-                  Kişisel verileriniz, toplama amacı için gerekli olan süre
-                  boyunca saklanır:
-                </p>
-                <ul className="list-disc pl-6 text-ai-text-secondary space-y-2 mt-4">
-                  <li>
-                    <strong className="text-white">Bülten e-postaları:</strong> Abonelikten çıkana
-                    kadar
-                  </li>
-                  <li>
-                    <strong className="text-white">Push bildirim token'ları:</strong> İzin iptal
-                    edilene kadar
-                  </li>
-                  <li>
-                    <strong className="text-white">Log kayıtları:</strong> Maksimum 90 gün
-                  </li>
-                  <li>
-                    <strong className="text-white">Analitik veriler:</strong> Anonim hale getirilerek 2
-                    yıl
-                  </li>
-                </ul>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">
-                  10. Politika Değişiklikleri
-                </h2>
-                <p className="text-ai-text-secondary leading-relaxed">
-                  Bu gizlilik politikasını zaman zaman güncelleyebiliriz. Önemli
-                  değişiklikler olduğunda, web sitemizde duyuru yapacağız.
-                  Politikayı düzenli olarak gözden geçirmenizi öneririz.
-                </p>
-              </section>
-
-              <section className="mb-8">
-                <h2 className="text-2xl font-bold mb-4 text-white">11. İletişim</h2>
-                <p className="text-ai-text-secondary leading-relaxed mb-4">
-                  Gizlilik politikamız hakkında sorularınız veya talepleriniz
-                  için bizimle iletişime geçebilirsiniz:
-                </p>
-                <div className="bg-ai-surface-card border border-ai-surface-border rounded-xl p-6">
-                  <p className="text-ai-text-secondary mb-2">
-                    <strong className="text-white">E-posta:</strong>{" "}
-                    <a
-                      href="mailto:privacy@aihaberleri.org"
-                      className="text-ai-primary hover:underline"
-                    >
-                      privacy@aihaberleri.org
-                    </a>
+            {/* Content Area */}
+            <div className="col-span-1 lg:col-span-9 space-y-16">
+              {/* Section 1: Introduction */}
+              <section className="scroll-mt-28" id="giris">
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 text-ai-primary font-bold text-lg">1</span>
+                  <h2 className="text-2xl font-bold text-white m-0">Giriş</h2>
+                </div>
+                <div className="bg-ai-surface-card p-8 rounded-xl border border-ai-surface-border">
+                  <p className="text-ai-text-secondary leading-relaxed mb-4">
+                    AI Haberleri (&quot;Şirket&quot;, &quot;Biz&quot;), gizliliğinize büyük önem vermektedir. Bu Gizlilik Politikası, web sitemizi ziyaret ettiğinizde veya hizmetlerimizi kullandığınızda kişisel verilerinizin nasıl toplandığını, kullanıldığını ve korunduğunu açıklamaktadır.
                   </p>
-                  <p className="text-ai-text-secondary">
-                    <strong className="text-white">Genel İletişim:</strong>{" "}
-                    <a
-                      href="mailto:info@aihaberleri.org"
-                      className="text-ai-primary hover:underline"
-                    >
-                      info@aihaberleri.org
-                    </a>
+                  <p className="text-ai-text-secondary leading-relaxed">
+                    Hizmetlerimizi kullanarak, bu politikada belirtilen uygulamaları kabul etmiş sayılırsınız. Bu politika, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) ve Avrupa Genel Veri Koruma Tüzüğü (GDPR) standartlarına uygun olarak hazırlanmıştır.
                   </p>
                 </div>
               </section>
 
-              <div className="bg-ai-surface-card border-l-4 border-ai-primary p-6 rounded-r-xl mt-8">
-                <p className="text-sm text-ai-text-secondary">
-                  Bu gizlilik politikası, Türkiye Cumhuriyeti Kişisel Verilerin
-                  Korunması Kanunu (KVKK) ve Avrupa Birliği Genel Veri Koruma
-                  Yönetmeliği (GDPR) ile uyumlu olarak hazırlanmıştır.
+              {/* Section 2: Data Collection */}
+              <section className="scroll-mt-28" id="veri">
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 text-ai-primary font-bold text-lg">2</span>
+                  <h2 className="text-2xl font-bold text-white m-0">Toplanan Veriler</h2>
+                </div>
+                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                  <div className="bg-ai-surface-card p-6 rounded-xl border border-ai-surface-border">
+                    <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-400 mb-4">
+                      <span className="material-symbols-outlined">person</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-2">Kişisel Bilgiler</h3>
+                    <p className="text-sm text-ai-text-secondary">
+                      Ad, soyad, e-posta adresi ve hesap oluştururken sağladığınız diğer iletişim bilgileri.
+                    </p>
+                  </div>
+                  <div className="bg-ai-surface-card p-6 rounded-xl border border-ai-surface-border">
+                    <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4">
+                      <span className="material-symbols-outlined">query_stats</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-2">Kullanım Verileri</h3>
+                    <p className="text-sm text-ai-text-secondary">
+                      IP adresi, tarayıcı türü, ziyaret edilen sayfalar ve platform üzerindeki etkileşim süreleri.
+                    </p>
+                  </div>
+                </div>
+                <p className="text-ai-text-secondary leading-relaxed">
+                  Topladığımız veriler, size kişiselleştirilmiş bir AI haber deneyimi sunmak, teknik sorunları gidermek ve platform güvenliğini sağlamak amacıyla işlenmektedir.
                 </p>
-              </div>
+              </section>
+
+              {/* Section 3: AI Transparency */}
+              <section className="scroll-mt-28" id="ai">
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 text-ai-primary font-bold text-lg">3</span>
+                  <h2 className="text-2xl font-bold text-white m-0">AI ve Model Eğitimi</h2>
+                </div>
+                <div className="bg-ai-primary/5 border border-ai-primary/20 rounded-xl p-6">
+                  <div className="flex gap-4">
+                    <div className="shrink-0">
+                      <span className="material-symbols-outlined text-ai-primary text-3xl">psychology</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-2">AI Şeffaflık Beyanı</h3>
+                      <p className="text-ai-text-secondary text-sm mb-4">
+                        AI Haberleri olarak yapay zeka teknolojilerini içerik önerme ve özetleme amacıyla kullanmaktayız. Ancak, kişisel verileriniz (özel mesajlar, profil detayları) üçüncü taraf <strong className="text-white">Genel Yapay Zeka (LLM) modellerinin eğitimi için kullanılmaz veya satılmaz.</strong>
+                      </p>
+                      <ul className="space-y-2 text-sm text-ai-text-secondary">
+                        <li className="flex items-start gap-2">
+                          <span className="material-symbols-outlined text-green-400 text-[18px] mt-0.5">check_circle</span>
+                          Okuma alışkanlıklarınız sadece size özel öneri algoritmamızda kullanılır.
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="material-symbols-outlined text-green-400 text-[18px] mt-0.5">check_circle</span>
+                          Verileriniz anonimleştirilerek trend analizlerinde kullanılabilir.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Section 4: Cookies */}
+              <section className="scroll-mt-28" id="cerez">
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 text-ai-primary font-bold text-lg">4</span>
+                  <h2 className="text-2xl font-bold text-white m-0">Çerez Politikası</h2>
+                </div>
+                <div className="bg-ai-surface-card rounded-xl border border-ai-surface-border overflow-hidden">
+                  {[
+                    {
+                      title: "Zorunlu Çerezler",
+                      icon: "cookie",
+                      desc: "Web sitesinin düzgün çalışması için gereklidir. Oturum açma durumu, güvenlik tercihleri ve temel site fonksiyonlarını içerir. Bu çerezler kapatılamaz.",
+                      open: true,
+                    },
+                    {
+                      title: "Analitik Çerezler",
+                      icon: "analytics",
+                      desc: "Ziyaretçi sayısını ve trafik kaynaklarını saymamıza olanak tanır. Hangi sayfaların en popüler olduğunu görmemize yardımcı olur. Tüm bilgiler anonim olarak toplanır.",
+                      open: false,
+                    },
+                    {
+                      title: "Pazarlama Çerezler",
+                      icon: "ads_click",
+                      desc: "Reklam ortaklarımız tarafından ilgi alanlarınıza göre profil oluşturmak ve diğer sitelerde alakalı reklamlar göstermek için kullanılabilir.",
+                      open: false,
+                    },
+                  ].map((item, index) => (
+                    <details key={index} className="group p-4 border-b border-ai-surface-border last:border-b-0" open={item.open}>
+                      <summary className="flex cursor-pointer items-center justify-between font-medium text-white hover:text-ai-primary">
+                        <div className="flex items-center gap-3">
+                          <span className="material-symbols-outlined text-ai-text-muted">{item.icon}</span>
+                          <span>{item.title}</span>
+                        </div>
+                        <span className="transition group-open:rotate-180">
+                          <span className="material-symbols-outlined">expand_more</span>
+                        </span>
+                      </summary>
+                      <div className="mt-4 text-sm text-ai-text-secondary pl-9">
+                        {item.desc}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </section>
+
+              {/* Section 5: User Rights */}
+              <section className="scroll-mt-28" id="haklar">
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 text-ai-primary font-bold text-lg">5</span>
+                  <h2 className="text-2xl font-bold text-white m-0">Kullanıcı Hakları</h2>
+                </div>
+                <p className="text-ai-text-secondary leading-relaxed mb-6">
+                  KVKK ve GDPR kapsamında aşağıdaki haklara sahipsiniz:
+                </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="flex gap-3 p-4 rounded-lg bg-ai-surface-card border border-ai-surface-border">
+                    <span className="material-symbols-outlined text-ai-primary">visibility</span>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">Erişim Hakkı</h4>
+                      <p className="text-xs text-ai-text-muted mt-1">Verilerinizin bir kopyasını talep etme.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 p-4 rounded-lg bg-ai-surface-card border border-ai-surface-border">
+                    <span className="material-symbols-outlined text-ai-primary">edit</span>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">Düzeltme Hakkı</h4>
+                      <p className="text-xs text-ai-text-muted mt-1">Yanlış veya eksik bilgileri güncelleme.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 p-4 rounded-lg bg-ai-surface-card border border-ai-surface-border">
+                    <span className="material-symbols-outlined text-ai-primary">delete</span>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">Silme Hakkı</h4>
+                      <p className="text-xs text-ai-text-muted mt-1">Hesabınızı ve verilerinizi kalıcı olarak silme.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 p-4 rounded-lg bg-ai-surface-card border border-ai-surface-border">
+                    <span className="material-symbols-outlined text-ai-primary">output</span>
+                    <div>
+                      <h4 className="font-bold text-white text-sm">Taşınabilirlik</h4>
+                      <p className="text-xs text-ai-text-muted mt-1">Verilerinizi başka bir servise aktarma.</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Section 6: Contact */}
+              <section className="scroll-mt-28" id="iletisim">
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 text-ai-primary font-bold text-lg">6</span>
+                  <h2 className="text-2xl font-bold text-white m-0">İletişim</h2>
+                </div>
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-ai-primary to-blue-700 p-8 md:p-10 text-white">
+                  <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+                  <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 rounded-full bg-white/10 blur-2xl"></div>
+                  <div className="relative z-10">
+                    <h3 className="text-xl md:text-2xl font-bold mb-4">Sorularınız mı var?</h3>
+                    <p className="text-blue-100 mb-8 max-w-xl">
+                      Gizlilik politikamız veya verilerinizin işlenmesi hakkında herhangi bir sorunuz varsa, Veri Koruma Görevlimiz (DPO) ile iletişime geçmekten çekinmeyin.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <a
+                        href="mailto:hukuk@aihaberleri.com"
+                        className="flex items-center justify-center gap-2 bg-white hover:bg-blue-50 text-ai-primary font-bold py-3 px-6 rounded-lg transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">mail</span>
+                        hukuk@aihaberleri.com
+                      </a>
+                      <Link
+                        href="/contact"
+                        className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-6 rounded-lg backdrop-blur-sm transition-colors border border-white/10"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">help</span>
+                        Yardım Merkezi
+                      </Link>
+                    </div>
+                    <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-4 text-sm text-blue-100">
+                      <div>
+                        <p className="font-medium text-white mb-1">Adres:</p>
+                        <p>AI Haberleri Ltd. Şti.<br/>Teknopark İstanbul, 34906 Pendik/İstanbul</p>
+                      </div>
+                      <div className="sm:text-right">
+                        <p className="font-medium text-white mb-1">Telefon:</p>
+                        <p>+90 (216) 555 0123</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
         </div>

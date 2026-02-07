@@ -1,7 +1,9 @@
 import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
-import { HeroCarousel } from "@/components/HeroCarousel";
-import { MostReadSidebarClient } from "@/components/MostReadSidebarClient";
+import { HeroSection } from "@/components/HeroSection";
+import { TrendingSidebar } from "@/components/TrendingSidebar";
+import { NewsletterCTA } from "@/components/NewsletterCTA";
+import { CategoryFilters } from "@/components/CategoryFilters";
 import Link from "next/link";
 
 import {
@@ -42,17 +44,17 @@ export default async function HomePage() {
     );
   }
 
-  // Fetch settings, articles, and categories in PARALLEL
+  // Fetch data
   let settings = {
     heroCarouselCount: 5,
     heroCarouselInterval: 6000,
   };
   let articles: any[] = [];
-  let heroArticles: any[] = [];
+  let featuredArticle: any = null;
   let categories: any[] = [];
 
   try {
-    const [settingsFromDb, articlesFromDb, heroArticlesFromDb, categoriesFromDb] =
+    const [settingsFromDb, articlesFromDb, featuredFromDb, categoriesFromDb] =
       await Promise.all([
         // Query 1: Settings
         db.setting.findMany({
@@ -66,7 +68,7 @@ export default async function HomePage() {
             value: true,
           },
         }),
-        // Query 2: Latest articles
+        // Query 2: Latest articles (excluding featured)
         db.article.findMany({
           where: {
             status: "PUBLISHED",
@@ -80,6 +82,7 @@ export default async function HomePage() {
             imageUrl: true,
             publishedAt: true,
             views: true,
+            trendScore: true,
             category: {
               select: {
                 name: true,
@@ -90,10 +93,10 @@ export default async function HomePage() {
           orderBy: {
             publishedAt: "desc",
           },
-          take: 12,
+          take: 8,
         }),
-        // Query 3: Hero articles
-        db.article.findMany({
+        // Query 3: Featured article (highest views + recent)
+        db.article.findFirst({
           where: {
             status: "PUBLISHED",
             publishedAt: { not: null },
@@ -106,6 +109,7 @@ export default async function HomePage() {
             imageUrl: true,
             publishedAt: true,
             views: true,
+            trendScore: true,
             category: {
               select: {
                 name: true,
@@ -113,8 +117,7 @@ export default async function HomePage() {
               },
             },
           },
-          orderBy: [{ publishedAt: "desc" }, { views: "desc" }],
-          take: 5,
+          orderBy: [{ views: "desc" }, { publishedAt: "desc" }],
         }),
         // Query 4: Categories for filter chips
         db.category.findMany({
@@ -138,7 +141,7 @@ export default async function HomePage() {
     };
 
     articles = articlesFromDb;
-    heroArticles = heroArticlesFromDb;
+    featuredArticle = featuredFromDb;
     categories = categoriesFromDb;
   } catch (error) {
     console.error("Failed to fetch data:", error);
@@ -153,69 +156,42 @@ export default async function HomePage() {
           "@graph": [organizationSchema, websiteSchema],
         })}
       />
-      <main className="flex-1">
-        {/* Hero Carousel - Manşet Haberleri */}
-        <HeroCarousel
-          articles={heroArticles}
-          autoPlayInterval={settings.heroCarouselInterval}
-          locale="tr"
-        />
+      <main className="flex-grow">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {/* Hero Section - Öne Çıkan Haber */}
+          <HeroSection
+            featuredArticle={featuredArticle}
+            locale="tr"
+          />
 
-        {/* Category Filter Chips */}
-        <section className="border-b border-ai-surface-border bg-ai-surface-dark/50">
-          <div className="container mx-auto px-4 py-4 max-w-7xl">
-            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              <Link
-                href="/"
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-ai-primary text-white text-sm font-medium whitespace-nowrap transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px]">apps</span>
-                Tümü
-              </Link>
-              {categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={`/category/${category.slug}`}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-ai-surface-card hover:bg-ai-surface-hover text-ai-text-secondary hover:text-white text-sm font-medium whitespace-nowrap transition-colors border border-ai-surface-border"
-                >
-                  {category.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
+          {/* Newsletter CTA Cards */}
+          <NewsletterCTA locale="tr" />
 
-        {/* Main Content Area - Two Column Layout */}
-        <section className="container mx-auto px-4 py-10 lg:py-14 max-w-7xl">
-          <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
+          {/* Category Filter Chips */}
+          <CategoryFilters
+            categories={categories}
+            locale="tr"
+          />
+
+          {/* Main Content Area - Two Column Layout */}
+          <div className="flex flex-col gap-12 lg:flex-row">
             {/* Left Column - Latest News */}
             <div className="flex-1">
               {/* Section Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-primary/10">
-                    <span className="material-symbols-outlined text-ai-primary text-[22px]">
-                      newspaper
-                    </span>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">Son Haberler</h2>
-                    <p className="text-sm text-ai-text-muted">Güncel AI gelişmeleri</p>
-                  </div>
-                </div>
+              <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                  Son Gelişmeler
+                </h2>
                 <Link
                   href="/haberler"
-                  className="flex items-center gap-1 text-sm text-ai-primary hover:text-ai-primary-hover transition-colors group"
+                  className="text-sm font-medium text-ai-primary hover:text-ai-primary/80"
                 >
-                  Tümünü Gör
-                  <span className="material-symbols-outlined text-[18px] group-hover:translate-x-0.5 transition-transform">
-                    arrow_forward
-                  </span>
+                  Tümünü Gör →
                 </Link>
               </div>
 
               {/* News Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
                 {articles.map((article, index: number) => (
                   <ArticleCard
                     key={article.id}
@@ -226,7 +202,7 @@ export default async function HomePage() {
               </div>
 
               {articles.length === 0 && (
-                <div className="text-center py-16 bg-ai-surface-card rounded-xl border border-ai-surface-border">
+                <div className="text-center py-16 bg-white dark:bg-ai-surface-card rounded-xl border border-gray-200 dark:border-ai-surface-border">
                   <span className="material-symbols-outlined text-[48px] text-ai-text-muted mb-4">
                     article
                   </span>
@@ -239,68 +215,17 @@ export default async function HomePage() {
               {/* Load More Button */}
               {articles.length > 0 && (
                 <div className="mt-8 text-center">
-                  <Link
-                    href="/haberler"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-ai-surface-card hover:bg-ai-surface-hover border border-ai-surface-border rounded-xl text-white font-medium transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">expand_more</span>
-                    Daha Fazla Haber
-                  </Link>
+                  <button className="rounded-lg border border-gray-300 dark:border-ai-surface-border bg-transparent px-6 py-3 text-sm font-bold text-slate-700 dark:text-white hover:bg-gray-100 dark:hover:bg-ai-surface-border transition-colors">
+                    Daha Fazla Yükle
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Right Column - Sidebars */}
-            <div className="w-full lg:w-[380px] xl:w-[420px] flex-shrink-0 space-y-6">
-              {/* Most Read Sidebar */}
-              <MostReadSidebarClient />
-
-              {/* AI Tools CTA Card */}
-              <div className="bg-gradient-to-br from-ai-primary/20 to-ai-surface-card rounded-xl border border-ai-surface-border p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-primary/20">
-                    <span className="material-symbols-outlined text-ai-primary text-[22px]">
-                      psychology
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white">AI Araçları</h3>
-                </div>
-                <p className="text-sm text-ai-text-secondary mb-4">
-                  En popüler yapay zeka araçlarını keşfedin ve üretkenliğinizi artırın.
-                </p>
-                <Link
-                  href="/category/ai-araclari"
-                  className="inline-flex items-center gap-2 text-sm text-ai-primary hover:text-ai-primary-hover font-medium transition-colors"
-                >
-                  Araçları İncele
-                  <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-                </Link>
-              </div>
-
-              {/* Newsletter Card */}
-              <div className="bg-ai-surface-card rounded-xl border border-ai-surface-border p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-primary/20">
-                    <span className="material-symbols-outlined text-ai-primary text-[22px]">
-                      mail
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Haftalık Bülten</h3>
-                </div>
-                <p className="text-sm text-ai-text-secondary mb-4">
-                  Her hafta en önemli AI haberlerini e-posta kutunuza alalım.
-                </p>
-                <Link
-                  href="#newsletter"
-                  className="inline-flex items-center justify-center w-full gap-2 px-4 py-2.5 bg-ai-primary hover:bg-ai-primary-hover text-white text-sm font-medium rounded-lg transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px]">notifications</span>
-                  Abone Ol
-                </Link>
-              </div>
-            </div>
+            {/* Right Column - Sidebar */}
+            <TrendingSidebar locale="tr" />
           </div>
-        </section>
+        </div>
       </main>
     </div>
   );
