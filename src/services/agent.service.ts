@@ -277,7 +277,8 @@ export async function executeNewsAgent(
     });
 
     // Get article count from database settings (priority) or env vars (fallback)
-    // FIXED: System runs every 15 minutes and publishes exactly 1 article
+    // OPTIMIZED: Select ONLY 1 BEST article BEFORE expensive processing!
+    // This prevents wasting API calls on 3-5 articles when only 1 is published.
     const minSetting = await db.setting.findUnique({
       where: { key: "agent.minArticles" },
     });
@@ -285,23 +286,29 @@ export async function executeNewsAgent(
       where: { key: "agent.maxArticles" },
     });
 
-    // Default: 3-5 articles per run to ensure at least some pass relevance filter
-    // If relevance filter rejects some, we still have backup candidates
-    const envMin = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "3");
-    const envMax = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "5");
+    // FIXED: Always process exactly 1 article to maximize efficiency
+    // Before: 3-5 articles → ALL processed → only 1 published = 75% waste!
+    // After:  1 article → processed → published = 100% efficient!
+    const envMin = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "1");
+    const envMax = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "1");
 
-    // Use DB setting if exists, otherwise env var (which defaults to 1)
+    // Use DB setting if exists, otherwise env var (defaults to 1)
     const minArticles = minSetting ? parseInt(minSetting.value) : envMin;
     const maxArticles = maxSetting ? parseInt(maxSetting.value) : envMax;
+
+    // CRITICAL: Select THE BEST 1 article before expensive pipeline
+    // Selection quality is ensured by: Duplicate → Trend Score → Topic Diversity
+    const targetCount = Math.min(
+      Math.floor(Math.random() * (maxArticles - minArticles + 1)) + minArticles,
+      1, // HARD LIMIT: Never process more than 1 article!
+    );
 
     console.log(
       `📊 Haber sayısı ayarları: min=${minArticles}, max=${maxArticles}`,
     );
-
-    const targetCount =
-      Math.floor(Math.random() * (maxArticles - minArticles + 1)) + minArticles;
-
-    console.log(`🎯 Hedef haber sayısı: ${targetCount}`);
+    console.log(
+      `🎯 Hedef haber sayısı: ${targetCount} (optimized single-article mode)`,
+    );
 
     // Live log: Smart filtering
     await liveLog.deepseek.info(
@@ -512,8 +519,9 @@ export async function executeNewsAgent(
     const emailNotify =
       emailSettings.find((s: any) => s.key === "agent.emailNotifications")
         ?.value !== "false";
-    const adminEmail =
-      emailSettings.find((s: any) => s.key === "agent.adminEmail")?.value;
+    const adminEmail = emailSettings.find(
+      (s: any) => s.key === "agent.adminEmail",
+    )?.value;
 
     if (!adminEmail) {
       console.warn(

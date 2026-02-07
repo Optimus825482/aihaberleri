@@ -174,20 +174,24 @@ Agent, environment değişkenleri ile yapılandırılır:
 # Agent'ı etkinleştir/devre dışı bırak
 AGENT_ENABLED=true
 
-# Her çalıştırmada makale sayısı
-AGENT_MIN_ARTICLES_PER_RUN=2
-AGENT_MAX_ARTICLES_PER_RUN=3
+# Her çalıştırmada makale sayısı (OPTIMIZED: 1 makale = 100% verimli!)
+# Sistem ÖNCE en iyi 1 haberi seçer, SONRA işler - API israfı 0!
+AGENT_MIN_ARTICLES_PER_RUN=1
+AGENT_MAX_ARTICLES_PER_RUN=1
 
 # Çalıştırmalar arası minimum saat
 AGENT_MIN_INTERVAL_HOURS=5
 ```
 
-### Nasıl Çalışır
+### Nasıl Çalışır (Optimized Pipeline)
 
-1. **Haber Keşfi**: Brave Search API kullanarak yapay zeka haberlerini arar
-2. **İçerik Analizi**: DeepSeek Reasoner en iyi makaleleri analiz eder ve seçer
-3. **İçerik Yeniden Yazımı**: Makaleleri benzersiz ve SEO-optimize edilmiş şekilde yeniden yazar
-4. **Görsel Oluşturma**: Unsplash'tan ilgili görselleri alır
+1. **Haber Toplama**: RSS kaynaklarından yapay zeka haberlerini toplar
+2. **Duplicate Filtreleme**: Son 12 saatteki yayınlarla karşılaştırır
+3. **Trend Skorlama**: Makaleleri trend puanlarına göre sıralar
+4. **EN İYİ 1 SEÇİMİ**: Sadece en yüksek puanlı 1 makale işlenir ★
+5. **İçerik Zenginleştirme**: SearXNG ile kaynak toplama, DeepSeek ile yeniden yazım
+6. **Görsel Oluşturma**: Pollinations.ai ile AI görseli
+7. **SEO Optimizasyonu**: Meta başlık, açıklama, slug optimizasyonu
 5. **Yayınlama**: Web sitesine otomatik olarak yayınlar
 6. **Zamanlama**: Sonraki çalıştırmayı planlar (5-8 saat sonra, rastgele zaman)
 

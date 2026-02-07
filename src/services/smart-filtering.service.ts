@@ -50,18 +50,18 @@ export interface SmartFilteringResult {
  * - 75+ haber → 0.75 gün (18 saat) max
  */
 export function calculateDynamicTimeWindow(articleCount: number): number {
-  // Sınırlar
-  const MIN_HOURS = 1.5;   // Minimum 1.5 saat (çok az haber için)
-  const MAX_HOURS = 18;    // Maksimum 18 saat (çok fazla haber için)
-  
+  // Sınırlar - OPTIMIZED: Min 12 saat garantili!
+  const MIN_HOURS = 12; // ✅ Minimum 12 saat GARANTİLİ (duplicate koruması!)
+  const MAX_HOURS = 18; // Maksimum 18 saat (çok fazla haber için)
+
   // Referans noktaları
   const REF_ARTICLES = 50; // 50 haber = 12 saat (orta nokta)
   const REF_HOURS = 12;
-  
+
   if (articleCount <= 0) {
     return MIN_HOURS / 24; // 1.5 saat
   }
-  
+
   // Logaritmik ölçekleme: log(articleCount) / log(50) * 12
   // Bu formül:
   // - 5 haber için ~1.5 saat
@@ -69,18 +69,20 @@ export function calculateDynamicTimeWindow(articleCount: number): number {
   // - 25 haber için ~8 saat
   // - 50 haber için 12 saat
   // - 75+ haber için 18 saat (max)
-  
+
   const logScale = Math.log(Math.max(articleCount, 1)) / Math.log(REF_ARTICLES);
   let hours = REF_HOURS * logScale;
-  
+
   // Alt ve üst sınır uygula
   hours = Math.max(MIN_HOURS, Math.min(MAX_HOURS, hours));
-  
+
   // Gün cinsine çevir
   const days = hours / 24;
-  
-  console.log(`📊 Dynamic Time Window: ${articleCount} haber → ${hours.toFixed(1)} saat (${(days * 24).toFixed(1)}h)`);
-  
+
+  console.log(
+    `📊 Dynamic Time Window: ${articleCount} haber → ${hours.toFixed(1)} saat (${(days * 24).toFixed(1)}h)`,
+  );
+
   return days;
 }
 
