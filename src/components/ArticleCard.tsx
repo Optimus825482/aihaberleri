@@ -16,7 +16,7 @@ interface ArticleCardProps {
     views: number;
     content?: string;
     isTrending?: boolean;
-    trendScore?: number | null;
+    trendScore?: number | null | undefined;
     category: {
       name: string;
       slug: string;
@@ -99,7 +99,7 @@ export function ArticleCard({
   };
 
   // Generate star rating based on trend score (0-10 scale -> 0-5 stars)
-  const getStarRating = (score: number | null) => {
+  const getStarRating = (score: number | null | undefined) => {
     const rating = score ? (score / 2) : 3.5;
     const fullStars = Math.floor(rating);
     const hasHalf = rating % 1 >= 0.5;
