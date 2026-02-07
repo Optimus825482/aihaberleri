@@ -155,12 +155,17 @@ export async function POST(
     // Log the re-evaluation
     await db.agentLog.create({
       data: {
-        status: "COMPLETED",
+        status: "SUCCESS",
         articlesCreated: 0,
         articlesScraped: 0,
         duration: Math.round((Date.now() - startTime) / 1000),
         errors: [],
-        category: article.category.slug,
+        metadata: {
+          type: "re-evaluate",
+          articleId: article.id,
+          category: article.category.slug,
+          note: note.substring(0, 100),
+        },
       },
     });
 
