@@ -49,15 +49,20 @@ export const TREND_CONFIG = {
       "singularity",
       "Futurology",
     ],
-    // Reddit JSON API (no auth required)
-    baseUrl: "https://www.reddit.com",
-    userAgent: "AIHaberleri/1.0 (AI News Aggregator)",
+    // Reddit OAuth2 API (required since 2024)
+    baseUrl: "https://oauth.reddit.com",
+    publicUrl: "https://www.reddit.com", // Fallback for unauthenticated
+    authUrl: "https://www.reddit.com/api/v1/access_token",
+    clientId: process.env.REDDIT_CLIENT_ID || "",
+    clientSecret: process.env.REDDIT_CLIENT_SECRET || "",
+    userAgent:
+      process.env.REDDIT_USER_AGENT || "AIHaberleri/1.0 (AI News Aggregator)",
     postsPerSubreddit: 10,
   },
   // How often to fetch (in minutes)
   fetchIntervalMinutes: 15,
-  // How long trends are valid (in hours)
-  trendExpiryHours: 1,
+  // How long trends are valid (in hours) - extended to 6 hours for better visibility
+  trendExpiryHours: 6,
   // Cleanup: delete trends older than X days
   cleanupDays: 30,
 };
@@ -101,21 +106,91 @@ interface RedditResponse {
 }
 
 // ============================================================================
-// REDDIT FETCHER (Free, no auth required)
+// REDDIT FETCHER (OAuth2 Authentication Required since 2024)
 // ============================================================================
+
+// Cache for Reddit access token
+let redditAccessToken: string | null = null;
+let redditTokenExpiry: number = 0;
+
+/**
+ * Get Reddit OAuth2 access token
+ */
+async function getRedditAccessToken(): Promise<string | null> {
+  const { clientId, clientSecret, userAgent, authUrl } = TREND_CONFIG.reddit;
+
+  // Check if we have valid credentials
+  if (!clientId || !clientSecret) {
+    logger.warn(
+      "Reddit API credentials not configured. Set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET.",
+    );
+    return null;
+  }
+
+  // Return cached token if still valid
+  if (redditAccessToken && Date.now() < redditTokenExpiry) {
+    return redditAccessToken;
+  }
+
+  try {
+    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
+      "base64",
+    );
+
+    const response = await fetch(authUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": userAgent,
+      },
+      body: "grant_type=client_credentials",
+    });
+
+    if (!response.ok) {
+      logger.error(
+        `Reddit auth failed: ${response.status} ${response.statusText}`,
+      );
+      return null;
+    }
+
+    const data = await response.json();
+    redditAccessToken = data.access_token;
+    // Token expires in ~1 hour, refresh 5 minutes early
+    redditTokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
+
+    logger.info("✅ Reddit OAuth2 token acquired");
+    return redditAccessToken;
+  } catch (error) {
+    logger.error(
+      `Reddit auth error: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return null;
+  }
+}
 
 /**
  * Fetch hot posts from a Reddit subreddit
  */
 async function fetchRedditHot(subreddit: string): Promise<NormalizedTrend[]> {
-  const url = `${TREND_CONFIG.reddit.baseUrl}/r/${subreddit}/hot.json?limit=${TREND_CONFIG.reddit.postsPerSubreddit}`;
+  const token = await getRedditAccessToken();
+
+  // Use OAuth endpoint if we have a token, otherwise try public (may fail with 403)
+  const baseUrl = token
+    ? TREND_CONFIG.reddit.baseUrl
+    : TREND_CONFIG.reddit.publicUrl;
+  const url = `${baseUrl}/r/${subreddit}/hot.json?limit=${TREND_CONFIG.reddit.postsPerSubreddit}`;
 
   try {
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": TREND_CONFIG.reddit.userAgent,
-      },
-    });
+    const headers: Record<string, string> = {
+      "User-Agent": TREND_CONFIG.reddit.userAgent,
+    };
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, { headers });
 
     if (!response.ok) {
       logger.warn(`Reddit API error for r/${subreddit}: ${response.status}`);

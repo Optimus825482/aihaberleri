@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
-    // Get all active trends
+    // Get all trends (both active and expired) - show last 24 hours
     const trends = await db.$queryRaw<any[]>`
       SELECT 
         id,
@@ -21,24 +21,25 @@ export async function GET(request: NextRequest) {
         volume,
         sentiment,
         keywords,
-        "isActive",
-        "createdAt",
+        ("expiresAt" > NOW()) as "isActive",
+        "fetchedAt" as "createdAt",
         "expiresAt"
       FROM "SocialTrend"
-      WHERE "isActive" = true
-      ORDER BY score DESC
-      LIMIT 50
+      WHERE "fetchedAt" > NOW() - INTERVAL '24 hours'
+      ORDER BY "fetchedAt" DESC, score DESC
+      LIMIT 100
     `;
 
-    // Get stats
+    // Get stats - count all trends and active ones separately
     const statsRaw = await db.$queryRaw<any[]>`
       SELECT 
         COUNT(*) as "totalTrends",
-        COUNT(*) FILTER (WHERE "isActive" = true) as "activeTrends",
+        COUNT(*) FILTER (WHERE "expiresAt" > NOW()) as "activeTrends",
         COUNT(*) FILTER (WHERE platform = 'twitter') as "twitterTrends",
         COUNT(*) FILTER (WHERE platform = 'reddit') as "redditTrends",
         COALESCE(AVG(score), 0) as "avgTrendScore"
       FROM "SocialTrend"
+      WHERE "fetchedAt" > NOW() - INTERVAL '24 hours'
     `;
 
     // Get enriched articles count
