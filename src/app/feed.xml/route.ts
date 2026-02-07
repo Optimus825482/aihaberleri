@@ -9,6 +9,9 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
+// Force dynamic to prevent build-time database access
+export const dynamic = "force-dynamic";
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
 const SITE_NAME = "AI Haberleri";
 const SITE_DESCRIPTION = "Yapay Zeka ve Teknoloji Haberleri";

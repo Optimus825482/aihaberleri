@@ -10,9 +10,9 @@ import {
   generateJsonLd,
 } from "@/lib/seo";
 
-// Dynamic rendering with ISR caching for better performance
-export const dynamic = "auto"; // Let Next.js decide (hybrid approach)
-export const revalidate = 300; // Cache for 5 minutes
+// Force dynamic rendering - database queries require runtime
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function HomePage() {
   // Structured Data
