@@ -241,7 +241,7 @@ SADECE GEÇERLİ JSON YANIT VER.`;
       );
 
       return changes;
-    };, "Content optimization failed");
+    }, "Content optimization failed");
   }
 
   /**
