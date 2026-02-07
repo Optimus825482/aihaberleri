@@ -18,6 +18,7 @@ import { LayoutWrapper } from "@/components/layout-wrapper";
 import { AudioProvider } from "@/context/AudioContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { VisitorTracker } from "@/components/VisitorTracker";
+import { MontagAds } from "@/components/MontagAds";
 
 // Initialize scheduler (in-process fallback if worker not available)
 import "@/lib/init-scheduler";
@@ -133,14 +134,6 @@ export default function RootLayout({
         {/* Monetag Verification */}
         <meta name="monetag" content="fafd2571ef3afa004030a9d1e9bf206a" />
 
-        {/* Monetag Multitag Script */}
-        <script
-          src="https://quge5.com/88/tag.min.js"
-          data-zone="209156"
-          async
-          data-cfasync="false"
-        />
-
         {/* Preconnect for LCP/FCP optimization */}
         <link rel="preconnect" href="https://images.aihaberleri.org" />
         <link
@@ -176,6 +169,7 @@ export default function RootLayout({
               <ClientProviders />
               <ServiceWorkerRegistration />
               <TailwindIndicator />
+              <MontagAds />
             </AudioProvider>
           </ErrorBoundary>
         </ThemeProvider>

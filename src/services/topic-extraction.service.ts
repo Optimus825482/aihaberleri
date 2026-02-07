@@ -631,26 +631,56 @@ function extractKeywords(title: string): string[] {
 }
 
 /**
- * NEW: Early duplicate filtering by topic, URL, entities, and keywords
- * Filters out articles that already exist in database (last N days)
- * AND filters duplicates within the same batch (cross-article comparison)
- * This should be called BEFORE expensive operations (Brave API, scoring, etc.)
+ * 🔴 CRITICAL FIX: Early duplicate filtering by URL (FULL DATABASE) + topic (recent)
+ * URL DUPLICATES are checked against ENTIRE database (no time limit)
+ * Topic duplicates are checked against recent articles only
+ * This MUST run BEFORE expensive operations (Brave API, DeepSeek, etc.)
  */
 export async function filterDuplicatesByTopicAndUrl(
   articles: ArticleWithTopic[],
-  timeWindowDays: number = 0.5, // 12 saate düşürüldü
+  timeWindowDays: number = 2, // Topic için 2 gün
 ): Promise<ArticleWithTopic[]> {
-  console.log(`\n🔍 Early duplicate filtering başlatılıyor...`);
+  console.log(`\n🔍 ====== EARLY DUPLICATE FILTERING (CRITICAL) ======`);
   console.log(`   Input: ${articles.length} haber`);
-  console.log(`   Time window: ${timeWindowDays} gün`);
+  console.log(`   Topic time window: ${timeWindowDays} gün`);
+  console.log(`   URL check: TÜM VERİTABANI (limitsiz)`);
 
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - timeWindowDays);
 
   const unique: ArticleWithTopic[] = [];
-  let duplicateCount = 0;
+  let urlDuplicateCount = 0;
+  let topicDuplicateCount = 0;
+  let batchDuplicateCount = 0;
 
-  // Fetch recent articles from database ONCE (for performance)
+  // 🔴 CRITICAL: Fetch ALL URLs from database (no time limit!)
+  // This is the main fix - URL duplicates should be checked against ENTIRE history
+  console.log(`   📡 Fetching ALL URLs from database...`);
+  const allUrls = await db.article.findMany({
+    select: {
+      sourceUrl: true,
+    },
+    where: {
+      sourceUrl: { not: null },
+    },
+  });
+
+  // Create a Set for O(1) lookup + normalized URL prefix set
+  const existingUrls = new Set<string>();
+  const existingUrlPrefixes = new Set<string>();
+  
+  for (const article of allUrls) {
+    if (article.sourceUrl) {
+      existingUrls.add(article.sourceUrl);
+      // Also store URL without query params for prefix matching
+      const urlWithoutParams = article.sourceUrl.split("?")[0];
+      existingUrlPrefixes.add(urlWithoutParams);
+    }
+  }
+  
+  console.log(`   📚 URL Database: ${existingUrls.size} unique URLs loaded`);
+
+  // Fetch recent articles for TOPIC check (time-limited)
   const recentArticles = await db.article.findMany({
     where: {
       publishedAt: { gte: cutoffDate },
@@ -662,79 +692,72 @@ export async function filterDuplicatesByTopicAndUrl(
       sourceUrl: true,
       publishedAt: true,
     },
-    take: 100, // Check last 100 articles
+    take: 500, // Son 500 makale (topic için)
   });
 
   console.log(
-    `   📚 Checking against ${recentArticles.length} recent articles in database`,
+    `   📚 Topic Database: ${recentArticles.length} recent articles (${timeWindowDays} gün)`,
   );
 
   for (const article of articles) {
     let isDuplicate = false;
 
-    // 1. Topic-based check (database)
-    if (article.topic) {
+    // 🔴 FIRST: URL-based check (ENTIRE DATABASE - most important!)
+    if (article.url) {
+      const urlWithoutParams = article.url.split("?")[0];
+      
+      // Check against FULL database URLs (Set lookup - O(1))
+      if (existingUrls.has(article.url) || existingUrlPrefixes.has(urlWithoutParams)) {
+        console.log(
+          `   ⏭️  URL DUPLICATE (DB): ${article.url.substring(0, 60)}...`,
+        );
+        urlDuplicateCount++;
+        isDuplicate = true;
+        continue;
+      }
+
+      // Check URL against ALREADY SELECTED articles in this batch
+      const batchUrlDuplicate = unique.find(
+        (u) => u.url === article.url || u.url?.split("?")[0] === urlWithoutParams,
+      );
+      if (batchUrlDuplicate) {
+        console.log(
+          `   ⏭️  URL DUPLICATE (BATCH): ${article.url.substring(0, 60)}...`,
+        );
+        batchDuplicateCount++;
+        isDuplicate = true;
+        continue;
+      }
+    }
+
+    // 2. Topic-based check (recent database only)
+    if (!isDuplicate && article.topic) {
       const existingByTopic = recentArticles.find(
         (a) => a.topic === article.topic,
       );
 
       if (existingByTopic) {
         console.log(
-          `   ⏭️  SKIP (topic duplicate in DB): ${article.topic} - "${article.title.substring(0, 50)}..."`,
+          `   ⏭️  TOPIC DUPLICATE (DB): ${article.topic} - "${article.title.substring(0, 50)}..."`,
         );
-        duplicateCount++;
+        topicDuplicateCount++;
         isDuplicate = true;
         continue;
       }
 
-      // 🆕 CRITICAL: Check topic against ALREADY SELECTED articles in this batch
+      // Check topic against ALREADY SELECTED articles in this batch
       const batchDuplicate = unique.find((u) => u.topic === article.topic);
       if (batchDuplicate) {
         console.log(
-          `   ⏭️  SKIP (topic duplicate in BATCH): ${article.topic} - "${article.title.substring(0, 50)}..."`,
+          `   ⏭️  TOPIC DUPLICATE (BATCH): ${article.topic}`,
         );
-        console.log(
-          `      Already selected: "${batchDuplicate.title.substring(0, 50)}..."`,
-        );
-        duplicateCount++;
+        batchDuplicateCount++;
         isDuplicate = true;
         continue;
       }
     }
 
-    // 2. URL-based check (database)
-    if (!isDuplicate && article.url) {
-      const urlWithoutParams = article.url.split("?")[0];
-      const existingByUrl = recentArticles.find(
-        (a) =>
-          a.sourceUrl === article.url ||
-          a.sourceUrl?.startsWith(urlWithoutParams),
-      );
-
-      if (existingByUrl) {
-        console.log(
-          `   ⏭️  SKIP (URL duplicate in DB): ${article.url.substring(0, 60)}...`,
-        );
-        duplicateCount++;
-        isDuplicate = true;
-        continue;
-      }
-
-      // 🆕 CRITICAL: Check URL against ALREADY SELECTED articles in this batch
-      const batchUrlDuplicate = unique.find(
-        (u) => u.url === article.url || u.url?.startsWith(urlWithoutParams),
-      );
-      if (batchUrlDuplicate) {
-        console.log(
-          `   ⏭️  SKIP (URL duplicate in BATCH): ${article.url.substring(0, 60)}...`,
-        );
-        duplicateCount++;
-        isDuplicate = true;
-        continue;
-      }
-    }
-
-    // 3. 🆕 CRITICAL: Entity+keyword check (database AND batch)
+    // 3. Entity+keyword check (database AND batch)
     if (!isDuplicate) {
       const entities = extractEntities(article.title);
       if (entities.length >= 1) {
@@ -760,20 +783,16 @@ export async function filterDuplicatesByTopicAndUrl(
             // If 50%+ keyword similarity with same entities = duplicate (esnek modda)
             if (similarity >= 0.5) {
               console.log(
-                `   ⏭️  SKIP (entity+keyword duplicate in DB): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
+                `   ⏭️  ENTITY DUPLICATE (DB): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
               );
-              console.log(`      New: "${article.title.substring(0, 50)}..."`);
-              console.log(
-                `      Existing: "${existing.title.substring(0, 50)}..." (${existing.publishedAt?.toLocaleDateString()})`,
-              );
-              duplicateCount++;
+              topicDuplicateCount++;
               isDuplicate = true;
               break;
             }
           }
         }
 
-        // 🆕 CRITICAL: Check against ALREADY SELECTED articles in this batch
+        // Check against ALREADY SELECTED articles in this batch
         if (!isDuplicate) {
           for (const selected of unique) {
             const selectedEntities = extractEntities(selected.title);
@@ -794,15 +813,9 @@ export async function filterDuplicatesByTopicAndUrl(
               // If 50%+ keyword similarity with same entities = duplicate (esnek modda)
               if (similarity >= 0.5) {
                 console.log(
-                  `   ⏭️  SKIP (entity+keyword duplicate in BATCH): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
+                  `   ⏭️  ENTITY DUPLICATE (BATCH): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
                 );
-                console.log(
-                  `      New: "${article.title.substring(0, 50)}..."`,
-                );
-                console.log(
-                  `      Already selected: "${selected.title.substring(0, 50)}..."`,
-                );
-                duplicateCount++;
+                batchDuplicateCount++;
                 isDuplicate = true;
                 break;
               }
@@ -814,17 +827,31 @@ export async function filterDuplicatesByTopicAndUrl(
       }
     }
 
-    // ✅ Unique!
+    // ✅ Unique! Add URL to tracked set for batch checking
+    if (article.url) {
+      existingUrls.add(article.url);
+      existingUrlPrefixes.add(article.url.split("?")[0]);
+    }
     unique.push(article);
   }
 
-  console.log(`\n📊 Early filtering özeti:`);
+  const totalDuplicates = urlDuplicateCount + topicDuplicateCount + batchDuplicateCount;
+  
+  console.log(`\n📊 ====== EARLY FILTERING SONUÇLARI ======`);
   console.log(`   Input: ${articles.length} haber`);
-  console.log(`   Duplicate: ${duplicateCount} haber`);
-  console.log(`   Unique: ${unique.length} haber`);
+  console.log(`   ❌ URL Duplicates (DB): ${urlDuplicateCount}`);
+  console.log(`   ❌ Topic Duplicates: ${topicDuplicateCount}`);
+  console.log(`   ❌ Batch Duplicates: ${batchDuplicateCount}`);
+  console.log(`   ─────────────────────────`);
+  console.log(`   ❌ TOTAL FILTERED: ${totalDuplicates} haber`);
+  console.log(`   ✅ UNIQUE REMAINING: ${unique.length} haber`);
   console.log(
-    `   Duplicate rate: ${((duplicateCount / articles.length) * 100).toFixed(1)}%`,
+    `   📈 Duplicate Rate: ${((totalDuplicates / articles.length) * 100).toFixed(1)}%`,
   );
+  console.log(
+    `   💰 API Savings: %${((totalDuplicates / articles.length) * 100).toFixed(0)} Brave/DeepSeek call saved!`,
+  );
+  console.log(`==========================================\n`);
 
   return unique;
 }
