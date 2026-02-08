@@ -111,8 +111,12 @@ export default async function EnglishHomePage() {
 
   return (
     <main className="min-h-screen">
-      {/* Hero Carousel */}
-      <HeroCarousel articles={heroArticles} locale="en" />
+      {/* Hero Carousel - Latest 10 News (10 seconds auto-play) */}
+      <HeroCarousel
+        articles={heroArticles}
+        locale="en"
+        autoPlayInterval={10000}
+      />
 
       {/* Latest News */}
       <section className="py-16 bg-gray-50 dark:bg-gray-900">

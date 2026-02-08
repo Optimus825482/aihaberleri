@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
-import { HeroSection } from "@/components/HeroSection";
+import { HeroCarousel } from "@/components/HeroCarousel";
 import { TrendingSidebar } from "@/components/TrendingSidebar";
 import { NewsletterCTA } from "@/components/NewsletterCTA";
 import { CategoryFilters } from "@/components/CategoryFilters";
@@ -159,10 +159,14 @@ export default async function HomePage() {
         })}
       />
       <main className="flex-grow">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          {/* Hero Section - Öne Çıkan Haberler (Slider) */}
-          <HeroSection featuredArticles={featuredArticles} locale="tr" />
+        {/* Hero Carousel - Son 10 Haber (10 saniye aralıklarla otomatik geçiş) */}
+        <HeroCarousel
+          articles={featuredArticles}
+          locale="tr"
+          autoPlayInterval={10000}
+        />
 
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {/* Newsletter CTA Cards */}
           <NewsletterCTA locale="tr" />
 

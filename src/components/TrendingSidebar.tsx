@@ -27,7 +27,12 @@ type TimePeriod = "today" | "week" | "month" | "all";
 const aiTools: AITool[] = [
   { id: "1", name: "ChatGPT Plus", category: "Chatbot", pricingType: "free" },
   { id: "2", name: "Midjourney", category: "Image Gen", pricingType: "paid" },
-  { id: "3", name: "Notion AI", category: "Productivity", pricingType: "freemium" },
+  {
+    id: "3",
+    name: "Notion AI",
+    category: "Productivity",
+    pricingType: "freemium",
+  },
   { id: "4", name: "Claude", category: "Chatbot", pricingType: "freemium" },
   { id: "5", name: "GitHub Copilot", category: "Coding", pricingType: "paid" },
 ];
@@ -96,7 +101,9 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
           month: "month",
           all: "all",
         };
-        const res = await fetch(`/api/most-read?period=${periodMap[timePeriod]}&limit=5`);
+        const res = await fetch(
+          `/api/most-read?period=${periodMap[timePeriod]}&limit=5`,
+        );
         if (res.ok) {
           const data = await res.json();
           setArticles(data.articles || []);
@@ -125,10 +132,12 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
   return (
     <aside className="w-full lg:w-80 lg:shrink-0 flex flex-col gap-5 lg:gap-6">
       {/* Trending News Card */}
-      <div className="rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card border border-gray-100 dark:border-ai-surface-border p-0 overflow-hidden shadow-md dark:shadow-none sticky top-24">
+      <div className="rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card border border-gray-100 dark:border-ai-surface-border p-0 overflow-hidden shadow-md dark:shadow-none">
         <div className="bg-gradient-to-r from-ai-primary/15 via-ai-primary/5 to-transparent p-4 sm:p-5 border-b border-gray-100 dark:border-ai-surface-border flex items-center justify-between">
           <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="material-symbols-outlined text-ai-primary text-[20px] sm:text-[22px]">local_fire_department</span>
+            <span className="material-symbols-outlined text-ai-primary text-[20px] sm:text-[22px]">
+              local_fire_department
+            </span>
             {t.trendingNews}
           </h3>
           <span className="text-[10px] sm:text-xs font-bold text-ai-primary bg-gradient-to-r from-ai-primary/20 to-ai-primary/10 px-2.5 py-1 rounded-lg border border-ai-primary/20 shadow-sm">
@@ -161,7 +170,10 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
           {loading ? (
             // Loading skeleton
             Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="relative flex gap-3 sm:gap-4 p-3.5 sm:p-4 border-b border-gray-100 dark:border-ai-surface-border/60 animate-pulse">
+              <div
+                key={i}
+                className="relative flex gap-3 sm:gap-4 p-3.5 sm:p-4 border-b border-gray-100 dark:border-ai-surface-border/60 animate-pulse"
+              >
                 <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 rounded-lg flex-shrink-0"></div>
                 <div className="flex-1 space-y-2">
                   <div className="h-3.5 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
@@ -186,15 +198,17 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
 
                 {/* Rank Badge */}
                 <div className="flex-shrink-0 relative">
-                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm font-black text-white shadow-lg ${
-                    index === 0
-                      ? 'bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500'
-                      : index === 1
-                      ? 'bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500'
-                      : index === 2
-                      ? 'bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800'
-                      : 'bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600 dark:from-gray-600 dark:via-gray-700 dark:to-gray-800'
-                  }`}>
+                  <div
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-xs sm:text-sm font-black text-white shadow-lg ${
+                      index === 0
+                        ? "bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500"
+                        : index === 1
+                          ? "bg-gradient-to-br from-gray-300 via-gray-400 to-gray-500"
+                          : index === 2
+                            ? "bg-gradient-to-br from-amber-600 via-amber-700 to-amber-800"
+                            : "bg-gradient-to-br from-gray-400 via-gray-500 to-gray-600 dark:from-gray-600 dark:via-gray-700 dark:to-gray-800"
+                    }`}
+                  >
                     {index + 1}
                   </div>
                 </div>
@@ -208,7 +222,9 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
                     )}
                     {article.trendScore && (
                       <span className="text-[11px] text-ai-text-secondary flex items-center gap-0.5 font-medium">
-                        <span className="material-symbols-outlined text-[12px] text-emerald-400">trending_up</span>
+                        <span className="material-symbols-outlined text-[12px] text-emerald-400">
+                          trending_up
+                        </span>
                         {article.trendScore.toFixed(1)}
                       </span>
                     )}
@@ -217,7 +233,9 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
                     {article.title}
                   </h4>
                   <p className="text-[11px] text-ai-text-secondary flex items-center gap-1 font-medium">
-                    <span className="material-symbols-outlined text-[12px]">visibility</span>
+                    <span className="material-symbols-outlined text-[12px]">
+                      visibility
+                    </span>
                     {formatViews(article.views)}
                   </p>
                 </div>
@@ -225,7 +243,9 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
             ))
           ) : (
             <div className="p-8 text-center text-ai-text-secondary text-sm">
-              <span className="material-symbols-outlined text-[32px] mb-2 block">trending_up</span>
+              <span className="material-symbols-outlined text-[32px] mb-2 block">
+                trending_up
+              </span>
               Bu dönem için haber yok
             </div>
           )}
@@ -236,7 +256,9 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
       <div className="rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card border border-gray-100 dark:border-ai-surface-border p-5 shadow-md dark:shadow-none">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="material-symbols-outlined text-yellow-500 text-[20px]">construction</span>
+            <span className="material-symbols-outlined text-yellow-500 text-[20px]">
+              construction
+            </span>
             {t.aiTools}
           </h3>
           <Link
@@ -250,7 +272,12 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
         <div className="space-y-2.5">
           {aiTools.map((tool) => {
             const pricing = getPricingLabel(tool.pricingType);
-            const initials = tool.name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+            const initials = tool.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .substring(0, 2)
+              .toUpperCase();
 
             return (
               <div
@@ -265,10 +292,14 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
                     <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-ai-primary transition-colors duration-300">
                       {tool.name}
                     </p>
-                    <p className="text-[10px] text-ai-text-secondary font-medium">{tool.category}</p>
+                    <p className="text-[10px] text-ai-text-secondary font-medium">
+                      {tool.category}
+                    </p>
                   </div>
                 </div>
-                <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-lg ${pricing.color} shadow-sm`}>
+                <span
+                  className={`text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-lg ${pricing.color} shadow-sm`}
+                >
                   {pricing.text}
                 </span>
               </div>
@@ -281,10 +312,14 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
       <div>
         <div className="rounded-xl lg:rounded-2xl bg-gradient-to-br from-ai-primary via-ai-primary-hover to-blue-700 p-5 text-white shadow-xl shadow-ai-primary/30 border border-white/10">
           <div className="flex items-center gap-2 mb-3">
-            <span className="material-symbols-outlined text-[24px]">description</span>
+            <span className="material-symbols-outlined text-[24px]">
+              description
+            </span>
             <h4 className="font-bold text-base">{t.specialReport}</h4>
           </div>
-          <p className="mb-4 text-xs sm:text-sm opacity-90 leading-relaxed">{t.reportDesc}</p>
+          <p className="mb-4 text-xs sm:text-sm opacity-90 leading-relaxed">
+            {t.reportDesc}
+          </p>
           <button
             type="button"
             className="w-full rounded-xl bg-white py-2.5 text-xs sm:text-sm font-bold text-ai-primary hover:bg-gray-50 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
