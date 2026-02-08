@@ -105,6 +105,7 @@ export function HeroSection({
       className="group relative mb-8 sm:mb-10 lg:mb-12 min-h-[400px] overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl md:min-h-[500px] lg:min-h-[580px] border border-gray-800/50"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      suppressHydrationWarning={true}
     >
       {/* Slider Container */}
       <div className="relative h-full">

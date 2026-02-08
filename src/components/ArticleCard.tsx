@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { formatRelativeTime, calculateReadingTime } from "@/lib/utils";
+import { calculateReadingTime } from "@/lib/utils";
 import { TrendingBadge } from "@/components/TrendingBadge";
 
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
@@ -86,7 +86,10 @@ export function ArticleCard({
   };
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card shadow-md dark:shadow-none border border-gray-100 dark:border-ai-surface-border hover:shadow-xl dark:hover:shadow-2xl dark:hover:border-ai-primary/40 transition-all duration-300 hover:-translate-y-1">
+    <article
+      className="group flex flex-col overflow-hidden rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card shadow-md dark:shadow-none border border-gray-100 dark:border-ai-surface-border hover:shadow-xl dark:hover:shadow-2xl dark:hover:border-ai-primary/40 transition-all duration-300 hover:-translate-y-1"
+      suppressHydrationWarning={true}
+    >
       {/* Image Section */}
       <Link
         href={`/${newsPath}/${article.slug}`}
@@ -134,7 +137,9 @@ export function ArticleCard({
         {/* Reading Time (Bottom Right) */}
         <div className="absolute right-3 bottom-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <span className="flex items-center gap-1 rounded-lg bg-black/70 backdrop-blur-md px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold text-white border border-white/10 shadow-lg">
-            <span className="material-symbols-outlined text-[12px]">schedule</span>
+            <span className="material-symbols-outlined text-[12px]">
+              schedule
+            </span>
             {readingTime} {t.readingTime}
           </span>
         </div>
@@ -146,8 +151,15 @@ export function ArticleCard({
         <div className="mb-2.5 flex items-center justify-between">
           {/* Views Count */}
           <div className="flex items-center gap-1 text-xs text-ai-text-secondary">
-            <span className="material-symbols-outlined text-[14px]">visibility</span>
-            <span className="font-medium">{article.views >= 1000 ? `${(article.views / 1000).toFixed(1)}k` : article.views} {t.views}</span>
+            <span className="material-symbols-outlined text-[14px]">
+              visibility
+            </span>
+            <span className="font-medium">
+              {article.views >= 1000
+                ? `${(article.views / 1000).toFixed(1)}k`
+                : article.views}{" "}
+              {t.views}
+            </span>
           </div>
           {/* Trend Score */}
           {article.trendScore ? (
@@ -197,7 +209,9 @@ export function ArticleCard({
               className="h-8 w-8 rounded-lg flex items-center justify-center text-ai-text-secondary hover:text-ai-primary hover:bg-ai-primary/10 transition-all duration-300"
               title={t.share}
             >
-              <span className="material-symbols-outlined text-[18px]">share</span>
+              <span className="material-symbols-outlined text-[18px]">
+                share
+              </span>
             </button>
           </div>
         </div>
