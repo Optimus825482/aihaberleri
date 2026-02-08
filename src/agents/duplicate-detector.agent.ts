@@ -5,7 +5,7 @@
  * 1. Check for URL duplicates (PostgreSQL)
  * 2. Store topic in Article.topic field for future checks
  * 3. Emit articles to next queue
- *
+ */
 
 import { Job } from "bullmq";
 import { BaseAgent, AgentResult } from "./base-agent";
