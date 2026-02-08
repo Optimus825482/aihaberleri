@@ -184,9 +184,10 @@ async function stopMultiAgentPipeline(): Promise<void> {
   await Promise.all([
     relevanceFilter?.stop(),
     duplicateDetector?.stop(),
+    trendEnricher?.stop(),
     contentEnricher?.stop(),
     visualGenerator?.stop(),
-    seoOptimizer?.stop(), // NEW
+    // seoOptimizer removed from pipeline
     databasePublisher?.stop(),
     seoCalculatorWorker?.close(),
   ]);

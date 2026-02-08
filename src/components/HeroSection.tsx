@@ -93,6 +93,11 @@ function HeroSectionContent({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Touch event states for mobile swipe support
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+
   // Auto-slide every 10 seconds (going backwards: newest to oldest)
   useEffect(() => {
     if (articles.length <= 1 || isPaused) return;
@@ -117,7 +122,46 @@ function HeroSectionContent({
     setCurrentIndex((prev) => (prev + 1) % articles.length);
   };
 
+  // Touch event handlers for mobile swipe support
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+    setTouchEnd(e.targetTouches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isSwiping) return;
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwiping) return;
+    setIsSwiping(false);
+
+    const swipeDistance = touchStart - touchEnd;
+    const minSwipeDistance = 50; // Minimum 50px swipe to trigger
+
+    if (Math.abs(swipeDistance) < minSwipeDistance) return;
+
+    if (swipeDistance > 0) {
+      // Swipe left → next slide
+      goToNext();
+    } else {
+      // Swipe right → previous slide
+      goToPrev();
+    }
+  };
+
   const currentArticle = articles[currentIndex];
+
+  // Performans optimizasyonu: Sadece görünür ve komşu slide'ları render et
+  const getVisibleSlides = () => {
+    const prevIndex = (currentIndex - 1 + articles.length) % articles.length;
+    const nextIndex = (currentIndex + 1) % articles.length;
+    return new Set([prevIndex, currentIndex, nextIndex]);
+  };
+
+  const visibleSlides = getVisibleSlides();
 
   const getArticleLink = () => {
     if (locale === "en" && currentArticle.slug) {
@@ -138,95 +182,131 @@ function HeroSectionContent({
       className="group relative mb-8 sm:mb-10 lg:mb-12 min-h-[400px] overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl md:min-h-[500px] lg:min-h-[580px] border border-gray-800/50"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Slider Container */}
       <div className="relative h-full">
-        {articles.map((article, index) => (
-          <div
-            key={article.id}
-            className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-              index === currentIndex
-                ? "opacity-100 scale-100 z-10"
-                : "opacity-0 scale-105 z-0"
-            }`}
-          >
-            {/* Background Image */}
-            <div className="absolute inset-0 z-0">
-              {article.imageUrl ? (
-                article.imageUrl.includes("pollinations.ai") ||
-                article.imageUrl.includes("r2.dev") ||
-                article.imageUrl.includes("images.aihaberleri.org") ||
-                article.imageUrl.includes("googleusercontent.com") ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={article.imageUrl}
-                    alt={article.title}
-                    className={`h-full w-full object-cover transition-transform duration-[3000ms] ease-out ${
-                      index === currentIndex ? "scale-100" : "scale-110"
-                    }`}
-                  />
-                ) : (
-                  <Image
-                    src={article.imageUrl}
-                    alt={article.title}
-                    fill
-                    className="object-cover"
-                    priority={index === 0}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
-                  />
-                )
-              ) : null}
-              {/* Modern Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/70 to-transparent"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-ai-background-dark/40 via-transparent to-transparent"></div>
-              {/* Glassmorphism overlay */}
-              <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
-            </div>
+        {articles.map((article, index) => {
+          // Performans: Sadece görünür slide'ları render et
+          if (!visibleSlides.has(index)) return null;
 
-            {/* Content */}
-            <div className="relative z-10 flex flex-col items-start justify-end px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 md:py-16 lg:py-20 lg:min-h-[520px]">
-              {/* Category Badge */}
-              <Link
-                href={getCategoryLink()}
-                className="mb-3 sm:mb-4 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-ai-primary/20 to-ai-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-ai-primary/30 shadow-lg shadow-ai-primary/20 transition-all duration-300 hover:bg-ai-primary/30 hover:shadow-ai-primary/30 hover:scale-105"
-              >
-                <span className="material-symbols-outlined text-[14px]">
-                  auto_awesome
-                </span>
-                <span>{t.featured}</span>
-              </Link>
+          return (
+            <div
+              key={article.id}
+              className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+                index === currentIndex
+                  ? "opacity-100 scale-100 z-10"
+                  : "opacity-0 scale-105 z-0"
+              }`}
+              style={{
+                // GPU acceleration
+                transform:
+                  index === currentIndex
+                    ? "translateZ(0)"
+                    : "translateZ(0) scale(1.05)",
+                willChange:
+                  index === currentIndex ? "opacity, transform" : "auto",
+              }}
+            >
+              {/* Background Image */}
+              <div className="absolute inset-0 z-0">
+                {article.imageUrl ? (
+                  article.imageUrl.includes("pollinations.ai") ||
+                  article.imageUrl.includes("r2.dev") ||
+                  article.imageUrl.includes("images.aihaberleri.org") ||
+                  article.imageUrl.includes("googleusercontent.com") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={article.imageUrl}
+                      alt={article.title}
+                      className={`h-full w-full object-cover transition-transform duration-[3000ms] ease-out ${
+                        index === currentIndex ? "scale-100" : "scale-110"
+                      }`}
+                      loading={index === currentIndex ? "eager" : "lazy"}
+                      style={{
+                        // GPU acceleration
+                        transform: "translateZ(0)",
+                        willChange: "auto",
+                      }}
+                    />
+                  ) : (
+                    <Image
+                      src={article.imageUrl}
+                      alt={article.title}
+                      fill
+                      className="object-cover"
+                      priority={index === currentIndex}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
+                      style={{
+                        // GPU acceleration
+                        transform: "translateZ(0)",
+                      }}
+                    />
+                  )
+                ) : null}
+                {/* Modern Gradient Overlay - GPU accelerated */}
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/70 to-transparent"
+                  style={{ transform: "translateZ(0)" }}
+                />
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-ai-background-dark/40 via-transparent to-transparent"
+                  style={{ transform: "translateZ(0)" }}
+                />
+                {/* Glassmorphism overlay - GPU accelerated */}
+                <div
+                  className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"
+                  style={{ transform: "translateZ(0)" }}
+                />
+              </div>
 
-              {/* Title */}
-              <h1 className="mb-3 sm:mb-4 max-w-3xl text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white drop-shadow-2xl">
-                {article.title}
-              </h1>
-
-              {/* Excerpt */}
-              <p className="mb-6 sm:mb-8 max-w-2xl text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 line-clamp-2 sm:line-clamp-3 leading-relaxed">
-                {article.excerpt}
-              </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-wrap gap-3 sm:gap-4">
+              {/* Content */}
+              <div className="relative z-10 flex flex-col items-start justify-end px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 md:py-16 lg:py-20 lg:min-h-[520px]">
+                {/* Category Badge */}
                 <Link
-                  href={getArticleLink()}
-                  className="group/btn flex items-center gap-2 rounded-xl bg-gradient-to-r from-ai-primary to-ai-primary-hover px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white shadow-xl shadow-ai-primary/30 transition-all duration-300 hover:shadow-2xl hover:shadow-ai-primary/50 hover:scale-105 active:scale-95"
+                  href={getCategoryLink()}
+                  className="mb-3 sm:mb-4 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-ai-primary/20 to-ai-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-ai-primary/30 shadow-lg shadow-ai-primary/20 transition-all duration-300 hover:bg-ai-primary/30 hover:shadow-ai-primary/30 hover:scale-105"
                 >
-                  <span>{t.readMore}</span>
-                  <span className="material-symbols-outlined text-[18px] sm:text-[20px] transition-transform duration-300 group-hover/btn:translate-x-1">
-                    arrow_forward
+                  <span className="material-symbols-outlined text-[14px]">
+                    auto_awesome
                   </span>
+                  <span>{t.featured}</span>
                 </Link>
-                <button className="flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-md px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white border border-white/20 shadow-lg transition-all duration-300 hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95">
-                  <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
-                    bookmark
-                  </span>
-                  <span className="hidden sm:inline">{t.save}</span>
-                </button>
+
+                {/* Title */}
+                <h1 className="mb-3 sm:mb-4 max-w-3xl text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white drop-shadow-2xl">
+                  {article.title}
+                </h1>
+
+                {/* Excerpt */}
+                <p className="mb-6 sm:mb-8 max-w-2xl text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 line-clamp-2 sm:line-clamp-3 leading-relaxed">
+                  {article.excerpt}
+                </p>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-wrap gap-3 sm:gap-4">
+                  <Link
+                    href={getArticleLink()}
+                    className="group/btn flex items-center gap-2 rounded-xl bg-gradient-to-r from-ai-primary to-ai-primary-hover px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white shadow-xl shadow-ai-primary/30 transition-all duration-300 hover:shadow-2xl hover:shadow-ai-primary/50 hover:scale-105 active:scale-95"
+                  >
+                    <span>{t.readMore}</span>
+                    <span className="material-symbols-outlined text-[18px] sm:text-[20px] transition-transform duration-300 group-hover/btn:translate-x-1">
+                      arrow_forward
+                    </span>
+                  </Link>
+                  <button className="flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-md px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white border border-white/20 shadow-lg transition-all duration-300 hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95">
+                    <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
+                      bookmark
+                    </span>
+                    <span className="hidden sm:inline">{t.save}</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Navigation Dots */}

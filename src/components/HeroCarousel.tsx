@@ -97,6 +97,11 @@ function HeroCarouselContent({
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [direction, setDirection] = useState<"left" | "right">("right");
 
+  // Touch event states for mobile swipe support
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+
   const labels = {
     tr: {
       readMore: "Haberi Oku",
@@ -151,7 +156,47 @@ function HeroCarouselContent({
     setTimeout(() => setIsAutoPlaying(true), 5000);
   };
 
+  // Touch event handlers for mobile swipe support
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+    setTouchEnd(e.targetTouches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isSwiping) return;
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwiping) return;
+    setIsSwiping(false);
+
+    const swipeDistance = touchStart - touchEnd;
+    const minSwipeDistance = 50; // Minimum 50px swipe to trigger
+
+    if (Math.abs(swipeDistance) < minSwipeDistance) return;
+
+    if (swipeDistance > 0) {
+      // Swipe left → next slide
+      goToNext();
+    } else {
+      // Swipe right → previous slide
+      goToPrevious();
+    }
+  };
+
   const currentArticle = articles[currentIndex];
+
+  // Performans optimizasyonu: Sadece görünür ve komşu slide'ları render et
+  // Bu, DOM'da 10 yerine sadece 3 image olmasını sağlar
+  const getVisibleSlides = () => {
+    const prevIndex = (currentIndex - 1 + articles.length) % articles.length;
+    const nextIndex = (currentIndex + 1) % articles.length;
+    return new Set([prevIndex, currentIndex, nextIndex]);
+  };
+
+  const visibleSlides = getVisibleSlides();
 
   // Helper for localized links
   const getLink = (path: string) => (locale === "en" ? `/en${path}` : path);
@@ -162,44 +207,75 @@ function HeroCarouselContent({
     locale === "en" ? `/en/news/${slug}` : `/news/${slug}`;
 
   return (
-    <section className="relative bg-ai-background-dark text-white overflow-hidden h-[500px] md:h-[600px] group">
-      {/* Background Images with Smooth Transition */}
-      {articles.map((article, index) => (
-        <div
-          key={article.id}
-          className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
-            index === currentIndex
-              ? "opacity-100 scale-100"
-              : "opacity-0 scale-105"
-          }`}
-        >
-          {article.imageUrl &&
-            (article.imageUrl.includes("pollinations.ai") ||
-            article.imageUrl.includes("r2.dev") ||
-            article.imageUrl.includes("images.aihaberleri.org") ? (
-              // Use native img for Pollinations and R2 to avoid Next.js optimization issues
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={article.imageUrl}
-                alt={article.title}
-                className="absolute inset-0 w-full h-full object-cover"
-                loading={index === 0 ? "eager" : "lazy"}
-              />
-            ) : (
-              <Image
-                src={article.imageUrl}
-                alt={article.title}
-                fill
-                className="object-cover"
-                priority={index === 0}
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
-                quality={85}
-              />
-            ))}
-          {/* Dark Overlay with Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/70 to-ai-background-dark/30" />
-        </div>
-      ))}
+    <section
+      className="relative bg-ai-background-dark text-white overflow-hidden h-[500px] md:h-[600px] group"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Background Images with Smooth Transition - LAZY RENDERING */}
+      {/* Performans: Sadece current, prev, next slide'lar render ediliyor */}
+      {articles.map((article, index) => {
+        // Sadece görünür slide'ları render et
+        if (!visibleSlides.has(index)) return null;
+
+        return (
+          <div
+            key={article.id}
+            className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+              index === currentIndex
+                ? "opacity-100 scale-100"
+                : "opacity-0 scale-105"
+            }`}
+            style={{
+              // GPU acceleration için transform kullan
+              transform:
+                index === currentIndex
+                  ? "translateZ(0)"
+                  : "translateZ(0) scale(1.05)",
+              willChange: index === currentIndex ? "opacity" : "auto",
+            }}
+          >
+            {article.imageUrl &&
+              (article.imageUrl.includes("pollinations.ai") ||
+              article.imageUrl.includes("r2.dev") ||
+              article.imageUrl.includes("images.aihaberleri.org") ? (
+                // Use native img for Pollinations and R2 to avoid Next.js optimization issues
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading={index === currentIndex ? "eager" : "lazy"}
+                  style={{
+                    // GPU acceleration
+                    transform: "translateZ(0)",
+                    willChange: "auto",
+                  }}
+                />
+              ) : (
+                <Image
+                  src={article.imageUrl}
+                  alt={article.title}
+                  fill
+                  className="object-cover"
+                  priority={index === currentIndex}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
+                  quality={85}
+                  style={{
+                    // GPU acceleration
+                    transform: "translateZ(0)",
+                  }}
+                />
+              ))}
+            {/* Dark Overlay with Gradient - GPU accelerated */}
+            <div
+              className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/70 to-ai-background-dark/30"
+              style={{ transform: "translateZ(0)" }}
+            />
+          </div>
+        );
+      })}
 
       {/* Content with Slide Animation */}
       <div className="container mx-auto px-4 h-full relative z-10">
