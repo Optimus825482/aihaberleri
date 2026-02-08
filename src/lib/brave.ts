@@ -38,7 +38,7 @@ async function rateLimitedCall<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 // ============================================
-// IN-MEMORY CACHE
+// IN-MEMORY CACHE (WITH AUTO CLEANUP)
 // ============================================
 interface CacheEntry {
   score: number;
@@ -46,18 +46,79 @@ interface CacheEntry {
 }
 
 const trendCache = new Map<string, CacheEntry>();
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour (TTL)
+const CACHE_CLEANUP_INTERVAL = 30 * 60 * 1000; // 30 minutes
+let cleanupIntervalId: NodeJS.Timeout | null = null;
 
 function getCachedScore(cacheKey: string): number | null {
   const cached = trendCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.score;
   }
+  // Remove expired entry
+  if (cached) {
+    trendCache.delete(cacheKey);
+  }
   return null;
 }
 
 function setCachedScore(cacheKey: string, score: number): void {
   trendCache.set(cacheKey, { score, timestamp: Date.now() });
+}
+
+/**
+ * Cleanup expired entries from trendCache
+ * Should be called periodically to prevent memory leaks
+ */
+export function cleanupTrendCache(): number {
+  const now = Date.now();
+  let cleanedCount = 0;
+
+  for (const [key, entry] of trendCache.entries()) {
+    if (now - entry.timestamp > CACHE_TTL) {
+      trendCache.delete(key);
+      cleanedCount++;
+    }
+  }
+
+  if (cleanedCount > 0) {
+    console.log(`🧹 Cleaned ${cleanedCount} expired entries from trendCache (size: ${trendCache.size})`);
+  }
+
+  return cleanedCount;
+}
+
+/**
+ * Start automatic cleanup interval
+ * Call this on application startup
+ */
+export function startTrendCacheCleanup(): void {
+  if (cleanupIntervalId) {
+    return; // Already running
+  }
+
+  cleanupIntervalId = setInterval(() => {
+    cleanupTrendCache();
+  }, CACHE_CLEANUP_INTERVAL);
+
+  console.log(`🧹 Trend cache cleanup started (interval: ${CACHE_CLEANUP_INTERVAL / 60000} min, TTL: ${CACHE_TTL / 60000} min)`);
+}
+
+/**
+ * Stop automatic cleanup interval
+ * Call this on graceful shutdown
+ */
+export function stopTrendCacheCleanup(): void {
+  if (cleanupIntervalId) {
+    clearInterval(cleanupIntervalId);
+    cleanupIntervalId = null;
+    console.log("🧹 Trend cache cleanup stopped");
+  }
+}
+
+// Auto-start cleanup in non-build environments
+if (process.env.NODE_ENV !== "build" && typeof globalThis.setInterval !== "undefined") {
+  startTrendCacheCleanup();
 }
 
 export interface BraveSearchResult {

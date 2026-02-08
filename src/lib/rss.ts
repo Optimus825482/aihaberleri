@@ -915,23 +915,92 @@ export function getSourceReliabilityScore(sourceUrl: string): number {
 /**
  * Update source reliability based on fetch success/failure
  * This is a runtime adjustment (doesn't persist)
+ * WITH TIMESTAMP FOR AUTO CLEANUP
  */
-const sourceReliabilityAdjustments: Map<string, number> = new Map();
+interface ReliabilityEntry {
+  adjustment: number;
+  timestamp: number;
+}
+
+const sourceReliabilityAdjustments: Map<string, ReliabilityEntry> = new Map();
+const RELIABILITY_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour cleanup interval
+const RELIABILITY_ENTRY_TTL = 24 * 60 * 60 * 1000; // 24 hours TTL
+let reliabilityCleanupIntervalId: NodeJS.Timeout | null = null;
 
 export function updateSourceReliability(
   sourceId: string,
   success: boolean,
 ): void {
-  const current = sourceReliabilityAdjustments.get(sourceId) || 0;
+  const entry = sourceReliabilityAdjustments.get(sourceId);
+  const current = entry?.adjustment || 0;
   const adjustment = success
     ? Math.min(current + 1, 10)
     : Math.max(current - 5, -30);
-  sourceReliabilityAdjustments.set(sourceId, adjustment);
+  sourceReliabilityAdjustments.set(sourceId, {
+    adjustment,
+    timestamp: Date.now(),
+  });
 }
 
 export function getAdjustedReliability(source: RSSSource): number {
-  const adjustment = sourceReliabilityAdjustments.get(source.id) || 0;
+  const entry = sourceReliabilityAdjustments.get(source.id);
+  const adjustment = entry?.adjustment || 0;
   return Math.max(0, Math.min(100, source.reliabilityScore + adjustment));
+}
+
+/**
+ * Cleanup expired reliability adjustments
+ * Should be called periodically to prevent memory leaks
+ */
+export function cleanupSourceReliability(): number {
+  const now = Date.now();
+  let cleanedCount = 0;
+
+  for (const [key, entry] of sourceReliabilityAdjustments.entries()) {
+    if (now - entry.timestamp > RELIABILITY_ENTRY_TTL) {
+      sourceReliabilityAdjustments.delete(key);
+      cleanedCount++;
+    }
+  }
+
+  if (cleanedCount > 0) {
+    console.log(`🧹 Cleaned ${cleanedCount} expired reliability entries (remaining: ${sourceReliabilityAdjustments.size})`);
+  }
+
+  return cleanedCount;
+}
+
+/**
+ * Start automatic reliability cleanup interval
+ * Call this on application startup
+ */
+export function startSourceReliabilityCleanup(): void {
+  if (reliabilityCleanupIntervalId) {
+    return; // Already running
+  }
+
+  reliabilityCleanupIntervalId = setInterval(() => {
+    cleanupSourceReliability();
+  }, RELIABILITY_CLEANUP_INTERVAL);
+
+  console.log(`🧹 Source reliability cleanup started (interval: ${RELIABILITY_CLEANUP_INTERVAL / 60000} min, TTL: ${RELIABILITY_ENTRY_TTL / (60 * 60 * 1000)} hours)`);
+}
+
+/**
+ * Stop automatic reliability cleanup interval
+ * Call this on graceful shutdown
+ */
+export function stopSourceReliabilityCleanup(): void {
+  if (reliabilityCleanupIntervalId) {
+    clearInterval(reliabilityCleanupIntervalId);
+    reliabilityCleanupIntervalId = null;
+    console.log("🧹 Source reliability cleanup stopped");
+  }
+}
+
+// Auto-start cleanup in non-build environments
+if (process.env.NODE_ENV !== "build" && typeof globalThis.setInterval !== "undefined") {
+  startSourceReliabilityCleanup();
 }
 
 /**

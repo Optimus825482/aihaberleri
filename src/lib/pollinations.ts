@@ -4,7 +4,13 @@
  *
  * Supports both anonymous and authenticated usage.
  * Set POLLINATIONS_API_KEY for higher rate limits.
+ *
+ * PERFORMANCE: Image caching implemented to avoid regenerating same prompts
+ * Cache key: hash(prompt) → Value: imageUrl, TTL: 7 days
  */
+
+import { createHash } from "crypto";
+import { getRedis } from "@/lib/redis";
 
 interface PollinationsOptions {
   width?: number;
@@ -26,6 +32,58 @@ interface PollinationsOptions {
 const POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY;
 const POLLINATIONS_IMAGE_URL = "https://image.pollinations.ai/prompt"; // Legacy anonymous endpoint
 const POLLINATIONS_GEN_URL = "https://gen.pollinations.ai/image"; // New authenticated endpoint
+
+// Cache Configuration
+const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
+const CACHE_KEY_PREFIX = "pollinations:image:";
+
+/**
+ * Generate cache key from prompt using SHA-256 hash
+ */
+function generateCacheKey(prompt: string): string {
+  return `${CACHE_KEY_PREFIX}${createHash("sha256").update(prompt).digest("hex")}`;
+}
+
+/**
+ * Get cached image URL from Redis
+ */
+async function getCachedImage(prompt: string): Promise<string | null> {
+  try {
+    const redis = getRedis();
+    if (!redis) return null;
+
+    const cacheKey = generateCacheKey(prompt);
+    const cachedUrl = await redis.get(cacheKey);
+
+    if (cachedUrl) {
+      console.log("🎯 Cache HIT for prompt:", prompt.substring(0, 50) + "...");
+      return cachedUrl;
+    }
+
+    console.log("🎯 Cache MISS for prompt:", prompt.substring(0, 50) + "...");
+    return null;
+  } catch (error) {
+    console.warn("⚠️ Redis cache read error:", error);
+    return null;
+  }
+}
+
+/**
+ * Cache image URL in Redis with 7-day TTL
+ */
+async function cacheImageUrl(prompt: string, imageUrl: string): Promise<void> {
+  try {
+    const redis = getRedis();
+    if (!redis) return;
+
+    const cacheKey = generateCacheKey(prompt);
+    await redis.setex(cacheKey, CACHE_TTL_SECONDS, imageUrl);
+    console.log("💾 Image cached for 7 days");
+  } catch (error) {
+    console.warn("⚠️ Redis cache write error:", error);
+    // Don't fail if caching fails
+  }
+}
 
 /**
  * Generate image URL from Pollinations.ai (simple URL method)
@@ -145,6 +203,12 @@ export async function fetchPollinationsImage(
       "artificial intelligence technology, modern digital art, professional tech illustration, high quality, 4k, no people, no humans";
   }
 
+  // 🚀 CACHE CHECK: Try to get cached image first
+  const cachedUrl = await getCachedImage(prompt);
+  if (cachedUrl) {
+    return cachedUrl;
+  }
+
   // CRITICAL: Ensure no humans in prompt - add strong negative prompt
   let sanitizedPrompt = prompt.trim();
 
@@ -238,6 +302,8 @@ export async function fetchPollinationsImage(
             console.log(
               "✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)",
             );
+            // Cache the result for future use
+            await cacheImageUrl(sanitizedPrompt, imageUrl);
             return imageUrl;
           }
 
@@ -330,6 +396,8 @@ async function fetchPollinationsImageAnonymous(
     }
 
     // Return the URL directly (Pollinations.ai provides stable URLs)
+    // Cache for future use
+    await cacheImageUrl(prompt, imageUrl);
     return imageUrl;
   } catch (error) {
     clearTimeout(timeoutId);

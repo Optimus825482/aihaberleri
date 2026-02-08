@@ -34,8 +34,11 @@ export const db =
             url: process.env.DATABASE_URL,
           },
         },
-        // Connection pool settings for long-running operations
-        // Prevents "Connection closed" errors during agent execution
+        // 🚀 CONNECTION POOL SETTINGS (FAZ 2 - Performance Optimization)
+        // Optimized for BullMQ worker with long-running operations
+        // - connection_limit: Max concurrent DB connections (reduced to prevent overload)
+        // - pool_timeout: How long to wait for a connection (increased for long queries)
+        // - statement_timeout: Max query execution time (prevents runaway queries)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any));
 

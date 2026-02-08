@@ -60,6 +60,7 @@ function getRedisConnection(): ConnectionOptions | null {
 
 /**
  * Queue configuration with concurrency and rate limits
+ * FAZ 3: Added jobTimeout for deadlock prevention
  */
 const QUEUE_CONFIG = {
   [QUEUE_NAMES.COLLECTED_ARTICLES]: {
@@ -69,6 +70,7 @@ const QUEUE_CONFIG = {
       duration: 1000, // Per second
     },
     lockDuration: 60000, // 1 minute
+    jobTimeout: 120000, // FAZ 3: 2 minutes job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.RELEVANT_ARTICLES]: {
@@ -78,6 +80,7 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 120000, // 2 minutes (DeepSeek calls)
+    jobTimeout: 180000, // FAZ 3: 3 minutes job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.UNIQUE_ARTICLES]: {
@@ -87,6 +90,7 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 90000, // 1.5 minutes
+    jobTimeout: 120000, // FAZ 3: 2 minutes job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.TREND_ENRICHMENT]: {
@@ -96,6 +100,7 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 30000, // 30 seconds
+    jobTimeout: 60000, // FAZ 3: 1 minute job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.ENRICHED_ARTICLES]: {
@@ -105,6 +110,7 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 300000, // 5 minutes
+    jobTimeout: 600000, // FAZ 3: 10 minutes job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.ARTICLES_WITH_VISUALS]: {
@@ -114,6 +120,7 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 180000, // 3 minutes (Pollinations can be slow)
+    jobTimeout: 300000, // FAZ 3: 5 minutes job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.DATABASE_PUBLISHER]: {
@@ -123,6 +130,7 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 120000, // 2 minutes
+    jobTimeout: 180000, // FAZ 3: 3 minutes job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.SEO_CALCULATION]: {
@@ -132,6 +140,7 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 600000, // 10 minutes
+    jobTimeout: 600000, // FAZ 3: 10 minutes job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.SEO_OPTIMIZATION]: {
@@ -141,6 +150,7 @@ const QUEUE_CONFIG = {
       duration: 1000,
     },
     lockDuration: 1200000, // 20 minutes (AI calls)
+    jobTimeout: 900000, // FAZ 3: 15 minutes job timeout
     attempts: 3,
   },
 };
@@ -182,6 +192,8 @@ export function getQueue(queueName: string): Queue | null {
         removeOnFail: {
           count: 50, // Keep last 50 failed jobs
         },
+        // FAZ 3: Add job timeout for deadlock prevention
+        jobTimeout: (config as any).jobTimeout || 300000, // Default 5 minutes
       },
     });
 

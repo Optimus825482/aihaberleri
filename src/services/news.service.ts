@@ -253,9 +253,10 @@ export async function isDuplicateNews(
         };
       }
 
-      // 2. Title Similarity Check (65%+ similar - RELAXED from 55% on 01.02.2026)
+      // 2. Title Similarity Check (75%+ similar - RELAXED from 65% on 08.02.2026)
+      // Increased to reduce false positives while maintaining duplicate detection
       const titleSimilarity = calculateSimilarity(title, article.title);
-      if (titleSimilarity > 0.65) {
+      if (titleSimilarity > 0.75) {
         console.log(
           `❌ DUPLICATE: Title similarity ${(titleSimilarity * 100).toFixed(1)}% with article ${article.id}`,
         );
@@ -353,15 +354,15 @@ export async function isDuplicateNews(
             };
           }
 
-          // 🔧 RELAXED: 24h→12h, 40%→50% similarity (06.02.2026)
-          // This catches: "Nvidia CEO OpenAI yatırım X" vs "Nvidia CEO OpenAI yatırım Y"
+          // 🔧 RELAXED: 12h→24h, 50%→60% similarity (08.02.2026)
+          // More lenient to allow different angles on same topic
           if (
             entityIntersection.length >= 2 &&
-            hoursDiff < 12 &&
-            titleSimilarity > 0.5
+            hoursDiff < 24 &&
+            titleSimilarity > 0.6
           ) {
             console.log(
-              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] + ${(titleSimilarity * 100).toFixed(1)}% similarity within 12h`,
+              `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] + ${(titleSimilarity * 100).toFixed(1)}% similarity within 24h`,
             );
             console.log(`   New: "${title}"`);
             console.log(`   Existing: "${article.title}"`);
@@ -372,9 +373,9 @@ export async function isDuplicateNews(
             };
           }
 
-          // 🔧 RELAXED: 3+ entity 12h → 4+ entity 6h (06.02.2026)
-          // Changed from 3+ entities, 12h to 4+ entities, 6h - allows more unique angles
-          if (entityIntersection.length >= 4 && hoursDiff < 6) {
+          // 🔧 RELAXED: 4+ entity 6h → 5+ entity 12h (08.02.2026)
+          // Requires more entities and longer time window for duplicate detection
+          if (entityIntersection.length >= 5 && hoursDiff < 12) {
             console.log(
               `❌ DUPLICATE: Multi-entity match [${entityIntersection.join(", ")}] within 6h`,
             );

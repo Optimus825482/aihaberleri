@@ -11,8 +11,149 @@
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 import type { ArticleWithTopic } from "./topic-extraction.service";
+import { getRedis } from "@/lib/redis";
 
 const logger = createModuleLogger("multi-agent-pipeline");
+
+// ============================================================================
+// AGENT RECOVERY MECHANISM (FAZ 3)
+// ============================================================================
+
+export interface AgentHealthStatus {
+  agentName: string;
+  isHealthy: boolean;
+  lastSeen: Date;
+  consecutiveFailures: number;
+  inRecoveryMode: boolean;
+}
+
+const AGENT_HEALTH_STORE_KEY = "agent:health:status";
+const AGENT_RECOVERY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+const MAX_CONSECUTIVE_FAILURES = 3;
+
+/**
+ * Update agent health status in Redis
+ */
+export async function updateAgentHealth(
+  agentName: string,
+  isHealthy: boolean,
+): Promise<void> {
+  try {
+    const redis = getRedis();
+    if (!redis) return;
+
+    const key = `${AGENT_HEALTH_STORE_KEY}:${agentName}`;
+    const existing = await redis.get(key);
+
+    let consecutiveFailures = 0;
+    let inRecoveryMode = false;
+
+    if (existing) {
+      const status = JSON.parse(existing) as AgentHealthStatus;
+      consecutiveFailures = isHealthy ? 0 : status.consecutiveFailures + 1;
+
+      // Enter recovery mode after 3 consecutive failures
+      if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+        inRecoveryMode = true;
+        logger.warn(
+          `🔄 Agent ${agentName} entered RECOVERY MODE (${consecutiveFailures} consecutive failures)`,
+        );
+      }
+    } else if (!isHealthy) {
+      consecutiveFailures = 1;
+    }
+
+    const healthStatus: AgentHealthStatus = {
+      agentName,
+      isHealthy,
+      lastSeen: new Date(),
+      consecutiveFailures,
+      inRecoveryMode,
+    };
+
+    await redis.set(key, JSON.stringify(healthStatus), "EX", 3600); // 1 hour TTL
+  } catch (error) {
+    logger.error(`Failed to update agent health for ${agentName}:`, error);
+  }
+}
+
+/**
+ * Check if agent is in recovery mode
+ */
+export async function isAgentInRecoveryMode(agentName: string): Promise<boolean> {
+  try {
+    const redis = getRedis();
+    if (!redis) return false;
+
+    const key = `${AGENT_HEALTH_STORE_KEY}:${agentName}`;
+    const existing = await redis.get(key);
+
+    if (!existing) return false;
+
+    const status = JSON.parse(existing) as AgentHealthStatus;
+    return status.inRecoveryMode;
+  } catch (error) {
+    logger.error(`Failed to check recovery mode for ${agentName}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Get all agent health statuses
+ */
+export async function getAllAgentHealthStatuses(): Promise<
+  AgentHealthStatus[]
+> {
+  try {
+    const redis = getRedis();
+    if (!redis) return [];
+
+    const keys = await redis.keys(`${AGENT_HEALTH_STORE_KEY}:*`);
+    const statuses: AgentHealthStatus[] = [];
+
+    for (const key of keys) {
+      const data = await redis.get(key);
+      if (data) {
+        statuses.push(JSON.parse(data) as AgentHealthStatus);
+      }
+    }
+
+    return statuses;
+  } catch (error) {
+    logger.error("Failed to get agent health statuses:", error);
+    return [];
+  }
+}
+
+/**
+ * Exit recovery mode for an agent (call when agent succeeds)
+ */
+export async function exitRecoveryMode(agentName: string): Promise<void> {
+  try {
+    const redis = getRedis();
+    if (!redis) return;
+
+    const key = `${AGENT_HEALTH_STORE_KEY}:${agentName}`;
+    const existing = await redis.get(key);
+
+    if (existing) {
+      const status = JSON.parse(existing) as AgentHealthStatus;
+      status.consecutiveFailures = 0;
+      status.inRecoveryMode = false;
+      status.isHealthy = true;
+      status.lastSeen = new Date();
+
+      await redis.set(key, JSON.stringify(status), "EX", 3600);
+      logger.success(`✅ Agent ${agentName} exited RECOVERY MODE`);
+    }
+  } catch (error) {
+    logger.error(`Failed to exit recovery mode for ${agentName}:`, error);
+  }
+}
+
+// ============================================================================
+// END AGENT RECOVERY MECHANISM
+// ============================================================================
 
 export interface PipelineConfig {
   agentLogId: string;
@@ -195,7 +336,7 @@ export async function waitForPipelineCompletion(
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
   let consecutiveEmptyChecks = 0;
-  const REQUIRED_EMPTY_CHECKS = 5; // Require 5 consecutive empty checks to confirm completion
+  const REQUIRED_EMPTY_CHECKS = 3; // FAZ 3: Reduced from 5 to 3 for faster completion detection
   let hasSeenArticlesInQueue = false; // Track if we've ever seen articles in queue
   let checkCount = 0;
 

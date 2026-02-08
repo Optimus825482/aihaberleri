@@ -360,40 +360,58 @@ async function processAggregatedCluster(
 
   try {
     // Fetch full content for each article in cluster
-    // CHANGED: Sequential processing with individual timeout to prevent Promise.all blocking
-    // Previously: Promise.all() - single slow request blocked entire operation
+    // OPTIMIZED: Parallel processing with Promise.allSettled() and concurrency limit
+    // Max 5 concurrent requests, 30s timeout each, fault-tolerant (one failure doesn't block others)
     const articlesWithContent = [];
-    for (const article of cluster.articles.slice(
+    const articlesToFetch = cluster.articles.slice(
       0,
       CONTENT_CONSTANTS.MAX_AGGREGATION_SOURCES,
-    )) {
-      // Max 5 sources
-      let content = article.description;
-      try {
-        // Individual timeout per article (30s max)
-        const fullContent = await Promise.race([
-          fetchArticleContent(article.url),
-          new Promise<string>((_, reject) =>
-            setTimeout(
-              () => reject(new Error("Article fetch timeout")),
-              30000,
+    ); // Max 5 sources
+
+    // Process in parallel with concurrency limit (max 5 concurrent)
+    const CONCURRENCY_LIMIT = 5;
+    for (let i = 0; i < articlesToFetch.length; i += CONCURRENCY_LIMIT) {
+      const batch = articlesToFetch.slice(i, i + CONCURRENCY_LIMIT);
+
+      // Parallel fetch with individual timeouts
+      const fetchPromises = batch.map(async (article) => {
+        let content = article.description;
+        try {
+          // Individual timeout per article (30s max)
+          const fullContent = await Promise.race([
+            fetchArticleContent(article.url),
+            new Promise<string>((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Article fetch timeout")),
+                CONTENT_CONSTANTS.IMAGE_FETCH_TIMEOUT,
+              ),
             ),
-          ),
-        ]) as string;
-        if (fullContent && fullContent.length > content.length) {
-          content = fullContent;
+          ]) as string;
+          if (fullContent && fullContent.length > content.length) {
+            content = fullContent;
+          }
+        } catch (e) {
+          console.warn(
+            `⚠️ Could not fetch full content for ${article.url}: ${(e as Error).message}`,
+          );
         }
-      } catch (e) {
-        console.warn(
-          `⚠️ Could not fetch full content for ${article.url}: ${(e as Error).message}`,
-        );
-      }
-      articlesWithContent.push({
-        title: article.title,
-        content,
-        source: article.source || "Unknown",
-        url: article.url,
+        return {
+          title: article.title,
+          content,
+          source: article.source || "Unknown",
+          url: article.url,
+        };
       });
+
+      // Use allSettled for fault tolerance - continue even if some fail
+      const results = await Promise.allSettled(fetchPromises);
+
+      // Collect successful results
+      for (const result of results) {
+        if (result.status === "fulfilled" && result.value) {
+          articlesWithContent.push(result.value);
+        }
+      }
     }
 
     // Use DeepSeek to aggregate sources
@@ -858,54 +876,86 @@ export async function processArticle(
   </div>
 </div>`;
 
-    // Step 4: Generate AI image prompt using DeepSeek
-    console.log("🎨 DeepSeek ile görsel prompt oluşturuluyor...");
-    const imagePrompt = await generateImagePrompt(
-      rewritten.title,
-      rewritten.content,
-      category,
-    );
-    console.log("📝 Görsel prompt:", imagePrompt);
+    // 🚀 PERFORMANCE (FAZ 2): Score-based early exit for image generation
+    // Skip image generation for low-score articles to save resources
+    const shouldGenerateImage = score >= CONTENT_CONSTANTS.PUBLISH_SCORE_THRESHOLD;
 
-    // Step 5: Get image from Pollinations.ai
-    console.log("🖼️  Pollinations.ai'dan görsel alınıyor...");
-    const imageUrl = await fetchPollinationsImage(imagePrompt, {
-      width: 1200,
-      height: 630,
-      model: "flux",
-      enhance: true,
-      nologo: true,
-    });
-    console.log("✅ Görsel URL:", imageUrl);
-
-    // Step 5.5: Generate slug (needed for image optimization)
-    const slug = generateSlug(rewritten.title);
-
-    // Live log: Image generated
-    await liveLog.image.success(`🖼️ Görsel oluşturuldu: ${slug}`);
-
-    // Step 6: Optimize image and generate multiple sizes
-    console.log("🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...");
-    let imageSizes = {
-      large: imageUrl,
-      medium: imageUrl,
-      small: imageUrl,
-      thumb: imageUrl,
+    let imageUrl: string;
+    let imageSizes: {
+      large: string;
+      medium: string;
+      small: string;
+      thumb: string;
     };
 
-    try {
-      imageSizes = await optimizeAndGenerateSizes(imageUrl, slug);
-      console.log("✅ Görsel optimizasyonu tamamlandı");
-      console.log(`   Large: ${imageSizes.large}`);
-      console.log(`   Medium: ${imageSizes.medium}`);
-      console.log(`   Small: ${imageSizes.small}`);
-      console.log(`   Thumb: ${imageSizes.thumb}`);
-    } catch (optimizeError) {
-      console.error(
-        "⚠️  Görsel optimizasyonu başarısız, orijinal kullanılacak:",
-        optimizeError,
+    if (shouldGenerateImage) {
+      // Step 4: Generate AI image prompt using DeepSeek
+      console.log("🎨 DeepSeek ile görsel prompt oluşturuluyor...");
+      const imagePrompt = await generateImagePrompt(
+        rewritten.title,
+        rewritten.content,
+        category,
       );
-      // Continue with original image URL for all sizes
+      console.log("📝 Görsel prompt:", imagePrompt);
+
+      // Step 5: Get image from Pollinations.ai
+      console.log("🖼️  Pollinations.ai'dan görsel alınıyor...");
+      imageUrl = await fetchPollinationsImage(imagePrompt, {
+        width: 1200,
+        height: 630,
+        model: "flux",
+        enhance: true,
+        nologo: true,
+      });
+      console.log("✅ Görsel URL:", imageUrl);
+
+      // Step 5.5: Generate slug (needed for image optimization)
+      const slug = generateSlug(rewritten.title);
+
+      // Live log: Image generated
+      await liveLog.image.success(`🖼️ Görsel oluşturuldu: ${slug}`);
+
+      // Step 6: Optimize image and generate multiple sizes
+      console.log("🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...");
+      imageSizes = {
+        large: imageUrl,
+        medium: imageUrl,
+        small: imageUrl,
+        thumb: imageUrl,
+      };
+
+      try {
+        imageSizes = await optimizeAndGenerateSizes(imageUrl, slug);
+        console.log("✅ Görsel optimizasyonu tamamlandı");
+        console.log(`   Large: ${imageSizes.large}`);
+        console.log(`   Medium: ${imageSizes.medium}`);
+        console.log(`   Small: ${imageSizes.small}`);
+        console.log(`   Thumb: ${imageSizes.thumb}`);
+      } catch (optimizeError) {
+        console.error(
+          "⚠️  Görsel optimizasyonu başarısız, orijinal kullanılacak:",
+          optimizeError,
+        );
+        // Continue with original image URL for all sizes
+      }
+    } else {
+      // 🚀 SKIP image generation for low-score articles
+      console.log(
+        `⏭️  Görsel oluşturma atlandı (Skor: ${score} < ${CONTENT_CONSTANTS.PUBLISH_SCORE_THRESHOLD})`,
+      );
+      await liveLog.image.warn(
+        `⏭️ Görsel atlandı: Düşük skor (${score}/1000)`,
+      );
+
+      // Use default placeholder image
+      imageUrl = "/logos/og-image.png";
+      const slug = generateSlug(rewritten.title);
+      imageSizes = {
+        large: imageUrl,
+        medium: imageUrl,
+        small: imageUrl,
+        thumb: imageUrl,
+      };
     }
 
     // Step 7: Get or create category

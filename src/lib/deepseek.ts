@@ -59,8 +59,105 @@ export interface DeepSeekResponse {
   };
 }
 
+// ============================================
+// CIRCUIT BREAKER PATTERN (FAZ 3)
+// ============================================
+type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
+
+interface CircuitBreakerState {
+  state: CircuitState;
+  failureCount: number;
+  lastFailureTime: number;
+  nextAttemptTime: number;
+}
+
+const circuitBreakerConfig = {
+  threshold: 3, // Open circuit after 3 consecutive failures
+  timeout: 5 * 60 * 1000, // 5 minutes before trying again
+  halfOpenMaxCalls: 1, // Only 1 call allowed in half-open state
+};
+
+const deepSeekCircuitBreaker: CircuitBreakerState = {
+  state: "CLOSED",
+  failureCount: 0,
+  lastFailureTime: 0,
+  nextAttemptTime: 0,
+};
+
 /**
- * Call DeepSeek API with Reasoner model
+ * Check if circuit breaker allows the request
+ */
+function canProceed(): boolean {
+  const now = Date.now();
+
+  if (deepSeekCircuitBreaker.state === "OPEN") {
+    if (now >= deepSeekCircuitBreaker.nextAttemptTime) {
+      // Transition to HALF_OPEN
+      console.log("🔄 Circuit breaker: OPEN → HALF_OPEN");
+      deepSeekCircuitBreaker.state = "HALF_OPEN";
+      return true;
+    }
+    console.warn("⚠️ Circuit breaker is OPEN - blocking request");
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Record a successful API call
+ */
+function recordSuccess(): void {
+  if (deepSeekCircuitBreaker.state === "HALF_OPEN") {
+    console.log("✅ Circuit breaker: HALF_OPEN → CLOSED (call succeeded)");
+    deepSeekCircuitBreaker.state = "CLOSED";
+  }
+  deepSeekCircuitBreaker.failureCount = 0;
+}
+
+/**
+ * Record a failed API call and potentially open circuit
+ */
+function recordFailure(): void {
+  deepSeekCircuitBreaker.failureCount++;
+  deepSeekCircuitBreaker.lastFailureTime = Date.now();
+
+  if (
+    deepSeekCircuitBreaker.failureCount >= circuitBreakerConfig.threshold
+  ) {
+    deepSeekCircuitBreaker.state = "OPEN";
+    deepSeekCircuitBreaker.nextAttemptTime =
+      Date.now() + circuitBreakerConfig.timeout;
+    console.error(
+      `❌ Circuit breaker: opened after ${deepSeekCircuitBreaker.failureCount} failures. Next attempt in ${circuitBreakerConfig.timeout / 1000}s`,
+    );
+  } else {
+    console.warn(
+      `⚠️ Circuit breaker: ${deepSeekCircuitBreaker.failureCount}/${circuitBreakerConfig.threshold} failures`,
+    );
+  }
+}
+
+/**
+ * Get current circuit breaker state (for monitoring)
+ */
+export function getCircuitBreakerState(): CircuitBreakerState {
+  return deepSeekCircuitBreaker.state;
+}
+
+/**
+ * Reset circuit breaker (for manual recovery)
+ */
+export function resetCircuitBreaker(): void {
+  deepSeekCircuitBreaker.state = "CLOSED";
+  deepSeekCircuitBreaker.failureCount = 0;
+  deepSeekCircuitBreaker.lastFailureTime = 0;
+  deepSeekCircuitBreaker.nextAttemptTime = 0;
+  console.log("🔄 Circuit breaker manually reset to CLOSED");
+}
+
+/**
+ * Call DeepSeek API with circuit breaker protection
  */
 export async function callDeepSeek(
   messages: DeepSeekMessage[],
@@ -72,6 +169,13 @@ export async function callDeepSeek(
 ): Promise<string> {
   if (!DEEPSEEK_API_KEY) {
     throw new Error("DEEPSEEK_API_KEY is not configured");
+  }
+
+  // Check circuit breaker before proceeding
+  if (!canProceed()) {
+    throw new Error(
+      "DeepSeek API circuit breaker is OPEN - too many recent failures. Please try again later.",
+    );
   }
 
   try {
@@ -92,8 +196,14 @@ export async function callDeepSeek(
       },
     );
 
+    // Record success and reset failure count
+    recordSuccess();
+
     return response.data.choices[0]?.message?.content || "";
   } catch (error) {
+    // Record failure and potentially open circuit
+    recordFailure();
+
     if (axios.isAxiosError(error)) {
       console.error("DeepSeek API Error:", {
         status: error.response?.status,

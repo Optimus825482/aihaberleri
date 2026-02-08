@@ -195,6 +195,157 @@ async function stopMultiAgentPipeline(): Promise<void> {
   console.log("✅ Multi-agent pipeline stopped");
 }
 
+/**
+ * Cleanup memory resources before shutdown
+ */
+async function cleanupMemoryResources(): Promise<void> {
+  console.log("🧹 Cleaning up memory resources...");
+
+  try {
+    // Stop trend cache cleanup
+    const { stopTrendCacheCleanup } = await import("@/lib/brave");
+    stopTrendCacheCleanup();
+  } catch (error) {
+    console.warn("⚠️ Failed to stop trend cache cleanup:", error);
+  }
+
+  try {
+    // Stop source reliability cleanup
+    const { stopSourceReliabilityCleanup } = await import("@/lib/rss");
+    stopSourceReliabilityCleanup();
+  } catch (error) {
+    console.warn("⚠️ Failed to stop source reliability cleanup:", error);
+  }
+
+  try {
+    // Close all queues
+    const { closeAllQueues } = await import("@/lib/queue-manager");
+    await closeAllQueues();
+  } catch (error) {
+    console.warn("⚠️ Failed to close queues:", error);
+  }
+
+  console.log("✅ Memory resources cleaned up");
+}
+
+/**
+ * Progress tracking interface for agent jobs
+ */
+interface ProgressUpdate {
+  timestamp: string;
+  agent: string;
+  stage: string;
+  message: string;
+  progress: number; // 0-100
+}
+
+/**
+ * Update job progress in AgentLog (persistent storage)
+ * Updates both Redis (fast access) and Database (persistent)
+ */
+async function updateJobProgress(
+  agentLogId: string,
+  agent: string,
+  stage: string,
+  message: string,
+  progress: number,
+): Promise<void> {
+  const update: ProgressUpdate = {
+    timestamp: new Date().toISOString(),
+    agent,
+    stage,
+    message,
+    progress: Math.min(100, Math.max(0, progress)), // Clamp 0-100
+  };
+
+  try {
+    // 1. Store in Redis for fast access (1 hour TTL)
+    if (redis) {
+      const progressKey = `job:progress:${agentLogId}`;
+      await redis.lpush(progressKey, JSON.stringify(update));
+      await redis.ltrim(progressKey, 0, 49); // Keep last 50
+      await redis.expire(progressKey, 3600); // 1 hour TTL
+    }
+  } catch (redisError) {
+    console.warn("⚠️ Failed to store progress in Redis:", redisError);
+  }
+
+  try {
+    // 2. Persist to database (survives Redis restarts)
+    const log = await db.agentLog.findUnique({
+      where: { id: agentLogId },
+      select: { progressUpdates: true },
+    });
+
+    if (log) {
+      let updates: ProgressUpdate[] = [];
+      try {
+        updates = Array.isArray(log.progressUpdates)
+          ? (log.progressUpdates as unknown as ProgressUpdate[])
+          : JSON.parse(String(log.progressUpdates || "[]"));
+      } catch {
+        updates = [];
+      }
+
+      // Add new update
+      updates.push(update);
+
+      // Keep only last 100 updates in DB (prevent unlimited growth)
+      if (updates.length > 100) {
+        updates = updates.slice(-100);
+      }
+
+      await db.agentLog.update({
+        where: { id: agentLogId },
+        data: { progressUpdates: updates as unknown as Prisma.JsonValue },
+      });
+
+      console.log(`📊 Progress: ${progress}% - ${agent} > ${stage}`);
+    }
+  } catch (dbError) {
+    console.warn(`⚠️ Failed to persist progress to DB: ${dbError}`);
+    // Don't throw - progress updates are non-critical
+  }
+}
+
+/**
+ * Get job progress from Redis or database
+ */
+async function getJobProgress(agentLogId: string): Promise<ProgressUpdate[]> {
+  try {
+    if (!redis) return [];
+
+    // Try Redis first (fast)
+    const progressKey = `job:progress:${agentLogId}`;
+    const redisProgress = await redis.lrange(progressKey, 0, 49);
+
+    if (redisProgress.length > 0) {
+      return redisProgress.map((p) => JSON.parse(p));
+    }
+
+    // Fallback to database
+    const log = await db.agentLog.findUnique({
+      where: { id: agentLogId },
+      select: { progressUpdates: true },
+    });
+
+    if (log?.progressUpdates) {
+      try {
+        return Array.isArray(log.progressUpdates)
+          ? log.progressUpdates as unknown as ProgressUpdate[]
+          : JSON.parse(log.progressUpdates as string || "[]");
+      } catch {
+        return [];
+      }
+    }
+
+    return [];
+  } catch (error) {
+    console.warn(`⚠️ Failed to get job progress: ${error}`);
+    return [];
+  }
+}
+
 workerLogger.start();
 console.log("🚀 Starting News Agent Worker...");
 
@@ -374,8 +525,9 @@ async function startWorker() {
 
       let result;
       try {
-        // Ensure DB connection is active (prevents "Closed" error after long idle)
-        await (db as PrismaClient).$connect();
+        // 🚀 PERFORMANCE (FAZ 2): No need for explicit $connect()
+        // Prisma's connection pool handles connection lifecycle automatically
+        // This prevents unnecessary reconnection overhead
 
         // Update job progress to prevent stalling
         await job.updateProgress(10);
@@ -460,16 +612,12 @@ async function startWorker() {
           publishedArticles: [],
         };
       } finally {
-        // CRITICAL: Disconnect after each job to prevent connection leaks
-        try {
-          await (db as PrismaClient).$disconnect();
-          console.log("🔌 Database connection closed");
-        } catch (disconnectError) {
-          console.error(
-            "⚠️ Error disconnecting from database:",
-            disconnectError,
-          );
-        }
+        // 🚀 PERFORMANCE (FAZ 2): Keep connection pool alive instead of disconnecting
+        // Prisma's connection pool manages connections efficiently
+        // Disconnecting after each job causes unnecessary overhead
+        // Connection pool will automatically handle connection lifecycle
+        console.log("💾 Database connection pool kept alive for next job");
+
         // Repeatable jobs auto-reschedule - no manual scheduling needed
         // Just log next execution info
         try {
@@ -555,24 +703,78 @@ async function startWorker() {
     }
   });
 
-  // Graceful shutdown
-  process.on("SIGTERM", async () => {
-    console.log("\n🛑 SIGTERM received, closing worker...");
-    await stopMultiAgentPipeline();
-    await worker.close();
-    await (db as PrismaClient).$disconnect();
-    await redis!.quit();
-    process.exit(0);
-  });
+  // Graceful shutdown with active job waiting
+  async function gracefulShutdown(signal: string): Promise<void> {
+    console.log(`\n🛑 ${signal} received, initiating graceful shutdown...`);
 
-  process.on("SIGINT", async () => {
-    console.log("\n🛑 SIGINT received, closing worker...");
-    await stopMultiAgentPipeline();
-    await worker.close();
-    await (db as PrismaClient).$disconnect();
-    await redis!.quit();
-    process.exit(0);
-  });
+    const SHUTDOWN_TIMEOUT = 30000; // 30 seconds max wait
+    const startTime = Date.now();
+
+    try {
+      // 1. Stop accepting new jobs
+      console.log("📋 Pausing worker, no new jobs will be accepted...");
+      await worker.pause();
+
+      // 2. Wait for active jobs to complete (with timeout)
+      console.log("⏳ Waiting for active jobs to complete...");
+
+      let attempts = 0;
+      const maxAttempts = Math.ceil(SHUTDOWN_TIMEOUT / 1000);
+
+      while (attempts < maxAttempts) {
+        const activeCount = await worker.getActiveCount();
+
+        if (activeCount === 0) {
+          console.log("✅ All active jobs completed");
+          break;
+        }
+
+        const elapsed = Date.now() - startTime;
+        if (elapsed >= SHUTDOWN_TIMEOUT) {
+          console.warn(`⚠️ Shutdown timeout reached after ${elapsed}ms. ${activeCount} jobs may be incomplete.`);
+          break;
+        }
+
+        console.log(`   Still waiting... ${activeCount} active job(s) remaining (${elapsed}ms elapsed)`);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        attempts++;
+      }
+
+      // 3. Stop multi-agent pipeline
+      console.log("🔄 Stopping multi-agent pipeline...");
+      await stopMultiAgentPipeline();
+
+      // 3.5. Cleanup memory resources
+      await cleanupMemoryResources();
+
+      // 4. Close worker
+      console.log("🔒 Closing worker...");
+      await worker.close();
+
+      // 5. Disconnect from database
+      console.log("💾 Disconnecting from database...");
+      await (db as PrismaClient).$disconnect();
+
+      // 6. Close Redis connection
+      if (redis) {
+        console.log("🔴 Closing Redis connection...");
+        await redis.quit();
+      }
+
+      const totalTime = Date.now() - startTime;
+      console.log(`✅ Graceful shutdown completed in ${totalTime}ms`);
+      process.exit(0);
+    } catch (error) {
+      console.error("❌ Error during graceful shutdown:", error);
+      // Force exit if shutdown fails
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      process.exit(1);
+    }
+  }
+
+  // Graceful shutdown handlers
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
   // Initial scheduling check and system sync on startup
   async function initStartupSync() {

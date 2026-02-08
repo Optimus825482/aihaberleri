@@ -10,6 +10,29 @@ import { getRedis } from "@/lib/redis";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 import { getQueue, getQueueConfig } from "@/lib/queue-manager";
 
+// ============================================================================
+// AGENT TIMEOUT CONFIG (FAZ 3)
+// ============================================================================
+
+const AGENT_TIMEOUTS: Record<string, number> = {
+  "relevance-filter": 3 * 60 * 1000, // 3 minutes
+  "duplicate-detector": 2 * 60 * 1000, // 2 minutes
+  "content-enricher": 10 * 60 * 1000, // 10 minutes
+  "visual-generator": 5 * 60 * 1000, // 5 minutes
+  "database-publisher": 2 * 60 * 1000, // 2 minutes
+  "seo-optimizer": 15 * 60 * 1000, // 15 minutes
+  "trend-enricher": 1 * 60 * 1000, // 1 minute
+  "default": 5 * 60 * 1000, // 5 minutes default
+};
+
+export function getAgentTimeout(agentName: string): number {
+  return AGENT_TIMEOUTS[agentName] || AGENT_TIMEOUTS["default"];
+}
+
+// ============================================================================
+// END AGENT TIMEOUT CONFIG
+// ============================================================================
+
 export interface AgentMetrics {
   processingTime: number; // milliseconds
   apiCalls: number;
@@ -53,6 +76,32 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
   protected abstract process(job: Job<TInput>): Promise<AgentResult<TOutput>>;
 
   /**
+   * Process with timeout protection (FAZ 3)
+   * Wraps the process method with a timeout to prevent hanging agents
+   */
+  protected async processWithTimeout(
+    job: Job<TInput>,
+    timeoutMs?: number,
+  ): Promise<AgentResult<TOutput>> {
+    const agentTimeout = timeoutMs || getAgentTimeout(this.config.name);
+
+    return Promise.race([
+      this.process(job),
+      new Promise<AgentResult<TOutput>>((_, reject) =>
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                `Agent ${this.config.name} timed out after ${Math.round(agentTimeout / 1000)}s`,
+              ),
+            ),
+          agentTimeout,
+        ),
+      ),
+    ]);
+  }
+
+  /**
    * Start the agent worker
    */
   public async start(): Promise<void> {
@@ -76,6 +125,8 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
       this.config.queueName,
       async (job) => {
         const startTime = Date.now();
+        const agentTimeout = getAgentTimeout(this.config.name);
+
         console.log(
           `\n🤖 [${this.config.name}] ========== PROCESSING JOB ==========`,
         );
@@ -85,11 +136,12 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
         console.log(
           `   Data items: ${Array.isArray(job.data) ? job.data.length : 1}`,
         );
-        this.logger.info(`Processing job ${job.id}`);
+        console.log(`   Timeout: ${Math.round(agentTimeout / 1000)}s`);
+        this.logger.info(`Processing job ${job.id} (timeout: ${Math.round(agentTimeout / 1000)}s)`);
 
         try {
-          // Call the agent's process method
-          const result = await this.process(job);
+          // FAZ 3: Use processWithTimeout for automatic timeout protection
+          const result = await this.processWithTimeout(job, agentTimeout);
 
           // Calculate processing time
           const processingTime = Date.now() - startTime;
@@ -108,6 +160,13 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
             this.metrics.set(job.id, result.metrics);
           }
 
+          // FAZ 3: Update agent health status on success
+          const { updateAgentHealth, exitRecoveryMode } = await import("@/services/multi-agent-pipeline.service");
+          await updateAgentHealth(this.config.name, true);
+          if (result.success) {
+            await exitRecoveryMode(this.config.name);
+          }
+
           // Log success
           this.logger.success(`Job ${job.id} completed in ${processingTime}ms`);
 
@@ -123,6 +182,13 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
             `Job ${job.id} failed after ${processingTime}ms:`,
             this.serializeError(error),
           );
+
+          // FAZ 3: Update agent health status on failure
+          if (error instanceof Error && error.message.includes("timed out")) {
+            const { updateAgentHealth } = await import("@/services/multi-agent-pipeline.service");
+            await updateAgentHealth(this.config.name, false);
+            this.logger.error(`⏰ Agent ${this.config.name} timed out - health updated`);
+          }
 
           return {
             success: false,

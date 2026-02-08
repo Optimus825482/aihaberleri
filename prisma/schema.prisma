@@ -196,6 +196,20 @@ model Article {
   @@index([status, googleIndexStatusEn])
   @@index([status, googleIndexStatus])
   @@index([seoScore], map: "idx_article_seo_score")
+
+  // =============================================
+  // FAZ 4: Database Optimizasyonu
+  // =============================================
+
+  // 1. GIN index for keywords - Array contains query performansı
+  @@index([keywords], type: Gin, map: "idx_article_keywords_gin")
+  @@index([keywordsEn], type: Gin, map: "idx_article_keywords_en_gin")
+
+  // 2. Full-text search support - Migration ile ekleniyor (Prisma FullText type desteklemiyor)
+  // 3. Partial index PUBLISHED - Migration ile ekleniyor (Prisma where clause desteklemiyor)
+  // 4. Composite indexes - Çoklu sorgu optimizasyonu
+  @@index([status, publishedAt(sort: Desc), language], map: "idx_article_status_published_lang")
+  @@index([isTrending, trendScore(sort: Desc)], map: "idx_article_trending_score")
 }
 
 model ArticleInteraction {
@@ -267,6 +281,7 @@ model AgentLog {
   duration        Int?
   errors          String[]
   metadata        Json?
+  progressUpdates Json?       @default("[]")
   articles        Article[]
 
   @@index([executionTime])
