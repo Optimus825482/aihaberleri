@@ -26,11 +26,13 @@ const texts = {
     featured: "Öne Çıkan",
     readMore: "Devamını Oku",
     save: "Kaydet",
+    loading: "Yükleniyor...",
   },
   en: {
     featured: "Featured",
     readMore: "Read More",
     save: "Save",
+    loading: "Loading...",
   },
 };
 
@@ -58,17 +60,23 @@ export function HeroSection({
     featuredArticles.length > 0 ? featuredArticles : [defaultArticle];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Prevent hydration mismatch - wait until client-side mount
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Auto-slide every 10 seconds (going backwards: newest to oldest)
   useEffect(() => {
-    if (articles.length <= 1 || isPaused) return;
+    if (articles.length <= 1 || isPaused || !isMounted) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % articles.length);
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [articles.length, isPaused]);
+  }, [articles.length, isPaused, isMounted]);
 
   // Manual navigation
   const goToSlide = useCallback(
@@ -101,6 +109,46 @@ export function HeroSection({
     }
     return `/category/${currentArticle.category.slug}`;
   };
+
+  // Server-side render: Show skeleton to prevent hydration mismatch
+  if (!isMounted) {
+    const firstArticle = articles[0];
+    return (
+      <div
+        className="group relative mb-8 sm:mb-10 lg:mb-12 min-h-[400px] overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl md:min-h-[500px] lg:min-h-[580px] border border-gray-800/50"
+        suppressHydrationWarning
+      >
+        {/* Static Background for SSR */}
+        <div className="absolute inset-0 z-0">
+          {firstArticle.imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={firstArticle.imageUrl}
+              alt={firstArticle.title}
+              className="h-full w-full object-cover"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/70 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-ai-background-dark/40 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
+        </div>
+
+        {/* Static Content for SSR */}
+        <div className="relative z-10 flex flex-col items-start justify-end px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 md:py-16 lg:py-20 lg:min-h-[520px]">
+          <div className="mb-3 sm:mb-4 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-ai-primary/20 to-ai-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-ai-primary/30 shadow-lg shadow-ai-primary/20">
+            <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+            <span>{t.featured}</span>
+          </div>
+          <h1 className="mb-3 sm:mb-4 max-w-3xl text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white drop-shadow-2xl">
+            {firstArticle.title}
+          </h1>
+          <p className="mb-6 sm:mb-8 max-w-2xl text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 line-clamp-2 sm:line-clamp-3 leading-relaxed">
+            {firstArticle.excerpt}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -248,3 +296,4 @@ export function HeroSection({
     </div>
   );
 }
+

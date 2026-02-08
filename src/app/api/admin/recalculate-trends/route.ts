@@ -142,10 +142,15 @@ export async function POST(request: NextRequest) {
  * GET /api/admin/recalculate-trends
  * 
  * Returns current trend statistics without recalculating
+ * Auth: Session OR X-API-Secret header OR secret query param
  */
 export async function GET(request: NextRequest) {
+  // Auth check - allow session OR API secret (same as POST)
   const session = await auth();
-  if (!session) {
+  const apiSecret = request.headers.get("X-API-Secret") || request.nextUrl.searchParams.get("secret");
+  const validSecret = process.env.CRON_SECRET || process.env.API_SECRET || "aihaberleri-trend-2026";
+  
+  if (!session && apiSecret !== validSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

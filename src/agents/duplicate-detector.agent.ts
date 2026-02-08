@@ -26,6 +26,16 @@ export interface UniqueArticle extends ScoredArticle {
   embedding?: number[]; // Pre-generated embedding for storage
 }
 
+// 🚨 GUARANTEED MINIMUM PUBLISH CONFIG
+const FORCE_PUBLISH_CONFIG = {
+  // Minimum number of articles to publish per run (GUARANTEED)
+  MINIMUM_ARTICLES: 1,
+  // Allow more articles in force mode if available (up to this limit)
+  FORCE_MAX_ARTICLES: 3,
+  // Log level for force publish operations
+  VERBOSE_LOGGING: true,
+};
+
 export class DuplicateDetectorAgent extends BaseAgent<
   ScoredArticle[],
   UniqueArticle[]
@@ -152,9 +162,74 @@ export class DuplicateDetectorAgent extends BaseAgent<
           }
         }
 
+        // 🚨 FORCE PUBLISH MECHANISM: Guaranteed minimum articles (2026-02-09)
+        // If recovery also failed, FORCE publish the highest scored articles
+        // This ensures at least MINIMUM_ARTICLES is always published per run
         if (uniqueArticles.length === 0) {
-          this.logger.error(
-            `❌ RECOVERY FAILED: All articles have URL duplicates in database`,
+          this.logger.warn(
+            `⚠️ RECOVERY FAILED: All articles URL duplicates. Activating FORCE PUBLISH...`,
+          );
+
+          // Get the top scored articles - will publish regardless of duplicate status
+          const articlesToForce = sortedByScore.slice(0, FORCE_PUBLISH_CONFIG.FORCE_MAX_ARTICLES);
+          
+          for (const article of articlesToForce) {
+            const topic = this.extractTopic(article.title);
+            let embedding: number[] | undefined;
+            try {
+              const combinedText =
+                `${article.title}. ${article.description || ""}`.trim();
+              embedding = await generateEmbedding(combinedText);
+            } catch {
+              // Ignore embedding errors
+            }
+
+            uniqueArticles.push({
+              ...article,
+              topic,
+              isDuplicate: false, // Force as non-duplicate
+              duplicateReason: "FORCE_PUBLISH_GUARANTEED",
+              embedding,
+            });
+
+            if (FORCE_PUBLISH_CONFIG.VERBOSE_LOGGING) {
+              this.logger.success(
+                `🚀 FORCE PUBLISH [${uniqueArticles.length}/${FORCE_PUBLISH_CONFIG.FORCE_MAX_ARTICLES}]: "${article.title.substring(0, 50)}..." (score: ${article.relevanceScore})`,
+              );
+            }
+            
+            // Stop if we have enough for guaranteed minimum
+            if (uniqueArticles.length >= FORCE_PUBLISH_CONFIG.MINIMUM_ARTICLES) {
+              break;
+            }
+          }
+
+          this.logger.success(
+            `✅ FORCE PUBLISH COMPLETE: ${uniqueArticles.length} articles will be published (duplicate override active)`,
+          );
+        }
+      }
+
+      // 🔒 FINAL GUARANTEE: Ensure at least 1 article even if something went wrong
+      if (uniqueArticles.length === 0 && articles.length > 0) {
+        this.logger.warn(
+          `🔒 FINAL FALLBACK: All mechanisms failed. Force-selecting top article...`,
+        );
+        const sortedByScore = [...articles].sort(
+          (a, b) => b.relevanceScore - a.relevanceScore,
+        );
+        const bestArticle = sortedByScore[0];
+        if (bestArticle) {
+          const topic = this.extractTopic(bestArticle.title);
+          uniqueArticles.push({
+            ...bestArticle,
+            topic,
+            isDuplicate: false,
+            duplicateReason: "FINAL_FALLBACK_GUARANTEE",
+            embedding: undefined,
+          });
+          this.logger.success(
+            `🔒 FINAL FALLBACK SUCCESS: "${bestArticle.title.substring(0, 50)}..." selected`,
           );
         }
       }
