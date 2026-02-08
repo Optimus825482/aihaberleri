@@ -192,8 +192,8 @@ export function getQueue(queueName: string): Queue | null {
         removeOnFail: {
           count: 50, // Keep last 50 failed jobs
         },
-        // FAZ 3: Add job timeout for deadlock prevention
-        jobTimeout: (config as any).jobTimeout || 300000, // Default 5 minutes
+        // Note: Job timeouts are handled at Worker level via lockDuration
+        // The actual timeout is controlled by worker's job processing timeout
       },
     });
 

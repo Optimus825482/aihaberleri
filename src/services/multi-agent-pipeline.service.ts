@@ -72,15 +72,18 @@ export async function updateAgentHealth(
     };
 
     await redis.set(key, JSON.stringify(healthStatus), "EX", 3600); // 1 hour TTL
-  } catch (error) {
-    logger.error(`Failed to update agent health for ${agentName}:`, error);
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    logger.error(`Failed to update agent health for ${agentName}: ${errorMsg}`);
   }
 }
 
 /**
  * Check if agent is in recovery mode
  */
-export async function isAgentInRecoveryMode(agentName: string): Promise<boolean> {
+export async function isAgentInRecoveryMode(
+  agentName: string,
+): Promise<boolean> {
   try {
     const redis = getRedis();
     if (!redis) return false;
@@ -92,8 +95,9 @@ export async function isAgentInRecoveryMode(agentName: string): Promise<boolean>
 
     const status = JSON.parse(existing) as AgentHealthStatus;
     return status.inRecoveryMode;
-  } catch (error) {
-    logger.error(`Failed to check recovery mode for ${agentName}:`, error);
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    logger.error(`Failed to check recovery mode for ${agentName}: ${errorMsg}`);
     return false;
   }
 }
@@ -119,8 +123,9 @@ export async function getAllAgentHealthStatuses(): Promise<
     }
 
     return statuses;
-  } catch (error) {
-    logger.error("Failed to get agent health statuses:", error);
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    logger.error(`Failed to get agent health statuses: ${errorMsg}`);
     return [];
   }
 }
@@ -146,8 +151,9 @@ export async function exitRecoveryMode(agentName: string): Promise<void> {
       await redis.set(key, JSON.stringify(status), "EX", 3600);
       logger.success(`✅ Agent ${agentName} exited RECOVERY MODE`);
     }
-  } catch (error) {
-    logger.error(`Failed to exit recovery mode for ${agentName}:`, error);
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    logger.error(`Failed to exit recovery mode for ${agentName}: ${errorMsg}`);
   }
 }
 

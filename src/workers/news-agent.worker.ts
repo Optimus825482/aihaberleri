@@ -29,7 +29,7 @@ import { postToBluesky, postToBlueskyEN } from "@/lib/social/bluesky";
 import { postToMastodon, postToMastodonEN } from "@/lib/social/mastodon";
 import { postToTumblr, postToTumblrEN } from "@/lib/social/tumblr";
 import { db } from "@/lib/db";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { workerLogger } from "@/lib/logger";
 import { trackWorkerError } from "@/lib/sentry";
 
@@ -297,7 +297,8 @@ async function updateJobProgress(
 
       await db.agentLog.update({
         where: { id: agentLogId },
-        data: { progressUpdates: updates as unknown as Prisma.JsonValue },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data: { progressUpdates: updates as any },
       });
 
       console.log(`📊 Progress: ${progress}% - ${agent} > ${stage}`);
@@ -332,8 +333,8 @@ async function getJobProgress(agentLogId: string): Promise<ProgressUpdate[]> {
     if (log?.progressUpdates) {
       try {
         return Array.isArray(log.progressUpdates)
-          ? log.progressUpdates as unknown as ProgressUpdate[]
-          : JSON.parse(log.progressUpdates as string || "[]");
+          ? (log.progressUpdates as unknown as ProgressUpdate[])
+          : JSON.parse((log.progressUpdates as string) || "[]");
       } catch {
         return [];
       }
@@ -720,9 +721,10 @@ async function startWorker() {
 
       let attempts = 0;
       const maxAttempts = Math.ceil(SHUTDOWN_TIMEOUT / 1000);
+      const queue = (worker as any).queue;
 
       while (attempts < maxAttempts) {
-        const activeCount = await worker.getActiveCount();
+        const activeCount = queue ? await queue.getActiveCount() : 0;
 
         if (activeCount === 0) {
           console.log("✅ All active jobs completed");
@@ -731,11 +733,15 @@ async function startWorker() {
 
         const elapsed = Date.now() - startTime;
         if (elapsed >= SHUTDOWN_TIMEOUT) {
-          console.warn(`⚠️ Shutdown timeout reached after ${elapsed}ms. ${activeCount} jobs may be incomplete.`);
+          console.warn(
+            `⚠️ Shutdown timeout reached after ${elapsed}ms. ${activeCount} jobs may be incomplete.`,
+          );
           break;
         }
 
-        console.log(`   Still waiting... ${activeCount} active job(s) remaining (${elapsed}ms elapsed)`);
+        console.log(
+          `   Still waiting... ${activeCount} active job(s) remaining (${elapsed}ms elapsed)`,
+        );
         await new Promise((resolve) => setTimeout(resolve, 1000));
         attempts++;
       }

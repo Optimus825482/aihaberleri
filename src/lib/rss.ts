@@ -999,7 +999,8 @@ export function stopSourceReliabilityCleanup(): void {
 }
 
 // Auto-start cleanup in non-build environments
-if (process.env.NODE_ENV !== "build" && typeof globalThis.setInterval !== "undefined") {
+const isBuildPhaseRss = process.env.NEXT_PHASE === "phase-production-build";
+if (!isBuildPhaseRss && typeof globalThis.setInterval !== "undefined") {
   startSourceReliabilityCleanup();
 }
 

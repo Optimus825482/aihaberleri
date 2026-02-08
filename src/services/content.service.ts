@@ -881,6 +881,7 @@ export async function processArticle(
     const shouldGenerateImage = score >= CONTENT_CONSTANTS.PUBLISH_SCORE_THRESHOLD;
 
     let imageUrl: string;
+    let slug: string; // Declare slug at outer scope
     let imageSizes: {
       large: string;
       medium: string;
@@ -910,7 +911,7 @@ export async function processArticle(
       console.log("✅ Görsel URL:", imageUrl);
 
       // Step 5.5: Generate slug (needed for image optimization)
-      const slug = generateSlug(rewritten.title);
+      slug = generateSlug(rewritten.title);
 
       // Live log: Image generated
       await liveLog.image.success(`🖼️ Görsel oluşturuldu: ${slug}`);
@@ -943,13 +944,11 @@ export async function processArticle(
       console.log(
         `⏭️  Görsel oluşturma atlandı (Skor: ${score} < ${CONTENT_CONSTANTS.PUBLISH_SCORE_THRESHOLD})`,
       );
-      await liveLog.image.warn(
-        `⏭️ Görsel atlandı: Düşük skor (${score}/1000)`,
-      );
+      await liveLog.image.warn(`⏭️ Görsel atlandı: Düşük skor (${score}/1000)`);
 
       // Use default placeholder image
       imageUrl = "/logos/og-image.png";
-      const slug = generateSlug(rewritten.title);
+      slug = generateSlug(rewritten.title);
       imageSizes = {
         large: imageUrl,
         medium: imageUrl,
