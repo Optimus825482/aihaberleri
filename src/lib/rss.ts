@@ -43,7 +43,8 @@ export interface MultiLanguageFeedResult {
 
 /**
  * AI News RSS Feed Sources
- * Total: ~90 feeds (60+ English, 29 Turkish)
+ * Total: ~70 feeds (AI-focused only, cleaned 2026-02-08)
+ * REMOVED: 20 non-AI sources (general tech, mobile, hardware, science)
  */
 export const AI_NEWS_RSS_FEEDS = [
   // ========================================
@@ -144,73 +145,11 @@ export const AI_NEWS_RSS_FEEDS = [
   },
 
   // ========================================
-  // TECH NEWS & PUBLICATIONS (18 feeds)
+  // TECH NEWS & PUBLICATIONS - AI FOCUSED ONLY (2 feeds)
   // ========================================
-  {
-    name: "The Next Web",
-    url: "https://thenextweb.com/feed",
-    language: "en",
-  },
-  {
-    name: "TechRadar - News",
-    url: "https://www.techradar.com/rss",
-    language: "en",
-  },
-  {
-    name: "CNET - News",
-    url: "https://www.cnet.com/rss/news/",
-    language: "en",
-  },
-  {
-    name: "Mashable - Tech",
-    url: "https://mashable.com/feeds/rss/tech",
-    language: "en",
-  },
-  {
-    name: "Gizmodo",
-    url: "https://gizmodo.com/rss",
-    language: "en",
-  },
-  {
-    name: "Lifehacker",
-    url: "https://lifehacker.com/rss",
-    language: "en",
-  },
-  {
-    name: "Digital Trends",
-    url: "https://www.digitaltrends.com/feed/",
-    language: "en",
-  },
-  {
-    name: "Tom's Hardware",
-    url: "https://www.tomshardware.com/feeds/all",
-    language: "en",
-  },
-  {
-    name: "9to5Mac",
-    url: "https://9to5mac.com/feed/",
-    language: "en",
-  },
-  {
-    name: "9to5Google",
-    url: "https://9to5google.com/feed/",
-    language: "en",
-  },
-  {
-    name: "Android Authority",
-    url: "https://www.androidauthority.com/feed/",
-    language: "en",
-  },
-  {
-    name: "Android Police",
-    url: "https://www.androidpolice.com/feed/",
-    language: "en",
-  },
-  {
-    name: "XDA Developers",
-    url: "https://www.xda-developers.com/feed/",
-    language: "en",
-  },
+  // REMOVED: The Next Web, TechRadar, CNET, Mashable, Gizmodo, Lifehacker, Digital Trends, Tom's Hardware
+  // REMOVED: 9to5Mac, 9to5Google, Android Authority, Android Police, XDA Developers
+  // REASON: Genel teknoloji haberleri, AI odaklı değil
   {
     name: "Hacker News (YCombinator)",
     url: "https://hnrss.org/frontpage",
@@ -466,51 +405,18 @@ export const AI_NEWS_RSS_FEEDS = [
   },
 
   // ========================================
-  // SCIENCE & TECHNOLOGY (10 feeds)
+  // SCIENCE & TECHNOLOGY - AI FOCUSED ONLY (3 feeds)
   // ========================================
+  // REMOVED: New Scientist, Popular Science, Popular Mechanics, Space.com, Phys.org, Singularity Hub, IEEE Spectrum
+  // REASON: Genel bilim/teknoloji haberleri, AI odaklı değil
   {
-    name: "New Scientist - Technology",
-    url: "https://www.newscientist.com/subject/technology/feed/",
-    language: "en",
-  },
-  {
-    name: "Popular Science",
-    url: "https://www.popsci.com/feed/",
-    language: "en",
-  },
-  {
-    name: "Popular Mechanics",
-    url: "https://www.popularmechanics.com/rss/all.xml/",
-    language: "en",
-  },
-  {
-    name: "Space.com",
-    url: "https://www.space.com/feeds/all",
-    language: "en",
-  },
-  {
-    name: "Phys.org - Technology",
-    url: "https://phys.org/rss-feed/technology-news/",
-    language: "en",
-  },
-  {
-    name: "ScienceDaily - Technology",
+    name: "ScienceDaily - AI",
     url: "https://www.sciencedaily.com/rss/computers_math/artificial_intelligence.xml",
     language: "en",
   },
   {
-    name: "Futurism",
-    url: "https://futurism.com/feed",
-    language: "en",
-  },
-  {
-    name: "Singularity Hub",
-    url: "https://singularityhub.com/feed/",
-    language: "en",
-  },
-  {
-    name: "IEEE Spectrum - Technology",
-    url: "https://spectrum.ieee.org/feeds/feed.rss",
+    name: "Futurism - AI",
+    url: "https://futurism.com/categories/ai-artificial-intelligence/feed",
     language: "en",
   },
 
@@ -665,7 +571,9 @@ function extractLink(element: any): string {
 export async function fetchAllRSSFeeds(
   maxConcurrent: number = 5,
 ): Promise<RSSItem[]> {
-  console.log(`📡 ${AI_NEWS_RSS_FEEDS.length} RSS feed okunuyor...`);
+  console.log(
+    `📡 ${AI_NEWS_RSS_FEEDS.length} RSS feed okunuyor (AI-focused only)...`,
+  );
 
   const allItems: RSSItem[] = [];
   const feeds = [...AI_NEWS_RSS_FEEDS];
@@ -964,7 +872,9 @@ export function cleanupSourceReliability(): number {
   }
 
   if (cleanedCount > 0) {
-    console.log(`🧹 Cleaned ${cleanedCount} expired reliability entries (remaining: ${sourceReliabilityAdjustments.size})`);
+    console.log(
+      `🧹 Cleaned ${cleanedCount} expired reliability entries (remaining: ${sourceReliabilityAdjustments.size})`,
+    );
   }
 
   return cleanedCount;
@@ -983,7 +893,9 @@ export function startSourceReliabilityCleanup(): void {
     cleanupSourceReliability();
   }, RELIABILITY_CLEANUP_INTERVAL);
 
-  console.log(`🧹 Source reliability cleanup started (interval: ${RELIABILITY_CLEANUP_INTERVAL / 60000} min, TTL: ${RELIABILITY_ENTRY_TTL / (60 * 60 * 1000)} hours)`);
+  console.log(
+    `🧹 Source reliability cleanup started (interval: ${RELIABILITY_CLEANUP_INTERVAL / 60000} min, TTL: ${RELIABILITY_ENTRY_TTL / (60 * 60 * 1000)} hours)`,
+  );
 }
 
 /**

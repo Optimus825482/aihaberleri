@@ -157,8 +157,9 @@ async function initializeMultiAgentPipeline(): Promise<void> {
 
     console.log("✅ Multi-agent pipeline (6 agents) started successfully");
     console.log(
-      "   Pipeline: Relevance → Duplicate → Enrich → Visual → Publish (SEO removed)",
+      "   Pipeline: Relevance → Duplicate → Enrich → Visual → Publish",
     );
+    console.log("   🎯 Target: 1-2 haber / 15 dakika (96 haber/gün)");
   } catch (error) {
     console.error("❌ Failed to initialize multi-agent pipeline:");
     console.error(

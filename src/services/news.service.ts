@@ -859,12 +859,12 @@ export async function fetchAINews(
     // const uniqueArticles = await filterDuplicatesByTopicAndUrl(articlesWithTopics, 1);
 
     console.log(
-      `\n✅ ${itemsToAnalyze.length} unique haber Brave API'ye gönderilecek`,
+      `\n✅ ${itemsToAnalyze.length} unique haber trend skorlamasına gönderilecek`,
     );
 
-    // Step 3: Analyze trends using Brave Search API ONLY
+    // Step 3: Analyze trends using SearXNG (NOT Brave API)
     console.log(
-      `📊 ${itemsToAnalyze.length} haber için Trend analizi (Brave API)...`,
+      `📊 ${itemsToAnalyze.length} haber için Trend analizi (SearXNG)...`,
     );
 
     const trendRankings = await rankArticlesByTrendHybrid(
@@ -875,10 +875,10 @@ export async function fetchAINews(
     );
 
     // Step 4: Sort by trend score and take top articles
-    // 🔄 INCREASED from 20 to 50 for retry mechanism pool
-    // Agent will select 1-5 articles, but needs more options if duplicates found
+    // 🎯 OPTIMIZED: 15 dakikada 1-2 haber (08.02.2026)
+    // Duplicate detector için 5 haber pool (2 duplicate olsa bile 1-2 haber kalır)
     const topArticles = trendRankings
-      .slice(0, 50) // Top 50 trending (increased for retry pool)
+      .slice(0, 5) // Top 5 trending (duplicate için yedek)
       .map((ranking) => {
         const item = itemsToAnalyze[ranking.index];
         return {
@@ -889,7 +889,7 @@ export async function fetchAINews(
       .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0));
 
     console.log(
-      `✅ ${topArticles.length} trend haber seçildi (retry pool için artırıldı)`,
+      `✅ ${topArticles.length} trend haber seçildi (15 dakikada 1-2 haber için)`,
     );
     console.log(
       "Top 5 Trend Haberler:",
