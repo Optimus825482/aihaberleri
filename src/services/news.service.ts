@@ -749,8 +749,8 @@ export async function fetchAINews(
 
     const recentUrlSet = new Set(
       recentUrls
-        .filter((a) => a.sourceUrl !== null)
-        .map((a) => normalizeUrl(a.sourceUrl!)),
+        .filter((a): a is { sourceUrl: string } => a.sourceUrl !== null)
+        .map((a) => normalizeUrl(a.sourceUrl)),
     );
 
     console.log(
