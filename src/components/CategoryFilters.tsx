@@ -49,18 +49,18 @@ export function CategoryFilters({ categories, locale = "tr", selectedCategory }:
   };
 
   return (
-    <div className="mb-8 flex flex-wrap gap-3 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="mb-6 sm:mb-8 flex flex-wrap gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
       {/* All Categories Button */}
       <Link
         href={getCategoryLink("")}
-        className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium shadow-lg shadow-ai-primary/25 transition-colors ${
+        className={`group flex items-center gap-2 rounded-full px-4 py-2 text-xs sm:text-sm font-semibold transition-all duration-300 ${
           selectedCategory === "" || !selectedCategory
-            ? "bg-ai-primary text-white"
-            : "bg-white dark:bg-ai-surface-card border border-gray-200 dark:border-ai-surface-border text-slate-700 dark:text-gray-300 hover:border-ai-primary hover:text-ai-primary dark:hover:border-ai-primary"
+            ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-lg shadow-ai-primary/30 scale-105"
+            : "bg-white dark:bg-ai-surface-card border-2 border-gray-200 dark:border-ai-surface-border text-slate-700 dark:text-gray-300 hover:border-ai-primary hover:text-ai-primary dark:hover:border-ai-primary dark:hover:text-ai-primary hover:shadow-md"
         }`}
       >
-        <span className="material-symbols-outlined text-[18px]">apps</span>
-        {t.all}
+        <span className="material-symbols-outlined text-[18px] sm:text-[20px]">apps</span>
+        <span>{t.all}</span>
       </Link>
 
       {/* Category Buttons */}
@@ -68,14 +68,14 @@ export function CategoryFilters({ categories, locale = "tr", selectedCategory }:
         <Link
           key={category.id}
           href={getCategoryLink(category.slug)}
-          className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+          className={`group flex items-center gap-2 rounded-full px-4 py-2 text-xs sm:text-sm font-semibold transition-all duration-300 ${
             selectedCategory === category.slug
-              ? "bg-ai-primary text-white"
-              : "bg-white dark:bg-ai-surface-card border border-gray-200 dark:border-ai-surface-border text-slate-700 dark:text-gray-300 hover:border-ai-primary hover:text-ai-primary dark:hover:border-ai-primary dark:hover:text-ai-primary"
+              ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-lg shadow-ai-primary/30 scale-105"
+              : "bg-white dark:bg-ai-surface-card border-2 border-gray-200 dark:border-ai-surface-border text-slate-700 dark:text-gray-300 hover:border-ai-primary hover:text-ai-primary dark:hover:border-ai-primary dark:hover:text-ai-primary hover:shadow-md"
           }`}
         >
-          <span className="material-symbols-outlined text-[18px]">{getIcon(category.slug)}</span>
-          {category.name}
+          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">{getIcon(category.slug)}</span>
+          <span>{category.name}</span>
         </Link>
       ))}
     </div>

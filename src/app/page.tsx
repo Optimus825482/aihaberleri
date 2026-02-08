@@ -159,7 +159,7 @@ export default async function HomePage() {
         })}
       />
       <main className="flex-grow">
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {/* Hero Section - Öne Çıkan Haberler (Slider) */}
           <HeroSection featuredArticles={featuredArticles} locale="tr" />
 
@@ -170,24 +170,30 @@ export default async function HomePage() {
           <CategoryFilters categories={categories} locale="tr" />
 
           {/* Main Content Area - Two Column Layout */}
-          <div className="flex flex-col gap-12 lg:flex-row">
+          <div className="flex flex-col gap-10 lg:gap-12 lg:flex-row mt-8 lg:mt-10">
             {/* Left Column - Latest News */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {/* Section Header */}
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  Son Gelişmeler
-                </h2>
+              <div className="mb-6 sm:mb-8 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-1 rounded-full bg-gradient-to-b from-ai-primary to-ai-primary-hover"></div>
+                  <h2 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                    Son Gelişmeler
+                  </h2>
+                </div>
                 <Link
                   href="/haberler"
-                  className="text-sm font-medium text-ai-primary hover:text-ai-primary/80"
+                  className="group flex items-center gap-1.5 text-sm font-semibold text-ai-primary hover:text-ai-primary-hover transition-colors duration-300"
                 >
-                  Tümünü Gör →
+                  <span>Tümünü Gör</span>
+                  <span className="material-symbols-outlined text-[18px] transition-transform duration-300 group-hover:translate-x-1">
+                    arrow_forward
+                  </span>
                 </Link>
               </div>
 
               {/* News Grid */}
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2">
+              <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2">
                 {articles.map((article, index: number) => (
                   <ArticleCard
                     key={article.id}
@@ -198,11 +204,15 @@ export default async function HomePage() {
               </div>
 
               {articles.length === 0 && (
-                <div className="text-center py-16 bg-white dark:bg-ai-surface-card rounded-xl border border-gray-200 dark:border-ai-surface-border">
-                  <span className="material-symbols-outlined text-[48px] text-ai-text-muted mb-4">
-                    article
-                  </span>
-                  <p className="text-ai-text-secondary">
+                <div className="text-center py-16 bg-white dark:bg-ai-surface-card rounded-xl lg:rounded-2xl border border-gray-200 dark:border-ai-surface-border shadow-sm">
+                  <div className="flex justify-center mb-4">
+                    <div className="h-16 w-16 rounded-full bg-gradient-to-br from-ai-primary/20 to-ai-primary/5 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[36px] text-ai-primary">
+                        article
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-ai-text-secondary font-medium">
                     Henüz haber yok. Otonom agent yakında haber yayınlamaya
                     başlayacak!
                   </p>
@@ -211,9 +221,17 @@ export default async function HomePage() {
 
               {/* Load More Button */}
               {articles.length > 0 && (
-                <div className="mt-8 text-center">
-                  <button className="rounded-lg border border-gray-300 dark:border-ai-surface-border bg-transparent px-6 py-3 text-sm font-bold text-slate-700 dark:text-white hover:bg-gray-100 dark:hover:bg-ai-surface-border transition-colors">
-                    Daha Fazla Yükle
+                <div className="mt-8 sm:mt-10 text-center">
+                  <button
+                    type="button"
+                    className="group rounded-xl border-2 border-gray-300 dark:border-ai-surface-border bg-transparent px-6 sm:px-8 py-3 text-sm font-bold text-slate-700 dark:text-white hover:bg-gray-100 dark:hover:bg-ai-surface-border hover:border-ai-primary/50 dark:hover:border-ai-primary/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>Daha Fazla Yükle</span>
+                      <span className="material-symbols-outlined text-[18px] transition-transform duration-300 group-hover:translate-y-0.5">
+                        expand_more
+                      </span>
+                    </span>
                   </button>
                 </div>
               )}
