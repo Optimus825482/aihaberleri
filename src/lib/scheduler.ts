@@ -1,44 +1,56 @@
 /**
  * In-Process Scheduler - Fallback when worker service is not available
  * This runs inside the Next.js process and checks periodically if agent should run
+ *
+ * UPDATED: 2026-02-08 - Fixed 15-minute interval with node-schedule
  */
 
 import { db } from "./db";
 import { executeNewsAgent } from "@/services/agent.service";
+import { scheduleJob, Job as ScheduleJob } from "node-schedule";
 
 let schedulerInterval: NodeJS.Timeout | null = null;
+let cronJob: ScheduleJob | null = null;
 let isRunning = false;
 
 /**
- * Start the in-process scheduler
- * Checks every minute if it's time to run the agent
+ * Start the in-process scheduler with FIXED 15-minute interval
+ * Uses node-schedule for precise cron timing (0, 15, 30, 45 minutes)
  */
 export function startInProcessScheduler() {
   // Only run if not already running
-  // Modified for debugging: Allow in dev mode
-  if (schedulerInterval) {
+  if (cronJob) {
+    console.log("⏰ Scheduler already running");
     return;
   }
 
-  console.log("🔄 Starting in-process scheduler (fallback mode)...");
+  console.log("🔄 Starting in-process scheduler with 15-minute cron...");
 
-  // Check every minute
-  schedulerInterval = setInterval(async () => {
-    try {
-      await checkAndRunAgent();
-    } catch (error) {
-      console.error("❌ Scheduler check error:", error);
-    }
-  }, 60 * 1000); // Every 1 minute
+  // Schedule job to run every 15 minutes (0, 15, 30, 45)
+  cronJob = scheduleJob("*/15 * * * *", async () => {
+    console.log("⏰ 15-minute cron triggered");
+    await runAgentWithLimits();
+  });
 
-  // Also check immediately on startup
-  setTimeout(() => checkAndRunAgent(), 5000); // Wait 5s for app to be ready
+  console.log("✅ Cron job scheduled: */15 * * * * (every 15 minutes)");
+
+  // Also check immediately on startup (after 5s)
+  setTimeout(() => {
+    console.log("🚀 Initial agent run on startup");
+    runAgentWithLimits();
+  }, 5000);
 }
 
 /**
  * Stop the in-process scheduler
  */
 export function stopInProcessScheduler() {
+  if (cronJob) {
+    cronJob.cancel();
+    cronJob = null;
+    console.log("⏹️ Cron job stopped");
+  }
+
   if (schedulerInterval) {
     clearInterval(schedulerInterval);
     schedulerInterval = null;
@@ -47,81 +59,61 @@ export function stopInProcessScheduler() {
 }
 
 /**
- * Check if agent should run and execute if needed
+ * Run agent with 1-3 article limits
+ * NEW: Ensures exactly 1-3 articles are published per run
  */
-async function checkAndRunAgent() {
+async function runAgentWithLimits() {
   // Prevent concurrent executions
   if (isRunning) {
+    console.log("⚠️ Agent already running, skipping...");
     return;
   }
 
   try {
-    // Get settings
-    const [enabledSetting, nextRunSetting, lastRunSetting] = await Promise.all([
-      db.setting.findUnique({ where: { key: "agent.enabled" } }),
-      db.setting.findUnique({ where: { key: "agent.nextRun" } }),
-      db.setting.findUnique({ where: { key: "agent.lastRun" } }),
-    ]);
+    // Check if agent is enabled
+    const enabledSetting = await db.setting.findUnique({
+      where: { key: "agent.enabled" },
+    });
 
     const isEnabled = enabledSetting?.value !== "false";
     if (!isEnabled) {
+      console.log("⏸️ Agent is disabled, skipping...");
       return;
     }
 
-    const nextRunStr = nextRunSetting?.value;
-    if (!nextRunStr) {
-      // No next run scheduled, schedule one
-      await scheduleNextRun();
-      return;
-    }
+    isRunning = true;
+    const startTime = new Date();
 
-    const nextRun = new Date(nextRunStr);
-    const now = new Date();
+    console.log("🤖 Starting agent execution with 1-3 article limit...");
 
-    // Check if it's time to run (with 1 minute tolerance)
-    if (nextRun <= now) {
-      console.log("⏰ Time to run agent (in-process scheduler)");
-      isRunning = true;
+    // Update last run
+    await db.setting.upsert({
+      where: { key: "agent.lastRun" },
+      update: { value: startTime.toISOString() },
+      create: { key: "agent.lastRun", value: startTime.toISOString() },
+    });
 
-      try {
-        // Update last run
-        await db.setting.upsert({
-          where: { key: "agent.lastRun" },
-          update: { value: now.toISOString() },
-          create: { key: "agent.lastRun", value: now.toISOString() },
-        });
+    // Execute agent (will handle 1-3 article limit internally)
+    await executeNewsAgent();
 
-        // Execute agent
-        await executeNewsAgent();
-
-        // Schedule next run
-        await scheduleNextRun();
-      } finally {
-        isRunning = false;
-      }
-    }
+    const duration = Math.round((Date.now() - startTime.getTime()) / 1000);
+    console.log(`✅ Agent execution completed in ${duration}s`);
   } catch (error) {
     console.error("❌ Agent execution error:", error);
+  } finally {
     isRunning = false;
   }
 }
 
 /**
- * Schedule the next agent run
+ * Schedule the next agent run (DEPRECATED - using cron now)
+ * Kept for backward compatibility with settings
  */
 async function scheduleNextRun() {
   try {
-    const intervalSetting = await db.setting.findUnique({
-      where: { key: "agent.intervalHours" },
-    });
-
-    // DEFAULT: 0.25 hours = 15 minutes for real-time news pipeline (Updated for high frequency)
-    const intervalHours = intervalSetting
-      ? parseFloat(intervalSetting.value)
-      : 0.25;
-    const nextRun = new Date(
-      Date.now() + Math.round(intervalHours * 60 * 60 * 1000),
-    );
+    // Fixed 15-minute interval
+    const intervalHours = 0.25; // 15 minutes
+    const nextRun = new Date(Date.now() + 15 * 60 * 1000);
 
     await db.setting.upsert({
       where: { key: "agent.nextRun" },
@@ -129,10 +121,7 @@ async function scheduleNextRun() {
       create: { key: "agent.nextRun", value: nextRun.toISOString() },
     });
 
-    const intervalMinutes = Math.round(intervalHours * 60);
-    console.log(
-      `📅 Next agent run scheduled for: ${nextRun.toLocaleString()} (in ${intervalMinutes} min)`,
-    );
+    console.log(`📅 Next run: ${nextRun.toLocaleString()} (15 min from now)`);
   } catch (error) {
     console.error("❌ Failed to schedule next run:", error);
   }

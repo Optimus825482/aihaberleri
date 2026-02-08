@@ -26,6 +26,11 @@ import {
   initializeABTestData,
   TitleABTestData,
 } from "@/lib/title-ab-testing";
+import {
+  batchExtract,
+  priorityExtract,
+  filterQualityResults,
+} from "@/lib/tavily-extract";
 import axios from "axios";
 import type { UniqueArticle } from "./duplicate-detector.agent";
 
@@ -115,8 +120,8 @@ export class ContentEnricherAgent extends BaseAgent<
         );
 
         try {
-          // Step 1: Gather sources (parallel SearXNG + Jina)
-          const sources = await this.gatherSources(article);
+          // Step 1: Gather sources (priority-based: Tavily for high-priority, Jina for low-priority)
+          const sources = await this.gatherSourcesWithPriority(article);
 
           if (sources.length < 2) {
             this.logger.warn(
@@ -225,7 +230,8 @@ export class ContentEnricherAgent extends BaseAgent<
   }
 
   /**
-   * Gather sources using SearXNG + Jina Reader (UNLIMITED!)
+   * Gather sources using Tavily (DEEP RESEARCH) + SearXNG + Jina Reader
+   * UPDATED: 2026-02-08 - Added Tavily deep research for richer content
    */
   private async gatherSources(article: UniqueArticle): Promise<
     Array<{
@@ -251,24 +257,190 @@ export class ContentEnricherAgent extends BaseAgent<
       article.description,
     );
 
-    // Generate diverse search queries - use only 2 queries for speed
-    const searchQueries = [keywords, `${keywords} news`];
+    this.logger.info(`🔍 Deep research: Tavily + SearXNG for "${keywords}"`);
 
-    this.logger.info(`🔍 Fast SearXNG search: ${keywords}`);
+    // ============================================
+    // STEP 1: Tavily Deep Research (5-8 sources)
+    // ============================================
+    try {
+      const { tavilySearch } = await import("@/lib/tavily");
 
-    // Collect all candidate URLs first (fast)
+      this.logger.info(`🔬 Tavily deep research starting...`);
+
+      const tavilyResults = await tavilySearch(keywords, {
+        max_results: 8,
+      });
+
+      for (const result of tavilyResults) {
+        const normalizedUrl = this.normalizeUrl(result.url);
+        if (seenUrls.has(normalizedUrl)) continue;
+        seenUrls.add(normalizedUrl);
+
+        if (this.shouldSkipUrl(result.url)) continue;
+
+        // Tavily provides content directly
+        if (result.content && result.content.length > 100) {
+          sources.push({
+            title: result.title,
+            url: result.url,
+            content: result.content,
+            relevanceScore: Math.round(result.score * 100), // Tavily score 0-1
+          });
+        }
+      }
+
+      this.logger.info(`✅ Tavily: ${sources.length} sources collected`);
+    } catch (tavilyError) {
+      this.logger.warn(`⚠️ Tavily failed, falling back to SearXNG`);
+    }
+
+    // ============================================
+    // STEP 2: SearXNG (if Tavily insufficient)
+    // ============================================
+    if (sources.length < TARGET_SOURCE_COUNT) {
+      const searchQueries = [keywords, `${keywords} news`];
+
+      this.logger.info(`🔍 SearXNG search: ${keywords}`);
+
+      const candidateUrls: Array<{
+        title: string;
+        url: string;
+        relevanceScore: number;
+      }> = [];
+
+      const searchResults = await Promise.all(
+        searchQueries.map(async (query) => {
+          try {
+            return await searxngSearch(query, {
+              count: 8,
+              time_range: "week",
+              categories: "general,news",
+            });
+          } catch {
+            return [];
+          }
+        }),
+      );
+
+      for (const results of searchResults) {
+        for (const result of results) {
+          if (candidateUrls.length >= TARGET_SOURCE_COUNT * 2) break;
+
+          const normalizedUrl = this.normalizeUrl(result.url);
+          if (seenUrls.has(normalizedUrl)) continue;
+          seenUrls.add(normalizedUrl);
+
+          if (this.shouldSkipUrl(result.url)) continue;
+
+          const relevanceScore = this.calculateRelevanceScoreSearXNG(
+            result,
+            article.title,
+          );
+
+          if (relevanceScore >= 30) {
+            candidateUrls.push({
+              title: result.title,
+              url: result.url,
+              relevanceScore,
+            });
+          }
+        }
+      }
+
+      candidateUrls.sort((a, b) => b.relevanceScore - a.relevanceScore);
+      const topCandidates = candidateUrls.slice(0, TARGET_SOURCE_COUNT);
+
+      this.logger.info(
+        `📖 Reading ${topCandidates.length} URLs in parallel...`,
+      );
+
+      const contentResults = await Promise.allSettled(
+        topCandidates.map(async (candidate) => {
+          const content = await this.readUrlContent(candidate.url);
+          return { ...candidate, content };
+        }),
+      );
+
+      for (const result of contentResults) {
+        if (
+          result.status === "fulfilled" &&
+          result.value.content &&
+          result.value.content.length > 100
+        ) {
+          sources.push({
+            title: result.value.title,
+            url: result.value.url,
+            content: result.value.content,
+            relevanceScore: result.value.relevanceScore,
+          });
+        }
+      }
+
+      this.logger.info(
+        `✅ SearXNG: ${sources.length - (tavilyResults?.length || 0)} additional sources`,
+      );
+    }
+
+    this.logger.info(`✅ Total sources: ${sources.length} (Tavily + SearXNG)`);
+
+    // Sort by relevance
+    sources.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+    return sources;
+  }
+
+  /**
+   * Gather sources with priority-based routing (Tavily extract for high-priority)
+   * NEW: Uses Tavily extract() API for high-priority articles (trendScore > 80)
+   */
+  private async gatherSourcesWithPriority(article: UniqueArticle): Promise<
+    Array<{
+      title: string;
+      url: string;
+      content: string;
+      relevanceScore: number;
+    }>
+  > {
+    const sources: Array<{
+      title: string;
+      url: string;
+      content: string;
+      relevanceScore: number;
+    }> = [];
+    const seenUrls = new Set<string>();
+
+    seenUrls.add(this.normalizeUrl(article.url));
+
+    // Extract keywords for search
+    const keywords = this.extractSearchKeywords(
+      article.title,
+      article.description,
+    );
+
+    const trendScore = article.trendScore || 0;
+    const isHighPriority = trendScore > 80;
+
+    this.logger.info(
+      `🔍 Source gathering: ${isHighPriority ? "HIGH" : "LOW"} priority (score: ${trendScore})`,
+    );
+
+    // ============================================
+    // STEP 1: Find candidate URLs using SearXNG
+    // ============================================
+    this.logger.info(`🔍 SearXNG search: "${keywords}"`);
+
     const candidateUrls: Array<{
       title: string;
       url: string;
       relevanceScore: number;
     }> = [];
 
-    // Search with all queries in parallel
+    const searchQueries = [keywords, `${keywords} news`];
     const searchResults = await Promise.all(
       searchQueries.map(async (query) => {
         try {
           return await searxngSearch(query, {
-            count: 8,
+            count: 10,
             time_range: "week",
             categories: "general,news",
           });
@@ -278,10 +450,9 @@ export class ContentEnricherAgent extends BaseAgent<
       }),
     );
 
-    // Flatten and dedupe results
     for (const results of searchResults) {
       for (const result of results) {
-        if (candidateUrls.length >= TARGET_SOURCE_COUNT * 2) break; // Get 2x candidates
+        if (candidateUrls.length >= 15) break;
 
         const normalizedUrl = this.normalizeUrl(result.url);
         if (seenUrls.has(normalizedUrl)) continue;
@@ -304,40 +475,94 @@ export class ContentEnricherAgent extends BaseAgent<
       }
     }
 
-    // Sort by relevance and take top candidates
     candidateUrls.sort((a, b) => b.relevanceScore - a.relevanceScore);
-    const topCandidates = candidateUrls.slice(0, TARGET_SOURCE_COUNT);
+    const topCandidates = candidateUrls.slice(0, 10);
 
-    // 🚀 PARALLEL: Read all URLs in parallel (major speed boost!)
-    this.logger.info(`📖 Reading ${topCandidates.length} URLs in parallel...`);
+    this.logger.info(`📋 Found ${topCandidates.length} candidate URLs`);
 
-    const contentResults = await Promise.allSettled(
-      topCandidates.map(async (candidate) => {
-        const content = await this.readUrlContent(candidate.url);
-        return { ...candidate, content };
-      }),
-    );
+    // ============================================
+    // STEP 2: Extract content (Tavily or Jina)
+    // ============================================
+    if (isHighPriority && topCandidates.length > 0) {
+      // HIGH PRIORITY: Use Tavily extract() API
+      this.logger.info(
+        `🔥 HIGH PRIORITY: Using Tavily extract() for ${topCandidates.length} URLs`,
+      );
 
-    // Collect successful results
-    for (const result of contentResults) {
-      if (
-        result.status === "fulfilled" &&
-        result.value.content &&
-        result.value.content.length > 100
-      ) {
-        sources.push({
-          title: result.value.title,
-          url: result.value.url,
-          content: result.value.content,
-          relevanceScore: result.value.relevanceScore,
-        });
+      try {
+        const extractResults = await batchExtract(
+          topCandidates.map((c) => c.url),
+          {
+            query: keywords,
+            chunksPerSource: 3,
+            extractDepth: "basic",
+          },
+        );
+
+        const qualityResults = filterQualityResults(extractResults, 100);
+
+        for (const result of qualityResults) {
+          const candidate = topCandidates.find((c) => c.url === result.url);
+          if (candidate) {
+            sources.push({
+              title: candidate.title,
+              url: result.url,
+              content: result.content.substring(0, 5000),
+              relevanceScore: candidate.relevanceScore,
+            });
+          }
+        }
+
+        this.logger.info(
+          `✅ Tavily extract: ${sources.length} sources collected`,
+        );
+      } catch (error: any) {
+        this.logger.warn(
+          `⚠️ Tavily extract failed: ${error.message}, falling back to Jina`,
+        );
       }
     }
 
-    this.logger.info(`✅ Got ${sources.length} sources from parallel fetch`);
+    // LOW PRIORITY or Tavily failed: Use Jina Reader (free)
+    if (sources.length < TARGET_SOURCE_COUNT) {
+      this.logger.info(
+        `📖 ${isHighPriority ? "Tavily failed, using" : "Using"} Jina Reader for remaining URLs`,
+      );
+
+      const remainingCandidates = topCandidates.slice(0, TARGET_SOURCE_COUNT);
+
+      const contentResults = await Promise.allSettled(
+        remainingCandidates.map(async (candidate) => {
+          const content = await this.readUrlContent(candidate.url);
+          return { ...candidate, content };
+        }),
+      );
+
+      for (const result of contentResults) {
+        if (
+          result.status === "fulfilled" &&
+          result.value.content &&
+          result.value.content.length > 100
+        ) {
+          // Skip if already added by Tavily
+          if (sources.some((s) => s.url === result.value.url)) continue;
+
+          sources.push({
+            title: result.value.title,
+            url: result.value.url,
+            content: result.value.content,
+            relevanceScore: result.value.relevanceScore,
+          });
+        }
+      }
+
+      this.logger.info(`✅ Jina Reader: ${sources.length} total sources`);
+    }
 
     // Sort by relevance
     sources.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+    this.logger.info(`✅ Total sources: ${sources.length}`);
 
     return sources;
   }

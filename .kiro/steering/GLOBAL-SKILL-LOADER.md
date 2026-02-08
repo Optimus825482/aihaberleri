@@ -1,62 +1,41 @@
-# 🌍 GLOBAL SKILL LOADER (.agent2/skills)
-
-## 🎯 AMAÇ
-
-`C:\Users\erkan\.agent2\skills` dizinindeki **500+ global skill'i** otomatik olarak keyword-based mapping ile yüklemek ve kullanmak.
-
-**KRİTİK KURAL:** Her talep geldiğinde MUTLAKA önce ilgili skill'leri tespit et ve aktive et!
-
+---
+inclusion: always
 ---
 
-## 🇹🇷 TÜRKÇE İLETİŞİM KURALI
+# Global Skill Loader
 
-**ZORUNLU:** Kullanıcı ile iletişim ve oluşturulan tüm dokümantasyon **TÜRKÇE** olmalıdır.
+## Purpose
 
-- ✅ Sohbet yanıtları → Türkçe
-- ✅ Dokümantasyon dosyaları → Türkçe
-- ✅ Raporlar → Türkçe
-- ✅ Kod → İngilizce (standart)
+Automatically load relevant skills from `C:\Users\erkan\.agent2\skills` based on keyword detection in user requests. This system provides access to 500+ specialized skills covering all aspects of software development.
 
----
+## Core Principles
 
-## 🚀 OTOMATIK SKILL AKTIVASYON PROTOKOLÜ
+**Automatic Activation**: Every user request triggers keyword analysis and skill loading before task execution.
 
-### Adım 1: Request Analizi
+**Real Execution**: Always use actual tool calls (`executePwsh`) to load skills - never simulate.
 
-```typescript
-const request = userRequest.toLowerCase();
-const detectedSkills: string[] = [];
+**Silent Operation**: Skill loading happens in the background without notifying the user.
+
+**Communication Language**: User-facing content (responses, documentation) in Turkish; code and technical identifiers in English.
+
+## Activation Protocol
+
+1. **Analyze Request**: Extract keywords from user input (case-insensitive)
+2. **Match Skills**: Map keywords to relevant skills using the mapping tables below (minimum 3-5 skills)
+3. **Load Skills**: Execute `Get-Content` via `executePwsh` for each matched skill
+4. **Apply Knowledge**: Use loaded skill content to inform task execution
+
+## Skill Loading Command
+
+```powershell
+Get-Content "C:\Users\erkan\.agent2\skills\{skill-name}\SKILL.md"
 ```
 
-### Adım 2: Keyword Matching
+Use `executePwsh` tool with this command for each detected skill.
 
-```typescript
-// Her kategori için keyword kontrolü yap
-// Eşleşen skill'leri detectedSkills array'ine ekle
-```
+## Keyword to Skill Mapping
 
-### Adım 3: Skill Yükleme (REAL EXECUTION)
-
-```typescript
-for (const skill of detectedSkills) {
-  await executePwsh({
-    command: `Get-Content "C:\\Users\\erkan\\.agent2\\skills\\${skill}\\SKILL.md"`,
-    explanation: `Loading ${skill} for current task`,
-  });
-}
-```
-
-### Adım 4: Skill'leri Kullan
-
-```typescript
-// Yüklenen skill'lerin içeriğini task'te kullan
-```
-
----
-
-## 🔍 KAPSAMLI KEYWORD → SKILL MAPPING
-
-### 🤖 AI & Agent Development
+### AI & Agent Development
 
 | Keywords                                                     | Global Skills (.agent2/skills)                                                                                                                                                                                                         |
 | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -271,145 +250,72 @@ for (const skill of detectedSkills) {
 | "Salesforce", "CRM"                 | salesforce-development, hubspot-integration, segment-cdp                                      |
 | "HR", "recruitment", "culture"      | hr-pro, culture-index, team-composition-analysis                                              |
 
----
+## Usage Examples
 
-## 🚀 KULLANIM ÖRNEKLERİ
+### Example 1: Debug Request
 
-### Örnek 1: Debug Request
+User: "Login API'de bug var, düzelt"
 
-**User:** "Login API'de bug var, düzelt"
+Detected keywords: "bug", "API", "düzelt"
 
-**Otomatik Skill Aktivasyonu:**
+Skills to load:
 
-```typescript
-// Detected keywords: "bug", "API", "düzelt"
-const skills = [
-  "systematic-debugging",
-  "debugger",
-  "error-detective",
-  "api-patterns",
-  "api-security-best-practices",
-  "backend-architect",
-  "test-driven-development",
-];
+- systematic-debugging
+- debugger
+- error-detective
+- api-patterns
+- api-security-best-practices
+- backend-architect
+- test-driven-development
 
-// REAL execution
-for (const skill of skills) {
-  await executePwsh({
-    command: `Get-Content "C:\\Users\\erkan\\.agent2\\skills\\${skill}\\SKILL.md"`,
-    explanation: `Loading ${skill} for debugging task`,
-  });
-}
-```
+### Example 2: Frontend Performance
 
-### Örnek 2: Frontend Task
+User: "React component'te performance sorunu var"
 
-**User:** "React component'te performance sorunu var"
+Detected keywords: "React", "component", "performance"
 
-**Otomatik Skill Aktivasyonu:**
+Skills to load:
 
-```typescript
-// Detected keywords: "React", "component", "performance"
-const skills = [
-  "react-best-practices",
-  "react-patterns",
-  "vercel-react-best-practices",
-  "performance-profiling",
-  "performance-engineer",
-  "systematic-debugging",
-];
+- react-best-practices
+- react-patterns
+- vercel-react-best-practices
+- performance-profiling
+- performance-engineer
+- systematic-debugging
 
-// REAL execution
-for (const skill of skills) {
-  await executePwsh({
-    command: `Get-Content "C:\\Users\\erkan\\.agent2\\skills\\${skill}\\SKILL.md"`,
-    explanation: `Loading ${skill} for React performance optimization`,
-  });
-}
-```
+### Example 3: Security Audit
 
-### Örnek 3: Security Audit
+User: "API güvenlik kontrolü yap"
 
-**User:** "API güvenlik kontrolü yap"
+Detected keywords: "API", "güvenlik", "kontrol"
 
-**Otomatik Skill Aktivasyonu:**
+Skills to load:
 
-```typescript
-// Detected keywords: "API", "güvenlik", "kontrol"
-const skills = [
-  "security-auditor",
-  "vulnerability-scanner",
-  "api-security-best-practices",
-  "pentest-checklist",
-  "red-team-tactics",
-  "api-fuzzing-bug-bounty",
-];
+- security-auditor
+- vulnerability-scanner
+- api-security-best-practices
+- pentest-checklist
+- red-team-tactics
+- api-fuzzing-bug-bounty
 
-// REAL execution
-for (const skill of skills) {
-  await executePwsh({
-    command: `Get-Content "C:\\Users\\erkan\\.agent2\\skills\\${skill}\\SKILL.md"`,
-    explanation: `Loading ${skill} for security audit`,
-  });
-}
-```
+## Implementation Requirements
 
----
+**Before Task Execution**:
 
-## 🔴 ZORUNLU KURALLAR
+1. Analyze user request for keywords
+2. Match minimum 3-5 relevant skills
+3. Load each skill using `executePwsh` with `Get-Content` command
+4. Apply skill knowledge to task execution
 
-1. ✅ **HER TALEP** → Önce keyword analizi yap
-2. ✅ **KEYWORD MATCH** → İlgili skill'leri tespit et (minimum 3-5 skill)
-3. ✅ **REAL EXECUTION** → `executePwsh` ile skill'leri yükle (simulation değil!)
-4. ✅ **USE SKILLS** → Yüklenen skill içeriklerini task'te kullan
-5. ✅ **REPORT** → Hangi skill'lerin kullanıldığını belirt
-6. ❌ **ASLA** skill yüklemeden task'e başlama
-7. ❌ **ASLA** skill yüklemeyi simüle etme - REAL tool call kullan
+**Mandatory Actions**:
 
----
+- Use real tool calls (never simulate)
+- Load skills silently (no user notification)
+- Apply loaded content to inform responses
+- Deduplicate skill list before loading
 
-## 📊 SKILL AKTIVASYON TEMPLATE
+**Forbidden Actions**:
 
-```typescript
-async function activateGlobalSkills(userRequest: string) {
-  // 1. Keyword detection
-  const request = userRequest.toLowerCase();
-  const detectedSkills: string[] = [];
-
-  // 2. Match keywords to skills (use mapping table above)
-  if (/debug|hata|bug|fix/.test(request)) {
-    detectedSkills.push("systematic-debugging", "debugger", "error-detective");
-  }
-
-  if (/api|backend|server/.test(request)) {
-    detectedSkills.push(
-      "api-patterns",
-      "backend-architect",
-      "api-security-best-practices",
-    );
-  }
-
-  // ... (continue for all categories)
-
-  // 3. Load skills (REAL execution)
-  const skillContents: Record<string, string> = {};
-
-  for (const skill of [...new Set(detectedSkills)]) {
-    const content = await executePwsh({
-      command: `Get-Content "C:\\Users\\erkan\\.agent2\\skills\\${skill}\\SKILL.md"`,
-      explanation: `Loading ${skill} for ${userRequest}`,
-    });
-    skillContents[skill] = content;
-  }
-
-  // 4. Return loaded skills
-  return {
-    skills: Object.keys(skillContents),
-    contents: skillContents,
-  };
-}
-```
-
----
-
-**Bu dosya HER ZAMAN aktiftir. Her talep otomatik olarak ilgili skill'leri yükler ve kullanır.**
+- Starting tasks without loading relevant skills
+- Simulating skill loading without actual tool calls
+- Notifying users about skill loading operations

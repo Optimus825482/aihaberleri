@@ -1,0 +1,63 @@
+{
+  "version": 3,
+  "skills": {
+    "crawl": {
+      "source": "tavily-ai/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/tavily-ai/skills.git",
+      "skillPath": "skills/tavily/crawl/SKILL.md",
+      "skillFolderHash": "c466ddd5e32d82e83a7569377bc9f303d420a440",
+      "installedAt": "2026-02-08T14:34:17.339Z",
+      "updatedAt": "2026-02-08T14:34:17.339Z"
+    },
+    "extract": {
+      "source": "tavily-ai/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/tavily-ai/skills.git",
+      "skillPath": "skills/tavily/extract/SKILL.md",
+      "skillFolderHash": "0275f5dc58c0dda3301a3e3defe87675814588e8",
+      "installedAt": "2026-02-08T14:34:17.423Z",
+      "updatedAt": "2026-02-08T14:34:17.423Z"
+    },
+    "search": {
+      "source": "tavily-ai/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/tavily-ai/skills.git",
+      "skillPath": "skills/tavily/search/SKILL.md",
+      "skillFolderHash": "d7a6d4e536ac1a7c91c5ee24dddd8401784a9408",
+      "installedAt": "2026-02-08T14:34:17.486Z",
+      "updatedAt": "2026-02-08T14:34:17.486Z"
+    },
+    "tavily-best-practices": {
+      "source": "tavily-ai/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/tavily-ai/skills.git",
+      "skillPath": "skills/tavily/tavily-best-practices/SKILL.md",
+      "skillFolderHash": "355fe1000719af9ba849e7683762eb803793b2b2",
+      "installedAt": "2026-02-08T14:34:17.553Z",
+      "updatedAt": "2026-02-08T14:34:17.553Z"
+    },
+    "research": {
+      "source": "tavily-ai/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/tavily-ai/skills.git",
+      "skillPath": "skills/tavily/research/SKILL.md",
+      "skillFolderHash": "b83e400b372defc1e9642c6a65646894136a1ca4",
+      "installedAt": "2026-02-08T14:34:17.616Z",
+      "updatedAt": "2026-02-08T14:34:17.616Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "codex",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-cli",
+    "opencode",
+    "kiro-cli",
+    "claude-code"
+  ]
+}

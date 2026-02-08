@@ -1,317 +1,174 @@
 ---
 inclusion: always
-priority: 1
 ---
 
-# 🎯 REAL ORCHESTRATION SYSTEM
+# Real Orchestration System
 
-## CRITICAL: This is NOT theater - This is REAL execution
+## Core Principle: Execute, Don't Simulate
 
-Every request triggers ACTUAL tool calls, not markdown simulation.
+Use actual tool calls for every operation. Never describe what you would do—do it.
 
----
+## File Operation Rules
 
-## 🚫 DOKÜMANTASYON OKUMA KURALI (KRİTİK)
+### Reading Files
 
-**ZORUNLU KURAL:** Kullanıcı açıkça istemediği sürece ASLA dokümantasyon dosyası okuma!
+Only read documentation files when explicitly requested:
 
-- ❌ Kullanıcı "deployment yapıyorum" dediğinde → Dokümantasyon OKUMA
-- ❌ Kullanıcı "test ediyorum" dediğinde → Dokümantasyon OKUMA
-- ❌ Kullanıcı "hata var" dediğinde → Dokümantasyon OKUMA
-- ✅ Kullanıcı "şu dosyayı oku" dediğinde → O zaman oku
-- ✅ Kullanıcı "dokümantasyona bak" dediğinde → O zaman oku
+- ❌ Auto-read on "deployment yapıyorum", "test ediyorum", "hata var"
+- ✅ Read when user says "şu dosyayı oku" or "dokümantasyona bak"
 
-**Kullanıcı aksini söylemediği sürece sadece KONUŞ, dosya OKUMA!**
+### Writing Files
 
----
+Only create documentation files when explicitly requested:
 
-## 🚫 ÖZET VE DOKÜMANTASYON YAZMA KURALI (KRİTİK)
+- ❌ Auto-create SUMMARY.md, REPORT.md, GUIDE.md after tasks
+- ✅ Create when user says "özet yaz", "dokümantasyon oluştur", "rapor hazırla"
 
-**ZORUNLU KURAL:** Kullanıcı açıkça istemediği sürece ASLA özet veya dokümantasyon dosyası YAZMA!
+Default: Provide brief verbal summaries in chat instead of creating files.
 
-- ❌ İş bitince otomatik özet dosyası oluşturma
-- ❌ "SUMMARY.md", "REPORT.md", "GUIDE.md" gibi dosyalar yazma
-- ❌ Her işlem sonunda dokümantasyon oluşturma
-- ✅ Kullanıcı "özet yaz" dediğinde → O zaman yaz
-- ✅ Kullanıcı "dokümantasyon oluştur" dediğinde → O zaman yaz
-- ✅ Kullanıcı "rapor hazırla" dediğinde → O zaman yaz
+## Communication Language
 
-**Kullanıcı açıkça istemediği sürece sadece İŞİ YAP, dosya YAZMA!**
+**Turkish (Türkçe)** for all user-facing content:
 
-**Sohbette kısa özet vermek yeterli - dosya oluşturma!**
+- User conversations
+- Documentation files (.md, .txt)
+- Reports and summaries
+- Commit messages
+- Log messages
 
----
+**English** for code-related content:
 
-## 🇹🇷 TÜRKÇE İLETİŞİM KURALI (ZORUNLU)
+- Code comments
+- Variable/function names
+- API endpoint names
+- Technical terms (AI, API, database)
 
-**KURAL:** Kullanıcı ile iletişim ve oluşturulan tüm dokümantasyon dosyaları **TÜRKÇE** olmalıdır.
+## Orchestration Workflow
 
-### Türkçe Kullanılması Gereken Yerler:
+### 1. Request Analysis
 
-1. ✅ **Kullanıcı ile sohbet** → Tüm yanıtlar Türkçe
-2. ✅ **Oluşturulan dokümantasyon** → .md, .txt dosyaları Türkçe
-3. ✅ **Raporlar ve özetler** → Türkçe
-4. ✅ **Commit mesajları** → Türkçe
-5. ✅ **Log mesajları** → Türkçe (kullanıcıya gösterilen)
+Use `mcp_kk_sequentialthinking` to analyze request type, domains, and complexity.
 
-### İngilizce Kalabilecek Yerler:
+### 2. Skill Loading
 
-1. ✅ **Kod içi yorumlar** → İngilizce (kod standartları)
-2. ✅ **Değişken/fonksiyon isimleri** → İngilizce (kod standartları)
-3. ✅ **API endpoint isimleri** → İngilizce
-4. ✅ **Teknik terimler** → İngilizce (AI, API, database, etc.)
+Use `readMultipleFiles` to load relevant skills from `.agent/skills/`:
 
-### Örnek Kullanım:
+- Determine required skills based on request keywords
+- Load skill documentation before execution
+- Never simulate—always use real file reads
 
-```markdown
-# ❌ YANLIŞ
+### 3. Agent Invocation
 
-## Implementation Summary
+Use `invokeSubAgent` for complex tasks requiring multiple perspectives:
 
-The multi-agent pipeline has been successfully implemented...
+- Minimum 3 agents for high-complexity tasks
+- Execute agents in parallel when possible
+- Pass full context (user request, loaded skills, previous work)
 
-# ✅ DOĞRU
+### 4. Workflow Execution
 
-## Uygulama Özeti
+Use `readFile` to load workflow templates from `.agent/workflows/` when structured execution is needed.
 
-Multi-agent pipeline başarıyla uygulandı...
-```
+## Request Type Detection
 
-**NOT:** Bu kural tüm agent'lar ve subagent'lar için geçerlidir.
+| Keywords             | Mode           | Skills                                                  | Agents                             | Workflow         |
+| -------------------- | -------------- | ------------------------------------------------------- | ---------------------------------- | ---------------- |
+| debug, hata, fix     | Analysis       | systematic-debugging, testing-patterns                  | context-gatherer, debugger, tester | debug.md         |
+| plan, tasarım        | Analysis       | architecture, plan-writing                              | planner                            | plan.md          |
+| yap, oluştur, create | Implementation | app-builder, clean-code                                 | frontend, backend, tester          | create.md        |
+| API, backend         | Implementation | api-patterns, nodejs-best-practices, database-design    | backend, database, security        | create.md        |
+| UI, frontend         | Implementation | nextjs-react-expert, tailwind-patterns, frontend-design | frontend, performance, seo         | ui-ux-pro-max.md |
 
----
-
-## 🔴 MANDATORY EXECUTION FLOW
-
-### 1. REQUEST ANALYSIS (Use mcp_kk_sequentialthinking)
-
-```typescript
-// REAL tool call
-await mcp_kk_sequentialthinking({
-  thought: "Analyzing request type and required domains",
-  thoughtNumber: 1,
-  totalThoughts: 5,
-  nextThoughtNeeded: true,
-});
-```
-
-### 2. SKILL LOADING (Use readMultipleFiles)
-
-```typescript
-// REAL file reads - NO simulation
-const skillPaths = determineRequiredSkills(request);
-await readMultipleFiles({
-  paths: skillPaths.map((s) => `.agent/skills/${s}/SKILL.md`),
-  explanation: "Loading required skill knowledge for orchestration",
-});
-```
-
-### 3. AGENT INVOCATION (Use invokeSubAgent)
-
-```typescript
-// REAL subagent spawns - MINIMUM 3
-const agents = selectAgents(request); // Must return >= 3
-
-// Parallel execution
-await Promise.all(
-  agents.map((agent) =>
-    invokeSubAgent({
-      name: "general-task-execution",
-      prompt: `You are ${agent.name}. ${agent.task}. 
-      
-CONTEXT:
-- User Request: ${originalRequest}
-- Loaded Skills: ${loadedSkills.join(", ")}
-- Previous Work: ${previousAgentOutputs}`,
-      explanation: `Delegating ${agent.domain} work to specialized agent`,
-    }),
-  ),
-);
-```
-
-### 4. WORKFLOW EXECUTION (Use readFile)
-
-```typescript
-// REAL workflow file read
-await readFile({
-  path: `.agent/workflows/${workflowName}.md`,
-  explanation: "Loading workflow instructions for structured execution",
-});
-```
-
----
-
-## 🚨 DETECTION RULES
-
-| Request Contains           | Mode       | Skills to Load                                          | Agents to Spawn                                                                                        | Workflow         |
-| -------------------------- | ---------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ---------------- |
-| "debug", "hata", "fix"     | ULTRATHINK | systematic-debugging, testing-patterns                  | context-gatherer, general-task-execution (debugger role), general-task-execution (test role)           | debug.md         |
-| "plan", "tasarım"          | ULTRATHINK | architecture, plan-writing                              | general-task-execution (planner role)                                                                  | plan.md          |
-| "yap", "oluştur", "create" | ULTRAWORK  | app-builder, clean-code                                 | general-task-execution (frontend), general-task-execution (backend), general-task-execution (test)     | create.md        |
-| "API", "backend"           | ULTRAWORK  | api-patterns, nodejs-best-practices, database-design    | general-task-execution (backend), general-task-execution (database), general-task-execution (security) | create.md        |
-| "UI", "frontend"           | ULTRAWORK  | nextjs-react-expert, tailwind-patterns, frontend-design | general-task-execution (frontend), general-task-execution (performance), general-task-execution (seo)  | ui-ux-pro-max.md |
-
----
-
-## 📋 EXECUTION TEMPLATE (REAL CALLS)
+## Execution Pattern
 
 ```typescript
 async function orchestrate(userRequest: string) {
-  // 1. ANALYZE with sequential thinking
+  // 1. Analyze request
   const analysis = await mcp_kk_sequentialthinking({
-    thought: `Request: "${userRequest}". Identifying: type, domains, complexity`,
+    thought: `Analyzing: "${userRequest}"`,
     thoughtNumber: 1,
     totalThoughts: 3,
     nextThoughtNeeded: true,
   });
 
-  // 2. LOAD SKILLS (real file reads)
-  const skills = determineSkills(analysis);
+  // 2. Load skills
   const skillContent = await readMultipleFiles({
-    paths: skills.map((s) => `.agent/skills/${s}/SKILL.md`),
-    explanation: `Loading ${skills.length} skills for ${analysis.type} task`,
+    paths: determineSkills(analysis).map((s) => `.agent/skills/${s}/SKILL.md`),
+    explanation: `Loading skills for ${analysis.type} task`,
   });
 
-  // 3. LOAD WORKFLOW (real file read)
+  // 3. Load workflow (if needed)
   const workflow = await readFile({
     path: `.agent/workflows/${analysis.workflow}.md`,
-    explanation: `Loading ${analysis.workflow} workflow structure`,
+    explanation: `Loading ${analysis.workflow} workflow`,
   });
 
-  // 4. SPAWN AGENTS (real subagent invocations - MINIMUM 3)
-  const agents = selectAgents(analysis); // Returns >= 3 agents
-
+  // 4. Spawn agents (parallel execution)
   const results = await Promise.all(
-    agents.map((agent) =>
+    selectAgents(analysis).map((agent) =>
       invokeSubAgent({
         name: "general-task-execution",
         prompt: buildAgentPrompt(agent, userRequest, skillContent, workflow),
-        explanation: `Spawning ${agent.role} agent for ${agent.domain}`,
+        explanation: `Delegating ${agent.domain} work`,
       }),
     ),
   );
 
-  // 5. SYNTHESIZE
+  // 5. Synthesize and return
   return synthesizeResults(results);
 }
 ```
 
----
+## Verification Checklist
 
-## 🔴 VERIFICATION CHECKLIST
+Before responding to user, ensure:
 
-Before responding to user, verify:
+- ✅ Used `mcp_kk_sequentialthinking` for analysis
+- ✅ Used `readMultipleFiles` to load skills from `.agent/skills/`
+- ✅ Used `readFile` to load workflow (if applicable)
+- ✅ Used `invokeSubAgent` for complex tasks (minimum 3 agents)
+- ✅ Executed tools in parallel when possible
+- ✅ No simulation—all tool calls were real
 
-````typescript
-const verification = {
-  sequentialThinking: toolCalls.includes("mcp_kk_sequentialthinking"),
-  skillsLoaded:
-    toolCalls.includes("readMultipleFiles") &&
-    readPaths.some((p) => p.includes(".agent/skills")),
-  workflowLoaded:
-    toolCalls.includes("readFile") &&
-    readPaths.some((p) => p.includes(".agent/workflows")),
-  agentsSpawned: toolCalls.filter((c) => c === "invokeSubAgent").length >= 3,
-  realExecution: !response.includes("```typescript"), // Not showing code, DOING it
-};
+## Anti-Patterns to Avoid
 
-if (!Object.values(verification).every((v) => v)) {
-  throw new Error("ORCHESTRATION FAILED: Not all real tools were called");
-}
-````
+**Never do these:**
 
----
+- Writing "Activating skills..." without calling `readMultipleFiles`
+- Writing "Spawning agents..." without calling `invokeSubAgent`
+- Writing "Analyzing..." without calling `mcp_kk_sequentialthinking`
+- Showing code examples of what you "would" do
+- Responding before tool calls complete
 
-## 💡 EXAMPLE: Real Debug Request
+**Always do these:**
+
+- Call tools first, respond with results
+- Use actual tool invocations, not descriptions
+- Execute in parallel when dependencies allow
+
+## Example: Debug Request
 
 **User:** "Login sayfası çalışmıyor"
 
-**REAL Execution:**
+**Execution:**
 
-```typescript
-// Step 1: Think
-await mcp_kk_sequentialthinking({
-  thought:
-    "Debug request detected. Need: systematic-debugging skill, context-gatherer for codebase, debugger agent, test agent",
-  thoughtNumber: 1,
-  totalThoughts: 4,
-  nextThoughtNeeded: true,
-});
+1. **Analyze** with `mcp_kk_sequentialthinking`
+2. **Load skills** with `readMultipleFiles`: systematic-debugging, testing-patterns, api-patterns
+3. **Load workflow** with `readFile`: debug.md
+4. **Spawn agents** with `invokeSubAgent` (parallel):
+   - context-gatherer: Find login-related files
+   - debugger: Analyze root cause
+   - tester: Create regression test
+5. **Synthesize** results and respond in Turkish
 
-// Step 2: Load skills
-await readMultipleFiles({
-  paths: [
-    ".agent/skills/systematic-debugging/SKILL.md",
-    ".agent/skills/testing-patterns/SKILL.md",
-    ".agent/skills/api-patterns/SKILL.md",
-  ],
-  explanation: "Loading debugging, testing, and API skills for login issue",
-});
+## Activation Protocol
 
-// Step 3: Load workflow
-await readFile({
-  path: ".agent/workflows/debug.md",
-  explanation: "Loading debug workflow structure",
-});
+For every user request:
 
-// Step 4: Spawn agents (MINIMUM 3)
-const [codebaseContext, debugAnalysis, testVerification] = await Promise.all([
-  invokeSubAgent({
-    name: "context-gatherer",
-    prompt: "Find all files related to login functionality",
-    explanation: "Gathering login-related code context",
-  }),
-  invokeSubAgent({
-    name: "general-task-execution",
-    prompt:
-      "You are a debugger. Analyze login error using systematic-debugging skill. Context: [codebase files]",
-    explanation: "Analyzing root cause of login failure",
-  }),
-  invokeSubAgent({
-    name: "general-task-execution",
-    prompt:
-      "You are a test engineer. Create regression test for login fix using testing-patterns skill",
-    explanation: "Creating test coverage for login",
-  }),
-]);
+1. Immediately call `mcp_kk_sequentialthinking` to analyze
+2. Immediately call `readMultipleFiles` to load skills
+3. Immediately call `readFile` to load workflow (if needed)
+4. Immediately call `invokeSubAgent` 3+ times in parallel (if complex)
+5. Only then respond to user with results
 
-// Step 5: Synthesize
-return {
-  rootCause: debugAnalysis.findings,
-  fix: debugAnalysis.solution,
-  tests: testVerification.tests,
-  verification: "3 agents spawned, 3 skills loaded, debug workflow executed",
-};
-```
-
----
-
-## 🚀 ACTIVATION PROTOCOL
-
-When you see a user request:
-
-1. ✅ **IMMEDIATELY** call `mcp_kk_sequentialthinking` to analyze
-2. ✅ **IMMEDIATELY** call `readMultipleFiles` to load skills
-3. ✅ **IMMEDIATELY** call `readFile` to load workflow
-4. ✅ **IMMEDIATELY** call `invokeSubAgent` 3+ times in parallel
-5. ✅ **ONLY THEN** respond to user with results
-
-**NO markdown simulation. NO "I will do X". JUST DO IT.**
-
----
-
-## 🔥 ANTI-PATTERNS (FORBIDDEN)
-
-❌ Writing "Activating skills..." without `readMultipleFiles`
-❌ Writing "Spawning agents..." without `invokeSubAgent`
-❌ Writing "Analyzing..." without `mcp_kk_sequentialthinking`
-❌ Showing code examples of what you "would" do
-❌ Responding before tool calls complete
-
-✅ Call tools FIRST
-✅ Respond with RESULTS
-✅ Show execution log if needed
-
----
-
-**This steering file is ALWAYS active. Every request = Real orchestration.**
+**No simulation. No "I will do X". Just execute.**

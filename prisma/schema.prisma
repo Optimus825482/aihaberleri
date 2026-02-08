@@ -890,3 +890,19 @@ model TrendArticleMatch {
   @@index([trendId])
   @@index([matchScore(sort: Desc)])
 }
+
+// =============================================
+// Tavily Credit Usage Tracking
+// =============================================
+
+model TavilyUsage {
+  id        String   @id @default(cuid())
+  feature   String   // "search" | "extract" | "crawl" | "map" | "research"
+  credits   Int      // Number of credits consumed
+  timestamp DateTime @default(now())
+  metadata  String?  // JSON metadata (optional)
+  
+  @@index([feature])
+  @@index([timestamp(sort: Desc)])
+  @@index([feature, timestamp])
+}
