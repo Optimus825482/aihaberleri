@@ -120,8 +120,8 @@ export async function GET() {
 
       // 2. Check queue stats for news-agent queue
       try {
-        const { getQueue } = await import("@/lib/queue");
-        const newsAgentQueue = getQueue("news-agent");
+        const { getNewsAgentQueue } = await import("@/lib/queue");
+        const newsAgentQueue = getNewsAgentQueue();
         if (newsAgentQueue) {
           const [waiting, active, completed, failed, delayed] = await Promise.all([
             newsAgentQueue.getWaitingCount(),
