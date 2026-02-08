@@ -1,11 +1,13 @@
 /**
  * Multi-Agent Pipeline Service
  *
- * MODERN ARCHITECTURE:
- * ContentCollector → RelevanceFilter → DuplicateDetector → ContentEnricher → VisualGenerator → Publisher
+ * MODERN ARCHITECTURE (6 Agents):
+ * ContentCollector → RelevanceFilter → DuplicateDetector → TrendEnricher → ContentEnricher → VisualGenerator → DatabasePublisher
  *
  * Each agent is autonomous and communicates via BullMQ queues.
  * This replaces the monolithic processAndPublishArticles approach.
+ *
+ * NOTE: SEO Optimization agent was removed from pipeline for performance.
  */
 
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
@@ -256,15 +258,14 @@ export async function startMultiAgentPipeline(
 ┃  Target:       ${config.targetCount.toString().padEnd(35)}┃
 ┃  Agent Log:    ${config.agentLogId.substring(0, 12)}...${" ".repeat(20)}┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  Pipeline Flow (7 Agents):                        ┃
+┃  Pipeline Flow (6 Agents):                        ┃
 ┃  1. ✅ Content Collected (RSS + Trend)            ┃
 ┃  2. 🔄 Relevance Filter (AI scoring)              ┃
 ┃  3. 🔄 Duplicate Detection (3-layer)              ┃
 ┃  4. 🔄 Trend Enrichment                           ┃
 ┃  5. 🔄 Content Enrichment (Brave + Jina)          ┃
 ┃  6. 🔄 Visual Generation (Pollinations)           ┃
-┃  7. 🔄 SEO Optimization (AI scoring)              ┃
-┃  8. 🔄 Database Publishing                        ┃
+┃  7. 🔄 Database Publishing                        ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
   `);
 }
@@ -272,14 +273,15 @@ export async function startMultiAgentPipeline(
 /**
  * Monitor pipeline progress
  *
- * PIPELINE FLOW (7 stages):
+ * PIPELINE FLOW (6 stages):
  * 1. RELEVANT_ARTICLES → RelevanceFilter
  * 2. UNIQUE_ARTICLES → DuplicateDetector
  * 3. TREND_ENRICHMENT → TrendEnricher
  * 4. ENRICHED_ARTICLES → ContentEnricher
  * 5. ARTICLES_WITH_VISUALS → VisualGenerator
- * 6. SEO_OPTIMIZATION → SEOOptimizer
- * 7. DATABASE_PUBLISHER → DatabasePublisher
+ * 6. DATABASE_PUBLISHER → DatabasePublisher
+ *
+ * NOTE: SEO Optimization was removed - articles go directly from Visual Generator to Database Publisher
  */
 export async function monitorPipelineProgress(agentLogId: string): Promise<{
   stage: string;
@@ -287,15 +289,14 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
   completed: number;
   failed: number;
 }> {
-  // FIX: Include ALL pipeline queues including SEO and Publisher
+  // Monitor all active pipeline queues (SEO removed from pipeline)
   const queues = [
     QUEUE_NAMES.RELEVANT_ARTICLES,
     QUEUE_NAMES.UNIQUE_ARTICLES,
     QUEUE_NAMES.TREND_ENRICHMENT,
     QUEUE_NAMES.ENRICHED_ARTICLES,
     QUEUE_NAMES.ARTICLES_WITH_VISUALS,
-    QUEUE_NAMES.SEO_OPTIMIZATION, // FIX: Added - was missing!
-    QUEUE_NAMES.DATABASE_PUBLISHER, // FIX: Added - was missing!
+    QUEUE_NAMES.DATABASE_PUBLISHER,
   ];
 
   let currentStage = "unknown";

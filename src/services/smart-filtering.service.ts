@@ -31,19 +31,19 @@ export interface SmartFilteringResult {
 
 /**
  * 🕐 DYNAMIC TIME WINDOW CALCULATOR
- * 
+ *
  * Kalan haber sayısına göre akıllı zaman penceresi hesaplar.
  * Daha az haber = daha kısa zaman penceresi (daha sıkı duplicate kontrolü)
  * Daha çok haber = daha uzun zaman penceresi (daha geniş kapsamlı kontrol)
- * 
+ *
  * Formül: logaritmik ölçekleme + minimum/maksimum sınırlar
- * 
+ *
  * @param articleCount - Kalan haber sayısı
  * @returns Zaman penceresi (gün cinsinden, ondalıklı)
- * 
+ *
  * Örnekler:
  * - 5 haber  → 0.0625 gün (1.5 saat)
- * - 10 haber → 0.167 gün (4 saat)  
+ * - 10 haber → 0.167 gün (4 saat)
  * - 20 haber → 0.25 gün (6 saat)
  * - 30 haber → 0.333 gün (8 saat)
  * - 50 haber → 0.5 gün (12 saat)
@@ -136,6 +136,7 @@ export function batchFilter(
  * STAGE 2: Topic Extraction
  *
  * Her haberin konusunu DeepSeek API ile çıkar
+ * 🚀 OPTIMIZED: Increased batch size for faster processing
  */
 export async function extractTopicsStage(
   articles: ArticleWithTopic[],
@@ -143,7 +144,8 @@ export async function extractTopicsStage(
   console.log(`\n🧠 STAGE 2: TOPIC EXTRACTION`);
   console.log(`   Input: ${articles.length} haber`);
 
-  const withTopics = await extractTopicsBatch(articles, 4);
+  // ✅ OPTIMIZED: 4→20 batch size (5x faster)
+  const withTopics = await extractTopicsBatch(articles, 20);
 
   // Topic dağılımını göster
   const topicCounts: Record<string, number> = {};
@@ -229,7 +231,9 @@ export async function runSmartFiltering(
   console.log(`${"=".repeat(60)}`);
   console.log(`   Input: ${articles.length} haber`);
   console.log(`   Target: ${targetCount} unique haber`);
-  console.log(`   Time window: ${(timeWindowDays * 24).toFixed(1)} saat (${timeWindowDays.toFixed(3)} gün)`);
+  console.log(
+    `   Time window: ${(timeWindowDays * 24).toFixed(1)} saat (${timeWindowDays.toFixed(3)} gün)`,
+  );
   console.log(`   Skip duplicate check: ${skipDuplicateCheck}`);
 
   // STAGE 1: Batch Filtering

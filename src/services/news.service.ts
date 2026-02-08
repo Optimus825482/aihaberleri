@@ -711,10 +711,11 @@ export async function fetchAINews(
       await import("./topic-extraction.service");
 
     // Extract topics for all articles
+    // ✅ OPTIMIZED: Increased batch size from 10→20 for faster processing
     console.log(`🧠 Topic extraction: ${newsArticlesForCheck.length} haber...`);
     const articlesWithTopics = await extractTopicsBatch(
       newsArticlesForCheck,
-      10,
+      20, // ✅ 10→20 (2x faster, fewer batches)
     );
 
     // Filter duplicates - 1 güne düşürüldü (daha esnek)
