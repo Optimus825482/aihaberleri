@@ -19,6 +19,8 @@ import { AudioProvider } from "@/context/AudioContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { VisitorTracker } from "@/components/VisitorTracker";
 import { MontagAds } from "@/components/MontagAds";
+import { Suspense } from "react";
+import { PageLoadingIndicator } from "@/components/PageLoadingIndicator";
 
 // Initialize scheduler (in-process fallback if worker not available)
 import "@/lib/init-scheduler";
@@ -155,6 +157,10 @@ export default function RootLayout({
         >
           <ErrorBoundary>
             <AudioProvider>
+              {/* Global Page Loading Indicator */}
+              <Suspense fallback={null}>
+                <PageLoadingIndicator />
+              </Suspense>
               <GoogleTagManagerNoScript />
               <GoogleAnalytics />
               <GoogleTagManager />

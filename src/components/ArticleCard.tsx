@@ -138,8 +138,14 @@ export function ArticleCard({
 
       {/* Content Section */}
       <div className="flex flex-1 flex-col p-5">
-        {/* Meta Info: Trend Score Badge ONLY (Replaces Date & Old Stars) */}
-        <div className="mb-2 flex items-center justify-end">
+        {/* Meta Info: Views + Trend Score */}
+        <div className="mb-2 flex items-center justify-between">
+          {/* Views Count */}
+          <div className="flex items-center gap-1 text-xs text-ai-text-secondary">
+            <span className="material-symbols-outlined text-[14px]">visibility</span>
+            <span>{article.views >= 1000 ? `${(article.views / 1000).toFixed(1)}k` : article.views} {t.views}</span>
+          </div>
+          {/* Trend Score */}
           {article.trendScore ? (
             <TrendScoreBadge trendScore={article.trendScore} size="sm" />
           ) : null}
