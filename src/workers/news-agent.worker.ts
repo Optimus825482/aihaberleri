@@ -109,29 +109,47 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     console.log("   ✅ Agent instances created (7 agents)");
 
     console.log("   🚀 Starting all agents...");
-    await Promise.all([
-      relevanceFilter
-        .start()
-        .then(() => console.log("   ✅ RelevanceFilter started")),
-      duplicateDetector
-        .start()
-        .then(() => console.log("   ✅ DuplicateDetector started")),
-      trendEnricher
-        .start()
-        .then(() => console.log("   ✅ TrendEnricher started")), // FIX: Critical for pipeline flow
-      contentEnricher
-        .start()
-        .then(() => console.log("   ✅ ContentEnricher started")),
-      visualGenerator
-        .start()
-        .then(() => console.log("   ✅ VisualGenerator started")),
-      seoOptimizer
-        .start()
-        .then(() => console.log("   ✅ SEOOptimizer started")),
-      databasePublisher
-        .start()
-        .then(() => console.log("   ✅ DatabasePublisher started")),
-    ]);
+    const agentStarts = [
+      { name: "RelevanceFilter", agent: relevanceFilter },
+      { name: "DuplicateDetector", agent: duplicateDetector },
+      { name: "TrendEnricher", agent: trendEnricher },
+      { name: "ContentEnricher", agent: contentEnricher },
+      { name: "VisualGenerator", agent: visualGenerator },
+      { name: "SEOOptimizer", agent: seoOptimizer },
+      { name: "DatabasePublisher", agent: databasePublisher },
+    ];
+
+    // Start agents with individual error handling
+    let successCount = 0;
+    let failCount = 0;
+    for (const { name, agent } of agentStarts) {
+      try {
+        await agent.start();
+        console.log(`   ✅ ${name} started`);
+        successCount++;
+      } catch (error) {
+        console.error(`   ❌ ${name} failed to start:`);
+        console.error(
+          `      Error: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        if (error instanceof Error && error.stack) {
+          console.error(
+            `      Stack: ${error.stack.split("\n").slice(0, 3).join("\n")}`,
+          );
+        }
+        failCount++;
+        // Don't throw - continue with other agents
+      }
+    }
+
+    if (failCount > 0) {
+      console.warn(
+        `   ⚠️ ${failCount}/${agentStarts.length} agents failed to start`,
+      );
+      console.warn(
+        `   ⚠️ Pipeline will continue with ${successCount} working agents`,
+      );
+    }
 
     // Start SEO Calculator Worker (background, non-blocking)
     console.log("   🎯 Starting SEO Calculator Worker...");

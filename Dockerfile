@@ -30,9 +30,11 @@ WORKDIR /app
 
 RUN apk add --no-cache openssl openssl-dev python3 make g++ vips-dev
 
-# Copy source files first, then node_modules
-COPY . .
+# OPTIMIZATION: Copy node_modules BEFORE source files (better layer caching)
 COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source files
+COPY . .
 
 # Generate Prisma Client (locked to v5.22.0)
 RUN npx prisma@5.22.0 generate
@@ -62,6 +64,7 @@ WORKDIR /app
 
 RUN apk add --no-cache openssl python3 make g++
 
+# OPTIMIZATION: Copy node_modules first (better layer caching)
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -99,7 +102,13 @@ COPY --from=app-builder --chown=nextjs:nodejs /app/server.js ./server.js
 COPY --from=app-builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
 
-# Copy ENTIRE node_modules from deps (no missing packages!)
+# OPTIMIZATION: Copy node_modules in chunks to avoid timeout
+# First copy critical packages
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/.bin ./node_modules/.bin
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+
+# Then copy remaining packages
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Copy generated Prisma client from builder
@@ -148,7 +157,13 @@ RUN addgroup --system --gid 1001 nodejs && \
     mkdir -p /home/worker/.npm /home/worker/.cache /tmp/tsx-1001 /app/public/images/optimized && \
     chown -R worker:nodejs /home/worker /tmp/tsx-1001 /app/public
 
-# Copy ENTIRE node_modules
+# OPTIMIZATION: Copy node_modules in chunks to avoid timeout
+# First copy critical packages
+COPY --from=deps --chown=worker:nodejs /app/node_modules/.bin ./node_modules/.bin
+COPY --from=deps --chown=worker:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=deps --chown=worker:nodejs /app/node_modules/prisma ./node_modules/prisma
+
+# Then copy remaining packages
 COPY --from=deps --chown=worker:nodejs /app/node_modules ./node_modules
 
 # Copy generated Prisma client

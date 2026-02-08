@@ -16,7 +16,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
         reservations:
           memory: 128M
@@ -37,10 +37,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker-runner
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     deploy:
       resources:
         limits:
-          cpus: '1.0'
+          cpus: "1.0"
           memory: 1G
         reservations:
           memory: 512M
@@ -96,10 +98,12 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     deploy:
       resources:
         limits:
-          cpus: '2.0'
+          cpus: "2.0"
           memory: 2G
         reservations:
           memory: 1G
