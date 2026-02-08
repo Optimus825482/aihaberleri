@@ -4,6 +4,21 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
+// Client-only wrapper to prevent hydration mismatch
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
 interface FeaturedArticle {
   id: string;
   title: string;
@@ -58,8 +73,26 @@ export function HeroSection({
   // Use provided articles or default article
   const articles =
     featuredArticles.length > 0 ? featuredArticles : [defaultArticle];
+
+  return (
+    <ClientOnly>
+      <HeroSectionContent articles={articles} locale={locale} t={t} />
+    </ClientOnly>
+  );
+}
+
+function HeroSectionContent({
+  articles,
+  locale,
+  t,
+}: {
+  articles: FeaturedArticle[];
+  locale: "tr" | "en";
+  t: typeof texts.tr;
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+
   // Auto-slide every 10 seconds (going backwards: newest to oldest)
   useEffect(() => {
     if (articles.length <= 1 || isPaused) return;
@@ -105,7 +138,6 @@ export function HeroSection({
       className="group relative mb-8 sm:mb-10 lg:mb-12 min-h-[400px] overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl md:min-h-[500px] lg:min-h-[580px] border border-gray-800/50"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      suppressHydrationWarning={true}
     >
       {/* Slider Container */}
       <div className="relative h-full">

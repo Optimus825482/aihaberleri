@@ -4,6 +4,21 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+// Client-only wrapper to prevent hydration mismatch
+function ClientOnly({ children }: { children: React.ReactNode }) {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
 interface Article {
   id: string;
   title: string;
@@ -26,6 +41,57 @@ export function HeroCarousel({
   articles,
   autoPlayInterval = 6000,
   locale = "tr",
+}: HeroCarouselProps) {
+  if (articles.length === 0) {
+    return <HeroCarouselEmpty locale={locale} />;
+  }
+
+  return (
+    <ClientOnly>
+      <HeroCarouselContent
+        articles={articles}
+        autoPlayInterval={autoPlayInterval}
+        locale={locale}
+      />
+    </ClientOnly>
+  );
+}
+
+function HeroCarouselEmpty({ locale }: { locale: string }) {
+  const labels = {
+    tr: {
+      emptyTitle: "Yapay Zeka Dünyasından Son Haberler",
+      emptyDesc: "En güncel AI haberleri yakında burada",
+    },
+    en: {
+      emptyTitle: "Latest AI News",
+      emptyDesc: "Latest AI news coming soon",
+    },
+  };
+
+  const t = labels[locale as keyof typeof labels] || labels.tr;
+
+  return (
+    <section className="relative bg-gradient-to-br from-ai-primary via-ai-primary-hover to-ai-surface-dark text-white overflow-hidden h-[500px] md:h-[600px]">
+      <div className="container mx-auto px-4 h-full flex items-center justify-center">
+        <div className="text-center">
+          <span className="material-symbols-outlined text-[64px] text-white/50 mb-4 block">
+            newspaper
+          </span>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            {t.emptyTitle}
+          </h1>
+          <p className="text-xl text-white/90">{t.emptyDesc}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function HeroCarouselContent({
+  articles,
+  autoPlayInterval,
+  locale,
 }: HeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -85,22 +151,6 @@ export function HeroCarousel({
     setTimeout(() => setIsAutoPlaying(true), 5000);
   };
 
-  if (articles.length === 0) {
-    return (
-      <section className="relative bg-gradient-to-br from-ai-primary via-ai-primary-hover to-ai-surface-dark text-white overflow-hidden h-[500px] md:h-[600px]">
-        <div className="container mx-auto px-4 h-full flex items-center justify-center">
-          <div className="text-center">
-            <span className="material-symbols-outlined text-[64px] text-white/50 mb-4 block">newspaper</span>
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              {t.emptyTitle}
-            </h1>
-            <p className="text-xl text-white/90">{t.emptyDesc}</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
   const currentArticle = articles[currentIndex];
 
   // Helper for localized links
@@ -117,13 +167,16 @@ export function HeroCarousel({
       {articles.map((article, index) => (
         <div
           key={article.id}
-          className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentIndex
-            ? "opacity-100 scale-100"
-            : "opacity-0 scale-105"
-            }`}
+          className={`absolute inset-0 transition-all duration-1000 ease-in-out ${
+            index === currentIndex
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-105"
+          }`}
         >
-          {article.imageUrl && (
-            article.imageUrl.includes('pollinations.ai') || article.imageUrl.includes('r2.dev') || article.imageUrl.includes('images.aihaberleri.org') ? (
+          {article.imageUrl &&
+            (article.imageUrl.includes("pollinations.ai") ||
+            article.imageUrl.includes("r2.dev") ||
+            article.imageUrl.includes("images.aihaberleri.org") ? (
               // Use native img for Pollinations and R2 to avoid Next.js optimization issues
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -142,8 +195,7 @@ export function HeroCarousel({
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
                 quality={85}
               />
-            )
-          )}
+            ))}
           {/* Dark Overlay with Gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/70 to-ai-background-dark/30" />
         </div>
@@ -163,7 +215,9 @@ export function HeroCarousel({
                 href={getCategoryLink(currentArticle.category.slug)}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-ai-primary hover:bg-ai-primary-hover rounded-full text-sm font-semibold transition-all hover:scale-105 shadow-lg"
               >
-                <span className="material-symbols-outlined text-[16px]">category</span>
+                <span className="material-symbols-outlined text-[16px]">
+                  category
+                </span>
                 {currentArticle.category.name}
               </Link>
             </div>
@@ -196,7 +250,9 @@ export function HeroCarousel({
                 className="inline-flex items-center gap-2 bg-ai-primary hover:bg-ai-primary-hover text-white px-6 md:px-8 py-3 md:py-4 rounded-full font-semibold text-base md:text-lg transition-all hover:scale-105 hover:shadow-2xl shadow-xl"
               >
                 {t.readMore}
-                <span className="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+                <span className="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1">
+                  arrow_forward
+                </span>
               </Link>
             </div>
           </div>
@@ -211,14 +267,18 @@ export function HeroCarousel({
             className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-ai-surface-card/70 hover:bg-ai-surface-hover text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 hover:scale-110 backdrop-blur-sm border border-ai-surface-border"
             aria-label={t.prev}
           >
-            <span className="material-symbols-outlined text-[24px]">chevron_left</span>
+            <span className="material-symbols-outlined text-[24px]">
+              chevron_left
+            </span>
           </button>
           <button
             onClick={goToNext}
             className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-ai-surface-card/70 hover:bg-ai-surface-hover text-white p-3 rounded-full transition-all opacity-0 group-hover:opacity-100 hover:scale-110 backdrop-blur-sm border border-ai-surface-border"
             aria-label={t.next}
           >
-            <span className="material-symbols-outlined text-[24px]">chevron_right</span>
+            <span className="material-symbols-outlined text-[24px]">
+              chevron_right
+            </span>
           </button>
         </>
       )}
@@ -230,10 +290,11 @@ export function HeroCarousel({
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`transition-all duration-300 ${index === currentIndex
-                ? "w-8 bg-ai-primary scale-110"
-                : "w-2 bg-white/50 hover:bg-white/70 hover:scale-110"
-                } h-2 rounded-full`}
+              className={`transition-all duration-300 ${
+                index === currentIndex
+                  ? "w-8 bg-ai-primary scale-110"
+                  : "w-2 bg-white/50 hover:bg-white/70 hover:scale-110"
+              } h-2 rounded-full`}
               aria-label={t.goTo(index)}
             />
           ))}
