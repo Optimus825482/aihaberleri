@@ -1,0 +1,1748 @@
+
+2026-02-08T04:50:11.221600366Z npm warn exec The following package was not found and will be installed: tsx@4.21.0
+2026-02-08T04:50:14.801551638Z 🧹 Source reliability cleanup started (interval: 60 min, TTL: 24 hours)
+2026-02-08T04:50:14.840217321Z 🧹 Trend cache cleanup started (interval: 30 min, TTL: 60 min)
+2026-02-08T04:50:17.177194570Z ✅ News agent queue created
+2026-02-08T04:50:17.178488685Z ✅ Queue events listener created
+2026-02-08T04:50:19.031478639Z info: 🚀 Worker started {"environment":"production","module":"worker","service":"ai-news-agent","timestamp":"2026-02-08 04:50:19"}
+2026-02-08T04:50:19.031874887Z 🚀 Starting News Agent Worker...
+2026-02-08T04:50:19.032286335Z 🔍 Checking Redis connection...
+2026-02-08T04:50:19.081431279Z ✅ Redis connected
+2026-02-08T04:50:19.089277409Z ✅ Redis ready to accept commands
+2026-02-08T04:50:19.092673936Z ✅ Redis connection verified (PONG received)
+2026-02-08T04:50:19.093062985Z 🔄 Database connection attempt 1/10...
+2026-02-08T04:50:19.093073395Z 🔍 Testing database connection...
+2026-02-08T04:50:19.239472437Z info: 🔌 database connection connected {"environment":"production","module":"worker","service":"database","status":"connected","timestamp":"2026-02-08 04:50:19"}
+2026-02-08T04:50:19.239511467Z ✅ Database connection successful
+2026-02-08T04:50:19.239517887Z ✅ All systems ready, starting worker...
+2026-02-08T04:50:19.239660346Z 💓 Starting worker heartbeat...
+2026-02-08T04:50:19.241361989Z 
+2026-02-08T04:50:19.241382229Z 🎯 Initializing BullMQ Worker...
+2026-02-08T04:50:19.241389239Z    Queue Name: news-agent
+2026-02-08T04:50:19.241526879Z    Redis Status: ready
+2026-02-08T04:50:19.241540639Z    Concurrency: 1
+2026-02-08T04:50:19.241546699Z    Lock Duration: 10 minutes
+2026-02-08T04:50:19.242079817Z 🤖 Initializing multi-agent pipeline agents...
+2026-02-08T04:50:19.242095597Z    📦 Initializing queue manager...
+2026-02-08T04:50:19.267414820Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Initializing all queues...
+2026-02-08T04:50:19.269128174Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Queue created: collected-articles
+2026-02-08T04:50:19.270322370Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Queue created: relevant-articles
+2026-02-08T04:50:19.271498945Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Queue created: unique-articles
+2026-02-08T04:50:19.272455551Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Queue created: trend-enrichment
+2026-02-08T04:50:19.273518507Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Queue created: enriched-articles
+2026-02-08T04:50:19.274526203Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Queue created: articles-with-visuals
+2026-02-08T04:50:19.275130111Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Queue created: database-publisher
+2026-02-08T04:50:19.276345947Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Queue created: seo-calculation
+2026-02-08T04:50:19.276452786Z ℹ️  [08.02.2026 04:50:19] [queue-manager] Queue created: seo-optimization
+2026-02-08T04:50:19.278231699Z ℹ️  [08.02.2026 04:50:19] [queue-manager] All queues initialized
+2026-02-08T04:50:19.278259649Z    ✅ Queue manager initialized
+2026-02-08T04:50:19.278265379Z    🔧 Creating agent instances...
+2026-02-08T04:50:19.278273749Z    ✅ Agent instances created (7 agents)
+2026-02-08T04:50:19.278278509Z    🚀 Starting all agents...
+2026-02-08T04:50:19.278667098Z ℹ️  [08.02.2026 04:50:19] [relevance-filter] Starting agent: relevance-filter
+2026-02-08T04:50:19.278879447Z ℹ️  [08.02.2026 04:50:19] [relevance-filter] Queue: relevant-articles
+2026-02-08T04:50:19.278998696Z ℹ️  [08.02.2026 04:50:19] [relevance-filter] Concurrency: 5
+2026-02-08T04:50:19.281355947Z ✅ [08.02.2026 04:50:19] [relevance-filter] Agent started: relevance-filter
+2026-02-08T04:50:19.282768912Z    ✅ RelevanceFilter started
+2026-02-08T04:50:19.282783032Z ℹ️  [08.02.2026 04:50:19] [duplicate-detector] Starting agent: duplicate-detector
+2026-02-08T04:50:19.282788152Z ℹ️  [08.02.2026 04:50:19] [duplicate-detector] Queue: unique-articles
+2026-02-08T04:50:19.282792692Z ℹ️  [08.02.2026 04:50:19] [duplicate-detector] Concurrency: 8
+2026-02-08T04:50:19.282797122Z ✅ [08.02.2026 04:50:19] [duplicate-detector] Agent started: duplicate-detector
+2026-02-08T04:50:19.283192970Z    ✅ DuplicateDetector started
+2026-02-08T04:50:19.283198560Z ℹ️  [08.02.2026 04:50:19] [TrendEnricher] Starting agent: trend-enricher
+2026-02-08T04:50:19.283255260Z ℹ️  [08.02.2026 04:50:19] [TrendEnricher] Queue: trend-enrichment
+2026-02-08T04:50:19.283344439Z ℹ️  [08.02.2026 04:50:19] [TrendEnricher] Concurrency: 10
+2026-02-08T04:50:19.284142437Z ✅ [08.02.2026 04:50:19] [TrendEnricher] Agent started: trend-enricher
+2026-02-08T04:50:19.284427885Z    ✅ TrendEnricher started
+2026-02-08T04:50:19.284436945Z ℹ️  [08.02.2026 04:50:19] [content-enricher] Starting agent: content-enricher
+2026-02-08T04:50:19.284496485Z ℹ️  [08.02.2026 04:50:19] [content-enricher] Queue: enriched-articles
+2026-02-08T04:50:19.284611924Z ℹ️  [08.02.2026 04:50:19] [content-enricher] Concurrency: 3
+2026-02-08T04:50:19.285115243Z ✅ [08.02.2026 04:50:19] [content-enricher] Agent started: content-enricher
+2026-02-08T04:50:19.285731880Z    ✅ ContentEnricher started
+2026-02-08T04:50:19.285749770Z ℹ️  [08.02.2026 04:50:19] [visual-generator] Starting agent: visual-generator
+2026-02-08T04:50:19.286135489Z ℹ️  [08.02.2026 04:50:19] [visual-generator] Queue: articles-with-visuals
+2026-02-08T04:50:19.286142949Z ℹ️  [08.02.2026 04:50:19] [visual-generator] Concurrency: 5
+2026-02-08T04:50:19.286429468Z ✅ [08.02.2026 04:50:19] [visual-generator] Agent started: visual-generator
+2026-02-08T04:50:19.286901696Z    ✅ VisualGenerator started
+2026-02-08T04:50:19.286915386Z ℹ️  [08.02.2026 04:50:19] [seo-optimization] Starting agent: seo-optimizer
+2026-02-08T04:50:19.287083856Z ℹ️  [08.02.2026 04:50:19] [seo-optimization] Queue: seo-optimization
+2026-02-08T04:50:19.287245255Z ℹ️  [08.02.2026 04:50:19] [seo-optimization] Concurrency: 1
+2026-02-08T04:50:19.289127387Z ✅ [08.02.2026 04:50:19] [seo-optimization] Agent started: seo-optimizer
+2026-02-08T04:50:19.289147477Z    ✅ SEOOptimizer started
+2026-02-08T04:50:19.289153137Z ℹ️  [08.02.2026 04:50:19] [database-publisher] Starting agent: database-publisher
+2026-02-08T04:50:19.289158017Z ℹ️  [08.02.2026 04:50:19] [database-publisher] Queue: database-publisher
+2026-02-08T04:50:19.289181767Z ℹ️  [08.02.2026 04:50:19] [database-publisher] Concurrency: 3
+2026-02-08T04:50:19.289186377Z ✅ [08.02.2026 04:50:19] [database-publisher] Agent started: database-publisher
+2026-02-08T04:50:19.289191167Z    ✅ DatabasePublisher started
+2026-02-08T04:50:19.289195517Z    🎯 Starting SEO Calculator Worker...
+2026-02-08T04:50:19.289543327Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] SEO Calculator Worker started
+2026-02-08T04:50:19.290476422Z    ✅ SEO Calculator Worker started
+2026-02-08T04:50:19.302238628Z 💓 Heartbeat updated: 08.02.2026 04:50:19
+2026-02-08T04:50:19.372478121Z 🟢 [relevance-filter] Worker READY - listening for jobs on queue: relevant-articles
+2026-02-08T04:50:19.372509190Z ℹ️  [08.02.2026 04:50:19] [relevance-filter] Worker ready
+2026-02-08T04:50:19.372867829Z 🟢 [duplicate-detector] Worker READY - listening for jobs on queue: unique-articles
+2026-02-08T04:50:19.373627496Z ℹ️  [08.02.2026 04:50:19] [duplicate-detector] Worker ready
+2026-02-08T04:50:19.373651596Z 🟢 [trend-enricher] Worker READY - listening for jobs on queue: trend-enrichment
+2026-02-08T04:50:19.373663356Z ℹ️  [08.02.2026 04:50:19] [TrendEnricher] Worker ready
+2026-02-08T04:50:19.373670596Z 🟢 [content-enricher] Worker READY - listening for jobs on queue: enriched-articles
+2026-02-08T04:50:19.373677036Z ℹ️  [08.02.2026 04:50:19] [content-enricher] Worker ready
+2026-02-08T04:50:19.373691836Z 🟢 [visual-generator] Worker READY - listening for jobs on queue: articles-with-visuals
+2026-02-08T04:50:19.373698236Z ℹ️  [08.02.2026 04:50:19] [visual-generator] Worker ready
+2026-02-08T04:50:19.373704846Z 🟢 [database-publisher] Worker READY - listening for jobs on queue: database-publisher
+2026-02-08T04:50:19.373710496Z ℹ️  [08.02.2026 04:50:19] [database-publisher] Worker ready
+2026-02-08T04:50:19.373894785Z 🟢 [seo-optimizer] Worker READY - listening for jobs on queue: seo-optimization
+2026-02-08T04:50:19.373902855Z ℹ️  [08.02.2026 04:50:19] [seo-optimization] Worker ready
+2026-02-08T04:50:19.374093484Z ✅ [08.02.2026 04:50:19] [seo-calculator] SEO Calculator Worker is ready
+2026-02-08T04:50:19.393012252Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Zoom'un Yapay Zeka Hamlesi: Toplantılar Artık Daha...
+2026-02-08T04:50:19.401546910Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Take-Two CEO'su: GTA 6'da Yapay Zeka Yok, Ancak Ve...
+2026-02-08T04:50:19.404177600Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Calculating SEO for: Zoom'un Yapay Zeka Hamlesi: Toplantılar Artık Daha...
+2026-02-08T04:50:19.406424751Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Calculating SEO for: Take-Two CEO'su: GTA 6'da Yapay Zeka Yok, Ancak Ve...
+2026-02-08T04:50:19.408830452Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Yapay Zeka ve Sosyal Etki: 2026'da İş Dünyasının İ...
+2026-02-08T04:50:19.410110897Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Alphabet'in 2 Trilyon Dolarlık Yükselişi Yapay Zek...
+2026-02-08T04:50:19.412994686Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: ChatGPT'de Büyük Kesinti: Binlerce Kullanıcı Etkil...
+2026-02-08T04:50:19.414772569Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: OpenAI'da Yönetim Planı ve Dijital Marka İkizleri...
+2026-02-08T04:50:19.416737252Z 🔍 SEO Analyzer: Analyzing article "Zoom'un Yapay Zeka Hamlesi: Toplantılar Artık Daha Akıllı ve Verimli"...
+2026-02-08T04:50:19.514849728Z 🔍 SEO Analyzer: Analyzing article "Take-Two CEO'su: GTA 6'da Yapay Zeka Yok, Ancak Verimlilik İçin Kucaklıyoruz"...
+2026-02-08T04:50:19.522051210Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: ChatGPT Terapist Olarak Kullanılabilir mi? Riskler...
+2026-02-08T04:50:19.525091699Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Nvidia'nın ARM Tabanlı Laptopları 2026'yı Bulabili...
+2026-02-08T04:50:19.532056793Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Yapay Zeka Ajanları Erişim Kontrol Sistemlerini Ta...
+2026-02-08T04:50:19.533750916Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Piyasalar Altın, Yapay Zeka ve Fed Kararları Arası...
+2026-02-08T04:50:19.534367154Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Yapay Zeka Rüzgarında Yazılım Hisseleri 'Duruşmada...
+2026-02-08T04:50:19.535512379Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Mindfulness ve Yapay Zeka: Proje Yönetiminde Dönüş...
+2026-02-08T04:50:19.538768627Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Cisco, Yapay Zeka Çağına Hazırlık İçin Eğitim ve S...
+2026-02-08T04:50:19.539590894Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Rentahuman.ai: Yapay Zeka Artık İnsan Kiralayabili...
+2026-02-08T04:50:19.543961728Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: EPAM, Avrupa'da Üçüncü Kez Üst Üste En İyi BT Hizm...
+2026-02-08T04:50:19.543994538Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: RFK Jr. Yönetiminde HHS, Aşı Yan Etkilerini İncele...
+2026-02-08T04:50:19.545300093Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Microsoft ve ServiceNow'un AI Ajanları Güvenlik Kr...
+2026-02-08T04:50:19.546729487Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Google Gemini, Derin Araştırma ve Harita Entegrasy...
+2026-02-08T04:50:19.547369924Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Yapay Zeka İnsanları Değil, İnsani Yargıyı Yeniden...
+2026-02-08T04:50:19.549050498Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued SEO calculation: Yapay Zeka SaaS Yatırımlarında Dönüm Noktası Yarat...
+2026-02-08T04:50:19.549733175Z ℹ️  [08.02.2026 04:50:19] [seo-calculator] Queued 20 articles for SEO calculation
+2026-02-08T04:50:19.549751935Z    📊 Queued 20 pending SEO calculations
+2026-02-08T04:50:19.549776045Z ✅ Multi-agent pipeline (7+1 agents) started successfully
+2026-02-08T04:50:19.549936565Z    Pipeline: Relevance → Duplicate → Enrich → Visual → SEO → Publish
+2026-02-08T04:50:19.549943195Z ✅ Multi-agent pipeline ready
+2026-02-08T04:50:19.549949195Z 
+2026-02-08T04:50:19.549954175Z 📊 Pipeline Status: ✅ READY
+2026-02-08T04:50:19.549959335Z 
+2026-02-08T04:50:19.549964505Z ✅ Worker started successfully!
+2026-02-08T04:50:19.549969485Z 👂 Listening for jobs on queue: news-agent
+2026-02-08T04:50:19.550098704Z 📊 Worker stats will be logged here...
+2026-02-08T04:50:19.550160414Z 
+2026-02-08T04:50:19.550581432Z 
+2026-02-08T04:50:19.550590132Z 🔄 Başlangıç senkronizasyonu başlatılıyor...
+2026-02-08T04:50:19.551971417Z ✅ Newsletter queue created
+2026-02-08T04:50:19.551991626Z 
+2026-02-08T04:50:19.551997496Z 📧 Initializing Newsletter Worker...
+2026-02-08T04:50:19.552804994Z ✅ Newsletter worker started
+2026-02-08T04:50:19.553165032Z ✅ Social batch queue created
+2026-02-08T04:50:19.553173732Z 
+2026-02-08T04:50:19.553178742Z 📤 Initializing Social Batch Worker...
+2026-02-08T04:50:19.553720510Z ✅ Social batch worker started
+2026-02-08T04:50:19.605516793Z 
+2026-02-08T04:50:19.605528703Z ✅ Worker is ready and listening for jobs
+2026-02-08T04:50:19.686257066Z 🗑️ Removed existing newsletter job: 8397d10618ce9a6d653c11b6052e6192
+2026-02-08T04:50:19.783835244Z 
+2026-02-08T04:50:19.783861453Z 🔄 Job repeat:c696fac75cf52f4a2fb23116b53dfd58:1770525360000 is now active
+2026-02-08T04:50:19.783867883Z info: 🔄 Job processing started {"environment":"production","jobId":"repeat:c696fac75cf52f4a2fb23116b53dfd58:1770525360000","jobName":"scrape-and-publish","module":"worker","service":"ai-news-agent","timestamp":"2026-02-08 04:50:19"}
+2026-02-08T04:50:19.783874713Z 
+2026-02-08T04:50:19.783879533Z ============================================================
+2026-02-08T04:50:19.783884133Z 🤖 Processing job: scrape-and-publish (ID: repeat:c696fac75cf52f4a2fb23116b53dfd58:1770525360000)
+2026-02-08T04:50:19.783902603Z    Priority: default
+2026-02-08T04:50:19.783907193Z    Attempt: 1/3
+2026-02-08T04:50:19.783911733Z    Timestamp: 2/8/2026, 4:31:16 AM
+2026-02-08T04:50:19.783916143Z ============================================================
+2026-02-08T04:50:19.783920473Z 
+2026-02-08T04:50:19.784881430Z 📊 Progress: 10% - Starting agent execution...
+2026-02-08T04:50:19.787155821Z 
+2026-02-08T04:50:19.787172151Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-08T04:50:19.787178341Z 📧 NEWSLETTER SCHEDULE:
+2026-02-08T04:50:19.787183341Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-08T04:50:19.787235191Z ⏰ Time: Every day at 19:00 (Turkey)
+2026-02-08T04:50:19.787239741Z 🆔 Job Type: Cron (daily-digest)
+2026-02-08T04:50:19.787244231Z ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2026-02-08T04:50:19.787248781Z 
+2026-02-08T04:50:19.787252871Z ✅ Newsletter scheduler initialized
+2026-02-08T04:50:19.788395756Z ℹ️ IndexNow için bekleyen haber bulunmadı.
+2026-02-08T04:50:19.792194852Z info: 🤖 Agent execution started {"category":"all","environment":"production","logId":"cmld9liiz0000pzqad8tujm8c","module":"agent","service":"ai-news-agent","timestamp":"2026-02-08 04:50:19"}
+2026-02-08T04:50:19.792619941Z ℹ️  [08.02.2026 04:50:19] [agent] 🚀 Agent başlatıldı (ID: cmld9lii...)
+2026-02-08T04:50:19.795140081Z [Socket] Cannot emit 'agent:started' - Socket.io not initialized
+2026-02-08T04:50:19.796597225Z 
+2026-02-08T04:50:19.796613445Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-08T04:50:19.796620165Z ┃           🤖 AGENT EXECUTION START                ┃
+2026-02-08T04:50:19.796625495Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-08T04:50:19.796673335Z ┃  Log ID:       cmld9liiz000                    ┃
+2026-02-08T04:50:19.796681465Z ┃  Start Time:   08.02.2026 04:50:19      ┃
+2026-02-08T04:50:19.796685835Z ┃  Category:     All                         ┃
+2026-02-08T04:50:19.796690275Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-08T04:50:19.797215793Z info: 📊 Agent step: fetch_news Yapay zeka haberleri aranıyor (RSS + Trend) {"environment":"production","logId":"cmld9liiz0000pzqad8tujm8c","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-02-08 04:50:19"}
+2026-02-08T04:50:19.797312613Z 📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...
+2026-02-08T04:50:19.799844223Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-08T04:50:19.800373061Z 📰 AI haberleri toplanıyor (RSS + Trend Analizi)...
+2026-02-08T04:50:19.800605780Z 📡 89 RSS feed okunuyor...
+2026-02-08T04:50:19.801040739Z 📡 RSS feed okunuyor: BBC News - Technology
+2026-02-08T04:50:19.804143406Z 📡 RSS feed okunuyor: CNN - Technology
+2026-02-08T04:50:19.805495821Z 📡 RSS feed okunuyor: Bloomberg - Technology
+2026-02-08T04:50:19.874343690Z 📡 RSS feed okunuyor: The Wall Street Journal - Technology
+2026-02-08T04:50:19.878791012Z 📡 RSS feed okunuyor: Financial Times - Technology
+2026-02-08T04:50:23.786928224Z ✅ 10 haber bulundu: The Wall Street Journal - Technology
+2026-02-08T04:50:23.851551938Z 📊 Günlük Google Indexing: 3/200 kullanıldı, 197 kaldı
+2026-02-08T04:50:23.857834474Z ℹ️ Google Indexing için bekleyen haber bulunmadı.
+2026-02-08T04:50:23.870776555Z 🔧 Repeatable job sistemi başlatılıyor...
+2026-02-08T04:50:23.902541645Z ✅ 10 haber bulundu: BBC News - Technology
+2026-02-08T04:50:23.918518244Z ✅ News agent queue created
+2026-02-08T04:50:23.919118791Z ✅ Queue events listener created
+2026-02-08T04:50:23.972282199Z ✅ Repeatable job mevcut (her 6 dakikada bir).
+2026-02-08T04:50:23.972691137Z 📅 Sıradaki çalışma zamanı: 2/8/2026, 4:55:31 AM
+2026-02-08T04:50:24.095985568Z ✅ 10 haber bulundu: Bloomberg - Technology
+2026-02-08T04:50:24.118418113Z ✅ 10 haber bulundu: Financial Times - Technology
+2026-02-08T04:50:24.127120731Z ✅ 10 haber bulundu: CNN - Technology
+2026-02-08T04:50:24.628012023Z 📡 RSS feed okunuyor: NBC News - Technology
+2026-02-08T04:50:24.631093601Z 📡 RSS feed okunuyor: ABC News - Technology
+2026-02-08T04:50:24.633649642Z 📡 RSS feed okunuyor: Sky News - Technology
+2026-02-08T04:50:24.635817253Z 📡 RSS feed okunuyor: Euronews - Technology
+2026-02-08T04:50:24.638006915Z 📡 RSS feed okunuyor: MIT Technology Review - AI
+2026-02-08T04:50:24.706050656Z ✅ 10 haber bulundu: ABC News - Technology
+2026-02-08T04:50:24.793041545Z ✅ 10 haber bulundu: MIT Technology Review - AI
+2026-02-08T04:50:24.909837461Z ✅ 10 haber bulundu: Euronews - Technology
+2026-02-08T04:50:24.923110270Z ✅ 10 haber bulundu: Sky News - Technology
+2026-02-08T04:50:24.970102551Z ✅ 10 haber bulundu: NBC News - Technology
+2026-02-08T04:50:25.470487327Z 📡 RSS feed okunuyor: VentureBeat - AI
+2026-02-08T04:50:25.473077647Z 📡 RSS feed okunuyor: The Verge - AI
+2026-02-08T04:50:25.475186999Z 📡 RSS feed okunuyor: TechCrunch - AI
+2026-02-08T04:50:25.477024981Z 📡 RSS feed okunuyor: Ars Technica - AI
+2026-02-08T04:50:25.478593496Z 📡 RSS feed okunuyor: Wired - AI
+2026-02-08T04:50:25.505667612Z ✅ 10 haber bulundu: Ars Technica - AI
+2026-02-08T04:50:25.522005221Z ✅ 10 haber bulundu: Wired - AI
+2026-02-08T04:50:25.533566206Z ✅ 10 haber bulundu: TechCrunch - AI
+2026-02-08T04:50:25.581627183Z ✅ 10 haber bulundu: The Verge - AI
+2026-02-08T04:50:25.626876231Z ✅ 7 haber bulundu: VentureBeat - AI
+2026-02-08T04:50:26.127383786Z 📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+2026-02-08T04:50:26.129365289Z 📡 RSS feed okunuyor: Engadget - Technology
+2026-02-08T04:50:26.131049592Z 📡 RSS feed okunuyor: The Next Web
+2026-02-08T04:50:26.132659446Z 📡 RSS feed okunuyor: TechRadar - News
+2026-02-08T04:50:26.134602439Z 📡 RSS feed okunuyor: CNET - News
+2026-02-08T04:50:26.239585559Z ✅ 10 haber bulundu: TechRadar - News
+2026-02-08T04:50:26.303693606Z ✅ 10 haber bulundu: CNET - News
+2026-02-08T04:50:26.444981048Z ✅ 10 haber bulundu: ZDNet - Artificial Intelligence
+2026-02-08T04:50:26.664331953Z ✅ 10 haber bulundu: The Next Web
+2026-02-08T04:50:27.158836681Z ✅ 10 haber bulundu: Engadget - Technology
+2026-02-08T04:50:27.660416312Z 📡 RSS feed okunuyor: Mashable - Tech
+2026-02-08T04:50:27.662311205Z 📡 RSS feed okunuyor: Gizmodo
+2026-02-08T04:50:27.663911059Z 📡 RSS feed okunuyor: Lifehacker
+2026-02-08T04:50:27.665246904Z 📡 RSS feed okunuyor: Digital Trends
+2026-02-08T04:50:27.666594879Z 📡 RSS feed okunuyor: Tom's Hardware
+2026-02-08T04:50:27.688088857Z ✅ 10 haber bulundu: Digital Trends
+2026-02-08T04:50:27.794943520Z ✅ 10 haber bulundu: Tom's Hardware
+2026-02-08T04:50:27.901728254Z ✅ 10 haber bulundu: Mashable - Tech
+2026-02-08T04:50:28.005743158Z ✅ 10 haber bulundu: Lifehacker
+2026-02-08T04:50:28.205681468Z ✅ 10 haber bulundu: Gizmodo
+2026-02-08T04:50:28.707092949Z 📡 RSS feed okunuyor: 9to5Mac
+2026-02-08T04:50:28.709490730Z 📡 RSS feed okunuyor: 9to5Google
+2026-02-08T04:50:28.710686426Z 📡 RSS feed okunuyor: Android Authority
+2026-02-08T04:50:28.712327589Z 📡 RSS feed okunuyor: Android Police
+2026-02-08T04:50:28.713731275Z 📡 RSS feed okunuyor: XDA Developers
+2026-02-08T04:50:28.776536675Z ✅ 10 haber bulundu: 9to5Mac
+2026-02-08T04:50:28.801657050Z ✅ 10 haber bulundu: 9to5Google
+2026-02-08T04:50:29.117166789Z ✅ 10 haber bulundu: Android Police
+2026-02-08T04:50:29.124201923Z ✅ 10 haber bulundu: XDA Developers
+2026-02-08T04:50:29.257809484Z ✅ 10 haber bulundu: Android Authority
+2026-02-08T04:50:29.757385583Z 📡 RSS feed okunuyor: Hacker News (YCombinator)
+2026-02-08T04:50:29.760444152Z 📡 RSS feed okunuyor: Product Hunt - Tech
+2026-02-08T04:50:29.762404374Z 📡 RSS feed okunuyor: AI News
+2026-02-08T04:50:29.764349177Z 📡 RSS feed okunuyor: MarkTechPost
+2026-02-08T04:50:29.766199359Z 📡 RSS feed okunuyor: The AI Edge (Substack)
+2026-02-08T04:50:29.905736449Z ✅ 10 haber bulundu: MarkTechPost
+2026-02-08T04:50:30.098311326Z ✅ 10 haber bulundu: The AI Edge (Substack)
+2026-02-08T04:50:30.187898806Z ✅ 10 haber bulundu: Product Hunt - Tech
+2026-02-08T04:50:30.281834638Z ✅ 10 haber bulundu: AI News
+2026-02-08T04:50:30.588822440Z ✅ 10 haber bulundu: Hacker News (YCombinator)
+2026-02-08T04:50:31.089315056Z 📡 RSS feed okunuyor: Last Week in AI
+2026-02-08T04:50:31.091621898Z 📡 RSS feed okunuyor: AI Business
+2026-02-08T04:50:31.093167401Z 📡 RSS feed okunuyor: THE DECODER - AI News
+2026-02-08T04:50:31.094525516Z 📡 RSS feed okunuyor: The Rundown AI
+2026-02-08T04:50:31.096144820Z 📡 RSS feed okunuyor: SiliconANGLE - AI
+2026-02-08T04:50:31.223226066Z ✅ 10 haber bulundu: Last Week in AI
+2026-02-08T04:50:31.478210457Z ✅ 10 haber bulundu: THE DECODER - AI News
+2026-02-08T04:50:31.522094279Z ✅ 10 haber bulundu: AI Business
+2026-02-08T04:50:32.019176038Z ✅ 10 haber bulundu: The Rundown AI
+2026-02-08T04:50:32.734355858Z ✅ 10 haber bulundu: SiliconANGLE - AI
+2026-02-08T04:50:33.234916974Z 📡 RSS feed okunuyor: AI Trends
+2026-02-08T04:50:33.236957256Z 📡 RSS feed okunuyor: Synced - AI Review
+2026-02-08T04:50:33.238510890Z 📡 RSS feed okunuyor: The Gradient
+2026-02-08T04:50:33.240616302Z 📡 RSS feed okunuyor: The Algorithmic Bridge
+2026-02-08T04:50:33.241876428Z 📡 RSS feed okunuyor: 404 Media
+2026-02-08T04:50:33.337198905Z ✅ 10 haber bulundu: 404 Media
+2026-02-08T04:50:33.501710399Z ✅ 10 haber bulundu: Synced - AI Review
+2026-02-08T04:50:33.627233292Z ✅ 10 haber bulundu: The Algorithmic Bridge
+2026-02-08T04:50:34.600715209Z ✅ 10 haber bulundu: The Gradient
+2026-02-08T04:50:34.953482847Z ✅ 10 haber bulundu: AI Trends
+2026-02-08T04:50:35.453542315Z 📡 RSS feed okunuyor: Ahead of AI
+2026-02-08T04:50:35.455472088Z 📡 RSS feed okunuyor: AI Accelerator Institute
+2026-02-08T04:50:35.456917552Z 📡 RSS feed okunuyor: AI - AI-TechPark
+2026-02-08T04:50:35.458287247Z 📡 RSS feed okunuyor: AI Archives | KnowTechie
+2026-02-08T04:50:35.459537212Z 📡 RSS feed okunuyor: AIModels.fyi
+2026-02-08T04:50:35.603363045Z ✅ 10 haber bulundu: AI - AI-TechPark
+2026-02-08T04:50:35.615363300Z ✅ 10 haber bulundu: AI Archives | KnowTechie
+2026-02-08T04:50:35.690225016Z ✅ 10 haber bulundu: Ahead of AI
+2026-02-08T04:50:35.794432418Z ✅ 10 haber bulundu: AI Accelerator Institute
+2026-02-08T04:50:35.884742616Z ✅ 10 haber bulundu: AIModels.fyi
+2026-02-08T04:50:36.385228433Z 📡 RSS feed okunuyor: AI Now Institute
+2026-02-08T04:50:36.387875182Z 📡 RSS feed okunuyor: AI Snake Oil
+2026-02-08T04:50:36.389360636Z 📡 RSS feed okunuyor: Ars Technica - All Content
+2026-02-08T04:50:36.391799747Z 📡 RSS feed okunuyor: Artificial Intelligence – Futurism
+2026-02-08T04:50:36.393329931Z 📡 RSS feed okunuyor: Artificial Intelligence News - ScienceDaily
+2026-02-08T04:50:36.412606618Z ✅ 10 haber bulundu: Ars Technica - All Content
+2026-02-08T04:50:36.527197692Z ✅ 10 haber bulundu: Artificial Intelligence – Futurism
+2026-02-08T04:50:36.617616028Z ✅ 10 haber bulundu: AI Now Institute
+2026-02-08T04:50:36.666025644Z ✅ 10 haber bulundu: AI Snake Oil
+2026-02-08T04:50:37.097609774Z ✅ 10 haber bulundu: Artificial Intelligence News - ScienceDaily
+2026-02-08T04:50:37.598545548Z 📡 RSS feed okunuyor: Machine Learning Mastery Blog
+2026-02-08T04:50:37.600439312Z 📡 RSS feed okunuyor: Chain of Thought
+2026-02-08T04:50:37.601793536Z 📡 RSS feed okunuyor: Chip Huyen
+2026-02-08T04:50:37.603219171Z 📡 RSS feed okunuyor: Crunchbase News
+2026-02-08T04:50:37.604558835Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-08T04:50:37.688110419Z ✅ 10 haber bulundu: Machine Learning Mastery Blog
+2026-02-08T04:50:37.721174202Z ✅ 10 haber bulundu: Chain of Thought
+2026-02-08T04:50:37.795443150Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-08T04:50:38.235365867Z ✅ 10 haber bulundu: Chip Huyen
+2026-02-08T04:50:38.353838807Z ✅ 10 haber bulundu: Crunchbase News
+2026-02-08T04:50:38.853515667Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-08T04:50:38.854577623Z 📡 RSS feed okunuyor: LangChain Blog
+2026-02-08T04:50:38.855314570Z 📡 RSS feed okunuyor: Machine Learning Mastery
+2026-02-08T04:50:38.856316546Z 📡 RSS feed okunuyor: OpenAI Blog
+2026-02-08T04:50:38.856331966Z 📡 RSS feed okunuyor: Google AI Blog
+2026-02-08T04:50:38.885287116Z ✅ 10 haber bulundu: Machine Learning Mastery
+2026-02-08T04:50:38.887540377Z ✅ 10 haber bulundu: KDnuggets
+2026-02-08T04:50:39.156870823Z ✅ 10 haber bulundu: OpenAI Blog
+2026-02-08T04:50:39.238069805Z ✅ 10 haber bulundu: LangChain Blog
+2026-02-08T04:50:39.564585603Z ✅ 10 haber bulundu: Google AI Blog
+2026-02-08T04:50:40.064346483Z 📡 RSS feed okunuyor: DeepMind Blog
+2026-02-08T04:50:40.067138053Z 📡 RSS feed okunuyor: NVIDIA Blog - AI
+2026-02-08T04:50:40.068550738Z 📡 RSS feed okunuyor: AWS Machine Learning Blog
+2026-02-08T04:50:40.069793953Z 📡 RSS feed okunuyor: Hugging Face Blog
+2026-02-08T04:50:40.070330320Z 📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+2026-02-08T04:50:40.149716319Z ✅ 10 haber bulundu: DeepMind Blog
+2026-02-08T04:50:40.271928894Z ✅ 10 haber bulundu: Hugging Face Blog
+2026-02-08T04:50:40.293832881Z ✅ 10 haber bulundu: NVIDIA Blog - AI
+2026-02-08T04:50:40.793449322Z ✅ 10 haber bulundu: AWS Machine Learning Blog
+2026-02-08T04:50:40.840466063Z ✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+2026-02-08T04:50:41.341773548Z 📡 RSS feed okunuyor: Forbes - Innovation
+2026-02-08T04:50:41.343540720Z 📡 RSS feed okunuyor: The Economist - Technology
+2026-02-08T04:50:41.344375018Z 📡 RSS feed okunuyor: Fast Company - Technology
+2026-02-08T04:50:41.345883552Z 📡 RSS feed okunuyor: MIT Sloan Management Review
+2026-02-08T04:50:41.347220786Z 📡 RSS feed okunuyor: Seeking Alpha - Technology
+2026-02-08T04:50:41.386664387Z ✅ 10 haber bulundu: Forbes - Innovation
+2026-02-08T04:50:41.391354199Z ✅ 10 haber bulundu: Seeking Alpha - Technology
+2026-02-08T04:50:41.428305969Z ✅ 10 haber bulundu: Fast Company - Technology
+2026-02-08T04:50:41.570850457Z ✅ 10 haber bulundu: The Economist - Technology
+2026-02-08T04:50:41.999148898Z ✅ 10 haber bulundu: MIT Sloan Management Review
+2026-02-08T04:50:42.500481563Z 📡 RSS feed okunuyor: New Scientist - Technology
+2026-02-08T04:50:42.502682495Z 📡 RSS feed okunuyor: Popular Science
+2026-02-08T04:50:42.504209229Z 📡 RSS feed okunuyor: Popular Mechanics
+2026-02-08T04:50:42.505611153Z 📡 RSS feed okunuyor: Space.com
+2026-02-08T04:50:42.507161618Z 📡 RSS feed okunuyor: Phys.org - Technology
+2026-02-08T04:50:42.563408613Z ✅ 10 haber bulundu: New Scientist - Technology
+2026-02-08T04:50:42.609516259Z ✅ 10 haber bulundu: Popular Science
+2026-02-08T04:50:42.640390641Z ✅ 10 haber bulundu: Popular Mechanics
+2026-02-08T04:50:42.666817961Z ✅ 10 haber bulundu: Space.com
+2026-02-08T04:50:43.168003706Z ✅ 10 haber bulundu: Phys.org - Technology
+2026-02-08T04:50:43.668767482Z 📡 RSS feed okunuyor: ScienceDaily - Technology
+2026-02-08T04:50:43.671413632Z 📡 RSS feed okunuyor: Futurism
+2026-02-08T04:50:43.673543724Z 📡 RSS feed okunuyor: Singularity Hub
+2026-02-08T04:50:43.674914189Z 📡 RSS feed okunuyor: IEEE Spectrum - Technology
+2026-02-08T04:50:43.676120094Z 📡 RSS feed okunuyor: Towards Data Science
+2026-02-08T04:50:43.723816733Z ✅ 10 haber bulundu: Singularity Hub
+2026-02-08T04:50:43.766756450Z ✅ 10 haber bulundu: Futurism
+2026-02-08T04:50:44.032488730Z ✅ 10 haber bulundu: IEEE Spectrum - Technology
+2026-02-08T04:50:44.138360737Z ✅ 10 haber bulundu: Towards Data Science
+2026-02-08T04:50:44.367583277Z ✅ 10 haber bulundu: ScienceDaily - Technology
+2026-02-08T04:50:44.868162125Z 📡 RSS feed okunuyor: Analytics Vidhya
+2026-02-08T04:50:44.870126747Z 📡 RSS feed okunuyor: KDnuggets
+2026-02-08T04:50:44.872693348Z 📡 RSS feed okunuyor: Machine Learning Reddit
+2026-02-08T04:50:44.874577241Z 📡 RSS feed okunuyor: AI Trends
+2026-02-08T04:50:44.906177670Z ✅ 10 haber bulundu: KDnuggets
+2026-02-08T04:50:45.108201392Z ✅ 10 haber bulundu: AI Trends
+2026-02-08T04:50:45.618793672Z ✅ 10 haber bulundu: Analytics Vidhya
+2026-02-08T04:50:46.003293600Z ✅ 10 haber bulundu: Machine Learning Reddit
+2026-02-08T04:50:46.003327640Z ✅ Toplam 887 haber toplandı
+2026-02-08T04:50:46.052527683Z ✅ 833 benzersiz haber
+2026-02-08T04:50:46.054019897Z 📅 Son 48 saatte 375 haber
+2026-02-08T04:50:46.079305011Z 🤖 AI filtreleme: 107/375 haber AI ile ilgili
+2026-02-08T04:50:46.079867960Z    ⏭️  SKIP (Reddit discussion): [R] Identifying the "Complexity Kink": An Economet...
+2026-02-08T04:50:46.079881150Z    ⏭️  SKIP (Reddit discussion): [P] A Matchbox Machine Learning model...
+2026-02-08T04:50:46.079886800Z    ⏭️  SKIP (Reddit discussion): [D] Best architecture for generating synthetic wea...
+2026-02-08T04:50:46.079891740Z 🔍 Reddit filtre: 3 discussion post elendi
+2026-02-08T04:50:46.079896349Z ⚡ Smart Sampling: 104 haber → 100 habere düşürülüyor
+2026-02-08T04:50:46.080915136Z ✅ En güncel 100 haber seçildi
+2026-02-08T04:50:46.080925486Z 
+2026-02-08T04:50:46.080930106Z 🔍 EARLY DUPLICATE FILTERING (Brave API'den ÖNCE)...
+2026-02-08T04:50:46.080934946Z    Input: 100 haber
+2026-02-08T04:50:46.172348658Z 🧠 Topic extraction: 100 haber...
+2026-02-08T04:50:46.172622507Z 🧠 Topic extraction başlatılıyor: 100 haber
+2026-02-08T04:50:46.172649827Z 📦 Batch 1/10 işleniyor (10 haber)...
+2026-02-08T04:50:47.701757286Z    ✅ Show HN: LocalGPT – A local-first AI assistant in ... → localgpt_rust_release
+2026-02-08T04:50:47.701796886Z    ✅ Matching the right LLM for your GPU feels like an ... → gpu_llm_selection_guide
+2026-02-08T04:50:47.701803366Z    ✅ Super Bowl LX ads: all AI everything... → super_bowl_ai_ads
+2026-02-08T04:50:47.701808386Z    ✅ One AI hub, fewer tabs — 1min.AI’s lifetime plan c... → 1minai_lifetime_plan
+2026-02-08T04:50:47.701813246Z    ✅ I compared NotebookLM with OneNote's Copilot Noteb... → notebooklm_onenote_copilot_comparison
+2026-02-08T04:50:47.701817866Z    ✅ What if we treated the Nvidia GB10 as an employee:... → nvidia_gb10_ai_jobs
+2026-02-08T04:50:47.701822426Z    ✅ China ramps up energy boom flagged by Musk as key ... → china_energy_ai_boom
+2026-02-08T04:50:47.701826926Z    ✅ Meta thinks you’ll want a whole app just for AI vi... → meta_ai_video_app
+2026-02-08T04:50:47.701831386Z    ✅ Is artificial general intelligence already here? A... → llm_agi_tests
+2026-02-08T04:50:47.702000845Z    ✅ Tech’s AI Push Risks a Bond Market Blowback: Credi... → tech_ai_bond_market_risk
+2026-02-08T04:50:48.203110802Z 📦 Batch 2/10 işleniyor (10 haber)...
+2026-02-08T04:50:49.245580461Z 💓 Heartbeat updated: 08.02.2026 04:50:49
+2026-02-08T04:50:49.604386898Z    ✅ Google AI Introduces PaperBanana: An Agentic Frame... → google_paperbanana_framework
+2026-02-08T04:50:49.604432018Z    ✅ How can computing for AI and other demands be more... → ai_computing_energy_efficiency
+2026-02-08T04:50:49.604441088Z    ✅ Speed up responses with fast mode... → fast_mode_response_speed
+2026-02-08T04:50:49.604448378Z    ✅ Microsoft’s AI Efforts Are Faceplanting... → microsoft_ai_problems
+2026-02-08T04:50:49.604454158Z    ✅ OpenAI and Anthropic become AI consultants as ente... → openai_anthropic_consulting
+2026-02-08T04:50:49.604459048Z    ✅ Trade Unions Alarmed by Robots Designed to Do Blue... → trade_unions_robot_concern
+2026-02-08T04:50:49.604463808Z    ✅ How to watch the 2026 Super Bowl on NBC: Patriots ... → super_bowl_2026_broadcast
+2026-02-08T04:50:49.604468568Z    ✅ Apple could soon allow AI chatbots like ChatGPT an... → apple_carplay_ai_integration
+2026-02-08T04:50:49.604473338Z    ✅ Anthropic spent millions on Super Bowl ads to roas... → anthropic_openai_ad_campaign
+2026-02-08T04:50:49.604478328Z    ✅ AI-generated text is overwhelming institutions, se... → ai_detectors_arms_race
+2026-02-08T04:50:50.104972726Z 📦 Batch 3/10 işleniyor (10 haber)...
+2026-02-08T04:50:51.764166663Z    ✅ Robots that keep moving when flipped? Sea star tub... → sea_star_robots_blueprint
+2026-02-08T04:50:51.764203103Z    ✅ Low-Vision Programmers Can Now Design 3D Models In... → low_vision_programmers_3d_modeling
+2026-02-08T04:50:51.764206593Z    ✅ 30 Agentic AI Interview Questions and Answers: Fro... → agentic_ai_interview_questions
+2026-02-08T04:50:51.764209233Z    ✅ Build an Agent with Nanobot, Lighter Replacement f... → nanobot_agent_release
+2026-02-08T04:50:51.764212153Z    ✅ Anthropic Insiders Afraid They’ve Crossed a Line... → anthropic_insiders_concerns
+2026-02-08T04:50:51.764214573Z    ✅ Gemini just saved me $419.20 with a single prompt... → gemini_cost_savings
+2026-02-08T04:50:51.764217043Z    ✅ Nvidia CEO Jensen Huang claims AI no longer halluc... → nvidia_ceo_ai_hallucination
+2026-02-08T04:50:51.764219653Z    ✅ Man Wakes Up Homeless, Realizes He Fell Into AI Ps... → ai_psychosis_homelessness
+2026-02-08T04:50:51.764222253Z    ✅ Top tech jobs 2026: 5 of the fastest-growing tech,... → tech_jobs_growth
+2026-02-08T04:50:51.764224713Z    ✅ A simple text file beats complex skill systems for... → ai_coding_agents_performance
+2026-02-08T04:50:52.265181731Z 📦 Batch 4/10 işleniyor (10 haber)...
+2026-02-08T04:50:53.871330370Z    ✅ Private Markets Push for World’s Wealthy Runs Into... → private_markets_ai_meltdown
+2026-02-08T04:50:53.871369630Z    ✅ The Technologies Changing How You’ll Watch the 202... → winter_olympics_2026_technologies
+2026-02-08T04:50:53.871376180Z    ✅ You Spent Your Whole Life Getting Good at the Wron... → life_skills_misalignment
+2026-02-08T04:50:53.871399100Z    ✅ Moltbook, the Social Network for AI Agents, Expose... → moltbook_user_data_exposure
+2026-02-08T04:50:53.871404370Z    ✅ Love the caricature trend? 9 more viral ChatGPT im... → chatgpt_image_prompts_trend
+2026-02-08T04:50:53.871409050Z    ✅ OpenAI’s Latest AI Was Created Using “Itself,” Com... → openai_ai_self_creation
+2026-02-08T04:50:53.871413680Z    ✅ A diverging Magnificent Seven... → magnificent_seven_divergence
+2026-02-08T04:50:53.871418500Z    ✅ 9 times the ChatGPT caricature trend went horribly... → chatgpt_caricature_trend_failures
+2026-02-08T04:50:53.871423150Z    ✅ Japan's lower house election becomes a testing gro... → japan_election_ai_misinformation
+2026-02-08T04:50:53.871427720Z    ✅ OpenAI's UAE deal with G42 shows AI models are cul... → openai_g42_partnership
+2026-02-08T04:50:54.371733170Z 📦 Batch 5/10 işleniyor (10 haber)...
+2026-02-08T04:50:55.731406495Z    ✅ Google's PaperBanana uses five AI agents to auto-g... → google_paperbanana_ai_agents
+2026-02-08T04:50:55.731449505Z    ✅ How to Build a Production-Grade Agentic AI System ... → agentic_ai_system_development
+2026-02-08T04:50:55.731458335Z    ✅ Benchmark raises $225M in special funds to double ... → benchmark_cerebras_investment
+2026-02-08T04:50:55.731465605Z    ✅ Anthropic’s More Than $20 Billion Funding to Close... → anthropic_funding_round
+2026-02-08T04:50:55.731471045Z    ✅ NVIDIA AI releases C-RADIOv4 vision backbone unify... → nvidia_c_radio_v4_release
+2026-02-08T04:50:55.731475615Z    ✅ Coursera, Udemy Merger to Boost Online AI Educatio... → coursera_udemy_merger
+2026-02-08T04:50:55.731480135Z    ✅ Big Tech’s $650 Billion AI Plans Spark Chip Rally... → big_tech_ai_chip_investment
+2026-02-08T04:50:55.731484715Z    ✅ Sixteen Claude AI agents working together created ... → claude_ai_compiler_creation
+2026-02-08T04:50:55.731489085Z    ✅ From Svedka to Anthropic, brands make bold plays w... → super_bowl_ai_advertising
+2026-02-08T04:50:55.731493665Z    ✅ Lawyer sets new standard for abuse of AI; judge to... → lawyer_ai_abuse_case_dismissal
+2026-02-08T04:50:56.231939575Z 📦 Batch 6/10 işleniyor (10 haber)...
+2026-02-08T04:50:57.843004057Z    ✅ It just got easier for Claude to check in on your ... → anthropic_claude_wordpress_integration
+2026-02-08T04:50:57.843047277Z    ✅ New Voice Assistants Are Officially a Whiff (for N... → voice_assistants_development
+2026-02-08T04:50:57.843053567Z    ✅ Pixelated 87: A wild Pixel 10a appeared!... → pixel_10a_release
+2026-02-08T04:50:57.843058387Z    ✅ OpenAI's Latest Platform Targets Enterprise Custom... → openai_enterprise_platform_launch
+2026-02-08T04:50:57.843063207Z    ✅ Apple might let you use ChatGPT from CarPlay... → apple_chatgpt_carplay_integration
+2026-02-08T04:50:57.843068037Z    ✅ Professor Says Her Garbled AI Textbook Was a Huge ... → professor_ai_textbook_success
+2026-02-08T04:50:57.843885194Z    ✅ Tech stocks rally strongly after three days of hea... → tech_stocks_rally
+2026-02-08T04:50:57.843896194Z    ✅ Anthropic’s breakout moment: how Claude cracked AI... → anthropic_claude_business_breakthrough
+2026-02-08T04:50:57.843901254Z    ✅ Vivian Tu on how to spot good financial advice in ... → vivian_tu_financial_advice
+2026-02-08T04:50:57.843905774Z    ✅ Maybe AI agents can be lawyers after all... → ai_agents_lawyers
+2026-02-08T04:50:58.344262994Z 📦 Batch 7/10 işleniyor (10 haber)...
+2026-02-08T04:51:00.036812249Z    ✅ Structured outputs on Amazon Bedrock: Schema-compl... → amazon_bedrock_structured_outputs
+2026-02-08T04:51:00.036849379Z    ✅ Apple might soon allow Gemini and ChatGPT on CarPl... → apple_gemini_chatgpt_integration
+2026-02-08T04:51:00.036927208Z    ✅ OpenAI’s GPT-5.3-Codex thinks deeper and wider abo... → openai_gpt_5_3_codex_release
+2026-02-08T04:51:00.036935008Z    ✅ Gemini’s Google Messages, iMessage, and WhatsApp p... → gemini_google_messages_integration
+2026-02-08T04:51:00.036939818Z    ✅ Waymo Introduces the Waymo World Model: A New Fron... → waymo_world_model_release
+2026-02-08T04:51:00.036944428Z    ✅ IEEE Online Mini-MBA Aims to Fill Leadership Skill... → ieee_mini_mba_launch
+2026-02-08T04:51:00.037032698Z    ✅ Waymo taps Google Deepmind's Genie 3 to simulate d... → waymo_deepmind_genie_simulation
+2026-02-08T04:51:00.037038088Z    ✅ Investors Concerned AI Bubble Is Finally Popping... → ai_bubble_investor_concerns
+2026-02-08T04:51:00.037042578Z    ✅ Behind the Blog: The Neverending Cybersecurity Sto... → cybersecurity_blog_series
+2026-02-08T04:51:00.037046978Z    ✅ Big Tech commits at least $610 billion to AI, then... → big_tech_ai_investment_market_loss
+2026-02-08T04:51:00.537511458Z 📦 Batch 8/10 işleniyor (10 haber)...
+2026-02-08T04:51:02.135302373Z    ✅ The Week’s 10 Biggest Funding Rounds: Waymo Leads ... → waymo_ai_funding
+2026-02-08T04:51:02.135338853Z    ✅ Case study: Open AI... → openai_case_study
+2026-02-08T04:51:02.135345253Z    ✅ Video Friday: Autonomous Robots Learn By Doing in ... → autonomous_robots_learning
+2026-02-08T04:51:02.135350673Z    ✅ Moltbook was peak AI theater... → moltbook_ai_theater
+2026-02-08T04:51:02.135355583Z    ✅ The Kindle Scribe Colorsoft is a pricey but pretty... → kindle_scribe_colorsoft_release
+2026-02-08T04:51:02.135360423Z    ✅ The Only Thing Standing Between Humanity and AI Ap... → anthropic_claude_apocalypse
+2026-02-08T04:51:02.135365113Z    ✅ Evaluate generative AI models with an Amazon Nova ... → amazon_sagemaker_ai_evaluation
+2026-02-08T04:51:02.135369823Z    ✅ Enterprises Don't Care About Anthropic's Super Bow... → anthropic_superbowl_ad_reaction
+2026-02-08T04:51:02.135374813Z    ✅ Sam Altman predicts AI agents will integrate any s... → sam_altman_ai_agents_prediction
+2026-02-08T04:51:02.135379583Z    ✅ What happens when Waymo runs into a tornado? Or an... → waymo_emergency_scenarios
+2026-02-08T04:51:02.636145532Z 📦 Batch 9/10 işleniyor (10 haber)...
+2026-02-08T04:51:04.266518675Z    ✅ UiPath pushes deeper into financial services with ... → uipath_workfusion_acquisition
+2026-02-08T04:51:04.266553625Z    ✅ Claude Opus 4.6 wrote mustard gas instructions in ... → anthropic_claude_safety_test
+2026-02-08T04:51:04.266560375Z    ✅ ‘Today’ host Savannah Guthrie is demanding proof o... → savannah_guthrie_deepfake_proof
+2026-02-08T04:51:04.266566475Z    ✅ Scientists Want to Give ChatGPT an Inner Monologue... → chatgpt_inner_monologue_research
+2026-02-08T04:51:04.266584825Z    ✅ Amazon shares sink as it prepares $200bn AI spendi... → amazon_ai_spending
+2026-02-08T04:51:04.266589935Z    ✅ Claude Opus 4.6 vs OpenAI Codex 5.3: Which is Bett... → claude_opus_openai_codex_comparison
+2026-02-08T04:51:04.266594845Z    ✅ How AI is helping solve the labor issue in treatin... → ai_rare_diseases_labor
+2026-02-08T04:51:04.266599605Z    ✅ The backlash over OpenAI’s decision to retire GPT-... → openai_gpt4o_backlash
+2026-02-08T04:51:04.266612505Z    ✅ Cyberhaven Research Highlights Urgent Need for AI ... → cyberhaven_ai_governance_research
+2026-02-08T04:51:04.266659325Z    ✅ Is OpenAI’s GPT-5.3 Codex Worth the Hype?... → openai_gpt5_3_codex_hype
+2026-02-08T04:51:04.768199001Z 📦 Batch 10/10 işleniyor (10 haber)...
+2026-02-08T04:51:06.111622003Z ✅ SEO Analyzer: Analysis complete
+2026-02-08T04:51:06.111697803Z    Score: 72/100
+2026-02-08T04:51:06.111703823Z    Issues: 4
+2026-02-08T04:51:06.111708813Z    Opportunities: 4
+2026-02-08T04:51:06.131048199Z ✅ [08.02.2026 04:51:06] [seo-calculator] SEO calculated: Zoom'un Yapay Zeka Hamlesi: To... → Score: 72 (46727ms)
+2026-02-08T04:51:06.140305084Z ℹ️  [08.02.2026 04:51:06] [queue-manager] [seo-calculation] Job seo-calc-cml80vrcy001bl7hddkz3l1ny completed
+2026-02-08T04:51:06.142128127Z ✅ [08.02.2026 04:51:06] [seo-calculator] SEO job seo-calc-cml80vrcy001bl7hddkz3l1ny completed: score=72
+2026-02-08T04:51:06.142158837Z ℹ️  [08.02.2026 04:51:06] [seo-calculator] Calculating SEO for: Yapay Zeka ve Sosyal Etki: 2026'da İş Dünyasının İ...
+2026-02-08T04:51:06.147261357Z 🔍 SEO Analyzer: Analyzing article "Yapay Zeka ve Sosyal Etki: 2026'da İş Dünyasının İkilemi"...
+2026-02-08T04:51:06.220695849Z    ✅ The Stock Market Has No Idea What’s Coming... → stock_market_uncertainty
+2026-02-08T04:51:06.220722099Z    ✅ Is Your Machine Learning Pipeline as Efficient as ... → machine_learning_pipeline_efficiency
+2026-02-08T04:51:06.220725029Z    ✅ How AWS-powered Next Gen Stats changed the NFL for... → aws_next_gen_stats_nfl
+2026-02-08T04:51:06.220727929Z    ✅ Domino Data Lab Taps Admiral Grady to Lead Public ... → domino_data_lab_grady_leadership
+2026-02-08T04:51:06.222285733Z    ✅ Prompt Fidelity: Measuring How Much of Your Intent... → ai_agent_prompt_fidelity
+2026-02-08T04:51:06.222311363Z    ✅ How separating logic and search boosts AI agent sc... → ai_agent_scalability_boost
+2026-02-08T04:51:06.222336113Z    ✅ My Honest Review of Claude Opus 4.6: Is It Worth t... → claude_opus_review
+2026-02-08T04:51:06.222341493Z    ✅ OpenAI, Anthropic fight on the frontier... → openai_anthropic_competition
+2026-02-08T04:51:06.222346203Z    ✅ Intuit, Uber, and State Farm trial AI agents insid... → intuit_uber_statefarm_ai_agents
+2026-02-08T04:51:06.222350753Z    ✅ Making AI work for everyone, everywhere: our appro... → ai_localization_approach
+2026-02-08T04:51:06.222355283Z ✅ Topic extraction tamamlandı: 100 haber
+2026-02-08T04:51:06.222359843Z 🔍 Duplicate check: Son 1 günde yayınlananlar eleniyor...
+2026-02-08T04:51:06.222364723Z 
+2026-02-08T04:51:06.222369742Z 🔍 ====== EARLY DUPLICATE FILTERING (RELAXED MODE) ======
+2026-02-08T04:51:06.222374332Z    Input: 100 haber
+2026-02-08T04:51:06.222378672Z    Topic time window: 24.0 saat (1.00 gün)
+2026-02-08T04:51:06.222383052Z    URL check: Son 24 saat (esnek mod)
+2026-02-08T04:51:06.222387332Z    📡 Fetching URLs from last 24 hours...
+2026-02-08T04:51:06.227477393Z    📚 URL Database: 79 unique URLs loaded
+2026-02-08T04:51:06.235170404Z    📚 Topic Database: 79 recent articles (1 gün)
+2026-02-08T04:51:06.236819508Z    ⏭️  URL DUPLICATE (DB): https://github.com/localgpt-app/localgpt...
+2026-02-08T04:51:06.236853027Z    ⏭️  URL DUPLICATE (DB): https://www.xda-developers.com/matching-the-right-llm-for-yo...
+2026-02-08T04:51:06.237017187Z    ⏭️  URL DUPLICATE (DB): https://mashable.com/article/feb-7-1minai-advanced-business-...
+2026-02-08T04:51:06.237027977Z    ⏭️  URL DUPLICATE (DB): https://www.xda-developers.com/compared-notebooklm-with-copi...
+2026-02-08T04:51:06.237036057Z    ⏭️  URL DUPLICATE (DB): https://www.techradar.com/pro/what-if-we-treated-the-nvidia-...
+2026-02-08T04:51:06.237224746Z    ⏭️  URL DUPLICATE (DB): https://techxplore.com/news/2026-02-china-ramps-energy-boom-...
+2026-02-08T04:51:06.237234276Z    ⏭️  URL DUPLICATE (DB): https://www.digitaltrends.com/social-media/meta-thinks-youll...
+2026-02-08T04:51:06.237239876Z    ⏭️  URL DUPLICATE (DB): https://techxplore.com/news/2026-02-artificial-general-intel...
+2026-02-08T04:51:06.237244776Z    ⏭️  URL DUPLICATE (DB): https://www.bloomberg.com/news/articles/2026-02-07/tech-s-ai...
+2026-02-08T04:51:06.237249556Z    ⏭️  URL DUPLICATE (DB): https://www.marktechpost.com/2026/02/07/google-ai-introduces...
+2026-02-08T04:51:06.237254616Z    ⏭️  URL DUPLICATE (DB): https://techxplore.com/news/2026-02-ai-demands-energy-effici...
+2026-02-08T04:51:06.237259146Z    ⏭️  URL DUPLICATE (DB): https://code.claude.com/docs/en/fast-mode...
+2026-02-08T04:51:06.237263666Z    ⏭️  URL DUPLICATE (DB): https://futurism.com/artificial-intelligence/microsoft-ai-ef...
+2026-02-08T04:51:06.237327055Z    ⏭️  URL DUPLICATE (DB): https://the-decoder.com/openai-and-anthropic-become-ai-consu...
+2026-02-08T04:51:06.237332805Z    ⏭️  URL DUPLICATE (DB): https://futurism.com/robots-and-machines/trade-unions-ai-rob...
+2026-02-08T04:51:06.237433016Z    ⏭️  URL DUPLICATE (DB): https://www.techradar.com/ai-platforms-assistants/apple-coul...
+2026-02-08T04:51:06.237439576Z    ⏭️  URL DUPLICATE (DB): https://thenextweb.com/news/anthropic-spent-millions-on-supe...
+2026-02-08T04:51:06.237444356Z    ⏭️  URL DUPLICATE (DB): https://techxplore.com/news/2026-02-ai-generated-text-overwh...
+2026-02-08T04:51:06.237449136Z    ⏭️  URL DUPLICATE (DB): https://techxplore.com/news/2026-02-robots-flipped-sea-star-...
+2026-02-08T04:51:06.237454186Z    ⏭️  URL DUPLICATE (DB): https://spectrum.ieee.org/3d-modeling-blind-programmers...
+2026-02-08T04:51:06.237550945Z    ⏭️  URL DUPLICATE (DB): https://www.analyticsvidhya.com/blog/2026/02/agentic-ai-inte...
+2026-02-08T04:51:06.237556625Z    ⏭️  URL DUPLICATE (DB): https://www.analyticsvidhya.com/blog/2026/02/ai-crypto-track...
+2026-02-08T04:51:06.237561235Z    ⏭️  URL DUPLICATE (DB): https://futurism.com/artificial-intelligence/anthropic-agent...
+2026-02-08T04:51:06.237566145Z    ⏭️  URL DUPLICATE (DB): https://www.androidauthority.com/gemini-saved-me-419-bucks-3...
+2026-02-08T04:51:06.237614445Z    ⏭️  URL DUPLICATE (DB): https://the-decoder.com/nvidia-ceo-jensen-huang-claims-ai-no...
+2026-02-08T04:51:06.237751804Z    ⏭️  URL DUPLICATE (DB): https://futurism.com/artificial-intelligence/ai-psychosis-ma...
+2026-02-08T04:51:06.237852414Z    ⏭️  URL DUPLICATE (DB): https://the-decoder.com/a-simple-text-file-beats-complex-ski...
+2026-02-08T04:51:06.237881124Z    ⏭️  URL DUPLICATE (DB): https://www.bloomberg.com/news/articles/2026-02-07/private-m...
+2026-02-08T04:51:06.237930603Z    ⏭️  URL DUPLICATE (DB): https://www.wired.com/story/the-technologies-changing-how-yo...
+2026-02-08T04:51:06.237968433Z    ⏭️  URL DUPLICATE (DB): https://www.thealgorithmicbridge.com/p/you-spent-your-whole-...
+2026-02-08T04:51:06.238101803Z    ⏭️  URL DUPLICATE (DB): https://www.wired.com/story/security-news-this-week-moltbook...
+2026-02-08T04:51:06.238107013Z    ⏭️  URL DUPLICATE (DB): https://mashable.com/article/9-chatgpt-photo-prompts-to-try-...
+2026-02-08T04:51:06.238109653Z    ⏭️  URL DUPLICATE (DB): https://futurism.com/artificial-intelligence/openai-ai-creat...
+2026-02-08T04:51:06.238166862Z    ⏭️  URL DUPLICATE (DB): https://www.ft.com/content/5676a4bd-c7d8-47f1-84f7-82c006cfc...
+2026-02-08T04:51:06.238233072Z    ⏭️  URL DUPLICATE (DB): https://mashable.com/article/chatgpt-caricature-trends-that-...
+2026-02-08T04:51:06.238236602Z    ⏭️  URL DUPLICATE (DB): https://the-decoder.com/japans-lower-house-election-becomes-...
+2026-02-08T04:51:06.238294872Z    ⏭️  URL DUPLICATE (DB): https://the-decoder.com/openais-uae-deal-with-g42-shows-ai-m...
+2026-02-08T04:51:06.238299052Z    ⏭️  URL DUPLICATE (DB): https://the-decoder.com/googles-paperbanana-uses-five-ai-age...
+2026-02-08T04:51:06.238305092Z    ⏭️  URL DUPLICATE (DB): https://www.marktechpost.com/2026/02/06/how-to-build-a-produ...
+2026-02-08T04:51:06.238823630Z    ⏭️  URL DUPLICATE (DB): https://techcrunch.com/2026/02/06/benchmark-raises-225m-in-s...
+2026-02-08T04:51:06.243850841Z    ⏭️  URL DUPLICATE (DB): https://techcrunch.com/2026/02/06/super-bowl-60-ai-ads-svedk...
+2026-02-08T04:51:06.243901101Z    ⏭️  URL DUPLICATE (DB): https://techcrunch.com/2026/02/06/it-just-got-easier-for-cla...
+2026-02-08T04:51:06.245993093Z    ⏭️  URL DUPLICATE (DB): https://www.theverge.com/transportation/875199/apple-carplay...
+2026-02-08T04:51:06.246774450Z    ⏭️  URL DUPLICATE (DB): https://www.ft.com/content/a75555a6-24c3-4468-aba9-7fe12b5de...
+2026-02-08T04:51:06.247565977Z    ⏭️  URL DUPLICATE (DB): https://www.digitaltrends.com/cars/apple-might-soon-allow-ge...
+2026-02-08T04:51:06.249535890Z    ⏭️  URL DUPLICATE (DB): https://9to5google.com/2026/02/06/gemini-google-messaging/...
+2026-02-08T04:51:06.251465682Z    ⏭️  URL DUPLICATE (DB): https://www.technologyreview.com/2026/02/06/1132448/moltbook...
+2026-02-08T04:51:06.251485212Z    ⏭️  URL DUPLICATE (DB): https://techcrunch.com/2026/02/06/kindle-scribe-colorsoft-re...
+2026-02-08T04:51:06.255932155Z    ⏭️  URL DUPLICATE (DB): https://www.analyticsvidhya.com/blog/2026/02/claude-opus-4-6...
+2026-02-08T04:51:06.256691363Z    ⏭️  URL DUPLICATE (DB): https://www.analyticsvidhya.com/blog/2026/02/gpt-5-3-codex-h...
+2026-02-08T04:51:06.258808244Z    ⏭️  URL DUPLICATE (DB): https://www.analyticsvidhya.com/blog/2026/02/claude-opus-4-6...
+2026-02-08T04:51:06.258819154Z    ⏭️  URL DUPLICATE (DB): https://www.therundown.ai/p/openai-anthropic-fight-on-the-fr...
+2026-02-08T04:51:06.259514022Z 
+2026-02-08T04:51:06.259521072Z 📊 ====== EARLY FILTERING SONUÇLARI ======
+2026-02-08T04:51:06.259526191Z    Input: 100 haber
+2026-02-08T04:51:06.259530751Z    ❌ URL Duplicates (DB): 52
+2026-02-08T04:51:06.259535581Z    ❌ Topic Duplicates: 0
+2026-02-08T04:51:06.259540011Z    ❌ Batch Duplicates: 0
+2026-02-08T04:51:06.259544501Z    ─────────────────────────
+2026-02-08T04:51:06.259549211Z    ❌ TOTAL FILTERED: 52 haber
+2026-02-08T04:51:06.259553691Z    ✅ UNIQUE REMAINING: 48 haber
+2026-02-08T04:51:06.259624651Z    📈 Duplicate Rate: 52.0%
+2026-02-08T04:51:06.259688481Z    💰 API Savings: %52 Brave/DeepSeek call saved!
+2026-02-08T04:51:06.259705791Z ==========================================
+2026-02-08T04:51:06.259714431Z 
+2026-02-08T04:51:06.259790470Z 
+2026-02-08T04:51:06.259796950Z 📊 Early filtering sonuçları:
+2026-02-08T04:51:06.259801810Z    Input: 100 haber
+2026-02-08T04:51:06.259806150Z    Duplicate: 52 haber
+2026-02-08T04:51:06.259810540Z    Unique: 48 haber
+2026-02-08T04:51:06.259815100Z    Duplicate rate: 52.0%
+2026-02-08T04:51:06.260357879Z 
+2026-02-08T04:51:06.260372499Z ✅ 48 unique haber Brave API'ye gönderilecek
+2026-02-08T04:51:06.260395939Z    Brave API maliyet tasarrufu: 52.0%
+2026-02-08T04:51:06.260401019Z 
+2026-02-08T04:51:06.260405458Z 📊 48 UNIQUE haber için Trend analizi (Brave API)...
+2026-02-08T04:51:06.260850636Z 📊 Hybrid ile 48 haber analiz ediliyor...
+2026-02-08T04:51:06.260863576Z 📦 Batch 1/5 işleniyor (10 haber)...
+2026-02-08T04:51:07.630662799Z ✅ SEO Analyzer: Analysis complete
+2026-02-08T04:51:07.630699348Z    Score: 65/100
+2026-02-08T04:51:07.630705178Z    Issues: 5
+2026-02-08T04:51:07.630710128Z    Opportunities: 5
+2026-02-08T04:51:07.649852296Z ✅ [08.02.2026 04:51:07] [seo-calculator] SEO calculated: Take-Two CEO'su: GTA 6'da Yapa... → Score: 65 (48244ms)
+2026-02-08T04:51:07.651793219Z ℹ️  [08.02.2026 04:51:07] [queue-manager] [seo-calculation] Job seo-calc-cml80css50012l7hd5wfnub43 completed
+2026-02-08T04:51:07.652339776Z ✅ [08.02.2026 04:51:07] [seo-calculator] SEO job seo-calc-cml80css50012l7hd5wfnub43 completed: score=65
+2026-02-08T04:51:07.652716306Z ℹ️  [08.02.2026 04:51:07] [seo-calculator] Calculating SEO for: Alphabet'in 2 Trilyon Dolarlık Yükselişi Yapay Zek...
+2026-02-08T04:51:07.657447677Z 🔍 SEO Analyzer: Analyzing article "Alphabet'in 2 Trilyon Dolarlık Yükselişi Yapay Zeka Liderliğini Test Ediyor"...
+2026-02-08T04:51:07.803969832Z ✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+2026-02-08T04:51:07.804001101Z 📊 SearXNG trend score: 31 (results: 2, domains: 2, pos: 1.5, keywords: super,everything)
+2026-02-08T04:51:07.804006311Z ✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+2026-02-08T04:51:07.804010531Z 📊 SearXNG trend score: 37 (results: 1, domains: 1, pos: 1.0, keywords: 2026:,fastest-growing,tech,,careers)
+2026-02-08T04:51:07.831676466Z ✅ SearXNG: 5 sonuç bulundu (toplam: 5)
+2026-02-08T04:51:07.831708736Z 📊 SearXNG trend score: 63 (results: 5, domains: 4, pos: 3.0, keywords: watch,super,patriots,seahawks)
+2026-02-08T04:51:07.842320696Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:07.842350266Z 📊 SearXNG trend score: 11 (results: 0, domains: 0, pos: 10.0, keywords: anthropic’s,billion,funding,close)
+2026-02-08T04:51:07.985655812Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:07.985695102Z 📊 SearXNG trend score: 14 (results: 0, domains: 0, pos: 10.0, keywords: coursera,,udemy,merger,boost)
+2026-02-08T04:51:08.017338691Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:08.017375121Z 📊 SearXNG trend score: 13 (results: 0, domains: 0, pos: 10.0, keywords: sixteen,claude,agents,working)
+2026-02-08T04:51:08.024856054Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:08.024893993Z 📊 SearXNG trend score: 9 (results: 0, domains: 0, pos: 10.0, keywords: tech’s,billion,plans,spark)
+2026-02-08T04:51:08.026419327Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:08.026459747Z 📊 SearXNG trend score: 11 (results: 0, domains: 0, pos: 10.0, keywords: nvidia,releases,c-radiov4,vision)
+2026-02-08T04:51:08.149543559Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:08.149602439Z 📊 SearXNG trend score: 9 (results: 0, domains: 0, pos: 10.0, keywords: lawyer,standard,abuse,judge)
+2026-02-08T04:51:08.198021476Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:08.198058346Z 📊 SearXNG trend score: 11 (results: 0, domains: 0, pos: 10.0, keywords: voice,assistants,officially,whiff)
+2026-02-08T04:51:08.198384414Z ⏳ 500ms bekleniyor...
+2026-02-08T04:51:08.702704541Z 📦 Batch 2/5 işleniyor (10 haber)...
+2026-02-08T04:51:08.877055890Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:08.877081960Z 📊 SearXNG trend score: 14 (results: 0, domains: 0, pos: 10.0, keywords: pixelated,pixel,appeared!)
+2026-02-08T04:51:09.413224436Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:09.413266495Z 📊 SearXNG trend score: 9 (results: 0, domains: 0, pos: 10.0, keywords: vivian,financial,advice,uncertain)
+2026-02-08T04:51:09.417764149Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:09.417921158Z 📊 SearXNG trend score: 9 (results: 0, domains: 0, pos: 10.0, keywords: professor,garbled,textbook,success)
+2026-02-08T04:51:09.460250417Z ✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+2026-02-08T04:51:09.460285747Z 📊 SearXNG trend score: 31 (results: 1, domains: 1, pos: 1.0, keywords: stocks,rally,strongly,three)
+2026-02-08T04:51:09.464271362Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:09.464294902Z 📊 SearXNG trend score: 8 (results: 0, domains: 0, pos: 10.0, keywords: openai's,latest,platform,targets)
+2026-02-08T04:51:09.635087804Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:09.635136544Z 📊 SearXNG trend score: 16 (results: 0, domains: 0, pos: 10.0, keywords: structured,outputs,amazon,bedrock:)
+2026-02-08T04:51:09.652469238Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:09.652499899Z 📊 SearXNG trend score: 14 (results: 0, domains: 0, pos: 10.0, keywords: waymo,introduces,waymo,world)
+2026-02-08T04:51:09.657153000Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:09.657194110Z 📊 SearXNG trend score: 12 (results: 0, domains: 0, pos: 10.0, keywords: openai’s,gpt-5.3-codex,thinks,deeper)
+2026-02-08T04:51:09.658280856Z ✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+2026-02-08T04:51:09.658381585Z 📊 SearXNG trend score: 31 (results: 2, domains: 1, pos: 1.5, keywords: maybe,agents,lawyers)
+2026-02-08T04:51:09.806659154Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:09.806697213Z 📊 SearXNG trend score: 10 (results: 0, domains: 0, pos: 10.0, keywords: online,mini-mba,leadership,skills)
+2026-02-08T04:51:09.806703923Z ⏳ 500ms bekleniyor...
+2026-02-08T04:51:10.307210185Z 📦 Batch 3/5 işleniyor (10 haber)...
+2026-02-08T04:51:10.466935269Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:10.466964299Z 📊 SearXNG trend score: 13 (results: 0, domains: 0, pos: 10.0, keywords: waymo,google,deepmind's,genie)
+2026-02-08T04:51:11.024336614Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:11.024373654Z 📊 SearXNG trend score: 11 (results: 0, domains: 0, pos: 10.0, keywords: video,friday:,autonomous,robots)
+2026-02-08T04:51:11.044494018Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:11.044528237Z 📊 SearXNG trend score: 8 (results: 0, domains: 0, pos: 10.0, keywords: thing,standing,humanity,apocalypse)
+2026-02-08T04:51:11.060811656Z ✅ SearXNG: 5 sonuç bulundu (toplam: 5)
+2026-02-08T04:51:11.061049515Z 📊 SearXNG trend score: 41 (results: 5, domains: 3, pos: 3.0, keywords: study:)
+2026-02-08T04:51:11.079502205Z ✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+2026-02-08T04:51:11.079531605Z 📊 SearXNG trend score: 33 (results: 1, domains: 1, pos: 1.0, keywords: week’s,biggest,funding,rounds:)
+2026-02-08T04:51:11.230468932Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:11.230503832Z 📊 SearXNG trend score: 8 (results: 0, domains: 0, pos: 10.0, keywords: enterprises,don't,anthropic's,super)
+2026-02-08T04:51:11.236938147Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:11.236963757Z 📊 SearXNG trend score: 9 (results: 0, domains: 0, pos: 10.0, keywords: evaluate,generative,amazon,rubric-based)
+2026-02-08T04:51:11.248024246Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:11.248053546Z 📊 SearXNG trend score: 8 (results: 0, domains: 0, pos: 10.0, keywords: behind,blog:,neverending,cybersecurity)
+2026-02-08T04:51:11.293982312Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:11.294016842Z 📊 SearXNG trend score: 11 (results: 0, domains: 0, pos: 10.0, keywords: investors,concerned,bubble,finally)
+2026-02-08T04:51:11.402026092Z ✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+2026-02-08T04:51:11.402065622Z 📊 SearXNG trend score: 31 (results: 1, domains: 1, pos: 1.0, keywords: commits,least,billion,loses)
+2026-02-08T04:51:11.402086271Z ⏳ 500ms bekleniyor...
+2026-02-08T04:51:11.902470923Z 📦 Batch 4/5 işleniyor (10 haber)...
+2026-02-08T04:51:12.075353038Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:12.075384217Z 📊 SearXNG trend score: 12 (results: 0, domains: 0, pos: 10.0, keywords: altman,predicts,agents,integrate)
+2026-02-08T04:51:12.598835282Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:12.598966941Z 📊 SearXNG trend score: 14 (results: 0, domains: 0, pos: 10.0, keywords: happens,waymo,tornado?,elephant?)
+2026-02-08T04:51:12.603115876Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:12.603141086Z 📊 SearXNG trend score: 11 (results: 0, domains: 0, pos: 10.0, keywords: claude,wrote,mustard,instructions)
+2026-02-08T04:51:12.621912094Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:12.621971844Z 📊 SearXNG trend score: 8 (results: 0, domains: 0, pos: 10.0, keywords: uipath,pushes,deeper,financial)
+2026-02-08T04:51:12.796714112Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:12.796763071Z 📊 SearXNG trend score: 15 (results: 0, domains: 0, pos: 10.0, keywords: amazon,shares,prepares,$200bn)
+2026-02-08T04:51:12.800878245Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:12.800899925Z 📊 SearXNG trend score: 6 (results: 0, domains: 0, pos: 10.0, keywords: scientists,chatgpt,inner,monologue)
+2026-02-08T04:51:12.822867703Z ✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+2026-02-08T04:51:12.822930192Z 📊 SearXNG trend score: 33 (results: 1, domains: 1, pos: 1.0, keywords: helping,solve,labor,issue)
+2026-02-08T04:51:12.837717386Z ✅ SearXNG: 6 sonuç bulundu (toplam: 6)
+2026-02-08T04:51:12.837919925Z 📊 SearXNG trend score: 51 (results: 6, domains: 4, pos: 3.5, keywords: ‘today’,savannah,guthrie,demanding)
+2026-02-08T04:51:12.981029912Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:12.981193292Z 📊 SearXNG trend score: 10 (results: 0, domains: 0, pos: 10.0, keywords: backlash,openai’s,decision,retire)
+2026-02-08T04:51:12.982380858Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:12.982398288Z 📊 SearXNG trend score: 6 (results: 0, domains: 0, pos: 10.0, keywords: cyberhaven,research,highlights,urgent)
+2026-02-08T04:51:12.982440537Z ⏳ 500ms bekleniyor...
+2026-02-08T04:51:13.483344547Z 📦 Batch 5/5 işleniyor (8 haber)...
+2026-02-08T04:51:13.638687328Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:13.638740897Z 📊 SearXNG trend score: 7 (results: 0, domains: 0, pos: 10.0, keywords: stock,market,what’s,coming)
+2026-02-08T04:51:14.248539284Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:14.248574564Z 📊 SearXNG trend score: 14 (results: 0, domains: 0, pos: 10.0, keywords: aws-powered,stats,changed,forever)
+2026-02-08T04:51:14.264703393Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:14.264750433Z 📊 SearXNG trend score: 15 (results: 0, domains: 0, pos: 10.0, keywords: machine,learning,pipeline,efficient)
+2026-02-08T04:51:14.278418601Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:14.278449621Z 📊 SearXNG trend score: 14 (results: 0, domains: 0, pos: 10.0, keywords: prompt,fidelity:,measuring,intent)
+2026-02-08T04:51:14.282406757Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:14.282430766Z 📊 SearXNG trend score: 8 (results: 0, domains: 0, pos: 10.0, keywords: domino,admiral,grady,public)
+2026-02-08T04:51:14.429526868Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:14.429562178Z 📊 SearXNG trend score: 9 (results: 0, domains: 0, pos: 10.0, keywords: intuit,,uber,,state,trial)
+2026-02-08T04:51:14.430192346Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:14.430213156Z 📊 SearXNG trend score: 10 (results: 0, domains: 0, pos: 10.0, keywords: separating,logic,search,boosts)
+2026-02-08T04:51:14.434859188Z ✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+2026-02-08T04:51:14.434881318Z 📊 SearXNG trend score: 10 (results: 0, domains: 0, pos: 10.0, keywords: making,everyone,,everywhere:,approach)
+2026-02-08T04:51:14.435072287Z ✅ Hybrid trend sıralaması tamamlandı
+2026-02-08T04:51:14.435078737Z 📊 İşlenen: 48/48 haber
+2026-02-08T04:51:14.435240096Z 🏆 Top 5: #2 (skor: 63), #35 (skor: 51), #26 (skor: 41), #3 (skor: 37), #25 (skor: 33)
+2026-02-08T04:51:14.435437795Z 📈 Provider İstatistikleri:
+2026-02-08T04:51:14.435443645Z    Brave: 0 istek, 0 hata, ✅ aktif
+2026-02-08T04:51:14.435593845Z    Tavily: 0 istek, 0 hata, ✅ aktif
+2026-02-08T04:51:14.435612085Z    SearXNG: 48 istek, 0 hata, ✅ aktif
+2026-02-08T04:51:14.436184833Z ✅ 48 trend haber seçildi (retry pool için artırıldı)
+2026-02-08T04:51:14.436340902Z Top 5 Trend Haberler: 
+2026-02-08T04:51:14.436351692Z   1. How to watch the 2026 Super Bowl on NBC: Patriots vs. Seahaw... (skor: 63)
+2026-02-08T04:51:14.436359322Z   2. ‘Today’ host Savannah Guthrie is demanding proof of life for... (skor: 51)
+2026-02-08T04:51:14.436366622Z   3. Case study: Open AI... (skor: 41)
+2026-02-08T04:51:14.436372632Z   4. Top tech jobs 2026: 5 of the fastest-growing tech, AI career... (skor: 37)
+2026-02-08T04:51:14.436430452Z   5. The Week’s 10 Biggest Funding Rounds: Waymo Leads An AI-Driv... (skor: 33)
+2026-02-08T04:51:14.436439952Z ✅ 48 unique trend haber bulundu (duplicate filtering yapıldı)
+2026-02-08T04:51:14.436510782Z ✅ [08.02.2026 04:51:14] [rss] 📰 48 unique haber bulundu
+2026-02-08T04:51:14.442222670Z 📊 Haber sayısı ayarları: min=1, max=3
+2026-02-08T04:51:14.442249480Z 🎯 Hedef haber sayısı: 1 (content variation mode aktif)
+2026-02-08T04:51:14.443247076Z info: 📊 Agent step: content_variation İçerik çeşitlendirme kontrolü {"environment":"production","logId":"cmld9liiz0000pzqad8tujm8c","module":"agent","progress":40,"service":"ai-news-agent","step":"content_variation","timestamp":"2026-02-08 04:51:14"}
+2026-02-08T04:51:14.443261016Z 🔄 Adım 2: İçerik çeşitlendirme stratejisi...
+2026-02-08T04:51:14.445740957Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-08T04:51:14.450983747Z 📚 Son 48 saatte 100 haber yayınlanmış
+2026-02-08T04:51:14.451269195Z info: 📊 Agent step: multi_agent_pipeline Multi-agent pipeline başlatılıyor (Enrichment + Visual + Publish) {"environment":"production","logId":"cmld9liiz0000pzqad8tujm8c","module":"agent","progress":60,"service":"ai-news-agent","step":"multi_agent_pipeline","timestamp":"2026-02-08 04:51:14"}
+2026-02-08T04:51:14.451290155Z 🤖 Adım 3: Multi-agent pipeline başlatılıyor...
+2026-02-08T04:51:14.452430521Z [Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+2026-02-08T04:51:14.600674899Z ℹ️  [08.02.2026 04:51:14] [multi-agent-pipeline] 🚀 Starting multi-agent pipeline with 48 articles
+2026-02-08T04:51:14.669782937Z 
+2026-02-08T04:51:14.669812546Z 📤 Adding job to queue: relevant-articles
+2026-02-08T04:51:14.669836066Z    Articles: 48
+2026-02-08T04:51:14.669841376Z    AgentLogId: cmld9liiz0000pzqad8tujm8c
+2026-02-08T04:51:14.686568763Z ✅ Job added successfully: 526
+2026-02-08T04:51:14.693829515Z 🔄 [relevance-filter] Job 526 ACTIVE - processing...
+2026-02-08T04:51:14.693859555Z ℹ️  [08.02.2026 04:51:14] [relevance-filter] Job 526 active
+2026-02-08T04:51:14.694460103Z 
+2026-02-08T04:51:14.694476753Z 🤖 [relevance-filter] ========== PROCESSING JOB ==========
+2026-02-08T04:51:14.694783092Z    Job ID: 526
+2026-02-08T04:51:14.695155840Z    Job Name: filter-relevance
+2026-02-08T04:51:14.695168180Z    Queue: relevant-articles
+2026-02-08T04:51:14.695175090Z    Data items: 48
+2026-02-08T04:51:14.695340480Z    Timeout: 180s
+2026-02-08T04:51:14.695372870Z ℹ️  [08.02.2026 04:51:14] [relevance-filter] Processing job 526 (timeout: 180s)
+2026-02-08T04:51:14.696248146Z ℹ️  [08.02.2026 04:51:14] [relevance-filter] Filtering 48 articles for relevance...
+2026-02-08T04:51:14.697157133Z ℹ️  [08.02.2026 04:51:14] [relevance-filter] Processing batch 1/5 (10 articles)
+2026-02-08T04:51:14.697179803Z ℹ️  [08.02.2026 04:51:14] [relevance-filter] 🤖 HYBRID: Using Gemini 2.0 Flash for batch scoring
+2026-02-08T04:51:15.688387794Z 
+2026-02-08T04:51:15.688426884Z 📊 Queue Status (relevant-articles):
+2026-02-08T04:51:15.688433614Z    Waiting: 0
+2026-02-08T04:51:15.688438824Z    Active: 1
+2026-02-08T04:51:15.688443244Z    Completed: 100
+2026-02-08T04:51:15.688447504Z    Failed: 0
+2026-02-08T04:51:15.688451824Z ℹ️  [08.02.2026 04:51:15] [multi-agent-pipeline] 📊 Queue status: waiting=0, active=1, completed=100, failed=0
+2026-02-08T04:51:15.688546624Z ✅ [08.02.2026 04:51:15] [multi-agent-pipeline] ✅ Job is being processed by an agent!
+2026-02-08T04:51:15.688554674Z ✅ [08.02.2026 04:51:15] [multi-agent-pipeline] ✅ 48 articles added to multi-agent pipeline
+2026-02-08T04:51:15.688718363Z 
+2026-02-08T04:51:15.688781993Z ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+2026-02-08T04:51:15.688787633Z ┃        🤖 MULTI-AGENT PIPELINE STARTED            ┃
+2026-02-08T04:51:15.688792513Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-08T04:51:15.688797592Z ┃  Articles:     48                                 ┃
+2026-02-08T04:51:15.688802552Z ┃  Target:       1                                  ┃
+2026-02-08T04:51:15.688807072Z ┃  Agent Log:    cmld9liiz000...                    ┃
+2026-02-08T04:51:15.688811562Z ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+2026-02-08T04:51:15.688841032Z ┃  Pipeline Flow (7 Agents):                        ┃
+2026-02-08T04:51:15.688845922Z ┃  1. ✅ Content Collected (RSS + Trend)            ┃
+2026-02-08T04:51:15.688850532Z ┃  2. 🔄 Relevance Filter (AI scoring)              ┃
+2026-02-08T04:51:15.688855162Z ┃  3. 🔄 Duplicate Detection (3-layer)              ┃
+2026-02-08T04:51:15.688859682Z ┃  4. 🔄 Trend Enrichment                           ┃
+2026-02-08T04:51:15.688864232Z ┃  5. 🔄 Content Enrichment (Brave + Jina)          ┃
+2026-02-08T04:51:15.688868812Z ┃  6. 🔄 Visual Generation (Pollinations)           ┃
+2026-02-08T04:51:15.688873342Z ┃  7. 🔄 SEO Optimization (AI scoring)              ┃
+2026-02-08T04:51:15.688878122Z ┃  8. 🔄 Database Publishing                        ┃
+2026-02-08T04:51:15.688882782Z ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+2026-02-08T04:51:15.688887722Z   
+2026-02-08T04:51:15.689331941Z ℹ️  [08.02.2026 04:51:15] [agent] 🤖 Multi-agent pipeline başlatıldı: 48 haber işlenecek
+2026-02-08T04:51:15.692413569Z ⏳ Multi-agent pipeline tamamlanması bekleniyor...
+2026-02-08T04:51:15.693618904Z 
+2026-02-08T04:51:15.693665404Z ⏳ Waiting for pipeline completion (timeout: 1200s)
+2026-02-08T04:51:15.693687254Z ℹ️  [08.02.2026 04:51:15] [multi-agent-pipeline] ⏳ Waiting for pipeline completion (timeout: 1200s)
+2026-02-08T04:51:18.827771870Z ℹ️  [08.02.2026 04:51:18] [relevance-filter] Processing batch 2/5 (10 articles)
+2026-02-08T04:51:18.827821700Z ℹ️  [08.02.2026 04:51:18] [relevance-filter] 🤖 HYBRID: Using Gemini 2.0 Flash for batch scoring
+2026-02-08T04:51:19.241437883Z 💓 Heartbeat updated: 08.02.2026 04:51:19
+2026-02-08T04:51:20.701968516Z 
+2026-02-08T04:51:20.702000376Z 📊 [Check #1] Pipeline Progress:
+2026-02-08T04:51:20.702007676Z    Stage: relevant-articles
+2026-02-08T04:51:20.702012556Z    In Queue: 1
+2026-02-08T04:51:20.702017066Z    Completed: 100
+2026-02-08T04:51:20.702024316Z    Failed: 0
+2026-02-08T04:51:20.702028966Z    Has Seen Articles: true
+2026-02-08T04:51:20.702068056Z    Empty Checks: 0/3
+2026-02-08T04:51:20.702076656Z ℹ️  [08.02.2026 04:51:20] [multi-agent-pipeline] 📊 Pipeline progress: relevant-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:51:25.525844983Z ℹ️  [08.02.2026 04:51:25] [relevance-filter] Processing batch 3/5 (10 articles)
+2026-02-08T04:51:25.526170651Z ℹ️  [08.02.2026 04:51:25] [relevance-filter] 🤖 HYBRID: Using Gemini 2.0 Flash for batch scoring
+2026-02-08T04:51:25.706617378Z 
+2026-02-08T04:51:25.706693027Z 📊 [Check #2] Pipeline Progress:
+2026-02-08T04:51:25.706745807Z    Stage: relevant-articles
+2026-02-08T04:51:25.706752727Z    In Queue: 1
+2026-02-08T04:51:25.706759797Z    Completed: 100
+2026-02-08T04:51:25.706765807Z    Failed: 0
+2026-02-08T04:51:25.706771947Z    Has Seen Articles: true
+2026-02-08T04:51:25.706779057Z    Empty Checks: 0/3
+2026-02-08T04:51:25.706791197Z ℹ️  [08.02.2026 04:51:25] [multi-agent-pipeline] 📊 Pipeline progress: relevant-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:51:30.713586477Z 
+2026-02-08T04:51:30.713664387Z 📊 [Check #3] Pipeline Progress:
+2026-02-08T04:51:30.713676407Z    Stage: relevant-articles
+2026-02-08T04:51:30.713681786Z    In Queue: 1
+2026-02-08T04:51:30.713686496Z    Completed: 100
+2026-02-08T04:51:30.713691306Z    Failed: 0
+2026-02-08T04:51:30.713695906Z    Has Seen Articles: true
+2026-02-08T04:51:30.713703026Z    Empty Checks: 0/3
+2026-02-08T04:51:30.713855666Z ℹ️  [08.02.2026 04:51:30] [multi-agent-pipeline] 📊 Pipeline progress: relevant-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:51:31.415904006Z ℹ️  [08.02.2026 04:51:31] [relevance-filter] Processing batch 4/5 (10 articles)
+2026-02-08T04:51:31.416370474Z ℹ️  [08.02.2026 04:51:31] [relevance-filter] 🤖 HYBRID: Using Gemini 2.0 Flash for batch scoring
+2026-02-08T04:51:35.717564885Z 
+2026-02-08T04:51:35.717602515Z 📊 [Check #4] Pipeline Progress:
+2026-02-08T04:51:35.717609045Z    Stage: relevant-articles
+2026-02-08T04:51:35.717613905Z    In Queue: 1
+2026-02-08T04:51:35.717618435Z    Completed: 100
+2026-02-08T04:51:35.717622745Z    Failed: 0
+2026-02-08T04:51:35.717627335Z    Has Seen Articles: true
+2026-02-08T04:51:35.717667025Z    Empty Checks: 0/3
+2026-02-08T04:51:35.717674395Z ℹ️  [08.02.2026 04:51:35] [multi-agent-pipeline] 📊 Pipeline progress: relevant-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:51:38.651235387Z ℹ️  [08.02.2026 04:51:38] [relevance-filter] Processing batch 5/5 (8 articles)
+2026-02-08T04:51:38.651385746Z ℹ️  [08.02.2026 04:51:38] [relevance-filter] 🤖 HYBRID: Using Gemini 2.0 Flash for batch scoring
+2026-02-08T04:51:40.725080595Z 
+2026-02-08T04:51:40.725112385Z 📊 [Check #5] Pipeline Progress:
+2026-02-08T04:51:40.725119095Z    Stage: relevant-articles
+2026-02-08T04:51:40.725123895Z    In Queue: 1
+2026-02-08T04:51:40.725128275Z    Completed: 100
+2026-02-08T04:51:40.725132575Z    Failed: 0
+2026-02-08T04:51:40.725136675Z    Has Seen Articles: true
+2026-02-08T04:51:40.725140815Z    Empty Checks: 0/3
+2026-02-08T04:51:40.725145635Z ℹ️  [08.02.2026 04:51:40] [multi-agent-pipeline] 📊 Pipeline progress: relevant-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:51:43.864486883Z ✅ [08.02.2026 04:51:43] [relevance-filter] Filtered: 45/48 articles passed (6.3% rejected)
+2026-02-08T04:51:43.864747731Z ℹ️  [08.02.2026 04:51:43] [relevance-filter] Top 5 relevant articles:
+2026-02-08T04:51:43.864939741Z ℹ️  [08.02.2026 04:51:43] [relevance-filter]   1. [92] OpenAI’s GPT-5.3-Codex thinks deeper and wider abo...
+2026-02-08T04:51:43.865073670Z ℹ️  [08.02.2026 04:51:43] [relevance-filter]   2. [92] The backlash over OpenAI’s decision to retire GPT-...
+2026-02-08T04:51:43.865171180Z ℹ️  [08.02.2026 04:51:43] [relevance-filter]   3. [90] Waymo taps Google Deepmind's Genie 3 to simulate d...
+2026-02-08T04:51:43.865350279Z ℹ️  [08.02.2026 04:51:43] [relevance-filter]   4. [90] Making AI work for everyone, everywhere: our appro...
+2026-02-08T04:51:43.865423518Z ℹ️  [08.02.2026 04:51:43] [relevance-filter]   5. [90] Enterprises Don't Care About Anthropic's Super Bow...
+2026-02-08T04:51:43.870248610Z ✅ [08.02.2026 04:51:43] [multi-agent-pipeline] ✅ Agent relevance-filter exited RECOVERY MODE
+2026-02-08T04:51:43.871160717Z ✅ [08.02.2026 04:51:43] [relevance-filter] Job 526 completed in 29171ms
+2026-02-08T04:51:43.878467009Z ℹ️  [08.02.2026 04:51:43] [relevance-filter] Emitted to next queue: unique-articles
+2026-02-08T04:51:43.885016865Z 🔄 [duplicate-detector] Job 493 ACTIVE - processing...
+2026-02-08T04:51:43.885043975Z ℹ️  [08.02.2026 04:51:43] [duplicate-detector] Job 493 active
+2026-02-08T04:51:43.885185074Z 
+2026-02-08T04:51:43.885205244Z 🤖 [duplicate-detector] ========== PROCESSING JOB ==========
+2026-02-08T04:51:43.885214344Z    Job ID: 493
+2026-02-08T04:51:43.885222074Z    Job Name: relevance-filter-output
+2026-02-08T04:51:43.885229684Z    Queue: unique-articles
+2026-02-08T04:51:43.885236844Z    Data items: 45
+2026-02-08T04:51:43.885243824Z    Timeout: 120s
+2026-02-08T04:51:43.885314554Z ℹ️  [08.02.2026 04:51:43] [duplicate-detector] Processing job 493 (timeout: 120s)
+2026-02-08T04:51:43.886002640Z ℹ️  [08.02.2026 04:51:43] [duplicate-detector] Checking 45 articles for duplicates...
+2026-02-08T04:51:43.891510980Z ✅ [relevance-filter] Job 526 COMPLETED
+2026-02-08T04:51:43.891534630Z ✅ [08.02.2026 04:51:43] [relevance-filter] Job 526 completed
+2026-02-08T04:51:43.896620160Z ℹ️  [08.02.2026 04:51:43] [queue-manager] [relevant-articles] Job 526 completed
+2026-02-08T04:51:44.470534148Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:44.636565800Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:44.789332112Z ✅ No duplicates found for: "OpenAI’s GPT-5.3-Codex thinks deeper and wider about coding ..."
+2026-02-08T04:51:45.015907735Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:45.168557567Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:45.280770622Z ✅ No duplicates found for: "The backlash over OpenAI’s decision to retire GPT-4o shows h..."
+2026-02-08T04:51:45.444773281Z ⚠️  [08.02.2026 04:51:45] [duplicate-detector] ⚠️ Entity overlap (not rejecting): google+xr - "Waymo taps Google Deepmind's Genie 3 to simulate d..."
+2026-02-08T04:51:45.489376352Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:45.505820991Z ✅ No duplicates found for: "Waymo taps Google Deepmind's Genie 3 to simulate driving sce..."
+2026-02-08T04:51:45.732530163Z 
+2026-02-08T04:51:45.732557793Z 📊 [Check #6] Pipeline Progress:
+2026-02-08T04:51:45.732563133Z    Stage: unique-articles
+2026-02-08T04:51:45.732567023Z    In Queue: 1
+2026-02-08T04:51:45.732570593Z    Completed: 100
+2026-02-08T04:51:45.732574363Z    Failed: 0
+2026-02-08T04:51:45.732577732Z    Has Seen Articles: true
+2026-02-08T04:51:45.732581162Z    Empty Checks: 0/3
+2026-02-08T04:51:45.732594602Z ℹ️  [08.02.2026 04:51:45] [multi-agent-pipeline] 📊 Pipeline progress: unique-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:51:45.772457801Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:45.785882260Z ✅ No duplicates found for: "Making AI work for everyone, everywhere: our approach to loc..."
+2026-02-08T04:51:46.010921269Z ⚠️  [08.02.2026 04:51:46] [duplicate-detector] ⚠️ Entity overlap (not rejecting): anthropic+xr - "Enterprises Don't Care About Anthropic's Super Bow..."
+2026-02-08T04:51:46.011408017Z ⚠️  [08.02.2026 04:51:46] [duplicate-detector] ⚠️ Entity overlap (not rejecting): anthropic+xr - "Enterprises Don't Care About Anthropic's Super Bow..."
+2026-02-08T04:51:46.011530796Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:46.104090356Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:46.128291094Z ✅ No duplicates found for: "Enterprises Don't Care About Anthropic's Super Bowl Ad..."
+2026-02-08T04:51:46.453447014Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:46.470140451Z ✅ No duplicates found for: "Intuit, Uber, and State Farm trial AI agents inside enterpri..."
+2026-02-08T04:51:46.609493233Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:46.693382916Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:46.729866449Z ✅ No duplicates found for: "Structured outputs on Amazon Bedrock: Schema-compliant AI re..."
+2026-02-08T04:51:46.995308624Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:47.099400189Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:47.174452066Z ✅ No duplicates found for: "Sam Altman predicts AI agents will integrate any service the..."
+2026-02-08T04:51:47.394979372Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:47.411704199Z ✅ No duplicates found for: "How separating logic and search boosts AI agent scalability..."
+2026-02-08T04:51:47.668706276Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:47.845607736Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:47.931682621Z ✅ No duplicates found for: "Evaluate generative AI models with an Amazon Nova rubric-bas..."
+2026-02-08T04:51:48.206939449Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:48.355224228Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:48.394412589Z ✅ No duplicates found for: "Amazon shares sink as it prepares $200bn AI spending blitz..."
+2026-02-08T04:51:48.588387106Z ✅ SEO Analyzer: Analysis complete
+2026-02-08T04:51:48.588549525Z    Score: 68/100
+2026-02-08T04:51:48.588560535Z    Issues: 4
+2026-02-08T04:51:48.588568585Z    Opportunities: 5
+2026-02-08T04:51:48.642244052Z ✅ [08.02.2026 04:51:48] [seo-calculator] SEO calculated: Alphabet'in 2 Trilyon Dolarlık... → Score: 68 (40989ms)
+2026-02-08T04:51:48.646922305Z ℹ️  [08.02.2026 04:51:48] [queue-manager] [seo-calculation] Job seo-calc-cml7zthsj000nl7hdayikmxcs completed
+2026-02-08T04:51:48.647014414Z ✅ [08.02.2026 04:51:48] [seo-calculator] SEO job seo-calc-cml7zthsj000nl7hdayikmxcs completed: score=68
+2026-02-08T04:51:48.647209093Z ℹ️  [08.02.2026 04:51:48] [seo-calculator] Calculating SEO for: ChatGPT'de Büyük Kesinti: Binlerce Kullanıcı Etkil...
+2026-02-08T04:51:48.652939992Z 🔍 SEO Analyzer: Analyzing article "ChatGPT'de Büyük Kesinti: Binlerce Kullanıcı Etkilendi"...
+2026-02-08T04:51:48.921862834Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:48.964890332Z ✅ No duplicates found for: "Waymo Introduces the Waymo World Model: A New Frontier Simul..."
+2026-02-08T04:51:49.281755213Z 💓 Heartbeat updated: 08.02.2026 04:51:49
+2026-02-08T04:51:49.282467700Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:49.474021885Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:49.611111297Z ✅ No duplicates found for: "NVIDIA AI releases C-RADIOv4 vision backbone unifying SigLIP..."
+2026-02-08T04:51:49.923081176Z ⚠️  [08.02.2026 04:51:49] [duplicate-detector] ⚠️ Entity overlap (not rejecting): anthropic+xr - "Claude Opus 4.6 wrote mustard gas instructions in ..."
+2026-02-08T04:51:49.923608414Z ⚠️  [08.02.2026 04:51:49] [duplicate-detector] ⚠️ Entity overlap (not rejecting): anthropic+xr - "Claude Opus 4.6 wrote mustard gas instructions in ..."
+2026-02-08T04:51:49.923734213Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:50.056288332Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:50.112770989Z ✅ No duplicates found for: "Claude Opus 4.6 wrote mustard gas instructions in an Excel s..."
+2026-02-08T04:51:50.388741085Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:50.429088541Z ✅ No duplicates found for: "Big Tech’s $650 Billion AI Plans Spark Chip Rally..."
+2026-02-08T04:51:50.737253096Z 
+2026-02-08T04:51:50.737290676Z 📊 [Check #7] Pipeline Progress:
+2026-02-08T04:51:50.737297726Z    Stage: unique-articles
+2026-02-08T04:51:50.737302856Z    In Queue: 1
+2026-02-08T04:51:50.737307546Z    Completed: 100
+2026-02-08T04:51:50.737313596Z    Failed: 0
+2026-02-08T04:51:50.737318246Z    Has Seen Articles: true
+2026-02-08T04:51:50.737322766Z    Empty Checks: 0/3
+2026-02-08T04:51:50.737381615Z ℹ️  [08.02.2026 04:51:50] [multi-agent-pipeline] 📊 Pipeline progress: unique-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:51:50.812818320Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:50.832485585Z ✅ No duplicates found for: "Behind the Blog: The Neverending Cybersecurity Story..."
+2026-02-08T04:51:51.124996419Z ✅ SEO Analyzer: Analysis complete
+2026-02-08T04:51:51.125029789Z    Score: 68/100
+2026-02-08T04:51:51.125102849Z    Issues: 4
+2026-02-08T04:51:51.125109189Z    Opportunities: 4
+2026-02-08T04:51:51.137493851Z ✅ [08.02.2026 04:51:51] [seo-calculator] SEO calculated: Yapay Zeka ve Sosyal Etki: 202... → Score: 68 (44996ms)
+2026-02-08T04:51:51.139450334Z ℹ️  [08.02.2026 04:51:51] [queue-manager] [seo-calculation] Job seo-calc-cml7ztiog000tl7hdqv59exe3 completed
+2026-02-08T04:51:51.139828873Z ✅ [08.02.2026 04:51:51] [seo-calculator] SEO job seo-calc-cml7ztiog000tl7hdqv59exe3 completed: score=68
+2026-02-08T04:51:51.139957913Z ℹ️  [08.02.2026 04:51:51] [seo-calculator] Calculating SEO for: OpenAI'da Yönetim Planı ve Dijital Marka İkizleri...
+2026-02-08T04:51:51.145469452Z 🔍 SEO Analyzer: Analyzing article "OpenAI'da Yönetim Planı ve Dijital Marka İkizleri"...
+2026-02-08T04:51:51.212556658Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:51.369218276Z ✅ No duplicates found for: "UiPath pushes deeper into financial services with WorkFusion..."
+2026-02-08T04:51:51.617008628Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:51.748184531Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:51.815942196Z ✅ No duplicates found for: "Scientists Want to Give ChatGPT an Inner Monologue to Improv..."
+2026-02-08T04:51:52.369078382Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:52.411584242Z ✅ No duplicates found for: "What happens when Waymo runs into a tornado? Or an elephant?..."
+2026-02-08T04:51:52.649730281Z ⚠️  [08.02.2026 04:51:52] [duplicate-detector] ⚠️ Entity overlap (not rejecting): openai+xr - "OpenAI's Latest Platform Targets Enterprise Custom..."
+2026-02-08T04:51:52.650866697Z ⚠️  [08.02.2026 04:51:52] [duplicate-detector] ⚠️ Entity overlap (not rejecting): openai+xr - "OpenAI's Latest Platform Targets Enterprise Custom..."
+2026-02-08T04:51:52.650990896Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:52.764036758Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:52.824356031Z ✅ No duplicates found for: "OpenAI's Latest Platform Targets Enterprise Customers..."
+2026-02-08T04:51:53.401616967Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:53.442973221Z ✅ No duplicates found for: "Coursera, Udemy Merger to Boost Online AI Education..."
+2026-02-08T04:51:53.731727289Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:53.767325504Z ✅ No duplicates found for: "How AWS-powered Next Gen Stats changed the NFL forever..."
+2026-02-08T04:51:54.097729925Z ⚠️  [08.02.2026 04:51:54] [duplicate-detector] ⚠️ Entity overlap (not rejecting): robotics+xr - "Video Friday: Autonomous Robots Learn By Doing in ..."
+2026-02-08T04:51:54.210516698Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:54.250161268Z ✅ No duplicates found for: "Video Friday: Autonomous Robots Learn By Doing in This Facto..."
+2026-02-08T04:51:54.599267707Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:54.607154727Z ✅ No duplicates found for: "Lawyer sets new standard for abuse of AI; judge tosses case..."
+2026-02-08T04:51:54.789790267Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:54.991587703Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:55.046674525Z ✅ No duplicates found for: "The Only Thing Standing Between Humanity and AI Apocalypse I..."
+2026-02-08T04:51:55.364231834Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:55.386909429Z ✅ No duplicates found for: "The Stock Market Has No Idea What’s Coming..."
+2026-02-08T04:51:55.823576786Z 
+2026-02-08T04:51:55.823611806Z 📊 [Check #8] Pipeline Progress:
+2026-02-08T04:51:55.823621416Z    Stage: unique-articles
+2026-02-08T04:51:55.823629086Z    In Queue: 1
+2026-02-08T04:51:55.823683316Z    Completed: 100
+2026-02-08T04:51:55.823690916Z    Failed: 0
+2026-02-08T04:51:55.823697946Z    Has Seen Articles: true
+2026-02-08T04:51:55.823717686Z    Empty Checks: 0/3
+2026-02-08T04:51:55.823725126Z ℹ️  [08.02.2026 04:51:55] [multi-agent-pipeline] 📊 Pipeline progress: unique-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:51:55.912393051Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:55.953391765Z ✅ No duplicates found for: "Prompt Fidelity: Measuring How Much of Your Intent an AI Age..."
+2026-02-08T04:51:56.306878239Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:56.346618899Z ✅ No duplicates found for: "IEEE Online Mini-MBA Aims to Fill Leadership Skills Gaps in ..."
+2026-02-08T04:51:56.874444853Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:56.916256695Z ✅ No duplicates found for: "How to watch the 2026 Super Bowl on NBC: Patriots vs. Seahaw..."
+2026-02-08T04:51:57.263497521Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:57.287585500Z ✅ No duplicates found for: "Is Your Machine Learning Pipeline as Efficient as it Could B..."
+2026-02-08T04:51:57.691840692Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:57.836122006Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:57.896358038Z ✅ No duplicates found for: "Anthropic’s More Than $20 Billion Funding to Close as Soon a..."
+2026-02-08T04:51:58.115606279Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:58.131215080Z ✅ No duplicates found for: "Professor Says Her Garbled AI Textbook Was a Huge Success..."
+2026-02-08T04:51:58.580905889Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:58.618660777Z ✅ No duplicates found for: "Domino Data Lab Taps Admiral Grady to Lead Public Sector AI..."
+2026-02-08T04:51:58.966998429Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:59.011968519Z ✅ No duplicates found for: "‘Today’ host Savannah Guthrie is demanding proof of life for..."
+2026-02-08T04:51:59.287159669Z 🔍 Popular topic detected - extending duplicate check to 7 days
+2026-02-08T04:51:59.444192286Z 🔍 Checking for duplicates among 714 recent articles...
+2026-02-08T04:51:59.478041847Z ✅ No duplicates found for: "Sixteen Claude AI agents working together created a new C co..."
+2026-02-08T04:51:59.736626869Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:51:59.767031814Z ✅ No duplicates found for: "Investors Concerned AI Bubble Is Finally Popping..."
+2026-02-08T04:52:00.297532448Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:52:00.338931572Z ✅ No duplicates found for: "Vivian Tu on how to spot good financial advice in an uncerta..."
+2026-02-08T04:52:00.604803687Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:52:00.634494995Z ✅ No duplicates found for: "Cyberhaven Research Highlights Urgent Need for AI Data Gover..."
+2026-02-08T04:52:01.071753501Z 
+2026-02-08T04:52:01.072240610Z 📊 [Check #9] Pipeline Progress:
+2026-02-08T04:52:01.072246390Z    Stage: unique-articles
+2026-02-08T04:52:01.072249720Z    In Queue: 1
+2026-02-08T04:52:01.072252740Z    Completed: 100
+2026-02-08T04:52:01.072255580Z    Failed: 0
+2026-02-08T04:52:01.072258420Z    Has Seen Articles: true
+2026-02-08T04:52:01.072261460Z    Empty Checks: 0/3
+2026-02-08T04:52:01.072264410Z ℹ️  [08.02.2026 04:52:01] [multi-agent-pipeline] 📊 Pipeline progress: unique-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:01.090811069Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:52:01.102471845Z ✅ No duplicates found for: "Case study: Open AI..."
+2026-02-08T04:52:01.397476250Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:52:01.415233174Z ✅ No duplicates found for: "Top tech jobs 2026: 5 of the fastest-growing tech, AI career..."
+2026-02-08T04:52:01.876062610Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:52:01.896096075Z ✅ No duplicates found for: "New Voice Assistants Are Officially a Whiff (for Now)..."
+2026-02-08T04:52:02.174060475Z ⚠️  [08.02.2026 04:52:02] [duplicate-detector] ⚠️ Entity overlap (not rejecting): investment+xr - "The Week’s 10 Biggest Funding Rounds: Waymo Leads ..."
+2026-02-08T04:52:02.175323080Z ⚠️  [08.02.2026 04:52:02] [duplicate-detector] ⚠️ Entity overlap (not rejecting): investment+xr - "The Week’s 10 Biggest Funding Rounds: Waymo Leads ..."
+2026-02-08T04:52:02.264573332Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:52:02.302027990Z ✅ No duplicates found for: "The Week’s 10 Biggest Funding Rounds: Waymo Leads An AI-Driv..."
+2026-02-08T04:52:02.642834082Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:52:02.655104745Z ✅ No duplicates found for: "How AI is helping solve the labor issue in treating rare dis..."
+2026-02-08T04:52:02.923672560Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:52:02.955189531Z ✅ No duplicates found for: "Super Bowl LX ads: all AI everything..."
+2026-02-08T04:52:03.415618951Z 🔍 Checking for duplicates among 361 recent articles...
+2026-02-08T04:52:03.471411211Z ✅ No duplicates found for: "Tech stocks rally strongly after three days of heavy selling..."
+2026-02-08T04:52:03.471687909Z ✅ [08.02.2026 04:52:03] [duplicate-detector] Duplicate check: 45/45 unique (0.0% duplicates)
+2026-02-08T04:52:03.474996166Z ✅ [08.02.2026 04:52:03] [multi-agent-pipeline] ✅ Agent duplicate-detector exited RECOVERY MODE
+2026-02-08T04:52:03.475114777Z ✅ [08.02.2026 04:52:03] [duplicate-detector] Job 493 completed in 19586ms
+2026-02-08T04:52:03.494984451Z ℹ️  [08.02.2026 04:52:03] [duplicate-detector] Emitted to next queue: trend-enrichment
+2026-02-08T04:52:03.517738655Z 🔄 [trend-enricher] Job 66 ACTIVE - processing...
+2026-02-08T04:52:03.517768095Z ℹ️  [08.02.2026 04:52:03] [TrendEnricher] Job 66 active
+2026-02-08T04:52:03.517774585Z 
+2026-02-08T04:52:03.517779425Z 🤖 [trend-enricher] ========== PROCESSING JOB ==========
+2026-02-08T04:52:03.517784205Z    Job ID: 66
+2026-02-08T04:52:03.517788585Z    Job Name: duplicate-detector-output
+2026-02-08T04:52:03.517793115Z    Queue: trend-enrichment
+2026-02-08T04:52:03.517797465Z    Data items: 45
+2026-02-08T04:52:03.517801755Z    Timeout: 60s
+2026-02-08T04:52:03.517806305Z ℹ️  [08.02.2026 04:52:03] [TrendEnricher] Processing job 66 (timeout: 60s)
+2026-02-08T04:52:03.517832775Z ℹ️  [08.02.2026 04:52:03] [TrendEnricher] 🔥 Processing 45 articles for trend enrichment...
+2026-02-08T04:52:03.517918584Z ✅ [duplicate-detector] Job 493 COMPLETED
+2026-02-08T04:52:03.518009894Z ✅ [08.02.2026 04:52:03] [duplicate-detector] Job 493 completed
+2026-02-08T04:52:03.525186367Z ℹ️  [08.02.2026 04:52:03] [queue-manager] [unique-articles] Job 493 completed
+2026-02-08T04:52:03.527286819Z ⚠️  [08.02.2026 04:52:03] [TrendEnricher] ⚠️ No active trends available. Passing articles through without enrichment.
+2026-02-08T04:52:03.530188827Z ✅ [08.02.2026 04:52:03] [multi-agent-pipeline] ✅ Agent trend-enricher exited RECOVERY MODE
+2026-02-08T04:52:03.530350088Z ✅ [08.02.2026 04:52:03] [TrendEnricher] Job 66 completed in 13ms
+2026-02-08T04:52:03.547810891Z ℹ️  [08.02.2026 04:52:03] [TrendEnricher] Emitted to next queue: enriched-articles
+2026-02-08T04:52:03.572805197Z 🔄 [content-enricher] Job 445 ACTIVE - processing...
+2026-02-08T04:52:03.572953216Z ℹ️  [08.02.2026 04:52:03] [content-enricher] Job 445 active
+2026-02-08T04:52:03.572960896Z 
+2026-02-08T04:52:03.572966246Z 🤖 [content-enricher] ========== PROCESSING JOB ==========
+2026-02-08T04:52:03.572992266Z    Job ID: 445
+2026-02-08T04:52:03.572997266Z    Job Name: trend-enricher-output
+2026-02-08T04:52:03.573001916Z    Queue: enriched-articles
+2026-02-08T04:52:03.573006526Z    Data items: 45
+2026-02-08T04:52:03.573148975Z    Timeout: 600s
+2026-02-08T04:52:03.573154525Z ℹ️  [08.02.2026 04:52:03] [content-enricher] Processing job 445 (timeout: 600s)
+2026-02-08T04:52:03.573472565Z ℹ️  [08.02.2026 04:52:03] [content-enricher] Enriching 45 articles...
+2026-02-08T04:52:03.573562084Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🚀 Starting PARALLEL enrichment for 45 articles...
+2026-02-08T04:52:03.573870313Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [1/45] Enriching: OpenAI’s GPT-5.3-Codex thinks deeper and wider abo...
+2026-02-08T04:52:03.575246428Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: openai gpt codex thinks deeper wider about coding
+2026-02-08T04:52:03.577423050Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [2/45] Enriching: The backlash over OpenAI’s decision to retire GPT-...
+2026-02-08T04:52:03.577747988Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: backlash over openai decision retire gpt shows how
+2026-02-08T04:52:03.577866198Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [3/45] Enriching: Waymo taps Google Deepmind's Genie 3 to simulate d...
+2026-02-08T04:52:03.578226926Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: waymo taps google deepmind genie simulate driving scenarios
+2026-02-08T04:52:03.578455536Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [4/45] Enriching: Making AI work for everyone, everywhere: our appro...
+2026-02-08T04:52:03.578532855Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: making work everyone everywhere our approach localization openai
+2026-02-08T04:52:03.578716295Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [5/45] Enriching: Enterprises Don't Care About Anthropic's Super Bow...
+2026-02-08T04:52:03.578807714Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: enterprises don care about anthropic super bowl claude
+2026-02-08T04:52:03.578880594Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [6/45] Enriching: Intuit, Uber, and State Farm trial AI agents insid...
+2026-02-08T04:52:03.579159703Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: intuit uber state farm trial agents inside enterprise
+2026-02-08T04:52:03.579256892Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [7/45] Enriching: Structured outputs on Amazon Bedrock: Schema-compl...
+2026-02-08T04:52:03.579449352Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: structured outputs amazon bedrock schema compliant responses today
+2026-02-08T04:52:03.579628661Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [8/45] Enriching: Sam Altman predicts AI agents will integrate any s...
+2026-02-08T04:52:03.579922090Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: sam altman predicts agents will integrate any service
+2026-02-08T04:52:03.579933590Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [9/45] Enriching: How separating logic and search boosts AI agent sc...
+2026-02-08T04:52:03.580249099Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: how separating logic search boosts agent scalability separating
+2026-02-08T04:52:03.580269388Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [10/45] Enriching: Evaluate generative AI models with an Amazon Nova ...
+2026-02-08T04:52:03.580536907Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: evaluate generative models amazon nova rubric based llm
+2026-02-08T04:52:03.580834267Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [11/45] Enriching: Amazon shares sink as it prepares $200bn AI spendi...
+2026-02-08T04:52:03.580948246Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: amazon shares sink prepares 200bn spending blitz capital
+2026-02-08T04:52:03.582824839Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [12/45] Enriching: Waymo Introduces the Waymo World Model: A New Fron...
+2026-02-08T04:52:03.582846049Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: waymo introduces waymo world model new frontier simulator
+2026-02-08T04:52:03.582853079Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [13/45] Enriching: NVIDIA AI releases C-RADIOv4 vision backbone unify...
+2026-02-08T04:52:03.582857978Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: nvidia releases radiov4 vision backbone unifying siglip2 dinov3
+2026-02-08T04:52:03.582862798Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [14/45] Enriching: Claude Opus 4.6 wrote mustard gas instructions in ...
+2026-02-08T04:52:03.582867558Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: claude opus wrote mustard gas instructions excel spreadsheet
+2026-02-08T04:52:03.582886278Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [15/45] Enriching: Big Tech’s $650 Billion AI Plans Spark Chip Rally...
+2026-02-08T04:52:03.582891288Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: big tech 650 billion plans spark chip rally
+2026-02-08T04:52:03.582896078Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [16/45] Enriching: Behind the Blog: The Neverending Cybersecurity Sto...
+2026-02-08T04:52:03.582900718Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: behind blog neverending cybersecurity story this week discuss
+2026-02-08T04:52:03.582905388Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [17/45] Enriching: UiPath pushes deeper into financial services with ...
+2026-02-08T04:52:03.582909928Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: uipath pushes deeper into financial services workfusion acquisition
+2026-02-08T04:52:03.582914388Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [18/45] Enriching: Scientists Want to Give ChatGPT an Inner Monologue...
+2026-02-08T04:52:03.582918898Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: scientists want give chatgpt inner monologue improve its
+2026-02-08T04:52:03.582923418Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [19/45] Enriching: What happens when Waymo runs into a tornado? Or an...
+2026-02-08T04:52:03.582927838Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: what happens when waymo runs into tornado elephant
+2026-02-08T04:52:03.582933098Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [20/45] Enriching: OpenAI's Latest Platform Targets Enterprise Custom...
+2026-02-08T04:52:03.582937918Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: openai latest platform targets enterprise customers company said
+2026-02-08T04:52:03.582947818Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [21/45] Enriching: Coursera, Udemy Merger to Boost Online AI Educatio...
+2026-02-08T04:52:03.583088008Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: coursera udemy merger boost online education greg hart
+2026-02-08T04:52:03.583300017Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [22/45] Enriching: How AWS-powered Next Gen Stats changed the NFL for...
+2026-02-08T04:52:03.585522949Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: how aws powered next gen stats changed nfl
+2026-02-08T04:52:03.586852194Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [23/45] Enriching: Video Friday: Autonomous Robots Learn By Doing in ...
+2026-02-08T04:52:03.588140389Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: video friday autonomous robots learn doing this factory
+2026-02-08T04:52:03.588325998Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [24/45] Enriching: Lawyer sets new standard for abuse of AI; judge to...
+2026-02-08T04:52:03.588472918Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: lawyer sets new standard abuse judge tosses case
+2026-02-08T04:52:03.588668437Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [25/45] Enriching: The Only Thing Standing Between Humanity and AI Ap...
+2026-02-08T04:52:03.588904646Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: only thing standing between humanity apocalypse claude systems
+2026-02-08T04:52:03.589030685Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [26/45] Enriching: The Stock Market Has No Idea What’s Coming...
+2026-02-08T04:52:03.590782349Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: stock market idea what coming investors simultaneously terrified
+2026-02-08T04:52:03.590795999Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [27/45] Enriching: Prompt Fidelity: Measuring How Much of Your Intent...
+2026-02-08T04:52:03.590800899Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: prompt fidelity measuring how much your intent agent
+2026-02-08T04:52:03.590805829Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [28/45] Enriching: IEEE Online Mini-MBA Aims to Fill Leadership Skill...
+2026-02-08T04:52:03.590810369Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: ieee online mini mba aims fill leadership skills
+2026-02-08T04:52:03.590815139Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [29/45] Enriching: How to watch the 2026 Super Bowl on NBC: Patriots ...
+2026-02-08T04:52:03.591207337Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: how watch 2026 super bowl nbc patriots seahawks
+2026-02-08T04:52:03.591901515Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [30/45] Enriching: Is Your Machine Learning Pipeline as Efficient as ...
+2026-02-08T04:52:03.592127744Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: your machine learning pipeline efficient could here five
+2026-02-08T04:52:03.592241593Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [31/45] Enriching: Anthropic’s More Than $20 Billion Funding to Close...
+2026-02-08T04:52:03.592455882Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: anthropic more than billion funding close soon next
+2026-02-08T04:52:03.592554152Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [32/45] Enriching: Professor Says Her Garbled AI Textbook Was a Huge ...
+2026-02-08T04:52:03.592806262Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: professor says her garbled textbook huge success students
+2026-02-08T04:52:03.592918781Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [33/45] Enriching: Domino Data Lab Taps Admiral Grady to Lead Public ...
+2026-02-08T04:52:03.594798413Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: domino data lab taps admiral grady lead public
+2026-02-08T04:52:03.594810243Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [34/45] Enriching: ‘Today’ host Savannah Guthrie is demanding proof o...
+2026-02-08T04:52:03.594815073Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: today host savannah guthrie demanding proof life her
+2026-02-08T04:52:03.594819663Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [35/45] Enriching: Sixteen Claude AI agents working together created ...
+2026-02-08T04:52:03.594824233Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: sixteen claude agents working together created new compiler
+2026-02-08T04:52:03.594871313Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [36/45] Enriching: Investors Concerned AI Bubble Is Finally Popping...
+2026-02-08T04:52:03.594876363Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: investors concerned bubble finally popping suddenly gone fear
+2026-02-08T04:52:03.594880993Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [37/45] Enriching: Vivian Tu on how to spot good financial advice in ...
+2026-02-08T04:52:03.595005152Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: vivian how spot good financial advice uncertain economy
+2026-02-08T04:52:03.595123483Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [38/45] Enriching: Cyberhaven Research Highlights Urgent Need for AI ...
+2026-02-08T04:52:03.595358742Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: cyberhaven research highlights urgent need data governance research
+2026-02-08T04:52:03.595466571Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [39/45] Enriching: Case study: Open AI...
+2026-02-08T04:52:03.595619651Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: case study open silicon valley openai built systems
+2026-02-08T04:52:03.595821870Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [40/45] Enriching: Top tech jobs 2026: 5 of the fastest-growing tech,...
+2026-02-08T04:52:03.595974469Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: top tech jobs 2026 fastest growing tech careers
+2026-02-08T04:52:03.596109248Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [41/45] Enriching: New Voice Assistants Are Officially a Whiff (for N...
+2026-02-08T04:52:03.596251279Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: new voice assistants officially whiff now even full
+2026-02-08T04:52:03.596352888Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [42/45] Enriching: The Week’s 10 Biggest Funding Rounds: Waymo Leads ...
+2026-02-08T04:52:03.597830272Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: week biggest funding rounds waymo leads driven lineup
+2026-02-08T04:52:03.597844632Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [43/45] Enriching: How AI is helping solve the labor issue in treatin...
+2026-02-08T04:52:03.597849572Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: how helping solve labor issue treating rare diseases
+2026-02-08T04:52:03.597854172Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [44/45] Enriching: Super Bowl LX ads: all AI everything...
+2026-02-08T04:52:03.597858732Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: super bowl ads all everything super bowl nearly
+2026-02-08T04:52:03.597863272Z ℹ️  [08.02.2026 04:52:03] [content-enricher] [45/45] Enriching: Tech stocks rally strongly after three days of hea...
+2026-02-08T04:52:03.597898072Z ℹ️  [08.02.2026 04:52:03] [content-enricher] 🔍 Fast SearXNG search: tech stocks rally strongly after three days heavy
+2026-02-08T04:52:03.599246507Z ✅ [trend-enricher] Job 66 COMPLETED
+2026-02-08T04:52:03.599328027Z ✅ [08.02.2026 04:52:03] [TrendEnricher] Job 66 completed
+2026-02-08T04:52:03.616590091Z ℹ️  [08.02.2026 04:52:03] [queue-manager] [trend-enrichment] Job 66 completed
+2026-02-08T04:52:04.394918569Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:04.762195451Z ✅ SearXNG: 8 sonuç bulundu (toplam: 30)
+2026-02-08T04:52:04.802806918Z ✅ SearXNG: 8 sonuç bulundu (toplam: 22)
+2026-02-08T04:52:04.804097083Z ℹ️  [08.02.2026 04:52:04] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:04.916922367Z ✅ SearXNG: 8 sonuç bulundu (toplam: 32)
+2026-02-08T04:52:04.962895963Z ✅ SearXNG: 8 sonuç bulundu (toplam: 31)
+2026-02-08T04:52:04.962982282Z ℹ️  [08.02.2026 04:52:04] [content-enricher] 📖 Reading 2 URLs in parallel...
+2026-02-08T04:52:05.238396242Z ✅ SearXNG: 8 sonuç bulundu (toplam: 22)
+2026-02-08T04:52:05.238483241Z ℹ️  [08.02.2026 04:52:05] [content-enricher] 📖 Reading 5 URLs in parallel...
+2026-02-08T04:52:05.248401044Z ✅ SearXNG: 8 sonuç bulundu (toplam: 21)
+2026-02-08T04:52:05.338991481Z ✅ SearXNG: 8 sonuç bulundu (toplam: 21)
+2026-02-08T04:52:05.339280600Z ℹ️  [08.02.2026 04:52:05] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:05.502429293Z ✅ SearXNG: 8 sonuç bulundu (toplam: 14)
+2026-02-08T04:52:05.715766007Z ✅ SearXNG: 8 sonuç bulundu (toplam: 24)
+2026-02-08T04:52:05.716043296Z ℹ️  [08.02.2026 04:52:05] [content-enricher] 📖 Reading 2 URLs in parallel...
+2026-02-08T04:52:05.765238070Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:05.871789697Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:05.872145196Z ℹ️  [08.02.2026 04:52:05] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:05.889066633Z ℹ️  [08.02.2026 04:52:05] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:05.889531881Z ⚠️  [08.02.2026 04:52:05] [content-enricher] [4] Insufficient sources (1), using fallback
+2026-02-08T04:52:05.890537147Z ℹ️  [08.02.2026 04:52:05] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:06.008882419Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:06.074607011Z 
+2026-02-08T04:52:06.074717310Z 📊 [Check #10] Pipeline Progress:
+2026-02-08T04:52:06.074729570Z    Stage: enriched-articles
+2026-02-08T04:52:06.074737290Z    In Queue: 1
+2026-02-08T04:52:06.074744570Z    Completed: 100
+2026-02-08T04:52:06.074766310Z    Failed: 0
+2026-02-08T04:52:06.074773330Z    Has Seen Articles: true
+2026-02-08T04:52:06.074780170Z    Empty Checks: 0/3
+2026-02-08T04:52:06.074790630Z ℹ️  [08.02.2026 04:52:06] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:06.078513966Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:06.079185084Z ℹ️  [08.02.2026 04:52:06] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-08T04:52:06.079928531Z ⚠️  [08.02.2026 04:52:06] [content-enricher] [7] Insufficient sources (0), using fallback
+2026-02-08T04:52:06.079978401Z ℹ️  [08.02.2026 04:52:06] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:06.080530219Z ℹ️  [08.02.2026 04:52:06] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:06.215085050Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:06.398754896Z ✅ SearXNG: 8 sonuç bulundu (toplam: 11)
+2026-02-08T04:52:06.553432301Z ✅ SearXNG: 8 sonuç bulundu (toplam: 12)
+2026-02-08T04:52:06.571401533Z ✅ SearXNG: 8 sonuç bulundu (toplam: 11)
+2026-02-08T04:52:06.571852791Z ℹ️  [08.02.2026 04:52:06] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:06.630077242Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:06.630674669Z ℹ️  [08.02.2026 04:52:06] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-08T04:52:06.630993099Z ℹ️  [08.02.2026 04:52:06] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:06.631037398Z ⚠️  [08.02.2026 04:52:06] [content-enricher] [9] Insufficient sources (0), using fallback
+2026-02-08T04:52:06.631338847Z ℹ️  [08.02.2026 04:52:06] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:06.966060662Z ✅ SearXNG: 8 sonuç bulundu (toplam: 14)
+2026-02-08T04:52:07.116116855Z ✅ SearXNG: 8 sonuç bulundu (toplam: 14)
+2026-02-08T04:52:07.120580169Z ℹ️  [08.02.2026 04:52:07] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-08T04:52:07.120598698Z ℹ️  [08.02.2026 04:52:07] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:07.120601498Z ℹ️  [08.02.2026 04:52:07] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:07.120641608Z ⚠️  [08.02.2026 04:52:07] [content-enricher] [11] Insufficient sources (0), using fallback
+2026-02-08T04:52:07.207930018Z ✅ SearXNG: 8 sonuç bulundu (toplam: 22)
+2026-02-08T04:52:07.439627162Z ℹ️  [08.02.2026 04:52:07] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:07.439924922Z ⚠️  [08.02.2026 04:52:07] [content-enricher] [8] Insufficient sources (0), using fallback
+2026-02-08T04:52:07.440261970Z ℹ️  [08.02.2026 04:52:07] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:07.467590027Z ✅ SearXNG: 8 sonuç bulundu (toplam: 21)
+2026-02-08T04:52:07.467925006Z ℹ️  [08.02.2026 04:52:07] [content-enricher] 📖 Reading 4 URLs in parallel...
+2026-02-08T04:52:07.515842005Z ✅ SearXNG: 8 sonuç bulundu (toplam: 12)
+2026-02-08T04:52:07.673408859Z ✅ SearXNG: 8 sonuç bulundu (toplam: 11)
+2026-02-08T04:52:07.745887484Z ⚠️  [08.02.2026 04:52:07] [content-enricher] [1] Insufficient sources (1), using fallback
+2026-02-08T04:52:07.745937244Z ℹ️  [08.02.2026 04:52:07] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:07.745948434Z ℹ️  [08.02.2026 04:52:07] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:07.853794667Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:07.853887706Z ℹ️  [08.02.2026 04:52:07] [content-enricher] 📖 Reading 2 URLs in parallel...
+2026-02-08T04:52:07.933486186Z ℹ️  [08.02.2026 04:52:07] [content-enricher] ✅ Got 5 sources from parallel fetch
+2026-02-08T04:52:07.933501336Z ℹ️  [08.02.2026 04:52:07] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:08.022194141Z ✅ SearXNG: 8 sonuç bulundu (toplam: 11)
+2026-02-08T04:52:08.022226591Z ℹ️  [08.02.2026 04:52:08] [content-enricher] 📖 Reading 4 URLs in parallel...
+2026-02-08T04:52:08.064357152Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:08.143619342Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:08.144143800Z ℹ️  [08.02.2026 04:52:08] [content-enricher] 📖 Reading 2 URLs in parallel...
+2026-02-08T04:52:08.539582186Z ✅ SearXNG: 8 sonuç bulundu (toplam: 13)
+2026-02-08T04:52:08.589896786Z ✅ SearXNG: 8 sonuç bulundu (toplam: 14)
+2026-02-08T04:52:08.589931076Z ℹ️  [08.02.2026 04:52:08] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:08.648562993Z ✅ SearXNG: 8 sonuç bulundu (toplam: 11)
+2026-02-08T04:52:08.648870913Z ℹ️  [08.02.2026 04:52:08] [content-enricher] 📖 Reading 5 URLs in parallel...
+2026-02-08T04:52:08.705319719Z ✅ SearXNG: 8 sonuç bulundu (toplam: 13)
+2026-02-08T04:52:08.732844736Z ℹ️  [08.02.2026 04:52:08] [content-enricher] ✅ Got 4 sources from parallel fetch
+2026-02-08T04:52:08.734969747Z ℹ️  [08.02.2026 04:52:08] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:09.015615176Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:09.036856987Z ⚠️  [08.02.2026 04:52:09] [content-enricher] [14] Insufficient sources (1), using fallback
+2026-02-08T04:52:09.036994446Z ℹ️  [08.02.2026 04:52:09] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:09.037000726Z ℹ️  [08.02.2026 04:52:09] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:09.043650331Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:09.044261438Z ℹ️  [08.02.2026 04:52:09] [content-enricher] 📖 Reading 2 URLs in parallel...
+2026-02-08T04:52:09.215878550Z ✅ SearXNG: 8 sonuç bulundu (toplam: 22)
+2026-02-08T04:52:09.256717966Z ✅ SearXNG: 8 sonuç bulundu (toplam: 22)
+2026-02-08T04:52:09.257138294Z ℹ️  [08.02.2026 04:52:09] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:09.480181781Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:09.507299419Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:09.507476828Z ℹ️  [08.02.2026 04:52:09] [content-enricher] 📖 Reading 4 URLs in parallel...
+2026-02-08T04:52:09.838015189Z ✅ SearXNG: 8 sonuç bulundu (toplam: 15)
+2026-02-08T04:52:09.838043469Z ℹ️  [08.02.2026 04:52:09] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-08T04:52:09.838049009Z ℹ️  [08.02.2026 04:52:09] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:09.838053439Z ℹ️  [08.02.2026 04:52:09] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:09.838069929Z ⚠️  [08.02.2026 04:52:09] [content-enricher] [20] Insufficient sources (0), using fallback
+2026-02-08T04:52:09.874747120Z ✅ SearXNG: 8 sonuç bulundu (toplam: 12)
+2026-02-08T04:52:09.889720173Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:09.934066156Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:09.934103686Z ℹ️  [08.02.2026 04:52:09] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-08T04:52:09.934110396Z ℹ️  [08.02.2026 04:52:09] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:09.934116496Z ℹ️  [08.02.2026 04:52:09] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:09.934146955Z ⚠️  [08.02.2026 04:52:09] [content-enricher] [21] Insufficient sources (0), using fallback
+2026-02-08T04:52:10.289114605Z ℹ️  [08.02.2026 04:52:10] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:10.289225674Z ⚠️  [08.02.2026 04:52:10] [content-enricher] [15] Insufficient sources (1), using fallback
+2026-02-08T04:52:10.289833962Z ℹ️  [08.02.2026 04:52:10] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:10.334653703Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:10.366317043Z ✅ SearXNG: 8 sonuç bulundu (toplam: 40)
+2026-02-08T04:52:10.390705701Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:10.391076309Z ℹ️  [08.02.2026 04:52:10] [content-enricher] 📖 Reading 5 URLs in parallel...
+2026-02-08T04:52:10.547322149Z ✅ SearXNG: 8 sonuç bulundu (toplam: 12)
+2026-02-08T04:52:10.547548198Z ℹ️  [08.02.2026 04:52:10] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:10.855198866Z ✅ SearXNG: 8 sonuç bulundu (toplam: 42)
+2026-02-08T04:52:10.855615764Z ℹ️  [08.02.2026 04:52:10] [content-enricher] 📖 Reading 5 URLs in parallel...
+2026-02-08T04:52:10.884786914Z ✅ SearXNG: 8 sonuç bulundu (toplam: 11)
+2026-02-08T04:52:10.965811808Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:10.968012370Z ℹ️  [08.02.2026 04:52:10] [content-enricher] 📖 Reading 5 URLs in parallel...
+2026-02-08T04:52:11.007664510Z ℹ️  [08.02.2026 04:52:11] [content-enricher] ✅ Got 5 sources from parallel fetch
+2026-02-08T04:52:11.011004798Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:11.071038751Z ✅ SearXNG: 8 sonuç bulundu (toplam: 15)
+2026-02-08T04:52:11.084146050Z 
+2026-02-08T04:52:11.084167990Z 📊 [Check #11] Pipeline Progress:
+2026-02-08T04:52:11.084170850Z    Stage: enriched-articles
+2026-02-08T04:52:11.084172900Z    In Queue: 1
+2026-02-08T04:52:11.084174730Z    Completed: 100
+2026-02-08T04:52:11.084176450Z    Failed: 0
+2026-02-08T04:52:11.084178210Z    Has Seen Articles: true
+2026-02-08T04:52:11.084179880Z    Empty Checks: 0/3
+2026-02-08T04:52:11.084181620Z ℹ️  [08.02.2026 04:52:11] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:11.085350596Z ℹ️  [08.02.2026 04:52:11] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:11.085729355Z ⚠️  [08.02.2026 04:52:11] [content-enricher] [22] Insufficient sources (1), using fallback
+2026-02-08T04:52:11.089288062Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:11.135249208Z ℹ️  [08.02.2026 04:52:11] [content-enricher] ✅ Got 2 sources from parallel fetch
+2026-02-08T04:52:11.135448177Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:11.151100558Z ℹ️  [08.02.2026 04:52:11] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:11.151236357Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:11.151259757Z ⚠️  [08.02.2026 04:52:11] [content-enricher] [2] Insufficient sources (1), using fallback
+2026-02-08T04:52:11.260368425Z ✅ SearXNG: 8 sonuç bulundu (toplam: 15)
+2026-02-08T04:52:11.260528844Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 📖 Reading 5 URLs in parallel...
+2026-02-08T04:52:11.292325084Z ✅ SearXNG: 8 sonuç bulundu (toplam: 15)
+2026-02-08T04:52:11.304473798Z ℹ️  [08.02.2026 04:52:11] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:11.304755417Z ⚠️  [08.02.2026 04:52:11] [content-enricher] [6] Insufficient sources (1), using fallback
+2026-02-08T04:52:11.305030536Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:11.400340056Z ✅ SearXNG: 8 sonuç bulundu (toplam: 17)
+2026-02-08T04:52:11.467027094Z ✅ SearXNG: 8 sonuç bulundu (toplam: 13)
+2026-02-08T04:52:11.467443713Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 📖 Reading 5 URLs in parallel...
+2026-02-08T04:52:11.665765004Z ℹ️  [08.02.2026 04:52:11] [content-enricher] ✅ Got 5 sources from parallel fetch
+2026-02-08T04:52:11.666347651Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:11.784446885Z ✅ SearXNG: 8 sonuç bulundu (toplam: 15)
+2026-02-08T04:52:11.869903722Z ✅ SearXNG: 8 sonuç bulundu (toplam: 15)
+2026-02-08T04:52:11.869943072Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 📖 Reading 3 URLs in parallel...
+2026-02-08T04:52:11.873121420Z ✅ SearXNG: 8 sonuç bulundu (toplam: 16)
+2026-02-08T04:52:11.873464259Z ℹ️  [08.02.2026 04:52:11] [content-enricher] 📖 Reading 3 URLs in parallel...
+2026-02-08T04:52:12.217163720Z ✅ SearXNG: 8 sonuç bulundu (toplam: 14)
+2026-02-08T04:52:12.328414520Z ℹ️  [08.02.2026 04:52:12] [content-enricher] ✅ Got 5 sources from parallel fetch
+2026-02-08T04:52:12.331140399Z ℹ️  [08.02.2026 04:52:12] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:12.333089823Z ✅ SearXNG: 8 sonuç bulundu (toplam: 14)
+2026-02-08T04:52:12.333133412Z ℹ️  [08.02.2026 04:52:12] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:12.393733483Z ✅ SearXNG: 8 sonuç bulundu (toplam: 17)
+2026-02-08T04:52:12.399856031Z ℹ️  [08.02.2026 04:52:12] [content-enricher] ✅ Got 3 sources from parallel fetch
+2026-02-08T04:52:12.400302669Z ℹ️  [08.02.2026 04:52:12] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:12.548320159Z ℹ️  [08.02.2026 04:52:12] [content-enricher] ✅ Got 5 sources from parallel fetch
+2026-02-08T04:52:12.548721518Z ℹ️  [08.02.2026 04:52:12] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:12.559090548Z ✅ SearXNG: 8 sonuç bulundu (toplam: 13)
+2026-02-08T04:52:12.605256984Z ℹ️  [08.02.2026 04:52:12] [content-enricher] ✅ Got 4 sources from parallel fetch
+2026-02-08T04:52:12.605674663Z ℹ️  [08.02.2026 04:52:12] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:12.611198842Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:12.611671460Z ℹ️  [08.02.2026 04:52:12] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:12.828813540Z ✅ SearXNG: 8 sonuç bulundu (toplam: 13)
+2026-02-08T04:52:12.829099788Z ℹ️  [08.02.2026 04:52:12] [content-enricher] 📖 Reading 3 URLs in parallel...
+2026-02-08T04:52:12.912739063Z ℹ️  [08.02.2026 04:52:12] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:12.912912982Z ⚠️  [08.02.2026 04:52:12] [content-enricher] [32] Insufficient sources (1), using fallback
+2026-02-08T04:52:12.913394040Z ℹ️  [08.02.2026 04:52:12] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:12.969438209Z ✅ SearXNG: 8 sonuç bulundu (toplam: 12)
+2026-02-08T04:52:12.978929443Z ℹ️  [08.02.2026 04:52:12] [content-enricher] ✅ Got 2 sources from parallel fetch
+2026-02-08T04:52:12.979225691Z ℹ️  [08.02.2026 04:52:12] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:13.098468262Z ✅ SearXNG: 8 sonuç bulundu (toplam: 26)
+2026-02-08T04:52:13.143270562Z ℹ️  [08.02.2026 04:52:13] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:13.143487191Z ⚠️  [08.02.2026 04:52:13] [content-enricher] [31] Insufficient sources (1), using fallback
+2026-02-08T04:52:13.144166769Z ℹ️  [08.02.2026 04:52:13] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:13.177248003Z ✅ SearXNG: 8 sonuç bulundu (toplam: 25)
+2026-02-08T04:52:13.177685122Z ℹ️  [08.02.2026 04:52:13] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:13.229277018Z ℹ️  [08.02.2026 04:52:13] [content-enricher] ✅ Got 3 sources from parallel fetch
+2026-02-08T04:52:13.229790435Z ℹ️  [08.02.2026 04:52:13] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:13.285235256Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:13.505826832Z ✅ SearXNG: 8 sonuç bulundu (toplam: 22)
+2026-02-08T04:52:13.528985855Z ✅ SearXNG: 8 sonuç bulundu (toplam: 11)
+2026-02-08T04:52:13.529014694Z ℹ️  [08.02.2026 04:52:13] [content-enricher] 📖 Reading 4 URLs in parallel...
+2026-02-08T04:52:13.685516374Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:13.685836492Z ⚠️  [08.02.2026 04:52:13] [content-enricher] [36] Insufficient sources (0), using fallback
+2026-02-08T04:52:13.685888342Z ℹ️  [08.02.2026 04:52:13] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-08T04:52:13.685895522Z ℹ️  [08.02.2026 04:52:13] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:13.685900972Z ℹ️  [08.02.2026 04:52:13] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:13.814209078Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:13.878628444Z ✅ SearXNG: 8 sonuç bulundu (toplam: 9)
+2026-02-08T04:52:13.879008153Z ℹ️  [08.02.2026 04:52:13] [content-enricher] 📖 Reading 3 URLs in parallel...
+2026-02-08T04:52:13.891324456Z ℹ️  [08.02.2026 04:52:13] [content-enricher] ✅ Got 5 sources from parallel fetch
+2026-02-08T04:52:13.892228773Z ℹ️  [08.02.2026 04:52:13] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:13.985552470Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:13.985734110Z ℹ️  [08.02.2026 04:52:13] [content-enricher] 📖 Reading 2 URLs in parallel...
+2026-02-08T04:52:14.121332767Z ℹ️  [08.02.2026 04:52:14] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:14.121481857Z ⚠️  [08.02.2026 04:52:14] [content-enricher] [34] Insufficient sources (1), using fallback
+2026-02-08T04:52:14.121609986Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:14.141346471Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:14.287856678Z ℹ️  [08.02.2026 04:52:14] [content-enricher] ✅ Got 3 sources from parallel fetch
+2026-02-08T04:52:14.288262157Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:14.292991729Z ✅ SearXNG: 8 sonuç bulundu (toplam: 10)
+2026-02-08T04:52:14.293071429Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 📖 Reading 4 URLs in parallel...
+2026-02-08T04:52:14.379582992Z ✅ SearXNG: 8 sonuç bulundu (toplam: 13)
+2026-02-08T04:52:14.383244338Z ℹ️  [08.02.2026 04:52:14] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:14.383911425Z ⚠️  [08.02.2026 04:52:14] [content-enricher] [18] Insufficient sources (1), using fallback
+2026-02-08T04:52:14.383913025Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:14.462654138Z ✅ SearXNG: 8 sonuç bulundu (toplam: 14)
+2026-02-08T04:52:14.462919636Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-08T04:52:14.463486725Z ℹ️  [08.02.2026 04:52:14] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:14.463526895Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:14.463546515Z ⚠️  [08.02.2026 04:52:14] [content-enricher] [40] Insufficient sources (0), using fallback
+2026-02-08T04:52:14.585027235Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:14.707835311Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:14.708144671Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 📖 Reading 0 URLs in parallel...
+2026-02-08T04:52:14.708350990Z ℹ️  [08.02.2026 04:52:14] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:14.709080036Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:14.709139906Z ⚠️  [08.02.2026 04:52:14] [content-enricher] [41] Insufficient sources (0), using fallback
+2026-02-08T04:52:14.744781682Z ✅ SearXNG: 8 sonuç bulundu (toplam: 11)
+2026-02-08T04:52:14.898424392Z ✅ SearXNG: 8 sonuç bulundu (toplam: 11)
+2026-02-08T04:52:14.900857542Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:14.917895088Z ℹ️  [08.02.2026 04:52:14] [content-enricher] ✅ Got 2 sources from parallel fetch
+2026-02-08T04:52:14.917979937Z ℹ️  [08.02.2026 04:52:14] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:15.060519709Z ℹ️  [08.02.2026 04:52:15] [content-enricher] ✅ Got 4 sources from parallel fetch
+2026-02-08T04:52:15.060998987Z ℹ️  [08.02.2026 04:52:15] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:15.091663382Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:15.140235708Z ✅ SearXNG: 8 sonuç bulundu (toplam: 20)
+2026-02-08T04:52:15.140703677Z ℹ️  [08.02.2026 04:52:15] [content-enricher] 📖 Reading 1 URLs in parallel...
+2026-02-08T04:52:15.317009441Z ✅ SearXNG: 8 sonuç bulundu (toplam: 21)
+2026-02-08T04:52:15.394507357Z ✅ SearXNG: 8 sonuç bulundu (toplam: 21)
+2026-02-08T04:52:15.394773427Z ℹ️  [08.02.2026 04:52:15] [content-enricher] 📖 Reading 4 URLs in parallel...
+2026-02-08T04:52:15.481278600Z ℹ️  [08.02.2026 04:52:15] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:15.481440430Z ⚠️  [08.02.2026 04:52:15] [content-enricher] [43] Insufficient sources (1), using fallback
+2026-02-08T04:52:15.481805908Z ℹ️  [08.02.2026 04:52:15] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:15.491769240Z ℹ️  [08.02.2026 04:52:15] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:15.492125219Z ⚠️  [08.02.2026 04:52:15] [content-enricher] [37] Insufficient sources (1), using fallback
+2026-02-08T04:52:15.492212429Z ℹ️  [08.02.2026 04:52:15] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:15.495973075Z ✅ SearXNG: 8 sonuç bulundu (toplam: 24)
+2026-02-08T04:52:15.664393898Z ✅ SearXNG: 8 sonuç bulundu (toplam: 16)
+2026-02-08T04:52:15.664917947Z ℹ️  [08.02.2026 04:52:15] [content-enricher] 📖 Reading 3 URLs in parallel...
+2026-02-08T04:52:15.723891624Z ✅ SearXNG: 8 sonuç bulundu (toplam: 24)
+2026-02-08T04:52:15.882959482Z ℹ️  [08.02.2026 04:52:15] [content-enricher] ✅ Got 4 sources from parallel fetch
+2026-02-08T04:52:15.883244891Z ℹ️  [08.02.2026 04:52:15] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:16.018399931Z ℹ️  [08.02.2026 04:52:16] [content-enricher] ✅ Got 3 sources from parallel fetch
+2026-02-08T04:52:16.020050434Z ℹ️  [08.02.2026 04:52:16] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:16.063349261Z ℹ️  [08.02.2026 04:52:16] [content-enricher] ✅ Got 4 sources from parallel fetch
+2026-02-08T04:52:16.063565361Z ℹ️  [08.02.2026 04:52:16] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:16.072004729Z ✅ SearXNG: 8 sonuç bulundu (toplam: 25)
+2026-02-08T04:52:16.072249838Z ℹ️  [08.02.2026 04:52:16] [content-enricher] 📖 Reading 4 URLs in parallel...
+2026-02-08T04:52:16.087967338Z 
+2026-02-08T04:52:16.088025988Z 📊 [Check #12] Pipeline Progress:
+2026-02-08T04:52:16.088032778Z    Stage: enriched-articles
+2026-02-08T04:52:16.088037568Z    In Queue: 1
+2026-02-08T04:52:16.088041928Z    Completed: 100
+2026-02-08T04:52:16.088046438Z    Failed: 0
+2026-02-08T04:52:16.088050658Z    Has Seen Articles: true
+2026-02-08T04:52:16.088054778Z    Empty Checks: 0/3
+2026-02-08T04:52:16.088059008Z ℹ️  [08.02.2026 04:52:16] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:16.445156160Z ℹ️  [08.02.2026 04:52:16] [content-enricher] ✅ Got 1 sources from parallel fetch
+2026-02-08T04:52:16.445423889Z ⚠️  [08.02.2026 04:52:16] [content-enricher] [42] Insufficient sources (1), using fallback
+2026-02-08T04:52:16.445606658Z ℹ️  [08.02.2026 04:52:16] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:16.843965323Z ℹ️  [08.02.2026 04:52:16] [content-enricher] ✅ Got 4 sources from parallel fetch
+2026-02-08T04:52:16.844267992Z ℹ️  [08.02.2026 04:52:16] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:18.008514195Z ⚠️  [08.02.2026 04:52:18] [content-enricher] [19] Insufficient sources (0), using fallback
+2026-02-08T04:52:18.008543845Z ℹ️  [08.02.2026 04:52:18] [content-enricher] ✅ Got 0 sources from parallel fetch
+2026-02-08T04:52:18.008974803Z ℹ️  [08.02.2026 04:52:18] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:18.805277157Z ℹ️  [08.02.2026 04:52:18] [content-enricher] ✅ Got 2 sources from parallel fetch
+2026-02-08T04:52:18.805747084Z ℹ️  [08.02.2026 04:52:18] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:19.283129902Z 💓 Heartbeat updated: 08.02.2026 04:52:19
+2026-02-08T04:52:19.787450297Z 📊Progress: 20% - Agent still running...
+2026-02-08T04:52:21.092132581Z 
+2026-02-08T04:52:21.092172920Z 📊 [Check #13] Pipeline Progress:
+2026-02-08T04:52:21.092182500Z    Stage: enriched-articles
+2026-02-08T04:52:21.092190360Z    In Queue: 1
+2026-02-08T04:52:21.092197680Z    Completed: 100
+2026-02-08T04:52:21.092204700Z    Failed: 0
+2026-02-08T04:52:21.092211670Z    Has Seen Articles: true
+2026-02-08T04:52:21.092218840Z    Empty Checks: 0/3
+2026-02-08T04:52:21.092226030Z ℹ️  [08.02.2026 04:52:21] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:24.255979716Z ℹ️  [08.02.2026 04:52:24] [content-enricher] ✅ Got 2 sources from parallel fetch
+2026-02-08T04:52:24.256172485Z ℹ️  [08.02.2026 04:52:24] [content-enricher] 🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)
+2026-02-08T04:52:26.099061568Z 
+2026-02-08T04:52:26.099105178Z 📊 [Check #14] Pipeline Progress:
+2026-02-08T04:52:26.099112818Z    Stage: enriched-articles
+2026-02-08T04:52:26.099118648Z    In Queue: 1
+2026-02-08T04:52:26.099124108Z    Completed: 100
+2026-02-08T04:52:26.099129617Z    Failed: 0
+2026-02-08T04:52:26.099134737Z    Has Seen Articles: true
+2026-02-08T04:52:26.099139817Z    Empty Checks: 0/3
+2026-02-08T04:52:26.099145027Z ℹ️  [08.02.2026 04:52:26] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:31.108458891Z 
+2026-02-08T04:52:31.108507991Z 📊 [Check #15] Pipeline Progress:
+2026-02-08T04:52:31.108524891Z    Stage: enriched-articles
+2026-02-08T04:52:31.108534951Z    In Queue: 1
+2026-02-08T04:52:31.108544021Z    Completed: 100
+2026-02-08T04:52:31.108553451Z    Failed: 0
+2026-02-08T04:52:31.108562181Z    Has Seen Articles: true
+2026-02-08T04:52:31.108570581Z    Empty Checks: 0/3
+2026-02-08T04:52:31.108578811Z ℹ️  [08.02.2026 04:52:31] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:34.044746692Z ✅ SEO Analyzer: Analysis complete
+2026-02-08T04:52:34.044781012Z    Score: 65/100
+2026-02-08T04:52:34.044789412Z    Issues: 4
+2026-02-08T04:52:34.044796672Z    Opportunities: 4
+2026-02-08T04:52:34.060764433Z ✅ [08.02.2026 04:52:34] [seo-calculator] SEO calculated: OpenAI'da Yönetim Planı ve Dij... → Score: 65 (42921ms)
+2026-02-08T04:52:34.063623401Z ℹ️  [08.02.2026 04:52:34] [queue-manager] [seo-calculation] Job seo-calc-cml7za0si0008l7hdl44b70sg completed
+2026-02-08T04:52:34.065765043Z ✅ [08.02.2026 04:52:34] [seo-calculator] SEO job seo-calc-cml7za0si0008l7hdl44b70sg completed: score=65
+2026-02-08T04:52:34.065791203Z ℹ️  [08.02.2026 04:52:34] [seo-calculator] Calculating SEO for: ChatGPT Terapist Olarak Kullanılabilir mi? Riskler...
+2026-02-08T04:52:34.075587586Z 🔍 SEO Analyzer: Analyzing article "ChatGPT Terapist Olarak Kullanılabilir mi? Riskler ve Fırsatlar"...
+2026-02-08T04:52:36.114150995Z 
+2026-02-08T04:52:36.114182345Z 📊 [Check #16] Pipeline Progress:
+2026-02-08T04:52:36.114191335Z    Stage: enriched-articles
+2026-02-08T04:52:36.114198715Z    In Queue: 1
+2026-02-08T04:52:36.114205875Z    Completed: 100
+2026-02-08T04:52:36.114212815Z    Failed: 0
+2026-02-08T04:52:36.114219585Z    Has Seen Articles: true
+2026-02-08T04:52:36.114226815Z    Empty Checks: 0/3
+2026-02-08T04:52:36.114233885Z ℹ️  [08.02.2026 04:52:36] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:41.122360524Z 
+2026-02-08T04:52:41.122428204Z 📊 [Check #17] Pipeline Progress:
+2026-02-08T04:52:41.122438084Z    Stage: enriched-articles
+2026-02-08T04:52:41.122446094Z    In Queue: 1
+2026-02-08T04:52:41.122453575Z    Completed: 100
+2026-02-08T04:52:41.122653254Z    Failed: 0
+2026-02-08T04:52:41.122701114Z    Has Seen Articles: true
+2026-02-08T04:52:41.123042622Z    Empty Checks: 0/3
+2026-02-08T04:52:41.123053762Z ℹ️  [08.02.2026 04:52:41] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:46.134169097Z 
+2026-02-08T04:52:46.134212287Z 📊 [Check #18] Pipeline Progress:
+2026-02-08T04:52:46.134225147Z    Stage: enriched-articles
+2026-02-08T04:52:46.134236047Z    In Queue: 1
+2026-02-08T04:52:46.134246217Z    Completed: 100
+2026-02-08T04:52:46.134256207Z    Failed: 0
+2026-02-08T04:52:46.134266067Z    Has Seen Articles: true
+2026-02-08T04:52:46.134275827Z    Empty Checks: 0/3
+2026-02-08T04:52:46.134286437Z ℹ️  [08.02.2026 04:52:46] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:46.822950270Z ✅ SEO Analyzer: Analysis complete
+2026-02-08T04:52:46.822994260Z    Score: 62/100
+2026-02-08T04:52:46.823003120Z    Issues: 5
+2026-02-08T04:52:46.823010830Z    Opportunities: 5
+2026-02-08T04:52:46.830965710Z ✅ [08.02.2026 04:52:46] [seo-calculator] SEO calculated: ChatGPT'de Büyük Kesinti: Binl... → Score: 62 (58183ms)
+2026-02-08T04:52:46.832060776Z ℹ️  [08.02.2026 04:52:46] [queue-manager] [seo-calculation] Job seo-calc-cml7za1n9000el7hdpi1axu66 completed
+2026-02-08T04:52:46.832281675Z ✅ [08.02.2026 04:52:46] [seo-calculator] SEO job seo-calc-cml7za1n9000el7hdpi1axu66 completed: score=62
+2026-02-08T04:52:46.832697004Z ℹ️  [08.02.2026 04:52:46] [seo-calculator] Calculating SEO for: Nvidia'nın ARM Tabanlı Laptopları 2026'yı Bulabili...
+2026-02-08T04:52:46.835548653Z 🔍 SEO Analyzer: Analyzing article "Nvidia'nın ARM Tabanlı Laptopları 2026'yı Bulabilir"...
+2026-02-08T04:52:49.282511728Z 💓 Heartbeat updated: 08.02.2026 04:52:49
+2026-02-08T04:52:51.140336165Z 
+2026-02-08T04:52:51.140401835Z 📊 [Check #19] Pipeline Progress:
+2026-02-08T04:52:51.140413795Z    Stage: enriched-articles
+2026-02-08T04:52:51.140423685Z    In Queue: 1
+2026-02-08T04:52:51.140432835Z    Completed: 100
+2026-02-08T04:52:51.140451035Z    Failed: 0
+2026-02-08T04:52:51.140460145Z    Has Seen Articles: true
+2026-02-08T04:52:51.140469825Z    Empty Checks: 0/3
+2026-02-08T04:52:51.140479365Z ℹ️  [08.02.2026 04:52:51] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:52:56.148702940Z 
+2026-02-08T04:52:56.148738290Z 📊 [Check #20] Pipeline Progress:
+2026-02-08T04:52:56.148745580Z    Stage: enriched-articles
+2026-02-08T04:52:56.148750990Z    In Queue: 1
+2026-02-08T04:52:56.148758270Z    Completed: 100
+2026-02-08T04:52:56.148767720Z    Failed: 0
+2026-02-08T04:52:56.148772690Z    Has Seen Articles: true
+2026-02-08T04:52:56.148777711Z    Empty Checks: 0/3
+2026-02-08T04:52:56.148902470Z ℹ️  [08.02.2026 04:52:56] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:53:00.307184664Z ℹ️  [08.02.2026 04:53:00] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:01.156038186Z 
+2026-02-08T04:53:01.156073436Z 📊 [Check #21] Pipeline Progress:
+2026-02-08T04:53:01.156098426Z    Stage: enriched-articles
+2026-02-08T04:53:01.156106456Z    In Queue: 1
+2026-02-08T04:53:01.156113726Z    Completed: 100
+2026-02-08T04:53:01.156120826Z    Failed: 0
+2026-02-08T04:53:01.156127896Z    Has Seen Articles: true
+2026-02-08T04:53:01.156134936Z    Empty Checks: 0/3
+2026-02-08T04:53:01.156142296Z ℹ️  [08.02.2026 04:53:01] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:53:01.648263362Z ℹ️  [08.02.2026 04:53:01] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:01.690762551Z ℹ️  [08.02.2026 04:53:01] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:01.881865512Z ℹ️  [08.02.2026 04:53:01] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:03.417305929Z ℹ️  [08.02.2026 04:53:03] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:03.576812138Z ℹ️  [08.02.2026 04:53:03] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:04.093759630Z ✅ [08.02.2026 04:53:04] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:04.616575752Z ℹ️  [08.02.2026 04:53:04] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:05.168953151Z ℹ️  [08.02.2026 04:53:05] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:05.235290711Z ℹ️  [08.02.2026 04:53:05] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:06.163001798Z 
+2026-02-08T04:53:06.163027377Z 📊 [Check #22] Pipeline Progress:
+2026-02-08T04:53:06.163031517Z    Stage: enriched-articles
+2026-02-08T04:53:06.163034637Z    In Queue: 1
+2026-02-08T04:53:06.163049047Z    Completed: 100
+2026-02-08T04:53:06.163051067Z    Failed: 0
+2026-02-08T04:53:06.163052847Z    Has Seen Articles: true
+2026-02-08T04:53:06.163054747Z    Empty Checks: 0/3
+2026-02-08T04:53:06.163173507Z ℹ️  [08.02.2026 04:53:06] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:53:06.178158421Z ℹ️  [08.02.2026 04:53:06] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:06.188848911Z ℹ️  [08.02.2026 04:53:06] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:06.295920307Z ℹ️  [08.02.2026 04:53:06] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:06.347818482Z ✅ [08.02.2026 04:53:06] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:06.505036840Z ✅ [08.02.2026 04:53:06] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:06.839095331Z ℹ️  [08.02.2026 04:53:06] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:07.013830034Z ℹ️  [08.02.2026 04:53:07] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:07.177541017Z ✅ [08.02.2026 04:53:07] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:07.352261469Z ✅ [08.02.2026 04:53:07] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:07.730719685Z ✅ [08.02.2026 04:53:07] [content-enricher] ✅ [11/45] Enriched: Amazon'un 200 Milyar Dolarlık AI Hamlesi: Yatırım ...
+2026-02-08T04:53:08.061159390Z ℹ️  [08.02.2026 04:53:08] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:08.365745593Z ℹ️  [08.02.2026 04:53:08] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:08.795954773Z ℹ️  [08.02.2026 04:53:08] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:08.997007616Z ✅ [08.02.2026 04:53:08] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:09.220748593Z ✅ [08.02.2026 04:53:09] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:09.517465097Z ℹ️  [08.02.2026 04:53:09] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:09.554611217Z ℹ️  [08.02.2026 04:53:09] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:09.557937523Z ✅ [08.02.2026 04:53:09] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:09.666021166Z ✅ [08.02.2026 04:53:09] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:09.724699236Z ℹ️  [08.02.2026 04:53:09] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:09.780968034Z ℹ️  [08.02.2026 04:53:09] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:10.033152814Z ✅ [08.02.2026 04:53:10] [content-enricher] ✅ [10/45] Enriched: Yapay Zeka Değerlendirmesinde Yeni Çağ: Amazon Nov...
+2026-02-08T04:53:10.118568833Z ✅ [08.02.2026 04:53:10] [content-enricher] ✅ [18/45] Enriched: Yapay Zekaya İç Monolog: ChatGPT'nin 'Düşünme' Sür...
+2026-02-08T04:53:10.298134257Z ✅ [08.02.2026 04:53:10] [content-enricher] ✅ [22/45] Enriched: Omuz Pedlerindeki RFID'den Süper Analize: NFL'i Dö...
+2026-02-08T04:53:10.593318536Z ✅ [08.02.2026 04:53:10] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:10.809885230Z ✅ [08.02.2026 04:53:10] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:10.812328271Z ✅ [08.02.2026 04:53:10] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:10.922476847Z ✅ [08.02.2026 04:53:10] [content-enricher] ✅ [23/45] Enriched: Video Devrimi: Yapay Zeka Artık Sadece İzlemiyor, ...
+2026-02-08T04:53:10.987912851Z ℹ️  [08.02.2026 04:53:10] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:11.167597544Z 
+2026-02-08T04:53:11.167627664Z 📊 [Check #23] Pipeline Progress:
+2026-02-08T04:53:11.167659753Z    Stage: enriched-articles
+2026-02-08T04:53:11.167679653Z    In Queue: 1
+2026-02-08T04:53:11.167684443Z    Completed: 100
+2026-02-08T04:53:11.167688953Z    Failed: 0
+2026-02-08T04:53:11.167693603Z    Has Seen Articles: true
+2026-02-08T04:53:11.167698323Z    Empty Checks: 0/3
+2026-02-08T04:53:11.167702883Z ℹ️  [08.02.2026 04:53:11] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:53:11.239077615Z ℹ️  [08.02.2026 04:53:11] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:11.376123049Z ✅ [08.02.2026 04:53:11] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:11.728338963Z ✅ [08.02.2026 04:53:11] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:12.013074871Z ℹ️  [08.02.2026 04:53:12] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:12.538552942Z ✅ [08.02.2026 04:53:12] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:12.589159442Z ℹ️  [08.02.2026 04:53:12] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:12.602612841Z ✅ [08.02.2026 04:53:12] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:12.670311256Z ℹ️  [08.02.2026 04:53:12] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:12.672376459Z ✅ [08.02.2026 04:53:12] [content-enricher] ✅ [12/45] Enriched: Waymo'nun Dünya Modeli: Otonom Araçların 'Hayal Gü...
+2026-02-08T04:53:12.804045533Z ✅ [08.02.2026 04:53:12] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:12.902792081Z ℹ️  [08.02.2026 04:53:12] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:12.920597094Z ✅ [08.02.2026 04:53:12] [content-enricher] ✅ [9/45] Enriched: Yapay Zeka Devriminde Kritik Dönüm Noktası: Mantık...
+2026-02-08T04:53:13.044995145Z ℹ️  [08.02.2026 04:53:13] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:13.415425981Z ✅ [08.02.2026 04:53:13] [content-enricher] ✅ [39/45] Enriched: CASE'in Dijital Dönüşümü: İnşaat Sektöründe Yapay ...
+2026-02-08T04:53:13.940624564Z ✅ [08.02.2026 04:53:13] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:13.994275202Z ✅ [08.02.2026 04:53:13] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:14.070853794Z ℹ️  [08.02.2026 04:53:14] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:14.116844111Z ✅ [08.02.2026 04:53:14] [content-enricher] ✅ [2/45] Enriched: GPT-4o'nun Emekliliği: Yapay Zeka Dostlarımızın Te...
+2026-02-08T04:53:14.218570568Z ✅ [08.02.2026 04:53:14] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:14.397213016Z ✅ [08.02.2026 04:53:14] [content-enricher] ✅ [21/45] Enriched: Eğitim Teknolojisinde Deprem: Coursera ve Udemy'ni...
+2026-02-08T04:53:14.460163389Z ✅ [08.02.2026 04:53:14] [content-enricher] ✅ [41/45] Enriched: Sesli Asistanlar Neden Hâlâ Boşluğa Bağırıyor?...
+2026-02-08T04:53:14.608009593Z ✅ [08.02.2026 04:53:14] [content-enricher] ✅ [20/45] Enriched: OpenAI'nin Kurumsal Hamlesi: Tekil Ajanlar Çağı Bi...
+2026-02-08T04:53:14.643814018Z ℹ️  [08.02.2026 04:53:14] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:14.754359942Z ℹ️  [08.02.2026 04:53:14] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:14.922721800Z ✅ [08.02.2026 04:53:14] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:15.027445735Z ℹ️  [08.02.2026 04:53:15] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:15.322918543Z ✅ [08.02.2026 04:53:15] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:15.347362471Z ✅ [08.02.2026 04:53:15] [content-enricher] ✅ [1/45] Enriched: GPT-5.3-Codex: Kod Yazmanın Ötesinde Bir Devrim Mi...
+2026-02-08T04:53:15.553839903Z ✅ [08.02.2026 04:53:15] [content-enricher] ✅ [25/45] Enriched: Tek Başına Durdurulamaz: İnsanlığın Yapay Zeka Kar...
+2026-02-08T04:53:15.741851776Z ℹ️  [08.02.2026 04:53:15] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:16.189827140Z 
+2026-02-08T04:53:16.189920559Z 📊 [Check #24] Pipeline Progress:
+2026-02-08T04:53:16.189949049Z    Stage: enriched-articles
+2026-02-08T04:53:16.189955059Z    In Queue: 1
+2026-02-08T04:53:16.189960219Z    Completed: 100
+2026-02-08T04:53:16.189965539Z    Failed: 0
+2026-02-08T04:53:16.189970349Z    Has Seen Articles: true
+2026-02-08T04:53:16.189975169Z    Empty Checks: 0/3
+2026-02-08T04:53:16.189980119Z ℹ️  [08.02.2026 04:53:16] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:53:16.254789985Z ✅ [08.02.2026 04:53:16] [content-enricher] ✅ [24/45] Enriched: Yapay Zekanın Hukukta Kötüye Kullanımında Yeni Sta...
+2026-02-08T04:53:16.338458500Z ✅ [08.02.2026 04:53:16] [content-enricher] ✅ [33/45] Enriched: Domino Etkisi: Bir Pizza Zincirinin Adı Neden Veri...
+2026-02-08T04:53:16.430863373Z ✅ [08.02.2026 04:53:16] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:16.469768046Z ✅ [08.02.2026 04:53:16] [content-enricher] ✅ [14/45] Enriched: Anthropic'in Güvenlik Testinde Claude, Excel'de Ha...
+2026-02-08T04:53:16.957857699Z ✅ [08.02.2026 04:53:16] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:16.985691184Z ℹ️  [08.02.2026 04:53:16] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:17.081670163Z ✅ [08.02.2026 04:53:17] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:17.163203006Z ℹ️  [08.02.2026 04:53:17] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:17.470421150Z ✅ [08.02.2026 04:53:17] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:17.498539844Z ℹ️  [08.02.2026 04:53:17] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:17.621204733Z ✅ [08.02.2026 04:53:17] [content-enricher] ✅ [3/45] Enriched: Waymo'nun Gizli Silahı: Genie 3 ile Robotaksi Devr...
+2026-02-08T04:53:17.836281123Z ✅ [08.02.2026 04:53:17] [content-enricher] ✅ [15/45] Enriched: Teknoloji Devi 650 Milyar Dolarlık AI Hamlesiyle Ç...
+2026-02-08T04:53:17.899708375Z ℹ️  [08.02.2026 04:53:17] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:18.051798532Z ✅ [08.02.2026 04:53:18] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:18.218354795Z ✅ [08.02.2026 04:53:18] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:18.436902392Z ✅ [08.02.2026 04:53:18] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:18.452489234Z ✅ [08.02.2026 04:53:18] [content-enricher] ✅ [8/45] Enriched: Sam Altman'ın Karanlık Kehaneti: Yapay Zeka Ajanla...
+2026-02-08T04:53:18.770153429Z ✅ [08.02.2026 04:53:18] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:19.162950210Z ✅ [08.02.2026 04:53:19] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:19.282904169Z 💓 Heartbeat updated: 08.02.2026 04:53:19
+2026-02-08T04:53:19.308299523Z ✅ [08.02.2026 04:53:19] [content-enricher] ✅ [6/45] Enriched: İş Dünyasında Devrim: Yapay Zeka Artık 'Araç' Deği...
+2026-02-08T04:53:19.416404247Z ⚠️  [08.02.2026 04:53:19] [content-enricher] ⚠️ Gemini failed (Expected ',' or '}' after property value in JSON at position 1637), falling back to DeepSeek for EN content...
+2026-02-08T04:53:19.492687400Z ✅ [08.02.2026 04:53:19] [content-enricher] ✅ [32/45] Enriched: Profesörün Anlamsız AI Ders Kitabı: Eğitimde Devri...
+2026-02-08T04:53:20.255035373Z ✅ [08.02.2026 04:53:20] [content-enricher] ✅ [37/45] Enriched: Belirsizlik Çağında Finansal Akıl: Vivian Tu'dan G...
+2026-02-08T04:53:20.329236174Z ✅ [08.02.2026 04:53:20] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:21.064158978Z ✅ [08.02.2026 04:53:21] [content-enricher] ✅ [7/45] Enriched: Yapay Zeka Artık 'Kurallara Uyuyor': Amazon Bedroc...
+2026-02-08T04:53:21.065844952Z ✅ [08.02.2026 04:53:21] [content-enricher] ✅ [16/45] Enriched: Siber Güvenlikte 'Behind' Kavramı: Görünmeyen Tehd...
+2026-02-08T04:53:21.191482069Z 
+2026-02-08T04:53:21.191516509Z 📊 [Check #25] Pipeline Progress:
+2026-02-08T04:53:21.191523289Z    Stage: enriched-articles
+2026-02-08T04:53:21.191528579Z    In Queue: 1
+2026-02-08T04:53:21.191533139Z    Completed: 100
+2026-02-08T04:53:21.191537459Z    Failed: 0
+2026-02-08T04:53:21.191541599Z    Has Seen Articles: true
+2026-02-08T04:53:21.191545799Z    Empty Checks: 0/3
+2026-02-08T04:53:21.191550119Z ℹ️  [08.02.2026 04:53:21] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:53:21.440034434Z ✅ [08.02.2026 04:53:21] [content-enricher] ✅ [34/45] Enriched: Savannah Guthrie'nin 'Yaşam Kanıtı' Çığlığı ve Der...
+2026-02-08T04:53:21.531332690Z ℹ️  [08.02.2026 04:53:21] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:21.559555374Z ℹ️  [08.02.2026 04:53:21] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:21.674736321Z ✅ [08.02.2026 04:53:21] [content-enricher] ✅ [43/45] Enriched: Nadir Hastalıklarda İlaç Keşfi Krizi: Yapay Zeka İ...
+2026-02-08T04:53:21.690487502Z ✅ [08.02.2026 04:53:21] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:21.766706855Z ℹ️  [08.02.2026 04:53:21] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:21.844543503Z ✅ [08.02.2026 04:53:21] [content-enricher] ✅ [28/45] Enriched: IEEE'nin Mini-MBA'sı: Yapay Zeka Liderliğindeki Kr...
+2026-02-08T04:53:21.878294025Z ✅ [08.02.2026 04:53:21] [content-enricher] ✅ [13/45] Enriched: NVIDIA'nın 5 Trilyon Dolarlık Tahtını Sağlamlaştır...
+2026-02-08T04:53:21.909382169Z ℹ️  [08.02.2026 04:53:21] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:21.966400994Z ✅ [08.02.2026 04:53:21] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:22.172874036Z ✅ [08.02.2026 04:53:22] [content-enricher] ✅ [36/45] Enriched: Yapay Zeka Balonu Sönüyor mu? Yatırımcıların 'Her ...
+2026-02-08T04:53:22.212259498Z ✅ [08.02.2026 04:53:22] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:22.877059197Z ✅ [08.02.2026 04:53:22] [content-enricher] ✅ [31/45] Enriched: Anthropic'in 20 Milyar Dolarlık Dev Finansmanı: Ya...
+2026-02-08T04:53:23.330608041Z ℹ️  [08.02.2026 04:53:23] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:24.094130109Z ✅ [08.02.2026 04:53:24] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:24.152238900Z ✅ [08.02.2026 04:53:24] [content-enricher] ✅ [5/45] Enriched: Anthropic'in Milyon Dolarlık Super Bowl Reklamı Ne...
+2026-02-08T04:53:24.154115823Z ℹ️  [08.02.2026 04:53:24] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:24.999116254Z ✅ SEO Analyzer: Analysis complete
+2026-02-08T04:53:24.999159024Z    Score: 65/100
+2026-02-08T04:53:24.999167564Z    Issues: 4
+2026-02-08T04:53:24.999174864Z    Opportunities: 5
+2026-02-08T04:53:25.015863131Z ✅ [08.02.2026 04:53:25] [seo-calculator] SEO calculated: ChatGPT Terapist Olarak Kullan... → Score: 65 (50949ms)
+2026-02-08T04:53:25.018370132Z ℹ️  [08.02.2026 04:53:25] [queue-manager] [seo-calculation] Job seo-calc-cml7z9zqj0002l7hd9ncij2qn completed
+2026-02-08T04:53:25.020176054Z ✅ [08.02.2026 04:53:25] [seo-calculator] SEO job seo-calc-cml7z9zqj0002l7hd9ncij2qn completed: score=65
+2026-02-08T04:53:25.020275835Z ℹ️  [08.02.2026 04:53:25] [seo-calculator] Calculating SEO for: Yapay Zeka Ajanları Erişim Kontrol Sistemlerini Ta...
+2026-02-08T04:53:25.028425713Z 🔍 SEO Analyzer: Analyzing article "Yapay Zeka Ajanları Erişim Kontrol Sistemlerini Tarihe Karıştırıyor"...
+2026-02-08T04:53:25.476536098Z ✅ [08.02.2026 04:53:25] [content-enricher] ✅ [45/45] Enriched: Teknoloji Hisselerindeki Çöküş ve Toparlanma: Yapa...
+2026-02-08T04:53:25.627006272Z ✅ [08.02.2026 04:53:25] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:25.693237203Z ✅ [08.02.2026 04:53:25] [content-enricher] ✅ [27/45] Enriched: Yapay Zeka Sözünü Tutuyor mu? Prompt Fidelity: Büy...
+2026-02-08T04:53:25.742349158Z ✅ [08.02.2026 04:53:25] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:25.803780667Z ✅ [08.02.2026 04:53:25] [content-enricher] ✅ [40/45] Enriched: 2026'nın Altın Meslekleri: Yapay Zeka Çağında Kari...
+2026-02-08T04:53:25.856522738Z ✅ [08.02.2026 04:53:25] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:26.195694583Z 
+2026-02-08T04:53:26.195730433Z 📊 [Check #26] Pipeline Progress:
+2026-02-08T04:53:26.195751483Z    Stage: enriched-articles
+2026-02-08T04:53:26.195775362Z    In Queue: 1
+2026-02-08T04:53:26.195779682Z    Completed: 100
+2026-02-08T04:53:26.195783452Z    Failed: 0
+2026-02-08T04:53:26.195787022Z    Has Seen Articles: true
+2026-02-08T04:53:26.195790652Z    Empty Checks: 0/3
+2026-02-08T04:53:26.195794392Z ℹ️  [08.02.2026 04:53:26] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:53:27.167455327Z ✅ [08.02.2026 04:53:27] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:27.296791041Z ℹ️  [08.02.2026 04:53:27] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:27.384601900Z ✅ [08.02.2026 04:53:27] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:27.879564249Z ✅ [08.02.2026 04:53:27] [content-enricher] ✅ [30/45] Enriched: Makine Öğrenimi Boru Hatlarınızda Gizli Verimlilik...
+2026-02-08T04:53:28.250163574Z ℹ️  [08.02.2026 04:53:28] [content-enricher] 🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...
+2026-02-08T04:53:28.603857234Z ✅ [08.02.2026 04:53:28] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:28.815472828Z ✅ [08.02.2026 04:53:28] [content-enricher] ✅ [17/45] Enriched: UiPath'nin Finans Hamlesi: WorkFusion Satın Alımın...
+2026-02-08T04:53:29.197238932Z ✅ [08.02.2026 04:53:29] [content-enricher] ✅ [44/45] Enriched: Super Bowl Reklamlarında Yapay Zeka Devrimi: Marka...
+2026-02-08T04:53:29.728421305Z ✅ [08.02.2026 04:53:29] [content-enricher] ✅ [4/45] Enriched: Yapay Zeka Evrensel mi Olacak Yoksa Yerelleşecek m...
+2026-02-08T04:53:31.145396305Z ✅ [08.02.2026 04:53:31] [content-enricher] ✅ [42/45] Enriched: Waymo'nun 2.5 Milyar Dolarlık Turu ve Yapay Zeka Ç...
+2026-02-08T04:53:31.200833376Z 
+2026-02-08T04:53:31.200913216Z 📊 [Check #27] Pipeline Progress:
+2026-02-08T04:53:31.200922486Z    Stage: enriched-articles
+2026-02-08T04:53:31.200929936Z    In Queue: 1
+2026-02-08T04:53:31.200937046Z    Completed: 100
+2026-02-08T04:53:31.200944126Z    Failed: 0
+2026-02-08T04:53:31.200950876Z    Has Seen Articles: true
+2026-02-08T04:53:31.200957635Z    Empty Checks: 0/3
+2026-02-08T04:53:31.200964515Z ℹ️  [08.02.2026 04:53:31] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:53:31.390105285Z ✅ [08.02.2026 04:53:31] [content-enricher] ✅ [19/45] Enriched: Waymo'nun Sanal Dünyası: Kasırgalar ve Filler Oton...
+2026-02-08T04:53:32.110218656Z ✅ [08.02.2026 04:53:32] [content-enricher] ✅ [35/45] Enriched: Yapay Zeka Ekosistemi: 16 Claude Ajanı Bir C Derle...
+2026-02-08T04:53:32.234138340Z ✅ [08.02.2026 04:53:32] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:32.507214863Z ✅ [08.02.2026 04:53:32] [content-enricher] ✅ Gemini EN content generated successfully
+2026-02-08T04:53:35.904777138Z ✅ [08.02.2026 04:53:35] [content-enricher] ✅ [38/45] Enriched: Yapay Zeka Çağında Veri Kaçakları: Siber Güvenlikt...
+2026-02-08T04:53:36.208758735Z 
+2026-02-08T04:53:36.208785925Z 📊 [Check #28] Pipeline Progress:
+2026-02-08T04:53:36.208789995Z    Stage: enriched-articles
+2026-02-08T04:53:36.208793095Z    In Queue: 1
+2026-02-08T04:53:36.208796145Z    Completed: 100
+2026-02-08T04:53:36.208798975Z    Failed: 0
+2026-02-08T04:53:36.208801755Z    Has Seen Articles: true
+2026-02-08T04:53:36.208804555Z    Empty Checks: 0/3
+2026-02-08T04:53:36.208807475Z ℹ️  [08.02.2026 04:53:36] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
+2026-02-08T04:53:36.625719418Z ✅ [08.02.2026 04:53:36] [content-enricher] ✅ [29/45] Enriched: Saat Endüstrisinde Dijital Devrim: Apple'ın Teknol...
+2026-02-08T04:53:41.212701174Z 
+2026-02-08T04:53:41.212758814Z 📊 [Check #29] Pipeline Progress:
+2026-02-08T04:53:41.212770604Z    Stage: enriched-articles
+2026-02-08T04:53:41.212780454Z    In Queue: 1
+2026-02-08T04:53:41.212789044Z    Completed: 100
+2026-02-08T04:53:41.212798514Z    Failed: 0
+2026-02-08T04:53:41.212808024Z    Has Seen Articles: true
+2026-02-08T04:53:41.212816744Z    Empty Checks: 0/3
+2026-02-08T04:53:41.212825703Z ℹ️  [08.02.2026 04:53:41] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 100 completed, 0 failed)
