@@ -291,7 +291,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
     // NOTE: Early filtering uses 24h, but we use 7 days here for safety margin
     // This prevents blocking legitimately NEW articles that have old historical coverage
     const normalizedUrl = this.normalizeUrl(article.url);
-    const urlTimeWindow = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days
+    const urlTimeWindow = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000); // 1 day
     const existingByUrl = await db.article.findFirst({
       where: {
         AND: [
@@ -372,11 +372,11 @@ export class DuplicateDetectorAgent extends BaseAgent<
       return { isDuplicate: false };
     }
 
-    // Check recent articles (last 48 hours)
+    // Check recent articles (last 12 hours)
     const recentArticles = await db.article.findMany({
       where: {
         publishedAt: {
-          gte: new Date(Date.now() - 48 * 60 * 60 * 1000),
+          gte: new Date(Date.now() - 12 * 60 * 60 * 1000),
         },
         status: "PUBLISHED",
       },
