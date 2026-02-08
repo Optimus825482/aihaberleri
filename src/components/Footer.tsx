@@ -8,7 +8,8 @@ import { db } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export async function Footer() {
-  const currentYear = new Date().getFullYear();
+  // Static year to prevent hydration mismatch
+  const currentYear = 2026;
 
   // Skip database queries during build or when DB is unavailable
   const isBuildTime =

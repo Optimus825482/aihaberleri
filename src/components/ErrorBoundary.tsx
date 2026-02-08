@@ -15,6 +15,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: React.ErrorInfo | null;
+  errorId: string;
 }
 
 /**
@@ -28,6 +29,7 @@ export class ErrorBoundary extends Component<Props, State> {
       hasError: false,
       error: null,
       errorInfo: null,
+      errorId: "",
     };
   }
 
@@ -42,10 +44,14 @@ export class ErrorBoundary extends Component<Props, State> {
     // Call custom error handler if provided
     this.props.onError?.(error, errorInfo);
 
+    // Generate error ID only on client-side (browser)
+    const errorId = typeof window !== "undefined" ? Date.now().toString(36) : "err";
+
     // Update state with error details
     this.setState({
       error,
       errorInfo,
+      errorId,
     });
 
     // TODO: Send to error tracking service (Sentry, LogRocket, etc.)
@@ -144,7 +150,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 <p className="mt-1">
                   Hata ID:{" "}
                   <code className="font-mono bg-muted px-1 py-0.5 rounded">
-                    {Date.now().toString(36)}
+                    {this.state.errorId || "err"}
                   </code>
                 </p>
               </div>

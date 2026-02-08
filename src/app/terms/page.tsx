@@ -17,12 +17,7 @@ export default function TermsPage() {
 
             <div className="prose prose-lg prose-invert max-w-none">
               <p className="text-ai-text-secondary mb-6">
-                Son güncelleme:{" "}
-                {new Date().toLocaleDateString("tr-TR", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                Son güncelleme: 1 Ocak 2026
               </p>
 
               <section className="mb-8">
