@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node server.js",
     "build": "next build",
-    "start": "node server.js",
+    "start": "tsx scripts/recalculate-trends.ts && node server.js",
     "lint": "next lint",
     "postinstall": "prisma generate || echo 'Prisma generate failed (schema not found?), skipping...'",
     "agent:start": "ts-node src/scripts/agent-runner.ts",

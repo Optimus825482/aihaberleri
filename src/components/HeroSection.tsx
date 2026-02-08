@@ -34,22 +34,28 @@ const texts = {
   },
 };
 
-const defaultImage = "https://lh3.googleusercontent.com/aida-public/AB6AXuDixixEkR1KuvGsPUfz3UGXoiCg4s23dbZw4FwSWDijoUyroJZZQJjgGgffm76qqx5j4sVkE574dKaX1Pw4SCbURfYpy_QQUdnR4L708kqoqHSSc0LSMJG7QAFLGcPWDZaCmBnW8w2Ih8YhklXKC53IJmJRhtu5Pt7_qUuAfh__AghN3fihJ8nm6jdHJfOPHnFWtNf_1Q_Z_I7IhzYEnf2Fg1W2sDezirOwy46NRyN3hOMP1wDlJqEjwImlERBDm5F83_bzBgM-g00";
+const defaultImage =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDixixEkR1KuvGsPUfz3UGXoiCg4s23dbZw4FwSWDijoUyroJZZQJjgGgffm76qqx5j4sVkE574dKaX1Pw4SCbURfYpy_QQUdnR4L708kqoqHSSc0LSMJG7QAFLGcPWDZaCmBnW8w2Ih8YhklXKC53IJmJRhtu5Pt7_qUuAfh__AghN3fihJ8nm6jdHJfOPHnFWtNf_1Q_Z_I7IhzYEnf2Fg1W2sDezirOwy46NRyN3hOMP1wDlJqEjwImlERBDm5F83_bzBgM-g00";
 
 const defaultArticle: FeaturedArticle = {
   id: "default",
   title: "Yapay Zeka Dünyasında Devrim: GPT-5 Beklentileri",
   slug: "",
-  excerpt: "OpenAI'nin yeni modeli hakkında bilmeniz gereken her şey ve teknoloji dünyasına olası etkileri üzerine kapsamlı bir analiz.",
+  excerpt:
+    "OpenAI'nin yeni modeli hakkında bilmeniz gereken her şey ve teknoloji dünyasına olası etkileri üzerine kapsamlı bir analiz.",
   imageUrl: defaultImage,
   category: { name: "OpenAI", slug: "openai" },
 };
 
-export function HeroSection({ featuredArticles = [], locale = "tr" }: HeroSectionProps) {
+export function HeroSection({
+  featuredArticles = [],
+  locale = "tr",
+}: HeroSectionProps) {
   const t = texts[locale];
 
   // Use provided articles or default article
-  const articles = featuredArticles.length > 0 ? featuredArticles : [defaultArticle];
+  const articles =
+    featuredArticles.length > 0 ? featuredArticles : [defaultArticle];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [direction, setDirection] = useState<"next" | "prev">("next");
@@ -67,10 +73,13 @@ export function HeroSection({ featuredArticles = [], locale = "tr" }: HeroSectio
   }, [articles.length, isPaused]);
 
   // Manual navigation
-  const goToSlide = useCallback((index: number) => {
-    setDirection(index > currentIndex ? "next" : "prev");
-    setCurrentIndex(index);
-  }, [currentIndex]);
+  const goToSlide = useCallback(
+    (index: number) => {
+      setDirection(index > currentIndex ? "next" : "prev");
+      setCurrentIndex(index);
+    },
+    [currentIndex],
+  );
 
   const goToNext = () => {
     setDirection("next");
@@ -100,12 +109,12 @@ export function HeroSection({ featuredArticles = [], locale = "tr" }: HeroSectio
 
   return (
     <div
-      className="group relative mb-12 overflow-hidden rounded-2xl bg-gray-900 shadow-xl"
+      className="group relative mb-12 min-h-[450px] overflow-hidden rounded-2xl bg-gray-900 shadow-xl md:min-h-[550px] lg:min-h-[600px]"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       {/* Slider Container */}
-      <div className="relative">
+      <div className="relative h-full">
         {articles.map((article, index) => (
           <div
             key={article.id}
@@ -170,10 +179,14 @@ export function HeroSection({ featuredArticles = [], locale = "tr" }: HeroSectio
                   className="flex items-center gap-2 rounded-lg bg-ai-primary px-6 py-3 text-base font-bold text-white transition-transform hover:scale-105 hover:bg-ai-primary/90"
                 >
                   <span>{t.readMore}</span>
-                  <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                  <span className="material-symbols-outlined text-[20px]">
+                    arrow_forward
+                  </span>
                 </Link>
                 <button className="flex items-center gap-2 rounded-lg bg-white/10 px-6 py-3 text-base font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20">
-                  <span className="material-symbols-outlined text-[20px]">bookmark</span>
+                  <span className="material-symbols-outlined text-[20px]">
+                    bookmark
+                  </span>
                   <span>{t.save}</span>
                 </button>
               </div>
@@ -223,7 +236,9 @@ export function HeroSection({ featuredArticles = [], locale = "tr" }: HeroSectio
       {/* Slide Counter */}
       {articles.length > 1 && (
         <div className="absolute top-6 right-6 z-20 flex items-center gap-2 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-sm">
-          <span className="material-symbols-outlined text-white text-sm">photo_library</span>
+          <span className="material-symbols-outlined text-white text-sm">
+            photo_library
+          </span>
           <span className="text-sm font-medium text-white">
             {currentIndex + 1} / {articles.length}
           </span>

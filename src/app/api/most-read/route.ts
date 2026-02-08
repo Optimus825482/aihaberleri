@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { recalculateTrendScore } from "@/lib/trend-service";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export async function GET(request: NextRequest) {
 
     // Calculate date limit based on period
     const dateLimit = new Date();
+    // Use 'any' to allow dynamic property addition
     let whereClause: any = {
       status: "PUBLISHED",
     };
@@ -50,6 +52,19 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Fire-and-forget trend recalculation for these popular articles
+    // This ensures that articles appearing in the "Most Read" list have up-to-date trend scores
+    // We don't await this to keep the API response fast
+    (async () => {
+      try {
+        await Promise.allSettled(
+          articles.map((a) => recalculateTrendScore(a.id)),
+        );
+      } catch (e) {
+        console.error("Background trend update error:", e);
+      }
+    })();
+
     return NextResponse.json({
       articles,
       period,
@@ -59,7 +74,7 @@ export async function GET(request: NextRequest) {
     console.error("Most read API error:", error);
     return NextResponse.json(
       { error: "Failed to fetch most read articles", articles: [] },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
