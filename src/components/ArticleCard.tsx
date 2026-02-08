@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { calculateReadingTime } from "@/lib/utils";
+import { calculateReadingTime, formatRelativeTime } from "@/lib/utils";
 import { TrendingBadge } from "@/components/TrendingBadge";
 
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
@@ -147,24 +147,37 @@ export function ArticleCard({
 
       {/* Content Section */}
       <div className="flex flex-1 flex-col p-4 sm:p-5">
-        {/* Meta Info: Views + Trend Score */}
-        <div className="mb-2.5 flex items-center justify-between">
-          {/* Views Count */}
-          <div className="flex items-center gap-1 text-xs text-ai-text-secondary">
-            <span className="material-symbols-outlined text-[14px]">
-              visibility
-            </span>
-            <span className="font-medium">
-              {article.views >= 1000
-                ? `${(article.views / 1000).toFixed(1)}k`
-                : article.views}{" "}
-              {t.views}
-            </span>
-          </div>
+        {/* Meta Info: Published Time + Views + Trend Score */}
+        <div className="mb-2.5 flex items-center justify-between gap-2">
+          {/* Published Time */}
+          {article.publishedAt && (
+            <div className="flex items-center gap-1 text-xs text-ai-text-secondary">
+              <span className="material-symbols-outlined text-[14px]">
+                schedule
+              </span>
+              <span className="font-medium">
+                {formatRelativeTime(article.publishedAt)}
+              </span>
+            </div>
+          )}
+
           {/* Trend Score */}
           {article.trendScore ? (
             <TrendScoreBadge trendScore={article.trendScore} size="sm" />
           ) : null}
+        </div>
+
+        {/* Views Count (Moved below published time) */}
+        <div className="mb-2.5 flex items-center gap-1 text-xs text-ai-text-secondary">
+          <span className="material-symbols-outlined text-[14px]">
+            visibility
+          </span>
+          <span className="font-medium">
+            {article.views >= 1000
+              ? `${(article.views / 1000).toFixed(1)}k`
+              : article.views}{" "}
+            {t.views}
+          </span>
         </div>
 
         {/* Title */}

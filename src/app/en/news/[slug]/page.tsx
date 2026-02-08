@@ -10,6 +10,7 @@ import Image from "next/image";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/utils";
 import { ArticleImage } from "@/components/ResponsiveImage";
+import { ViewTracker } from "@/components/ViewTracker";
 import {
   generateBreadcrumbSchema,
   generateJsonLd,
@@ -43,11 +44,8 @@ async function getArticle(slug: string) {
     return null;
   }
 
-  // Update view count
-  await db.article.update({
-    where: { id: translation.article.id },
-    data: { views: { increment: 1 } },
-  });
+  // View tracking is now handled client-side with ViewTracker component
+  // This prevents duplicate counts on page refresh/bot crawls
 
   return {
     id: translation.article.id,
@@ -213,6 +211,9 @@ export default async function EnglishArticlePage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-ai-background-dark">
+      {/* View Tracking - Client-side with session control */}
+      <ViewTracker articleId={article.id} />
+
       {/* Structured Data */}
       <script
         type="application/ld+json"
@@ -223,8 +224,13 @@ export default async function EnglishArticlePage({ params }: Props) {
       <div className="bg-ai-surface-dark border-b border-ai-surface-border">
         <div className="container mx-auto px-4 py-3">
           <nav className="text-sm text-ai-text-secondary flex items-center gap-2">
-            <Link href="/en" className="hover:text-ai-primary transition-colors flex items-center gap-1">
-              <span className="material-symbols-outlined text-[16px]">home</span>
+            <Link
+              href="/en"
+              className="hover:text-ai-primary transition-colors flex items-center gap-1"
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                home
+              </span>
               Home
             </Link>
             <span className="text-ai-text-muted">/</span>
@@ -254,7 +260,9 @@ export default async function EnglishArticlePage({ params }: Props) {
                 {article.category.name}
               </Link>
               <span className="text-ai-text-secondary text-sm flex items-center gap-1">
-                <span className="material-symbols-outlined text-[16px]">visibility</span>
+                <span className="material-symbols-outlined text-[16px]">
+                  visibility
+                </span>
                 {article.views.toLocaleString()} views
               </span>
             </div>
@@ -270,7 +278,9 @@ export default async function EnglishArticlePage({ params }: Props) {
             <div className="flex items-center gap-4 text-sm text-ai-text-secondary border-b border-ai-surface-border pb-6">
               {article.publishedAt && (
                 <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    calendar_today
+                  </span>
                   <time dateTime={article.publishedAt.toISOString()}>
                     {formatDate(article.publishedAt)}
                   </time>
@@ -278,13 +288,16 @@ export default async function EnglishArticlePage({ params }: Props) {
               )}
               {article.author && (
                 <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">person</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    person
+                  </span>
                   By {article.author.name || "AI News Team"}
                 </span>
               )}
               <Link
                 href={`/news/${article.originalSlug}`}
-                className="text-ai-primary hover:text-ai-primary-hover transition-colors flex items-center gap-1 ml-auto">
+                className="text-ai-primary hover:text-ai-primary-hover transition-colors flex items-center gap-1 ml-auto"
+              >
                 <span className="text-lg">🇹🇷</span>
                 Türkçe versiyonu
               </Link>
@@ -315,7 +328,9 @@ export default async function EnglishArticlePage({ params }: Props) {
           <div className="border-t border-b border-ai-surface-border py-6 mb-12">
             <div className="flex items-center gap-4">
               <span className="font-semibold text-white flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px] text-ai-primary">share</span>
+                <span className="material-symbols-outlined text-[20px] text-ai-primary">
+                  share
+                </span>
                 Share:
               </span>
               <a
@@ -350,7 +365,9 @@ export default async function EnglishArticlePage({ params }: Props) {
         {relatedArticles.length > 0 && (
           <section className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
-              <span className="material-symbols-outlined text-[24px] text-ai-primary">recommend</span>
+              <span className="material-symbols-outlined text-[24px] text-ai-primary">
+                recommend
+              </span>
               Related Articles
             </h2>
             <div className="grid md:grid-cols-3 gap-6">

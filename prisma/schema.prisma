@@ -226,6 +226,18 @@ model ArticleInteraction {
   @@index([ipAddress, articleId, type])
 }
 
+// View tracking with session control (5-minute deduplication)
+model ArticleView {
+  id        String   @id @default(cuid())
+  articleId String
+  sessionId String   // IP + UserAgent hash
+  viewedAt  DateTime @default(now())
+
+  @@index([articleId])
+  @@index([sessionId, articleId, viewedAt])
+  @@index([viewedAt])
+}
+
 model ArticleTranslation {
   id              String   @id @default(cuid())
   articleId       String

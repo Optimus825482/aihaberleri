@@ -19,6 +19,7 @@ import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ArticleImage } from "@/components/ResponsiveImage";
 import { LikeButton } from "@/components/interactions/LikeButton";
 import { StarRating } from "@/components/interactions/StarRating";
+import { ViewTracker } from "@/components/ViewTracker";
 // AI Disclaimer is now embedded in article content footer (see content.service.ts)
 
 interface ArticlePageProps {
@@ -85,11 +86,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  // Increment view count
-  await db.article.update({
-    where: { id: article.id },
-    data: { views: { increment: 1 } },
-  });
+  // View tracking is now handled client-side with ViewTracker component
+  // This prevents duplicate counts on page refresh/bot crawls
 
   // Get related articles (now 6 for sidebar and bottom)
   const relatedArticles = await db.article.findMany({
@@ -133,6 +131,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* View Tracking - Client-side with session control */}
+      <ViewTracker articleId={article.id} />
+
       {/* Analytics Tracking */}
       <AnalyticsTracker articleId={article.id} />
 
@@ -149,8 +150,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <article className="lg:col-span-8">
               {/* Breadcrumb */}
               <nav className="mb-6 text-sm text-ai-text-secondary flex items-center gap-2">
-                <Link href="/" className="hover:text-ai-primary transition-colors flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">home</span>
+                <Link
+                  href="/"
+                  className="hover:text-ai-primary transition-colors flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-[16px]">
+                    home
+                  </span>
                   Ana Sayfa
                 </Link>
                 <span className="text-ai-text-muted">/</span>
@@ -161,7 +167,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   {article.category.name}
                 </Link>
                 <span className="text-ai-text-muted">/</span>
-                <span className="text-white truncate max-w-[200px]">{article.title}</span>
+                <span className="text-white truncate max-w-[200px]">
+                  {article.title}
+                </span>
               </nav>
 
               {/* Title & Meta */}
@@ -172,19 +180,27 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <div className="flex flex-wrap items-center gap-4 text-sm text-ai-text-secondary mb-6 border-b border-ai-surface-border pb-6">
                 {article.publishedAt && (
                   <div className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                    <span className="material-symbols-outlined text-[16px]">
+                      calendar_today
+                    </span>
                     <time dateTime={article.publishedAt.toISOString()}>
                       {formatDate(article.publishedAt)}
                     </time>
                   </div>
                 )}
                 <div className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">schedule</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    schedule
+                  </span>
                   <span>{readingTime} dk okuma</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">visibility</span>
-                  <span>{article.views.toLocaleString('tr-TR')} görüntülenme</span>
+                  <span className="material-symbols-outlined text-[16px]">
+                    visibility
+                  </span>
+                  <span>
+                    {article.views.toLocaleString("tr-TR")} görüntülenme
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 border-l border-ai-surface-border pl-4 ml-2">
                   <LikeButton
@@ -197,16 +213,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 {(article.trendScore ?? 0) > 0 && (
                   <div className="flex items-center gap-1 border-l border-ai-surface-border pl-4 ml-2">
                     <span
-                      className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 font-bold tabular-nums rounded-md border ${(article.trendScore ?? 0) >= 80
-                        ? "bg-green-500/20 text-green-400 border-green-500/30"
+                      className={`inline-flex items-center gap-1 text-xs px-1.5 py-0.5 font-bold tabular-nums rounded-md border ${
+                        (article.trendScore ?? 0) >= 80
+                          ? "bg-green-500/20 text-green-400 border-green-500/30"
                           : (article.trendScore ?? 0) >= 60
-                          ? "bg-lime-500/20 text-lime-400 border-lime-500/30"
+                            ? "bg-lime-500/20 text-lime-400 border-lime-500/30"
                             : (article.trendScore ?? 0) >= 40
-                            ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                            : "bg-orange-500/20 text-orange-400 border-orange-500/30"
-                        }`}
+                              ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                              : "bg-orange-500/20 text-orange-400 border-orange-500/30"
+                      }`}
                     >
-                      <span className="material-symbols-outlined text-[12px]">trending_up</span>
+                      <span className="material-symbols-outlined text-[12px]">
+                        trending_up
+                      </span>
                       {article.trendScore}
                     </span>
                   </div>
@@ -257,7 +276,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               {/* Rating Section */}
               <div className="my-8 p-6 bg-ai-surface-card rounded-xl border border-ai-surface-border">
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2 text-white">
-                  <span className="material-symbols-outlined text-[20px] text-ai-primary">star</span>
+                  <span className="material-symbols-outlined text-[20px] text-ai-primary">
+                    star
+                  </span>
                   Bu haberi nasıl buldunuz?
                 </h3>
                 <StarRating
@@ -293,7 +314,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <div className="sticky top-24 space-y-8">
                 <div className="bg-ai-surface-card rounded-xl p-6 border border-ai-surface-border">
                   <h3 className="font-semibold mb-4 text-white flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[20px] text-ai-primary">share</span>
+                    <span className="material-symbols-outlined text-[20px] text-ai-primary">
+                      share
+                    </span>
                     Paylaş
                   </h3>
                   <ShareButtons
@@ -306,7 +329,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 {/* Trending / Related */}
                 <div className="bg-ai-surface-card rounded-xl p-6 border border-ai-surface-border">
                   <h3 className="font-bold text-lg mb-4 text-white flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[20px] text-ai-primary">recommend</span>
+                    <span className="material-symbols-outlined text-[20px] text-ai-primary">
+                      recommend
+                    </span>
                     İlginizi Çekebilir
                   </h3>
                   <div className="space-y-4">
@@ -358,7 +383,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             <div className="container mx-auto px-4">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[32px] text-ai-primary">auto_stories</span>
+                  <span className="material-symbols-outlined text-[32px] text-ai-primary">
+                    auto_stories
+                  </span>
                   Bunları da Okuyun
                 </h2>
                 <Link
@@ -366,7 +393,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   className="text-ai-primary hover:text-ai-primary-hover font-medium flex items-center gap-1 transition-colors"
                 >
                   {article.category.name} Haberleri
-                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  <span className="material-symbols-outlined text-[18px]">
+                    arrow_forward
+                  </span>
                 </Link>
               </div>
 
@@ -406,7 +435,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                         {related.excerpt}
                       </p>
                       <div className="flex items-center text-xs text-ai-text-muted mt-auto pt-4 border-t border-ai-surface-border">
-                        <span className="material-symbols-outlined text-[14px] mr-1">calendar_today</span>
+                        <span className="material-symbols-outlined text-[14px] mr-1">
+                          calendar_today
+                        </span>
                         {related.publishedAt && (
                           <time dateTime={related.publishedAt.toISOString()}>
                             {formatDate(related.publishedAt)}

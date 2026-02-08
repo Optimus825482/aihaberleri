@@ -748,7 +748,9 @@ export async function fetchAINews(
     });
 
     const recentUrlSet = new Set(
-      recentUrls.map((a) => normalizeUrl(a.sourceUrl)),
+      recentUrls
+        .filter((a) => a.sourceUrl !== null)
+        .map((a) => normalizeUrl(a.sourceUrl!)),
     );
 
     console.log(
