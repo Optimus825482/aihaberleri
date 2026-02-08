@@ -60,31 +60,21 @@ export function HeroSection({
     featuredArticles.length > 0 ? featuredArticles : [defaultArticle];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Prevent hydration mismatch - wait until client-side mount
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
   // Auto-slide every 10 seconds (going backwards: newest to oldest)
   useEffect(() => {
-    if (articles.length <= 1 || isPaused || !isMounted) return;
+    if (articles.length <= 1 || isPaused) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % articles.length);
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [articles.length, isPaused, isMounted]);
+  }, [articles.length, isPaused]);
 
   // Manual navigation
-  const goToSlide = useCallback(
-    (index: number) => {
-      setCurrentIndex(index);
-    },
-    [],
-  );
+  const goToSlide = useCallback((index: number) => {
+    setCurrentIndex(index);
+  }, []);
 
   const goToNext = () => {
     setCurrentIndex((prev) => (prev - 1 + articles.length) % articles.length);
@@ -110,46 +100,6 @@ export function HeroSection({
     return `/category/${currentArticle.category.slug}`;
   };
 
-  // Server-side render: Show skeleton to prevent hydration mismatch
-  if (!isMounted) {
-    const firstArticle = articles[0];
-    return (
-      <div
-        className="group relative mb-8 sm:mb-10 lg:mb-12 min-h-[400px] overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl md:min-h-[500px] lg:min-h-[580px] border border-gray-800/50"
-        suppressHydrationWarning
-      >
-        {/* Static Background for SSR */}
-        <div className="absolute inset-0 z-0">
-          {firstArticle.imageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={firstArticle.imageUrl}
-              alt={firstArticle.title}
-              className="h-full w-full object-cover"
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/70 to-transparent"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-ai-background-dark/40 via-transparent to-transparent"></div>
-          <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
-        </div>
-
-        {/* Static Content for SSR */}
-        <div className="relative z-10 flex flex-col items-start justify-end px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 md:py-16 lg:py-20 lg:min-h-[520px]">
-          <div className="mb-3 sm:mb-4 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-ai-primary/20 to-ai-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-ai-primary/30 shadow-lg shadow-ai-primary/20">
-            <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
-            <span>{t.featured}</span>
-          </div>
-          <h1 className="mb-3 sm:mb-4 max-w-3xl text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white drop-shadow-2xl">
-            {firstArticle.title}
-          </h1>
-          <p className="mb-6 sm:mb-8 max-w-2xl text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 line-clamp-2 sm:line-clamp-3 leading-relaxed">
-            {firstArticle.excerpt}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div
       className="group relative mb-8 sm:mb-10 lg:mb-12 min-h-[400px] overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl md:min-h-[500px] lg:min-h-[580px] border border-gray-800/50"
@@ -162,7 +112,9 @@ export function HeroSection({
           <div
             key={article.id}
             className={`absolute inset-0 transition-all duration-700 ease-in-out ${
-              index === currentIndex ? "opacity-100 scale-100 z-10" : "opacity-0 scale-105 z-0"
+              index === currentIndex
+                ? "opacity-100 scale-100 z-10"
+                : "opacity-0 scale-105 z-0"
             }`}
           >
             {/* Background Image */}
@@ -205,7 +157,9 @@ export function HeroSection({
                 href={getCategoryLink()}
                 className="mb-3 sm:mb-4 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-ai-primary/20 to-ai-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-ai-primary/30 shadow-lg shadow-ai-primary/20 transition-all duration-300 hover:bg-ai-primary/30 hover:shadow-ai-primary/30 hover:scale-105"
               >
-                <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                <span className="material-symbols-outlined text-[14px]">
+                  auto_awesome
+                </span>
                 <span>{t.featured}</span>
               </Link>
 
@@ -231,7 +185,9 @@ export function HeroSection({
                   </span>
                 </Link>
                 <button className="flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-md px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white border border-white/20 shadow-lg transition-all duration-300 hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95">
-                  <span className="material-symbols-outlined text-[18px] sm:text-[20px]">bookmark</span>
+                  <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
+                    bookmark
+                  </span>
                   <span className="hidden sm:inline">{t.save}</span>
                 </button>
               </div>
@@ -267,7 +223,9 @@ export function HeroSection({
             className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 opacity-0 transition-all duration-300 hover:bg-black/60 hover:scale-110 group-hover:opacity-100 shadow-lg"
             aria-label="Previous slide"
           >
-            <span className="material-symbols-outlined text-[20px] sm:text-[24px]">chevron_left</span>
+            <span className="material-symbols-outlined text-[20px] sm:text-[24px]">
+              chevron_left
+            </span>
           </button>
           <button
             onClick={goToPrev}
@@ -275,7 +233,9 @@ export function HeroSection({
             className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 opacity-0 transition-all duration-300 hover:bg-black/60 hover:scale-110 group-hover:opacity-100 shadow-lg"
             aria-label="Next slide"
           >
-            <span className="material-symbols-outlined text-[20px] sm:text-[24px]">chevron_right</span>
+            <span className="material-symbols-outlined text-[20px] sm:text-[24px]">
+              chevron_right
+            </span>
           </button>
         </>
       )}
@@ -296,4 +256,3 @@ export function HeroSection({
     </div>
   );
 }
-
