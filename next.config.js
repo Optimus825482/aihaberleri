@@ -127,6 +127,20 @@ const nextConfig = {
     // This prevents runtime crashes from type mismatches
     ignoreBuildErrors: false,
   },
+  // Headers for iOS auto-linking prevention (hydration fix)
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "format-detection",
+            value: "telephone=no, date=no, email=no, address=no",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

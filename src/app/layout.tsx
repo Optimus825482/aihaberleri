@@ -17,6 +17,7 @@ import { Footer } from "@/components/Footer";
 import { LayoutWrapper } from "@/components/layout-wrapper";
 import { AudioProvider } from "@/context/AudioContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { HydrationErrorBoundary } from "@/components/HydrationErrorBoundary";
 import { VisitorTracker } from "@/components/VisitorTracker";
 import { MontagAds } from "@/components/MontagAds";
 import { Suspense } from "react";
@@ -133,6 +134,12 @@ export default function RootLayout({
   return (
     <html lang="tr" className="dark" suppressHydrationWarning>
       <head>
+        {/* iOS auto-linking prevention (hydration fix) */}
+        <meta
+          name="format-detection"
+          content="telephone=no, date=no, email=no, address=no"
+        />
+
         {/* Preconnect for LCP/FCP optimization */}
         <link rel="preconnect" href="https://images.aihaberleri.org" />
         <link
@@ -148,6 +155,7 @@ export default function RootLayout({
           inter.className,
           "min-h-screen bg-background antialiased",
         )}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"
@@ -155,26 +163,28 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ErrorBoundary>
-            <AudioProvider>
-              {/* Global Page Loading Indicator */}
-              <Suspense fallback={null}>
-                <PageLoadingIndicator />
-              </Suspense>
-              <GoogleTagManagerNoScript />
-              <GoogleAnalytics />
-              <GoogleTagManager />
-              <YandexMetrika />
-              <VisitorTracker />
-              <LayoutWrapper header={<SiteHeader />} footer={<Footer />}>
-                {children}
-              </LayoutWrapper>
-              <ClientProviders />
-              <ServiceWorkerRegistration />
-              <TailwindIndicator />
-              <MontagAds />
-            </AudioProvider>
-          </ErrorBoundary>
+          <HydrationErrorBoundary>
+            <ErrorBoundary>
+              <AudioProvider>
+                {/* Global Page Loading Indicator */}
+                <Suspense fallback={null}>
+                  <PageLoadingIndicator />
+                </Suspense>
+                <GoogleTagManagerNoScript />
+                <GoogleAnalytics />
+                <GoogleTagManager />
+                <YandexMetrika />
+                <VisitorTracker />
+                <LayoutWrapper header={<SiteHeader />} footer={<Footer />}>
+                  {children}
+                </LayoutWrapper>
+                <ClientProviders />
+                <ServiceWorkerRegistration />
+                <TailwindIndicator />
+                <MontagAds />
+              </AudioProvider>
+            </ErrorBoundary>
+          </HydrationErrorBoundary>
         </ThemeProvider>
       </body>
     </html>

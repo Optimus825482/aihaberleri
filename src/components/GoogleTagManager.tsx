@@ -1,11 +1,22 @@
 "use client";
 
 import Script from "next/script";
+import { useEffect, useState } from "react";
 
 export function GoogleTagManager() {
+  const [isClient, setIsClient] = useState(false);
   const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || "GTM-59TBBZLC";
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   if (!GTM_ID) {
+    return null;
+  }
+
+  // Client-side render olana kadar bekleme (hydration fix)
+  if (!isClient) {
     return null;
   }
 

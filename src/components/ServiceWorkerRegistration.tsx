@@ -17,7 +17,12 @@ export function ServiceWorkerRegistration() {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker
         .register("/sw.js")
-        .then(() => console.log("SW registered"))
+        .then((registration) => {
+          console.log("SW registered");
+
+          // Service Worker'ı güncelle (hydration fix için)
+          registration.update();
+        })
         .catch((err) => console.log("SW fail", err));
     }
 

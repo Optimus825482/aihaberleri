@@ -190,6 +190,8 @@ export function generateImageUrl(
  * Fetch image from Pollinations.ai using API endpoint (with auth)
  * This method is preferred when API key is available for better rate limits
  * Includes retry logic with exponential backoff and fallback strategy
+ *
+ * OPTIMIZED: Reduced retry delays, better rate limit handling
  */
 export async function fetchPollinationsImage(
   prompt: string,
@@ -241,7 +243,7 @@ export async function fetchPollinationsImage(
     enhance = true,
   } = options;
 
-  // Retry loop with exponential backoff
+  // Retry loop with exponential backoff (OPTIMIZED: faster retries)
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       // If we have an API key, use the new authenticated endpoint
@@ -307,14 +309,24 @@ export async function fetchPollinationsImage(
             return imageUrl;
           }
 
-          // Retry on 502/503/504
+          // OPTIMIZED: Handle 429 rate limit with exponential backoff
+          if (response.status === 429 && attempt < maxRetries) {
+            const delay = Math.min(2000 * Math.pow(2, attempt - 1), 8000); // Start at 2s, max 8s
+            console.warn(
+              `⚠️ Rate limit (429), retry ${attempt}/${maxRetries} in ${delay}ms`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, delay));
+            continue;
+          }
+
+          // Retry on 502/503/504 (OPTIMIZED: faster retry)
           if (
             (response.status === 502 ||
               response.status === 503 ||
               response.status === 504) &&
             attempt < maxRetries
           ) {
-            const delay = Math.min(2000 * Math.pow(2, attempt), 15000);
+            const delay = Math.min(1500 * Math.pow(2, attempt - 1), 6000); // Start at 1.5s, max 6s
             console.warn(
               `⚠️ Pollinations API ${response.status} (service temporarily down), retry ${attempt}/${maxRetries} in ${delay}ms`,
             );
@@ -353,7 +365,8 @@ export async function fetchPollinationsImage(
         return getFallbackImage();
       }
 
-      const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+      // OPTIMIZED: Faster exponential backoff (start at 1s instead of 2s)
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000); // 1s, 2s, 4s, max 8s
       console.warn(
         `⚠️ Pollinations.ai error, retry ${attempt}/${maxRetries} in ${delay}ms:`,
         error,

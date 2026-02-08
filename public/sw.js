@@ -49,6 +49,21 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // CRITICAL FIX: HTML dosyalarını ASLA cache'leme (hydration mismatch önleme)
+  if (
+    event.request.mode === "navigate" ||
+    event.request.headers.get("accept")?.includes("text/html")
+  ) {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        // Offline fallback (opsiyonel)
+        return caches.match("/");
+      }),
+    );
+    return;
+  }
+
+  // Diğer kaynaklar için cache-first stratejisi
   event.respondWith(
     fetch(event.request)
       .then((response) => {
