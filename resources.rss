@@ -1,0 +1,1839 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>AI For Newsroom — Resources</title>
+    <link>https://aifornewsroom.in/resources</link>
+    <description>Latest learning resources on AI in journalism. Research papers, reports, case studies, tools, and educational materials for newsrooms.</description>
+    <language>en-US</language>
+    <lastBuildDate>2026-02-08T09:22:52.889Z</lastBuildDate>
+    <atom:link href="https://aifornewsroom.in/api/rss/resources?t=1770542572889" rel="self" type="application/rss+xml" />
+    <image>
+      <url>https://aifornewsroom.in/og-image.png</url>
+      <title>AI For Newsroom</title>
+      <link>https://aifornewsroom.in/resources</link>
+    </image>
+    
+      <item>
+        <guid isPermaLink="false">resource-193</guid>
+        <title>Journalism AI Skills</title>
+        <link>https://huggingface.co/spaces/fdaudens/ai-journalism-skills</link>
+        <description>Open-source AI skills and workflows for journalism.
+
+Type: Tools
+
+Title: Hugging Face</description>
+        <pubDate>Fri, 30 Jan 2026 08:38:16 GMT</pubDate>
+        <source url="https://huggingface.co/spaces/fdaudens/ai-journalism-skills">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-191</guid>
+        <title>Coding Agents for Investigative Journalism</title>
+        <link>https://generative-ai-newsroom.com/coding-agents-for-investigative-journalism-8b65bc30f9ea</link>
+        <description>A case study in using AI coding agents to recreate a MuckRock investigation with a human-in-the-loop.
+
+Type: Case study
+
+Title: Generative AI in the Newsrooms</description>
+        <pubDate>Wed, 28 Jan 2026 12:50:29 GMT</pubDate>
+        <source url="https://generative-ai-newsroom.com/coding-agents-for-investigative-journalism-8b65bc30f9ea">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-190</guid>
+        <title>Small models, big results: Achieving superior intent extraction through decomposition</title>
+        <link>https://research.google/blog/small-models-big-results-achieving-superior-intent-extraction-through-decomposition/</link>
+        <description>Two-stage, on-device intent understanding system that uses small multimodal models to infer what a user is trying to accomplish from their interaction trajectory across app or web screens. Instead of asking a large model to interpret the whole session end‑to‑end, it first has a small MLLM summarize each individual interaction in context (what’s on the screen, what the user just did, and a speculation about their goal), then feeds the resulting sequence of summaries into a fine‑tuned small model that produces a single concise intent statement. 
+
+Type: Education
+
+Title: Google</description>
+        <pubDate>Mon, 26 Jan 2026 09:38:51 GMT</pubDate>
+        <source url="https://research.google/blog/small-models-big-results-achieving-superior-intent-extraction-through-decomposition/">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-189</guid>
+        <title>News Revenue Hub uses AI, first-party data to explain donor behaviour</title>
+        <link>https://www.inma.org/blogs/conference/post.cfm/news-revenue-hub-uses-ai-first-party-data-to-explain-donor-behaviour</link>
+        <description>Service from News Revenue Hub that helps small and mid-sized newsrooms turn messy, free-text “reasons for giving” into concrete fundraising insight by combining clean first-party donor data with off‑the‑shelf AI tools.
+
+Type: Case study
+
+Title: INMA</description>
+        <pubDate>Mon, 26 Jan 2026 09:07:44 GMT</pubDate>
+        <source url="https://www.inma.org/blogs/conference/post.cfm/news-revenue-hub-uses-ai-first-party-data-to-explain-donor-behaviour">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-188</guid>
+        <title>On Controlled Change: Generative AI&apos;s Impact on Professional Authority in Journalism</title>
+        <link>https://www.tandfonline.com/doi/full/10.1080/1461670X.2026.2616634</link>
+        <description>Generative AI in journalism is expected to boost output, reshape business models, and personalize news consumption. Since 2022, tools like ChatGPT have raised concerns about reporting, fact-checking, and journalists’ professional authority. This study explores how Dutch journalists integrate AI into daily work through 13 interviews. Using “controlled change” and professional authority as lenses, it shows journalists integrate AI in a supervised way by: (1) creating adaptive guidelines aligned with ethics, (2) testing AI tools for necessity and fit, and (3) critically evaluating their capabilities and limits.
+
+Type: Research
+
+Title: T&amp;F Online</description>
+        <pubDate>Fri, 23 Jan 2026 10:12:39 GMT</pubDate>
+        <source url="https://www.tandfonline.com/doi/full/10.1080/1461670X.2026.2616634">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-187</guid>
+        <title>AI Agents are Rewriting the Web’s Rules of Engagement. Here’s a Way to Fix it</title>
+        <link>https://www.techpolicy.press/ai-agents-are-rewriting-the-webs-rules-of-engagement-heres-a-way-to-fix-it/</link>
+        <description>The increasing use of AI agents on the web is redefining the rules of engagement, posing a significant threat to businesses that rely on traditional web traffic. As AI agents bypass website layouts, ads, and newsletters, referral traffic to publishers is declining, leading to devastating consequences for creators who rely on web traffic to sustain their businesses. To address this issue, a solution is proposed: requiring bots to prove their identity cryptographically, rather than relying on voluntary protocols like robots.txt. New protocols like Web Bot Auth, CAIP-122, and x402 provide verifiable agent identity, enabling websites to make informed authorization decisions and ensuring accountability.
+
+Type: Education
+
+Title: Tech Policy</description>
+        <pubDate>Wed, 21 Jan 2026 09:14:09 GMT</pubDate>
+        <source url="https://www.techpolicy.press/ai-agents-are-rewriting-the-webs-rules-of-engagement-heres-a-way-to-fix-it/">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-186</guid>
+        <title>Using AI to find hidden data sources</title>
+        <link>https://www.digitaldigging.org/p/using-ai-to-find-hidden-data-sources</link>
+        <description>How Henk Van Ess found 56,273 hidden power outages in five minutes
+
+Type: Case study
+
+Title: Digital Digging</description>
+        <pubDate>Wed, 21 Jan 2026 09:08:58 GMT</pubDate>
+        <source url="https://www.digitaldigging.org/p/using-ai-to-find-hidden-data-sources">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-185</guid>
+        <title>Editorial identity and AI</title>
+        <link>https://www.journalismai.info/research/2025-editorial-identity-and-ai-report</link>
+        <description>How AI, algorithms, and social platforms shape newsroom voice and visibility. Based on interviews with BBC, Sky News, and Aftonbladet, the reports concludes AI is used as an assistant for routine tasks like subtitling and drafting, while humans safeguard editorial judgment and brand identity. The core tension: platform-driven uniformity versus maintaining a distinctive voice and audience trust; AI still struggles to create truly viral, emotionally resonant moments.
+
+Type: Research
+
+Title: JournalismAI</description>
+        <pubDate>Mon, 19 Jan 2026 13:47:44 GMT</pubDate>
+        <source url="https://www.journalismai.info/research/2025-editorial-identity-and-ai-report">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-184</guid>
+        <title>AIWhisperer</title>
+        <link>https://github.com/voelspriet/aiwhisperer</link>
+        <description>AIWhisperer by Henk Van Ess shrinks huge PDFs to clean, chunked text and locally replaces sensitive identifiers with placeholders, so you can safely use fast cloud AI and then decode results back on your machine.
+
+Type: Tools
+
+Title: Github</description>
+        <pubDate>Mon, 19 Jan 2026 09:43:59 GMT</pubDate>
+        <source url="https://github.com/voelspriet/aiwhisperer">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-182</guid>
+        <title>Journalism, media, and technology trends and predictions 2026</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/journalism-media-and-technology-trends-and-predictions-2026</link>
+        <description>Industry survey, drawn from a strategic sample of 280 digital leaders from 51 countries and territories
+
+Type: Report
+
+Title: Reuters Institute</description>
+        <pubDate>Mon, 12 Jan 2026 12:28:23 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/journalism-media-and-technology-trends-and-predictions-2026">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-181</guid>
+        <title>AI in Canadian newsrooms: media engaging cautiously</title>
+        <link>https://j-source.ca/ai-in-canadian-newsrooms-media-engaging-cautiously/</link>
+        <description>Canadian journalism’s AI adoption reveals a patchwork of policies and gaps.
+
+Type: Report
+
+Title: J-Source</description>
+        <pubDate>Fri, 09 Jan 2026 09:28:33 GMT</pubDate>
+        <source url="https://j-source.ca/ai-in-canadian-newsrooms-media-engaging-cautiously/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-180</guid>
+        <title>Generative AI and the Journalism Profession - Good or Bad News?</title>
+        <link>https://www.obvia.ca/sites/obvia.ca/files/ressources/202505-obv-pub-gai_journalism_profession-en_0.pdf</link>
+        <description>The aim of this report is to identify early trends in the use of Gen AI and its effects on the profession. Based on a study of 400 Canadian and international journalists, it examines user profiles, changes in users’ work, their perceptions of these tools, and the regulatory challenges they raise.
+
+Type: Research
+
+Title: Obvia</description>
+        <pubDate>Fri, 09 Jan 2026 09:25:50 GMT</pubDate>
+        <source url="https://www.obvia.ca/sites/obvia.ca/files/ressources/202505-obv-pub-gai_journalism_profession-en_0.pdf">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-179</guid>
+        <title>How will AI reshape the news in 2026? Forecasts by 17 experts from around the world</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/news/how-will-ai-reshape-news-2026-forecasts-17-experts-around-world</link>
+        <description>As the news industry enters a crucial year, here are the thoughts of experts from BBC, WSJ, Scroll, NPO, SZ, Semafor, the New York Times and other newsrooms
+
+Type: Case study
+
+Title: Reuters Institute</description>
+        <pubDate>Wed, 07 Jan 2026 08:35:59 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/news/how-will-ai-reshape-news-2026-forecasts-17-experts-around-world">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-178</guid>
+        <title>An Analysis of Global AI Policy Proposals and Their Impacts on Journalism</title>
+        <link>https://cnti.org/reports/journalisms-new-frontier-an-analysis-of-global-ai-policy-proposals-and-their-impacts-on-journalism/</link>
+        <description>CNTI analyzed 188 national and regional AI strategies, laws and policies that collectively cover more than 99 countries to determine how AI regulation is impacting journalism around the world.
+
+Type: Research
+
+Title: CNTI</description>
+        <pubDate>Fri, 19 Dec 2025 15:25:35 GMT</pubDate>
+        <source url="https://cnti.org/reports/journalisms-new-frontier-an-analysis-of-global-ai-policy-proposals-and-their-impacts-on-journalism/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-177</guid>
+        <title>How to optimize for AI Mode</title>
+        <link>https://seranking.com/blog/how-to-optimize-for-ai-mode/</link>
+        <description>Getting cited by AI Mode takes more than just publishing content. Domain authority, content quality, technical optimization, and social media presence all play a role. But how much, and which factors should you prioritize first?
+
+Type: Education
+
+Title: SE Ranking Blog</description>
+        <pubDate>Fri, 19 Dec 2025 14:00:24 GMT</pubDate>
+        <source url="https://seranking.com/blog/how-to-optimize-for-ai-mode/">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-176</guid>
+        <title>Editorial identity and AI</title>
+        <link>https://www.journalismai.info/research/2025-editorial-identity-and-ai-report</link>
+        <description>This research examines how newsrooms in Sweden and the UK are navigating the rise of AI. While outlets are increasingly using automation to streamline social video production, they remain cautious about losing their unique editorial voice.
+
+Type: Research
+
+Title: PolisLSE</description>
+        <pubDate>Thu, 18 Dec 2025 15:04:16 GMT</pubDate>
+        <source url="https://www.journalismai.info/research/2025-editorial-identity-and-ai-report">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-175</guid>
+        <title>The OpenAI Academy for News Organizations</title>
+        <link>https://academy.openai.com/public/clubs/news-organizations-b9osl/overview</link>
+        <description>The OpenAI Academy for News Organizations is a learning community for editorial, business, product, and technology teams. You’ll find practical trainings, case studies, and playbooks designed specifically for news media.
+
+Type: Education
+
+Title: OpenAI</description>
+        <pubDate>Thu, 18 Dec 2025 10:28:27 GMT</pubDate>
+        <source url="https://academy.openai.com/public/clubs/news-organizations-b9osl/overview">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-174</guid>
+        <title>Vibe coding starter guide</title>
+        <link>https://centerforcooperativemedia.org/tools/llmadvisor/vibe-coding.html</link>
+        <description>A practical, step‑by‑step guide for non‑developer newsroom teams to plan, build, and debug small software projects with an AI‑assisted workflow.
+
+Type: Education
+
+Title: Center for Cooperative Media</description>
+        <pubDate>Tue, 16 Dec 2025 08:43:21 GMT</pubDate>
+        <source url="https://centerforcooperativemedia.org/tools/llmadvisor/vibe-coding.html">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-173</guid>
+        <title>Video: Proactive Agents</title>
+        <link>https://www.youtube.com/watch?v=v3u8xc0zLec</link>
+        <description>Learn how asynchronous agents can improve developer workflow by anticipating needs and proactively fixing bugs. Explore the concept of &quot;proactive systems&quot; and their potential impact on software development.
+
+Type: Education
+
+Title: Google Labs</description>
+        <pubDate>Mon, 15 Dec 2025 16:39:12 GMT</pubDate>
+        <source url="https://www.youtube.com/watch?v=v3u8xc0zLec">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-172</guid>
+        <title>The Copilot usage report — 2025</title>
+        <link>https://microsoft.ai/wp-content/uploads/2025/12/What_people_do_with_Copilot-8.pdf</link>
+        <description>Microsoft analyzed 37.5 million deidentified conversations with Microsoft’s Copilot between January and September 2025. Unlike prior analyses of AI usage, the report focused not just on what people do with AI, but on how and when they do it. Authors of the report found that how people use AI depends fundamentally on context and device type. 
+
+Type: Report
+
+Title: Microsoft</description>
+        <pubDate>Thu, 11 Dec 2025 17:40:19 GMT</pubDate>
+        <source url="https://microsoft.ai/wp-content/uploads/2025/12/What_people_do_with_Copilot-8.pdf">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-171</guid>
+        <title>AI Deals and Disputes Tracker</title>
+        <link>https://tow.cjr.org/ai-deals-lawsuits/</link>
+        <description>This tracker monitors developments between news publishers and AI companies—including Lawsuits, Deals, and Grants—based on publicly available information.
+
+Type: Tools
+
+Title: Tow Center</description>
+        <pubDate>Tue, 09 Dec 2025 15:53:30 GMT</pubDate>
+        <source url="https://tow.cjr.org/ai-deals-lawsuits/">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-170</guid>
+        <title>NotebookLM: The Complete Guide</title>
+        <link>https://wondertools.substack.com/p/notebooklm-the-complete-guide</link>
+        <description>How to make the most of 2025&apos;s most valuable free AI tool — by Jeremy Caplan.
+
+Type: Education
+
+Title: WonderTools</description>
+        <pubDate>Tue, 09 Dec 2025 15:52:03 GMT</pubDate>
+        <source url="https://wondertools.substack.com/p/notebooklm-the-complete-guide">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-168</guid>
+        <title>AI Transcription and Translation in Journalism</title>
+        <link>https://cnti.org/article/ai-transcription-and-translation-in-journalism/</link>
+        <description>The Center for News, Technology &amp; Innovation&apos;s AI and Journalism Research Working Group examined 55 studies on AI transcription and translation in journalism. The research suggests that while AI tools can save time, human review is crucial for ensuring accuracy and identifying potential errors. Significant gaps remain for &quot;low-resource&quot; languages, and training data can produce biases in AI outputs. Journalists are actively using AI tools, but experience varying levels of difficulty and accuracy due to geography, resources, and other factors. The working group expects continued progress in building AI tools, but notes the importance of addressing existing challenges and improving training data to ensure accurate and reliable transcription and translation.
+
+Type: Research
+
+Title: CNTI</description>
+        <pubDate>Thu, 04 Dec 2025 14:56:51 GMT</pubDate>
+        <source url="https://cnti.org/article/ai-transcription-and-translation-in-journalism/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-167</guid>
+        <title>What is Data? A Conceptual and Empirical Inquiry of the Facets of Data in News Organizations</title>
+        <link>https://osf.io/preprints/socarxiv/2t6br_v2</link>
+        <description>Journalism studies focus on AI but overlook its foundation: data. This paper maps how data is embedded in news organizations using a Lasswellian lens — subjects, actors, spaces, constructions, and values — illustrated via a composite Patchwork News Outlet. It identifies varying data practices and offers five definitions of data, spanning social artifact, infrastructure, story resource, machine-readable input, and audience/editorial representations.
+
+Type: Research
+
+Title: OSF</description>
+        <pubDate>Thu, 04 Dec 2025 13:12:53 GMT</pubDate>
+        <source url="https://osf.io/preprints/socarxiv/2t6br_v2">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-166</guid>
+        <title>Vibe Coding for Newsrooms</title>
+        <link>https://generative-ai-newsroom.com/vibe-coding-for-newsrooms-6848b17dac99</link>
+        <description>Why being a good project manager matters more than being a savvy coder.
+
+Type: Education
+
+Title: GenAI in the Newsroom</description>
+        <pubDate>Tue, 02 Dec 2025 09:31:30 GMT</pubDate>
+        <source url="https://generative-ai-newsroom.com/vibe-coding-for-newsrooms-6848b17dac99">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-165</guid>
+        <title>AI adoption by UK journalists and their newsrooms: surveying applications, approaches, and attitudes</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/ai-adoption-uk-journalists-and-their-newsrooms-surveying-applications-approaches-and-attitudes#header--7</link>
+        <description>This report is based on a survey conducted between August and November 2024 with a broadly representative sample of 1,004 UK journalists. The survey was primarily focused on whether and how journalists and news organisations use artificial intelligence (AI), and how it relates to other aspects of their work. 
+
+Type: Research
+
+Title: Reuters Institute for the Study of Journalism</description>
+        <pubDate>Thu, 27 Nov 2025 09:08:51 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/ai-adoption-uk-journalists-and-their-newsrooms-surveying-applications-approaches-and-attitudes#header--7">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-164</guid>
+        <title>AI Ethics Principles and Accountability</title>
+        <link>https://www.ai-accountability-review.com/p/ai-ethics-principles-and-accountability</link>
+        <description>To move from high-level values to effective accountability, we still need to bridge the gap between abstractions and quantifiable, data-driven metrics.
+
+Type: Education
+
+Title: AI Accountability Review</description>
+        <pubDate>Wed, 26 Nov 2025 09:23:38 GMT</pubDate>
+        <source url="https://www.ai-accountability-review.com/p/ai-ethics-principles-and-accountability">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-163</guid>
+        <title>Agentic AI in Journalism: The New News Agents</title>
+        <link>https://columncontent.com/agentic-ai-journalism/</link>
+        <description>Case studies, challenges and applications. Explore how AI systems that act independently are reshaping newsrooms — from reporting and editing to ethics, governance, and public trust.
+
+Type: Education
+
+Title: Column</description>
+        <pubDate>Tue, 25 Nov 2025 09:13:58 GMT</pubDate>
+        <source url="https://columncontent.com/agentic-ai-journalism/">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-162</guid>
+        <title>2026 Media &amp; Entertainment Industry Predictions Report</title>
+        <link>https://www.alixpartners.com/insights/media-entertainment-industry-predictions-report-2026/</link>
+        <description>AlixPartners’ annual Media &amp; Entertainment Industry Predictions Report — a strategic foresight tool that distills fast-moving market shifts into actionable insights for executives. It frames the sector’s ongoing creative destruction, tracking how streaming platforms converge into one-stop content hubs, how AI reshapes search from links to agent answers, and how gaming and M&amp;A are accelerated by AI capabilities. Designed to cut through volatility, the report synthesizes disparate trends — short-form to live, YouTube to Netflix, agents to creators — into clear predictions that help media businesses anticipate the next year’s pivots and make confident product, partnership, and investment decisions.
+
+Type: Report
+
+Title: AlixPartners</description>
+        <pubDate>Tue, 25 Nov 2025 09:05:23 GMT</pubDate>
+        <source url="https://www.alixpartners.com/insights/media-entertainment-industry-predictions-report-2026/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-159</guid>
+        <title>Developing an AI usage policy in your news organization</title>
+        <link>https://www.theajp.org/news-insights/insights/developing-an-ai-usage-policy-in-your-news-organization/</link>
+        <description>The American Journalism Project launched its Product &amp; AI Studio in 2023 with support from OpenAI and the Patrick J. McGovern Foundation. The studio explores how generative AI and other emerging technologies can support local news. This summer, it asked AI-grant recipients in our portfolio whether they had published public AI usage policies. This post looks at where those organizations are in that adoption process.
+
+Type: Case study
+
+Title: American Journalism Project</description>
+        <pubDate>Mon, 24 Nov 2025 09:05:20 GMT</pubDate>
+        <source url="https://www.theajp.org/news-insights/insights/developing-an-ai-usage-policy-in-your-news-organization/">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-156</guid>
+        <title>Verifying AI-generated content</title>
+        <link>https://digitalcourses.afp.com/courses/verifying-AI-generated-content</link>
+        <description>In this course you will learn how AI has shaped our information ecosystem, the common types of AI-generated misinformation, the methodology and best practices for verifying AI-generated content.
+
+Type: Education
+
+Title: AFP</description>
+        <pubDate>Fri, 21 Nov 2025 09:00:12 GMT</pubDate>
+        <source url="https://digitalcourses.afp.com/courses/verifying-AI-generated-content">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-155</guid>
+        <title>What AI Headline Testing reveals about audience engagement</title>
+        <link>https://chartbeat.com/resources/general/what-ai-headline-testing-reveals-about-audience-engagement</link>
+        <description>To understand the effect AI is having in newsrooms, Chartbeat analyzed AI-assisted headline tests and non-AI-assisted headline tests from January through June 2025 to see the effects on engagement, click-through rate (CTR), and other metrics.
+
+Type: Education
+
+Title: Chartbeat</description>
+        <pubDate>Thu, 20 Nov 2025 09:52:27 GMT</pubDate>
+        <source url="https://chartbeat.com/resources/general/what-ai-headline-testing-reveals-about-audience-engagement">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-154</guid>
+        <title>An AI Journalistic Code Of Ethics (Proposed By An AI)</title>
+        <link>https://www.mediapost.com/publications/article/410734/an-ai-journalistic-code-of-ethics-proposed-by-an.html</link>
+        <description>AI recommends explicit rules to treat AI outputs as non‑original sources, mandate deepfake and hallucination checks, interrogate algorithmic bias and privacy impacts, ensure final decisions remain human, disclose significant reliance on proprietary AI, and consistently label AI‑assisted content—reinforcing that responsibility for published work remains fully human.
+
+Type: Case study
+
+Title: MediaPost</description>
+        <pubDate>Wed, 19 Nov 2025 08:14:08 GMT</pubDate>
+        <source url="https://www.mediapost.com/publications/article/410734/an-ai-journalistic-code-of-ethics-proposed-by-an.html">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-150</guid>
+        <title>FT transforms subscriber retention through AI and personalisation</title>
+        <link>https://www.inma.org/blogs/ideas/post.cfm/ft-transforms-subscriber-retention-through-ai-and-personalisation</link>
+        <description>The Financial Times has transformed its subscriber retention through AI and personalization, embedding AI into core retention journeys to meet subscribers&apos; evolving needs. By partnering with AI vendor Vector Labs, the FT created a model that recommends personalized products, payment terms, and offers to high-risk trialists before they churn. An eight-week controlled test showed encouraging results, including a 113% increase in save rate for trialists attempting to cancel online and a 165% improvement in trial conversion rate. The FT plans to expand the model&apos;s scope and apply AI strategies to non-trialist segments to support core subscriber retention.
+
+Type: Case study
+
+Title: INMA</description>
+        <pubDate>Tue, 18 Nov 2025 17:18:38 GMT</pubDate>
+        <source url="https://www.inma.org/blogs/ideas/post.cfm/ft-transforms-subscriber-retention-through-ai-and-personalisation">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-143</guid>
+        <title>News consumers cautious and unsure about AI use in news</title>
+        <link>https://localmedia.org/2025/11/news-consumers-cautiously-optimistic-about-ai-use-in-news/</link>
+        <description>New research shows survey respondents want human involvement, guardrails, transparency if AI is used in news reports.
+
+Type: Research
+
+Title: Local Media Assosciation</description>
+        <pubDate>Tue, 18 Nov 2025 09:00:23 GMT</pubDate>
+        <source url="https://localmedia.org/2025/11/news-consumers-cautiously-optimistic-about-ai-use-in-news/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-142</guid>
+        <title>Tricky Trade-Offs on a Transparency Spectrum: How the Financial Times Approaches Transparency about AI Use in News</title>
+        <link>https://osf.io/preprints/socarxiv/dvq76_v1</link>
+        <description>As news organisations adopt artificial intelligence (AI), they face growing pressure to be transparent about when and how it is used – yet practical approaches remain uneven. This paper examines AI transparency through an in-depth case study of the Financial Times (FT). 
+
+Type: Research
+
+Title: FT</description>
+        <pubDate>Tue, 18 Nov 2025 08:54:40 GMT</pubDate>
+        <source url="https://osf.io/preprints/socarxiv/dvq76_v1">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-141</guid>
+        <title>How to Find Hidden APIs Using AI</title>
+        <link>https://ruibarros.me/blog/finding-hidden-apis-using-ai</link>
+        <description>Discover how AI can find and document hidden APIs in government portals and data websites in minutes instead of hours. Step-by-step tutorial using Chrome DevTools MCP with real examples.
+
+Type: Education
+
+Title: Rui Barros</description>
+        <pubDate>Sat, 15 Nov 2025 07:57:48 GMT</pubDate>
+        <source url="https://ruibarros.me/blog/finding-hidden-apis-using-ai">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-140</guid>
+        <title>Technology &amp; Media Outlook 2026</title>
+        <link>https://www.activate.com/insights</link>
+        <description>Activate’s Technology &amp; Media Outlook is a research that distills where growth will emerge across technology, media, entertainment, eCommerce, gaming, video, audio, sports, and enterprise, turning disruption into actionable strategy. Grounded in exclusive consumer data and rigorous analysis, the 2026 Outlook maps inflection points like AI Search, Spatial Computing, and the Live Experience Economy, alongside chapters on Super Users, age identity, and new marketer data roadmaps—giving leaders a clear, evidence-backed path to “own the future” before it arrives.
+
+Type: Research
+
+Title: Activate</description>
+        <pubDate>Mon, 10 Nov 2025 10:35:41 GMT</pubDate>
+        <source url="https://www.activate.com/insights">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-139</guid>
+        <title>AI-Enhanced OSINT: A Practical Guide for Illicit Trade Intelligence</title>
+        <link>https://github.com/atlas-bear/osint-ai-guide</link>
+        <description>The guide presents a pragmatic OSINT “stack” centered on secure, privacy-preserving AI use: prioritize local models (Ollama with Mistral, Llama) for sensitive work; use Claude with Advanced Research and MCP to orchestrate agentic, multi‑source investigations with verifiable citations; integrate traditional tools (Maltego, Shodan, SpiderFoot) and geospatial platforms (QGIS) to map entities, networks, and locations; and enforce strict OPSEC—local storage, encryption, persona separation, VPN/Tor—especially given the claimed court‑ordered ChatGPT data retention risk. It’s a tactical playbook to blend human analysis with AI while keeping control of data and minimizing exposure.
+
+Type: Education
+
+Title: Atlas Bear / Github</description>
+        <pubDate>Mon, 10 Nov 2025 10:32:39 GMT</pubDate>
+        <source url="https://github.com/atlas-bear/osint-ai-guide">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-134</guid>
+        <title>ChatGPT as a news recommender system: Measuring source types and diversity across different interfaces</title>
+        <link>https://osf.io/preprints/socarxiv/wjzp3_v3</link>
+        <description>This paper investigates how well ChatGPT promotes diverse news sources in response to news-seeking prompts, with a focus on whether publishers holding licensing deals receive systematic preference. Using a quantitative content analysis comparing outputs from the web interface and the API, the authors find that, although ChatGPT cites a variety of outlets, overall exposure diversity is limited and context-sensitive. The web UI skews toward mainstream popularity and includes more licensed publishers, while the API leans toward encyclopedic and lesser-known sources—revealing structural differences in how each interface curates information.
+
+Type: Research
+
+Title: Universität Hamburg </description>
+        <pubDate>Thu, 06 Nov 2025 10:46:46 GMT</pubDate>
+        <source url="https://osf.io/preprints/socarxiv/wjzp3_v3">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-133</guid>
+        <title>Report: That Violates My Policies</title>
+        <link>https://futurefreespeech.org/wp-content/uploads/2025/10/AI-Report-2025-Full-Report.pdf</link>
+        <description>The Future of Free Speech’s 2025 report tool is a comparative auditing framework that evaluates how generative AI models and national laws shape freedom of expression, combining policy analysis with large-scale prompt testing to score eight leading AI systems and six jurisdictions on openness, transparency, and rights alignment; it aggregates company terms, training disclosures, moderation behaviors, and practical outputs across 512 controversial-but-lawful prompts, then ranks models (e.g., Grok 4 highest, Qwen3-235B-A22B lowest) and countries (e.g., United States most protective, China least) to offer an actionable benchmark, diagnostic breakdowns, and guidelines for policymakers and AI developers to embed necessity, proportionality, and transparency into AI governance.
+
+Type: Report
+
+Title: The Future of Free Speech</description>
+        <pubDate>Mon, 03 Nov 2025 11:55:30 GMT</pubDate>
+        <source url="https://futurefreespeech.org/wp-content/uploads/2025/10/AI-Report-2025-Full-Report.pdf">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-132</guid>
+        <title>alt+Ignite: Fuel Curiosity, Elevate Your AI Literacy</title>
+        <link>https://www.poynter.org/mediawise/programs/altignite-fuel-curiosity-elevate-your-ai-literacy/</link>
+        <description>Alt+Ignite: Fuel Curiosity, Elevate Your AI Literacy is an AI literacy initiative from MediaWise offering everything you need to level up your AI know-how. It is designed for educators, students, library workers, civic leaders, journalists and anyone who encounters AI in their daily lives (and that means everyone!).
+
+Type: Education
+
+Title: Poynter</description>
+        <pubDate>Tue, 28 Oct 2025 11:35:05 GMT</pubDate>
+        <source url="https://www.poynter.org/mediawise/programs/altignite-fuel-curiosity-elevate-your-ai-literacy/">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-131</guid>
+        <title>Signs of AI writing</title>
+        <link>https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing</link>
+        <description>This is a list of writing and formatting conventions typical of AI chatbots such as ChatGPT, with real examples taken from Wikipedia articles and drafts. It is a field guide to help detect undisclosed AI-generated content on Wikipedia. 
+
+Type: Tools
+
+Title: Wikipedia</description>
+        <pubDate>Tue, 28 Oct 2025 10:26:57 GMT</pubDate>
+        <source url="https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-130</guid>
+        <title>Apertus</title>
+        <link>https://publicai.co/</link>
+        <description>Apertus is a fully open-source, multilingual foundation language model released by the Swiss AI Initiative (EPFL, ETH Zurich, CSCS) in 8B and 70B parameter versions under Apache 2.0. Built for transparency and public service, it offers end-to-end openness—training architecture, datasets, recipes, weights with checkpoints, source code, logs, and deployment guides—making it fully inspectable and modifiable. Trained on 15 trillion tokens across 1500+ languages with 40% non‑English data, it’s research‑grade and industry‑ready for translation, summarization, chatbots, tutoring, and commercial use, and is globally accessible via the Public AI Inference Utility with substantial GPU capacity allocated for public inference.
+
+Type: Tools
+
+Title: Public AI Inference Utility</description>
+        <pubDate>Tue, 28 Oct 2025 10:20:34 GMT</pubDate>
+        <source url="https://publicai.co/">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-129</guid>
+        <title>AI Tools Radar For Media</title>
+        <link>https://radar.ircai.org/en/tools/?audience=media</link>
+        <description>IRCAI’s AI Tools Radar, a curated repository mapping AI tools relevant to global development and research. It organizes entries by function and impact, helping practitioners quickly discover credible solutions while noting that all ideas and opinions are those of the authors, not endorsements by UNESCO or IRCAI. The Radar’s neutral presentation emphasizes transparency about legal status and boundaries, focusing purely on practical utility and informed access to the evolving AI landscape.
+
+Type: Tools
+
+Title: IRCAI</description>
+        <pubDate>Fri, 24 Oct 2025 08:38:35 GMT</pubDate>
+        <source url="https://radar.ircai.org/en/tools/?audience=media">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-128</guid>
+        <title>The Journalism Benchmark Cookbook: A Template for Benchmarking LLMs in Newsrooms</title>
+        <link>https://generative-ai-newsroom.com/the-journalism-benchmark-cookbook-a-template-for-benchmarking-llms-in-newsrooms-404b74f05cfd</link>
+        <description>We prototyped a benchmark evaluating the task of information extraction in journalism. Our goal was to make it easier for journalists to build similar types of evaluations of GenAI in the newsroom by designing the benchmark as a cookbook that others can edit and adapt.
+
+Type: Tools
+
+Title: GenAI In The Newsroom</description>
+        <pubDate>Thu, 23 Oct 2025 08:44:45 GMT</pubDate>
+        <source url="https://generative-ai-newsroom.com/the-journalism-benchmark-cookbook-a-template-for-benchmarking-llms-in-newsrooms-404b74f05cfd">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-127</guid>
+        <title>News Integrity in AI Assistants TOOLKIT</title>
+        <link>https://www.ebu.ch/files/live/sites/ebu/files/Publications/MIS/open/EBU-MIS-BBC_News_Integrity_in_AI_Assistants_Toolkit_2025.pdf</link>
+        <description>This Toolkit is a companion resource to the BBC/EBU report News&#10;Integrity in AI Assistants: An International PSM Study, evaluating&#10;how AI assistants answer questions about the news. In June-July&#10;2025, Research participants from 22 Public Service Media (PSM)&#10;organizations analysed and evaluated more than 3,000 AI assistant&#10;responses to news-related questions, identifying hundreds of examples&#10;of how assistants get things wrong. 
+
+Type: Tools
+
+Title: The European Broadcasting Union</description>
+        <pubDate>Thu, 23 Oct 2025 07:43:02 GMT</pubDate>
+        <source url="https://www.ebu.ch/files/live/sites/ebu/files/Publications/MIS/open/EBU-MIS-BBC_News_Integrity_in_AI_Assistants_Toolkit_2025.pdf">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-126</guid>
+        <title>AI guide for local news editorial teams</title>
+        <link>https://www.theajp.org/news-insights/insights/introducing-a-new-ai-guide-for-local-news-editorial-teams/</link>
+        <description>Quarterly-updated guide will help local news outlets navigate AI tools for local reporting, detailing what each tool does, how it’s used, who’s using it, and what makes it unique.
+
+Type: Tools
+
+Title: American Journalism Project</description>
+        <pubDate>Wed, 22 Oct 2025 12:13:27 GMT</pubDate>
+        <source url="https://www.theajp.org/news-insights/insights/introducing-a-new-ai-guide-for-local-news-editorial-teams/">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-125</guid>
+        <title>News Integrity in AI Assistants</title>
+        <link>https://www.ebu.ch/research/open/report/news-integrity-in-ai-assistants</link>
+        <description>AI misrepresents news across languages and platforms; ~50% of answers had major problems, ~33% had serious sourcing issues, and ~20% had major accuracy errors (hallucinations/outdated info).
+
+Type: Research
+
+Title: The European Broadcasting Union</description>
+        <pubDate>Wed, 22 Oct 2025 08:56:13 GMT</pubDate>
+        <source url="https://www.ebu.ch/research/open/report/news-integrity-in-ai-assistants">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-124</guid>
+        <title>The journalist&apos;s AI assistant for data collection, monitoring, investigation and verification</title>
+        <link>https://cojournalist.ai/</link>
+        <description>CoJournalist consolidates technical investigative tools into an accessible interface, addressing the resource constraints facing small newsrooms and independent journalists to help expand the coverage of local news. Through natural language commands, reporters gain access to capabilities typically reserved for well-funded organizations.
+
+Type: Tools
+
+Title: CoJournalist</description>
+        <pubDate>Mon, 20 Oct 2025 10:02:30 GMT</pubDate>
+        <source url="https://cojournalist.ai/">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-123</guid>
+        <title>The News Atom: a metadata blueprint for journalism in the age of AI</title>
+        <link>https://newsatom.xyz/assets/The%20News%20Atom_%20A%20Metadata%20Blueprint%20for%20Journalism%20in%20the%20Age%20of%20AI%20by%20Sannuta%20Raghu.pdf</link>
+        <description>The News Atom v1.0 is a metadata blueprint that encodes the core “knowledge signals” of journalism—such as sourcing, verification, editorial caution, and context—at the sentence level in a machine‑readable format, defining the smallest portable unit of a news story so newsroom systems and external AI can reliably recognize, verify, retrieve, and reuse journalistic information.
+
+Type: Tools
+
+Title:  Sannuta Raghu / Reuters Institute</description>
+        <pubDate>Mon, 20 Oct 2025 10:00:22 GMT</pubDate>
+        <source url="https://newsatom.xyz/assets/The%20News%20Atom_%20A%20Metadata%20Blueprint%20for%20Journalism%20in%20the%20Age%20of%20AI%20by%20Sannuta%20Raghu.pdf">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-122</guid>
+        <title>How The Philadelphia Inquirer is Teaching Journalists the Limits of GenAI</title>
+        <link>https://generative-ai-newsroom.com/how-the-philadelphia-inquirer-is-teaching-journalists-the-limits-of-genai-9f74146f91c3</link>
+        <description>Dewey is the Philadelphia Inquirer’s internal newsroom archive assistant, a generative AI chatbot. The team pairs Dewey’s use with mandatory AI training that teaches probabilistic reasoning, embeddings, and verification habits so staff apply it for brainstorming and structure while validating outputs against authoritative sources.
+
+Type: Case study
+
+Title: The Generative AI in the Newsroom</description>
+        <pubDate>Mon, 20 Oct 2025 09:55:17 GMT</pubDate>
+        <source url="https://generative-ai-newsroom.com/how-the-philadelphia-inquirer-is-teaching-journalists-the-limits-of-genai-9f74146f91c3">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-117</guid>
+        <title>More articles are now created by AI than humans</title>
+        <link>https://graphite.io/five-percent/more-articles-are-now-created-by-ai-than-humans</link>
+        <description>AI‑generated articles now outnumber human‑written ones, crossing that line in November 2024. Using 65k English articles from Common Crawl, Graphite labels pieces as AI when over half of their 500‑word chunks are flagged by Surfer’s AI detector. The detector shows a ~4.2% false positive rate on pre‑ChatGPT human articles and 0.6% false negatives on GPT‑4o outputs. Growth surged after late 2022 but has plateaued since May 2024, and despite their prevalence, these AI articles mostly don’t surface in Google or ChatGPT. Limits include excluding AI‑assisted human edits and testing false negatives only on GPT‑4o.
+
+Type: Research
+
+Title: Graphite.io</description>
+        <pubDate>Fri, 17 Oct 2025 09:20:59 GMT</pubDate>
+        <source url="https://graphite.io/five-percent/more-articles-are-now-created-by-ai-than-humans">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-116</guid>
+        <title>Paris Charter on AI and Journalism</title>
+        <link>https://rsf.org/en/rsf-and-16-partners-unveil-paris-charter-ai-and-journalism</link>
+        <description>The first of its kind, the Paris Charter on AI and Journalism defines ethics and principles that journalists, newsrooms and media outlets around the world will be able to appropriate and apply in their work with artificial intelligence. It was created by a commission initiated by Reporters Without Borders (RSF) and chaired by journalist and Nobel Peace Prize laureate Maria Ressa.
+
+Type: Education
+
+Title: RSF</description>
+        <pubDate>Thu, 16 Oct 2025 12:52:31 GMT</pubDate>
+        <source url="https://rsf.org/en/rsf-and-16-partners-unveil-paris-charter-ai-and-journalism">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-115</guid>
+        <title>AI in Journalism Futures 2025</title>
+        <link>https://aijf2025.tinius.com/</link>
+        <description>This report represents an experiment: what if we could compress a thousand voices, a year-long process, and human-scale deliberation into an AI-agent made report? What might we learn about both the futures being explored, and the tools we used to explore them?
+
+Type: Report
+
+Title: The Tinius Trust</description>
+        <pubDate>Thu, 16 Oct 2025 08:07:39 GMT</pubDate>
+        <source url="https://aijf2025.tinius.com/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-114</guid>
+        <title>Navigating the responsible AI landscape: unraveling the principles-to-practices gap of transparency and explainability at the BBC</title>
+        <link>https://www.tandfonline.com/doi/full/10.1080/1369118X.2025.2553382#abstract</link>
+        <description>For this study, 22 expert interviews were conducted in 2023 to investigate the mechanisms shaping the principles-to-practices gap vis-a-vis responsible AI. Findings describe a discernible gap between stated principles and actual practices, specifically revealing complexities in ownership structures. While principles of transparency and explainability are articulated at an organizational level in the form of the BBC AI principles , their interpretation and execution vary across different departments and specific stakeholders.
+
+Type: Research
+
+Title: AI, Media and Democracy Lab</description>
+        <pubDate>Tue, 14 Oct 2025 12:07:01 GMT</pubDate>
+        <source url="https://www.tandfonline.com/doi/full/10.1080/1369118X.2025.2553382#abstract">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-112</guid>
+        <title>How to ask AI to perform data analysis</title>
+        <link>https://onlinejournalismblog.com/2025/09/22/how-to-ask-ai-to-perform-data-analysis/</link>
+        <description>To effectively ask AI to perform data analysis, start by uploading a dataset in CSV format to avoid limitations and ensure the AI tool knows which sheet to analyze. Choose a suitable model for the task, considering factors like power, speed, and environmental impact. When crafting prompts, be specific about columns and functions to reduce the risk of misinterpretation, and ask for multiple figures or rows to provide context. Additionally, utilize prompt design techniques such as meta-prompting, role prompting, and recursive prompting to avoid gullibility and ensure more accurate results. By following these tips, you can harness the potential of large language models for data analysis while minimizing risks.
+
+Type: Education
+
+Title: Online Journalism Blog</description>
+        <pubDate>Mon, 22 Sep 2025 16:02:16 GMT</pubDate>
+        <source url="https://onlinejournalismblog.com/2025/09/22/how-to-ask-ai-to-perform-data-analysis/">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-101</guid>
+        <title>Technological Hype and AI in Journalism: Five Functions and Why They Matter</title>
+        <link>https://www.tandfonline.com/doi/full/10.1080/21670811.2025.2557994</link>
+        <description>A conceptual tool—a two-by-two matrix—that helps analyze the impact of technological hype, especially around AI, in journalism. The matrix examines hype’s effects (symbolic vs. material) and their site (inside journalism vs. among the wider public), revealing five key functions: it directs attention and resources, sets organizational priorities, signals innovation, mobilizes partnerships and policies, and prompts journalists to reflect on their roles and values. 
+
+Type: Research
+
+Title: Taylor &amp; Francis</description>
+        <pubDate>Tue, 16 Sep 2025 09:21:01 GMT</pubDate>
+        <source url="https://www.tandfonline.com/doi/full/10.1080/21670811.2025.2557994">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-100</guid>
+        <title>Dewey</title>
+        <link>https://github.com/Lenfest-Institute/ai-collab-dewey-ai?tab=readme-ov-file</link>
+        <description>Dewey is an AI-powered librarian designed to help newsrooms easily search and access their archives by leveraging large language models (LLMs) to provide cited, natural language responses.
+
+Type: Tools
+
+Title: Github</description>
+        <pubDate>Tue, 16 Sep 2025 08:59:34 GMT</pubDate>
+        <source url="https://github.com/Lenfest-Institute/ai-collab-dewey-ai?tab=readme-ov-file">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-99</guid>
+        <title>AI False Information Rate Nearly Doubles in One Year</title>
+        <link>https://www.newsguardtech.com/ai-monitor/august-2025-ai-false-claim-monitor/</link>
+        <description>NewsGuard’s audit of the 10 leading generative AI tools and their propensity to repeat false claims on topics in the news reveals the rate of publishing false information nearly doubled — now providing false claims to news prompts more than one third of the time.
+
+Type: Research
+
+Title: NewsGuard</description>
+        <pubDate>Tue, 16 Sep 2025 08:50:50 GMT</pubDate>
+        <source url="https://www.newsguardtech.com/ai-monitor/august-2025-ai-false-claim-monitor/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-98</guid>
+        <title>ONA25 Custom GPTs In Newsrooms</title>
+        <link>https://media.licdn.com/dms/document/media/v2/D4D1FAQEz0xX9d_8qOg/feedshare-document-pdf-analyzed/B4DZlAIr7DJAAY-/0/1757717648522?e=1758758400&amp;v=beta&amp;t=cAyHkCZu3Iy8lVUfS3bDaU3ZqJrQ10R4QHmyS43a03w</link>
+        <description>Custom GPTs are specialized AI agents built for newsroom tasks, enabling journalists to automate and enhance editorial workflows. These tools can analyze data, suggest improvements, generate fresh news angles, and provide feedback on story framing and alignment, all tailored to specific editorial guidelines.
+
+Type: Case study
+
+Title: ONA25</description>
+        <pubDate>Tue, 16 Sep 2025 08:48:53 GMT</pubDate>
+        <source url="https://media.licdn.com/dms/document/media/v2/D4D1FAQEz0xX9d_8qOg/feedshare-document-pdf-analyzed/B4DZlAIr7DJAAY-/0/1757717648522?e=1758758400&amp;v=beta&amp;t=cAyHkCZu3Iy8lVUfS3bDaU3ZqJrQ10R4QHmyS43a03w">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-97</guid>
+        <title>How AI Search Really Works: Findings from Our AI Visibility Study</title>
+        <link>https://www.semrush.com/blog/ai-search-visibility-study-findings/</link>
+        <description>The findings reveal that AI search contradicts traditional SEO wisdom about authority, expertise, and source credibility. For example, Reddit outranks financial experts 176% of the time when ChatGPT answers finance questions, despite YMYL guidelines prioritizing authoritative sources.
+
+Type: Research
+
+Title: Semrush</description>
+        <pubDate>Fri, 12 Sep 2025 09:03:43 GMT</pubDate>
+        <source url="https://www.semrush.com/blog/ai-search-visibility-study-findings/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-96</guid>
+        <title>TollBit State of the Bots - Q2 2025</title>
+        <link>https://tollbit.com/bots/25q2/</link>
+        <description>This TollBit State of the Bots is the third quarterly report that tracks overall trends in the scraping habits of the AI industry. Through unique position, TollBit has created this comprehensive report across its publisher network to give an evolving view into how AI companies access content, revealing emerging patterns, behaviors, and shifts each quarter.
+
+Type: Report
+
+Title: TollBit</description>
+        <pubDate>Thu, 11 Sep 2025 12:06:20 GMT</pubDate>
+        <source url="https://tollbit.com/bots/25q2/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-95</guid>
+        <title>WAN-IFRA’s 6th AI report: Publishers’ perspective on the AI value equation</title>
+        <link>https://wan-ifra.org/2025/09/wan-ifras-6th-ai-report-publishers-perspective-on-the-ai-value-equation/</link>
+        <description>AI is no longer just an experiment for publishers – it is becoming part of everyday operations. WAN-IFRA’s 6th AI report shows where the technology is delivering measurable value, and where its impact remains harder to define.
+
+Type: Report
+
+Title: WAN-IFRA</description>
+        <pubDate>Thu, 11 Sep 2025 11:13:08 GMT</pubDate>
+        <source url="https://wan-ifra.org/2025/09/wan-ifras-6th-ai-report-publishers-perspective-on-the-ai-value-equation/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-94</guid>
+        <title>Cloudflare Radar</title>
+        <link>https://radar.cloudflare.com/ai-insights</link>
+        <description>Detailed breakdown of how, where and when AI bots trying to parse content over the Web.
+
+Type: Tools
+
+Title: Cloudflare</description>
+        <pubDate>Mon, 01 Sep 2025 14:57:14 GMT</pubDate>
+        <source url="https://radar.cloudflare.com/ai-insights">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-93</guid>
+        <title>AI Ethics Guidebook</title>
+        <link>https://docs.google.com/document/d/e/2PACX-1vSSITy7VXWa0_wh61UoyZij4CX__F4tGhwiSDnAM7rObE2-Cq9v-aE56ar-WIgGAFC_oy8R9h51j3mj/pub</link>
+        <description>Every news organization needs an artificial intelligence policy. The following is designed to be a starting point for newsrooms as they explore various uses for AI in their work.
+
+Type: Tools
+
+Title: Poynter</description>
+        <pubDate>Wed, 20 Aug 2025 17:56:08 GMT</pubDate>
+        <source url="https://docs.google.com/document/d/e/2PACX-1vSSITy7VXWa0_wh61UoyZij4CX__F4tGhwiSDnAM7rObE2-Cq9v-aE56ar-WIgGAFC_oy8R9h51j3mj/pub">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-92</guid>
+        <title>Trusting News AI Worksheet: Create an AI use policy</title>
+        <link>https://docs.google.com/document/d/13JNNz1AJGGTx6NyuVPCqL8x1lXWZ9ghdWVqMxqHDdc4/edit?tab=t.0</link>
+        <description>Use this worksheet to help draft a clear, trustworthy AI policy you can share with your audience. At Trusting News, we believe your AI policy should be a living document that changes as your use of the technology evolves.
+
+Type: Tools
+
+Title: Trusting News</description>
+        <pubDate>Wed, 20 Aug 2025 17:54:21 GMT</pubDate>
+        <source url="https://docs.google.com/document/d/13JNNz1AJGGTx6NyuVPCqL8x1lXWZ9ghdWVqMxqHDdc4/edit?tab=t.0">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-91</guid>
+        <title>The State of AI in the Newsroom</title>
+        <link>https://info.arcxp.com/the-state-of-ai-in-the-newsroom</link>
+        <description>Framing the Impact of AI Beyond. Workflow Automation in 2025
+
+Type: Report
+
+Title: Digiday &amp; ArcXP</description>
+        <pubDate>Wed, 13 Aug 2025 11:34:28 GMT</pubDate>
+        <source url="https://info.arcxp.com/the-state-of-ai-in-the-newsroom">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-90</guid>
+        <title>What Should We Say? New Research on AI Disclosures in Journalism</title>
+        <link>https://journalists.org/resources/what-should-we-say-new-research-on-ai-disclosures-in-journalism/</link>
+        <description>In this session, Trusting News shared their latest research on transparency around AI use in journalism. This session is perfect for anyone navigating AI use in their newsroom or looking to build clarity and credibility with their community.
+
+Type: Case study
+
+Title: ONA, Trusting News</description>
+        <pubDate>Tue, 12 Aug 2025 11:24:45 GMT</pubDate>
+        <source url="https://journalists.org/resources/what-should-we-say-new-research-on-ai-disclosures-in-journalism/">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-89</guid>
+        <title>Three steps to an AI-ready newsroom: A practical guide</title>
+        <link>https://www.trust.org/resource/ai-policies-newsroom-guide/</link>
+        <description>This practical starter guide is designed to help newsrooms identify ethical risks in their AI applications and take action to mitigate these.
+
+Type: Education
+
+Title: Thomson Reuters Foundation</description>
+        <pubDate>Mon, 11 Aug 2025 11:31:19 GMT</pubDate>
+        <source url="https://www.trust.org/resource/ai-policies-newsroom-guide/">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-88</guid>
+        <title>GPT-5 prompting guide</title>
+        <link>https://cookbook.openai.com/examples/gpt-5/gpt-5_prompting_guide</link>
+        <description>a comprehensive guide to maximizing the performance of GPT-5 through effective prompting strategies. It outlines methods for controlling agentic behavior, optimizing coding workflows, and ensuring precise instruction adherence. Real-world examples, including insights from Cursor’s integration, illustrate how structured prompts and clear instructions can significantly improve output quality and efficiency in both agentic and coding contexts.
+
+Type: Education
+
+Title: OpenAI</description>
+        <pubDate>Mon, 11 Aug 2025 11:16:24 GMT</pubDate>
+        <source url="https://cookbook.openai.com/examples/gpt-5/gpt-5_prompting_guide">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-87</guid>
+        <title>Image Whisperer</title>
+        <link>https://www.imagewhisperer.org/</link>
+        <description>This experimental platform by Henk van Ess helps verify if images are authentic or AI-generated - increasingly important as synthetic media becomes more sophisticated.
+
+Type: Tools</description>
+        <pubDate>Mon, 11 Aug 2025 11:07:33 GMT</pubDate>
+        <source url="https://www.imagewhisperer.org/">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-86</guid>
+        <title>New research: How AI disclosures in news help — and also hurt — trust with audiences</title>
+        <link>https://trustingnews.org/new-research-how-ai-disclosures-in-news-help-and-also-hurt-trust-with-audiences/</link>
+        <description>News consumers are skeptical, uncomfortable and worried about AI, and many people bring those feelings into how they view its use in journalism. This is a broad but striking takeaway from new research from Trusting News.
+
+Type: Research
+
+Title: Trusting News</description>
+        <pubDate>Tue, 05 Aug 2025 12:37:38 GMT</pubDate>
+        <source url="https://trustingnews.org/new-research-how-ai-disclosures-in-news-help-and-also-hurt-trust-with-audiences/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-85</guid>
+        <title>Convert long audio in 5 minutes</title>
+        <link>https://www.digitaldigging.org/p/full-interview-analysis-in-5-minutes</link>
+        <description>Fast, efficient workflow for turning hour-long audio interviews into comprehensive written analyses in just five minutes. By sequentially using four specialized AI tools—audio optimization, Google’s NotebookLM for transcription, Claude Pro for semantic analysis, and Gemini 2.5 Flash for narrative writing—the process streamlines everything from file preparation to final story, saving time without sacrificing depth or accuracy.
+
+Type: Tools
+
+Title: Digital Digging</description>
+        <pubDate>Thu, 31 Jul 2025 11:45:12 GMT</pubDate>
+        <source url="https://www.digitaldigging.org/p/full-interview-analysis-in-5-minutes">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-84</guid>
+        <title>How I use AI</title>
+        <link>https://labs.davidbauer.ch/how-i-use-ai/</link>
+        <description>An ever growing and chronically incomplete list of ways in which David Bauer uses AI for work, in personal life, and for fun. Copy and steal whatever you find useful.
+
+Type: Tools
+
+Title: David Bauer&apos;s Newsletter</description>
+        <pubDate>Wed, 30 Jul 2025 15:52:34 GMT</pubDate>
+        <source url="https://labs.davidbauer.ch/how-i-use-ai/">Tools</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-83</guid>
+        <title>No Turning Back: AI’s Growing Role in News</title>
+        <link>https://www.aspendigital.org/wp-content/uploads/2025/06/Aspen-Digital_No-Turning-Back_June-2025.pdf</link>
+        <description>Insights from 80+ UK and European media leaders to explore how artificial intelligence is reshaping journalism. The verdict? AI is already embedded in newsroom routines—but the real disruption is just beginning.
+
+Type: Report
+
+Title: Aspen Digital</description>
+        <pubDate>Tue, 29 Jul 2025 15:52:42 GMT</pubDate>
+        <source url="https://www.aspendigital.org/wp-content/uploads/2025/06/Aspen-Digital_No-Turning-Back_June-2025.pdf">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-82</guid>
+        <title>Infringing AI: Liability for AI-generated outputs under International, EU, and UK copyright law</title>
+        <link>https://www.cambridge.org/core/journals/european-journal-of-risk-regulation/article/infringing-ai-liability-for-aigenerated-outputs-under-international-eu-and-uk-copyright-law/C568C6B717E9CFC45FB52E58E54B6BEC#article</link>
+        <description>The analysis of liability aspects facing Artificial Intelligence (‘AI’)-generated outputs under copyright and related rights has been overlooked compared to other issues connected to the development and use of AI. This study fills this gap by exploring pertinent questions under international, EU and UK law. 
+
+Type: Analysis
+
+Title: Cambridge University Press</description>
+        <pubDate>Wed, 23 Jul 2025 10:44:04 GMT</pubDate>
+        <source url="https://www.cambridge.org/core/journals/european-journal-of-risk-regulation/article/infringing-ai-liability-for-aigenerated-outputs-under-international-eu-and-uk-copyright-law/C568C6B717E9CFC45FB52E58E54B6BEC#article">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-81</guid>
+        <title>Google users are less likely to click on links when an AI summary appears in the results</title>
+        <link>https://www.pewresearch.org/short-reads/2025/07/22/google-users-are-less-likely-to-click-on-links-when-an-ai-summary-appears-in-the-results/</link>
+        <description>Last year, Google introduced “AI Overviews,” a feature that displays an artificial intelligence-generated result summary at the top of many Google search pages. This feature is available to millions of Google users. 
+
+Type: Research
+
+Title: Pew Research Center</description>
+        <pubDate>Wed, 23 Jul 2025 10:41:06 GMT</pubDate>
+        <source url="https://www.pewresearch.org/short-reads/2025/07/22/google-users-are-less-likely-to-click-on-links-when-an-ai-summary-appears-in-the-results/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-80</guid>
+        <title>User interest predictions show what Schibsted users are actually interested in</title>
+        <link>https://www.inma.org/blogs/ideas/post.cfm/user-interest-predictions-show-what-schibsted-users-are-actually-interested-in</link>
+        <description>Schibsted, aiming to be the top media destination in the Nordics, unites well-known brands like Aftonbladet, Bergens Tidende, and Tek.no to deliver highly relevant content tailored to users’ interests. To overcome inconsistent interest identification across its diverse platforms, Schibsted developed User Interest Predictions (UIP), an AI-driven system that leverages machine learning and natural language processing to analyze user behavior and accurately predict interests. This unified, data-driven approach enables personalized experiences and informed decision-making, ensuring adaptability in a rapidly evolving media landscape.
+
+Type: Case study
+
+Title: INMA</description>
+        <pubDate>Thu, 17 Jul 2025 08:34:33 GMT</pubDate>
+        <source url="https://www.inma.org/blogs/ideas/post.cfm/user-interest-predictions-show-what-schibsted-users-are-actually-interested-in">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-79</guid>
+        <title>Taking AI from the Backend to the Front Page: Scaling Internal Tests into Conversational Audience Experiences</title>
+        <link>https://www.ftstrategies.com/en-gb/insights/taking-ai-from-the-backend-to-the-front-page-scaling-internal-tests-into-conversational-audience-experiences</link>
+        <description>FT Strategies, supported by the Google News Initiative, is pleased to share learnings from the second, expanded AI Launchpad programme of 2024. This report focuses on how publishers are evolving their AI experimentation and moving beyond internal newsroom tools to develop live, reader-facing products powered by generative AI.
+
+Type: Case study
+
+Title: FT Strategies</description>
+        <pubDate>Wed, 16 Jul 2025 12:19:45 GMT</pubDate>
+        <source url="https://www.ftstrategies.com/en-gb/insights/taking-ai-from-the-backend-to-the-front-page-scaling-internal-tests-into-conversational-audience-experiences">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-78</guid>
+        <title>MarkItDown</title>
+        <link>https://github.com/microsoft/markitdown</link>
+        <description>LLMs don’t process files — they process structure. Microsoft’s MarkItDown is a minimal, open-source Python tool that converts documents (including PDF, Word, Excel, PowerPoint), images, and audio into clean Markdown for AI pipelines. With built-in OCR, EXIF extraction, transcription, and LLM-powered image alt text, it streamlines turning raw data into structured, LLM-ready content.
+
+Type: Data
+
+Title: Microsoft</description>
+        <pubDate>Wed, 16 Jul 2025 08:32:41 GMT</pubDate>
+        <source url="https://github.com/microsoft/markitdown">Data</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-77</guid>
+        <title>Publishers&apos; (in)visibility problem - Organic traffic under pressure</title>
+        <link>https://www.endersanalysis.com/reports/publishers-invisibility-problem-organic-traffic-under-pressure</link>
+        <description>Publishers are becoming less visible. Since 2019, publisher visibility on Google’s search results has diminished markedly—the Mail is less than half as visible in Google’s search results as it was five years ago.
+
+Type: Report
+
+Title: Enders Analysis</description>
+        <pubDate>Wed, 16 Jul 2025 08:29:19 GMT</pubDate>
+        <source url="https://www.endersanalysis.com/reports/publishers-invisibility-problem-organic-traffic-under-pressure">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-76</guid>
+        <title>Connect tools with Claude</title>
+        <link>https://claude.ai/directory</link>
+        <description>Browse and connect Claude to Canva, Figma, Notion, Stripe, Zapier, and more. Instead of explaining your context every time, ask Claude to turn Claude discussions into Notion roadmaps, create Canva social media posts from creative briefs, generate production-ready code from Figma files, access Stripe customer data and payment information.
+
+Type: Education
+
+Title: Anthropic</description>
+        <pubDate>Tue, 15 Jul 2025 06:59:09 GMT</pubDate>
+        <source url="https://claude.ai/directory">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-75</guid>
+        <title>How AI bots quietly dismantle paywalls</title>
+        <link>https://www.digitaldigging.org/p/how-ai-bots-quietly-dismantle-paywalls?triedRedirect=true&amp;hide_intro_popup=true</link>
+        <description>ChatGPT and other AI chatbots have figured out how to get around paywalls—and they&apos;re doing it systematically and quietly across major publications, a new Digital Digging investigation reveals.
+
+Type: Research
+
+Title: Digital Digging</description>
+        <pubDate>Fri, 11 Jul 2025 15:29:10 GMT</pubDate>
+        <source url="https://www.digitaldigging.org/p/how-ai-bots-quietly-dismantle-paywalls?triedRedirect=true&amp;hide_intro_popup=true">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-74</guid>
+        <title>Measuring the Impact of Early-2025 AI on Experienced Open-Source Developer Productivity</title>
+        <link>https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/</link>
+        <description>A randomized controlled trial found that, when using early-2025 AI tools, experienced open-source developers took 19% longer to complete tasks compared to working without AI. This outcome highlights current limitations of AI in real-world software development, and ongoing evaluation is necessary as AI capabilities advance.
+
+Type: Research
+
+Title: METR</description>
+        <pubDate>Fri, 11 Jul 2025 13:40:44 GMT</pubDate>
+        <source url="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-73</guid>
+        <title>What Web Browsing Data Tells Us About How AI Appears Online</title>
+        <link>https://www.pewresearch.org/data-labs/2025/05/23/what-web-browsing-data-tells-us-about-how-ai-appears-online/</link>
+        <description>An analysis of one month of browsing data finds that around six-in-ten respondents visited a search page with an AI-generated summary. But visits to more in-depth content about AI were relatively rare.
+
+Type: Research
+
+Title: Pew Research Center</description>
+        <pubDate>Fri, 11 Jul 2025 08:56:43 GMT</pubDate>
+        <source url="https://www.pewresearch.org/data-labs/2025/05/23/what-web-browsing-data-tells-us-about-how-ai-appears-online/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-72</guid>
+        <title>How Media Brands Can Maintain Visibility in the AI Era</title>
+        <link>https://aiformedia.network/wp-content/uploads/2025/05/AI_for_Media_Network_How_Media_Brands_Can_Maintain_Visibility_in_the_AI_Era.pdf</link>
+        <description>This whitepaper explores strategies for media brands to maintain their visibility and relevance in an era dominated by artificial intelligence, offering practical insights on adapting content, leveraging AI tools, and staying competitive in a rapidly evolving digital landscape.
+
+Type: Education
+
+Title: AI For Media Network</description>
+        <pubDate>Thu, 10 Jul 2025 13:25:39 GMT</pubDate>
+        <source url="https://aiformedia.network/wp-content/uploads/2025/05/AI_for_Media_Network_How_Media_Brands_Can_Maintain_Visibility_in_the_AI_Era.pdf">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-71</guid>
+        <title>Talking About AI: Newsroom Toolkit</title>
+        <link>https://www.poynter.org/mediawise/programs/talking-about-ai-newsroom-toolkit/</link>
+        <description>Created by MediaWise in partnership with The Associated Press and supported by Microsoft, this guide is for journalists and media professionals who want to incorporate AI literacy into their reporting and other newsroom processes.
+
+Type: Education
+
+Title: Poynter</description>
+        <pubDate>Wed, 09 Jul 2025 14:15:17 GMT</pubDate>
+        <source url="https://www.poynter.org/mediawise/programs/talking-about-ai-newsroom-toolkit/">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-70</guid>
+        <title>Journalism in the AI era — insights from a study for the Thomson Reuters Foundation</title>
+        <link>https://medium.com/damian-radcliffe/executive-summary-journalism-in-the-ai-era-insights-from-a-study-for-the-thomson-reuters-25f960f5d2ed</link>
+        <description>Executive Summary by Damian Radcliffe. Opportunities and challenges in the Global South and emerging economies
+
+Type: Report
+
+Title: Thomson Reuters Foundation</description>
+        <pubDate>Wed, 09 Jul 2025 07:12:20 GMT</pubDate>
+        <source url="https://medium.com/damian-radcliffe/executive-summary-journalism-in-the-ai-era-insights-from-a-study-for-the-thomson-reuters-25f960f5d2ed">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-69</guid>
+        <title>The Ultimate AI Video Stack: Up-to-Date Best Tools to Make Content With AI</title>
+        <link>https://youtu.be/4hP2RrFduMQ</link>
+        <description>Justine Moor showcases tools like Veo 3, Kling 2.1, Hedra, Higgsfield, and Krea, and shares how she uses each one for specific creative tasks: text-to-video generation, animating still images, creating talking characters with cloned voices, adding cinematic visual effects&#10;Testing and enhancing outputs across multiple models.
+
+Type: Education
+
+Title: a16z</description>
+        <pubDate>Tue, 08 Jul 2025 18:40:14 GMT</pubDate>
+        <source url="https://youtu.be/4hP2RrFduMQ">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-68</guid>
+        <title>Benchmarking LLM Performance for Journalism</title>
+        <link>https://generative-ai-newsroom.com/benchmarking-llm-performance-for-journalism-9831e6f918e4</link>
+        <description>A recent workshop at Northwestern convened newsroom practitioners to outline how to evaluate LLMs for news tasks and align with journalistic values.
+
+Type: Research
+
+Title: Generative AI in the Newsroom</description>
+        <pubDate>Tue, 08 Jul 2025 14:12:43 GMT</pubDate>
+        <source url="https://generative-ai-newsroom.com/benchmarking-llm-performance-for-journalism-9831e6f918e4">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-67</guid>
+        <title>Artificial Intelligence and Generative AI for Media &amp; Journalism</title>
+        <link>https://guides.lib.unc.edu/generativeAI</link>
+        <description>This guide provides an introduction to AI and Generative AI, focusing on their applications in journalism.
+
+Type: Education
+
+Title: The University of North Carolina at Chapel</description>
+        <pubDate>Tue, 08 Jul 2025 14:07:05 GMT</pubDate>
+        <source url="https://guides.lib.unc.edu/generativeAI">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-64</guid>
+        <title>GenAI and How It’s Impacting US Publishers</title>
+        <link>https://www.similarweb.com/corp/reports/generative-ai-publishers/</link>
+        <description>Instead of turning to traditional search engines, millions are now using AI tools like ChatGPT to get instant updates on politics, finance, and world events – and publishers are paying the price. And it could be a game-changer for how people access the news.
+
+Type: Report
+
+Title: Similarweb</description>
+        <pubDate>Thu, 03 Jul 2025 08:03:02 GMT</pubDate>
+        <source url="https://www.similarweb.com/corp/reports/generative-ai-publishers/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-63</guid>
+        <title>TollBit State of the Bots - Q1 2025</title>
+        <link>https://tollbit.com/bots/25q1/</link>
+        <description>The TollBit State of the Bots delivers a quarterly analysis of AI-driven web scraping trends, provides a detailed and evolving perspective on how AI entities access online content. This initiative uncovers key patterns, behaviors, and shifts within the industry each quarter, offering publishers and stakeholders actionable insights into the changing landscape of AI content interaction.
+
+Type: Report
+
+Title: TollBit</description>
+        <pubDate>Wed, 02 Jul 2025 08:55:37 GMT</pubDate>
+        <source url="https://tollbit.com/bots/25q1/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-62</guid>
+        <title>Coatue’s 2025 EMW Keynote Deck</title>
+        <link>https://www.coatue.com/blog/company-update/coatues-2025-emw-conference</link>
+        <description>AI has become a daily habit for nearly 20% of Americans, with parents leading adoption, especially for practical tasks like childcare planning and organizing notes. People prefer AI for simplifying everyday routines rather than for flashy features.
+
+Type: Research
+
+Title: Coatue</description>
+        <pubDate>Sat, 28 Jun 2025 11:53:03 GMT</pubDate>
+        <source url="https://www.coatue.com/blog/company-update/coatues-2025-emw-conference">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-61</guid>
+        <title>How organizations use Claude</title>
+        <link>https://www.anthropic.com/customers</link>
+        <description>Overview of organizations using Claude, highlighting a range of companies from large enterprises to startups across industries such as finance, healthcare, and legal services. It features examples and case studies of how these businesses are implementing Claude’s AI technology in their operations.
+
+Type: Case study
+
+Title: Anthropic</description>
+        <pubDate>Fri, 27 Jun 2025 11:30:31 GMT</pubDate>
+        <source url="https://www.anthropic.com/customers">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-60</guid>
+        <title>The News Pipeline: Economic and Strategic Implications of AI for News Distribution</title>
+        <link>https://docs.google.com/forms/d/e/1FAIpQLSdL9FfSszJUV92T1vqS8kSeuXlEAAw6V8nrCo51F7ew_3g0rQ/viewform</link>
+        <description>Great summary of challenges and opportunities of the intersection between AI and news media, researched and written with academic mindset.
+
+Type: Report
+
+Title: Stanford University Graduate School of Business</description>
+        <pubDate>Fri, 27 Jun 2025 06:40:33 GMT</pubDate>
+        <source url="https://docs.google.com/forms/d/e/1FAIpQLSdL9FfSszJUV92T1vqS8kSeuXlEAAw6V8nrCo51F7ew_3g0rQ/viewform">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-59</guid>
+        <title>Meta-Media. Report of France TV (🇫🇷)</title>
+        <link>https://www.meta-media.fr/wp-content/uploads/sites/33/2025/06/metamedia-24.pdf</link>
+        <description>The MetaMedia 2024 report from France Télévisions explores the latest trends and future directions in media, technology, and digital culture, focusing on topics such as artificial intelligence, social networks, and the impact of digital transformation on society, while offering expert insights and case studies for media professionals 
+
+Type: Report
+
+Title: France Télévisions</description>
+        <pubDate>Thu, 26 Jun 2025 06:01:24 GMT</pubDate>
+        <source url="https://www.meta-media.fr/wp-content/uploads/sites/33/2025/06/metamedia-24.pdf">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-58</guid>
+        <title>Introduction to AI Agents and Agent Use Cases</title>
+        <link>https://github.com/aditya-hicounselor/ai-agents-for-beginners/tree/main/01-intro-to-ai-agents</link>
+        <description>This course provides fundamental knowledge and applied samples for building AI Agents.
+
+Type: Education
+
+Title: Github</description>
+        <pubDate>Tue, 24 Jun 2025 12:39:27 GMT</pubDate>
+        <source url="https://github.com/aditya-hicounselor/ai-agents-for-beginners/tree/main/01-intro-to-ai-agents">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-57</guid>
+        <title>LLM journalism tool advisor</title>
+        <link>https://llmadvisor.replit.app/</link>
+        <description>This interactive advisor helps journalists select appropriate LLM tools for specific tasks. Created by Joe Amditis. Updated June 2025.
+
+Type: Education
+
+Title: LLM Tools</description>
+        <pubDate>Tue, 24 Jun 2025 06:13:11 GMT</pubDate>
+        <source url="https://llmadvisor.replit.app/">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-56</guid>
+        <title>Responsible Tech Summer Reading List 2025</title>
+        <link>https://alltechishuman.org/all-tech-is-human-blog/responsible-tech-summer-reading-list-2025</link>
+        <description>This year’s curated list from &apos;All Tech Is Human&apos; has themes around power, AI, human agency, the folly of technosolutionism, and understanding how history affects our present and future. 
+
+Type: Education
+
+Title: All Tech Is Human</description>
+        <pubDate>Mon, 23 Jun 2025 06:32:09 GMT</pubDate>
+        <source url="https://alltechishuman.org/all-tech-is-human-blog/responsible-tech-summer-reading-list-2025">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-55</guid>
+        <title>Build trust around the use of AI</title>
+        <link>https://trustingnews.org/trustkits/ai/</link>
+        <description>This research is the first step in a year’s worth of work focused on AI disclosures and ethics, funded by a grant from the Patrick J. McGovern Foundation.
+
+Type: Research
+
+Title: Trust In News</description>
+        <pubDate>Sat, 21 Jun 2025 20:29:58 GMT</pubDate>
+        <source url="https://trustingnews.org/trustkits/ai/">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-54</guid>
+        <title>The EuroStack: Europe Innovating on Its Own Terms</title>
+        <link>https://www.euro-stack.info</link>
+        <description>Sovereign AI, open-source ecosystems, green supercomputing, data commons, and sovereign cloud: Building homegrown alternatives to empower Europe to reclaim control of its digital future—layer by layer, innovation by innovation
+
+Type: Report
+
+Title: The EuroStack</description>
+        <pubDate>Thu, 19 Jun 2025 11:26:38 GMT</pubDate>
+        <source url="https://www.euro-stack.info">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-53</guid>
+        <title>Google Zero is here — now what?</title>
+        <link>https://www.theverge.com/24167865/google-zero-search-crash-housefresh-ai-overviews-traffic-data-audience</link>
+        <description>Search is an invisible platform that shaped the entire web. And it’s changing.
+
+Type: Analysis
+
+Title: The Verge</description>
+        <pubDate>Thu, 19 Jun 2025 10:15:39 GMT</pubDate>
+        <source url="https://www.theverge.com/24167865/google-zero-search-crash-housefresh-ai-overviews-traffic-data-audience">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-52</guid>
+        <title>(🔐) News Sites Are Getting Crushed by Google’s New AI Tools</title>
+        <link>https://www.wsj.com/tech/ai/google-ai-news-publishers-7e687141</link>
+        <description>
+
+Type: Analysis
+
+Title: WSJ</description>
+        <pubDate>Thu, 19 Jun 2025 10:14:17 GMT</pubDate>
+        <source url="https://www.wsj.com/tech/ai/google-ai-news-publishers-7e687141">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-51</guid>
+        <title>How The Oglethorpe Echo boosts newsroom with AI</title>
+        <link>https://www.journalismai.info/blog/7hyych4p1qk548nbwmmr95xnri43fu</link>
+        <description>Through collaboration between the Oglethorpe Echo and YESEO, a Slack-based AI tool is enhancing newsroom efficiency and strengthening local journalism
+
+Type: Case study
+
+Title: JournalismAI</description>
+        <pubDate>Thu, 19 Jun 2025 09:58:16 GMT</pubDate>
+        <source url="https://www.journalismai.info/blog/7hyych4p1qk548nbwmmr95xnri43fu">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-50</guid>
+        <title>A chatbot bringing economics closer to “la pipol”</title>
+        <link>https://www.journalismai.info/blog/preyx0wwurzv6rth17jbt5tg7ynu25</link>
+        <description>Economía para la Pipol and Datasketch are on a mission to make economics more accessible in Colombia. Learn how their AI-powered chatbot is being built to bridge this gap
+
+Type: Case study
+
+Title: JournalismAI</description>
+        <pubDate>Thu, 19 Jun 2025 09:54:46 GMT</pubDate>
+        <source url="https://www.journalismai.info/blog/preyx0wwurzv6rth17jbt5tg7ynu25">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-49</guid>
+        <title>AURA: AI Research Tool for Journalists</title>
+        <link>https://www.journalismai.info/blog/an-ai-research-tool-for-journalists</link>
+        <description>Learn how a cross-border collaboration between the Indian Express, DR, The Economist, and Aftonbladet led to the development of an AI tool to help journalists enhance their research abilities.
+
+Type: Case study
+
+Title: JournalismAI</description>
+        <pubDate>Thu, 19 Jun 2025 09:05:35 GMT</pubDate>
+        <source url="https://www.journalismai.info/blog/an-ai-research-tool-for-journalists">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-48</guid>
+        <title>RealEstateAlerter - Using AI to find stories in property data</title>
+        <link>https://www.journalismai.info/blog/using-ai-to-find-stories-in-property-data</link>
+        <description>Learn how Team RealEstateAlerter of the 2024 JournalismAI Fellowship collaborated across time zones, overcame challenges in data access, and applied AI to strengthen investigative real estate journalism 
+
+Type: Case study
+
+Title: JournalismAI</description>
+        <pubDate>Thu, 19 Jun 2025 09:01:26 GMT</pubDate>
+        <source url="https://www.journalismai.info/blog/using-ai-to-find-stories-in-property-data">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-47</guid>
+        <title>“Very Dangerous” to Use ChatGPT Seriously for Writing, Ezra Klein Argues</title>
+        <link>https://excitech.substack.com/p/very-dangerous-to-use-chatgpt-for</link>
+        <description>Ezra Klein has interviewed some of the top people in AI on his New York Times podcast The Ezra Klein Show, but the acclaimed journalist is not a big fan of using a tool like ChatGPT in his own work — in fact, he thinks it is dangerous.
+
+Type: Analysis
+
+Title: Excitech</description>
+        <pubDate>Wed, 18 Jun 2025 16:09:24 GMT</pubDate>
+        <source url="https://excitech.substack.com/p/very-dangerous-to-use-chatgpt-for">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-46</guid>
+        <title>Harnessing AI in media – Insights from the experts</title>
+        <link>https://www.fipp.com/resource/harnessing-ai-in-media-insights-from-the-experts/</link>
+        <description>Discover how AI is reshaping publishing. Download our latest report featuring real-world case studies from the FIPP Insider event in Prague.
+
+Type: Report
+
+Title: FIPP</description>
+        <pubDate>Wed, 18 Jun 2025 16:06:57 GMT</pubDate>
+        <source url="https://www.fipp.com/resource/harnessing-ai-in-media-insights-from-the-experts/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-45</guid>
+        <title>AI in Search: Going beyond information to intelligence</title>
+        <link>https://blog.google/products/search/google-search-ai-mode-update/#ai-mode-search</link>
+        <description>Google launched AI Overviews last year at I/O, and since then there&apos;s been a profound shift in how people are using Google Search. People are coming to Google to ask more of their questions, including more complex, longer and multimodal questions.
+
+Type: Report
+
+Title: Google</description>
+        <pubDate>Wed, 18 Jun 2025 16:02:48 GMT</pubDate>
+        <source url="https://blog.google/products/search/google-search-ai-mode-update/#ai-mode-search">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-44</guid>
+        <title>Is Google about to destroy the web?</title>
+        <link>https://www.bbc.com/future/article/20250611-ai-mode-is-google-about-to-change-the-internet-forever</link>
+        <description>Google says a new AI tool on its search engine will rejuvenate the internet. Others predict an apocalypse for websites. One thing is clear: the current chapter of online history is careening towards its end. Welcome to the &quot;machine web&quot;.
+
+Type: Analysis
+
+Title: BBC</description>
+        <pubDate>Wed, 18 Jun 2025 16:01:09 GMT</pubDate>
+        <source url="https://www.bbc.com/future/article/20250611-ai-mode-is-google-about-to-change-the-internet-forever">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-43</guid>
+        <title>As Search Ends for News, Here Is What&apos;s Next</title>
+        <link>https://www.inma.org/report/as-search-ends-for-news-here-is-whats-next</link>
+        <description>What publishers must quickly do to adapt to the changing realities of search and AI answer engines is the focus of a new report released today by the International News Media Association (INMA).
+
+Type: Report
+
+Title: INMA</description>
+        <pubDate>Wed, 18 Jun 2025 15:58:26 GMT</pubDate>
+        <source url="https://www.inma.org/report/as-search-ends-for-news-here-is-whats-next">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-42</guid>
+        <title>Artificial fact</title>
+        <link>https://www.weekendavisen.dk/kultur/kunstig-fakta</link>
+        <description>The technology was not the problem when Politiken published an article full of hallucinations from an artificial intelligence – it was the way it was used, says the newspaper&apos;s editor-in-chief Amalie Kestler.
+
+Type: Case study
+
+Title: Weekendavisen</description>
+        <pubDate>Wed, 18 Jun 2025 15:56:33 GMT</pubDate>
+        <source url="https://www.weekendavisen.dk/kultur/kunstig-fakta">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-41</guid>
+        <title>The Essential AI Toolkit for Journalists and Content Creators</title>
+        <link>https://huggingface.co/spaces/JournalistsonHF/ai-toolkit</link>
+        <description>All the tools listed here are free to use and open-source. This is a curated list designed to help creators create content. 
+
+Type: Education
+
+Title: Huggingface</description>
+        <pubDate>Wed, 18 Jun 2025 15:53:51 GMT</pubDate>
+        <source url="https://huggingface.co/spaces/JournalistsonHF/ai-toolkit">Education</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-40</guid>
+        <title>CRMArena-Pro: Holistic Assessment of LLM Agents Across Diverse Business Scenarios and Interactions</title>
+        <link>https://arxiv.org/pdf/2505.18878</link>
+        <description>A new benchmark developed by academics shows that LLM-based AI agents perform below par on standard CRM tests and fail to understand the need for customer confidentiality.
+
+Type: Research
+
+Title: Salesforce</description>
+        <pubDate>Wed, 18 Jun 2025 15:50:09 GMT</pubDate>
+        <source url="https://arxiv.org/pdf/2505.18878">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-39</guid>
+        <title>How a Five-Person AI Team Is Powering Innovation at The New York Times</title>
+        <link>https://www.newsroomrobots.com/p/how-a-five-person-ai-team-is-powering</link>
+        <description>In Conversation with Zach Seward
+
+Type: Case study
+
+Title: Newsroom Robots</description>
+        <pubDate>Wed, 18 Jun 2025 15:37:58 GMT</pubDate>
+        <source url="https://www.newsroomrobots.com/p/how-a-five-person-ai-team-is-powering">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-37</guid>
+        <title>Media and AI: How Artificial Intelligence Is Transforming Journalism in 2025</title>
+        <link>https://www.roboto.fr/blog/m-dias-et-ia-comment-l-intelligence-artificielle-transforme-le-journalisme-en-2025</link>
+        <description>Artificial intelligence is profoundly disrupting the French and global media landscape. In 2025, the relationship between journalism and AI has reached a critical point where revolutionary opportunities and existential challenges coexist.
+
+Type: Report
+
+Title: Roboto</description>
+        <pubDate>Wed, 18 Jun 2025 11:39:56 GMT</pubDate>
+        <source url="https://www.roboto.fr/blog/m-dias-et-ia-comment-l-intelligence-artificielle-transforme-le-journalisme-en-2025">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-36</guid>
+        <title>Artificial Power: 2025 Landscape Report</title>
+        <link>https://ainowinstitute.org/publications/research/ai-now-2025-landscape-report</link>
+        <description>Examines AI’s societal, political, and power dynamics, offering strategies for public agency and regulation in the post‑AI‑boom era.
+
+Type: Research
+
+Title: AI Now</description>
+        <pubDate>Wed, 18 Jun 2025 11:32:52 GMT</pubDate>
+        <source url="https://ainowinstitute.org/publications/research/ai-now-2025-landscape-report">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-35</guid>
+        <title>Digital News Report 2025</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2025</link>
+        <description>Authored by Nic Newman, Amy Ross Arguedas, Craig T. Robertson, Rasmus Nielsen and Richard Fletcher, the report is based on an online survey of almost 100,000 people in 48 markets and is the most comprehensive study of news consumption worldwide.
+
+Type: Report
+
+Title: The Reuters Institute for the Study of Journalism</description>
+        <pubDate>Wed, 18 Jun 2025 11:30:08 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2025">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-34</guid>
+        <title>Trends – Artificial Intelligence</title>
+        <link>https://www.bondcap.com/report/pdf/Trends_Artificial_Intelligence.pdf</link>
+        <description>Report by Mary Meeker, Jay Simons, Daegwon Chae, Alexander Krey
+
+Type: Report
+
+Title: BOND</description>
+        <pubDate>Wed, 18 Jun 2025 11:27:46 GMT</pubDate>
+        <source url="https://www.bondcap.com/report/pdf/Trends_Artificial_Intelligence.pdf">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-33</guid>
+        <title>GSM-Symbolic: Understanding the Limitations of Mathematical Reasoning in Large Language Models</title>
+        <link>https://machinelearning.apple.com/research/gsm-symbolic</link>
+        <description>While the performance of LLMs on GSM8K has significantly improved in recent years, it remains unclear whether their mathematical reasoning capabilities have genuinely advanced, raising questions about the reliability of the reported metrics.
+
+Type: Research
+
+Title: Apple</description>
+        <pubDate>Wed, 18 Jun 2025 11:25:56 GMT</pubDate>
+        <source url="https://machinelearning.apple.com/research/gsm-symbolic">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-32</guid>
+        <title>The 2025 AI Index Report</title>
+        <link>https://hai.stanford.edu/ai-index/2025-ai-index-report</link>
+        <description>An authoritative, data‑driven overview of global AI trends, benchmarks, policies, and deployments—complete with public data and policy summaries.
+
+Type: Report
+
+Title: Stanford HAI</description>
+        <pubDate>Wed, 18 Jun 2025 11:22:26 GMT</pubDate>
+        <source url="https://hai.stanford.edu/ai-index/2025-ai-index-report">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-27</guid>
+        <title>Ask away: EBU Neo powers Sveriges Radio AI news chatbot</title>
+        <link>https://www.ebu.ch/news/2025/03/ask-away-ebu-neo-powers-sveriges-radio-ai-news-chatbot</link>
+        <description>SR&apos;s chatbot using EBU Neo framework
+
+Type: Report
+
+Title: EBU</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.ebu.ch/news/2025/03/ask-away-ebu-neo-powers-sveriges-radio-ai-news-chatbot">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-26</guid>
+        <title>Building an AI Chatbot for trusted news content: Nyhetssök</title>
+        <link>https://tech.ebu.ch/events/2025/building-an-ai-chatbot-for-trusted-news-content-nyhetssk</link>
+        <description>Sveriges Radio chatbot development
+
+Type: Analysis
+
+Title: EBU Technology &amp; Innovation</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://tech.ebu.ch/events/2025/building-an-ai-chatbot-for-trusted-news-content-nyhetssk">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-25</guid>
+        <title>Case Study: Sweden&apos;s Aftonbladet Built AI-Driven Editorial Tools and an Election Chatbot</title>
+        <link>https://journalists.org/resources/case-study-swedens-aftonbladet-built-ai-driven-editorial-tools-and-an-election-chatbot/</link>
+        <description>Aftonbladet&apos;s Valkompisen chatbot
+
+Type: Analysis
+
+Title: ONA</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://journalists.org/resources/case-study-swedens-aftonbladet-built-ai-driven-editorial-tools-and-an-election-chatbot/">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-24</guid>
+        <title>Aftonbladet serves up innovation with AI Buffet</title>
+        <link>https://wan-ifra.org/2024/07/aftonbladet-serves-up-innovation-with-ai-buffet/</link>
+        <description>Aftonbladet&apos;s AI initiatives
+
+Type: Analysis
+
+Title: WAN-IFRA</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://wan-ifra.org/2024/07/aftonbladet-serves-up-innovation-with-ai-buffet/">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-23</guid>
+        <title>Aftonbladet shares 3 lessons learned from its new AI hub</title>
+        <link>https://www.inma.org/blogs/ideas/post.cfm/aftonbladet-shares-3-lessons-learned-from-its-new-ai-hub</link>
+        <description>Aftonbladet&apos;s AI Hub insights
+
+Type: Analysis
+
+Title: INMA</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.inma.org/blogs/ideas/post.cfm/aftonbladet-shares-3-lessons-learned-from-its-new-ai-hub">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-21</guid>
+        <title>AI-generated article summary hack-day experiments become standard feature at Schibsted</title>
+        <link>https://www.inma.org/blogs/media-leaders/post.cfm/ai-generated-article-summary-hack-day-experiments-become-standard-feature-at-schibsted</link>
+        <description>Schibsted&apos;s AI summary implementation
+
+Type: Analysis
+
+Title: INMA</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.inma.org/blogs/media-leaders/post.cfm/ai-generated-article-summary-hack-day-experiments-become-standard-feature-at-schibsted">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-20</guid>
+        <title>&apos;KI-Kjetil&apos; har bekreftet at Kamala Harris er &apos;gal&apos;, men TV 2 er fornøyd med eksperimentet</title>
+        <link>https://www.journalisten.no/ki-kjetil-har-bekreftet-at-kamala-harris-er-gal-men-tv-2-er-fornoyd-med-eksperimentet/626649</link>
+        <description>KI-Kjetil&apos;s performance during US election
+
+Type: Report
+
+Title: Journalisten</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.journalisten.no/ki-kjetil-har-bekreftet-at-kamala-harris-er-gal-men-tv-2-er-fornoyd-med-eksperimentet/626649">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-19</guid>
+        <title>TV 2 deler lærepunkter om KI-Kjetil</title>
+        <link>https://www.m24.no/231224-chris-ronald-hermansen-ki-kjetil/dette-laerte-tv-2-av-ki-kjetil/781469</link>
+        <description>TV2&apos;s KI-Kjetil AI avatar learnings
+
+Type: Report
+
+Title: Medier24</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.m24.no/231224-chris-ronald-hermansen-ki-kjetil/dette-laerte-tv-2-av-ki-kjetil/781469">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-17</guid>
+        <title>How Norway&apos;s public broadcaster uses AI-generated summaries to reach younger audiences</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/news/how-norways-public-broadcaster-uses-ai-generated-summaries-reach-younger-audiences</link>
+        <description>NRK&apos;s strategy for younger audiences
+
+Type: Analysis
+
+Title: Reuters Institute</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/news/how-norways-public-broadcaster-uses-ai-generated-summaries-reach-younger-audiences">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-14</guid>
+        <title>Schibsted makes the most of its newsroom humans in new text-to-audio initiative</title>
+        <link>https://www.inma.org/blogs/newsroom-initiative/post.cfm/schibsted-makes-the-most-of-its-newsroom-humans-in-new-text-to-audio-initiative</link>
+        <description>Schibsted&apos;s audio initiatives
+
+Type: Analysis
+
+Title: INMA</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.inma.org/blogs/newsroom-initiative/post.cfm/schibsted-makes-the-most-of-its-newsroom-humans-in-new-text-to-audio-initiative">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-13</guid>
+        <title>Norway&apos;s biggest daily doubles audio audience with AI-voiced articles</title>
+        <link>https://pressgazette.co.uk/podcasts/aftenposten-ai-voice-new-audiences/</link>
+        <description>Aftenposten&apos;s voice clone success
+
+Type: Analysis
+
+Title: Press Gazette</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://pressgazette.co.uk/podcasts/aftenposten-ai-voice-new-audiences/">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-12</guid>
+        <title>Norway&apos;s VG finding success with six AI-related newsroom tools</title>
+        <link>https://wan-ifra.org/2024/04/norways-vg-finding-success-with-six-ai-related-newsroom-tools/</link>
+        <description>VG&apos;s six AI tools including Jojo transcription
+
+Type: Analysis
+
+Title: WAN-IFRA</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://wan-ifra.org/2024/04/norways-vg-finding-success-with-six-ai-related-newsroom-tools/">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-11</guid>
+        <title>Denmark&apos;s TV2 orders tech-driven factual format AI Love You</title>
+        <link>https://www.c21media.net/news/denmarks-tv2-orders-tech-driven-factual-format-ai-love-you/</link>
+        <description>TV2&apos;s AI Love You program
+
+Type: Report
+
+Title: C21media</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.c21media.net/news/denmarks-tv2-orders-tech-driven-factual-format-ai-love-you/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-10</guid>
+        <title>Politikens kunstige intelligens lavede faktaboks fyldt med fejl</title>
+        <link>https://journalisten.dk/politikens-kunstige-intelligens-lavede-faktaboks-fyldt-med-fejl/</link>
+        <description>Politiken&apos;s AI fact-box error incident
+
+Type: Report
+
+Title: Journalisten</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://journalisten.dk/politikens-kunstige-intelligens-lavede-faktaboks-fyldt-med-fejl/">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-9</guid>
+        <title>Nordic AI in Media Summit 2024: Five projects you should keep an eye on</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/news/nordic-ai-media-summit-2024-five-projects-you-should-keep-eye</link>
+        <description>Key AI projects from 2024 summit
+
+Type: Report
+
+Title: Reuters Institute</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/news/nordic-ai-media-summit-2024-five-projects-you-should-keep-eye">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-8</guid>
+        <title>These Nordic newsrooms pioneered AI independently of Big Tech. Here&apos;s what they learnt</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/news/these-nordic-newsrooms-pioneered-ai-independently-big-tech-heres-what-they-learnt</link>
+        <description>Nordic newsrooms&apos; independent AI development
+
+Type: Research
+
+Title: Reuters Institute</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/news/these-nordic-newsrooms-pioneered-ai-independently-big-tech-heres-what-they-learnt">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-7</guid>
+        <title>How JP/Politikens leveraged early AI expertise to build centralised news products</title>
+        <link>https://wan-ifra.org/2024/07/how-jp-politikens-leveraged-early-ai-expertise-to-build-centralised-news-products/</link>
+        <description>JP/Politikens MAGNA AI system implementation
+
+Type: Analysis
+
+Title: WAN-IFRA</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://wan-ifra.org/2024/07/how-jp-politikens-leveraged-early-ai-expertise-to-build-centralised-news-products/">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-5</guid>
+        <title>NAMS 2025</title>
+        <link>https://www.nordicaijournalism.com/nams-2025</link>
+        <description>Nordic AI in Media Summit 2025 official page
+
+Type: Report
+
+Title: Nordic AI Journalism</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.nordicaijournalism.com/nams-2025">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-4</guid>
+        <title>&apos;The article will die, should die, but storytelling will not&apos;: Notes from the Nordic AI in Media Summit</title>
+        <link>https://www.niemanlab.org/2025/05/nordic-ai-in-media-summit-2025/</link>
+        <description>Insights from the Nordic AI summit about future of journalism
+
+Type: Analysis
+
+Title: Nieman Lab</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.niemanlab.org/2025/05/nordic-ai-in-media-summit-2025/">Analysis</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-3</guid>
+        <title>Nordic AI in Media Summit 2025: Five takeaways from this annual event on the future of news</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/news/nordic-ai-media-summit-2025-five-takeaways-annual-event-future-news</link>
+        <description>Overview of the 2025 Nordic AI summit in Copenhagen
+
+Type: Report
+
+Title: Reuters Institute</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/news/nordic-ai-media-summit-2025-five-takeaways-annual-event-future-news">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-29</guid>
+        <title>Svenska Dagbladet embraces audio to increase engagement</title>
+        <link>https://www.inma.org/blogs/Generative-AI-Initiative/post.cfm/svenska-dagbladet-embraces-audio-to-increase-engagement</link>
+        <description>Svenska Dagbladet&apos;s audio strategy
+
+Type: Case study
+
+Title: INMA</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.inma.org/blogs/Generative-AI-Initiative/post.cfm/svenska-dagbladet-embraces-audio-to-increase-engagement">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-22</guid>
+        <title>Sweden Digital News Report 2025</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2025/sweden</link>
+        <description>Swedish digital news landscape 2025
+
+Type: Report
+
+Title: Reuters Institute</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2025/sweden">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-30</guid>
+        <title>How Swedish Radio balances AI and journalism without falling for hype</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/news/how-swedish-radio-balances-ai-and-journalism-without-falling-hype</link>
+        <description>Swedish Radio&apos;s balanced AI approach
+
+Type: Research
+
+Title: Reuters Institute</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/news/how-swedish-radio-balances-ai-and-journalism-without-falling-hype">Research</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-6</guid>
+        <title>How Denmark&apos;s Ekstra Bladet used AI to boost subscriptions by 35%</title>
+        <link>https://wan-ifra.org/2025/02/how-denmarks-ekstra-bladet-used-ai-to-boost-subscriptions-by-35/</link>
+        <description>Ekstra Bladet&apos;s AI subscription strategy
+
+Type: Case study
+
+Title: WAN-IFRA</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://wan-ifra.org/2025/02/how-denmarks-ekstra-bladet-used-ai-to-boost-subscriptions-by-35/">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-15</guid>
+        <title>Case Study: Schibsted</title>
+        <link>https://beyondwords.io/blog/case-study-schibsted/</link>
+        <description>Schibsted&apos;s text-to-audio implementation
+
+Type: Case study
+
+Title: BeyondWords</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://beyondwords.io/blog/case-study-schibsted/">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-16</guid>
+        <title>How NRK uses AI-generated summaries to boost younger readers&apos; engagement</title>
+        <link>https://www.journalism.co.uk/news/how-nrk-uses-ai-generated-summaries-to-boost-younger-readers-engagement/s2/a1122878/</link>
+        <description>NRK&apos;s AI summary system
+
+Type: Case study
+
+Title: Journalism.co.uk</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.journalism.co.uk/news/how-nrk-uses-ai-generated-summaries-to-boost-younger-readers-engagement/s2/a1122878/">Case study</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-18</guid>
+        <title>Norway Digital News Report 2025</title>
+        <link>https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2025/norway</link>
+        <description>Norwegian digital news landscape 2025
+
+Type: Report
+
+Title: Reuters Institute</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://reutersinstitute.politics.ox.ac.uk/digital-news-report/2025/norway">Report</source>
+      </item>
+      <item>
+        <guid isPermaLink="false">resource-28</guid>
+        <title>Let&apos;s get to the point: Three newsrooms on generating AI summaries for news</title>
+        <link>https://www.niemanlab.org/2025/06/lets-get-to-the-point-three-newsrooms-on-generating-ai-summaries-for-news/</link>
+        <description>AI summary strategies across newsrooms
+
+Type: Research
+
+Title: Nieman Lab</description>
+        <pubDate>Wed, 18 Jun 2025 10:58:12 GMT</pubDate>
+        <source url="https://www.niemanlab.org/2025/06/lets-get-to-the-point-three-newsrooms-on-generating-ai-summaries-for-news/">Research</source>
+      </item>
+  </channel>
+</rss>

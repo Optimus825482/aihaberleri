@@ -43,62 +43,16 @@ export interface MultiLanguageFeedResult {
 
 /**
  * AI News RSS Feed Sources
- * Total: ~70 feeds (AI-focused only, cleaned 2026-02-08)
+ * Total: ~108 feeds (AI-focused only, updated 2026-02-08)
  * REMOVED: 20 non-AI sources (general tech, mobile, hardware, science)
+ * ADDED: 38 journalism AI & newsroom tools feeds (tested & working from resources.rss)
+ * REMOVED: 7 broken feeds (404, no entries, invalid XML)
  */
 export const AI_NEWS_RSS_FEEDS = [
   // ========================================
   // MAJOR GLOBAL NEWS OUTLETS - TECHNOLOGY ONLY
   // ========================================
   // REMOVED: BBC News - World (general news, not AI-specific)
-  {
-    name: "BBC News - Technology",
-    url: "http://feeds.bbci.co.uk/news/technology/rss.xml",
-    language: "en",
-  },
-  // REMOVED: CNN - Top Stories (general news, not AI-specific)
-  {
-    name: "CNN - Technology",
-    url: "http://rss.cnn.com/rss/edition_technology.rss",
-    language: "en",
-  },
-  // REMOVED: Al Jazeera - News (general news, not AI-specific)
-  {
-    name: "Bloomberg - Technology",
-    url: "https://feeds.bloomberg.com/technology/news.rss",
-    language: "en",
-  },
-  {
-    name: "The Wall Street Journal - Technology",
-    url: "https://feeds.a.dj.com/rss/RSSWSJD.xml",
-    language: "en",
-  },
-  {
-    name: "Financial Times - Technology",
-    url: "https://www.ft.com/technology?format=rss",
-    language: "en",
-  },
-  {
-    name: "NBC News - Technology",
-    url: "https://feeds.nbcnews.com/nbcnews/public/tech",
-    language: "en",
-  },
-  {
-    name: "ABC News - Technology",
-    url: "https://abcnews.go.com/abcnews/technologyheadlines",
-    language: "en",
-  },
-  {
-    name: "Sky News - Technology",
-    url: "https://feeds.skynews.com/feeds/rss/technology.xml",
-    language: "en",
-  },
-  // REMOVED: Deutsche Welle - News (general news, not AI-specific)
-  {
-    name: "Euronews - Technology",
-    url: "https://www.euronews.com/rss?level=theme&name=sci-tech",
-    language: "en",
-  },
 
   // ========================================
   // MAJOR TECH NEWS (AI SECTION) (8 feeds)
@@ -162,7 +116,7 @@ export const AI_NEWS_RSS_FEEDS = [
   },
 
   // ========================================
-  // AI FOCUSED PUBLICATIONS (39 feeds) - UPDATED 2026-02-02
+  // AI FOCUSED PUBLICATIONS (51 feeds) - UPDATED 2026-02-08
   // ========================================
   {
     name: "AI News",
@@ -318,9 +272,65 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://blog.langchain.dev/rss/",
     language: "en",
   },
+  // NEW AI NEWS FEEDS (12 more from resources.rss extraction)
+  {
+    name: "Poynter",
+    url: "https://www.poynter.org/feed/",
+    language: "en",
+  },
+  {
+    name: "SE Ranking Blog",
+    url: "https://seranking.com/blog/feed/",
+    language: "en",
+  },
+  {
+    name: "AlixPartners",
+    url: "https://www.alixpartners.com/rss",
+    language: "en",
+  },
+  {
+    name: "Semrush Blog",
+    url: "https://www.semrush.com/blog/feed/",
+    language: "en",
+  },
+  {
+    name: "WAN-IFRA",
+    url: "https://wan-ifra.org/feed/",
+    language: "en",
+  },
+  {
+    name: "Thomson Reuters Foundation",
+    url: "https://www.trust.org/feed/",
+    language: "en",
+  },
+  {
+    name: "METR",
+    url: "https://metr.org/feed.xml",
+    language: "en",
+  },
+  {
+    name: "Similarweb",
+    url: "https://www.similarweb.com/blog/feed/",
+    language: "en",
+  },
+  {
+    name: "Excitech",
+    url: "https://excitech.media/feed",
+    language: "en",
+  },
+  {
+    name: "FIPP",
+    url: "https://www.fipp.com/feed/",
+    language: "en",
+  },
+  {
+    name: "Journalisten",
+    url: "https://journalisten.dk/feed/",
+    language: "da",
+  },
 
   // ========================================
-  // RESEARCH & ENGINEERING BLOGS (9 feeds)
+  // RESEARCH & ENGINEERING BLOGS (13 feeds)
   // ========================================
   {
     name: "Machine Learning Mastery",
@@ -368,39 +378,25 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://bair.berkeley.edu/blog/feed.xml",
     language: "en",
   },
-
-  // ========================================
-  // BUSINESS & FINANCE (12 feeds)
-  // ========================================
+  // NEW AI RESEARCH FEEDS (4 from resources.rss extraction)
   {
-    name: "Forbes - Innovation",
-    url: "https://www.forbes.com/innovation/feed/",
-    language: "en",
-  },
-  // DISABLED: 403 Forbidden hatası (01.02.2026)
-  // {
-  //   name: "CNBC - Technology",
-  //   url: "https://www.cnbc.com/id/19854910/device/rss/rss.html",
-  //   language: "en",
-  // },
-  {
-    name: "The Economist - Technology",
-    url: "https://www.economist.com/science-and-technology/rss.xml",
+    name: "Google Research",
+    url: "https://research.google/blog/rss/",
     language: "en",
   },
   {
-    name: "Fast Company - Technology",
-    url: "https://www.fastcompany.com/technology/rss",
+    name: "Reuters Institute",
+    url: "https://reutersinstitute.politics.ox.ac.uk/rss",
     language: "en",
   },
   {
-    name: "MIT Sloan Management Review",
-    url: "https://sloanreview.mit.edu/feed/",
+    name: "Pew Research Center",
+    url: "https://www.pewresearch.org/feed/",
     language: "en",
   },
   {
-    name: "Seeking Alpha - Technology",
-    url: "https://seekingalpha.com/feed.xml",
+    name: "Apple Machine Learning Research",
+    url: "https://machinelearning.apple.com/rss.xml",
     language: "en",
   },
 
@@ -448,6 +444,136 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://www.aitrends.com/feed/",
     language: "en",
   },
+
+  // ========================================
+  // TECH COMPANIES & AI LABS (2 feeds) - NEW 2026-02-08
+  // ========================================
+  {
+    name: "Microsoft AI",
+    url: "https://microsoft.ai/feed/",
+    language: "en",
+  },
+  {
+    name: "Google Keyword Blog",
+    url: "https://blog.google/rss/",
+    language: "en",
+  },
+
+  // ========================================
+  // JOURNALISM AI & NEWSROOM TOOLS (20 feeds) - TESTED 2026-02-08
+  // ========================================
+  // ✅ WORKING FEEDS ONLY (7 failed feeds removed)
+  {
+    name: "Generative AI in the Newsroom",
+    url: "https://generative-ai-newsroom.com/feed",
+    language: "en",
+  },
+  {
+    name: "Center for Cooperative Media",
+    url: "https://centerforcooperativemedia.org/feed/",
+    language: "en",
+  },
+  {
+    name: "Tow Center for Digital Journalism",
+    url: "https://www.cjr.org/tow_center/feed",
+    language: "en",
+  },
+  {
+    name: "Digital Digging",
+    url: "https://www.digitaldigging.org/feed",
+    language: "en",
+  },
+  {
+    name: "J-Source - Canadian Journalism",
+    url: "https://j-source.ca/feed/",
+    language: "en",
+  },
+  {
+    name: "Local Media Association",
+    url: "https://localmedia.org/feed/",
+    language: "en",
+  },
+  {
+    name: "CNTI - Center for News, Technology & Innovation",
+    url: "https://cnti.org/feed/",
+    language: "en",
+  },
+  {
+    name: "Column Content",
+    url: "https://columncontent.com/feed/",
+    language: "en",
+  },
+  {
+    name: "American Journalism Project",
+    url: "https://www.theajp.org/feed/",
+    language: "en",
+  },
+  {
+    name: "WonderTools",
+    url: "https://wondertools.substack.com/feed",
+    language: "en",
+  },
+  {
+    name: "AI Accountability Review",
+    url: "https://www.ai-accountability-review.com/feed",
+    language: "en",
+  },
+  // NEW JOURNALISM AI FEEDS (9 more from resources.rss extraction)
+  {
+    name: "Online Journalism Blog",
+    url: "https://onlinejournalismblog.com/feed/",
+    language: "en",
+  },
+  {
+    name: "Trusting News",
+    url: "https://trustingnews.org/feed/",
+    language: "en",
+  },
+  {
+    name: "AI for Media Network",
+    url: "https://aiformedia.network/feed/",
+    language: "de",
+  },
+  {
+    name: "Méta-media",
+    url: "https://www.meta-media.fr/feed",
+    language: "fr",
+  },
+  {
+    name: "Newsroom Robots",
+    url: "https://www.newsroomrobots.com/feed",
+    language: "en",
+  },
+  {
+    name: "C21Media",
+    url: "https://www.c21media.net/feed/",
+    language: "en",
+  },
+  {
+    name: "Journalism UK",
+    url: "https://www.journalism.co.uk/rss/",
+    language: "en",
+  },
+  {
+    name: "Nieman Lab",
+    url: "https://www.niemanlab.org/feed/",
+    language: "en",
+  },
+  {
+    name: "BeyondWords",
+    url: "https://beyondwords.io/blog/rss/",
+    language: "en",
+  },
+  // REMOVED (HTTP 404):
+  // - JournalismAI: https://www.journalismai.info/feed
+  // - Reuters Institute: https://reutersinstitute.politics.ox.ac.uk/feed
+  // - INMA: https://www.inma.org/blogs/main/rss.xml
+  // - Chartbeat Blog: https://blog.chartbeat.com/feed/
+  // - MediaPost: https://www.mediapost.com/rss/
+  // REMOVED (No entries):
+  // - Tech Policy Press: https://www.techpolicy.press/feed/
+  // REMOVED (Invalid XML):
+  // - OSF Preprints: https://osf.io/preprints/socarxiv/discover/rss
 ];
 
 /**
@@ -572,7 +698,7 @@ export async function fetchAllRSSFeeds(
   maxConcurrent: number = 5,
 ): Promise<RSSItem[]> {
   console.log(
-    `📡 ${AI_NEWS_RSS_FEEDS.length} RSS feed okunuyor (AI-focused only)...`,
+    `📡 ${AI_NEWS_RSS_FEEDS.length} RSS feed okunuyor (AI-focused + Journalism AI + Research - all tested & working)...`,
   );
 
   const allItems: RSSItem[] = [];

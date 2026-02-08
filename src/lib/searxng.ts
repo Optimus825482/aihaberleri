@@ -131,19 +131,21 @@ export async function searxngSearch(
  * Calculate trend score using SearXNG
  * Uses result count and position as indicators
  *
- * ENHANCED ALGORITHM v2:
+ * ENHANCED ALGORITHM v3:
+ * - Improved keyword extraction (AI terms, proper nouns, meaningful words)
  * - Exact title match (high priority)
  * - Keyword specificity (unique terms = higher score)
  * - Freshness indicator (recent coverage)
  * - Source diversity (different domains = trending)
  * - Position weighting (top positions = more relevant)
+ * - AI term bonus (boost AI-specific content)
  */
 export async function calculateTrendScoreSearXNG(
   title: string,
   description: string,
 ): Promise<number> {
   try {
-    // Extract meaningful keywords (4+ chars, no common words)
+    // Enhanced stopwords list
     const stopWords = [
       "that",
       "this",
@@ -189,30 +191,168 @@ export async function calculateTrendScoreSearXNG(
       "first",
       "model",
       "models",
+      "your",
+      "they",
+      "make",
+      "like",
+      "time",
+      "year",
+      "work",
+      "good",
+      "many",
+      "much",
+      "well",
+      "back",
+      "call",
+      "come",
+      "find",
+      "give",
+      "hand",
+      "high",
+      "keep",
+      "last",
+      "long",
+      "look",
+      "made",
+      "part",
+      "seem",
+      "take",
+      "tell",
+      "want",
+      "week",
+      "show",
+      "know",
+      "need",
+      "feel",
+      "help",
+      "turn",
+      "move",
+      "live",
+      "mean",
+      "leave",
+      "think",
+      "still",
+      "every",
+      "great",
+      "right",
+      "small",
+      "large",
+      "next",
+      "early",
+      "young",
     ];
-    const keywords = title
-      .toLowerCase()
+
+    // AI-specific important terms (should NOT be filtered)
+    const aiTerms = [
+      "openai",
+      "anthropic",
+      "google",
+      "microsoft",
+      "meta",
+      "deepmind",
+      "chatgpt",
+      "claude",
+      "gemini",
+      "llama",
+      "grok",
+      "mistral",
+      "cohere",
+      "nvidia",
+      "agent",
+      "agents",
+      "agentic",
+      "multimodal",
+      "reasoning",
+      "training",
+      "inference",
+      "transformer",
+      "diffusion",
+      "embedding",
+      "robotics",
+      "autonomous",
+      "generative",
+      "neural",
+      "algorithm",
+      "deployment",
+      "scaling",
+      "compute",
+    ];
+
+    // Extract keywords with improved logic
+    const titleLower = title.toLowerCase();
+    const words = titleLower
+      .replace(/[^\w\s-]/g, " ")
       .split(/\s+/)
-      .filter((w) => w.length > 4 && !stopWords.includes(w))
-      .slice(0, 4);
+      .filter((w) => w.length > 0);
+
+    // Priority 1: AI-specific terms
+    const aiKeywords = words.filter((w) =>
+      aiTerms.some((term) => w.includes(term) || term.includes(w)),
+    );
+
+    // Priority 2: Capitalized words (proper nouns/brands)
+    const capitalizedWords = title
+      .split(/\s+/)
+      .filter(
+        (w) =>
+          w.length > 2 &&
+          w[0] === w[0].toUpperCase() &&
+          w.slice(1) === w.slice(1).toLowerCase() &&
+          !stopWords.includes(w.toLowerCase()),
+      )
+      .map((w) => w.toLowerCase());
+
+    // Priority 3: Long meaningful words (>5 chars)
+    const meaningfulWords = words.filter(
+      (w) => w.length > 5 && !stopWords.includes(w),
+    );
+
+    // Priority 4: Medium words (4-5 chars)
+    const mediumWords = words.filter(
+      (w) => w.length >= 4 && w.length <= 5 && !stopWords.includes(w),
+    );
+
+    // Combine with priority order
+    const allKeywords = [
+      ...new Set([
+        ...aiKeywords,
+        ...capitalizedWords,
+        ...meaningfulWords,
+        ...mediumWords,
+      ]),
+    ];
+
+    // Take top 5 keywords
+    const keywords = allKeywords.slice(0, 5);
 
     if (keywords.length === 0) {
       console.log(`📊 SearXNG trend score: 50 (no valid keywords)`);
       return 50;
     }
 
+    // Build smarter search query
+    let searchQuery = keywords.join(" ");
+    if (aiKeywords.length > 0) {
+      searchQuery =
+        `${aiKeywords.join(" ")} ${keywords.filter((k) => !aiKeywords.includes(k)).join(" ")}`.trim();
+    }
+
+    console.log(
+      `🔍 SearXNG query: "${searchQuery}" (${keywords.length} keywords, ${aiKeywords.length} AI terms)`,
+    );
+
     // Search for keywords in news category only
-    const keywordResults = await searxngSearch(keywords.join(" "), {
+    const keywordResults = await searxngSearch(searchQuery, {
       count: 15,
-      time_range: "day", // Only last 24 hours for freshness
+      time_range: "day",
       categories: "news",
     });
 
     // Calculate metrics
-    // 1. Result count score (0-100) - more results = more trending
+    // 1. Result count score (0-100)
     const resultCountScore = Math.min(100, keywordResults.length * 7);
 
-    // 2. Source diversity score (0-50) - unique domains
+    // 2. Source diversity score (0-50)
     const uniqueDomains = new Set(
       keywordResults.map((r) => {
         try {
@@ -224,7 +364,7 @@ export async function calculateTrendScoreSearXNG(
     );
     const diversityScore = Math.min(50, uniqueDomains.size * 10);
 
-    // 3. Position score (0-50) - top positions = more relevant
+    // 3. Position score (0-50)
     const avgPosition =
       keywordResults.length > 0
         ? keywordResults.reduce((sum, r) => sum + (r.positions?.[0] || 10), 0) /
@@ -232,11 +372,10 @@ export async function calculateTrendScoreSearXNG(
         : 10;
     const positionScore = Math.max(0, 50 - avgPosition * 5);
 
-    // 4. Keyword specificity bonus (0-30) - more unique keywords = higher score
+    // 4. Keyword specificity bonus (0-30)
     const specificityBonus = keywords.length >= 3 ? 30 : keywords.length * 10;
 
-    // 5. Title match bonus (0-50) - check if any result contains similar title
-    const titleLower = title.toLowerCase();
+    // 5. Title match bonus (0-50)
     const titleMatchCount = keywordResults.filter(
       (r) =>
         r.title?.toLowerCase().includes(keywords[0]) &&
@@ -244,27 +383,31 @@ export async function calculateTrendScoreSearXNG(
     ).length;
     const titleMatchBonus = Math.min(50, titleMatchCount * 15);
 
-    // Calculate total score (0-280 range, normalized to 0-100)
+    // 6. AI term bonus (0-30)
+    const aiTermBonus =
+      aiKeywords.length > 0 ? Math.min(30, aiKeywords.length * 15) : 0;
+
+    // Calculate total score (0-310 range, normalized to 0-100)
     const rawScore =
       resultCountScore +
       diversityScore +
       positionScore +
       specificityBonus +
-      titleMatchBonus;
-    const normalizedScore = Math.round((rawScore / 280) * 100);
+      titleMatchBonus +
+      aiTermBonus;
+    const normalizedScore = Math.round((rawScore / 310) * 100);
 
-    // Add random variance (±5) to differentiate similar scores
+    // Add random variance (±5)
     const variance = Math.floor(Math.random() * 11) - 5;
     const finalScore = Math.max(5, Math.min(100, normalizedScore + variance));
 
     console.log(
-      `📊 SearXNG trend score: ${finalScore} (results: ${keywordResults.length}, domains: ${uniqueDomains.size}, pos: ${avgPosition.toFixed(1)}, keywords: ${keywords.join(",")})`,
+      `📊 SearXNG trend score: ${finalScore} (results: ${keywordResults.length}, domains: ${uniqueDomains.size}, pos: ${avgPosition.toFixed(1)}, ai_bonus: ${aiTermBonus})`,
     );
 
     return finalScore;
   } catch (error: any) {
     console.error("❌ SearXNG trend score error:", error.message);
-    // Return random score between 20-60 on error
     return Math.floor(Math.random() * 41) + 20;
   }
 }

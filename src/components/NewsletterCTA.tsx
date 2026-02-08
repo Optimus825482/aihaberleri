@@ -195,10 +195,10 @@ export function NewsletterCTA({ locale = "tr" }: NewsletterCTAProps) {
   };
 
   return (
-    <div className="mb-8 sm:mb-10 lg:mb-12 grid gap-4 sm:gap-5 md:grid-cols-2">
+    <div className="mb-8 sm:mb-10 lg:mb-12 grid gap-4 sm:gap-5 grid-cols-1 md:grid-cols-2">
       {/* Newsletter Card */}
-      <div className="flex items-center justify-between gap-4 rounded-xl lg:rounded-2xl bg-gradient-to-r from-ai-primary/15 via-ai-primary/10 to-ai-primary/5 border border-ai-primary/20 p-5 sm:p-6 dark:from-ai-primary/10 dark:via-ai-primary/5 dark:to-ai-primary/0 dark:border-ai-primary/30 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-xl lg:rounded-2xl bg-gradient-to-r from-ai-primary/15 via-ai-primary/10 to-ai-primary/5 border border-ai-primary/20 p-4 sm:p-5 lg:p-6 dark:from-ai-primary/10 dark:via-ai-primary/5 dark:to-ai-primary/0 dark:border-ai-primary/30 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1 w-full sm:w-auto">
           <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-ai-primary to-ai-primary-hover text-white shadow-lg shadow-ai-primary/30">
             <span className="material-symbols-outlined text-[22px] sm:text-[24px]">
               mail
@@ -208,7 +208,7 @@ export function NewsletterCTA({ locale = "tr" }: NewsletterCTAProps) {
             <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white mb-0.5">
               {t.weeklyNewsletter}
             </h3>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-ai-text-secondary line-clamp-1">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-ai-text-secondary line-clamp-2 sm:line-clamp-1">
               {t.newsletterDesc}
             </p>
 
@@ -224,12 +224,12 @@ export function NewsletterCTA({ locale = "tr" }: NewsletterCTAProps) {
                   placeholder={t.enterEmail}
                   required
                   disabled={newsletterLoading}
-                  className="flex-1 px-3 py-1.5 text-xs border border-ai-surface-border rounded-lg bg-white dark:bg-ai-surface-dark text-slate-900 dark:text-white disabled:opacity-50"
+                  className="flex-1 px-3 py-2 text-xs sm:text-sm border border-ai-surface-border rounded-lg bg-white dark:bg-ai-surface-dark text-slate-900 dark:text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-ai-primary"
                 />
                 <button
                   type="submit"
                   disabled={newsletterLoading}
-                  className="px-3 py-1.5 text-xs bg-ai-primary text-white rounded-lg hover:bg-ai-primary-hover transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-xs sm:text-sm font-semibold bg-ai-primary text-white rounded-lg hover:bg-ai-primary-hover transition-colors disabled:opacity-50 whitespace-nowrap"
                 >
                   {newsletterLoading ? "..." : t.subscribe}
                 </button>
@@ -242,7 +242,7 @@ export function NewsletterCTA({ locale = "tr" }: NewsletterCTAProps) {
             type="button"
             onClick={() => setShowNewsletterForm(true)}
             disabled={newsletterSubscribed}
-            className={`shrink-0 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95 ${
+            className={`w-full sm:w-auto shrink-0 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:scale-105 active:scale-95 whitespace-nowrap ${
               newsletterSubscribed
                 ? "bg-green-600 cursor-default"
                 : "bg-gradient-to-r from-ai-primary to-ai-primary-hover hover:shadow-lg hover:shadow-ai-primary/30"
@@ -254,18 +254,18 @@ export function NewsletterCTA({ locale = "tr" }: NewsletterCTAProps) {
       </div>
 
       {/* Notifications Card */}
-      <div className="flex items-center justify-between gap-4 rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card border border-gray-100 dark:border-ai-surface-border p-5 sm:p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card border border-gray-100 dark:border-ai-surface-border p-4 sm:p-5 lg:p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 w-full sm:w-auto">
           <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-ai-surface-border to-ai-surface-hover text-white shadow-lg">
             <span className="material-symbols-outlined text-[22px] sm:text-[24px]">
               notifications_active
             </span>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white mb-0.5">
               {t.instantNotifications}
             </h3>
-            <p className="text-xs sm:text-sm text-ai-text-secondary line-clamp-1">
+            <p className="text-xs sm:text-sm text-ai-text-secondary line-clamp-2 sm:line-clamp-1">
               {t.notificationsDesc}
             </p>
           </div>
@@ -274,7 +274,7 @@ export function NewsletterCTA({ locale = "tr" }: NewsletterCTAProps) {
           type="button"
           onClick={handlePushActivate}
           disabled={pushLoading || pushSubscribed || !pushSupported}
-          className={`shrink-0 rounded-xl border-2 px-4 py-2 text-xs sm:text-sm font-bold transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={`w-full sm:w-auto shrink-0 rounded-xl border-2 px-5 py-2.5 text-sm font-bold transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
             pushSubscribed
               ? "border-green-600 bg-green-600 text-white"
               : "border-ai-surface-border bg-transparent text-slate-700 dark:text-white hover:bg-ai-surface-border hover:border-ai-primary/50"
