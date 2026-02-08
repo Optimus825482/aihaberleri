@@ -715,158 +715,12 @@ export async function selectBestArticles(
 }
 
 /**
- * 🆕 VARIATION MODE: Process article with content variation strategy
- * Instead of rejecting duplicates, create unique content from different angles
- */
-export async function processArticleVariation(
-  article: NewsArticle,
-  category: string,
-  variation?: {
-    angle: string;
-    targetAudience: string;
-    focus: string;
-    titleModifier: string;
-  },
-  baseArticle?: {
-    title: string;
-    topic: string;
-  }
-): Promise<ProcessedArticle> {
-  console.log(`🎨 VARIATION MODE: ${article.title}`);
-  if (variation) {
-    console.log(`   Angle: ${variation.angle}`);
-    console.log(`   Target: ${variation.targetAudience}`);
-    console.log(`   Focus: ${variation.focus}`);
-  }
-
-  // Live log: Processing variation
-  await liveLog.content.info(
-    `🎨 Variation: ${variation?.angle || 'Default'} - ${article.title.substring(0, 40)}...`,
-  );
-
-  try {
-    // 🆕 Step 1: Create variation article using content-variation service
-    const { createVariationArticle, optimizeForSEO } = await import("./content-variation.service");
-
-    const angleData = variation
-      ? await createVariationArticle(
-          article.title,
-          article.description,
-          article.url,
-          variation
-        )
-      : {
-          angleTitle: article.title,
-          angleContent: article.description,
-          researchSummary: "Original article"
-        };
-
-    console.log(`✅ Variation created: ${angleData.angleTitle}`);
-    console.log(`   Research: ${angleData.researchSummary}`);
-
-    // Step 2: SEO Optimization
-    const seoData = await optimizeForSEO(
-      angleData.angleTitle,
-      angleData.angleContent,
-      [article.title, category, variation?.angle || ""].filter(Boolean)
-    );
-
-    console.log(`✅ SEO optimized: ${seoData.optimizedTitle}`);
-    console.log(`   Keywords: ${seoData.focusKeywords.join(", ")}`);
-
-    // Step 3: Generate AI image with variation context
-    console.log("🎨 Görsel prompt oluşturuluyor (variation context)...");
-    const imagePrompt = await generateImagePrompt(
-      seoData.optimizedTitle,
-      angleData.angleContent,
-      `${category} - ${variation?.angle || "news"}`
-    );
-
-    const imageUrl = await fetchPollinationsImage(imagePrompt, {
-      width: 1200,
-      height: 630,
-      model: "flux",
-      enhance: true,
-      nologo: true,
-    });
-
-    // Step 4: Generate slug and optimize image
-    const slug = generateSlug(seoData.optimizedTitle);
-
-    let imageSizes = {
-      large: imageUrl,
-      medium: imageUrl,
-      small: imageUrl,
-      thumb: imageUrl,
-    };
-
-    try {
-      imageSizes = await optimizeAndGenerateSizes(imageUrl, slug);
-    } catch (e) {
-      console.warn("⚠️ Image optimization failed, using original");
-    }
-
-    // Step 5: Get or create category
-    const categorySlug = generateSlug(category);
-    await ensureCategory(category, categorySlug);
-
-    // Step 6: Build final content with sources
-    const sourcesHtml = `<a href="${article.url}" target="_blank" rel="noopener nofollow" class="source-link">Kaynak</a>`;
-
-    const finalContent = `${angleData.angleContent}
-<div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
-  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8a4 4 0 0 1 0 8"/><path d="M12 8a4 4 0 0 0 0 8"/></svg>
-    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">Yapay Zeka Destekli İçerik</span>
-    ${variation ? `<span style="font-size: 0.65rem; background: rgba(16,185,129,0.2); color: #10b981; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">${variation.angle}</span>` : ""}
-  </div>
-  <div style="font-size: 0.65rem; color: #94a3b8;">
-    <strong style="color: #64748b;">Kaynak:</strong> ${sourcesHtml}
-  </div>
-</div>`;
-
-    await liveLog.publish.success(`🎨 Variation hazır: ${slug}`);
-
-    return {
-      title: seoData.optimizedTitle,
-      slug,
-      excerpt: seoData.metaDescription,
-      content: finalContent,
-      imageUrl: imageSizes.large,
-      imageUrlMedium: imageSizes.medium,
-      imageUrlSmall: imageSizes.small,
-      imageUrlThumb: imageSizes.thumb,
-      sourceUrl: article.url,
-      categorySlug,
-      keywords: seoData.focusKeywords,
-      metaTitle: seoData.optimizedTitle,
-      metaDescription: seoData.metaDescription,
-      score: 800, // Variations get high score
-      topic: variation?.angle.toLowerCase().replace(/\s+/g, "-") || article.title.substring(0, 30).toLowerCase(),
-    };
-  } catch (error) {
-    console.error("❌ Variation processing failed:", error);
-    throw error;
-  }
-}
-
-/**
  * Process a single article: deep research, rewrite, get image, prepare for publishing
  * ENHANCED: Now includes deep research step for richer, more comprehensive content
  */
 export async function processArticle(
   article: NewsArticle,
   category: string,
-  variation?: {
-    angle: string;
-    targetAudience: string;
-    focus: string;
-    titleModifier: string;
-  },
-  baseArticle?: {
-    title: string;
-    topic: string;
-  }
 ): Promise<ProcessedArticle> {
   console.log(`📝 Haber işleniyor: ${article.title}`);
 
@@ -876,11 +730,6 @@ export async function processArticle(
   );
 
   try {
-    // 🆕 If variation provided, use variation mode
-    if (variation) {
-      return await processArticleVariation(article, category, variation, baseArticle);
-    }
-
     // Step 1: Fetch full article content
     const fullContent = await fetchArticleContent(article.url);
 
@@ -1444,7 +1293,6 @@ export async function publishArticle(
  * Process and publish multiple articles
  * ENHANCED: Now supports pre-aggregated articles from multi-source clustering
  * ENHANCED: Now supports topic field from smart filtering
- * 🆕 ENHANCED: Now supports VARIATION mode for similar topics
  */
 export async function processAndPublishArticles(
   articles: Array<{
@@ -1452,24 +1300,13 @@ export async function processAndPublishArticles(
     category: string;
     aggregated?: ProcessedArticle;
     topic?: string; // NEW: Topic from smart filtering
-    _variation?: { // 🆕 NEW: Content variation support
-      angle: string;
-      targetAudience: string;
-      focus: string;
-      titleModifier: string;
-    };
-    _needsVariation?: boolean; // 🆕 NEW: Flag to indicate variation mode
-    _baseArticle?: { // 🆕 NEW: Base article for variation
-      title: string;
-      topic: string;
-    };
   }>,
   agentLogId?: string,
   forceCategorySlug?: string,
 ): Promise<Array<{ id: string; slug: string }>> {
   const published = [];
 
-  for (const { article, category, aggregated, topic, _variation, _needsVariation, _baseArticle } of articles) {
+  for (const { article, category, aggregated, topic } of articles) {
     try {
       let processed: ProcessedArticle;
 
@@ -1487,39 +1324,6 @@ export async function processAndPublishArticles(
         if (topic) {
           processed.topic = topic;
         }
-      } else if (_needsVariation && _variation) {
-        // 🆕 VARIATION MODE: Create unique content from similar topic
-        console.log(
-          `🎨 VARIATION MODE: ${article.title.substring(0, 60)}...`,
-        );
-        console.log(`   Angle: ${_variation.angle}`);
-
-        // Skip duplicate check - we WANT to create similar but unique content
-        const targetCategory = forceCategorySlug
-          ? await db.category.findUnique({ where: { slug: forceCategorySlug } })
-          : null;
-
-        const categoryToUse = targetCategory ? targetCategory.name : category;
-
-        // Process with variation
-        processed = await processArticle(
-          article,
-          categoryToUse,
-          _variation,
-          _baseArticle
-        );
-
-        // Override category slug if forced
-        if (forceCategorySlug) {
-          processed.categorySlug = forceCategorySlug;
-        }
-
-        // Add unique topic for variation
-        if (topic) {
-          processed.topic = topic;
-        }
-
-        console.log(`✅ Variation created successfully!`);
       } else {
         // ⚡ CRITICAL FIX: Check for duplicates BEFORE processing (saves image generation costs)
         console.log(

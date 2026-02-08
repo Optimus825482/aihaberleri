@@ -42,10 +42,6 @@ export async function startMultiAgentPipeline(
     trendScore: article.trendScore,
     suggestedCategory: config.categorySlug || "teknoloji",
     agentLogId: config.agentLogId, // Pass agentLogId through pipeline
-    // 🆕 VARIATION SUPPORT: Pass variation data through pipeline
-    _variation: (article as any)._variation,
-    _needsVariation: (article as any)._needsVariation,
-    _baseArticle: (article as any)._baseArticle,
   }));
 
   // Add to relevance filter queue (skip content collector since we already have articles)

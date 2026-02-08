@@ -336,88 +336,8 @@ export async function executeNewsAgent(
 
     console.log(`📚 Son ${recentHours} saatte ${recentArticles.length} haber yayınlanmış`);
 
-    // 🆕 Content Variation Service ile kontrol et
-    const { findOrCreateVariation, createVariationArticle } = await import("./content-variation.service");
-
-    // Tüm aday haberleri kontrol et ve variation planı oluştur
-    const variationPlan: Array<{
-      article: any;
-      needsVariation: boolean;
-      variation?: any;
-      baseArticle?: any;
-    }> = [];
-
-    for (const candidate of newsArticles.slice(0, 10)) { // İlk 10 adayı kontrol et
-      const result = await findOrCreateVariation(
-        candidate.title,
-        candidate.description,
-        candidate.url,
-        recentArticles,
-        recentHours
-      );
-
-      if (result.shouldCreateVariation) {
-        console.log(`🔄 VARIATION NEEDED: "${candidate.title.substring(0, 50)}..."`);
-        console.log(`   → ${result.variation.angle} açısı ile içerik üretilecek`);
-
-        variationPlan.push({
-          article: candidate,
-          needsVariation: true,
-          variation: result.variation,
-          baseArticle: result.baseArticle
-        });
-      } else {
-        console.log(`✅ ORIGINAL OK: "${candidate.title.substring(0, 50)}..."`);
-        variationPlan.push({
-          article: candidate,
-          needsVariation: false
-        });
-      }
-
-      if (variationPlan.length >= targetCount) break;
-    }
-
-    console.log(`\n📊 Variation Plan: ${variationPlan.length} haber`);
-    console.log(`   - Original: ${variationPlan.filter(p => !p.needsVariation).length}`);
-    console.log(`   - Variation: ${variationPlan.filter(p => p.needsVariation).length}`);
-
-    if (variationPlan.length === 0) {
-      console.log(`⚠️ Hiç haber planlanamadı! En az 1 variation oluşturulacak...`);
-
-      // Force create variation from first candidate
-      const firstCandidate = newsArticles[0];
-      if (firstCandidate) {
-        const variations = await import("./content-variation.service");
-        const defaultVariations = await variations.generateContentAngles(
-          firstCandidate.title,
-          firstCandidate.description,
-          recentArticles.map(a => a.topic)
-        );
-        variationPlan.push({
-          article: firstCandidate,
-          needsVariation: true,
-          variation: defaultVariations[0]
-        });
-      }
-    }
-
-    const selectedArticles = variationPlan.map((plan, index) => ({
-      ...plan.article,
-      _variation: plan.variation,
-      _needsVariation: plan.needsVariation,
-      _baseArticle: plan.baseArticle,
-      _index: index
-    }));
-
-    await addLogMessage(
-      agentLog.id,
-      `✅ ${selectedArticles.length} haber planlandı (${variationPlan.filter(p => p.needsVariation).length} variation)`,
-    );
-
-    // Live log: Articles planned
-    await liveLog.deepseek.success(
-      `✅ ${selectedArticles.length} haber planlandı (${variationPlan.filter(p => p.needsVariation).length} variation)`,
-    );
+    // Use newsArticles directly (already filtered for duplicates in fetchAINews)
+    const uniqueArticles = newsArticles;
 
     // Step 3: Start Multi-Agent Pipeline (NEW!)
     agentLogger.step(
@@ -445,7 +365,7 @@ export async function executeNewsAgent(
     const { startMultiAgentPipeline, waitForPipelineCompletion } =
       await import("./multi-agent-pipeline.service");
 
-    await startMultiAgentPipeline(selectedArticles, {
+    await startMultiAgentPipeline(uniqueArticles, {
       agentLogId: agentLog.id,
       categorySlug,
       targetCount,
@@ -453,11 +373,11 @@ export async function executeNewsAgent(
 
     // Live log: Pipeline started
     await liveLog.agent.info(
-      `🤖 Multi-agent pipeline başlatıldı: ${selectedArticles.length} haber işlenecek`,
+      `🤖 Multi-agent pipeline başlatıldı: ${uniqueArticles.length} haber işlenecek`,
     );
     await addLogMessage(
       agentLog.id,
-      `🤖 Multi-agent pipeline başlatıldı: ${selectedArticles.length} haber işlenecek`,
+      `🤖 Multi-agent pipeline başlatıldı: ${uniqueArticles.length} haber işlenecek`,
     );
 
     // Wait for pipeline completion

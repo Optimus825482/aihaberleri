@@ -1,19 +1,10 @@
 /**
  * Duplicate Detector Agent
  *
- * 🆕 YENİ YAKLAŞIM: Content Variation - Duplicate'leri engelleme, çeşitlendir!
- *
- * ESKİ SİSTEM: Duplicate'leri tamamen engelle → %100 duplicate oranı
- * YENİ SİSTEM:
- * 1. Sadece URL duplicate'lerini engelle (aynı kaynaktan tekrar yazma)
- * 2. Benzer konular için VARIATION bayrağı ekle
- * 3. İçerik oluşturma aşamasında farklı açılardan içerik üret
- *
  * RESPONSIBILITIES:
  * 1. Check for URL duplicates (PostgreSQL)
  * 2. Store topic in Article.topic field for future checks
- * 3. Mark similar topics for variation processing
- * 4. Emit articles to next queue with variation flags
+ * 3. Emit articles to next queue
  *
 
 import { Job } from "bullmq";
@@ -56,7 +47,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
     const articles = job.data;
     const startTime = Date.now();
 
-    this.logger.info(`🎯 Processing ${articles.length} articles (Variation Mode activated)...`);
+    this.logger.info(`Checking ${articles.length} articles for duplicates...`);
 
     if (articles.length === 0) {
       return {
@@ -74,32 +65,20 @@ export class DuplicateDetectorAgent extends BaseAgent<
     try {
       const uniqueArticles: UniqueArticle[] = [];
       let duplicateCount = 0;
-      let variationCount = 0;
 
       for (const article of articles) {
         // Extract topic for future duplicate checks
         const topic = this.extractTopic(article.title);
 
-        // Check for duplicates using NEW relaxed detection
+        // Check for duplicates using multi-layer detection
         const duplicateCheck = await this.checkDuplicate(article);
 
         if (duplicateCheck.isDuplicate) {
           duplicateCount++;
           this.logger.info(
-            `❌ URL Duplicate: ${article.title.substring(0, 50)}... (${duplicateCheck.reason})`,
+            `Duplicate: ${article.title.substring(0, 50)}... (${duplicateCheck.reason})`,
           );
         } else {
-          // 🆕 Check if variation is needed
-          const needsVariation = duplicateCheck.needsVariation || false;
-          const similarArticles = duplicateCheck.similarArticles || [];
-
-          if (needsVariation) {
-            variationCount++;
-            this.logger.info(
-              `🎯 Needs Variation: ${article.title.substring(0, 50)}...`,
-            );
-          }
-
           // Pre-generate embedding for unique articles (to be stored later)
           let embedding: number[] | undefined;
           try {
@@ -117,16 +96,12 @@ export class DuplicateDetectorAgent extends BaseAgent<
             topic,
             isDuplicate: false,
             embedding,
-            // 🆕 Add variation flags
-            _needsVariation: needsVariation,
-            _similarArticles: similarArticles,
-          } as any);
+          });
         }
       }
 
-      // ═══════════════════════════════════════════════════════════════════
-      // 🆕 VARIATION MODE: Minimum 1 article guarantee
-      // ═══════════════════════════════════════════════════════════════════
+      // 🔧 RECOVERY MECHANISM: Minimum 1 article guarantee (06.02.2026)
+      // If ALL articles were rejected as duplicates, pick the highest scored one with ONLY URL check
       if (uniqueArticles.length === 0 && articles.length > 0) {
         this.logger.warn(
           `⚠️ RECOVERY MODE: All ${articles.length} articles were duplicates. Attempting relaxed selection...`,
@@ -168,9 +143,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
               isDuplicate: false,
               duplicateReason: "RECOVERY_MODE_URL_ONLY",
               embedding,
-              _needsVariation: true, // Recovery mode = force variation
-              _similarArticles: [],
-            } as any);
+            });
 
             this.logger.success(
               `🔄 RECOVERY: Selected "${article.title.substring(0, 50)}..." (score: ${article.relevanceScore})`,
@@ -189,12 +162,9 @@ export class DuplicateDetectorAgent extends BaseAgent<
       const duplicateRate = ((duplicateCount / articles.length) * 100).toFixed(
         1,
       );
-      const variationRate = ((variationCount / uniqueArticles.length) * 100).toFixed(
-        1,
-      );
 
       this.logger.success(
-        `🎯 Result: ${uniqueArticles.length}/${articles.length} unique (${duplicateRate}% URL duplicates, ${variationRate}% need variation)`,
+        `Duplicate check: ${uniqueArticles.length}/${articles.length} unique (${duplicateRate}% duplicates)`,
       );
 
       return {
@@ -225,18 +195,12 @@ export class DuplicateDetectorAgent extends BaseAgent<
   }
 
   /**
-   * 🆕 YENİ: Check if article is duplicate
-   *
-   * Sadece URL duplicate'lerini engelle.
-   * Benzer konular VARIATION ile işlenecek.
+   * Check if article is duplicate using multi-layer detection
    */
   private async checkDuplicate(
     article: ScoredArticle,
-  ): Promise<{ isDuplicate: boolean; reason?: string; needsVariation?: boolean; similarArticles?: any[] }> {
-    // ═══════════════════════════════════════════════════════════════════
-    // KATMAN 1: Sadece URL duplicate kontrolü (strict)
-    // Aynı kaynaktan tekrar yazmayı engelle
-    // ═══════════════════════════════════════════════════════════════════
+  ): Promise<{ isDuplicate: boolean; reason?: string }> {
+    // Layer 1: Exact URL match
     const normalizedUrl = this.normalizeUrl(article.url);
     const existingByUrl = await db.article.findFirst({
       where: {
@@ -245,7 +209,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
           { sourceUrl: { startsWith: normalizedUrl.split("?")[0] } },
         ],
       },
-      select: { id: true, title: true, topic: true, publishedAt: true },
+      select: { id: true, title: true },
     });
 
     if (existingByUrl) {
@@ -255,63 +219,46 @@ export class DuplicateDetectorAgent extends BaseAgent<
       };
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // 🆕 KATMAN 2: Benzer konuları bul (variation için)
-    // Bu konuları ENGELLE, variation bayrağı ile işaretle
-    // ═══════════════════════════════════════════════════════════════════
-    const entities = this.extractEntities(article.title.toLowerCase());
+    // Layer 2: Vector similarity using pgvector (semantic duplicates)
+    try {
+      const semanticCheck = await checkSemanticDuplicate(
+        article.title,
+        article.description,
+        0.9, // High threshold for duplicates
+        48, // 48-hour window
+      );
 
-    if (entities.length >= 1) {
-      // Son 24 saatteki benzer makaleleri bul
-      const recentArticles = await db.article.findMany({
-        where: {
-          publishedAt: {
-            gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // 24 saat
-          },
-          status: "PUBLISHED",
-        },
-        select: {
-          id: true,
-          title: true,
-          topic: true,
-          publishedAt: true,
-        },
-        take: 50,
-      });
-
-      const similarArticles: any[] = [];
-
-      for (const existing of recentArticles) {
-        const existingEntities = this.extractEntities(existing.title.toLowerCase());
-        const commonEntities = entities.filter((e) => existingEntities.includes(e));
-
-        // 1+ ortak entity varsa benzer kabul et
-        if (commonEntities.length >= 1) {
-          similarArticles.push({
-            ...existing,
-            commonEntities,
-          });
-        }
-      }
-
-      // Benzer makaleler varsa, variation bayrağını set et
-      if (similarArticles.length > 0) {
-        this.logger.info(
-          `🎯 Similar topics found: ${similarArticles.length} - "${article.title.substring(0, 40)}..."`,
-        );
-        similarArticles.forEach((s, i) => {
-          this.logger.info(
-            `   ${i + 1}. [${s.commonEntities.join(", ")}] "${s.title.substring(0, 40)}..."`,
-          );
-        });
-
+      if (semanticCheck.isDuplicate) {
         return {
-          isDuplicate: false,
-          reason: "NEEDS_VARIATION",
-          needsVariation: true,
-          similarArticles,
+          isDuplicate: true,
+          reason: `SEMANTIC_MATCH_${Math.round((semanticCheck.similarity || 0) * 100)}%`,
         };
       }
+    } catch (error) {
+      // Log but don't block on embedding errors
+      this.logger.warn(
+        `Semantic duplicate check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+
+    // Layer 3: Entity-based semantic matching
+    const entityMatch = await this.checkEntityBasedDuplicate(article.title);
+    if (entityMatch.isDuplicate) {
+      return entityMatch;
+    }
+
+    // Layer 4: Advanced title/content similarity (using existing service)
+    const duplicateCheck = await isDuplicateNews(
+      article.title,
+      article.description,
+      72, // 72-hour window
+    );
+
+    if (duplicateCheck.isDuplicate) {
+      return {
+        isDuplicate: true,
+        reason: duplicateCheck.reason,
+      };
     }
 
     return { isDuplicate: false };

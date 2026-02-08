@@ -131,16 +131,10 @@ export class ContentEnricherAgent extends BaseAgent<
           }
 
           // Step 2: Synthesize content (TR + EN) - these run in parallel across articles
-          // 🆕 VARIATION MODE: Check if this article needs variation
-          const needsVariation = (article as any)._needsVariation || false;
-          const similarArticles = (article as any)._similarArticles || [];
-
           const synthesized = await this.synthesizeContent(
             article,
             sources,
             article.suggestedCategory || "teknoloji",
-            needsVariation,
-            similarArticles,
           );
 
           // Step 3: Generate Title A/B Test Variants
@@ -400,7 +394,6 @@ export class ContentEnricherAgent extends BaseAgent<
 
   /**
    * Synthesize content from multiple sources (TR + EN)
-   * 🆕 VARIATION MODE: Can create content from different angles for similar topics
    */
   private async synthesizeContent(
     article: UniqueArticle,
@@ -411,8 +404,6 @@ export class ContentEnricherAgent extends BaseAgent<
       relevanceScore: number;
     }>,
     category: string,
-    needsVariation: boolean = false,
-    similarArticles: any[] = [],
   ): Promise<{
     tr: {
       title: string;
@@ -430,23 +421,6 @@ export class ContentEnricherAgent extends BaseAgent<
       metaDescription: string;
     };
   }> {
-    // 🆕 VARIATION MODE: Generate content angle if needed
-    let angleContext = "";
-    let angleModifier = "";
-    if (needsVariation && similarArticles.length > 0) {
-      // Determine best angle based on existing similar articles
-      const existingTopics = similarArticles.map((a: any) => a.topic || a.title).slice(0, 3);
-      const angle = await this.generateVariationAngle(article.title, existingTopics);
-      angleContext = `
-### VARIasyon Açısı:
-Bu içerik, benzer konuları yeniden yazmak yerine FARKLI BİR AÇIDAN ele alıyor.
-Seçilen Açı: ${angle.angle}
-Hedef Kitle: ${angle.targetAudience}
-Odak: ${angle.focus}
-`;
-      angleModifier = angle.titleModifier + " ";
-      this.logger.info(`🎨 Using variation angle: ${angle.angle}`);
-    }
     // Sanitize text to prevent JSON parsing errors in API calls
     const sanitizeForPrompt = (text: string): string => {
       return text
@@ -472,7 +446,7 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
 
     // Turkish content (HYBRID: Using DeepSeek-Chat for complex synthesis - proven quality)
     this.logger.info(
-      `🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis ${needsVariation ? '(VARIATION MODE)' : ''}`,
+      `🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)`,
     );
     const trPrompt = `Sen dünya çapında ödüllü bir investigative journalist ve haber editörüsün.
 
@@ -483,8 +457,6 @@ Başlık: ${article.title}
 Açıklama: ${article.description}
 Kaynak URL: ${article.url}
 
-${angleContext}
-
 ### TOPLANAN KAYNAKLAR:
 ${sourcesText}
 
@@ -494,11 +466,10 @@ ${sourcesText}
 3. Profesyonel üslup: Objektif, mesafeli, 3. tekil şahıs
 4. Yapı: Başlık (50-70 karakter), Özet (2-3 cümle), İçerik (HTML, min 500 kelime)
 5. SEO: Meta açıklama (150-160 karakter), 5-8 anahtar kelime
-${needsVariation ? `6. 🎨 VARIasyon: ${angleModifier}başlık kullan ve farklı bir açıdan ele al` : ""}
 
 JSON formatında yanıt ver:
 {
-  "title": "${needsVariation ? angleModifier : ""}SEO Uyumlu Türkçe Başlık",
+  "title": "SEO Uyumlu Türkçe Başlık",
   "excerpt": "2-3 cümlelik özet",
   "content": "HTML formatlı tam makale",
   "keywords": ["anahtar1", "anahtar2"],
@@ -657,101 +628,6 @@ Respond in JSON:
       tr: trContent,
       en: enContent,
     };
-  }
-
-  /**
-   * 🆕 Generate variation angle for similar topics
-   * Creates unique content from different angles instead of blocking duplicates
-   */
-  private async generateVariationAngle(
-    title: string,
-    existingTopics: string[],
-  ): Promise<{
-    angle: string;
-    targetAudience: string;
-    focus: string;
-    titleModifier: string;
-  }> {
-    const existingTopicsList = existingTopics.length > 0
-      ? `\n⚠️ DİKKAT: Bu konuları AVOID et (zaten işlendi):\n${existingTopics.map((t, i) => `  ${i + 1}. ${t}`).join("\n")}`
-      : "";
-
-    const prompt = `Sen bir içerik stratejisti uzmanısın. Aynı haberden farklı açılardan içerik üretmek istiyoruz.
-
-ORİJİNAL HABER:
-Başlık: "${title}"
-${existingTopicsList}
-
-GÖREV: Bu haberden BENZERSİZ bir açı (angle) seç. Önceki konulardan FARKLI olmalı.
-
-ÇIKTI FORMATI:
-ANGLE: [kısa açı adı]
-TARGET: [hedef kitle]
-FOCUS: [odak noktası]
-TITLE_MODIFIER: [başlık öneki]
-
-ÖRNEKLER:
-- "Teknik Analiz" → "GPT-5 Teknik İnceleme: Model Mimarisinde Neler Yeni?"
-- "İş Dünyası" → "GPT-5 İş Dünyasında Devrim Yaratacak mı?"
-- "Etik Güvenlik" → "GPT-5: AI Safety Endişeleri Artıyor mu?"
-- "Kullanıcı Deneyimi" → "GPT-5 ile Günlük Hayatta Neleri Yapabiliriz?"
-
-Şimdi 1 BENZERSİZ açı üret (önceki konulardan farklı):`;
-
-    try {
-      const response = await callDeepSeek(
-        [
-          {
-            role: "system",
-            content: "Sen bir içerik stratejisti uzmanısın. Kısa ve öz yanıtlar ver."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        {
-          model: "deepseek-chat",
-          maxTokens: 500,
-          temperature: 1.0 // Yüksek creativity = benzersiz açılar
-        }
-      );
-
-      // Parse response
-      const lines = response.split("\n");
-      let angle = "Derinlemesine Analiz";
-      let target = "Teknoloji meraklıları";
-      let focus = "Teknik detaylar";
-      let titleModifier = "Detaylı İnceleme: ";
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (trimmed.startsWith("ANGLE:")) {
-          angle = trimmed.replace("ANGLE:", "").trim();
-        } else if (trimmed.startsWith("TARGET:")) {
-          target = trimmed.replace("TARGET:", "").trim();
-        } else if (trimmed.startsWith("FOCUS:")) {
-          focus = trimmed.replace("FOCUS:", "").trim();
-        } else if (trimmed.startsWith("TITLE_MODIFIER:")) {
-          titleModifier = trimmed.replace("TITLE_MODIFIER:", "").trim();
-        }
-      }
-
-      return {
-        angle,
-        targetAudience: target,
-        focus,
-        titleModifier
-      };
-    } catch (error) {
-      this.logger.warn(`⚠️ Angle generation failed, using default`);
-      return {
-        angle: "Derinlemesine Analiz",
-        targetAudience: "Teknoloji meraklıları",
-        focus: "Teknik detaylar ve spesifikasyonlar",
-        titleModifier: "Detaylı İnceleme: "
-      };
-    }
   }
 
   /**
