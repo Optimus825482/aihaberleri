@@ -505,3 +505,11 @@ AdSense ve Ezoic'ten red almak cesaret kırıcı olabilir, ancak birçok güçl�
 
 claude mcp add stitch --transport http https://stitch.googleapis.com/mcp --header "X-Goog-Api-Key: AQ.Ab8RN6LHPQ9g_gVI454eh27wTWhjZmJAjgJu8xbYhGrnboyp4Q" -s user
 
+# Tüm makaleler için (TAM yeniden hesaplama)
+curl -X POST "https://aihaberleri.org/api/admin/recalculate-trends?scope=all" -H "Cookie: <auth_cookie>"
+
+# Son 1 haftanın makaleleri 
+curl -X POST "https://aihaberleri.org/api/admin/recalculate-trends?scope=recent&hours=168"
+
+# Mevcut istatistikleri görmek için
+curl "https://aihaberleri.org/api/admin/recalculate-trends"

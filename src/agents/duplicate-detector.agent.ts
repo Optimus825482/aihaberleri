@@ -212,13 +212,21 @@ export class DuplicateDetectorAgent extends BaseAgent<
     //
     // TODO: Re-enable with smarter topic extraction (company+action required)
 
-    // Layer 1: Exact URL match
+    // Layer 1: Exact URL match (last 7 days only - older articles are fine to re-cover)
+    // NOTE: Early filtering uses 24h, but we use 7 days here for safety margin
+    // This prevents blocking legitimately NEW articles that have old historical coverage
     const normalizedUrl = this.normalizeUrl(article.url);
+    const urlTimeWindow = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days
     const existingByUrl = await db.article.findFirst({
       where: {
-        OR: [
-          { sourceUrl: normalizedUrl },
-          { sourceUrl: { startsWith: normalizedUrl.split("?")[0] } },
+        AND: [
+          {
+            OR: [
+              { sourceUrl: normalizedUrl },
+              { sourceUrl: { startsWith: normalizedUrl.split("?")[0] } },
+            ],
+          },
+          { publishedAt: { gte: urlTimeWindow } },
         ],
       },
       select: { id: true, title: true },
@@ -227,7 +235,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
     if (existingByUrl) {
       return {
         isDuplicate: true,
-        reason: "EXACT_URL_MATCH",
+        reason: "EXACT_URL_MATCH_7D",
       };
     }
 
