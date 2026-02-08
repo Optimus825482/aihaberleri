@@ -11,6 +11,7 @@ import {
 import { rankArticlesByTrendHybrid } from "@/lib/hybrid-search";
 import { distance } from "fastest-levenshtein";
 import { db } from "@/lib/db";
+import { normalizeUrl } from "@/lib/url-utils";
 
 export interface NewsArticle {
   title: string;
@@ -730,8 +731,49 @@ export async function fetchAINews(
       return [];
     }
 
-    // Step 1.5: Filter by category keywords if specified
-    let filteredItems = rssItems;
+    console.log(`📥 RSS'den ${rssItems.length} haber alındı`);
+
+    // ⚡ STEP 1.5: CRITICAL - Filter out already published URLs (7 days window)
+    // This is the KEY optimization - prevents duplicate URLs from entering pipeline
+    console.log(
+      `\n🔍 URL Filtering: Son 7 günde yayınlanan URL'ler eleniyor...`,
+    );
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentUrls = await db.article.findMany({
+      where: {
+        publishedAt: { gte: sevenDaysAgo },
+      },
+      select: { sourceUrl: true },
+    });
+
+    const recentUrlSet = new Set(
+      recentUrls.map((a) => normalizeUrl(a.sourceUrl)),
+    );
+
+    console.log(
+      `   Database'de ${recentUrlSet.size} unique URL bulundu (son 7 gün)`,
+    );
+
+    // Filter RSS items - ONLY NEW URLs
+    const newRssItems = rssItems.filter((item) => {
+      const normalized = normalizeUrl(item.link);
+      return !recentUrlSet.has(normalized);
+    });
+
+    console.log(
+      `   ✅ ${newRssItems.length}/${rssItems.length} haber YENİ (${((newRssItems.length / rssItems.length) * 100).toFixed(1)}% yeni)`,
+    );
+
+    if (newRssItems.length === 0) {
+      console.log(
+        "⚠️  Tüm haberler zaten yayınlanmış! Boş array döndürülüyor.",
+      );
+      return [];
+    }
+
+    // Step 1.6: Filter by category keywords if specified
+    let filteredItems = newRssItems;
     if (categoryFilter) {
       const categoryKeywords = getCategoryKeywords(categoryFilter);
       console.log(
@@ -739,20 +781,20 @@ export async function fetchAINews(
       );
       console.log(`📝 Anahtar kelimeler: ${categoryKeywords.join(", ")}`);
 
-      filteredItems = rssItems.filter((item) => {
+      filteredItems = newRssItems.filter((item) => {
         const text = `${item.title} ${item.description}`.toLowerCase();
         return categoryKeywords.some((keyword) => text.includes(keyword));
       });
 
       console.log(
-        `✅ ${filteredItems.length}/${rssItems.length} haber kategoriye uygun`,
+        `✅ ${filteredItems.length}/${newRssItems.length} haber kategoriye uygun`,
       );
 
       if (filteredItems.length === 0) {
         console.log(
           "⚠️  Kategoriye uygun haber bulunamadı, tüm haberler kullanılacak",
         );
-        filteredItems = rssItems;
+        filteredItems = newRssItems;
       }
     }
 
@@ -822,75 +864,23 @@ export async function fetchAINews(
       console.log(`✅ En güncel ${MAX_ARTICLES_TO_ANALYZE} haber seçildi`);
     }
 
-    // 🆕 STEP 2.7: EARLY DUPLICATE FILTERING (BEFORE BRAVE API!)
-    // This is the CRITICAL optimization - filter duplicates BEFORE expensive Brave API calls
-    console.log(`\n🔍 EARLY DUPLICATE FILTERING (Brave API'den ÖNCE)...`);
-    console.log(`   Input: ${itemsToAnalyze.length} haber`);
-
-    // Convert RSS items to NewsArticle format for duplicate checking
-    const newsArticlesForCheck = convertRSSToNews(
-      itemsToAnalyze.map((item) => ({ ...item, trendScore: 0 })),
-    );
-
-    // Import duplicate filtering functions
-    const { extractTopicsBatch, filterDuplicatesByTopicAndUrl } =
-      await import("./topic-extraction.service");
-
-    // Extract topics for all articles
-    // ✅ OPTIMIZED: Increased batch size from 10→20 for faster processing
-    console.log(`🧠 Topic extraction: ${newsArticlesForCheck.length} haber...`);
-    const articlesWithTopics = await extractTopicsBatch(
-      newsArticlesForCheck,
-      20, // ✅ 10→20 (2x faster, fewer batches)
-    );
-
-    // Filter duplicates - 1 güne düşürüldü (daha esnek)
-    console.log(`🔍 Duplicate check: Son 1 günde yayınlananlar eleniyor...`);
-    const uniqueArticles = await filterDuplicatesByTopicAndUrl(
-      articlesWithTopics,
-      1, // 2 günden 1 güne düşürüldü
-    );
-
-    console.log(`\n📊 Early filtering sonuçları:`);
-    console.log(`   Input: ${newsArticlesForCheck.length} haber`);
-    console.log(
-      `   Duplicate: ${newsArticlesForCheck.length - uniqueArticles.length} haber`,
-    );
-    console.log(`   Unique: ${uniqueArticles.length} haber`);
-    console.log(
-      `   Duplicate rate: ${(((newsArticlesForCheck.length - uniqueArticles.length) / newsArticlesForCheck.length) * 100).toFixed(1)}%`,
-    );
-
-    if (uniqueArticles.length === 0) {
-      console.log(`\n⚠️  Tüm haberler duplicate! Boş array döndürülüyor.`);
-      return [];
-    }
-
-    // Map back to RSS items for Brave API
-    const uniqueRssItems = uniqueArticles
-      .map((article) => {
-        const originalItem = itemsToAnalyze.find(
-          (item) => item.title === article.title,
-        );
-        return originalItem!;
-      })
-      .filter(Boolean);
+    // ❌ REMOVED: Early duplicate filtering (satır ~850-900)
+    // Neden kaldırıldı:
+    // 1. Çok yavaş (topic extraction + database query her haber için)
+    // 2. Gereksiz (duplicate-detector agent zaten var)
+    // 3. URL filtering yukarıda yapıldı (daha hızlı)
+    //
+    // Eski kod:
+    // const articlesWithTopics = await extractTopicsBatch(newsArticlesForCheck, 20);
+    // const uniqueArticles = await filterDuplicatesByTopicAndUrl(articlesWithTopics, 1);
 
     console.log(
-      `\n✅ ${uniqueRssItems.length} unique haber Brave API'ye gönderilecek`,
-    );
-    console.log(
-      `   Brave API maliyet tasarrufu: ${((1 - uniqueRssItems.length / itemsToAnalyze.length) * 100).toFixed(1)}%\n`,
+      `\n✅ ${itemsToAnalyze.length} unique haber Brave API'ye gönderilecek`,
     );
 
-    // Update itemsToAnalyze with unique items only
-    itemsToAnalyze = uniqueRssItems;
-
-    // Step 3: Analyze trends using Brave Search API ONLY (NOW WITH UNIQUE ARTICLES!)
-    // NOTE: Google Trends removed on 01.02.2026 - all endpoints returning 404
-    // Brave API is now the sole trend source
+    // Step 3: Analyze trends using Brave Search API ONLY
     console.log(
-      `📊 ${itemsToAnalyze.length} UNIQUE haber için Trend analizi (Brave API)...`,
+      `📊 ${itemsToAnalyze.length} haber için Trend analizi (Brave API)...`,
     );
 
     const trendRankings = await rankArticlesByTrendHybrid(
