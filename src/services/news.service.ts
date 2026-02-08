@@ -35,26 +35,136 @@ function calculateSimilarity(str1: string, str2: string): number {
 }
 
 /**
- * Extract main keywords from text (remove stop words)
+ * Token-based similarity (Jaccard similarity - word order independent)
+ * NEW: Added on 08.02.2026 to catch duplicates with different word order
+ * Example: "Google Chrome Auto Browse tanıttı" vs "Auto Browse Google Chrome'da tanıtıldı"
  */
-function extractKeywords(text: string): string[] {
+function calculateTokenSimilarity(str1: string, str2: string): number {
   const stopWords = [
     "haber",
-    "news",
     "için",
     "olan",
+    "bir",
+    "ile",
+    "yeni",
+    "dedi",
+    "etti",
+    "oldu",
+    "news",
     "this",
     "that",
     "with",
     "from",
     "will",
     "new",
-    "bir",
-    "ile",
     "the",
     "and",
+  ];
+
+  const tokenize = (str: string): Set<string> => {
+    return new Set(
+      str
+        .toLowerCase()
+        .replace(/[^\w\s]/g, " ")
+        .split(/\s+/)
+        .filter((word) => word.length > 2 && !stopWords.includes(word)),
+    );
+  };
+
+  const tokens1 = tokenize(str1);
+  const tokens2 = tokenize(str2);
+
+  if (tokens1.size === 0 || tokens2.size === 0) {
+    return 0;
+  }
+
+  const intersection = new Set([...tokens1].filter((t) => tokens2.has(t)));
+  const union = new Set([...tokens1, ...tokens2]);
+
+  return intersection.size / union.size; // Jaccard similarity
+}
+
+/**
+ * Extract main keywords from text (remove stop words)
+ * EXPANDED: Added more Turkish/English stopwords (08.02.2026)
+ */
+function extractKeywords(text: string): string[] {
+  const stopWords = [
+    // Turkish
+    "haber",
     "için",
+    "olan",
+    "bir",
+    "ile",
     "yeni",
+    "dedi",
+    "etti",
+    "oldu",
+    "yapıldı",
+    "açıkladı",
+    "belirtti",
+    "göre",
+    "olarak",
+    "gibi",
+    "kadar",
+    "sonra",
+    "önce",
+    "şimdi",
+    "bugün",
+    "dün",
+    "yarın",
+    "çok",
+    "daha",
+    "var",
+    "yok",
+    "ama",
+    "veya",
+    "ancak",
+    "böyle",
+    "şöyle",
+    "her",
+    "bazı",
+    // English
+    "news",
+    "this",
+    "that",
+    "with",
+    "from",
+    "will",
+    "new",
+    "the",
+    "and",
+    "said",
+    "announced",
+    "revealed",
+    "launched",
+    "released",
+    "according",
+    "has",
+    "have",
+    "been",
+    "was",
+    "were",
+    "are",
+    "can",
+    "could",
+    "would",
+    "about",
+    "after",
+    "before",
+    "now",
+    "today",
+    "yesterday",
+    "tomorrow",
+    "more",
+    "some",
+    "very",
+    "also",
+    "just",
+    "only",
+    "such",
+    "than",
+    "then",
   ];
 
   return text
@@ -265,6 +375,22 @@ export async function isDuplicateNews(
         return {
           isDuplicate: true,
           reason: `TITLE_SIMILARITY_${(titleSimilarity * 100).toFixed(0)}%`,
+          similarArticleId: article.id,
+        };
+      }
+
+      // 2.1. Token-based similarity (NEW - 08.02.2026)
+      // Catches duplicates with different word order
+      const tokenSimilarity = calculateTokenSimilarity(title, article.title);
+      if (tokenSimilarity > 0.65) {
+        console.log(
+          `❌ DUPLICATE: Token overlap ${(tokenSimilarity * 100).toFixed(1)}% with article ${article.id}`,
+        );
+        console.log(`   New: "${title}"`);
+        console.log(`   Existing: "${article.title}"`);
+        return {
+          isDuplicate: true,
+          reason: `TOKEN_OVERLAP_${(tokenSimilarity * 100).toFixed(0)}%`,
           similarArticleId: article.id,
         };
       }

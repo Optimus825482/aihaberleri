@@ -171,8 +171,11 @@ export class DuplicateDetectorAgent extends BaseAgent<
           );
 
           // Get the top scored articles - will publish regardless of duplicate status
-          const articlesToForce = sortedByScore.slice(0, FORCE_PUBLISH_CONFIG.FORCE_MAX_ARTICLES);
-          
+          const articlesToForce = sortedByScore.slice(
+            0,
+            FORCE_PUBLISH_CONFIG.FORCE_MAX_ARTICLES,
+          );
+
           for (const article of articlesToForce) {
             const topic = this.extractTopic(article.title);
             let embedding: number[] | undefined;
@@ -197,9 +200,11 @@ export class DuplicateDetectorAgent extends BaseAgent<
                 `🚀 FORCE PUBLISH [${uniqueArticles.length}/${FORCE_PUBLISH_CONFIG.FORCE_MAX_ARTICLES}]: "${article.title.substring(0, 50)}..." (score: ${article.relevanceScore})`,
               );
             }
-            
+
             // Stop if we have enough for guaranteed minimum
-            if (uniqueArticles.length >= FORCE_PUBLISH_CONFIG.MINIMUM_ARTICLES) {
+            if (
+              uniqueArticles.length >= FORCE_PUBLISH_CONFIG.MINIMUM_ARTICLES
+            ) {
               break;
             }
           }
@@ -287,11 +292,11 @@ export class DuplicateDetectorAgent extends BaseAgent<
     //
     // TODO: Re-enable with smarter topic extraction (company+action required)
 
-    // Layer 1: Exact URL match (last 7 days only - older articles are fine to re-cover)
+    // Layer 1: Exact URL match (last 7 days - increased from 1 day on 08.02.2026)
     // NOTE: Early filtering uses 24h, but we use 7 days here for safety margin
     // This prevents blocking legitimately NEW articles that have old historical coverage
     const normalizedUrl = this.normalizeUrl(article.url);
-    const urlTimeWindow = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000); // 1 day
+    const urlTimeWindow = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days
     const existingByUrl = await db.article.findFirst({
       where: {
         AND: [
@@ -319,7 +324,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
       const semanticCheck = await checkSemanticDuplicate(
         article.title,
         article.description,
-        0.9, // High threshold for duplicates
+        0.78, // Lowered from 0.9 - more sensitive duplicate detection (08.02.2026)
         48, // 48-hour window (covers 12h requirement too)
       );
 
@@ -394,14 +399,56 @@ export class DuplicateDetectorAgent extends BaseAgent<
         existingEntities.includes(e),
       );
 
-      // DISABLED: Entity matching is too aggressive
-      // Smart filtering already does topic-based duplicate detection
-      // Only log for debugging, don't reject
+      // Smart entity matching: Same company + same action within 24h = duplicate (08.02.2026)
       if (commonEntities.length >= 2) {
+        const companies = [
+          "openai",
+          "google",
+          "microsoft",
+          "meta",
+          "nvidia",
+          "apple",
+          "amazon",
+          "tesla",
+          "anthropic",
+          "deepseek",
+        ];
+        const actions = [
+          "launch",
+          "ban",
+          "acquisition",
+          "investment",
+          "partnership",
+          "regulation",
+          "ipo",
+          "legal",
+        ];
+
+        const hasCompany = commonEntities.some((e) => companies.includes(e));
+        const hasAction = commonEntities.some((e) => actions.includes(e));
+
+        // Calculate time difference
+        const existingArticle = recentArticles.find((a) => a.id === article.id);
+        const hoursDiff = existingArticle
+          ? (Date.now() -
+              new Date(existingArticle.publishedAt || Date.now()).getTime()) /
+            (60 * 60 * 1000)
+          : 0;
+
+        if (hasCompany && hasAction && hoursDiff < 24) {
+          this.logger.warn(
+            `🚫 Entity match (company+action): ${commonEntities.join("+")} - "${title.substring(0, 50)}..."`,
+          );
+          return {
+            isDuplicate: true,
+            reason: `ENTITY_MATCH_${commonEntities.join("+")}`,
+          };
+        }
+
+        // Log but don't reject if only entity overlap without company+action
         this.logger.warn(
           `⚠️ Entity overlap (not rejecting): ${commonEntities.join("+")} - "${title.substring(0, 50)}..."`,
         );
-        // Previously: return { isDuplicate: true, reason: `ENTITY_MATCH_${commonEntities.join("+")}` };
       }
     }
 
