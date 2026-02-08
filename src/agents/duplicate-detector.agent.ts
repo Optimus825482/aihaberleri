@@ -155,23 +155,23 @@ export class DuplicateDetectorAgent extends BaseAgent<
   }
 
   /**
-   * Check if article is duplicate using multi-layer detection
+   * Check if article is duplicate using SIMPLE URL-only detection
    *
-   * SIMPLIFIED (2026-02-09):
-   * - Layer 1: URL match (7 days)
-   * - Layer 2: Semantic similarity (48 hours, 0.85 threshold)
-   * - Layer 3: Advanced title/content similarity (72 hours)
+   * SIMPLIFIED (2026-02-08):
+   * - ONLY Layer 1: URL match (12 hours)
+   * - NO semantic similarity
+   * - NO title/content similarity
+   * - NO entity matching
    *
-   * REMOVED:
-   * - Topic matching (too aggressive, caused false positives)
-   * - Entity matching (moved to Layer 3 in news.service.ts)
+   * Reason: Duplicate filtering already done in news.service.ts
+   * This is just a safety check
    */
   private async checkDuplicate(
     article: ScoredArticle,
   ): Promise<{ isDuplicate: boolean; reason?: string }> {
-    // Layer 1: Exact URL match (last 7 days)
+    // Layer 1: Exact URL match (last 12 hours) - ONLY CHECK!
     const normalizedUrl = this.normalizeUrl(article.url);
-    const urlTimeWindow = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days
+    const urlTimeWindow = new Date(Date.now() - 12 * 60 * 60 * 1000); // 12 hours
     const existingByUrl = await db.article.findFirst({
       where: {
         AND: [
@@ -190,49 +190,11 @@ export class DuplicateDetectorAgent extends BaseAgent<
     if (existingByUrl) {
       return {
         isDuplicate: true,
-        reason: "EXACT_URL_MATCH_7D",
+        reason: "EXACT_URL_MATCH_12H",
       };
     }
 
-    // Layer 2: Vector similarity using pgvector (semantic duplicates)
-    // INCREASED threshold from 0.78 to 0.85 - only very similar articles
-    // REDUCED window from 48h to 24h - only recent duplicates
-    try {
-      const semanticCheck = await checkSemanticDuplicate(
-        article.title,
-        article.description,
-        0.85, // Higher threshold = stricter matching
-        24, // 24-hour window only
-      );
-
-      if (semanticCheck.isDuplicate) {
-        return {
-          isDuplicate: true,
-          reason: `SEMANTIC_MATCH_${Math.round((semanticCheck.similarity || 0) * 100)}%`,
-        };
-      }
-    } catch (error) {
-      // Log but don't block on embedding errors
-      this.logger.warn(
-        `Semantic duplicate check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
-    }
-
-    // Layer 3: Advanced title/content similarity (using existing service)
-    // This includes entity matching, keyword overlap, etc.
-    const duplicateCheck = await isDuplicateNews(
-      article.title,
-      article.description,
-      72, // 72-hour window
-    );
-
-    if (duplicateCheck.isDuplicate) {
-      return {
-        isDuplicate: true,
-        reason: duplicateCheck.reason,
-      };
-    }
-
+    // ✅ NO OTHER CHECKS - Keep it simple!
     return { isDuplicate: false };
   }
 

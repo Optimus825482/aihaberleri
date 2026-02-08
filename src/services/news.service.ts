@@ -733,16 +733,16 @@ export async function fetchAINews(
 
     console.log(`📥 RSS'den ${rssItems.length} haber alındı`);
 
-    // ⚡ STEP 1.5: CRITICAL - Filter out already published URLs (7 days window)
-    // This is the KEY optimization - prevents duplicate URLs from entering pipeline
+    // ⚡ STEP 1.5: SIMPLE URL FILTERING (son 12 saat)
+    // Sadece URL bazlı duplicate check - başka filtreleme YOK!
     console.log(
-      `\n🔍 URL Filtering: Son 7 günde yayınlanan URL'ler eleniyor...`,
+      `\n🔍 URL Filtering: Son 12 saatte yayınlanan URL'ler eleniyor...`,
     );
 
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
     const recentUrls = await db.article.findMany({
       where: {
-        publishedAt: { gte: sevenDaysAgo },
+        publishedAt: { gte: twelveHoursAgo },
       },
       select: { sourceUrl: true },
     });
@@ -754,7 +754,7 @@ export async function fetchAINews(
     );
 
     console.log(
-      `   Database'de ${recentUrlSet.size} unique URL bulundu (son 7 gün)`,
+      `   Database'de ${recentUrlSet.size} unique URL bulundu (son 12 saat)`,
     );
 
     // Filter RSS items - ONLY NEW URLs
@@ -769,7 +769,7 @@ export async function fetchAINews(
 
     if (newRssItems.length === 0) {
       console.log(
-        "⚠️  Tüm haberler zaten yayınlanmış! Boş array döndürülüyor.",
+        "⚠️  Son 12 saatte tüm haberler zaten yayınlanmış! Boş array döndürülüyor.",
       );
       return [];
     }
@@ -804,29 +804,11 @@ export async function fetchAINews(
     const recentItems = filterRecentArticles(filteredItems, 48);
     console.log(`📅 Son 48 saatte ${recentItems.length} haber`);
 
-    // Step 2.5: CRITICAL - Filter by AI keywords to exclude non-AI news
-    const aiFilteredItems = filterByAIKeywords(
-      recentItems.length > 0 ? recentItems : filteredItems,
-    );
-    console.log(
-      `🤖 AI filtreleme: ${aiFilteredItems.length}/${recentItems.length || filteredItems.length} haber AI ile ilgili`,
-    );
-
-    if (aiFilteredItems.length === 0) {
-      console.log(
-        "⚠️  AI ile ilgili haber bulunamadı, en az 10 haber kullanılacak",
-      );
-      // If no AI news found, take top 10 from recent items
-      const fallbackItems = (
-        recentItems.length > 0 ? recentItems : filteredItems
-      ).slice(0, 10);
-      return convertRSSToNews(
-        fallbackItems.map((item) => ({ ...item, trendScore: 0 })),
-      );
-    }
+    // ✅ AI KEYWORD FILTERING KALDIRILDI - Gereksiz filtreleme!
+    // Tüm haberler trend skorlamasına gidecek
 
     // SMART SAMPLING: Prioritize recent + diverse sources
-    let itemsToAnalyze = aiFilteredItems;
+    let itemsToAnalyze = recentItems.length > 0 ? recentItems : filteredItems;
 
     // 🆕 STEP 2.6: Filter Reddit discussion posts (not news articles)
     // Reddit tags: [D]=Discussion, [R]=Research, [P]=Project, [N]=News
