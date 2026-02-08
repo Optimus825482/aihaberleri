@@ -16,12 +16,17 @@ export const maxDuration = 60; // Allow up to 60 seconds for bulk operations
  * - hours: number (for recent scope, default 168 = 1 week)
  * - articleId: string (for single scope)
  * 
+ * Auth: Session OR X-API-Secret header OR secret query param
+ * 
  * Response includes progress stats
  */
 export async function POST(request: NextRequest) {
-  // Auth check
+  // Auth check - allow session OR API secret
   const session = await auth();
-  if (!session) {
+  const apiSecret = request.headers.get("X-API-Secret") || request.nextUrl.searchParams.get("secret");
+  const validSecret = process.env.CRON_SECRET || process.env.API_SECRET || "aihaberleri-trend-2026";
+  
+  if (!session && apiSecret !== validSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
