@@ -39,8 +39,8 @@ async function downloadImage(
   url: string,
   attempt: number = 1,
 ): Promise<Buffer> {
-  const MAX_DOWNLOAD_RETRIES = 3;
-  const RATE_LIMIT_DELAY = 5000; // 5 seconds wait on 429
+  const MAX_DOWNLOAD_RETRIES = 5; // Increased from 3
+  const BASE_DELAY = 3000; // 3 seconds base delay
 
   try {
     console.log(
@@ -61,15 +61,16 @@ async function downloadImage(
 
     const response = await fetch(url, {
       headers,
-      signal: AbortSignal.timeout(30000), // 30s timeout
+      signal: AbortSignal.timeout(45000), // Increased to 45s
     });
 
-    // Handle rate limiting with retry
+    // Handle rate limiting with exponential backoff
     if (response.status === 429 && attempt < MAX_DOWNLOAD_RETRIES) {
+      const delay = BASE_DELAY * Math.pow(2, attempt - 1); // Exponential backoff: 3s, 6s, 12s, 24s, 48s
       console.log(
-        `⚠️ Rate limited (429), waiting ${RATE_LIMIT_DELAY / 1000}s before retry...`,
+        `⚠️ Rate limited (429), waiting ${delay / 1000}s before retry (attempt ${attempt}/${MAX_DOWNLOAD_RETRIES})...`,
       );
-      await new Promise((resolve) => setTimeout(resolve, RATE_LIMIT_DELAY));
+      await new Promise((resolve) => setTimeout(resolve, delay));
       return downloadImage(url, attempt + 1);
     }
 

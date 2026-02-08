@@ -47,7 +47,7 @@ export class VisualGeneratorAgent extends BaseAgent<
   protected config = {
     name: "visual-generator",
     queueName: QUEUE_NAMES.ARTICLES_WITH_VISUALS,
-    nextQueueName: QUEUE_NAMES.SEO_OPTIMIZATION, // NEW: Send to SEO Optimizer first, then to publisher
+    nextQueueName: QUEUE_NAMES.DATABASE_PUBLISHER, // FIXED: Skip SEO, go directly to database
     enableMetrics: true,
   };
 

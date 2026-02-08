@@ -104,9 +104,9 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     trendEnricher = new TrendEnricherAgent(); // FIX: Connects duplicate-detector to content-enricher
     contentEnricher = new ContentEnricherAgent();
     visualGenerator = new VisualGeneratorAgent();
-    seoOptimizer = new SEOOptimizerAgent();
+    // SEO Optimizer REMOVED - direct flow to database
     databasePublisher = new DatabasePublisherAgent();
-    console.log("   ✅ Agent instances created (7 agents)");
+    console.log("   ✅ Agent instances created (6 agents - SEO removed)");
 
     console.log("   🚀 Starting all agents...");
     const agentStarts = [
@@ -115,7 +115,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
       { name: "TrendEnricher", agent: trendEnricher },
       { name: "ContentEnricher", agent: contentEnricher },
       { name: "VisualGenerator", agent: visualGenerator },
-      { name: "SEOOptimizer", agent: seoOptimizer },
+      // SEO Optimizer REMOVED
       { name: "DatabasePublisher", agent: databasePublisher },
     ];
 
@@ -151,32 +151,13 @@ async function initializeMultiAgentPipeline(): Promise<void> {
       );
     }
 
-    // Start SEO Calculator Worker (background, non-blocking)
-    console.log("   🎯 Starting SEO Calculator Worker...");
-    try {
-      seoCalculatorWorker = await startSEOCalculatorWorker();
-      if (seoCalculatorWorker) {
-        console.log("   ✅ SEO Calculator Worker started");
+    // Start SEO Calculator Worker (background, non-blocking) - DISABLED
+    console.log("   ⚠️ SEO Calculator Worker DISABLED (removed from pipeline)");
+    // SEO calculations removed to speed up pipeline
 
-        // Queue any pending SEO calculations (articles without SEO scores)
-        const pending = await queuePendingSEOCalculations(20);
-        if (pending > 0) {
-          console.log(`   📊 Queued ${pending} pending SEO calculations`);
-        }
-      } else {
-        console.log("   ⚠️ SEO Calculator Worker not available (Redis issue)");
-      }
-    } catch (seoError) {
-      console.warn(
-        "   ⚠️ SEO Calculator failed to start:",
-        (seoError as Error).message,
-      );
-      // Non-critical - continue without SEO
-    }
-
-    console.log("✅ Multi-agent pipeline (7+1 agents) started successfully");
+    console.log("✅ Multi-agent pipeline (6 agents) started successfully");
     console.log(
-      "   Pipeline: Relevance → Duplicate → Enrich → Visual → SEO → Publish",
+      "   Pipeline: Relevance → Duplicate → Enrich → Visual → Publish (SEO removed)",
     );
   } catch (error) {
     console.error("❌ Failed to initialize multi-agent pipeline:");
