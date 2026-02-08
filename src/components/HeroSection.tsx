@@ -58,14 +58,12 @@ export function HeroSection({
     featuredArticles.length > 0 ? featuredArticles : [defaultArticle];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [direction, setDirection] = useState<"next" | "prev">("next");
 
   // Auto-slide every 10 seconds (going backwards: newest to oldest)
   useEffect(() => {
     if (articles.length <= 1 || isPaused) return;
 
     const interval = setInterval(() => {
-      setDirection("prev");
       setCurrentIndex((prev) => (prev + 1) % articles.length);
     }, 10000);
 
@@ -75,19 +73,16 @@ export function HeroSection({
   // Manual navigation
   const goToSlide = useCallback(
     (index: number) => {
-      setDirection(index > currentIndex ? "next" : "prev");
       setCurrentIndex(index);
     },
-    [currentIndex],
+    [],
   );
 
   const goToNext = () => {
-    setDirection("next");
     setCurrentIndex((prev) => (prev - 1 + articles.length) % articles.length);
   };
 
   const goToPrev = () => {
-    setDirection("prev");
     setCurrentIndex((prev) => (prev + 1) % articles.length);
   };
 
@@ -199,15 +194,15 @@ export function HeroSection({
 
       {/* Navigation Dots */}
       {articles.length > 1 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 sm:gap-3 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
           {articles.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 index === currentIndex
-                  ? "w-8 bg-ai-primary"
-                  : "w-2 bg-white/30 hover:bg-white/50"
+                  ? "w-8 bg-gradient-to-r from-ai-primary to-ai-primary-hover shadow-lg shadow-ai-primary/50"
+                  : "w-2 bg-white/30 hover:bg-white/50 hover:w-3"
               }`}
               aria-label={`Go to slide ${index + 1}`}
             />
@@ -220,29 +215,33 @@ export function HeroSection({
         <>
           <button
             onClick={goToNext}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm opacity-0 transition-opacity hover:bg-black/50 group-hover:opacity-100"
+            type="button"
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 opacity-0 transition-all duration-300 hover:bg-black/60 hover:scale-110 group-hover:opacity-100 shadow-lg"
             aria-label="Previous slide"
           >
-            <span className="material-symbols-outlined">chevron_left</span>
+            <span className="material-symbols-outlined text-[20px] sm:text-[24px]">chevron_left</span>
           </button>
           <button
             onClick={goToPrev}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm opacity-0 transition-opacity hover:bg-black/50 group-hover:opacity-100"
+            type="button"
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white border border-white/10 opacity-0 transition-all duration-300 hover:bg-black/60 hover:scale-110 group-hover:opacity-100 shadow-lg"
             aria-label="Next slide"
           >
-            <span className="material-symbols-outlined">chevron_right</span>
+            <span className="material-symbols-outlined text-[20px] sm:text-[24px]">chevron_right</span>
           </button>
         </>
       )}
 
       {/* Slide Counter */}
       {articles.length > 1 && (
-        <div className="absolute top-6 right-6 z-20 flex items-center gap-2 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur-sm">
-          <span className="material-symbols-outlined text-white text-sm">
+        <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-20 flex items-center gap-2 rounded-full bg-gradient-to-r from-black/60 to-black/40 backdrop-blur-md px-3 sm:px-4 py-1.5 sm:py-2 border border-white/10 shadow-xl">
+          <span className="material-symbols-outlined text-ai-primary text-sm sm:text-base">
             photo_library
           </span>
-          <span className="text-sm font-medium text-white">
-            {currentIndex + 1} / {articles.length}
+          <span className="text-xs sm:text-sm font-semibold text-white">
+            <span className="text-ai-primary">{currentIndex + 1}</span>
+            <span className="mx-1 text-white/60">/</span>
+            {articles.length}
           </span>
         </div>
       )}

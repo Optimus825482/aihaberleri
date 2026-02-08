@@ -86,7 +86,7 @@ export function ArticleCard({
   };
 
   return (
-    <article className="group flex flex-col overflow-hidden rounded-xl bg-white dark:bg-ai-surface-card shadow-sm border border-gray-100 dark:border-ai-surface-border hover:shadow-lg dark:hover:border-ai-primary/50 transition-all duration-300">
+    <article className="group flex flex-col overflow-hidden rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card shadow-md dark:shadow-none border border-gray-100 dark:border-ai-surface-border hover:shadow-xl dark:hover:shadow-2xl dark:hover:border-ai-primary/40 transition-all duration-300 hover:-translate-y-1">
       {/* Image Section */}
       <Link
         href={`/${newsPath}/${article.slug}`}
@@ -101,7 +101,7 @@ export function ArticleCard({
             <img
               src={article.imageUrl}
               alt={article.title}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
               loading={priority ? "eager" : "lazy"}
               fetchPriority={priority ? "high" : "auto"}
             />
@@ -110,40 +110,44 @@ export function ArticleCard({
               src={article.imageUrl}
               alt={article.title}
               fill
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               priority={priority}
             />
           )
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-ai-primary/20 to-ai-surface-border flex items-center justify-center">
-            <span className="material-symbols-outlined text-[48px] text-ai-text-muted">
+          <div className="w-full h-full bg-gradient-to-br from-ai-primary/15 via-ai-primary/10 to-ai-surface-border flex items-center justify-center">
+            <span className="material-symbols-outlined text-[48px] text-ai-text-muted/70">
               article
             </span>
           </div>
         )}
 
+        {/* Image Overlay on Hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
         {/* Category Badge */}
-        <span className="absolute left-3 top-3 rounded bg-black/50 px-2 py-1 text-xs font-semibold text-white backdrop-blur-md">
+        <span className="absolute left-3 top-3 rounded-lg bg-black/60 backdrop-blur-md px-2.5 py-1 text-[11px] sm:text-xs font-bold text-white border border-white/10 shadow-lg">
           {article.category.name}
         </span>
 
         {/* Reading Time (Bottom Right) */}
-        <div className="absolute right-3 bottom-3 flex gap-2">
-          <span className="flex items-center gap-1 rounded bg-black/60 px-2 py-1 text-[10px] font-medium text-white backdrop-blur-md">
+        <div className="absolute right-3 bottom-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="flex items-center gap-1 rounded-lg bg-black/70 backdrop-blur-md px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold text-white border border-white/10 shadow-lg">
+            <span className="material-symbols-outlined text-[12px]">schedule</span>
             {readingTime} {t.readingTime}
           </span>
         </div>
       </Link>
 
       {/* Content Section */}
-      <div className="flex flex-1 flex-col p-5">
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
         {/* Meta Info: Views + Trend Score */}
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2.5 flex items-center justify-between">
           {/* Views Count */}
           <div className="flex items-center gap-1 text-xs text-ai-text-secondary">
             <span className="material-symbols-outlined text-[14px]">visibility</span>
-            <span>{article.views >= 1000 ? `${(article.views / 1000).toFixed(1)}k` : article.views} {t.views}</span>
+            <span className="font-medium">{article.views >= 1000 ? `${(article.views / 1000).toFixed(1)}k` : article.views} {t.views}</span>
           </div>
           {/* Trend Score */}
           {article.trendScore ? (
@@ -153,22 +157,22 @@ export function ArticleCard({
 
         {/* Title */}
         <Link href={`/${newsPath}/${article.slug}`}>
-          <h3 className="mb-2 text-lg font-bold leading-tight text-slate-900 dark:text-white group-hover:text-ai-primary transition-colors">
+          <h3 className="mb-2 text-base sm:text-lg font-bold leading-tight text-slate-900 dark:text-white group-hover:text-ai-primary transition-colors duration-300">
             {article.title}
           </h3>
         </Link>
 
         {/* Excerpt */}
-        <p className="mb-4 line-clamp-2 text-sm text-slate-600 dark:text-gray-400">
+        <p className="mb-4 line-clamp-2 text-xs sm:text-sm text-slate-600 dark:text-gray-400 leading-relaxed">
           {article.excerpt}
         </p>
 
         {/* Footer */}
-        <div className="mt-auto pt-4 border-t border-gray-100 dark:border-ai-surface-border">
+        <div className="mt-auto pt-3.5 sm:pt-4 border-t border-gray-100 dark:border-ai-surface-border/80">
           <div className="flex items-center justify-between">
             {/* Author */}
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+              <div className="h-7 w-7 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center overflow-hidden shadow-inner">
                 {article.author?.avatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -182,17 +186,18 @@ export function ArticleCard({
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium text-slate-700 dark:text-gray-300">
+              <span className="text-xs font-semibold text-slate-700 dark:text-gray-300">
                 {article.author?.name || "AI Haberleri"}
               </span>
             </div>
             {/* Share Button */}
             <button
+              type="button"
               onClick={handleShare}
-              className="text-ai-text-secondary hover:text-ai-primary transition-colors"
+              className="h-8 w-8 rounded-lg flex items-center justify-center text-ai-text-secondary hover:text-ai-primary hover:bg-ai-primary/10 transition-all duration-300"
               title={t.share}
             >
-              <span className="material-symbols-outlined">share</span>
+              <span className="material-symbols-outlined text-[18px]">share</span>
             </button>
           </div>
         </div>

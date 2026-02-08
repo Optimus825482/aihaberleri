@@ -448,7 +448,7 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
     this.logger.info(
       `🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)`,
     );
-    const trPrompt = `Sen dünya çapında ödüllü, 40 yıllık deneyime sahip usta bir araştırmacı gazeteci ve baş editörsün (Master Investigative Journalist).
+    const trPrompt = `Sen  usta bir araştırmacı gazeteci ve baş editörsün (Master Investigative Journalist).
     
     Görevin: Aşağıdaki ${sources.length} FARKLI KAYNAKTAN toplanan ham verileri derinlemesine analiz ederek, SENTEZLEYEREK, KAPSAMLI ve %100 ORİJİNAL bir Türkçe haber makalesi oluşturmak.
 
@@ -494,14 +494,14 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
         {
           role: "system",
           content:
-            "Sen dünyanın en iyi Türkçe haber editörüsün. Sadece geçerli JSON yanıtı ver.",
+            "Sen deneyimli bir Türkçe haber editörüsün. Sadece geçerli JSON yanıtı ver.",
         },
         { role: "user", content: trPrompt },
       ],
       {
         model: "deepseek-chat",
         maxTokens: 6000,
-        temperature: 0.9,
+        temperature: 0.7,
       },
     );
 
@@ -551,7 +551,7 @@ Respond in JSON:
       const enResponse = await callGemini(enPrompt, {
         model: "gemini-2.5-flash-lite",
         maxTokens: 6000,
-        temperature: 0.9,
+        temperature: 0.7,
       });
 
       const enJsonMatch = enResponse.match(/\{[\s\S]*\}/);
@@ -579,7 +579,7 @@ Respond in JSON:
         {
           model: "deepseek-chat",
           maxTokens: 6000,
-          temperature: 0.9,
+          temperature: 0.7,
         },
       );
 
