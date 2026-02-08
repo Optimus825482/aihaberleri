@@ -238,22 +238,38 @@ export class DuplicateDetectorAgent extends BaseAgent<
 
   /**
    * Extract topic identifier from title
+   * SIMPLIFIED: Just use first 3-4 significant words (no entity extraction)
    */
   private extractTopic(title: string): string {
-    const entities = this.extractEntities(title.toLowerCase());
+    const stopWords = [
+      "haber",
+      "için",
+      "olan",
+      "bir",
+      "ile",
+      "yeni",
+      "dedi",
+      "etti",
+      "oldu",
+      "news",
+      "this",
+      "that",
+      "with",
+      "from",
+      "will",
+      "new",
+      "the",
+      "and",
+    ];
 
-    if (entities.length === 0) {
-      // Fallback: use first 3 words
-      return title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, "")
-        .split(/\s+/)
-        .slice(0, 3)
-        .join("_");
-    }
+    const words = title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, "")
+      .split(/\s+/)
+      .filter((w) => w.length > 2 && !stopWords.includes(w));
 
-    // Use entities as topic
-    return entities.slice(0, 3).join("_");
+    // Take first 3-4 significant words as topic
+    return words.slice(0, 4).join("_");
   }
 
   /**
