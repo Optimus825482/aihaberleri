@@ -262,6 +262,7 @@ export class ContentEnricherAgent extends BaseAgent<
     // ============================================
     // STEP 1: Tavily Deep Research (5-8 sources)
     // ============================================
+    let tavilySourceCount = 0;
     try {
       const { tavilySearch } = await import("@/lib/tavily");
 
@@ -286,10 +287,11 @@ export class ContentEnricherAgent extends BaseAgent<
             content: result.content,
             relevanceScore: Math.round(result.score * 100), // Tavily score 0-1
           });
+          tavilySourceCount++;
         }
       }
 
-      this.logger.info(`✅ Tavily: ${sources.length} sources collected`);
+      this.logger.info(`✅ Tavily: ${tavilySourceCount} sources collected`);
     } catch (tavilyError) {
       this.logger.warn(`⚠️ Tavily failed, falling back to SearXNG`);
     }
@@ -377,7 +379,7 @@ export class ContentEnricherAgent extends BaseAgent<
       }
 
       this.logger.info(
-        `✅ SearXNG: ${sources.length - (tavilyResults?.length || 0)} additional sources`,
+        `✅ SearXNG: ${sources.length - tavilySourceCount} additional sources`,
       );
     }
 

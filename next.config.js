@@ -9,19 +9,38 @@ const nextConfig = {
 
   // Exclude heavy server-only packages from client bundling (CRITICAL for memory)
   // This prevents Puppeteer, Firebase Admin etc from being analyzed during build
-  serverExternalPackages: [
-    "puppeteer",
-    "puppeteer-core",
-    "firebase-admin",
-    "@sentry/nextjs",
-    "sharp",
-    "bullmq",
-    "ioredis",
-    "pg",
-    "googleapis",
-    "@prisma/client",
-    "winston",
-  ],
+  experimental: {
+    serverComponentsExternalPackages: [
+      "puppeteer",
+      "puppeteer-core",
+      "firebase-admin",
+      "@sentry/nextjs",
+      "sharp",
+      "bullmq",
+      "ioredis",
+      "pg",
+      "googleapis",
+      "@prisma/client",
+      "winston",
+    ],
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
+    // Force include sharp and its dependencies in standalone output
+    outputFileTracingIncludes: {
+      "/": ["./node_modules/sharp/**/*"],
+    },
+    // Disable instrumentation to prevent OpenTelemetry errors
+    instrumentationHook: false,
+    // Optimize page data loading
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "date-fns",
+      "@radix-ui/react-icons",
+      "framer-motion",
+    ],
+  },
 
   // Use SWC for faster, more memory-efficient minification
   swcMinify: true,
@@ -97,26 +116,7 @@ const nextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
-  // Experimental features (consolidated - no duplicates)
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "2mb",
-    },
-    // Force include sharp and its dependencies in standalone output
-    outputFileTracingIncludes: {
-      "/": ["./node_modules/sharp/**/*"],
-    },
-    // Disable instrumentation to prevent OpenTelemetry errors
-    instrumentationHook: false,
-    // Optimize page data loading
-    optimizePackageImports: [
-      "lucide-react",
-      "recharts",
-      "date-fns",
-      "@radix-ui/react-icons",
-      "framer-motion",
-    ],
-  },
+
   eslint: {
     // Production builds will fail on ESLint errors
     // Run `npm run lint` to check locally before building
