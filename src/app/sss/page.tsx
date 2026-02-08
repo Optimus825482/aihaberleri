@@ -106,9 +106,19 @@ export default function SSSPage() {
       />
 
       <div className="min-h-screen bg-ai-background-dark">
-        {/* Hero Section */}
+        {/* Hero Section with Background Image */}
         <div className="relative overflow-hidden py-12 md:py-20">
-          <div className="container mx-auto px-4 max-w-6xl">
+          {/* Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: "url('https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1920&q=80')",
+            }}
+          />
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-ai-background-dark/80 via-ai-background-dark/90 to-ai-background-dark" />
+          
+          <div className="relative container mx-auto px-4 max-w-6xl">
             <div className="flex items-center gap-2 text-ai-primary font-medium text-sm mb-4">
               <span className="material-symbols-outlined text-[18px]">help</span>
               <span>Yardım Merkezi</span>

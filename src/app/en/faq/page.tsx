@@ -115,19 +115,39 @@ export default function FAQPage() {
             />
 
             <div className="min-h-screen bg-ai-background-dark">
-                <div className="container max-w-4xl py-12 px-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center mb-12"
-                    >
-                        <h1 className="text-4xl font-bold mb-4 text-white">
-                            Frequently Asked Questions
-                        </h1>
-                        <p className="text-ai-text-secondary text-lg max-w-2xl mx-auto">
-                            Find answers to common questions about AI Haberleri.
-                        </p>
-                    </motion.div>
+                {/* Hero Section with Background Image */}
+                <div className="relative overflow-hidden">
+                    {/* Background Image */}
+                    <div 
+                        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                        style={{
+                            backgroundImage: "url('https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1920&q=80')",
+                        }}
+                    />
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-ai-background-dark/80 via-ai-background-dark/90 to-ai-background-dark" />
+                    
+                    <div className="relative container max-w-4xl py-16 px-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-center"
+                        >
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-ai-primary/20 border border-ai-primary/30 mb-6">
+                                <span className="material-symbols-outlined text-ai-primary text-[18px]">help</span>
+                                <span className="text-ai-primary text-sm font-medium">Help Center</span>
+                            </div>
+                            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-white">
+                                Frequently Asked Questions
+                            </h1>
+                            <p className="text-ai-text-secondary text-lg max-w-2xl mx-auto">
+                                Find answers to common questions about AI Haberleri.
+                            </p>
+                        </motion.div>
+                    </div>
+                </div>
+
+                <div className="container max-w-4xl py-12 px-4 -mt-4">
 
                     <div className="space-y-4">
                         {faqItems.map((item, index) => (
