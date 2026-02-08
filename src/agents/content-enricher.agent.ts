@@ -424,10 +424,10 @@ export class ContentEnricherAgent extends BaseAgent<
     // Sanitize text to prevent JSON parsing errors in API calls
     const sanitizeForPrompt = (text: string): string => {
       return text
-        .replace(/\\/g, '/')          // Replace backslashes
-        .replace(/[\r\n]+/g, ' ')       // Replace newlines with spaces
-        .replace(/[\x00-\x1f]/g, '')    // Remove control characters
-        .replace(/[\u2028\u2029]/g, ' ')// Remove line/paragraph separators
+        .replace(/\\/g, "/") // Replace backslashes
+        .replace(/[\r\n]+/g, " ") // Replace newlines with spaces
+        .replace(/[\x00-\x1f]/g, "") // Remove control characters
+        .replace(/[\u2028\u2029]/g, " ") // Remove line/paragraph separators
         .trim();
     };
 
@@ -448,34 +448,46 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
     this.logger.info(
       `🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)`,
     );
-    const trPrompt = `Sen dünya çapında ödüllü bir investigative journalist ve haber editörüsün.
+    const trPrompt = `Sen dünya çapında ödüllü, 40 yıllık deneyime sahip usta bir araştırmacı gazeteci ve baş editörsün (Master Investigative Journalist).
+    
+    Görevin: Aşağıdaki ${sources.length} FARKLI KAYNAKTAN toplanan ham verileri derinlemesine analiz ederek, SENTEZLEYEREK, KAPSAMLI ve %100 ORİJİNAL bir Türkçe haber makalesi oluşturmak.
 
-Görevin: Aşağıdaki ${sources.length} FARKLI KAYNAKTAN toplanan bilgileri SENTEZLEYEREK, KAPSAMLI ve ORİJİNAL bir Türkçe haber makalesi oluştur.
+    ### HEDEF:
+    Sıradan bir haber değil, okuyucuya "Ben bunu bilmiyordum" dedirtecek, olayların arka planını, nedenlerini ve olası sonuçlarını irdeleyen DERİNLEMESİNE (Deep Dice) bir analiz yazısı yazmalısın.
 
-### ORİJİNAL HABER:
-Başlık: ${article.title}
-Açıklama: ${article.description}
-Kaynak URL: ${article.url}
+    ### ORİJİNAL HABER BAŞLIĞI:
+    ${article.title}
 
-### TOPLANAN KAYNAKLAR:
-${sourcesText}
+    ### TOPLANAN KAYNAKLAR:
+    ${sourcesText}
 
-### SENTEZ KURALLARI:
-1. ORİJİNAL İÇERİK OLUŞTUR (kopyalama, sentezle)
-2. Kaynak atıf yap: "Reuters'a göre...", "TechCrunch'ın haberine göre..."
-3. Profesyonel üslup: Objektif, mesafeli, 3. tekil şahıs
-4. Yapı: Başlık (50-70 karakter), Özet (2-3 cümle), İçerik (HTML, min 500 kelime)
-5. SEO: Meta açıklama (150-160 karakter), 5-8 anahtar kelime
+    ### YAZIM KURALLARI (ÇOK ÖNEMLİ):
+    1. **İNSANSI VE AKICI DİL:** Robotik, yapay veya çeviri kokan cümlelerden kesinlikle kaçın. Usta bir yazar gibi akıcı, zengin ve edebi bir dil kullan.
+    2. **DERİN ANALİZ:** Sadece "ne oldu" değil, "neden oldu", "bu ne anlama geliyor", "gelecekte neyi etkileyecek" sorularına cevap ver.
+    3. **MEVCUT HABERİ GELİŞTİR:** Kaynaklardaki bilgileri sadece birleştirme; üzerine kendi analizini, vizyonunu ve bağlamı ekle. Okuyucuya katma değer sağla.
+    4. **OBJEKTİF AMA ÇARPICI:** Tarafsız kal ama sıkıcı olma. Olayın önemini vurgulayan güçlü başlıklar ve giriş cümleleri kullan.
+    5. **KAYNAK KULLANIMI:** "Reuters'a göre...", "TechCrunch'ın raporuna göre..." gibi ifadelerle kaynaklara atıf yaparak güvenilirliği artır.
+    6. **Benzersiz Anlatım:** Her cümlen özgün olsun. Kopya içerik algısından kaçın.
 
-JSON formatında yanıt ver:
-{
-  "title": "SEO Uyumlu Türkçe Başlık",
-  "excerpt": "2-3 cümlelik özet",
-  "content": "HTML formatlı tam makale",
-  "keywords": ["anahtar1", "anahtar2"],
-  "metaDescription": "SEO meta açıklama",
-  "score": 850
-}`;
+    ### YAPI:
+    - **Başlık (H1):** 50-70 karakter, tıklamaya teşvik eden, merak uyandıran ama yanıltıcı olmayan (Clickbait olmayan) güçlü bir başlık.
+    - **Özet (Lead):** 2-3 cümlelik, haberin en vurucu noktasını özetleyen, okuyucuyu içeri çeken giriş.
+    - **İçerik (HTML):**
+      - En az 600 kelime.
+      - <p> etiketleri ile paragraflara bölünmüş.
+      - <h2> ara başlıkları ile bölümlendirilmiş (En az 3 ara başlık).
+      - Önemli detaylar için <ul> veya <ol> listeleri.
+    - **SEO:** 150-160 karakterlik optimize edilmiş meta açıklama ve 6-10 adet ilgili anahtar kelime.
+
+    JSON formatında yanıt ver:
+    {
+      "title": "Çarpıcı ve SEO Uyumlu Başlık",
+      "excerpt": "Okuyucuyu yakalayan özet",
+      "content": "HTML formatlı, derin analiz içeren tam makale",
+      "keywords": ["anahtar1", "anahtar2"],
+      "metaDescription": "SEO meta açıklama",
+      "score": 950
+    }`;
 
     const trResponse = await callDeepSeek(
       [

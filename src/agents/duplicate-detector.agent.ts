@@ -200,6 +200,26 @@ export class DuplicateDetectorAgent extends BaseAgent<
   private async checkDuplicate(
     article: ScoredArticle,
   ): Promise<{ isDuplicate: boolean; reason?: string }> {
+    // Layer 0: Strict 12-Hour Topic Uniqueness (User Requirement)
+    // "Yayınladığı haber son 12 saat içerisinde yayınlanmamış olacak"
+    const topic = this.extractTopic(article.title);
+    const existingRecentTopic = await db.article.findFirst({
+      where: {
+        topic: topic,
+        publishedAt: {
+          gte: new Date(Date.now() - 12 * 60 * 60 * 1000), // Last 12 hours
+        },
+      },
+      select: { id: true, title: true },
+    });
+
+    if (existingRecentTopic) {
+      return {
+        isDuplicate: true,
+        reason: `TOPIC_MATCH_12H (${existingRecentTopic.title.substring(0, 30)}...)`,
+      };
+    }
+
     // Layer 1: Exact URL match
     const normalizedUrl = this.normalizeUrl(article.url);
     const existingByUrl = await db.article.findFirst({
@@ -225,7 +245,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
         article.title,
         article.description,
         0.9, // High threshold for duplicates
-        48, // 48-hour window
+        48, // 48-hour window (covers 12h requirement too)
       );
 
       if (semanticCheck.isDuplicate) {

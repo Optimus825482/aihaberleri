@@ -115,10 +115,10 @@ async function scheduleNextRun() {
       where: { key: "agent.intervalHours" },
     });
 
-    // DEFAULT: 0.167 hours = 10 minutes for real-time news pipeline
+    // DEFAULT: 0.25 hours = 15 minutes for real-time news pipeline (Updated for high frequency)
     const intervalHours = intervalSetting
       ? parseFloat(intervalSetting.value)
-      : 0.167;
+      : 0.25;
     const nextRun = new Date(
       Date.now() + Math.round(intervalHours * 60 * 60 * 1000),
     );

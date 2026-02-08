@@ -5,6 +5,8 @@ import Image from "next/image";
 import { formatRelativeTime, calculateReadingTime } from "@/lib/utils";
 import { TrendingBadge } from "@/components/TrendingBadge";
 
+import { TrendScoreBadge } from "@/components/TrendScoreBadge";
+
 interface ArticleCardProps {
   article: {
     id: string;
@@ -83,25 +85,13 @@ export function ArticleCard({
     }
   };
 
-  // Format date for display
-  const formatDate = (date: Date | null) => {
-    if (!date) return "";
-    const now = new Date();
-    const diffMs = now.getTime() - new Date(date).getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffHours < 1) return "Az önce";
-    if (diffHours < 24) return `${diffHours} saat önce`;
-    if (diffDays === 1) return "Dün";
-    if (diffDays < 7) return `${diffDays} gün önce`;
-    return formatRelativeTime(date);
-  };
-
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl bg-white dark:bg-ai-surface-card shadow-sm border border-gray-100 dark:border-ai-surface-border hover:shadow-lg dark:hover:border-ai-primary/50 transition-all duration-300">
       {/* Image Section */}
-      <Link href={`/${newsPath}/${article.slug}`} className="block relative aspect-video overflow-hidden bg-gray-200 dark:bg-gray-800">
+      <Link
+        href={`/${newsPath}/${article.slug}`}
+        className="block relative aspect-video overflow-hidden bg-gray-200 dark:bg-gray-800"
+      >
         {article.imageUrl ? (
           article.imageUrl.includes("pollinations.ai") ||
           article.imageUrl.includes("r2.dev") ||
@@ -127,7 +117,9 @@ export function ArticleCard({
           )
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-ai-primary/20 to-ai-surface-border flex items-center justify-center">
-            <span className="material-symbols-outlined text-[48px] text-ai-text-muted">article</span>
+            <span className="material-symbols-outlined text-[48px] text-ai-text-muted">
+              article
+            </span>
           </div>
         )}
 
@@ -136,14 +128,8 @@ export function ArticleCard({
           {article.category.name}
         </span>
 
-        {/* Trend Score & Reading Time */}
+        {/* Reading Time (Bottom Right) */}
         <div className="absolute right-3 bottom-3 flex gap-2">
-          {article.trendScore && article.trendScore > 7 && (
-            <span className="flex items-center gap-1 rounded bg-black/60 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-md">
-              <span className="material-symbols-outlined text-[12px] text-emerald-400">trending_up</span>
-              {article.trendScore.toFixed(1)}
-            </span>
-          )}
           <span className="flex items-center gap-1 rounded bg-black/60 px-2 py-1 text-[10px] font-medium text-white backdrop-blur-md">
             {readingTime} {t.readingTime}
           </span>
@@ -152,19 +138,11 @@ export function ArticleCard({
 
       {/* Content Section */}
       <div className="flex flex-1 flex-col p-5">
-        {/* Meta Info */}
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-ai-text-secondary">
-            <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-            <span>{formatDate(article.publishedAt)}</span>
-          </div>
-          {/* Trend Score Badge */}
-          {article.trendScore && article.trendScore > 7 && (
-            <span className="flex items-center gap-1 rounded bg-gradient-to-r from-amber-500/10 to-orange-500/10 px-2 py-1 text-[10px] font-bold text-amber-500 border border-amber-500/20">
-              <span className="material-symbols-outlined text-[10px]">trending_up</span>
-              {article.trendScore.toFixed(1)}
-            </span>
-          )}
+        {/* Meta Info: Trend Score Badge ONLY (Replaces Date & Old Stars) */}
+        <div className="mb-2 flex items-center justify-end">
+          {article.trendScore ? (
+            <TrendScoreBadge trendScore={article.trendScore} size="sm" />
+          ) : null}
         </div>
 
         {/* Title */}
@@ -187,7 +165,11 @@ export function ArticleCard({
               <div className="h-6 w-6 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
                 {article.author?.avatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={article.author.avatar} alt={article.author.name} className="w-full h-full object-cover" />
+                  <img
+                    src={article.author.avatar}
+                    alt={article.author.name}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
                   <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300">
                     {article.author?.name?.charAt(0).toUpperCase() || "A"}
