@@ -256,19 +256,30 @@ export async function startMultiAgentPipeline(
 ┃  Target:       ${config.targetCount.toString().padEnd(35)}┃
 ┃  Agent Log:    ${config.agentLogId.substring(0, 12)}...${" ".repeat(20)}┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  Pipeline Flow:                                   ┃
+┃  Pipeline Flow (7 Agents):                        ┃
 ┃  1. ✅ Content Collected (RSS + Trend)            ┃
 ┃  2. 🔄 Relevance Filter (AI scoring)              ┃
 ┃  3. 🔄 Duplicate Detection (3-layer)              ┃
-┃  4. 🔄 Content Enrichment (Brave + Jina)          ┃
-┃  5. 🔄 Visual Generation (Pollinations)           ┃
-┃  6. 🔄 Database Publishing                        ┃
+┃  4. 🔄 Trend Enrichment                           ┃
+┃  5. 🔄 Content Enrichment (Brave + Jina)          ┃
+┃  6. 🔄 Visual Generation (Pollinations)           ┃
+┃  7. 🔄 SEO Optimization (AI scoring)              ┃
+┃  8. 🔄 Database Publishing                        ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
   `);
 }
 
 /**
  * Monitor pipeline progress
+ *
+ * PIPELINE FLOW (7 stages):
+ * 1. RELEVANT_ARTICLES → RelevanceFilter
+ * 2. UNIQUE_ARTICLES → DuplicateDetector
+ * 3. TREND_ENRICHMENT → TrendEnricher
+ * 4. ENRICHED_ARTICLES → ContentEnricher
+ * 5. ARTICLES_WITH_VISUALS → VisualGenerator
+ * 6. SEO_OPTIMIZATION → SEOOptimizer
+ * 7. DATABASE_PUBLISHER → DatabasePublisher
  */
 export async function monitorPipelineProgress(agentLogId: string): Promise<{
   stage: string;
@@ -276,11 +287,15 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
   completed: number;
   failed: number;
 }> {
+  // FIX: Include ALL pipeline queues including SEO and Publisher
   const queues = [
     QUEUE_NAMES.RELEVANT_ARTICLES,
     QUEUE_NAMES.UNIQUE_ARTICLES,
+    QUEUE_NAMES.TREND_ENRICHMENT,
     QUEUE_NAMES.ENRICHED_ARTICLES,
     QUEUE_NAMES.ARTICLES_WITH_VISUALS,
+    QUEUE_NAMES.SEO_OPTIMIZATION, // FIX: Added - was missing!
+    QUEUE_NAMES.DATABASE_PUBLISHER, // FIX: Added - was missing!
   ];
 
   let currentStage = "unknown";

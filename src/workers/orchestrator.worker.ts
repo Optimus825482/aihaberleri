@@ -1,15 +1,17 @@
 /**
  * Orchestrator Worker - Multi-Agent News Pipeline
  *
- * ARCHITECTURE:
- * ContentCollector → RelevanceFilter → DuplicateDetector → ContentEnricher → VisualGenerator
+ * ARCHITECTURE (7+1 Agents):
+ * ContentCollector → RelevanceFilter → DuplicateDetector → TrendEnricher → 
+ * ContentEnricher → VisualGenerator → SEOOptimizer → DatabasePublisher
  *
  * This worker:
- * 1. Starts all 5 agents
+ * 1. Starts all 7 agents (+ SEO Calculator background worker)
  * 2. Triggers ContentCollectorAgent on schedule
  * 3. Monitors pipeline health
  * 4. Handles graceful shutdown
- * 5. Publishes final articles to database
+ * 5. Coordinates SEO optimization before publishing
+ * 6. Publishes final articles to database
  */
 
 import { Worker } from "bullmq";
