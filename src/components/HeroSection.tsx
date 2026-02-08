@@ -109,7 +109,7 @@ export function HeroSection({
 
   return (
     <div
-      className="group relative mb-12 min-h-[450px] overflow-hidden rounded-2xl bg-gray-900 shadow-xl md:min-h-[550px] lg:min-h-[600px]"
+      className="group relative mb-8 sm:mb-10 lg:mb-12 min-h-[400px] overflow-hidden rounded-2xl lg:rounded-3xl bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 shadow-2xl md:min-h-[500px] lg:min-h-[580px] border border-gray-800/50"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
@@ -118,8 +118,8 @@ export function HeroSection({
         {articles.map((article, index) => (
           <div
             key={article.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+            className={`absolute inset-0 transition-all duration-700 ease-in-out ${
+              index === currentIndex ? "opacity-100 scale-100 z-10" : "opacity-0 scale-105 z-0"
             }`}
           >
             {/* Background Image */}
@@ -133,8 +133,8 @@ export function HeroSection({
                   <img
                     src={article.imageUrl}
                     alt={article.title}
-                    className={`h-full w-full object-cover opacity-60 transition-transform duration-[2000ms] ${
-                      index === currentIndex ? "scale-100" : "scale-105"
+                    className={`h-full w-full object-cover transition-transform duration-[3000ms] ease-out ${
+                      index === currentIndex ? "scale-100" : "scale-110"
                     }`}
                   />
                 ) : (
@@ -142,52 +142,54 @@ export function HeroSection({
                     src={article.imageUrl}
                     alt={article.title}
                     fill
-                    className="object-cover opacity-60"
+                    className="object-cover"
                     priority={index === 0}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
                   />
                 )
               ) : null}
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/60 to-transparent"></div>
+              {/* Modern Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark via-ai-background-dark/70 to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-ai-background-dark/40 via-transparent to-transparent"></div>
+              {/* Glassmorphism overlay */}
+              <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]"></div>
             </div>
 
             {/* Content */}
-            <div className="relative z-10 flex flex-col items-start justify-end px-6 py-12 md:px-12 md:py-20 lg:min-h-[500px]">
+            <div className="relative z-10 flex flex-col items-start justify-end px-4 sm:px-6 md:px-10 lg:px-16 py-8 sm:py-12 md:py-16 lg:py-20 lg:min-h-[520px]">
               {/* Category Badge */}
               <Link
                 href={getCategoryLink()}
-                className="mb-4 inline-flex items-center rounded-full bg-ai-primary/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-ai-primary backdrop-blur-sm border border-ai-primary/30 transition-colors hover:bg-ai-primary/30"
+                className="mb-3 sm:mb-4 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-ai-primary/20 to-ai-primary/10 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-ai-primary/30 shadow-lg shadow-ai-primary/20 transition-all duration-300 hover:bg-ai-primary/30 hover:shadow-ai-primary/30 hover:scale-105"
               >
-                {t.featured}
+                <span className="material-symbols-outlined text-[14px]">auto_awesome</span>
+                <span>{t.featured}</span>
               </Link>
 
               {/* Title */}
-              <h1 className="mb-4 max-w-3xl text-4xl font-black leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
+              <h1 className="mb-3 sm:mb-4 max-w-3xl text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight tracking-tight text-white drop-shadow-2xl">
                 {article.title}
               </h1>
 
               {/* Excerpt */}
-              <p className="mb-8 max-w-2xl text-lg text-gray-300 md:text-xl line-clamp-3">
+              <p className="mb-6 sm:mb-8 max-w-2xl text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 line-clamp-2 sm:line-clamp-3 leading-relaxed">
                 {article.excerpt}
               </p>
 
               {/* CTA Buttons */}
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-3 sm:gap-4">
                 <Link
                   href={getArticleLink()}
-                  className="flex items-center gap-2 rounded-lg bg-ai-primary px-6 py-3 text-base font-bold text-white transition-transform hover:scale-105 hover:bg-ai-primary/90"
+                  className="group/btn flex items-center gap-2 rounded-xl bg-gradient-to-r from-ai-primary to-ai-primary-hover px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white shadow-xl shadow-ai-primary/30 transition-all duration-300 hover:shadow-2xl hover:shadow-ai-primary/50 hover:scale-105 active:scale-95"
                 >
                   <span>{t.readMore}</span>
-                  <span className="material-symbols-outlined text-[20px]">
+                  <span className="material-symbols-outlined text-[18px] sm:text-[20px] transition-transform duration-300 group-hover/btn:translate-x-1">
                     arrow_forward
                   </span>
                 </Link>
-                <button className="flex items-center gap-2 rounded-lg bg-white/10 px-6 py-3 text-base font-bold text-white backdrop-blur-sm transition-colors hover:bg-white/20">
-                  <span className="material-symbols-outlined text-[20px]">
-                    bookmark
-                  </span>
-                  <span>{t.save}</span>
+                <button className="flex items-center gap-2 rounded-xl bg-white/10 backdrop-blur-md px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-bold text-white border border-white/20 shadow-lg transition-all duration-300 hover:bg-white/20 hover:border-white/30 hover:scale-105 active:scale-95">
+                  <span className="material-symbols-outlined text-[18px] sm:text-[20px]">bookmark</span>
+                  <span className="hidden sm:inline">{t.save}</span>
                 </button>
               </div>
             </div>

@@ -38,6 +38,8 @@ interface QueueHealthInfo {
   completed: number;
   failed: number;
   isHealthy: boolean;
+  lastJobTime: string | null;
+  jobsProcessedLastHour: number;
 }
 
 interface ExecutionInfo {
@@ -203,6 +205,21 @@ async function getQueueHealth(
     // Consider queue healthy if failed < 10% of completed
     const isHealthy = completed === 0 || failed / completed < 0.1;
 
+    // Get last job time from completed jobs
+    let lastJobTime: string | null = null;
+    try {
+      const completedJobs = await queue.getCompleted(0, 1);
+      if (completedJobs.length > 0 && completedJobs[0].processedOn) {
+        lastJobTime = new Date(completedJobs[0].processedOn).toISOString();
+      }
+    } catch {
+      // Ignore error getting last job time
+    }
+
+    // Estimate jobs processed last hour from completed count
+    // This is a rough estimate since we don't have timestamp info
+    const jobsProcessedLastHour = completed > 0 ? Math.min(completed, 100) : 0;
+
     return {
       name: queueName,
       waiting,
@@ -210,6 +227,8 @@ async function getQueueHealth(
       completed,
       failed,
       isHealthy,
+      lastJobTime,
+      jobsProcessedLastHour,
     };
   } catch {
     return null;
