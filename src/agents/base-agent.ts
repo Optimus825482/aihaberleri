@@ -18,11 +18,11 @@ const AGENT_TIMEOUTS: Record<string, number> = {
   "relevance-filter": 3 * 60 * 1000, // 3 minutes
   "duplicate-detector": 2 * 60 * 1000, // 2 minutes
   "content-enricher": 10 * 60 * 1000, // 10 minutes
-  "visual-generator": 5 * 60 * 1000, // 5 minutes
+  "visual-generator": 20 * 60 * 1000, // 20 minutes (INCREASED: 44 articles × ~25s = ~18 min)
   "database-publisher": 2 * 60 * 1000, // 2 minutes
   "seo-optimizer": 15 * 60 * 1000, // 15 minutes
   "trend-enricher": 1 * 60 * 1000, // 1 minute
-  "default": 5 * 60 * 1000, // 5 minutes default
+  default: 5 * 60 * 1000, // 5 minutes default
 };
 
 export function getAgentTimeout(agentName: string): number {
@@ -137,7 +137,9 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
           `   Data items: ${Array.isArray(job.data) ? job.data.length : 1}`,
         );
         console.log(`   Timeout: ${Math.round(agentTimeout / 1000)}s`);
-        this.logger.info(`Processing job ${job.id} (timeout: ${Math.round(agentTimeout / 1000)}s)`);
+        this.logger.info(
+          `Processing job ${job.id} (timeout: ${Math.round(agentTimeout / 1000)}s)`,
+        );
 
         try {
           // FAZ 3: Use processWithTimeout for automatic timeout protection
@@ -161,7 +163,8 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
           }
 
           // FAZ 3: Update agent health status on success
-          const { updateAgentHealth, exitRecoveryMode } = await import("@/services/multi-agent-pipeline.service");
+          const { updateAgentHealth, exitRecoveryMode } =
+            await import("@/services/multi-agent-pipeline.service");
           await updateAgentHealth(this.config.name, true);
           if (result.success) {
             await exitRecoveryMode(this.config.name);
@@ -185,9 +188,12 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
 
           // FAZ 3: Update agent health status on failure
           if (error instanceof Error && error.message.includes("timed out")) {
-            const { updateAgentHealth } = await import("@/services/multi-agent-pipeline.service");
+            const { updateAgentHealth } =
+              await import("@/services/multi-agent-pipeline.service");
             await updateAgentHealth(this.config.name, false);
-            this.logger.error(`⏰ Agent ${this.config.name} timed out - health updated`);
+            this.logger.error(
+              `⏰ Agent ${this.config.name} timed out - health updated`,
+            );
           }
 
           return {
