@@ -122,7 +122,7 @@ export class VisualGeneratorAgent extends BaseAgent<
       return {
         success: true,
         data: articlesWithVisuals,
-        nextQueue: QUEUE_NAMES.SEO_OPTIMIZATION, // NEW: Send to SEO Optimizer first
+        nextQueue: QUEUE_NAMES.DATABASE_PUBLISHER, // FIXED: Skip SEO, go directly to database
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls,
