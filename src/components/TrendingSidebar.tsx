@@ -307,27 +307,6 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
           })}
         </div>
       </div>
-
-      {/* Special Report Card */}
-      <div>
-        <div className="rounded-xl lg:rounded-2xl bg-gradient-to-br from-ai-primary via-ai-primary-hover to-blue-700 p-5 text-white shadow-xl shadow-ai-primary/30 border border-white/10">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="material-symbols-outlined text-[24px]">
-              description
-            </span>
-            <h4 className="font-bold text-base">{t.specialReport}</h4>
-          </div>
-          <p className="mb-4 text-xs sm:text-sm opacity-90 leading-relaxed">
-            {t.reportDesc}
-          </p>
-          <button
-            type="button"
-            className="w-full rounded-xl bg-white py-2.5 text-xs sm:text-sm font-bold text-ai-primary hover:bg-gray-50 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
-          >
-            {t.downloadReport}
-          </button>
-        </div>
-      </div>
     </aside>
   );
 }
