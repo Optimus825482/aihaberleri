@@ -388,6 +388,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
       select: {
         id: true,
         title: true,
+        publishedAt: true, // Added for time difference calculation
       },
     });
 
@@ -427,11 +428,9 @@ export class DuplicateDetectorAgent extends BaseAgent<
         const hasCompany = commonEntities.some((e) => companies.includes(e));
         const hasAction = commonEntities.some((e) => actions.includes(e));
 
-        // Calculate time difference
-        const existingArticle = recentArticles.find((a) => a.id === article.id);
-        const hoursDiff = existingArticle
-          ? (Date.now() -
-              new Date(existingArticle.publishedAt || Date.now()).getTime()) /
+        // Calculate time difference with the existing article we're comparing against
+        const hoursDiff = article.publishedAt
+          ? (Date.now() - new Date(article.publishedAt).getTime()) /
             (60 * 60 * 1000)
           : 0;
 
