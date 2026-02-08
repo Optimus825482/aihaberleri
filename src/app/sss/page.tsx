@@ -71,7 +71,7 @@ function FAQAccordion({ item, index }: { item: FAQItem; index: number }) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-ai-surface-hover/30 transition-colors"
-        aria-expanded={isOpen ? "true" : "false"}
+        aria-expanded={isOpen}
       >
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-ai-primary/10 text-ai-primary">

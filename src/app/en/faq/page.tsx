@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Script from "next/script";
 
@@ -64,21 +63,16 @@ const faqSchema = {
     })),
 };
 
-function FAQAccordion({ item, index }: { item: FAQItem; index: number }) {
+function FAQAccordion({ item }: { item: FAQItem }) {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="border border-ai-surface-border rounded-xl overflow-hidden bg-ai-surface-card hover:border-ai-primary/50 transition-colors"
-        >
+        <div className="border border-ai-surface-border rounded-xl overflow-hidden bg-ai-surface-card hover:border-ai-primary/50 transition-colors">
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-ai-surface-hover transition-colors"
-                aria-expanded={isOpen ? "true" : "false"}
+                aria-expanded={isOpen}
             >
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-ai-primary/10 text-ai-primary">
@@ -86,26 +80,28 @@ function FAQAccordion({ item, index }: { item: FAQItem; index: number }) {
                     </div>
                     <span className="font-medium text-white">{item.question}</span>
                 </div>
-                <span className={`material-symbols-outlined text-[20px] text-ai-text-muted transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>expand_more</span>
+                <span className={`material-symbols-outlined text-[20px] text-ai-text-muted transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}>
+                    expand_more
+                </span>
             </button>
-            <motion.div
-                initial={false}
-                animate={{
-                    height: isOpen ? "auto" : 0,
-                    opacity: isOpen ? 1 : 0,
-                }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
+            <div
+                className={`overflow-hidden transition-all duration-200 ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
             >
                 <div className="px-6 pb-4 pt-2 text-ai-text-secondary leading-relaxed">
                     {item.answer}
                 </div>
-            </motion.div>
-        </motion.div>
+            </div>
+        </div>
     );
 }
 
 export default function FAQPage() {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
     return (
         <>
             <Script
@@ -128,11 +124,7 @@ export default function FAQPage() {
                     <div className="absolute inset-0 bg-gradient-to-b from-ai-background-dark/80 via-ai-background-dark/90 to-ai-background-dark" />
                     
                     <div className="relative container max-w-4xl py-16 px-4">
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-center"
-                        >
+                        <div className="text-center">
                             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-ai-primary/20 border border-ai-primary/30 mb-6">
                                 <span className="material-symbols-outlined text-ai-primary text-[18px]">help</span>
                                 <span className="text-ai-primary text-sm font-medium">Help Center</span>
@@ -143,24 +135,18 @@ export default function FAQPage() {
                             <p className="text-ai-text-secondary text-lg max-w-2xl mx-auto">
                                 Find answers to common questions about AI Haberleri.
                             </p>
-                        </motion.div>
+                        </div>
                     </div>
                 </div>
 
                 <div className="container max-w-4xl py-12 px-4 -mt-4">
-
                     <div className="space-y-4">
                         {faqItems.map((item, index) => (
-                            <FAQAccordion key={index} item={item} index={index} />
+                            <FAQAccordion key={index} item={item} />
                         ))}
                     </div>
 
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6 }}
-                        className="mt-12 p-6 rounded-xl bg-ai-surface-card border border-ai-surface-border text-center"
-                    >
+                    <div className="mt-12 p-6 rounded-xl bg-ai-surface-card border border-ai-surface-border text-center">
                         <h2 className="text-xl font-semibold mb-2 text-white">Have more questions?</h2>
                         <p className="text-ai-text-secondary mb-4">
                             Contact us if you can&apos;t find the answer you&apos;re looking for.
@@ -172,7 +158,7 @@ export default function FAQPage() {
                             <span className="material-symbols-outlined text-[18px]">mail</span>
                             Get in Touch
                         </Link>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
         </>
