@@ -141,7 +141,7 @@ function recordFailure(): void {
 /**
  * Get current circuit breaker state (for monitoring)
  */
-export function getCircuitBreakerState(): CircuitBreakerState {
+export function getCircuitBreakerState(): CircuitState {
   return deepSeekCircuitBreaker.state;
 }
 
