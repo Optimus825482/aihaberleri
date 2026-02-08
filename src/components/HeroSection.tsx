@@ -60,14 +60,14 @@ export function HeroSection({
   const [isPaused, setIsPaused] = useState(false);
   const [direction, setDirection] = useState<"next" | "prev">("next");
 
-  // Auto-slide every 8 seconds (going backwards: newest to oldest)
+  // Auto-slide every 10 seconds (going backwards: newest to oldest)
   useEffect(() => {
     if (articles.length <= 1 || isPaused) return;
 
     const interval = setInterval(() => {
       setDirection("prev");
       setCurrentIndex((prev) => (prev + 1) % articles.length);
-    }, 8000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [articles.length, isPaused]);

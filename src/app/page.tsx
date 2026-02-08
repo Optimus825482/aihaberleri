@@ -95,11 +95,12 @@ export default async function HomePage() {
           },
           take: 8,
         }),
-        // Query 3: Featured articles (multiple for slider)
+        // Query 3: Hero Slider (Latest 10 news with images)
         db.article.findMany({
           where: {
             status: "PUBLISHED",
             publishedAt: { not: null },
+            imageUrl: { not: null }, // Hero must have images
           },
           select: {
             id: true,
@@ -117,8 +118,8 @@ export default async function HomePage() {
               },
             },
           },
-          orderBy: [{ views: "desc" }, { publishedAt: "desc" }],
-          take: 5,
+          orderBy: { publishedAt: "desc" }, // Latest first
+          take: 10,
         }),
         // Query 4: Categories for filter chips
         db.category.findMany({
@@ -160,19 +161,13 @@ export default async function HomePage() {
       <main className="flex-grow">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {/* Hero Section - Öne Çıkan Haberler (Slider) */}
-          <HeroSection
-            featuredArticles={featuredArticles}
-            locale="tr"
-          />
+          <HeroSection featuredArticles={featuredArticles} locale="tr" />
 
           {/* Newsletter CTA Cards */}
           <NewsletterCTA locale="tr" />
 
           {/* Category Filter Chips */}
-          <CategoryFilters
-            categories={categories}
-            locale="tr"
-          />
+          <CategoryFilters categories={categories} locale="tr" />
 
           {/* Main Content Area - Two Column Layout */}
           <div className="flex flex-col gap-12 lg:flex-row">
@@ -208,7 +203,8 @@ export default async function HomePage() {
                     article
                   </span>
                   <p className="text-ai-text-secondary">
-                    Henüz haber yok. Otonom agent yakında haber yayınlamaya başlayacak!
+                    Henüz haber yok. Otonom agent yakında haber yayınlamaya
+                    başlayacak!
                   </p>
                 </div>
               )}

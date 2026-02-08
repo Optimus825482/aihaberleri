@@ -200,25 +200,17 @@ export class DuplicateDetectorAgent extends BaseAgent<
   private async checkDuplicate(
     article: ScoredArticle,
   ): Promise<{ isDuplicate: boolean; reason?: string }> {
-    // Layer 0: Strict 12-Hour Topic Uniqueness (User Requirement)
-    // "Yayınladığı haber son 12 saat içerisinde yayınlanmamış olacak"
-    const topic = this.extractTopic(article.title);
-    const existingRecentTopic = await db.article.findFirst({
-      where: {
-        topic: topic,
-        publishedAt: {
-          gte: new Date(Date.now() - 12 * 60 * 60 * 1000), // Last 12 hours
-        },
-      },
-      select: { id: true, title: true },
-    });
-
-    if (existingRecentTopic) {
-      return {
-        isDuplicate: true,
-        reason: `TOPIC_MATCH_12H (${existingRecentTopic.title.substring(0, 30)}...)`,
-      };
-    }
+    // Layer 0: DISABLED - Topic matching was too aggressive
+    // Problem: Generic patterns like "yatırım" matched too many unrelated articles
+    // extractTopic() would return "investment" for many different news stories
+    // causing 100% rejection rate. URL + Semantic matching is sufficient.
+    //
+    // Original code (disabled 2026-02-08):
+    // const topic = this.extractTopic(article.title);
+    // const existingRecentTopic = await db.article.findFirst({...});
+    // if (existingRecentTopic) return { isDuplicate: true, reason: `TOPIC_MATCH_12H...` };
+    //
+    // TODO: Re-enable with smarter topic extraction (company+action required)
 
     // Layer 1: Exact URL match
     const normalizedUrl = this.normalizeUrl(article.url);
