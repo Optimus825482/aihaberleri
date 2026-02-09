@@ -47,8 +47,12 @@ export async function callGemini(
   const ai = getGenAI();
 
   try {
+    // FIXED: Use gemini-2.0-flash-thinking-exp-1219 (available model)
+    // gemini-2.5-flash-lite doesn't exist, using stable 2.0 Flash model
+    const modelName = options.model || "gemini-2.0-flash-thinking-exp-1219";
+
     const model = ai.getGenerativeModel({
-      model: options.model || "gemini-2.5-flash-lite", // Using Flash Exp (experimental, free)
+      model: modelName,
       generationConfig: {
         temperature: options.temperature ?? 0.7,
         maxOutputTokens: options.maxTokens ?? 2000,
@@ -64,6 +68,7 @@ export async function callGemini(
       message: error.message,
       status: error.status,
       details: error.details,
+      model: options.model || "gemini-2.0-flash-thinking-exp-1219",
     });
     throw new Error(`Gemini API error: ${error.message}`);
   }
@@ -84,8 +89,11 @@ export async function callGeminiChat(
   const ai = getGenAI();
 
   try {
+    // FIXED: Use gemini-2.0-flash-thinking-exp-1219 (available model)
+    const modelName = options.model || "gemini-2.0-flash-thinking-exp-1219";
+
     const model = ai.getGenerativeModel({
-      model: options.model || "gemini-2.5-flash-lite",
+      model: modelName,
       generationConfig: {
         temperature: options.temperature ?? 0.7,
         maxOutputTokens: options.maxTokens ?? 2000,
@@ -112,6 +120,7 @@ export async function callGeminiChat(
       message: error.message,
       status: error.status,
       details: error.details,
+      model: options.model || "gemini-2.0-flash-thinking-exp-1219",
     });
     throw new Error(`Gemini Chat API error: ${error.message}`);
   }
@@ -176,7 +185,7 @@ JSON dizisi ile yanıt ver (makale başına bir nesne):
 Katı ama adil ol. Düşük kaliteli, eski veya alakasız içeriği reddet.`;
 
   const response = await callGemini(prompt, {
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
     temperature: 0.3, // Lower for consistent scoring
     maxTokens: 4000,
     systemInstruction:
@@ -237,7 +246,7 @@ Kategori: ${category}
 SADECE PROMPT İLE YANIT VER. AÇIKLAMA YOK.`;
 
   const response = await callGemini(prompt, {
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
     temperature: 1.0, // Maximum variety
     maxTokens: 200,
     systemInstruction:

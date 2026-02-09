@@ -185,7 +185,7 @@ Respond in JSON:
   try {
     const startTime = Date.now();
     const response = await callGemini(prompt, {
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
       maxTokens: 2000,
       temperature: 0.9,
     });

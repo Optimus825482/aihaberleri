@@ -111,7 +111,7 @@ JSON formatında yanıt ver:
 
       const response = await this.retryWithBackoff(async () => {
         return await callGemini(prompt, {
-          model: "gemini-2.5-flash",
+          model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
           temperature: 0.3,
           maxTokens: 3000,
         });

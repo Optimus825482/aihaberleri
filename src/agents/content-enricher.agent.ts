@@ -802,7 +802,7 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
       `🚀 EMERGENCY MODE: Using Gemini 2.5 Flash for BOTH TR + EN synthesis (fast!)`,
     );
 
-    // Turkish content (Gemini 2.5 Flash - FAST)
+    // Turkish content (Gemini 2.0 Flash - FAST)
     const trPrompt = `Sen usta bir araştırmacı gazeteci ve baş editörsün.
 
 Görevin: Aşağıdaki ${sources.length} FARKLI KAYNAKTAN toplanan ham verileri derinlemesine analiz ederek, SENTEZLEYEREK, KAPSAMLI ve %100 ORİJİNAL bir Türkçe haber makalesi oluşturmak.
@@ -839,7 +839,7 @@ JSON formatında yanıt ver:
     let trContent: any;
     try {
       const trResponse = await callGemini(trPrompt, {
-        model: "gemini-2.5-flash-lite",
+        model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
         maxTokens: 6000,
         temperature: 0.7,
       });
@@ -858,7 +858,7 @@ JSON formatında yanıt ver:
       return this.generateEmergencyTemplate(article, sources);
     }
 
-    // English content (Gemini 2.5 Flash - FAST)
+    // English content (Gemini 2.0 Flash - FAST)
     const enPrompt = `You are a world-renowned investigative journalist.
 
 Task: Create a comprehensive, original English news article by synthesizing ${sources.length} sources.
@@ -889,7 +889,7 @@ Respond in JSON:
     let enContent: any;
     try {
       const enResponse = await callGemini(enPrompt, {
-        model: "gemini-2.5-flash-lite",
+        model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
         maxTokens: 6000,
         temperature: 0.7,
       });
