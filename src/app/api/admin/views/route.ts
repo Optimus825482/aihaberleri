@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { requireAdminAuth } from "@/lib/admin-auth";
+
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/admin/views
@@ -8,9 +10,9 @@ import { auth } from "@/lib/auth";
  */
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session; // Return 401 response
     }
 
     const now = new Date();
@@ -119,7 +121,9 @@ export async function GET() {
     });
 
     // 9. Hourly views for last 24 hours
-    const hourlyViews = await db.$queryRaw<Array<{ hour: number; count: bigint }>>`
+    const hourlyViews = await db.$queryRaw<
+      Array<{ hour: number; count: bigint }>
+    >`
       SELECT 
         EXTRACT(HOUR FROM "viewedAt") as hour,
         COUNT(*) as count

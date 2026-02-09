@@ -875,12 +875,14 @@ export async function fetchAINews(
     );
 
     // Step 4: Sort by trend score and take top articles with EARLY DB CHECK
-    // 🎯 OPTIMIZED: TOP 2 seçim + Early DB Check (09.02.2026)
-    // Artık üst sıradaki 2 konuyu seçmeden önce veritabanında var mı kontrol ediyoruz
-    // Eğer varsa sonraki 2'yi deniyoruz, böylece boşa işlem yapılmıyor
+    // 🎯 OPTIMIZED: Progressive DB Check (09.02.2026 - V2)
+    // Duplicate olanları eleyip KALAN haberlerden devam et
+    // Top 10 duplicate olsa bile 11-77 arasından unique bul
 
     const BATCH_SIZE = 2; // Her seferinde 2 makale kontrol et
-    const MAX_BATCHES = 5; // Maksimum 10 makale dene (5 batch)
+    const MIN_UNIQUE_NEEDED = 2; // En az 2 unique makale bul
+    const TOTAL_ARTICLES = trendRankings.length;
+    const MAX_BATCHES = Math.ceil(TOTAL_ARTICLES / BATCH_SIZE); // TÜM listeyi tara
     // Extended type: RSSItem + trendScore (for sorting & display)
     type RSSItemWithScore = (typeof itemsToAnalyze)[0] & {
       trendScore?: number;
@@ -888,9 +890,11 @@ export async function fetchAINews(
     let topArticles: RSSItemWithScore[] = [];
     let batchIndex = 0;
 
-    console.log(`\n🔍 Early DB Check başlıyor (${BATCH_SIZE}'li gruplar)...`);
+    console.log(
+      `\n🔍 Early DB Check başlıyor (${BATCH_SIZE}'li gruplar, ${TOTAL_ARTICLES} haber taranacak)...`,
+    );
 
-    while (topArticles.length === 0 && batchIndex < MAX_BATCHES) {
+    while (topArticles.length < MIN_UNIQUE_NEEDED && batchIndex < MAX_BATCHES) {
       const startIdx = batchIndex * BATCH_SIZE;
       const endIdx = startIdx + BATCH_SIZE;
 
@@ -938,28 +942,35 @@ export async function fetchAINews(
       }
 
       if (uniqueArticles.length > 0) {
-        topArticles = uniqueArticles;
+        // Unique makaleleri topArticles'a EKLE (üzerine yazma, biriktir!)
+        topArticles.push(...uniqueArticles);
         console.log(
-          `\n✅ Batch ${batchIndex + 1}'de ${uniqueArticles.length} unique makale bulundu!`,
+          `\n✅ Batch ${batchIndex + 1}'de ${uniqueArticles.length} unique makale bulundu! (Toplam: ${topArticles.length})`,
         );
       } else {
         console.log(
           `\n⚠️ Batch ${batchIndex + 1}: Tüm makaleler zaten DB'de var, sonraki batch'e geçiliyor...`,
         );
-        batchIndex++;
       }
+
+      // Her zaman sonraki batch'e geç (MIN_UNIQUE_NEEDED'a ulaşana kadar)
+      batchIndex++;
     }
 
     // Hiç unique makale bulunamadıysa
     if (topArticles.length === 0) {
       console.log(
-        `\n⚠️ Early DB Check: ${MAX_BATCHES * BATCH_SIZE} makalede hiçbiri unique değil!`,
+        `\n⚠️ Early DB Check: ${TOTAL_ARTICLES} makalede hiçbiri unique değil!`,
       );
       console.log(
         `💡 Tüm trend haberler zaten veritabanında var. Agent bu sefer yeni içerik üretmeyecek.`,
       );
       return []; // Boş array dön
     }
+
+    console.log(
+      `\n📊 DB Check tamamlandı: ${batchIndex} batch tarandı, ${topArticles.length} unique bulundu`,
+    );
 
     // Sıralama
     topArticles = topArticles.sort(
