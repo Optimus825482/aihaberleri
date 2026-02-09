@@ -73,7 +73,7 @@ export class DatabasePublisherAgent extends BaseAgent<
       for (const article of articles) {
         try {
           // Get or create category
-          const categorySlug = article.suggestedCategory || "teknoloji";
+          const categorySlug = article.suggestedCategory || "yapay-zeka";
           let category = await db.category.findUnique({
             where: { slug: categorySlug },
           });
@@ -81,7 +81,7 @@ export class DatabasePublisherAgent extends BaseAgent<
           if (!category) {
             // Fallback to default category
             category = await db.category.findFirst({
-              where: { slug: "teknoloji" },
+              where: { slug: "yapay-zeka" },
             });
 
             if (!category) {

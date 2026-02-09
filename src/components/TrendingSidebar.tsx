@@ -11,12 +11,7 @@ interface TrendingArticle {
   trendScore?: number | null;
 }
 
-interface AITool {
-  id: string;
-  name: string;
-  category: string;
-  pricingType: "free" | "paid" | "freemium";
-}
+
 
 interface TrendingSidebarProps {
   locale?: "tr" | "en";
@@ -24,18 +19,7 @@ interface TrendingSidebarProps {
 
 type TimePeriod = "today" | "week" | "month" | "all";
 
-const aiTools: AITool[] = [
-  { id: "1", name: "ChatGPT Plus", category: "Chatbot", pricingType: "free" },
-  { id: "2", name: "Midjourney", category: "Image Gen", pricingType: "paid" },
-  {
-    id: "3",
-    name: "Notion AI",
-    category: "Productivity",
-    pricingType: "freemium",
-  },
-  { id: "4", name: "Claude", category: "Chatbot", pricingType: "freemium" },
-  { id: "5", name: "GitHub Copilot", category: "Coding", pricingType: "paid" },
-];
+
 
 const texts = {
   tr: {
@@ -44,8 +28,6 @@ const texts = {
     hot: "HOT",
     score: "Score",
     views: "",
-    aiTools: "Top 5 AI Araçları",
-    all: "Tümü",
     specialReport: "Özel Rapor",
     reportDesc: "Yapay Zeka Sektör Raporu 2024 Yayında! Hemen indirin.",
     downloadReport: "Raporu İndir",
@@ -62,8 +44,6 @@ const texts = {
     hot: "HOT",
     score: "Score",
     views: "",
-    aiTools: "Top 5 AI Tools",
-    all: "All",
     specialReport: "Special Report",
     reportDesc: "AI Sector Report 2024 is now available! Download now.",
     downloadReport: "Download Report",
@@ -74,15 +54,6 @@ const texts = {
       all: "All Time",
     },
   },
-};
-
-const getPricingLabel = (type: AITool["pricingType"]) => {
-  const labels = {
-    free: { text: "Free", color: "bg-emerald-500/10 text-emerald-500" },
-    paid: { text: "Paid", color: "bg-blue-500/10 text-blue-500" },
-    freemium: { text: "Freemium", color: "bg-yellow-500/10 text-yellow-500" },
-  };
-  return labels[type];
 };
 
 export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
@@ -252,61 +223,7 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
         </div>
       </div>
 
-      {/* AI Tools Card */}
-      <div className="rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card border border-gray-100 dark:border-ai-surface-border p-5 shadow-md dark:shadow-none">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span className="material-symbols-outlined text-yellow-500 text-[20px]">
-              construction
-            </span>
-            {t.aiTools}
-          </h3>
-          <Link
-            href="/category/ai-araclari"
-            className="text-[11px] sm:text-xs font-semibold text-ai-primary hover:text-ai-primary-hover transition-colors"
-          >
-            {t.all}
-          </Link>
-        </div>
 
-        <div className="space-y-2.5">
-          {aiTools.map((tool) => {
-            const pricing = getPricingLabel(tool.pricingType);
-            const initials = tool.name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .substring(0, 2)
-              .toUpperCase();
-
-            return (
-              <div
-                key={tool.id}
-                className="flex items-center justify-between group cursor-pointer p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-white/5 transition-all duration-300"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-gray-300 shadow-inner">
-                    {initials}
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-ai-primary transition-colors duration-300">
-                      {tool.name}
-                    </p>
-                    <p className="text-[10px] text-ai-text-secondary font-medium">
-                      {tool.category}
-                    </p>
-                  </div>
-                </div>
-                <span
-                  className={`text-[10px] sm:text-[11px] font-bold px-2 py-1 rounded-lg ${pricing.color} shadow-sm`}
-                >
-                  {pricing.text}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
     </aside>
   );
 }

@@ -255,16 +255,16 @@ export async function GET() {
     const last60Minutes = new Date(now.getTime() - 60 * 60 * 1000);
     const activeUsersTimeline = await db.$queryRaw<
       Array<{ interval: Date; count: bigint }>
-    >\`
+    >`
       SELECT 
         date_trunc('minute', "lastActivity") - 
         (EXTRACT(MINUTE FROM "lastActivity")::integer % 5) * interval '1 minute' as interval,
         COUNT(DISTINCT id) as count
       FROM "Visitor"
-      WHERE "lastActivity" >= \${last60Minutes}
+      WHERE "lastActivity" >= ${last60Minutes}
       GROUP BY interval
       ORDER BY interval ASC
-    \`;
+    `;
 
     const realtimeData = activeUsersTimeline.map((item) => ({
       time: item.interval,

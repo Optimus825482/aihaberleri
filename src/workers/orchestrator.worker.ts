@@ -201,7 +201,7 @@ async function publishArticlesToDatabase(
 
       // Get category
       const categoryRecord = await db.category.findUnique({
-        where: { slug: article.suggestedCategory || "teknoloji" },
+        where: { slug: article.suggestedCategory || "yapay-zeka" },
       });
 
       if (!categoryRecord) {

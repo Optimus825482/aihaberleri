@@ -189,7 +189,7 @@ export async function startMultiAgentPipeline(
     source: article.source || "RSS",
     topic: article.topic,
     trendScore: article.trendScore,
-    suggestedCategory: config.categorySlug || "teknoloji",
+    suggestedCategory: config.categorySlug || "yapay-zeka",
     agentLogId: config.agentLogId, // Pass agentLogId through pipeline
   }));
 

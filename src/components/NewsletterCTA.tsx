@@ -8,7 +8,7 @@ interface NewsletterCTAProps {
 
 const texts = {
   tr: {
-    weeklyNewsletter: "Haftalık Bülten",
+    dailyNewsletter: "Günlük Bülten",
     newsletterDesc: "En son AI gelişmelerini kaçırmayın.",
     subscribe: "Abone Ol",
     instantNotifications: "Anlık Bildirimler",
@@ -21,7 +21,7 @@ const texts = {
     activating: "Aktifleştiriliyor...",
   },
   en: {
-    weeklyNewsletter: "Weekly Newsletter",
+    dailyNewsletter: "Daily Newsletter",
     newsletterDesc: "Don't miss the latest AI developments.",
     subscribe: "Subscribe",
     instantNotifications: "Instant Notifications",
@@ -206,7 +206,7 @@ export function NewsletterCTA({ locale = "tr" }: NewsletterCTAProps) {
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white mb-0.5">
-              {t.weeklyNewsletter}
+              {t.dailyNewsletter}
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-ai-text-secondary line-clamp-2 sm:line-clamp-1">
               {t.newsletterDesc}
@@ -253,40 +253,34 @@ export function NewsletterCTA({ locale = "tr" }: NewsletterCTAProps) {
         )}
       </div>
 
-      {/* Notifications Card */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card border border-gray-100 dark:border-ai-surface-border p-4 sm:p-5 lg:p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 w-full sm:w-auto">
-          <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-ai-surface-border to-ai-surface-hover text-white shadow-lg">
-            <span className="material-symbols-outlined text-[22px] sm:text-[24px]">
-              notifications_active
-            </span>
+      {/* Notifications Card - Only show if not subscribed */}
+      {!pushSubscribed && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card border border-gray-100 dark:border-ai-surface-border p-4 sm:p-5 lg:p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0 w-full sm:w-auto">
+            <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-ai-surface-border to-ai-surface-hover text-white shadow-lg">
+              <span className="material-symbols-outlined text-[22px] sm:text-[24px]">
+                notifications_active
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white mb-0.5">
+                {t.instantNotifications}
+              </h3>
+              <p className="text-xs sm:text-sm text-ai-text-secondary line-clamp-2 sm:line-clamp-1">
+                {t.notificationsDesc}
+              </p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-sm sm:text-base text-slate-900 dark:text-white mb-0.5">
-              {t.instantNotifications}
-            </h3>
-            <p className="text-xs sm:text-sm text-ai-text-secondary line-clamp-2 sm:line-clamp-1">
-              {t.notificationsDesc}
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={handlePushActivate}
+            disabled={pushLoading || !pushSupported}
+            className="w-full sm:w-auto shrink-0 rounded-xl border-2 px-5 py-2.5 text-sm font-bold transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap border-ai-surface-border bg-transparent text-slate-700 dark:text-white hover:bg-ai-surface-border hover:border-ai-primary/50"
+          >
+            {pushLoading ? t.activating : t.activate}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handlePushActivate}
-          disabled={pushLoading || pushSubscribed || !pushSupported}
-          className={`w-full sm:w-auto shrink-0 rounded-xl border-2 px-5 py-2.5 text-sm font-bold transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${
-            pushSubscribed
-              ? "border-green-600 bg-green-600 text-white"
-              : "border-ai-surface-border bg-transparent text-slate-700 dark:text-white hover:bg-ai-surface-border hover:border-ai-primary/50"
-          }`}
-        >
-          {pushLoading
-            ? t.activating
-            : pushSubscribed
-              ? "✓ " + t.activated
-              : t.activate}
-        </button>
-      </div>
+      )}
     </div>
   );
 }

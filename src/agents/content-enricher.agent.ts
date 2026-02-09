@@ -224,7 +224,7 @@ export class ContentEnricherAgent extends BaseAgent<
               this.synthesizeContent(
                 article,
                 sources,
-                article.suggestedCategory || "teknoloji",
+                article.suggestedCategory || "yapay-zeka",
               ),
               new Promise<any>((_, reject) =>
                 setTimeout(
@@ -241,7 +241,7 @@ export class ContentEnricherAgent extends BaseAgent<
               const variants = await Promise.race([
                 generateTitleVariants(
                   synthesized.tr.content,
-                  article.suggestedCategory || "teknoloji",
+                  article.suggestedCategory || "yapay-zeka",
                 ),
                 new Promise<any>((_, reject) =>
                   setTimeout(
@@ -681,8 +681,9 @@ export class ContentEnricherAgent extends BaseAgent<
   }
 
   /**
-   * Read URL content using Jina Reader with Tavily fallback
+   * Read URL content using Jina Reader with Tavily and SearXNG fallbacks
    * FIXED: Added detailed error logging and increased timeout
+   * UPDATED: Added SearXNG as third fallback option
    */
   private async readUrlContent(url: string): Promise<string> {
     // Try Jina Reader first
@@ -709,7 +710,7 @@ export class ContentEnricherAgent extends BaseAgent<
       );
     }
 
-    // Fallback to Tavily
+    // Fallback 1: Tavily
     const apiKey = process.env.TAVILY_API_KEY;
     if (apiKey) {
       try {
@@ -737,6 +738,51 @@ export class ContentEnricherAgent extends BaseAgent<
           `⚠️ Tavily fallback failed for ${url}: ${tavilyError.message}`,
         );
       }
+    }
+
+    // Fallback 2: SearXNG (search for URL content)
+    try {
+      // Extract meaningful search query from URL
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split("/").filter(Boolean);
+      const searchQuery = pathParts
+        .join(" ")
+        .replace(/[-_]/g, " ")
+        .replace(/\.(html|htm|php|aspx)$/i, "")
+        .substring(0, 100);
+
+      if (searchQuery.length > 10) {
+        this.logger.info(
+          `🔍 SearXNG fallback: searching for "${searchQuery.substring(0, 50)}..."`,
+        );
+
+        const results = await searxngSearch(searchQuery, {
+          count: 5,
+          language: "en",
+          categories: "general",
+        });
+
+        if (results && results.length > 0) {
+          // Combine content from top results
+          const combinedContent = results
+            .slice(0, 3)
+            .map((r) => `${r.title}\n${r.content}`)
+            .join("\n\n");
+
+          if (combinedContent.length > 200) {
+            this.logger.info(
+              `✅ SearXNG fallback succeeded for ${url} (${combinedContent.length} chars)`,
+            );
+            return combinedContent.substring(0, 5000);
+          }
+        }
+
+        this.logger.warn(`⚠️ SearXNG returned insufficient content for ${url}`);
+      }
+    } catch (searxngError: any) {
+      this.logger.warn(
+        `⚠️ SearXNG fallback failed for ${url}: ${searxngError.message}`,
+      );
     }
 
     this.logger.error(`❌ All extraction methods failed for ${url}`);
@@ -797,9 +843,7 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
       .join("\n");
 
     // Using DeepSeek-chat for BOTH TR and EN content synthesis
-    this.logger.info(
-      `🚀 Using DeepSeek-chat for BOTH TR + EN synthesis`,
-    );
+    this.logger.info(`🚀 Using DeepSeek-chat for BOTH TR + EN synthesis`);
 
     // Turkish content (DeepSeek-chat)
     const trPrompt = `Sen usta bir araştırmacı gazeteci ve baş editörsün.
@@ -843,7 +887,7 @@ JSON formatında yanıt ver:
           model: "deepseek-chat",
           maxTokens: 6000,
           temperature: 0.7,
-        }
+        },
       );
 
       const trJsonMatch = trResponse.match(/\{[\s\S]*\}/);
@@ -896,7 +940,7 @@ Respond in JSON:
           model: "deepseek-chat",
           maxTokens: 6000,
           temperature: 0.7,
-        }
+        },
       );
 
       const enJsonMatch = enResponse.match(/\{[\s\S]*\}/);
@@ -1130,7 +1174,7 @@ Respond in JSON:
       metaDescription: string;
     };
   } {
-    const category = article.suggestedCategory || "teknoloji";
+    const category = article.suggestedCategory || "yapay-zeka";
     const sourceContent =
       sources[0]?.content || article.description || article.title;
 

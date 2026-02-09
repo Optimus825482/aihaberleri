@@ -229,7 +229,7 @@ export class VisualGeneratorAgent extends BaseAgent<
 
       const title = article.synthesizedContent.tr.title;
       const content = article.synthesizedContent.tr.content;
-      const category = article.suggestedCategory || "teknoloji";
+      const category = article.suggestedCategory || "yapay-zeka";
       const articleSlug = generateSlug(title);
 
       this.logger.info(`Generating visual: ${title.substring(0, 50)}...`);
