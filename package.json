@@ -39,6 +39,7 @@
     "@bull-board/express": "^6.16.4",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",
+    "@jest/globals": "^30.2.0",
     "@neondatabase/serverless": "^0.10.4",
     "@prisma/adapter-neon": "^6.2.1",
     "@prisma/client": "^5.22.0",

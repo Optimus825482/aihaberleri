@@ -192,6 +192,7 @@ export async function GET() {
         articleId: true,
         sessionId: true,
         viewedAt: true,
+        ipAddress: true,
       },
     });
 
@@ -202,24 +203,41 @@ export async function GET() {
       select: { id: true, title: true, slug: true },
     });
 
-    // Get visitor locations (last 20 active visitors)
-    const recentVisitors = await db.visitor.findMany({
-      orderBy: { lastActivity: "desc" },
-      take: 50,
+    // Get unique IPs from recent views (from ipAddress field or extracted from sessionId)
+    const extractedIPs = recentViews
+      .map((v) => {
+        if (v.ipAddress) return v.ipAddress;
+        // Fallback: Extract IP from sessionId (format: "IP-UserAgent")
+        const sessionParts = v.sessionId?.split("-");
+        if (sessionParts && sessionParts[0]) {
+          // Check if it looks like an IP address
+          const potentialIP = sessionParts[0];
+          if (/^[\d.]+$/.test(potentialIP) || potentialIP.includes(":")) {
+            return potentialIP;
+          }
+        }
+        return null;
+      })
+      .filter(Boolean) as string[];
+
+    const recentIPs = [...new Set(extractedIPs)];
+    const ipLocations = await db.visitor.findMany({
+      where: {
+        ipAddress: { in: recentIPs },
+      },
+      distinct: ["ipAddress"],
       select: {
         ipAddress: true,
         country: true,
         countryCode: true,
         city: true,
         region: true,
-        currentPage: true,
-        lastActivity: true,
       },
     });
 
     // Create IP to location map
     const ipLocationMap = new Map(
-      recentVisitors.map((v) => [
+      ipLocations.map((v) => [
         v.ipAddress,
         {
           country: v.country,
@@ -232,9 +250,18 @@ export async function GET() {
 
     const recentViewsWithArticles = recentViews.map((view) => {
       const article = recentArticles.find((a) => a.id === view.articleId);
-      // Try to extract IP from sessionId (format: ip_useragent_hash)
-      const ipPart = view.sessionId.split("_")[0];
-      const location = ipLocationMap.get(ipPart) || null;
+      // Try direct IP, then extract from sessionId
+      let ip = view.ipAddress;
+      if (!ip) {
+        const sessionParts = view.sessionId?.split("-");
+        if (sessionParts && sessionParts[0]) {
+          const potentialIP = sessionParts[0];
+          if (/^[\d.]+$/.test(potentialIP) || potentialIP.includes(":")) {
+            ip = potentialIP;
+          }
+        }
+      }
+      const location = ip ? ipLocationMap.get(ip) : null;
 
       return {
         ...view,

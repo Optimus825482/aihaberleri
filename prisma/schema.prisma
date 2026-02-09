@@ -231,11 +231,13 @@ model ArticleView {
   id        String   @id @default(cuid())
   articleId String
   sessionId String   // IP + UserAgent hash
+  ipAddress String?  // Direct IP address for geolocation
   viewedAt  DateTime @default(now())
 
   @@index([articleId])
   @@index([sessionId, articleId, viewedAt])
   @@index([viewedAt])
+  @@index([ipAddress])
 }
 
 model ArticleTranslation {
@@ -802,6 +804,8 @@ enum SocialPlatform {
   BLUESKY_EN
   MASTODON
   MASTODON_EN
+  TUMBLR
+  TUMBLR_EN
 }
 
 enum ShareStatus {

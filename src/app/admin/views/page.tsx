@@ -769,6 +769,44 @@ export default function ViewsPage() {
                   </div>
               )}
 
+        {/* Anlık Aktif Kullanıcılar - Büyük Gösterge */}
+        <div className="rounded-xl border border-green-500/30 bg-gradient-to-r from-green-500/10 to-emerald-600/10 p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20">
+                <Users className="h-8 w-8 text-green-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Şu An Sitede Aktif</p>
+                <p className="text-4xl font-bold text-green-400">
+                  {data.summary?.activeUsers || 0}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-green-500"></span>
+              </span>
+              <span className="text-sm font-medium text-green-400">CANLI</span>
+            </div>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-4 border-t border-green-500/20 pt-4">
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-white">{data.summary?.activeUsers || 0}</p>
+              <p className="text-xs text-gray-500">Aktif Kullanıcı</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-white">{data.locationBreakdown?.length || 0}</p>
+              <p className="text-xs text-gray-500">Farklı Ülke</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-semibold text-white">{data.summary?.todayViews?.toLocaleString() || 0}</p>
+              <p className="text-xs text-gray-500">Bugün Görüntülenme</p>
+            </div>
+          </div>
+        </div>
+
               {/* Recent Views with Location */}
         <div className="rounded-xl border border-white/10 bg-white/5 p-6">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">

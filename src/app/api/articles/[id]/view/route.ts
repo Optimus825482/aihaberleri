@@ -46,6 +46,7 @@ export async function POST(
       data: {
         articleId: id,
         sessionId: sessionId,
+        ipAddress: ip !== "unknown" ? ip : null,
         viewedAt: new Date(),
       },
     });
