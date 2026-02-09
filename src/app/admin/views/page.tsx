@@ -13,8 +13,26 @@ import {
   ExternalLink,
   Calendar,
   Activity,
+    MapPin,
+    Flame,
+    Globe,
+    Zap,
 } from "lucide-react";
 import Link from "next/link";
+import {
+    LineChart,
+    Line,
+    AreaChart,
+    Area,
+    XAxis,
+    YAxis,
+    Tooltip,
+    ResponsiveContainer,
+    CartesianGrid,
+    BarChart,
+    Bar,
+    Cell,
+} from "recharts";
 
 interface ViewSummary {
   totalViews: number;
@@ -24,6 +42,7 @@ interface ViewSummary {
   last30DaysViews: number;
   uniqueSessionsToday: number;
   viewChangePercent: string;
+    activeUsers: number;
 }
 
 interface TopArticle {
@@ -34,6 +53,8 @@ interface TopArticle {
   publishedAt: string;
   category?: { name: string };
   todayViews?: number;
+    trendScore?: number;
+    isTrending?: boolean;
 }
 
 interface HourlyData {
@@ -51,6 +72,13 @@ interface CategoryData {
   views: number;
 }
 
+interface LocationInfo {
+    country?: string;
+    countryCode?: string;
+    city?: string;
+    region?: string;
+}
+
 interface RecentView {
   id: string;
   articleId: string;
@@ -58,6 +86,12 @@ interface RecentView {
   viewedAt: string;
   articleTitle: string;
   articleSlug: string;
+    location?: LocationInfo | null;
+}
+
+interface RealtimeDataPoint {
+    time: string;
+    users: number;
 }
 
 interface ViewAnalytics {
@@ -68,7 +102,18 @@ interface ViewAnalytics {
   dailyData: DailyData[];
   categoryData: CategoryData[];
   recentViews: RecentView[];
+    realtimeData: RealtimeDataPoint[];
 }
+
+// Country flag emoji helper
+const getCountryFlag = (countryCode?: string) => {
+    if (!countryCode) return "🌍";
+    const codePoints = countryCode
+        .toUpperCase()
+        .split("")
+        .map((char) => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+};
 
 export default function ViewsPage() {
   const [data, setData] = useState<ViewAnalytics | null>(null);
@@ -117,6 +162,13 @@ export default function ViewsPage() {
     });
   };
 
+    const formatRealtimeTime = (timeStr: string) => {
+        return new Date(timeStr).toLocaleTimeString("tr-TR", {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    };
+
   if (loading && !data) {
     return (
       <AdminLayout>
@@ -145,11 +197,25 @@ export default function ViewsPage() {
 
   if (!data) return null;
 
-  const maxHourlyViews = Math.max(...data.hourlyData.map((d) => d.views), 1);
-  const maxDailyViews = Math.max(...data.dailyData.map((d) => d.views), 1);
-  const maxCategoryViews = Math.max(...data.categoryData.map((d) => d.views), 1);
-
   const isPositiveChange = !data.summary.viewChangePercent.startsWith("-");
+
+    // Prepare hourly data for chart
+    const hourlyChartData = data.hourlyData.map((item) => ({
+        name: `${item.hour}:00`,
+        views: item.views,
+    }));
+
+    // Prepare daily data for chart
+    const dailyChartData = data.dailyData.map((item) => ({
+        name: formatDate(item.date),
+        views: item.views,
+    }));
+
+    // Prepare realtime data for chart
+    const realtimeChartData = (data.realtimeData || []).map((item) => ({
+        time: formatRealtimeTime(item.time),
+        users: item.users,
+    }));
 
   return (
     <AdminLayout>
@@ -171,6 +237,73 @@ export default function ViewsPage() {
             Yenile
           </button>
         </div>
+
+              {/* Real-time Active Users Card + Chart */}
+              <div className="rounded-xl border border-green-500/30 bg-gradient-to-br from-green-500/10 to-emerald-600/5 p-6">
+                  <div className="mb-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/20">
+                              <Zap className="h-6 w-6 text-green-400" />
+                          </div>
+                          <div>
+                              <h3 className="text-lg font-semibold text-white">Şu An Sitede</h3>
+                              <p className="text-sm text-gray-400">Son 5 dakika aktif kullanıcılar</p>
+                          </div>
+                      </div>
+                      <div className="text-right">
+                          <p className="text-4xl font-bold text-green-400">
+                              {data.summary.activeUsers || 0}
+                          </p>
+                          <p className="text-sm text-gray-400">aktif kullanıcı</p>
+                      </div>
+                  </div>
+
+                  {/* Realtime Line Chart */}
+                  {realtimeChartData.length > 0 && (
+                      <div className="h-32">
+                          <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={realtimeChartData}>
+                                  <defs>
+                                      <linearGradient id="realtimeGradient" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="5%" stopColor="#22c55e" stopOpacity={0.4} />
+                                          <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                                      </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                                  <XAxis
+                                      dataKey="time"
+                                      stroke="#6b7280"
+                                      fontSize={10}
+                                      tickLine={false}
+                                  />
+                                  <YAxis
+                                      stroke="#6b7280"
+                                      fontSize={10}
+                                      tickLine={false}
+                                      axisLine={false}
+                                  />
+                                  <Tooltip
+                                      contentStyle={{
+                                          backgroundColor: "#1f2937",
+                                          border: "1px solid #374151",
+                                          borderRadius: "8px",
+                                          color: "#fff",
+                                      }}
+                                      labelStyle={{ color: "#9ca3af" }}
+                                  />
+                                  <Area
+                                      type="monotone"
+                                      dataKey="users"
+                                      stroke="#22c55e"
+                                      strokeWidth={2}
+                                      fill="url(#realtimeGradient)"
+                                      name="Kullanıcı"
+                                  />
+                              </AreaChart>
+                          </ResponsiveContainer>
+                      </div>
+                  )}
+              </div>
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
@@ -252,95 +385,153 @@ export default function ViewsPage() {
 
         {/* Charts Section */}
         <div className="grid gap-6 lg:grid-cols-2">
-          {/* Hourly Chart */}
+                  {/* Hourly Line Chart */}
           <div className="rounded-xl border border-white/10 bg-white/5 p-6">
             <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
-              <Clock className="h-5 w-5 text-blue-400" />
+                          <Clock className="h-5 w-5 text-cyan-400" />
               Saatlik Görüntülenme (Son 24 Saat)
             </h3>
-            <div className="flex h-40 items-end gap-1">
-              {data.hourlyData.map((item) => (
-                <div
-                  key={item.hour}
-                  className="group relative flex-1"
-                  title={`${item.hour}:00 - ${item.views} görüntülenme`}
-                >
-                  <div
-                    className="w-full rounded-t bg-gradient-to-t from-blue-500 to-blue-400 transition-all hover:from-blue-400 hover:to-blue-300"
-                    style={{
-                      height: `${(item.views / maxHourlyViews) * 100}%`,
-                      minHeight: item.views > 0 ? "4px" : "0",
+                      <div className="h-48">
+                          <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={hourlyChartData}>
+                                  <defs>
+                                      <linearGradient id="hourlyGradient" x1="0" y1="0" x2="1" y2="0">
+                                          <stop offset="0%" stopColor="#06b6d4" />
+                                          <stop offset="100%" stopColor="#3b82f6" />
+                                      </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                                  <XAxis
+                                      dataKey="name"
+                                      stroke="#6b7280"
+                                      fontSize={10}
+                                      tickLine={false}
+                                      interval={3}
+                                  />
+                                  <YAxis
+                                      stroke="#6b7280"
+                                      fontSize={10}
+                                      tickLine={false}
+                                      axisLine={false}
+                                  />
+                                  <Tooltip
+                                      contentStyle={{
+                                          backgroundColor: "#1f2937",
+                                          border: "1px solid #374151",
+                                          borderRadius: "8px",
+                                          color: "#fff",
                     }}
+                                      labelStyle={{ color: "#9ca3af" }}
                   />
-                  <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
-                    {item.views}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-2 flex justify-between text-xs text-gray-500">
-              <span>00:00</span>
-              <span>06:00</span>
-              <span>12:00</span>
-              <span>18:00</span>
-              <span>23:00</span>
+                                  <Line
+                                      type="monotone"
+                                      dataKey="views"
+                                      stroke="url(#hourlyGradient)"
+                                      strokeWidth={3}
+                                      dot={{ fill: "#06b6d4", strokeWidth: 0, r: 3 }}
+                                      activeDot={{ r: 6, fill: "#06b6d4" }}
+                                      name="Görüntülenme"
+                                  />
+                              </LineChart>
+                          </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Daily Chart */}
+                  {/* Daily Area Chart */}
           <div className="rounded-xl border border-white/10 bg-white/5 p-6">
             <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
               <Calendar className="h-5 w-5 text-purple-400" />
               Günlük Görüntülenme (Son 7 Gün)
             </h3>
-            <div className="flex h-40 items-end gap-2">
-              {data.dailyData.map((item, index) => (
-                <div
-                  key={index}
-                  className="group relative flex-1"
-                  title={`${formatDate(item.date)} - ${item.views} görüntülenme`}
-                >
-                  <div
-                    className="w-full rounded-t bg-gradient-to-t from-purple-500 to-purple-400 transition-all hover:from-purple-400 hover:to-purple-300"
-                    style={{
-                      height: `${(item.views / maxDailyViews) * 100}%`,
-                      minHeight: item.views > 0 ? "4px" : "0",
+                      <div className="h-48">
+                          <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={dailyChartData}>
+                                  <defs>
+                                      <linearGradient id="dailyGradient" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="5%" stopColor="#a855f7" stopOpacity={0.4} />
+                                          <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
+                                      </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                                  <XAxis
+                                      dataKey="name"
+                                      stroke="#6b7280"
+                                      fontSize={10}
+                                      tickLine={false}
+                                  />
+                                  <YAxis
+                                      stroke="#6b7280"
+                                      fontSize={10}
+                                      tickLine={false}
+                                      axisLine={false}
+                                  />
+                                  <Tooltip
+                                      contentStyle={{
+                                          backgroundColor: "#1f2937",
+                                          border: "1px solid #374151",
+                                          borderRadius: "8px",
+                                          color: "#fff",
                     }}
+                                      labelStyle={{ color: "#9ca3af" }}
                   />
-                  <div className="absolute -top-8 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white group-hover:block">
-                    {item.views}
-                  </div>
-                  <div className="mt-1 text-center text-xs text-gray-500">
-                    {formatDate(item.date)}
-                  </div>
-                </div>
-              ))}
+                                  <Area
+                                      type="monotone"
+                                      dataKey="views"
+                                      stroke="#a855f7"
+                                      strokeWidth={2}
+                                      fill="url(#dailyGradient)"
+                                      name="Görüntülenme"
+                                  />
+                              </AreaChart>
+                          </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        {/* Category Distribution */}
+              {/* Category Distribution - Horizontal Bar Chart */}
         {data.categoryData.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-white/5 p-6">
             <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
               <BarChart3 className="h-5 w-5 text-green-400" />
               Kategorilere Göre (Son 7 Gün)
             </h3>
-            <div className="space-y-3">
-              {data.categoryData.map((item, index) => (
-                <div key={index} className="group">
-                  <div className="mb-1 flex justify-between text-sm">
-                    <span className="text-gray-300">{item.category}</span>
-                    <span className="text-gray-400">{formatNumber(item.views)}</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all"
-                      style={{ width: `${(item.views / maxCategoryViews) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                      <div className="h-64">
+                          <ResponsiveContainer width="100%" height="100%">
+                              <BarChart
+                                  data={data.categoryData}
+                                  layout="vertical"
+                                  margin={{ left: 100, right: 20 }}
+                              >
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} horizontal={false} />
+                                  <XAxis type="number" stroke="#6b7280" fontSize={10} />
+                                  <YAxis
+                                      type="category"
+                                      dataKey="category"
+                                      stroke="#6b7280"
+                                      fontSize={11}
+                                      tickLine={false}
+                                      axisLine={false}
+                                      width={90}
+                                  />
+                                  <Tooltip
+                                      contentStyle={{
+                                          backgroundColor: "#1f2937",
+                                          border: "1px solid #374151",
+                                          borderRadius: "8px",
+                                          color: "#fff",
+                                      }}
+                                      formatter={(value: number) => [formatNumber(value), "Görüntülenme"]}
+                                  />
+                                  <Bar dataKey="views" radius={[0, 4, 4, 0]}>
+                                      {data.categoryData.map((_, index) => (
+                                          <Cell
+                                              key={`cell-${index}`}
+                                              fill={`hsl(${142 + index * 15}, 70%, ${50 - index * 3}%)`}
+                                          />
+                    ))}
+                                  </Bar>
+                              </BarChart>
+                          </ResponsiveContainer>
             </div>
           </div>
         )}
@@ -372,11 +563,22 @@ export default function ViewsPage() {
                       >
                         {article.title}
                       </Link>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-400">
                         <span className="rounded bg-green-500/20 px-1.5 py-0.5 text-green-400">
                           {article.todayViews} bugün
                         </span>
                         <span>{formatNumber(article.views || 0)} toplam</span>
+                                {article.trendScore && article.trendScore > 0 && (
+                                    <span className="flex items-center gap-1 rounded bg-orange-500/20 px-1.5 py-0.5 text-orange-400">
+                                        <Flame className="h-3 w-3" />
+                                        {article.trendScore}
+                                    </span>
+                                )}
+                                {article.isTrending && (
+                                    <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-red-400">
+                                        🔥 Trend
+                                    </span>
+                                )}
                       </div>
                     </div>
                     <Link
@@ -414,11 +616,22 @@ export default function ViewsPage() {
                     >
                       {article.title}
                     </Link>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-400">
                       <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-blue-400">
                         {formatNumber(article.views)} görüntülenme
                       </span>
                       {article.category && <span>{article.category.name}</span>}
+                              {article.trendScore && article.trendScore > 0 && (
+                                  <span className="flex items-center gap-1 rounded bg-orange-500/20 px-1.5 py-0.5 text-orange-400">
+                                      <Flame className="h-3 w-3" />
+                                      {article.trendScore}
+                                  </span>
+                              )}
+                              {article.isTrending && (
+                                  <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-red-400">
+                                      🔥 Trend
+                                  </span>
+                              )}
                     </div>
                   </div>
                   <Link
@@ -434,7 +647,7 @@ export default function ViewsPage() {
           </div>
         </div>
 
-        {/* Recent Views */}
+              {/* Recent Views with Location */}
         <div className="rounded-xl border border-white/10 bg-white/5 p-6">
           <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
             <Activity className="h-5 w-5 text-yellow-400" />
@@ -445,6 +658,12 @@ export default function ViewsPage() {
               <thead>
                 <tr className="border-b border-white/10 text-left text-xs text-gray-400">
                   <th className="pb-2 pr-4">Haber</th>
+                                  <th className="pb-2 pr-4">
+                                      <div className="flex items-center gap-1">
+                                          <MapPin className="h-3 w-3" />
+                                          Konum
+                                      </div>
+                                  </th>
                   <th className="pb-2 pr-4">Session</th>
                   <th className="pb-2">Zaman</th>
                 </tr>
@@ -465,8 +684,30 @@ export default function ViewsPage() {
                       </Link>
                     </td>
                     <td className="py-2 pr-4">
+                            {view.location ? (
+                                <div className="flex items-center gap-1.5 text-xs">
+                                    <span className="text-base">
+                                        {getCountryFlag(view.location.countryCode)}
+                                    </span>
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-300">
+                                            {view.location.city || view.location.region || "—"}
+                                        </span>
+                                        <span className="text-gray-500">
+                                            {view.location.country || "—"}
+                                        </span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <span className="flex items-center gap-1 text-gray-500">
+                                    <Globe className="h-3 w-3" />
+                                    Bilinmiyor
+                                </span>
+                            )}
+                        </td>
+                        <td className="py-2 pr-4">
                       <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs text-gray-400">
-                        {view.sessionId.substring(0, 20)}...
+                                {view.sessionId.substring(0, 16)}...
                       </code>
                     </td>
                     <td className="py-2 text-gray-400">
@@ -486,7 +727,8 @@ export default function ViewsPage() {
             <li>• Kullanıcı haberi açtıktan 3 saniye sonra görüntülenme kaydedilir</li>
             <li>• Aynı session (IP + UserAgent) 5 dakika içinde tekrar sayılmaz</li>
             <li>• Veriler 30 saniyede bir otomatik yenilenir</li>
-            <li>• Tüm görüntülemeler ArticleView tablosunda saklanır</li>
+                      <li>• Konum bilgisi Visitor tablosundan alınır</li>
+                      <li>• Trend puanı haberin popülerlik skorunu gösterir</li>
           </ul>
         </div>
       </div>

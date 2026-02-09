@@ -874,10 +874,9 @@ export async function processArticle(
   </div>
 </div>`;
 
-    // 🚀 PERFORMANCE (FAZ 2): Score-based early exit for image generation
-    // Skip image generation for low-score articles to save resources
-    const shouldGenerateImage =
-      score >= CONTENT_CONSTANTS.PUBLISH_SCORE_THRESHOLD;
+    // �️ TÜM HABERLER İÇİN GÖRSEL ÜRETİMİ ZORUNLU
+    // Elemeler zaten öncesinde yapılıyor, görsel üretiminde ek elemeye gerek yok
+    const shouldGenerateImage = true; // Skor eşiği kaldırıldı - her haber için görsel üretilecek
 
     let imageUrl: string;
     let slug: string; // Declare slug at outer scope
@@ -939,13 +938,9 @@ export async function processArticle(
         // Continue with original image URL for all sizes
       }
     } else {
-      // 🚀 SKIP image generation for low-score articles
-      console.log(
-        `⏭️  Görsel oluşturma atlandı (Skor: ${score} < ${CONTENT_CONSTANTS.PUBLISH_SCORE_THRESHOLD})`,
-      );
-      await liveLog.image.warn(`⏭️ Görsel atlandı: Düşük skor (${score}/1000)`);
-
-      // Use default placeholder image
+      // Bu blok artık çalışmayacak çünkü shouldGenerateImage = true
+      // Yine de güvenlik için bırakılıyor
+      console.log(`⚠️ Beklenmeyen durum: Görsel oluşturma atlandı`);
       imageUrl = "/logos/og-image.png";
       slug = generateSlug(rewritten.title);
       imageSizes = {

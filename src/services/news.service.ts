@@ -1106,7 +1106,49 @@ function getCategoryKeywords(categorySlug: string): string[] {
 }
 
 /**
+ * Validate content quality - detect Jina Reader errors and garbage content
+ * Returns true if content is valid, false if it contains error patterns
+ */
+function isValidContent(content: string): { valid: boolean; reason?: string } {
+  const lowerContent = content.toLowerCase();
+  
+  // Critical error patterns that indicate scraping failure
+  const errorPatterns = [
+    { pattern: 'shadow dom', reason: 'Shadow DOM barrier detected' },
+    { pattern: 'warning:', reason: 'Warning message in content' },
+    { pattern: 'published time:', reason: 'Raw metadata instead of content' },
+    { pattern: 'unable to access', reason: 'Access restriction' },
+    { pattern: 'javascript required', reason: 'JS-only site' },
+    { pattern: 'enable javascript', reason: 'JS-only site' },
+    { pattern: 'cookies must be enabled', reason: 'Cookie wall' },
+    { pattern: 'please enable cookies', reason: 'Cookie wall' },
+    { pattern: 'access denied', reason: 'Access denied' },
+    { pattern: '403 forbidden', reason: '403 Forbidden' },
+    { pattern: 'captcha', reason: 'CAPTCHA challenge' },
+    { pattern: 'robot verification', reason: 'Bot detection' },
+  ];
+  
+  for (const { pattern, reason } of errorPatterns) {
+    if (lowerContent.includes(pattern)) {
+      return { valid: false, reason };
+    }
+  }
+  
+  // Check for gibberish: too many special characters relative to alphanumeric
+  const alphanumeric = (content.match(/[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]/g) || []).length;
+  const total = content.length;
+  const alphaRatio = alphanumeric / total;
+  
+  if (alphaRatio < 0.5 && total > 100) {
+    return { valid: false, reason: `Low text quality (${Math.round(alphaRatio * 100)}% alphanumeric)` };
+  }
+  
+  return { valid: true };
+}
+
+/**
  * Fetch article content from URL using Jina Reader API
+ * ENHANCED: Now validates content quality and rejects garbage content
  */
 export async function fetchArticleContent(url: string): Promise<string> {
   try {
@@ -1129,6 +1171,15 @@ export async function fetchArticleContent(url: string): Promise<string> {
 
         // Clean up Jina output (markdown links etc)
         jinaContent = jinaContent.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1"); // Remove links
+
+        // 🛡️ VALIDATE CONTENT QUALITY - Detect Jina Reader errors
+        const validation = isValidContent(jinaContent);
+        if (!validation.valid) {
+          console.warn(`⚠️ Jina Reader içerik geçersiz: ${validation.reason}`);
+          console.warn(`   URL: ${url}`);
+          console.warn(`   İçerik önizleme: ${jinaContent.substring(0, 100)}...`);
+          throw new Error(`Invalid content: ${validation.reason}`);
+        }
 
         if (jinaContent.length > 200) {
           console.log(
@@ -1194,6 +1245,13 @@ export async function fetchArticleContent(url: string): Promise<string> {
       throw new Error("Content too short, likely blocked or empty");
     }
 
+    // 🛡️ VALIDATE FALLBACK CONTENT QUALITY
+    const fallbackValidation = isValidContent(content);
+    if (!fallbackValidation.valid) {
+      console.warn(`⚠️ Fallback içerik geçersiz: ${fallbackValidation.reason}`);
+      throw new Error(`Invalid fallback content: ${fallbackValidation.reason}`);
+    }
+
     console.log(
       `✅ Direct fetch ile içerik alındı: ${content.length} karakter`,
     );
@@ -1204,8 +1262,9 @@ export async function fetchArticleContent(url: string): Promise<string> {
       error.message || error.code,
     );
 
-    // Ultimate Fallback: Return a meaningful error string
-    return "Article content could not be fetched due to access restrictions. The AI will rewrite based on the title and description.";
+    // 🚨 CRITICAL: Throw error instead of returning garbage
+    // This allows the caller to skip this article instead of processing bad content
+    throw new Error(`Content fetch failed: ${error.message || 'Unknown error'}`);
   }
 }
 

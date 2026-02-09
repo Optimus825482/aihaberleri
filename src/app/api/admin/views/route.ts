@@ -20,6 +20,7 @@ export async function GET() {
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
     const last7Days = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
     const last30Days = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const last5Minutes = new Date(now.getTime() - 5 * 60 * 1000);
 
     // 1. Total views (all time)
     const totalViews = await db.article.aggregate({
@@ -65,7 +66,7 @@ export async function GET() {
       },
     });
 
-    // 7. Top 10 most viewed articles (all time)
+    // 7. Top 10 most viewed articles (all time) - with trend scores
     const topArticlesAllTime = await db.article.findMany({
       where: {
         status: "PUBLISHED",
@@ -76,6 +77,8 @@ export async function GET() {
         slug: true,
         views: true,
         publishedAt: true,
+        trendScore: true,
+        isTrending: true,
         category: {
           select: { name: true },
         },
@@ -95,7 +98,7 @@ export async function GET() {
       take: 10,
     });
 
-    // Get article details for today's top
+    // Get article details for today's top - with trend scores
     const todayTopIds = todayTopArticles.map((a) => a.articleId);
     const todayTopDetails = await db.article.findMany({
       where: { id: { in: todayTopIds } },
@@ -105,6 +108,8 @@ export async function GET() {
         slug: true,
         views: true,
         publishedAt: true,
+        trendScore: true,
+        isTrending: true,
         category: {
           select: { name: true },
         },
@@ -178,7 +183,7 @@ export async function GET() {
       views: Number(c.count),
     }));
 
-    // 12. Recent views (last 20)
+    // 12. Recent views (last 20) with location from Visitor table
     const recentViews = await db.articleView.findMany({
       orderBy: { viewedAt: "desc" },
       take: 20,
@@ -197,14 +202,74 @@ export async function GET() {
       select: { id: true, title: true, slug: true },
     });
 
+    // Get visitor locations (last 20 active visitors)
+    const recentVisitors = await db.visitor.findMany({
+      orderBy: { lastActivity: "desc" },
+      take: 50,
+      select: {
+        ipAddress: true,
+        country: true,
+        countryCode: true,
+        city: true,
+        region: true,
+        currentPage: true,
+        lastActivity: true,
+      },
+    });
+
+    // Create IP to location map
+    const ipLocationMap = new Map(
+      recentVisitors.map((v) => [
+        v.ipAddress,
+        {
+          country: v.country,
+          countryCode: v.countryCode,
+          city: v.city,
+          region: v.region,
+        },
+      ])
+    );
+
     const recentViewsWithArticles = recentViews.map((view) => {
       const article = recentArticles.find((a) => a.id === view.articleId);
+      // Try to extract IP from sessionId (format: ip_useragent_hash)
+      const ipPart = view.sessionId.split("_")[0];
+      const location = ipLocationMap.get(ipPart) || null;
+      
       return {
         ...view,
         articleTitle: article?.title || "Unknown",
         articleSlug: article?.slug || "",
+        location: location,
       };
     });
+
+    // 13. Real-time active users (last 5 minutes)
+    const activeUsers = await db.visitor.count({
+      where: {
+        lastActivity: { gte: last5Minutes },
+      },
+    });
+
+    // 14. Active users timeline (last 60 minutes, 5-min intervals)
+    const last60Minutes = new Date(now.getTime() - 60 * 60 * 1000);
+    const activeUsersTimeline = await db.$queryRaw<
+      Array<{ interval: Date; count: bigint }>
+    >\`
+      SELECT 
+        date_trunc('minute', "lastActivity") - 
+        (EXTRACT(MINUTE FROM "lastActivity")::integer % 5) * interval '1 minute' as interval,
+        COUNT(DISTINCT id) as count
+      FROM "Visitor"
+      WHERE "lastActivity" >= \${last60Minutes}
+      GROUP BY interval
+      ORDER BY interval ASC
+    \`;
+
+    const realtimeData = activeUsersTimeline.map((item) => ({
+      time: item.interval,
+      users: Number(item.count),
+    }));
 
     // Calculate change percentages
     const viewChangePercent =
@@ -223,6 +288,7 @@ export async function GET() {
         last30DaysViews,
         uniqueSessionsToday: uniqueSessionsToday.length,
         viewChangePercent,
+        activeUsers, // Real-time active users
       },
       topArticlesAllTime,
       topArticlesToday,
@@ -230,6 +296,7 @@ export async function GET() {
       dailyData,
       categoryData,
       recentViews: recentViewsWithArticles,
+      realtimeData, // Active users timeline
     });
   } catch (error) {
     console.error("View analytics error:", error);
