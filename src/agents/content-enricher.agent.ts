@@ -63,11 +63,11 @@ export interface EnrichedArticle extends UniqueArticle {
 }
 
 const JINA_READER_URL = "https://r.jina.ai";
-const JINA_TIMEOUT = 8000; // Aggressive: 8s (reduced from 10s for faster fail)
+const JINA_TIMEOUT = 15000; // FIXED: 15s (increased from 8s - heavy sites need more time)
 const TAVILY_EXTRACT_URL = "https://api.tavily.com/extract";
-const TAVILY_TIMEOUT = 12000; // Aggressive: 12s (reduced from 15s for faster fail)
-const SEARXNG_TIMEOUT = 5000; // New: 5s timeout for SearXNG
-const TARGET_SOURCE_COUNT = 3; // Reduced from 5 to 3 for faster processing
+const TAVILY_TIMEOUT = 20000; // FIXED: 20s (increased from 12s for reliability)
+const SEARXNG_TIMEOUT = 8000; // FIXED: 8s (increased from 5s)
+const TARGET_SOURCE_COUNT = 3; // Keep at 3 for speed
 
 // Layer timeouts for fallback strategy
 const LAYER_1_TIMEOUT = 20000; // 20s for Tavily (high-priority)
@@ -195,13 +195,13 @@ export class ContentEnricherAgent extends BaseAgent<
 
           try {
             // Step 1: Gather sources (priority-based: Tavily for high-priority, Jina for low-priority)
-            // TIMEOUT PROTECTION: Wrap in Promise.race with 30s timeout
+            // TIMEOUT PROTECTION: Wrap in Promise.race with 40s timeout (increased from 30s)
             const sources = await Promise.race([
               this.gatherSourcesWithPriority(article),
               new Promise<any>((_, reject) =>
                 setTimeout(
-                  () => reject(new Error("Source gathering timeout (30s)")),
-                  30000,
+                  () => reject(new Error("Source gathering timeout (40s)")),
+                  40000, // FIXED: Increased from 30s
                 ),
               ),
             ]);
@@ -219,7 +219,7 @@ export class ContentEnricherAgent extends BaseAgent<
             }
 
             // Step 2: Synthesize content (TR + EN) - these run in parallel across articles
-            // TIMEOUT PROTECTION: Wrap in Promise.race with 45s timeout
+            // TIMEOUT PROTECTION: Wrap in Promise.race with 60s timeout (increased from 45s)
             const synthesized = await Promise.race([
               this.synthesizeContent(
                 article,
@@ -228,8 +228,8 @@ export class ContentEnricherAgent extends BaseAgent<
               ),
               new Promise<any>((_, reject) =>
                 setTimeout(
-                  () => reject(new Error("Content synthesis timeout (45s)")),
-                  45000,
+                  () => reject(new Error("Content synthesis timeout (60s)")),
+                  60000, // FIXED: Increased from 45s for DeepSeek
                 ),
               ),
             ]);
@@ -275,6 +275,19 @@ export class ContentEnricherAgent extends BaseAgent<
               `❌ [${articleNum}] Failed to enrich: ${article.title.substring(0, 50)}...`,
               this.serializeError(error),
             );
+
+            // FIXED: Log detailed error information
+            if (error instanceof Error) {
+              this.logger.error(
+                `❌ [${articleNum}] Error details: ${error.message}`,
+              );
+              if (error.stack) {
+                this.logger.error(
+                  `❌ [${articleNum}] Stack trace: ${error.stack.substring(0, 500)}`,
+                );
+              }
+            }
+
             return { success: false as const, error };
           }
         });
@@ -669,6 +682,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
   /**
    * Read URL content using Jina Reader with Tavily fallback
+   * FIXED: Added detailed error logging and increased timeout
    */
   private async readUrlContent(url: string): Promise<string> {
     // Try Jina Reader first
@@ -685,8 +699,14 @@ export class ContentEnricherAgent extends BaseAgent<
       if (content && content.length > 100) {
         return content.substring(0, 5000);
       }
-    } catch {
-      // Silent fail, try Tavily
+
+      this.logger.warn(
+        `⚠️ Jina Reader returned insufficient content for ${url} (${content?.length || 0} chars)`,
+      );
+    } catch (jinaError: any) {
+      this.logger.warn(
+        `⚠️ Jina Reader failed for ${url}: ${jinaError.message}`,
+      );
     }
 
     // Fallback to Tavily
@@ -707,13 +727,19 @@ export class ContentEnricherAgent extends BaseAgent<
 
         const results = response.data?.results;
         if (results && results.length > 0 && results[0].raw_content) {
+          this.logger.info(`✅ Tavily fallback succeeded for ${url}`);
           return results[0].raw_content.substring(0, 5000);
         }
-      } catch {
-        // Silent fail
+
+        this.logger.warn(`⚠️ Tavily returned no content for ${url}`);
+      } catch (tavilyError: any) {
+        this.logger.warn(
+          `⚠️ Tavily fallback failed for ${url}: ${tavilyError.message}`,
+        );
       }
     }
 
+    this.logger.error(`❌ All extraction methods failed for ${url}`);
     return "";
   }
 
