@@ -183,7 +183,12 @@ export default function RootLayout({
                 <GoogleTagManager />
                 <YandexMetrika />
                 <VisitorTracker />
-                <LayoutWrapper header={<SiteHeader />} footer={<Footer />}>
+                <LayoutWrapper
+                  header={<SiteHeader locale="tr" />}
+                  headerEn={<SiteHeader locale="en" />}
+                  footer={<Footer locale="tr" />}
+                  footerEn={<Footer locale="en" />}
+                >
                   {children}
                 </LayoutWrapper>
                 <ClientProviders />

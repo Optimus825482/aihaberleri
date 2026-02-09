@@ -19,6 +19,8 @@ import {
     Trophy,
     Tags,
     Globe,
+    ArrowRight,
+    BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -438,6 +440,44 @@ export default function AnalyticsPage() {
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Quick Links to Detail Pages */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a
+                        href="/admin/views"
+                        className="group flex items-center justify-between p-5 rounded-xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent hover:from-blue-500/10 hover:border-blue-500/40 transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-blue-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                                <BarChart3 className="h-5 w-5 text-blue-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-sm uppercase tracking-tight">Okunma Takibi</h3>
+                                <p className="text-xs text-muted-foreground">
+                                    Saatlik/günlük grafikler, kategori dağılımı, trend analizi
+                                </p>
+                            </div>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
+                    </a>
+                    <a
+                        href="/admin/visitors"
+                        className="group flex items-center justify-between p-5 rounded-xl border border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent hover:from-green-500/10 hover:border-green-500/40 transition-all duration-300"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 bg-green-500/10 rounded-xl group-hover:scale-110 transition-transform">
+                                <Users className="h-5 w-5 text-green-500" />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-sm uppercase tracking-tight">Ziyaretçi Detayları</h3>
+                                <p className="text-xs text-muted-foreground">
+                                    IP adresleri, cihaz bilgileri, ISP, ülke dağılımı
+                                </p>
+                            </div>
+                        </div>
+                        <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-green-500 group-hover:translate-x-1 transition-all" />
+                    </a>
+                </div>
             </div>
         </AdminLayout>
     );

@@ -5,29 +5,33 @@ import { usePathname } from "next/navigation";
 interface LayoutWrapperProps {
   children: React.ReactNode;
   header: React.ReactNode;
+  headerEn: React.ReactNode;
   footer: React.ReactNode;
+  footerEn: React.ReactNode;
 }
 
 export function LayoutWrapper({
   children,
   header,
+  headerEn,
   footer,
+  footerEn,
 }: LayoutWrapperProps) {
   const pathname = usePathname();
-  // Check if current route is English (strictly /en or /en/...)
-  // Also check admin routes if created separate layout for admin
   const isEnglish = pathname === "/en" || pathname?.startsWith("/en/");
   const isAdmin = pathname?.startsWith("/admin");
 
-  // Don't show global header/footer on English pages (they assume en layout handles it)
-  // Don't show global header/footer on Admin pages (admin has its own layout usually)
-  const shouldHideGlobalNav = isEnglish || isAdmin;
+  // Admin pages have their own layout — no global header/footer
+  if (isAdmin) {
+    return <>{children}</>;
+  }
 
+  // Show locale-appropriate header and footer
   return (
     <>
-      {!shouldHideGlobalNav && header}
+      {isEnglish ? headerEn : header}
       {children}
-      {!shouldHideGlobalNav && footer}
+      {isEnglish ? footerEn : footer}
     </>
   );
 }

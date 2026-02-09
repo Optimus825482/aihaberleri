@@ -16,22 +16,17 @@ import {
   MessageSquare,
   Tags,
   Users,
-  Keyboard,
   BarChart,
-  Activity,
   Shield,
   Bell,
   Monitor,
   Search,
   ChevronDown,
   ChevronRight,
-  GitBranch,
-  Rocket,
   Mail,
   PlusCircle,
   Share2,
   TrendingUp,
-  Eye,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -48,120 +43,53 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
-const menuItems = [
+const menuGroups = [
   {
-    title: "Dashboard",
-    href: "/admin",
-    icon: LayoutDashboard,
-    requiredResource: null,
+    title: "Genel",
+    items: [
+      { title: "Dashboard", href: "/admin", icon: LayoutDashboard, requiredResource: null },
+      { title: "Sistem İzleme", href: "/admin/monitoring", icon: Monitor, requiredResource: null },
+    ],
   },
   {
-    title: "Yeni Haber Ekle",
-    href: "/admin/add-news",
-    icon: PlusCircle,
-    requiredResource: null,
+    title: "İçerik Yönetimi",
+    items: [
+      { title: "Haberler", href: "/admin/articles", icon: FileText, requiredResource: "articles" as const },
+      { title: "Yeni Haber Ekle", href: "/admin/add-news", icon: PlusCircle, requiredResource: null },
+      { title: "Kategoriler", href: "/admin/categories", icon: Tags, requiredResource: "categories" as const },
+    ],
   },
   {
-    title: "Sistem İzleme",
-    href: "/admin/monitoring",
-    icon: Monitor,
-    requiredResource: null,
+    title: "Analitik",
+    items: [
+      { title: "Analytics", href: "/admin/analytics", icon: BarChart, requiredResource: null },
+      { title: "Trendler", href: "/admin/trends", icon: TrendingUp, requiredResource: null },
+    ],
   },
   {
-    title: "Haberler",
-    href: "/admin/articles",
-    icon: FileText,
-    requiredResource: "articles" as const,
+    title: "Agent & SEO",
+    items: [
+      { title: "Agent Ayarları", href: "/admin/agent-settings", icon: Bot, requiredResource: "settings" as const },
+      { title: "SEO Dashboard", href: "/admin/seo", icon: Search, requiredResource: null },
+      { title: "SEO Bildirimleri", href: "/admin/seo-notifications", icon: Bell, requiredResource: null },
+    ],
   },
   {
-    title: "Kategoriler",
-    href: "/admin/categories",
-    icon: Tags,
-    requiredResource: "categories" as const,
+    title: "Dağıtım",
+    items: [
+      { title: "Sosyal Medya", href: "/admin/social-shares", icon: Share2, requiredResource: null },
+      { title: "Newsletter", href: "/admin/newsletter", icon: Mail, requiredResource: "settings" as const },
+      { title: "Bildirimler", href: "/admin/notifications", icon: Bell, requiredResource: "settings" as const },
+    ],
   },
   {
-    title: "Analytics",
-    href: "/admin/analytics",
-    icon: BarChart,
-    requiredResource: null,
-  },
-  {
-    title: "Okuyucu Analitiği",
-    href: "/admin/visitors",
-    icon: Activity,
-    requiredResource: null,
-  },
-  {
-    title: "Okunma Takibi",
-    href: "/admin/views",
-    icon: Eye,
-    requiredResource: null,
-  },
-  {
-    title: "Pipeline",
-    href: "/admin/pipeline",
-    icon: GitBranch,
-    requiredResource: null,
-  },
-  {
-    title: "Haber Trendleri",
-    href: "/admin/trends",
-    icon: TrendingUp,
-    requiredResource: null,
-  },
-  {
-    title: "İyileştirmeler",
-    href: "/admin/improvements",
-    icon: Rocket,
-    requiredResource: null,
-  },
-  {
-    title: "Agent Ayarları",
-    href: "/admin/agent-settings",
-    icon: Bot,
-    requiredResource: "settings" as const,
-  },
-  {
-    title: "Newsletter",
-    href: "/admin/newsletter",
-    icon: Mail,
-    requiredResource: "settings" as const,
-  },
-  {
-    title: "Bildirimler",
-    href: "/admin/notifications",
-    icon: Bell,
-    requiredResource: "settings" as const,
-  },
-  {
-    title: "SEO Bildirimleri",
-    href: "/admin/seo-notifications",
-    icon: Search,
-    requiredResource: null,
-  },
-  {
-    title: "Sosyal Medya",
-    href: "/admin/social-shares",
-    icon: Share2,
-    requiredResource: null,
-  },
-  {
-    title: "Kullanıcılar",
-    href: "/admin/users",
-    icon: Users,
-    requiredResource: "users" as const,
-  },
-  {
-    title: "İletişim",
-    href: "/admin/messages",
-    icon: MessageSquare,
-    requiredResource: "messages" as const,
-  },
-  {
-    title: "Ayarlar",
-    href: "/admin/settings",
-    icon: Settings,
-    requiredResource: "settings" as const,
+    title: "Yönetim",
+    items: [
+      { title: "Kullanıcılar", href: "/admin/users", icon: Users, requiredResource: "users" as const },
+      { title: "İletişim", href: "/admin/messages", icon: MessageSquare, requiredResource: "messages" as const },
+      { title: "İşlem Geçmişi", href: "/admin/audit-logs", icon: Shield, requiredResource: null },
+      { title: "Ayarlar", href: "/admin/settings", icon: Settings, requiredResource: "settings" as const },
+    ],
   },
 ];
 
@@ -207,11 +135,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     setIsMobileMenuOpen(false);
   };
 
-  // Filter menu items based on user role
-  const visibleMenuItems = menuItems.filter((item) => {
-    if (!item.requiredResource) return true;
-    return canAccessResource(userRole, item.requiredResource);
-  });
+  // Filter menu items based on user role and organize by groups
+  const visibleGroups = menuGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => {
+        if (!item.requiredResource) return true;
+        return canAccessResource(userRole, item.requiredResource);
+      }),
+    }))
+    .filter((group) => group.items.length > 0);
 
   // Role badge colors
   const getRoleBadgeColor = (role: string) => {
@@ -346,8 +279,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
 
           {/* Navigation - Touch Optimized */}
-          <nav className="px-3 py-4 space-y-1 pb-24 overflow-y-auto max-h-[calc(100vh-280px)] overscroll-contain">
-            {visibleMenuItems.map((item) => {
+          <nav className="px-3 py-2 space-y-0.5 pb-24 overflow-y-auto max-h-[calc(100vh-280px)] overscroll-contain">
+            {visibleGroups.map((group, groupIndex) => (
+              <div key={group.title}>
+                {groupIndex > 0 && (
+                  <div className="mx-3 my-2 border-t border-primary/5" />
+                )}
+                <div className="px-4 py-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/40">
+                    {group.title}
+                  </span>
+                </div>
+                {group.items.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               const hasSubmenu =
@@ -488,6 +431,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </div>
               );
             })}
+              </div>
+            ))}
           </nav>
 
           {/* Bottom Actions - Enhanced for PWA */}
