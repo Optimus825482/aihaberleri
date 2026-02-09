@@ -33,7 +33,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
   protected config = {
     name: "duplicate-detector",
     queueName: QUEUE_NAMES.UNIQUE_ARTICLES,
-    nextQueueName: QUEUE_NAMES.TREND_ENRICHMENT, // Route to TrendEnricher before ContentEnricher
+    nextQueueName: QUEUE_NAMES.RELEVANT_ARTICLES, // 🆕 Route to RelevanceFilter FIRST (09.02.2026)
     enableMetrics: true,
   };
 

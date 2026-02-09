@@ -55,14 +55,17 @@ const CONFIG = {
   // Minimum trend score to log as "trending"
   logThreshold: 30,
 
-  // Skip enrichment if no trends available
+  // Skip enrichment if no trends available (ALWAYS pass through)
   gracefulDegradation: true,
 
-  // Timeout for trend matching (ms)
-  timeout: 5000,
+  // Timeout for trend matching (ms) - increased from 5s to 15s
+  timeout: 15000,
 
   // Maximum articles to process per batch
   batchSize: 50,
+
+  // 🆕 Always pass articles even if trend DB is empty (09.02.2026)
+  alwaysPassThrough: true,
 };
 
 // ============================================================================
@@ -89,8 +92,14 @@ export class TrendEnricherAgent extends BaseAgent<
 
   /**
    * Check if trends are available in database
+   * 🆕 With alwaysPassThrough, this check is informational only
    */
   private async checkTrendsAvailable(): Promise<boolean> {
+    // If alwaysPassThrough is enabled, we don't block on missing trends
+    if (CONFIG.alwaysPassThrough) {
+      return true; // Always return true - articles will pass through
+    }
+
     // Cache check for 1 minute
     if (
       this.lastTrendCheck &&
@@ -105,10 +114,11 @@ export class TrendEnricherAgent extends BaseAgent<
       this.lastTrendCheck = new Date();
       return this.trendsAvailable;
     } catch (error) {
-      logger.warn("Failed to check trends availability");
+      logger.warn("Failed to check trends availability - passing through");
       this.trendsAvailable = false;
       this.lastTrendCheck = new Date();
-      return false;
+      // With alwaysPassThrough, we still return true
+      return CONFIG.alwaysPassThrough;
     }
   }
 

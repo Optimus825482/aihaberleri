@@ -39,7 +39,7 @@ export class RelevanceFilterAgent extends BaseAgent<
   protected config = {
     name: "relevance-filter",
     queueName: QUEUE_NAMES.RELEVANT_ARTICLES,
-    nextQueueName: QUEUE_NAMES.UNIQUE_ARTICLES,
+    nextQueueName: QUEUE_NAMES.TREND_ENRICHMENT, // 🆕 Go to TrendEnricher after duplicate check (09.02.2026)
     enableMetrics: true,
   };
 

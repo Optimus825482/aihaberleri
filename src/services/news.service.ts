@@ -875,10 +875,10 @@ export async function fetchAINews(
     );
 
     // Step 4: Sort by trend score and take top articles
-    // 🎯 OPTIMIZED: 15 dakikada 1-2 haber (08.02.2026)
-    // Duplicate detector için 5 haber pool (2 duplicate olsa bile 1-2 haber kalır)
+    // 🎯 OPTIMIZED: TOP 2 seçim (09.02.2026)
+    // Daha az haber = daha kaliteli içerik + daha az API maliyeti
     const topArticles = trendRankings
-      .slice(0, 5) // Top 5 trending (duplicate için yedek)
+      .slice(0, 2) // TOP 2 trending (optimized pipeline)
       .map((ranking) => {
         const item = itemsToAnalyze[ranking.index];
         return {
@@ -889,12 +889,12 @@ export async function fetchAINews(
       .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0));
 
     console.log(
-      `✅ ${topArticles.length} trend haber seçildi (15 dakikada 1-2 haber için)`,
+      `✅ ${topArticles.length} trend haber seçildi (TOP 2 optimization)`,
     );
     console.log(
-      "Top 5 Trend Haberler:",
+      "Top 2 Trend Haberler:",
       topArticles
-        .slice(0, 5)
+        .slice(0, 2)
         .map(
           (a, i) =>
             `\n  ${i + 1}. ${a.title.substring(0, 60)}... (skor: ${Math.round(a.trendScore || 0)})`,

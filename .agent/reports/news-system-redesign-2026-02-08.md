@@ -408,7 +408,7 @@ cronJob = scheduleJob("*/15 * * * *", async () => {
 **Durum:** Zaten 12 saatlik window mevcut
 
 ```typescript
-const urlTimeWindow = new Date(Date.now() - 12 * 60 * 60 * 1000); // 12 hours
+const urlTimeWindow = new Date(Date.now() - 6 * 60 * 60 * 1000); // 6 hours
 ```
 
 **Ek Kontroller:**

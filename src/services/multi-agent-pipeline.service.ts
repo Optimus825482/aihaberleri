@@ -193,18 +193,24 @@ export async function startMultiAgentPipeline(
     agentLogId: config.agentLogId, // Pass agentLogId through pipeline
   }));
 
-  // Add to relevance filter queue (skip content collector since we already have articles)
-  const relevanceQueue = getQueue(QUEUE_NAMES.RELEVANT_ARTICLES);
+  // 🆕 Pipeline artık DUPLICATE CHECK ile başlıyor (09.02.2026)
+  // Eski sıra: Relevance → Duplicate → Trend
+  // Yeni sıra: Duplicate → Relevance → Trend (daha az API çağrısı)
 
-  if (!relevanceQueue) {
-    throw new Error("Relevance filter queue not available");
-  }
-
-  console.log(`\n📤 Adding job to queue: ${QUEUE_NAMES.RELEVANT_ARTICLES}`);
+  console.log(`\n✉ Adding job to queue: ${QUEUE_NAMES.UNIQUE_ARTICLES}`); // 🆕 Duplicate check FIRST!
   console.log(`   Articles: ${collectedArticles.length}`);
   console.log(`   AgentLogId: ${config.agentLogId}`);
 
-  const job = await relevanceQueue.add("filter-relevance", collectedArticles, {
+  // 🆕 START WITH DUPLICATE CHECK (09.02.2026)
+  // Eski sıra: Relevance → Duplicate → Trend
+  // Yeni sıra: Duplicate → Relevance → Trend (daha az API call)
+  const duplicateQueue = getQueue(QUEUE_NAMES.UNIQUE_ARTICLES);
+
+  if (!duplicateQueue) {
+    throw new Error("Duplicate detector queue not available");
+  }
+
+  const job = await duplicateQueue.add("filter-duplicates", collectedArticles, {
     removeOnComplete: 100, // Keep last 100 for debugging
     removeOnFail: 50,
     attempts: 3,
@@ -217,12 +223,12 @@ export async function startMultiAgentPipeline(
   await new Promise((resolve) => setTimeout(resolve, 1000)); // Increased to 1s
 
   // Verify job was added
-  const waitingCount = await relevanceQueue.getWaitingCount();
-  const activeCount = await relevanceQueue.getActiveCount();
-  const completedCount = await relevanceQueue.getCompletedCount();
-  const failedCount = await relevanceQueue.getFailedCount();
+  const waitingCount = await duplicateQueue.getWaitingCount();
+  const activeCount = await duplicateQueue.getActiveCount();
+  const completedCount = await duplicateQueue.getCompletedCount();
+  const failedCount = await duplicateQueue.getFailedCount();
 
-  console.log(`\n📊 Queue Status (${QUEUE_NAMES.RELEVANT_ARTICLES}):`);
+  console.log(`\n📊 Queue Status (${QUEUE_NAMES.UNIQUE_ARTICLES}):`);
   console.log(`   Waiting: ${waitingCount}`);
   console.log(`   Active: ${activeCount}`);
   console.log(`   Completed: ${completedCount}`);
@@ -258,12 +264,12 @@ export async function startMultiAgentPipeline(
 ┃  Target:       ${config.targetCount.toString().padEnd(35)}┃
 ┃  Agent Log:    ${config.agentLogId.substring(0, 12)}...${" ".repeat(20)}┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  Pipeline Flow (6 Agents):                        ┃
+┃  Pipeline Flow (6 Agents) - 🆕 OPTIMIZED:         ┃
 ┃  1. ✅ Content Collected (RSS + Trend)            ┃
-┃  2. 🔄 Relevance Filter (AI scoring)              ┃
-┃  3. 🔄 Duplicate Detection (3-layer)              ┃
+┃  2. 🔄 Duplicate Detection (3-layer) ← FIRST!    ┃
+┃  3. 🔄 Relevance Filter (AI scoring)              ┃
 ┃  4. 🔄 Trend Enrichment                           ┃
-┃  5. 🔄 Content Enrichment (Brave + Jina)          ┃
+┃  5. 🔄 Content Enrichment (SearXNG + Jina)        ┃
 ┃  6. 🔄 Visual Generation (Pollinations)           ┃
 ┃  7. 🔄 Database Publishing                        ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -273,9 +279,9 @@ export async function startMultiAgentPipeline(
 /**
  * Monitor pipeline progress
  *
- * PIPELINE FLOW (6 stages):
- * 1. RELEVANT_ARTICLES → RelevanceFilter
- * 2. UNIQUE_ARTICLES → DuplicateDetector
+ * PIPELINE FLOW (6 stages) - 🆕 OPTIMIZED ORDER (09.02.2026):
+ * 1. UNIQUE_ARTICLES → DuplicateDetector (FIRST - saves API calls!)
+ * 2. RELEVANT_ARTICLES → RelevanceFilter
  * 3. TREND_ENRICHMENT → TrendEnricher
  * 4. ENRICHED_ARTICLES → ContentEnricher
  * 5. ARTICLES_WITH_VISUALS → VisualGenerator
