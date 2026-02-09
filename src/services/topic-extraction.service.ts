@@ -211,7 +211,7 @@ export function groupByTopic(
  */
 export async function checkTopicDuplicate(
   topic: string,
-  timeWindowDays: number = 0.5, // 12 saate düşürüldü (0.5 gün)
+  timeWindowDays: number = 0.25, // 6 saate düşürüldü (0.25 gün)
 ): Promise<{
   isDuplicate: boolean;
   existingArticle?: { id: string; title: string; publishedAt: Date | null };
@@ -258,7 +258,7 @@ export async function checkTopicDuplicate(
 export async function selectUniqueTopicArticles(
   articles: ArticleWithTopic[],
   targetCount: number = 5,
-  timeWindowDays: number = 0.5, // 12 saate düşürüldü (0.5 gün)
+  timeWindowDays: number = 0.25, // 6 saate düşürüldü (0.25 gün)
 ): Promise<ArticleWithTopic[]> {
   const timeWindowHours = timeWindowDays * 24;
   console.log(`\n🎯 Akıllı haber seçimi başlatılıyor...`);
@@ -604,7 +604,7 @@ function extractKeywords(title: string): string[] {
  */
 export async function filterDuplicatesByTopicAndUrl(
   articles: ArticleWithTopic[],
-  timeWindowDays: number = 0.5, // 12 saate düşürüldü (daha esnek)
+  timeWindowDays: number = 0.25, // 6 saate düşürüldü (daha esnek)
 ): Promise<ArticleWithTopic[]> {
   const timeWindowHours = timeWindowDays * 24;
   console.log(`\n🔍 ====== EARLY DUPLICATE FILTERING (RELAXED MODE) ======`);
@@ -612,7 +612,7 @@ export async function filterDuplicatesByTopicAndUrl(
   console.log(
     `   Topic time window: ${timeWindowHours.toFixed(1)} saat (${timeWindowDays.toFixed(2)} gün)`,
   );
-  console.log(`   URL check: Son 24 saat (esnek mod)`);
+  console.log(`   URL check: Son 6 saat (esnek mod)`);
 
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - timeWindowDays);

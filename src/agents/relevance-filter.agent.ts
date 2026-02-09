@@ -14,7 +14,7 @@
 import { Job } from "bullmq";
 import { BaseAgent, AgentResult } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
-import { batchScoreArticles } from "@/lib/gemini"; // HYBRID: Using Gemini for cost efficiency
+import { batchScoreArticles } from "@/lib/deepseek"; // DeepSeek-only (Gemini removed)
 import type { CollectedArticle } from "./content-collector.agent";
 
 export interface ScoredArticle extends CollectedArticle {
@@ -149,22 +149,24 @@ export class RelevanceFilterAgent extends BaseAgent<
   }
 
   /**
-   * Score a batch of articles using Gemini (HYBRID: Cost-efficient)
-   * BYPASS MODE: If Gemini fails, return all articles with trend-based scores
+   * Score a batch of articles using DeepSeek (Gemini removed)
+   * BYPASS MODE: If DeepSeek fails, return all articles with trend-based scores
    */
   private async scoreBatch(
     articles: CollectedArticle[],
   ): Promise<ScoredArticle[]> {
-    // Check if Gemini API is configured
-    const hasGeminiKey = !!process.env.GOOGLE_API_KEY;
+    // Check if DeepSeek API is configured
+    const hasDeepSeekKey = !!process.env.DEEPSEEK_API_KEY;
 
-    if (!hasGeminiKey) {
-      this.logger.warn(`⚠️ GOOGLE_API_KEY not configured - using BYPASS MODE`);
-      return this.bypassScoring(articles, "No Gemini API key");
+    if (!hasDeepSeekKey) {
+      this.logger.warn(
+        `⚠️ DEEPSEEK_API_KEY not configured - using BYPASS MODE`,
+      );
+      return this.bypassScoring(articles, "No DeepSeek API key");
     }
 
     try {
-      this.logger.info(`🤖 HYBRID: Using Gemini 2.0 Flash for batch scoring`);
+      this.logger.info(`🤖 Using DeepSeek-chat for batch scoring`);
 
       const scores = await batchScoreArticles(articles);
 
@@ -178,7 +180,7 @@ export class RelevanceFilterAgent extends BaseAgent<
       }));
     } catch (error) {
       this.logger.error(
-        "Gemini batch scoring failed:",
+        "DeepSeek batch scoring failed:",
         this.serializeError(error),
       );
 
@@ -187,14 +189,17 @@ export class RelevanceFilterAgent extends BaseAgent<
         this.logger.warn(
           `🔄 BYPASS MODE: Passing ${articles.length} articles based on trend scores`,
         );
-        return this.bypassScoring(articles, "Gemini API error - using bypass");
+        return this.bypassScoring(
+          articles,
+          "DeepSeek API error - using bypass",
+        );
       }
 
       // Fallback: assign default scores based on trend score
       return articles.map((article) => ({
         ...article,
         relevanceScore: Math.min((article.trendScore || 0) / 10, 100),
-        reasoning: "Fallback scoring (Gemini unavailable)",
+        reasoning: "Fallback scoring (DeepSeek unavailable)",
         suggestedTags: [],
       }));
     }

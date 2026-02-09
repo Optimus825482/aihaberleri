@@ -150,6 +150,9 @@ export class VisualGeneratorAgent extends BaseAgent<
 
   /**
    * Generate visual for a single article
+   *
+   * ⚠️ IMPORTANT: Only generates visuals for articles that WILL be published.
+   * Articles that fail enrichment or have low scores are skipped.
    */
   private async generateVisualForArticle(
     article: EnrichedArticle,
@@ -157,6 +160,42 @@ export class VisualGeneratorAgent extends BaseAgent<
     const imageStartTime = Date.now();
 
     try {
+      // ✅ SAFETY CHECK: Skip visual generation for articles that shouldn't be published
+      // This prevents wasting API calls on articles that will be rejected later
+      if (
+        !article.synthesizedContent?.tr?.title ||
+        !article.synthesizedContent?.tr?.content
+      ) {
+        this.logger.warn(
+          `⚠️ Skipping visual: Article missing synthesized content`,
+        );
+        return {
+          ...article,
+          imageUrl: null,
+          imageUrlMedium: null,
+          imageUrlSmall: null,
+          imageUrlThumb: null,
+          imageGenerationTime: 0,
+        };
+      }
+
+      // Check if article has minimum required score (if score exists)
+      const articleScore =
+        (article as any).score || (article as any).relevanceScore;
+      if (articleScore !== undefined && articleScore < 40) {
+        this.logger.warn(
+          `⚠️ Skipping visual: Article score ${articleScore} < 40 threshold`,
+        );
+        return {
+          ...article,
+          imageUrl: null,
+          imageUrlMedium: null,
+          imageUrlSmall: null,
+          imageUrlThumb: null,
+          imageGenerationTime: 0,
+        };
+      }
+
       const title = article.synthesizedContent.tr.title;
       const content = article.synthesizedContent.tr.content;
       const category = article.suggestedCategory || "teknoloji";

@@ -7,10 +7,10 @@
  * 3. Internal linking (2-3 relevant links)
  * 4. Schema markup (Article schema)
  *
- * MODEL: Gemini 2.5 Flash (hızlı ve ucuz)
+ * MODEL: DeepSeek-chat
  */
 
-import { callGemini } from "@/lib/gemini";
+import { callDeepSeek } from "@/lib/deepseek";
 
 export interface TechnicalSEOChanges {
   slug: {
@@ -153,18 +153,28 @@ JSON formatında yanıt ver:
 SADECE GEÇERLİ JSON YANIT VER. AÇIKLAMA YOK.`;
 
     try {
-      const response = await callGemini(prompt, {
-        model: "gemini-2.5-flash-lite", // FIXED: Use available model
-        temperature: 0.3, // Düşük temperature (tutarlılık için)
-        maxTokens: 2000,
-        systemInstruction:
-          "Sen bir technical SEO uzmanısın. Sadece geçerli JSON yanıtı ver.",
-      });
+      const response = await callDeepSeek(
+        [
+          {
+            role: "system",
+            content: "Sen bir technical SEO uzmanısın. Sadece geçerli JSON yanıtı ver.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        {
+          model: "deepseek-chat",
+          temperature: 0.3,
+          maxTokens: 2000,
+        }
+      );
 
       // JSON parse et
       const jsonMatch = response.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        throw new Error("Gemini'den geçerli JSON yanıtı alınamadı");
+        throw new Error("DeepSeek'ten geçerli JSON yanıtı alınamadı");
       }
 
       const changes: TechnicalSEOChanges = JSON.parse(jsonMatch[0]);
@@ -208,11 +218,14 @@ SEO-friendly slug oluştur:
 Sadece slug'ı yanıtla, açıklama yok.`;
 
     try {
-      const response = await callGemini(prompt, {
-        model: "gemini-2.5-flash-lite", // FIXED: Use available model
-        temperature: 0.2,
-        maxTokens: 100,
-      });
+      const response = await callDeepSeek(
+        [{ role: "user", content: prompt }],
+        {
+          model: "deepseek-chat",
+          temperature: 0.2,
+          maxTokens: 100,
+        }
+      );
 
       return response.trim().toLowerCase();
     } catch (error) {
@@ -261,11 +274,14 @@ Bu haber için SEO-friendly image alt text oluştur:
 Sadece alt text'i yanıtla, açıklama yok.`;
 
     try {
-      const response = await callGemini(prompt, {
-        model: "gemini-2.5-flash-lite", // FIXED: Use available model
-        temperature: 0.5,
-        maxTokens: 150,
-      });
+      const response = await callDeepSeek(
+        [{ role: "user", content: prompt }],
+        {
+          model: "deepseek-chat",
+          temperature: 0.5,
+          maxTokens: 150,
+        }
+      );
 
       return response.trim().substring(0, 125);
     } catch (error) {

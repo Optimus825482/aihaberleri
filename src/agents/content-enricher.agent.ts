@@ -20,7 +20,7 @@ import { BaseAgent, AgentResult, retryWithBackoff } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
 import { searxngSearch, type SearXNGResult } from "@/lib/searxng";
 import { callDeepSeek } from "@/lib/deepseek";
-import { callGemini } from "@/lib/gemini"; // HYBRID: Using Gemini for EN translation
+// callGemini REMOVED - Using DeepSeek-only (Gemini API deprecated due to 404 errors)
 import {
   generateTitleVariants,
   initializeABTestData,
@@ -218,8 +218,8 @@ export class ContentEnricherAgent extends BaseAgent<
               });
             }
 
-            // Step 2: Synthesize content (TR + EN) - GEMINI ONLY (FAST!)
-            // TIMEOUT PROTECTION: Wrap in Promise.race with 30s timeout (reduced from 60s - Gemini is FAST)
+            // Step 2: Synthesize content (TR + EN) - DeepSeek ONLY
+            // TIMEOUT PROTECTION: Wrap in Promise.race with 120s timeout for DeepSeek
             const synthesized = await Promise.race([
               this.synthesizeContent(
                 article,
@@ -228,8 +228,8 @@ export class ContentEnricherAgent extends BaseAgent<
               ),
               new Promise<any>((_, reject) =>
                 setTimeout(
-                  () => reject(new Error("Content synthesis timeout (30s)")),
-                  30000, // FIXED: Reduced from 60s - Gemini completes in 10-15s
+                  () => reject(new Error("Content synthesis timeout (120s)")),
+                  120000, // DeepSeek may take 60-90s for large content
                 ),
               ),
             ]);
@@ -745,7 +745,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
   /**
    * Synthesize content from multiple sources (TR + EN)
-   * EMERGENCY FIX: Using Gemini 2.5 Flash ONLY for speed (10-15s vs DeepSeek 60s+)
+   * Using DeepSeek-chat for both TR and EN content generation
    */
   private async synthesizeContent(
     article: UniqueArticle,
@@ -796,13 +796,12 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
       )
       .join("\n");
 
-    // EMERGENCY FIX: Use Gemini 2.5 Flash for BOTH TR and EN (10-15s total)
-    // DeepSeek was causing 60s+ timeouts
+    // Using DeepSeek-chat for BOTH TR and EN content synthesis
     this.logger.info(
-      `🚀 EMERGENCY MODE: Using Gemini 2.5 Flash for BOTH TR + EN synthesis (fast!)`,
+      `🚀 Using DeepSeek-chat for BOTH TR + EN synthesis`,
     );
 
-    // Turkish content (Gemini 2.0 Flash - FAST)
+    // Turkish content (DeepSeek-chat)
     const trPrompt = `Sen usta bir araştırmacı gazeteci ve baş editörsün.
 
 Görevin: Aşağıdaki ${sources.length} FARKLI KAYNAKTAN toplanan ham verileri derinlemesine analiz ederek, SENTEZLEYEREK, KAPSAMLI ve %100 ORİJİNAL bir Türkçe haber makalesi oluşturmak.
@@ -838,27 +837,30 @@ JSON formatında yanıt ver:
 
     let trContent: any;
     try {
-      const trResponse = await callGemini(trPrompt, {
-        model: "gemini-2.5-flash-lite", // FIXED: Use available model
-        maxTokens: 6000,
-        temperature: 0.7,
-      });
+      const trResponse = await callDeepSeek(
+        [{ role: "user", content: trPrompt }],
+        {
+          model: "deepseek-chat",
+          maxTokens: 6000,
+          temperature: 0.7,
+        }
+      );
 
       const trJsonMatch = trResponse.match(/\{[\s\S]*\}/);
       if (!trJsonMatch) {
-        throw new Error("Failed to parse Turkish content from Gemini");
+        throw new Error("Failed to parse Turkish content from DeepSeek");
       }
       trContent = JSON.parse(trJsonMatch[0]);
-      this.logger.success(`✅ Gemini TR content generated successfully`);
-    } catch (geminiTrError: any) {
+      this.logger.success(`✅ DeepSeek TR content generated successfully`);
+    } catch (deepseekTrError: any) {
       this.logger.error(
-        `❌ Gemini TR failed: ${geminiTrError.message}, using emergency template`,
+        `❌ DeepSeek TR failed: ${deepseekTrError.message}, using emergency template`,
       );
       // Emergency template fallback
       return this.generateEmergencyTemplate(article, sources);
     }
 
-    // English content (Gemini 2.0 Flash - FAST)
+    // English content (DeepSeek-chat)
     const enPrompt = `You are a world-renowned investigative journalist.
 
 Task: Create a comprehensive, original English news article by synthesizing ${sources.length} sources.
@@ -888,21 +890,24 @@ Respond in JSON:
 
     let enContent: any;
     try {
-      const enResponse = await callGemini(enPrompt, {
-        model: "gemini-2.5-flash-lite", // FIXED: Use available model
-        maxTokens: 6000,
-        temperature: 0.7,
-      });
+      const enResponse = await callDeepSeek(
+        [{ role: "user", content: enPrompt }],
+        {
+          model: "deepseek-chat",
+          maxTokens: 6000,
+          temperature: 0.7,
+        }
+      );
 
       const enJsonMatch = enResponse.match(/\{[\s\S]*\}/);
       if (!enJsonMatch) {
-        throw new Error("Failed to parse English content from Gemini");
+        throw new Error("Failed to parse English content from DeepSeek");
       }
       enContent = JSON.parse(enJsonMatch[0]);
-      this.logger.success(`✅ Gemini EN content generated successfully`);
-    } catch (geminiEnError: any) {
+      this.logger.success(`✅ DeepSeek EN content generated successfully`);
+    } catch (deepseekEnError: any) {
       this.logger.error(
-        `❌ Gemini EN failed: ${geminiEnError.message}, using emergency template`,
+        `❌ DeepSeek EN failed: ${deepseekEnError.message}, using emergency template`,
       );
       // Emergency template fallback
       return this.generateEmergencyTemplate(article, sources);

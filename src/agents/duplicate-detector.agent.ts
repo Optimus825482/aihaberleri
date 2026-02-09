@@ -169,9 +169,9 @@ export class DuplicateDetectorAgent extends BaseAgent<
   private async checkDuplicate(
     article: ScoredArticle,
   ): Promise<{ isDuplicate: boolean; reason?: string }> {
-    // Layer 1: Exact URL match (last 12 hours) - ONLY CHECK!
+    // Layer 1: Exact URL match (last 6 hours) - ONLY CHECK!
     const normalizedUrl = this.normalizeUrl(article.url);
-    const urlTimeWindow = new Date(Date.now() - 12 * 60 * 60 * 1000); // 12 hours
+    const urlTimeWindow = new Date(Date.now() - 6 * 60 * 60 * 1000); // 6 hours (changed from 12)
     const existingByUrl = await db.article.findFirst({
       where: {
         AND: [

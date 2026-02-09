@@ -7,10 +7,10 @@
  * 3. Final review yap
  * 4. Tutarlılık kontrolü
  *
- * MODEL: Gemini 2.5 Flash (hızlı koordinasyon için)
+ * MODEL: DeepSeek-chat
  */
 
-import { callGemini } from "@/lib/gemini";
+import { callDeepSeek } from "@/lib/deepseek";
 import { BaseSEOAgent } from "./base-seo.agent";
 import type { ContentOptimizationChanges } from "./content-optimizer.agent";
 import type { TechnicalSEOChanges } from "./technical-seo.agent";
@@ -110,11 +110,14 @@ JSON formatında yanıt ver:
       this.incrementApiCalls();
 
       const response = await this.retryWithBackoff(async () => {
-        return await callGemini(prompt, {
-          model: "gemini-2.5-flash-lite", // FIXED: Use available model
-          temperature: 0.3,
-          maxTokens: 3000,
-        });
+        return await callDeepSeek(
+          [{ role: "user", content: prompt }],
+          {
+            model: "deepseek-chat",
+            temperature: 0.3,
+            maxTokens: 3000,
+          }
+        );
       });
 
       const jsonMatch = response.match(/\{[\s\S]*\}/);

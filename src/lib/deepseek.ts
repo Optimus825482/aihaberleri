@@ -1150,6 +1150,104 @@ ${originalContent}
   };
 }
 
+/**
+ * Batch score articles for relevance filter (Gemini API compatibility wrapper)
+ * Returns same format as Gemini's batchScoreArticles for drop-in replacement
+ */
+export async function batchScoreArticles(
+  articles: Array<{
+    title: string;
+    description: string;
+    source?: string;
+    publishedDate?: string;
+    trendScore?: number;
+  }>,
+): Promise<
+  Array<{ score: number; reasoning: string; category: string; tags: string[] }>
+> {
+  if (!DEEPSEEK_API_KEY) {
+    throw new Error("DEEPSEEK_API_KEY is not configured");
+  }
+
+  if (!canProceed()) {
+    throw new Error(
+      "DeepSeek API circuit breaker is OPEN - too many recent failures",
+    );
+  }
+
+  const articlesText = articles
+    .map(
+      (article, index) => `
+--- MAKALE ${index + 1} ---
+Başlık: ${article.title}
+Açıklama: ${article.description}
+Kaynak: ${article.source || "Bilinmiyor"}
+Yayın Tarihi: ${article.publishedDate || "Bilinmiyor"}
+Trend Skoru: ${article.trendScore || 0}
+`,
+    )
+    .join("\n");
+
+  const prompt = `Bu ${articles.length} haber makalesini Türk AI/teknoloji haber platformu için değerlendir.
+
+${articlesText}
+
+PUANLAMA KRİTERLERİ (0-100):
+1. Haber Değeri (0-30): AI/teknoloji profesyonelleri için önemli/ilginç mi?
+2. Güncellik (0-20): Ne kadar yeni ve zamanında?
+3. Kaynak Otoritesi (0-20): Kaynak güvenilir ve otoriter mi?
+4. İçerik Derinliği (0-15): Yeterli bilgi sağlıyor mu?
+5. Hedef Kitle Uyumu (0-15): Türk AI/teknoloji kitlesi için uygun mu?
+
+EŞIK: >= 60 puan alan makaleler yayınlanacak.
+
+JSON dizisi ile yanıt ver (makale başına bir nesne):
+[
+  {
+    "score": 85,
+    "reasoning": "Büyük AI şirketi duyurusu, çok alakalı",
+    "category": "sektor-haberleri",
+    "tags": ["openai", "gpt-5", "duyuru"]
+  },
+  ...
+]
+
+Katı ama adil ol. Düşük kaliteli, eski veya alakasız içeriği reddet.`;
+
+  try {
+    const response = await callDeepSeek(
+      [
+        {
+          role: "system",
+          content:
+            "Sen Türk AI/teknoloji haber platformu için makale kalitesi ve alakasını değerlendiren uzman bir haber editörüsün. Sadece geçerli JSON dizisi ile yanıt ver.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      {
+        model: "deepseek-chat",
+        temperature: 0.3,
+        maxTokens: 4000,
+      },
+    );
+
+    // Parse JSON response
+    const jsonMatch = response.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      throw new Error("Failed to parse DeepSeek response");
+    }
+
+    recordSuccess();
+    return JSON.parse(jsonMatch[0]);
+  } catch (error) {
+    recordFailure();
+    throw error;
+  }
+}
+
 export default {
   callDeepSeek,
   analyzeNewsArticles,
@@ -1157,4 +1255,5 @@ export default {
   rewriteArticleWithNote,
   generateImagePrompt,
   aggregateMultiSourceArticles,
+  batchScoreArticles,
 };
