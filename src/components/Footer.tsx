@@ -7,7 +7,81 @@ import { db } from "@/lib/db";
 // Force dynamic rendering to avoid SSR issues
 export const dynamic = "force-dynamic";
 
-export async function Footer() {
+interface FooterProps {
+  locale?: "tr" | "en";
+}
+
+const translations = {
+  tr: {
+    subscribe: "Bültenimize Abone Olun",
+    subscribeDesc: "Haftalık AI haberlerini ve özel içerikleri kaçırmayın",
+    siteName: "AI Haberleri",
+    siteDesc: "Türkiye'nin en kapsamlı yapay zeka haber platformu. Güncel AI haberleri, trendler ve analizlerle teknoloji dünyasına bakış açınızı genişletin.",
+    categories: "Kategoriler",
+    quickLinks: "Hızlı Bağlantılar",
+    legal: "Yasal",
+    home: "Ana Sayfa",
+    latestNews: "Son Haberler",
+    about: "Hakkımızda",
+    contact: "İletişim",
+    faq: "SSS",
+    privacy: "Gizlilik Politikası",
+    terms: "Hizmet Şartları",
+    cookies: "Çerez Politikası",
+    kvkk: "KVKK Aydınlatma",
+    copyright: "AI Haberleri. Tüm hakları saklıdır.",
+    privacyShort: "Gizlilik",
+    termsShort: "Şartlar",
+    sitemap: "Site Haritası",
+    newsPath: "/haberler",
+    categoryPath: "/category",
+  },
+  en: {
+    subscribe: "Subscribe to Our Newsletter",
+    subscribeDesc: "Don't miss weekly AI news and exclusive content",
+    siteName: "AI News",
+    siteDesc: "The most comprehensive AI news platform. Expand your perspective on the technology world with the latest AI news, trends and analyses.",
+    categories: "Categories",
+    quickLinks: "Quick Links",
+    legal: "Legal",
+    home: "Home",
+    latestNews: "Latest News",
+    about: "About Us",
+    contact: "Contact",
+    faq: "FAQ",
+    privacy: "Privacy Policy",
+    terms: "Terms of Service",
+    cookies: "Cookie Policy",
+    kvkk: "Data Protection",
+    copyright: "AI News. All rights reserved.",
+    privacyShort: "Privacy",
+    termsShort: "Terms",
+    sitemap: "Sitemap",
+    newsPath: "/en/news",
+    categoryPath: "/en/category",
+  },
+};
+
+export async function Footer({ locale }: FooterProps) {
+  // Auto-detect locale from pathname if not provided
+  let detectedLocale: "tr" | "en" = locale || "tr";
+
+  if (!locale) {
+    try {
+      // Dynamic import to avoid static analysis issues in pages router
+      const { headers } = await import("next/headers");
+      const headersList = await headers();
+      const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
+      if (pathname.startsWith("/en")) {
+        detectedLocale = "en";
+      }
+    } catch {
+      // Fallback to TR if headers not available
+    }
+  }
+
+  const t = translations[detectedLocale];
+  const basePath = detectedLocale === "en" ? "/en" : "";
   // Static year to prevent hydration mismatch
   const currentYear = 2026;
 
@@ -67,11 +141,11 @@ export async function Footer() {
                   mail
                 </span>
                 <h3 className="text-xl font-bold text-white">
-                  Bültenimize Abone Olun
+                  {t.subscribe}
                 </h3>
               </div>
               <p className="text-ai-text-secondary text-sm">
-                Haftalık AI haberlerini ve özel içerikleri kaçırmayın
+                {t.subscribeDesc}
               </p>
             </div>
             <div className="w-full md:w-auto">
@@ -86,14 +160,12 @@ export async function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Logo & Description */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <Link href="/" className="flex items-center gap-3 mb-4">
+            <Link href={basePath || "/"} className="flex items-center gap-3 mb-4">
               <Logo size="md" showText={false} />
-              <span className="text-xl font-bold text-white">AI Haberleri</span>
+              <span className="text-xl font-bold text-white">{t.siteName}</span>
             </Link>
             <p className="text-sm text-ai-text-secondary mb-6 leading-relaxed">
-              Türkiye'nin en kapsamlı yapay zeka haber platformu. Güncel AI
-              haberleri, trendler ve analizlerle teknoloji dünyasına bakış
-              açınızı genişletin.
+              {t.siteDesc}
             </p>
             <div className="flex items-center gap-3 mb-4">
               <PushNotificationButton />
@@ -161,13 +233,13 @@ export async function Footer() {
               <span className="material-symbols-outlined text-ai-primary text-[20px]">
                 category
               </span>
-              Kategoriler
+              {t.categories}
             </h3>
             <ul className="space-y-2.5">
               {categories.slice(0, 8).map((category) => (
                 <li key={category.id}>
                   <Link
-                    href={`/category/${category.slug}`}
+                    href={`${t.categoryPath}/${category.slug}`}
                     className="text-sm text-ai-text-secondary hover:text-ai-primary transition-colors flex items-center gap-2 group"
                   >
                     <span className="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -188,15 +260,15 @@ export async function Footer() {
               <span className="material-symbols-outlined text-ai-primary text-[20px]">
                 link
               </span>
-              Hızlı Bağlantılar
+              {t.quickLinks}
             </h3>
             <ul className="space-y-2.5">
               {[
-                { href: "/", label: "Ana Sayfa", icon: "home" },
-                { href: "/haberler", label: "Son Haberler", icon: "newspaper" },
-                { href: "/about", label: "Hakkımızda", icon: "info" },
-                { href: "/contact", label: "İletişim", icon: "mail" },
-                { href: "/sss", label: "SSS", icon: "help" },
+                { href: basePath || "/", label: t.home, icon: "home" },
+                { href: t.newsPath, label: t.latestNews, icon: "newspaper" },
+                { href: `${basePath}/about`, label: t.about, icon: "info" },
+                { href: `${basePath}/contact`, label: t.contact, icon: "mail" },
+                { href: `${basePath}/sss`, label: t.faq, icon: "help" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link
@@ -221,24 +293,24 @@ export async function Footer() {
               <span className="material-symbols-outlined text-ai-primary text-[20px]">
                 gavel
               </span>
-              Yasal
+              {t.legal}
             </h3>
             <ul className="space-y-2.5">
               {[
                 {
-                  href: "/privacy",
-                  label: "Gizlilik Politikası",
+                  href: `${basePath}/privacy`,
+                  label: t.privacy,
                   icon: "shield",
                 },
                 {
-                  href: "/terms",
-                  label: "Hizmet Şartları",
+                  href: `${basePath}/terms`,
+                  label: t.terms,
                   icon: "description",
                 },
-                { href: "/cookies", label: "Çerez Politikası", icon: "cookie" },
+                { href: `${basePath}/cookies`, label: t.cookies, icon: "cookie" },
                 {
-                  href: "/kvkk",
-                  label: "KVKK Aydınlatma",
+                  href: `${basePath}/kvkk`,
+                  label: t.kvkk,
                   icon: "verified_user",
                 },
               ].map((link) => (
@@ -279,28 +351,28 @@ export async function Footer() {
         <div className="container mx-auto px-4 py-5 max-w-7xl">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-ai-text-muted text-center sm:text-left">
-              © {currentYear} AI Haberleri. Tüm hakları saklıdır.
+              © {currentYear} {t.copyright}
             </p>
             <div className="flex items-center gap-4 text-sm text-ai-text-muted">
               <Link
-                href="/privacy"
+                href={`${basePath}/privacy`}
                 className="hover:text-ai-primary transition-colors"
               >
-                Gizlilik
+                {t.privacyShort}
               </Link>
               <span className="text-ai-surface-border">•</span>
               <Link
-                href="/terms"
+                href={`${basePath}/terms`}
                 className="hover:text-ai-primary transition-colors"
               >
-                Şartlar
+                {t.termsShort}
               </Link>
               <span className="text-ai-surface-border">•</span>
               <Link
                 href="/sitemap.xml"
                 className="hover:text-ai-primary transition-colors"
               >
-                Site Haritası
+                {t.sitemap}
               </Link>
             </div>
           </div>

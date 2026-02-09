@@ -23,21 +23,35 @@ interface Category {
   slug: string;
 }
 
+const translations = {
+  tr: {
+    menu: "Menü",
+    installApp: "Uygulamayı Yükle",
+  },
+  en: {
+    menu: "Menu",
+    installApp: "Install App",
+  },
+};
+
 export function MainNav({
   items,
   children,
+  locale = "tr",
 }: {
   items?: NavItem[];
   children?: React.ReactNode;
+    locale?: "tr" | "en";
 }) {
   const pathname = usePathname();
   const [showMobileMenu, setShowMobileMenu] = React.useState<boolean>(false);
+  const t = translations[locale];
 
   return (
     <div className="flex flex-1 items-center justify-between">
       <div className="flex gap-6 md:gap-10 items-center">
-        <Logo className="hidden md:flex" size="md" showText={true} />
-        <Logo className="flex md:hidden" size="sm" showText={false} />
+        <Logo className="hidden md:flex" size="md" showText={true} href={locale === "en" ? "/en" : "/"} />
+        <Logo className="flex md:hidden" size="sm" showText={false} href={locale === "en" ? "/en" : "/"} />
       </div>
 
       <div className="flex items-center gap-6">
@@ -69,7 +83,7 @@ export function MainNav({
           ) : (
             <Icons.menu className="h-6 w-6" />
           )}
-          <span className="font-bold">Menü</span>
+          <span className="font-bold">{t.menu}</span>
         </button>
       </div>
 
@@ -91,7 +105,7 @@ export function MainNav({
                 </Link>
               ))}
 
-              <InstallAppButton onClick={() => setShowMobileMenu(false)} />
+              <InstallAppButton onClick={() => setShowMobileMenu(false)} locale={locale} />
             </nav>
           </div>
         </div>
@@ -101,8 +115,9 @@ export function MainNav({
   );
 }
 
-function InstallAppButton({ onClick }: { onClick: () => void }) {
+function InstallAppButton({ onClick, locale = "tr" }: { onClick: () => void; locale?: "tr" | "en" }) {
   const { isInstallable, installApp } = usePWA();
+  const t = translations[locale];
 
   if (!isInstallable) return null;
 
@@ -115,7 +130,7 @@ function InstallAppButton({ onClick }: { onClick: () => void }) {
       className="flex w-full items-center gap-2 rounded-md p-2 text-sm font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors mt-4"
     >
       <Download className="h-4 w-4" />
-      <span>Uygulamayı Yükle / Install App</span>
+      <span>{t.installApp}</span>
     </button>
   );
 }

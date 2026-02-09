@@ -28,6 +28,10 @@ import {
   initializeShareRecords,
 } from "@/services/social-share.service";
 import { createModuleLogger } from "@/lib/agent-log-stream";
+import {
+  ContentValidator,
+  validateAndFixContent,
+} from "@/lib/content-validator";
 
 // ============================================================================
 // CONTENT CONSTANTS - Magic numbers extracted for maintainability
@@ -749,6 +753,39 @@ export async function processArticle(
     // Step 1: Fetch full article content
     const fullContent = await fetchArticleContent(article.url);
 
+    // Step 1.1: 🆕 EARLY CONTENT VALIDATION - Catch garbage before processing
+    console.log("🔍 Kaynak içerik kalite kontrolü yapılıyor...");
+
+    const earlyValidation = ContentValidator.validate({
+      title: article.title,
+      content: fullContent,
+      excerpt: article.description,
+      sourceUrl: article.url,
+    });
+
+    if (earlyValidation.score < 40) {
+      // Critical garbage - don't even try to process
+      console.error(`❌ EARLY QUALITY GATE FAILED: Source content is garbage`);
+      console.error(`   Score: ${earlyValidation.score}/100`);
+      console.error(`   Issues: ${earlyValidation.issues.join(", ")}`);
+      await liveLog.content.error(
+        `❌ Kaynak içerik çok düşük kaliteli (${earlyValidation.score}/100): ${article.title.substring(0, 50)}...`,
+      );
+      throw new Error(
+        `Source content quality too low (${earlyValidation.score}/100): ${earlyValidation.issues.slice(0, 3).join(", ")}`,
+      );
+    }
+
+    if (earlyValidation.issues.length > 0) {
+      console.log(
+        `⚠️ Source content has issues (but passable): ${earlyValidation.issues.join(", ")}`,
+      );
+    }
+
+    console.log(
+      `✅ Kaynak içerik kalite kontrolünden geçti (${earlyValidation.score}/100)`,
+    );
+
     // Step 1.5: 🆕 DEEP RESEARCH - Gather additional context
     console.log("🔬 Deep research yapılıyor...");
     await liveLog.content.info(`🔬 Ek araştırma yapılıyor...`);
@@ -1068,6 +1105,40 @@ export async function publishArticle(
       return null; // Skip publishing
     }
 
+    // ========================================================================
+    // LAYER 3: CONTENT QUALITY VALIDATION (PRE-PUBLISH GATE)
+    // Rejects garbage content, scraping artifacts, and malformed HTML
+    // ========================================================================
+    console.log(`🔍 İçerik kalite kontrolü yapılıyor...`);
+
+    const validationResult = await validateAndFixContent({
+      title: processedArticle.title,
+      content: processedArticle.content,
+      excerpt: processedArticle.excerpt,
+      sourceUrl: processedArticle.sourceUrl,
+    });
+
+    if (!validationResult.success) {
+      console.error(`❌ QUALITY CHECK FAILED: ${processedArticle.title}`);
+      console.error(`   Issues: ${validationResult.issues.join(", ")}`);
+      await liveLog.publish.error(
+        `❌ Kalite kontrolü başarısız: ${processedArticle.title.substring(0, 50)}...`,
+      );
+      return null; // Skip publishing garbage content
+    }
+
+    // Apply auto-fixed content if available
+    const finalContent = validationResult.content || processedArticle.content;
+    const finalExcerpt = validationResult.excerpt || processedArticle.excerpt;
+
+    if (validationResult.issues.length > 0) {
+      console.log(
+        `⚠️ Content passed with warnings: ${validationResult.issues.join(", ")}`,
+      );
+    }
+
+    console.log(`✅ İçerik kalite kontrolünden geçti`);
+
     // Determine status based on score
     const score = processedArticle.score || 0;
     const status =
@@ -1080,8 +1151,8 @@ export async function publishArticle(
       data: {
         title: processedArticle.title,
         slug: processedArticle.slug,
-        excerpt: processedArticle.excerpt,
-        content: processedArticle.content,
+        excerpt: finalExcerpt, // Use validated/fixed excerpt
+        content: finalContent, // Use validated/fixed content
         imageUrl: processedArticle.imageUrl,
         imageUrlMedium: processedArticle.imageUrlMedium,
         imageUrlSmall: processedArticle.imageUrlSmall,
