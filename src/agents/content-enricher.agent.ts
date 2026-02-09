@@ -218,8 +218,8 @@ export class ContentEnricherAgent extends BaseAgent<
               });
             }
 
-            // Step 2: Synthesize content (TR + EN) - these run in parallel across articles
-            // TIMEOUT PROTECTION: Wrap in Promise.race with 60s timeout (increased from 45s)
+            // Step 2: Synthesize content (TR + EN) - GEMINI ONLY (FAST!)
+            // TIMEOUT PROTECTION: Wrap in Promise.race with 30s timeout (reduced from 60s - Gemini is FAST)
             const synthesized = await Promise.race([
               this.synthesizeContent(
                 article,
@@ -228,8 +228,8 @@ export class ContentEnricherAgent extends BaseAgent<
               ),
               new Promise<any>((_, reject) =>
                 setTimeout(
-                  () => reject(new Error("Content synthesis timeout (60s)")),
-                  60000, // FIXED: Increased from 45s for DeepSeek
+                  () => reject(new Error("Content synthesis timeout (30s)")),
+                  30000, // FIXED: Reduced from 60s - Gemini completes in 10-15s
                 ),
               ),
             ]);
@@ -745,6 +745,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
   /**
    * Synthesize content from multiple sources (TR + EN)
+   * EMERGENCY FIX: Using Gemini 2.5 Flash ONLY for speed (10-15s vs DeepSeek 60s+)
    */
   private async synthesizeContent(
     article: UniqueArticle,
@@ -795,75 +796,69 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
       )
       .join("\n");
 
-    // Turkish content (HYBRID: Using DeepSeek-Chat for complex synthesis - proven quality)
+    // EMERGENCY FIX: Use Gemini 2.5 Flash for BOTH TR and EN (10-15s total)
+    // DeepSeek was causing 60s+ timeouts
     this.logger.info(
-      `🤖 HYBRID: Using DeepSeek-Chat for TR content synthesis (proven quality)`,
+      `🚀 EMERGENCY MODE: Using Gemini 2.5 Flash for BOTH TR + EN synthesis (fast!)`,
     );
-    const trPrompt = `Sen  usta bir araştırmacı gazeteci ve baş editörsün (Master Investigative Journalist).
-    
-    Görevin: Aşağıdaki ${sources.length} FARKLI KAYNAKTAN toplanan ham verileri derinlemesine analiz ederek, SENTEZLEYEREK, KAPSAMLI ve %100 ORİJİNAL bir Türkçe haber makalesi oluşturmak.
 
-    ### HEDEF:
-    Sıradan bir haber değil, okuyucuya "Ben bunu bilmiyordum" dedirtecek, olayların arka planını, nedenlerini ve olası sonuçlarını irdeleyen DERİNLEMESİNE (Deep Dice) bir analiz yazısı yazmalısın.
+    // Turkish content (Gemini 2.5 Flash - FAST)
+    const trPrompt = `Sen usta bir araştırmacı gazeteci ve baş editörsün.
 
-    ### ORİJİNAL HABER BAŞLIĞI:
-    ${article.title}
+Görevin: Aşağıdaki ${sources.length} FARKLI KAYNAKTAN toplanan ham verileri derinlemesine analiz ederek, SENTEZLEYEREK, KAPSAMLI ve %100 ORİJİNAL bir Türkçe haber makalesi oluşturmak.
 
-    ### TOPLANAN KAYNAKLAR:
-    ${sourcesText}
+### ORİJİNAL HABER BAŞLIĞI:
+${article.title}
 
-    ### YAZIM KURALLARI (ÇOK ÖNEMLİ):
-    1. **İNSANSI VE AKICI DİL:** Robotik, yapay veya çeviri kokan cümlelerden kesinlikle kaçın. Usta bir yazar gibi akıcı, zengin ve edebi bir dil kullan.
-    2. **DERİN ANALİZ:** Sadece "ne oldu" değil, "neden oldu", "bu ne anlama geliyor", "gelecekte neyi etkileyecek" sorularına cevap ver.
-    3. **MEVCUT HABERİ GELİŞTİR:** Kaynaklardaki bilgileri sadece birleştirme; üzerine kendi analizini, vizyonunu ve bağlamı ekle. Okuyucuya katma değer sağla.
-    4. **OBJEKTİF AMA ÇARPICI:** Tarafsız kal ama sıkıcı olma. Olayın önemini vurgulayan güçlü başlıklar ve giriş cümleleri kullan.
-    5. **KAYNAK KULLANIMI:** "Reuters'a göre...", "TechCrunch'ın raporuna göre..." gibi ifadelerle kaynaklara atıf yaparak güvenilirliği artır.
-    6. **Benzersiz Anlatım:** Her cümlen özgün olsun. Kopya içerik algısından kaçın.
+### TOPLANAN KAYNAKLAR:
+${sourcesText}
 
-    ### YAPI:
-    - **Başlık (H1):** 50-70 karakter, tıklamaya teşvik eden, merak uyandıran ama yanıltıcı olmayan (Clickbait olmayan) güçlü bir başlık.
-    - **Özet (Lead):** 2-3 cümlelik, haberin en vurucu noktasını özetleyen, okuyucuyu içeri çeken giriş.
-    - **İçerik (HTML):**
-      - En az 600 kelime.
-      - <p> etiketleri ile paragraflara bölünmüş.
-      - <h2> ara başlıkları ile bölümlendirilmiş (En az 3 ara başlık).
-      - Önemli detaylar için <ul> veya <ol> listeleri.
-    - **SEO:** 150-160 karakterlik optimize edilmiş meta açıklama ve 6-10 adet ilgili anahtar kelime.
+### YAZIM KURALLARI:
+1. İNSANSI VE AKICI DİL: Robotik değil, doğal Türkçe
+2. DERİN ANALİZ: "Ne oldu" + "Neden oldu" + "Ne anlama geliyor"
+3. OBJEKTİF AMA ÇARPICI: Tarafsız kal ama sıkıcı olma
+4. KAYNAK KULLANIMI: "Reuters'a göre...", "TechCrunch'ın raporuna göre..."
+5. Benzersiz Anlatım: Her cümlen özgün olsun
 
-    JSON formatında yanıt ver:
-    {
-      "title": "Çarpıcı ve SEO Uyumlu Başlık",
-      "excerpt": "Okuyucuyu yakalayan özet",
-      "content": "HTML formatlı, derin analiz içeren tam makale",
-      "keywords": ["anahtar1", "anahtar2"],
-      "metaDescription": "SEO meta açıklama",
-      "score": 950
-    }`;
+### YAPI:
+- Başlık: 50-70 karakter, tıklamaya teşvik eden
+- Özet: 2-3 cümlelik giriş
+- İçerik: En az 600 kelime, HTML formatlı (<p>, <h2>, <ul>/<ol>)
+- SEO: 150-160 karakterlik meta açıklama ve 6-10 anahtar kelime
 
-    const trResponse = await callDeepSeek(
-      [
-        {
-          role: "system",
-          content:
-            "Sen deneyimli bir Türkçe haber editörüsün. Sadece geçerli JSON yanıtı ver.",
-        },
-        { role: "user", content: trPrompt },
-      ],
-      {
-        model: "deepseek-chat",
+JSON formatında yanıt ver:
+{
+  "title": "Çarpıcı ve SEO Uyumlu Başlık",
+  "excerpt": "Okuyucuyu yakalayan özet",
+  "content": "HTML formatlı, derin analiz içeren tam makale",
+  "keywords": ["anahtar1", "anahtar2"],
+  "metaDescription": "SEO meta açıklama",
+  "score": 950
+}`;
+
+    let trContent: any;
+    try {
+      const trResponse = await callGemini(trPrompt, {
+        model: "gemini-2.0-flash-exp",
         maxTokens: 6000,
         temperature: 0.7,
-      },
-    );
+      });
 
-    const trJsonMatch = trResponse.match(/\{[\s\S]*\}/);
-    if (!trJsonMatch) {
-      throw new Error("Failed to parse Turkish content");
+      const trJsonMatch = trResponse.match(/\{[\s\S]*\}/);
+      if (!trJsonMatch) {
+        throw new Error("Failed to parse Turkish content from Gemini");
+      }
+      trContent = JSON.parse(trJsonMatch[0]);
+      this.logger.success(`✅ Gemini TR content generated successfully`);
+    } catch (geminiTrError: any) {
+      this.logger.error(
+        `❌ Gemini TR failed: ${geminiTrError.message}, using emergency template`,
+      );
+      // Emergency template fallback
+      return this.generateEmergencyTemplate(article, sources);
     }
-    const trContent = JSON.parse(trJsonMatch[0]);
 
-    // English content (HYBRID: Using Gemini 2.5 Flash Lite for translation - 47% cheaper)
-    // FALLBACK: If Gemini fails, use DeepSeek for EN content
+    // English content (Gemini 2.5 Flash - FAST)
     const enPrompt = `You are a world-renowned investigative journalist.
 
 Task: Create a comprehensive, original English news article by synthesizing ${sources.length} sources.
@@ -892,15 +887,9 @@ Respond in JSON:
 }`;
 
     let enContent: any;
-    let usedProvider = "Gemini";
-
     try {
-      // Try Gemini first (47% cheaper)
-      this.logger.info(
-        `🤖 HYBRID: Trying Gemini 2.5 Flash Lite for EN content synthesis...`,
-      );
       const enResponse = await callGemini(enPrompt, {
-        model: "gemini-2.5-flash-lite",
+        model: "gemini-2.0-flash-exp",
         maxTokens: 6000,
         temperature: 0.7,
       });
@@ -911,37 +900,12 @@ Respond in JSON:
       }
       enContent = JSON.parse(enJsonMatch[0]);
       this.logger.success(`✅ Gemini EN content generated successfully`);
-    } catch (geminiError: any) {
-      // Fallback to DeepSeek if Gemini fails
-      this.logger.warn(
-        `⚠️ Gemini failed (${geminiError.message}), falling back to DeepSeek for EN content...`,
+    } catch (geminiEnError: any) {
+      this.logger.error(
+        `❌ Gemini EN failed: ${geminiEnError.message}, using emergency template`,
       );
-      usedProvider = "DeepSeek";
-
-      const enResponseDeepSeek = await callDeepSeek(
-        [
-          {
-            role: "system",
-            content:
-              "You are a world-class English news editor. Respond only with valid JSON.",
-          },
-          { role: "user", content: enPrompt },
-        ],
-        {
-          model: "deepseek-chat",
-          maxTokens: 6000,
-          temperature: 0.7,
-        },
-      );
-
-      const enJsonMatchDeepSeek = enResponseDeepSeek.match(/\{[\s\S]*\}/);
-      if (!enJsonMatchDeepSeek) {
-        throw new Error(
-          "Failed to parse English content from DeepSeek fallback",
-        );
-      }
-      enContent = JSON.parse(enJsonMatchDeepSeek[0]);
-      this.logger.success(`✅ DeepSeek EN content generated (fallback)`);
+      // Emergency template fallback
+      return this.generateEmergencyTemplate(article, sources);
     }
 
     // Add AI disclaimer and sources footer to both TR and EN content
