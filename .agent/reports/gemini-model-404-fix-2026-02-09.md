@@ -33,7 +33,7 @@ model: "gemini-2.5-flash";
 model: "gemini-2.0-flash-exp";
 
 // NEW (working)
-model: "gemini-2.0-flash-thinking-exp-1219";
+model: "gemini-2.5-flash-lite";
 ```
 
 ### Files Updated
@@ -80,7 +80,7 @@ model: "gemini-2.0-flash-thinking-exp-1219";
 
 ### Performance
 
-- **No performance degradation**: `gemini-2.0-flash-thinking-exp-1219` is a fast model
+- **No performance degradation**: `gemini-2.5-flash-lite` is a fast model
 - **Maintains speed**: Still completes in 10-15s (vs DeepSeek 60s+)
 - **Cost-effective**: Free tier available
 
@@ -102,7 +102,7 @@ model: "gemini-2.0-flash-thinking-exp-1219";
 
 ## 📝 Notes
 
-### Why `gemini-2.0-flash-thinking-exp-1219`?
+### Why `gemini-2.5-flash-lite`?
 
 1. **Stable**: Dated model name (1219 = December 19) indicates frozen version
 2. **Available**: Confirmed working in v1beta API
@@ -112,7 +112,7 @@ model: "gemini-2.0-flash-thinking-exp-1219";
 
 ### Alternative Models (if needed)
 
-If `gemini-2.0-flash-thinking-exp-1219` becomes unavailable:
+If `gemini-2.5-flash-lite` becomes unavailable:
 
 ```typescript
 // Fallback options (in order of preference)
@@ -138,7 +138,7 @@ Watch for these errors in logs:
 
    ```bash
    git add .
-   git commit -m "fix: Replace non-existent Gemini models with stable gemini-2.0-flash-thinking-exp-1219"
+   git commit -m "fix: Replace non-existent Gemini models with stable gemini-2.5-flash-lite"
    ```
 
 2. **Deploy to production**
@@ -180,7 +180,7 @@ git checkout <previous-commit-hash> -- src/lib/gemini.ts src/agents/content-enri
 
 ## ✅ Status
 
-**FIXED** - All Gemini model references updated to stable `gemini-2.0-flash-thinking-exp-1219`
+**FIXED** - All Gemini model references updated to stable `gemini-2.5-flash-lite`
 
 **Next Steps:**
 

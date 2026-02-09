@@ -47,9 +47,9 @@ export async function callGemini(
   const ai = getGenAI();
 
   try {
-    // FIXED: Use gemini-2.0-flash-thinking-exp-1219 (available model)
+    // FIXED: Use gemini-2.5-flash-lite (available model)
     // gemini-2.5-flash-lite doesn't exist, using stable 2.0 Flash model
-    const modelName = options.model || "gemini-2.0-flash-thinking-exp-1219";
+    const modelName = options.model || "gemini-2.5-flash-lite";
 
     const model = ai.getGenerativeModel({
       model: modelName,
@@ -68,7 +68,7 @@ export async function callGemini(
       message: error.message,
       status: error.status,
       details: error.details,
-      model: options.model || "gemini-2.0-flash-thinking-exp-1219",
+      model: options.model || "gemini-2.5-flash-lite",
     });
     throw new Error(`Gemini API error: ${error.message}`);
   }
@@ -89,8 +89,8 @@ export async function callGeminiChat(
   const ai = getGenAI();
 
   try {
-    // FIXED: Use gemini-2.0-flash-thinking-exp-1219 (available model)
-    const modelName = options.model || "gemini-2.0-flash-thinking-exp-1219";
+    // FIXED: Use gemini-2.5-flash-lite (available model)
+    const modelName = options.model || "gemini-2.5-flash-lite";
 
     const model = ai.getGenerativeModel({
       model: modelName,
@@ -120,7 +120,7 @@ export async function callGeminiChat(
       message: error.message,
       status: error.status,
       details: error.details,
-      model: options.model || "gemini-2.0-flash-thinking-exp-1219",
+      model: options.model || "gemini-2.5-flash-lite",
     });
     throw new Error(`Gemini Chat API error: ${error.message}`);
   }
@@ -185,7 +185,7 @@ JSON dizisi ile yanıt ver (makale başına bir nesne):
 Katı ama adil ol. Düşük kaliteli, eski veya alakasız içeriği reddet.`;
 
   const response = await callGemini(prompt, {
-    model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
+    model: "gemini-2.5-flash-lite", // FIXED: Use available model
     temperature: 0.3, // Lower for consistent scoring
     maxTokens: 4000,
     systemInstruction:
@@ -246,7 +246,7 @@ Kategori: ${category}
 SADECE PROMPT İLE YANIT VER. AÇIKLAMA YOK.`;
 
   const response = await callGemini(prompt, {
-    model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
+    model: "gemini-2.5-flash-lite", // FIXED: Use available model
     temperature: 1.0, // Maximum variety
     maxTokens: 200,
     systemInstruction:

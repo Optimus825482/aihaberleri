@@ -154,7 +154,7 @@ SADECE GEÇERLİ JSON YANIT VER. AÇIKLAMA YOK.`;
 
     try {
       const response = await callGemini(prompt, {
-        model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
+        model: "gemini-2.5-flash-lite", // FIXED: Use available model
         temperature: 0.3, // Düşük temperature (tutarlılık için)
         maxTokens: 2000,
         systemInstruction:
@@ -209,7 +209,7 @@ Sadece slug'ı yanıtla, açıklama yok.`;
 
     try {
       const response = await callGemini(prompt, {
-        model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
+        model: "gemini-2.5-flash-lite", // FIXED: Use available model
         temperature: 0.2,
         maxTokens: 100,
       });
@@ -262,7 +262,7 @@ Sadece alt text'i yanıtla, açıklama yok.`;
 
     try {
       const response = await callGemini(prompt, {
-        model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
+        model: "gemini-2.5-flash-lite", // FIXED: Use available model
         temperature: 0.5,
         maxTokens: 150,
       });

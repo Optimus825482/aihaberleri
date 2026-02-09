@@ -839,7 +839,7 @@ JSON formatında yanıt ver:
     let trContent: any;
     try {
       const trResponse = await callGemini(trPrompt, {
-        model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
+        model: "gemini-2.5-flash-lite", // FIXED: Use available model
         maxTokens: 6000,
         temperature: 0.7,
       });
@@ -889,7 +889,7 @@ Respond in JSON:
     let enContent: any;
     try {
       const enResponse = await callGemini(enPrompt, {
-        model: "gemini-2.0-flash-thinking-exp-1219", // FIXED: Use available model
+        model: "gemini-2.5-flash-lite", // FIXED: Use available model
         maxTokens: 6000,
         temperature: 0.7,
       });
