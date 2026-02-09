@@ -149,7 +149,7 @@ export async function scheduleNewsAgentJob() {
         },
         jobId: "news-agent-repeatable",
         removeOnComplete: true,
-        removeOnFail: false, // Keep failed jobs for debugging
+        removeOnFail: { count: 50, age: 24 * 3600 }, // Keep last 50 failed jobs for 24h max
       },
     );
 
@@ -264,7 +264,7 @@ export async function scheduleNewsletterJob() {
         },
         jobId: "newsletter-daily-digest",
         removeOnComplete: true,
-        removeOnFail: false,
+        removeOnFail: { count: 20, age: 24 * 3600 }, // Keep last 20 failed jobs for 24h max
       },
     );
 
@@ -424,7 +424,7 @@ export async function addSocialBatchJob(data: {
   try {
     const job = await queue.add("social-batch-share", data, {
       jobId: `social-batch-${data.batchId}`,
-      removeOnComplete: false, // Keep for progress tracking
+      removeOnComplete: { count: 50, age: 12 * 3600 }, // Keep last 50 for 12h for progress tracking
     });
 
     console.log(`📤 Social batch job added: ${job.id}`);

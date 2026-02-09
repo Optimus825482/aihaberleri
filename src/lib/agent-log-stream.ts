@@ -9,6 +9,10 @@ const LOG_CHANNEL = "agent:logs";
 const LOG_BUFFER_KEY = "agent:log-buffer";
 const MAX_BUFFER_SIZE = 100;
 
+// Throttle OOM error logging to prevent console spam
+let lastOOMWarning = 0;
+const OOM_WARNING_INTERVAL = 60_000; // Log OOM warning at most once per minute
+
 export type LogLevel = "info" | "success" | "warn" | "error" | "debug";
 
 export interface AgentLogEntry {
@@ -53,7 +57,17 @@ export async function publishAgentLog(
     await redis.expire(LOG_BUFFER_KEY, 3600);
   } catch (error) {
     // Silent fail - don't break worker for logging issues
-    console.error("[AgentLogStream] Publish failed:", error);
+    // Throttle OOM warnings to prevent console spam during Redis memory pressure
+    const errorMsg = String(error);
+    if (errorMsg.includes("OOM") || errorMsg.includes("maxmemory")) {
+      const now = Date.now();
+      if (now - lastOOMWarning > OOM_WARNING_INTERVAL) {
+        lastOOMWarning = now;
+        console.warn("[AgentLogStream] Redis OOM - log publishing suppressed (this warning shown at most once/min)");
+      }
+    } else {
+      console.error("[AgentLogStream] Publish failed:", error);
+    }
   }
 }
 
