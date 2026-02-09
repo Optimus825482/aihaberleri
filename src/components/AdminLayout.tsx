@@ -31,6 +31,7 @@ import {
   PlusCircle,
   Share2,
   TrendingUp,
+  Eye,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,12 @@ const menuItems = [
     title: "Okuyucu Analitiği",
     href: "/admin/visitors",
     icon: Activity,
+    requiredResource: null,
+  },
+  {
+    title: "Okunma Takibi",
+    href: "/admin/views",
+    icon: Eye,
     requiredResource: null,
   },
   {
