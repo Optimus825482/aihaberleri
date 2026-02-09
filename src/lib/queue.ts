@@ -92,12 +92,12 @@ export async function scheduleNewsAgentJob() {
   }
 
   try {
-    // Get interval from settings (default to 10 minutes for freshness)
+    // Get interval from settings (default to 15 minutes as per user requirement)
     const setting = await db.setting.findUnique({
       where: { key: "agent.intervalHours" },
     });
 
-    const intervalHours = setting ? parseFloat(setting.value) : 0.167; // 10 minutes default
+    const intervalHours = setting ? parseFloat(setting.value) : 0.25; // 15 minutes default (0.25 hours)
     const intervalMs = Math.round(intervalHours * 60 * 60 * 1000); // Support decimal hours (0.25 = 15 min)
 
     // Remove all existing repeatable and delayed jobs first

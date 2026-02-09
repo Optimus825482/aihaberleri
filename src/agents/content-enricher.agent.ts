@@ -63,9 +63,9 @@ export interface EnrichedArticle extends UniqueArticle {
 }
 
 const JINA_READER_URL = "https://r.jina.ai";
-const JINA_TIMEOUT = 5000; // Reduced from 10s to 5s for faster processing
+const JINA_TIMEOUT = 10000; // Increased from 5s to 10s to prevent timeouts
 const TAVILY_EXTRACT_URL = "https://api.tavily.com/extract";
-const TAVILY_TIMEOUT = 8000; // Reduced from 12s to 8s
+const TAVILY_TIMEOUT = 15000; // Increased from 8s to 15s to prevent timeouts
 const TARGET_SOURCE_COUNT = 5; // Reduced from 8 to 5 for faster processing
 
 export class ContentEnricherAgent extends BaseAgent<
@@ -121,7 +121,16 @@ export class ContentEnricherAgent extends BaseAgent<
 
         try {
           // Step 1: Gather sources (priority-based: Tavily for high-priority, Jina for low-priority)
-          const sources = await this.gatherSourcesWithPriority(article);
+          // TIMEOUT PROTECTION: Wrap in Promise.race with 30s timeout
+          const sources = await Promise.race([
+            this.gatherSourcesWithPriority(article),
+            new Promise<any>((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Source gathering timeout (30s)")),
+                30000,
+              ),
+            ),
+          ]);
 
           if (sources.length < 2) {
             this.logger.warn(
@@ -136,19 +145,37 @@ export class ContentEnricherAgent extends BaseAgent<
           }
 
           // Step 2: Synthesize content (TR + EN) - these run in parallel across articles
-          const synthesized = await this.synthesizeContent(
-            article,
-            sources,
-            article.suggestedCategory || "teknoloji",
-          );
+          // TIMEOUT PROTECTION: Wrap in Promise.race with 45s timeout
+          const synthesized = await Promise.race([
+            this.synthesizeContent(
+              article,
+              sources,
+              article.suggestedCategory || "teknoloji",
+            ),
+            new Promise<any>((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Content synthesis timeout (45s)")),
+                45000,
+              ),
+            ),
+          ]);
 
           // Step 3: Generate Title A/B Test Variants
+          // TIMEOUT PROTECTION: Wrap in Promise.race with 10s timeout
           let titleABTest: TitleABTestData | undefined;
           try {
-            const variants = await generateTitleVariants(
-              synthesized.tr.content,
-              article.suggestedCategory || "teknoloji",
-            );
+            const variants = await Promise.race([
+              generateTitleVariants(
+                synthesized.tr.content,
+                article.suggestedCategory || "teknoloji",
+              ),
+              new Promise<any>((_, reject) =>
+                setTimeout(
+                  () => reject(new Error("A/B test timeout (10s)")),
+                  10000,
+                ),
+              ),
+            ]);
             titleABTest = initializeABTestData(variants);
           } catch (abTestError) {
             this.logger.warn(

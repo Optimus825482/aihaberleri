@@ -52,8 +52,8 @@ import type { Worker as BullMQWorker } from "bullmq";
 // ============================================================================
 
 const WORKER_CONSTANTS = {
-  // Agent execution timeout (ms) - 18 minutes for complex processing
-  AGENT_TIMEOUT_MS: 18 * 60 * 1000,
+  // Agent execution timeout (ms) - 25 minutes for complex processing (increased to prevent timeouts)
+  AGENT_TIMEOUT_MS: 25 * 60 * 1000,
   // Progress update interval (ms) - every 2 minutes
   PROGRESS_UPDATE_INTERVAL_MS: 2 * 60 * 1000,
   // Heartbeat interval (ms) - every 30 seconds
@@ -654,7 +654,7 @@ async function startWorker() {
         max: 1,
         duration: 1000, // Max 1 job per second
       },
-      lockDuration: 1200000, // Lock job for 20 minutes (1200000ms) - increased from 10min
+      lockDuration: 1800000, // Lock job for 30 minutes (1800000ms) - increased from 20min to prevent stuck jobs
       maxStalledCount: 2, // Allow 2 stalls before failing
       stalledInterval: 60000, // Check for stalled jobs every 60 seconds
     },
