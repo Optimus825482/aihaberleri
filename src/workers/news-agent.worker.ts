@@ -27,7 +27,6 @@ import { sendDailyDigest } from "@/services/newsletter.service";
 import { postToFacebook, postToFacebookEN } from "@/lib/social/facebook";
 import { postToBluesky, postToBlueskyEN } from "@/lib/social/bluesky";
 import { postToMastodon, postToMastodonEN } from "@/lib/social/mastodon";
-import { postToTumblr, postToTumblrEN } from "@/lib/social/tumblr";
 import { db } from "@/lib/db";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { workerLogger } from "@/lib/logger";
@@ -1037,8 +1036,6 @@ async function startWorker() {
       BLUESKY_EN: postToBlueskyEN,
       MASTODON: postToMastodon,
       MASTODON_EN: postToMastodonEN,
-      TUMBLR: postToTumblr,
-      TUMBLR_EN: postToTumblrEN,
     };
 
     // Platform language mapping
@@ -1049,8 +1046,6 @@ async function startWorker() {
       BLUESKY_EN: "en",
       MASTODON: "tr",
       MASTODON_EN: "en",
-      TUMBLR: "tr",
-      TUMBLR_EN: "en",
     };
 
     const socialBatchWorker = new Worker(

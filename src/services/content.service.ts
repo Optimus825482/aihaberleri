@@ -18,7 +18,6 @@ import { postTweet } from "@/lib/social/twitter";
 import { postToFacebook } from "@/lib/social/facebook";
 import { postToBluesky } from "@/lib/social/bluesky";
 import { postToMastodon } from "@/lib/social/mastodon";
-import { postToTumblr } from "@/lib/social/tumblr";
 import { translateAndSaveArticle } from "@/lib/translation";
 import { getCache } from "@/lib/cache";
 import { contentLogger } from "@/lib/logger";
@@ -378,7 +377,7 @@ async function processAggregatedCluster(
         let content = article.description;
         try {
           // Individual timeout per article (30s max)
-          const fullContent = await Promise.race([
+          const fullContent = (await Promise.race([
             fetchArticleContent(article.url),
             new Promise<string>((_, reject) =>
               setTimeout(
@@ -386,7 +385,7 @@ async function processAggregatedCluster(
                 CONTENT_CONSTANTS.IMAGE_FETCH_TIMEOUT,
               ),
             ),
-          ]) as string;
+          ])) as string;
           if (fullContent && fullContent.length > content.length) {
             content = fullContent;
           }
@@ -642,11 +641,10 @@ export async function selectBestArticles(
     const recentPublished = await db.article.findMany({
       where: {
         publishedAt: {
-          gte:
-            new Date(
-              Date.now() -
-                CONTENT_CONSTANTS.DIVERSITY_WINDOW_HOURS * 60 * 60 * 1000,
-            ),
+          gte: new Date(
+            Date.now() -
+              CONTENT_CONSTANTS.DIVERSITY_WINDOW_HOURS * 60 * 60 * 1000,
+          ),
         },
         status: "PUBLISHED",
       },
@@ -878,7 +876,8 @@ export async function processArticle(
 
     // 🚀 PERFORMANCE (FAZ 2): Score-based early exit for image generation
     // Skip image generation for low-score articles to save resources
-    const shouldGenerateImage = score >= CONTENT_CONSTANTS.PUBLISH_SCORE_THRESHOLD;
+    const shouldGenerateImage =
+      score >= CONTENT_CONSTANTS.PUBLISH_SCORE_THRESHOLD;
 
     let imageUrl: string;
     let slug: string; // Declare slug at outer scope
@@ -1262,34 +1261,6 @@ export async function publishArticle(
         });
     } catch (e) {
       console.error("Failed to trigger Mastodon post:", e);
-    }
-
-    // Post to Tumblr (Async)
-    try {
-      postToTumblr({
-        title: article.title,
-        slug: article.slug,
-        excerpt: article.excerpt,
-        imageUrl: processedArticle.imageUrl,
-        categoryName: category.name,
-      })
-        .then(async (postId) => {
-          if (postId) {
-            await recordShareSuccess(article.id, "TUMBLR", "tr", postId);
-            console.log("📝 Tumblr paylaşıldı:", article.slug);
-          }
-        })
-        .catch(async (err) => {
-          await recordShareFailure(
-            article.id,
-            "TUMBLR",
-            "tr",
-            err?.message || "Unknown error",
-          );
-          console.error("Async Tumblr post failed:", err);
-        });
-    } catch (e) {
-      console.error("Failed to trigger Tumblr post:", e);
     }
 
     // Translate article to English (Async)

@@ -6,7 +6,6 @@
 import { db } from "@/lib/db";
 import { postToBluesky } from "@/lib/social/bluesky";
 import { postToMastodon } from "@/lib/social/mastodon";
-import { postToTumblr } from "@/lib/social/tumblr";
 import { postToFacebookEN } from "@/lib/social/facebook";
 import {
   recordShareSuccess,
@@ -367,35 +366,6 @@ export async function translateAndSaveArticle(
             err?.message || "Unknown error",
           );
           console.error(`   ❌ [EN-SHARE] Mastodon EN FAILED:`, err.message);
-        });
-
-      // Tumblr - English
-      console.log(`📢 [EN-SHARE] Calling postToTumblr...`);
-      postToTumblr({
-        title: translation.title,
-        slug: `en/news/${translation.slug}`,
-        excerpt: translation.excerpt,
-        imageUrl: article.imageUrl,
-        categoryName: "AI News",
-      })
-        .then(async (postId) => {
-          if (postId) {
-            await recordShareSuccess(articleId, "TUMBLR", "en", postId);
-            console.log(`   📝 [EN-SHARE] Tumblr EN SUCCESS: ${postId}`);
-          } else {
-            console.log(
-              `   ⚠️ [EN-SHARE] Tumblr EN returned null (disabled or no credentials)`,
-            );
-          }
-        })
-        .catch(async (err) => {
-          await recordShareFailure(
-            articleId,
-            "TUMBLR",
-            "en",
-            err?.message || "Unknown error",
-          );
-          console.error(`   ❌ [EN-SHARE] Tumblr EN FAILED:`, err.message);
         });
 
       // Facebook EN Page - English

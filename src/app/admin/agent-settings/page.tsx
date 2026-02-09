@@ -76,7 +76,8 @@ interface RecentLog {
 }
 
 export default function AgentSettingsPage() {
-  const defaultAdminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@example.com";
+  const defaultAdminEmail =
+    process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@example.com";
 
   const [settings, setSettings] = useState<AgentSettings>({
     enabled: true,
@@ -101,6 +102,10 @@ export default function AgentSettingsPage() {
   const [triggering, setTriggering] = useState(false);
   const { toast } = useToast();
 
+  // Pipeline status states
+  const [pipelineStats, setPipelineStats] = useState<any>(null);
+  const [pipelineLoading, setPipelineLoading] = useState(true);
+
   // Live log states
   const [showLiveLog, setShowLiveLog] = useState(false);
   const [liveLogData, setLiveLogData] = useState<{
@@ -121,10 +126,12 @@ export default function AgentSettingsPage() {
     fetchSettings();
     fetchWorkerStatus();
     fetchRecentLogs();
+    fetchPipelineStats();
 
     // Poll worker status every 30 seconds
     const interval = setInterval(() => {
       fetchWorkerStatus();
+      fetchPipelineStats();
     }, 30000);
 
     return () => clearInterval(interval);
@@ -179,6 +186,20 @@ export default function AgentSettingsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch recent logs:", error);
+    }
+  };
+
+  const fetchPipelineStats = async () => {
+    try {
+      const response = await fetch("/api/admin/pipeline/stats");
+      if (response.ok) {
+        const data = await response.json();
+        setPipelineStats(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch pipeline stats:", error);
+    } finally {
+      setPipelineLoading(false);
     }
   };
 
@@ -253,7 +274,8 @@ export default function AgentSettingsPage() {
       if (data.success) {
         toast({
           title: "✅ Agent Başlatıldı",
-          description: "Haber tarama işlemi arka planda başlatıldı. Logları aşağıda takip edebilirsiniz.",
+          description:
+            "Haber tarama işlemi arka planda başlatıldı. Logları aşağıda takip edebilirsiniz.",
         });
 
         // Open live log panel and start polling
@@ -308,7 +330,8 @@ export default function AgentSettingsPage() {
           } else if (data.data.latestLog?.status === "FAILED") {
             toast({
               title: "❌ Agent Başarısız",
-              description: "Haber oluşturulurken hata oluştu. Detaylar için logları inceleyin.",
+              description:
+                "Haber oluşturulurken hata oluştu. Detaylar için logları inceleyin.",
               variant: "destructive",
             });
           }
@@ -439,7 +462,8 @@ export default function AgentSettingsPage() {
                 : "Agent şu anda çalışmıyor"}
               {workerStatus.lastHeartbeat && (
                 <span className="text-xs block mt-1">
-                  Son heartbeat: {new Date(workerStatus.lastHeartbeat).toLocaleString("tr-TR")}
+                  Son heartbeat:{" "}
+                  {new Date(workerStatus.lastHeartbeat).toLocaleString("tr-TR")}
                 </span>
               )}
             </CardDescription>
@@ -499,14 +523,21 @@ export default function AgentSettingsPage() {
                     </>
                   ) : (
                     <>
-                      {liveLogData.latestLog?.status === "SUCCESS" ? "✅" : liveLogData.latestLog?.status === "FAILED" ? "❌" : "📋"}
+                      {liveLogData.latestLog?.status === "SUCCESS"
+                        ? "✅"
+                        : liveLogData.latestLog?.status === "FAILED"
+                          ? "❌"
+                          : "📋"}
                       Agent Log
                     </>
                   )}
                 </CardTitle>
                 <div className="flex items-center gap-2">
                   {liveLogData.isRunning && (
-                    <Badge variant="default" className="bg-blue-500 animate-pulse">
+                    <Badge
+                      variant="default"
+                      className="bg-blue-500 animate-pulse"
+                    >
                       Çalışıyor
                     </Badge>
                   )}
@@ -528,8 +559,12 @@ export default function AgentSettingsPage() {
               {liveLogData.progress && (
                 <div className="mt-3">
                   <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">{liveLogData.progress.message}</span>
-                    <span className="font-medium">{liveLogData.progress.progress}%</span>
+                    <span className="text-muted-foreground">
+                      {liveLogData.progress.message}
+                    </span>
+                    <span className="font-medium">
+                      {liveLogData.progress.progress}%
+                    </span>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
                     <div
@@ -544,6 +579,10 @@ export default function AgentSettingsPage() {
               <div
                 ref={liveLogRef}
                 className="h-[200px] overflow-y-auto bg-black/30 rounded-lg p-3 font-mono text-xs space-y-1"
+                onWheel={(e) => {
+                  // Prevent parent scroll when scrolling inside log container
+                  e.stopPropagation();
+                }}
               >
                 {liveLogData.logs.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-gray-500">
@@ -563,7 +602,10 @@ export default function AgentSettingsPage() {
                   </div>
                 ) : (
                   liveLogData.logs.map((log, index) => (
-                    <div key={index} className="text-gray-300 flex items-start gap-2">
+                    <div
+                      key={index}
+                      className="text-gray-300 flex items-start gap-2"
+                    >
                       <span className="text-gray-600 shrink-0">
                         {new Date().toLocaleTimeString("tr-TR")}
                       </span>
@@ -576,18 +618,35 @@ export default function AgentSettingsPage() {
                 <div className="mt-3 flex items-center justify-between text-sm">
                   <div className="flex items-center gap-4">
                     <span className="text-muted-foreground">
-                      Toplam: <span className="text-white font-medium">{liveLogData.latestLog.articlesScraped}</span> haber tarandı
+                      Toplam:{" "}
+                      <span className="text-white font-medium">
+                        {liveLogData.latestLog.articlesScraped}
+                      </span>{" "}
+                      haber tarandı
                     </span>
                     <span className="text-muted-foreground">
-                      Oluşturulan: <span className="text-green-400 font-medium">{liveLogData.latestLog.articlesCreated}</span> haber
+                      Oluşturulan:{" "}
+                      <span className="text-green-400 font-medium">
+                        {liveLogData.latestLog.articlesCreated}
+                      </span>{" "}
+                      haber
                     </span>
                     {liveLogData.latestLog.duration && (
                       <span className="text-muted-foreground">
-                        Süre: <span className="text-white font-medium">{Math.round(liveLogData.latestLog.duration / 1000)}s</span>
+                        Süre:{" "}
+                        <span className="text-white font-medium">
+                          {Math.round(liveLogData.latestLog.duration / 1000)}s
+                        </span>
                       </span>
                     )}
                   </div>
-                  <Badge variant={liveLogData.latestLog.status === "SUCCESS" ? "default" : "destructive"}>
+                  <Badge
+                    variant={
+                      liveLogData.latestLog.status === "SUCCESS"
+                        ? "default"
+                        : "destructive"
+                    }
+                  >
                     {liveLogData.latestLog.status}
                   </Badge>
                 </div>
@@ -644,7 +703,10 @@ export default function AgentSettingsPage() {
                   aria-label="Çalışma sıklığı seçin"
                   value={settings.intervalHours}
                   onChange={(e) =>
-                    setSettings((prev) => ({ ...prev, intervalHours: parseFloat(e.target.value) }))
+                    setSettings((prev) => ({
+                      ...prev,
+                      intervalHours: parseFloat(e.target.value),
+                    }))
                   }
                   className="w-full px-3 py-2 border border-border rounded-lg bg-background/50 backdrop-blur-sm text-foreground"
                 >
@@ -662,9 +724,11 @@ export default function AgentSettingsPage() {
                   <option value="24">Günde Bir</option>
                 </select>
                 <p className="text-xs text-muted-foreground">
-                  Agent her {settings.intervalHours < 1
+                  Agent her{" "}
+                  {settings.intervalHours < 1
                     ? `${Math.round(settings.intervalHours * 60)} dakikada`
-                    : `${settings.intervalHours} saatte`} bir çalışacak
+                    : `${settings.intervalHours} saatte`}{" "}
+                  bir çalışacak
                 </p>
               </div>
 
@@ -874,6 +938,135 @@ export default function AgentSettingsPage() {
 
         {/* Live Logs Section */}
         <LiveLogsSection />
+
+        {/* Pipeline Status Section */}
+        {!pipelineLoading && pipelineStats && (
+          <Card className="border-2 border-cyan-500/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Layers className="h-5 w-5 text-cyan-500" />
+                Pipeline Durumu (Real-Time)
+              </CardTitle>
+              <CardDescription>
+                Multi-Agent haber işleme pipeline'ı canlı durumu
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                  <div className="text-sm text-gray-400">Bugün Üretilen</div>
+                  <div className="text-2xl font-bold text-white">
+                    {pipelineStats.totalArticlesToday || 0}
+                  </div>
+                </div>
+                <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                  <div className="text-sm text-gray-400">Başarı Oranı</div>
+                  <div className="text-2xl font-bold text-green-400">
+                    {pipelineStats.successRate?.toFixed(1) || 0}%
+                  </div>
+                </div>
+                <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                  <div className="text-sm text-gray-400">Aktif Kuyruklar</div>
+                  <div className="text-2xl font-bold text-purple-400">
+                    {pipelineStats.agents?.reduce(
+                      (sum: number, a: any) => sum + a.queueCount,
+                      0,
+                    ) || 0}
+                  </div>
+                </div>
+                <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                  <div className="text-sm text-gray-400">Interval</div>
+                  <div className="text-2xl font-bold text-yellow-400">
+                    {pipelineStats.schedule?.interval || 15} dk
+                  </div>
+                </div>
+              </div>
+
+              {/* Agent Pipeline Status */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-gray-400">
+                  Agent Durumları
+                </h4>
+                <div className="grid gap-2">
+                  {pipelineStats.agents?.map((agent: any) => {
+                    const getStatusColor = (status: string) => {
+                      switch (status) {
+                        case "running":
+                          return "bg-blue-500 animate-pulse";
+                        case "success":
+                          return "bg-green-500";
+                        case "error":
+                          return "bg-red-500";
+                        default:
+                          return "bg-gray-400";
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={agent.name}
+                        className="flex items-center justify-between p-2 bg-white/5 rounded-lg border border-white/10"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-2 h-2 rounded-full ${getStatusColor(agent.status)}`}
+                          />
+                          <span className="text-sm text-white">
+                            {agent.displayName}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                          <span>Kuyruk: {agent.queueCount}</span>
+                          <span>İşlenen: {agent.processedCount}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Circuit Breakers */}
+              {pipelineStats.circuits && pipelineStats.circuits.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-gray-400">
+                    Circuit Breaker Durumu
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {pipelineStats.circuits.map((circuit: any) => {
+                      const getCircuitColor = (state: string) => {
+                        switch (state) {
+                          case "CLOSED":
+                            return "bg-green-500/20 text-green-400 border-green-500/30";
+                          case "HALF_OPEN":
+                            return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+                          case "OPEN":
+                            return "bg-red-500/20 text-red-400 border-red-500/30";
+                          default:
+                            return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+                        }
+                      };
+
+                      return (
+                        <div
+                          key={circuit.name}
+                          className={`p-2 rounded-lg border ${getCircuitColor(circuit.state)}`}
+                        >
+                          <div className="text-xs font-medium capitalize">
+                            {circuit.name}
+                          </div>
+                          <div className="text-xs opacity-75">
+                            {circuit.state}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AdminLayout>
   );
@@ -993,7 +1186,7 @@ function LiveLogsSection() {
     const content = logs
       .map(
         (log) =>
-          `[${log.timestamp}] [${log.level.toUpperCase()}]${log.module ? ` [${log.module}]` : ""} ${log.message}`
+          `[${log.timestamp}] [${log.level.toUpperCase()}]${log.module ? ` [${log.module}]` : ""} ${log.message}`,
       )
       .join("\n");
     const blob = new Blob([content], { type: "text/plain" });
@@ -1043,7 +1236,7 @@ function LiveLogsSection() {
                   "gap-1",
                   isConnected
                     ? "border-green-500/50 text-green-400"
-                    : "border-red-500/50 text-red-400"
+                    : "border-red-500/50 text-red-400",
                 )}
               >
                 {isConnected ? (
@@ -1078,11 +1271,15 @@ function LiveLogsSection() {
               <div className="text-xs text-gray-500">Toplam</div>
             </div>
             <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-              <div className="text-lg font-bold text-green-400">{stats.success}</div>
+              <div className="text-lg font-bold text-green-400">
+                {stats.success}
+              </div>
               <div className="text-xs text-gray-500">Başarılı</div>
             </div>
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-              <div className="text-lg font-bold text-red-400">{stats.error}</div>
+              <div className="text-lg font-bold text-red-400">
+                {stats.error}
+              </div>
               <div className="text-xs text-gray-500">Hata</div>
             </div>
           </div>
@@ -1094,7 +1291,9 @@ function LiveLogsSection() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsPaused(!isPaused)}
-                className={cn(isPaused && "border-yellow-500/50 text-yellow-400")}
+                className={cn(
+                  isPaused && "border-yellow-500/50 text-yellow-400",
+                )}
               >
                 {isPaused ? (
                   <>
@@ -1127,7 +1326,9 @@ function LiveLogsSection() {
                   checked={autoScroll}
                   onCheckedChange={setAutoScroll}
                 />
-                <Label htmlFor="auto-scroll-live" className="text-xs">Otomatik Kaydır</Label>
+                <Label htmlFor="auto-scroll-live" className="text-xs">
+                  Otomatik Kaydır
+                </Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch
@@ -1135,19 +1336,29 @@ function LiveLogsSection() {
                   checked={showDebug}
                   onCheckedChange={setShowDebug}
                 />
-                <Label htmlFor="show-debug-live" className="text-xs">Debug</Label>
+                <Label htmlFor="show-debug-live" className="text-xs">
+                  Debug
+                </Label>
               </div>
             </div>
           </div>
 
           {/* Log Viewer */}
-          <div className="h-[400px] overflow-y-auto bg-black/50 rounded-lg border border-gray-800 font-mono text-xs">
+          <div
+            className="h-[400px] overflow-y-auto bg-black/50 rounded-lg border border-gray-800 font-mono text-xs"
+            onWheel={(e) => {
+              // Prevent parent scroll when scrolling inside log container
+              e.stopPropagation();
+            }}
+          >
             {filteredLogs.length === 0 ? (
               <div className="flex items-center justify-center h-full text-gray-500">
                 <div className="text-center">
                   <Info className="h-10 w-10 mx-auto mb-2 opacity-50" />
                   <p>Henüz log yok</p>
-                  <p className="text-xs mt-1">Agent çalıştığında loglar burada görünecek</p>
+                  <p className="text-xs mt-1">
+                    Agent çalıştığında loglar burada görünecek
+                  </p>
                 </div>
               </div>
             ) : (
@@ -1161,17 +1372,26 @@ function LiveLogsSection() {
                       className={cn(
                         "flex items-start gap-2 px-2 py-1 rounded border",
                         config.bg,
-                        config.border
+                        config.border,
                       )}
                     >
-                      <Icon className={cn("h-3 w-3 mt-0.5 shrink-0", config.color)} />
-                      <span className="text-gray-500 shrink-0">{formatTime(log.timestamp)}</span>
+                      <Icon
+                        className={cn("h-3 w-3 mt-0.5 shrink-0", config.color)}
+                      />
+                      <span className="text-gray-500 shrink-0">
+                        {formatTime(log.timestamp)}
+                      </span>
                       {log.module && (
-                        <Badge variant="outline" className="text-[10px] px-1 py-0 shrink-0">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1 py-0 shrink-0"
+                        >
                           {log.module}
                         </Badge>
                       )}
-                      <span className={cn("text-gray-300 break-all", config.color)}>
+                      <span
+                        className={cn("text-gray-300 break-all", config.color)}
+                      >
                         {log.message}
                       </span>
                     </div>
@@ -1186,7 +1406,9 @@ function LiveLogsSection() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => logsEndRef.current?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() =>
+                logsEndRef.current?.scrollIntoView({ behavior: "smooth" })
+              }
               className="w-full gap-2"
             >
               <ArrowDown className="h-4 w-4" />

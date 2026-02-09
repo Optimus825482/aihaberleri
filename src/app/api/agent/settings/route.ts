@@ -63,6 +63,11 @@ export async function GET() {
 
     // Get all categories for selection
     const categories = await db.category.findMany({
+      where: {
+        slug: {
+          not: "teknoloji", // Exclude "teknoloji" category
+        },
+      },
       select: {
         id: true,
         name: true,

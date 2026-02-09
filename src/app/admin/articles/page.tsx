@@ -77,12 +77,6 @@ const MastodonIcon = () => (
   </svg>
 );
 
-const TumblrIcon = () => (
-  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M14.563 24c-5.093 0-7.031-3.756-7.031-6.411V9.747H5.116V6.648c3.63-1.313 4.512-4.596 4.71-6.469C9.84.051 9.941 0 9.999 0h3.517v6.114h4.801v3.633h-4.82v7.47c.016 1.001.375 2.371 2.207 2.371h.09c.631-.02 1.486-.205 1.936-.419l1.156 3.425c-.436.636-2.4 1.374-4.156 1.404h-.217z" />
-  </svg>
-);
-
 interface SocialShare {
   platform: string;
   language: string;
@@ -157,13 +151,6 @@ const SocialShareBadges = ({
       lang: "tr",
     },
     {
-      key: "TUMBLR",
-      label: "T",
-      icon: TumblrIcon,
-      color: "text-indigo-500",
-      lang: "tr",
-    },
-    {
       key: "FACEBOOK_EN",
       label: "FB-EN",
       icon: Facebook,
@@ -182,13 +169,6 @@ const SocialShareBadges = ({
       label: "M-EN",
       icon: MastodonIcon,
       color: "text-purple-500",
-      lang: "en",
-    },
-    {
-      key: "TUMBLR",
-      label: "T-EN",
-      icon: TumblrIcon,
-      color: "text-indigo-500",
       lang: "en",
     },
   ];
@@ -517,7 +497,13 @@ export default function ArticlesPage() {
 
   // Re-evaluate handlers
   const openReEvaluate = (id: string, title: string) => {
-    setReEvaluate({ id, title, note: "", loading: false, regenerateImage: false });
+    setReEvaluate({
+      id,
+      title,
+      note: "",
+      loading: false,
+      regenerateImage: false,
+    });
   };
 
   const cancelReEvaluate = () => {
@@ -537,14 +523,17 @@ export default function ArticlesPage() {
     setReEvaluate((prev) => (prev ? { ...prev, loading: true } : null));
 
     try {
-      const response = await fetch(`/api/admin/articles/${reEvaluate.id}/re-evaluate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          note: reEvaluate.note,
-          regenerateImage: reEvaluate.regenerateImage,
-        }),
-      });
+      const response = await fetch(
+        `/api/admin/articles/${reEvaluate.id}/re-evaluate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            note: reEvaluate.note,
+            regenerateImage: reEvaluate.regenerateImage,
+          }),
+        },
+      );
 
       const data = await response.json();
 
@@ -664,8 +653,22 @@ interface ArticlesPageContentProps {
   deleteArticle: (id: string, title: string) => void;
   refreshImage: (id: string) => Promise<void>;
   shareFacebook: (id: string) => Promise<void>;
-  reEvaluate: { id: string; title: string; note: string; loading: boolean; regenerateImage: boolean } | null;
-  setReEvaluate: React.Dispatch<React.SetStateAction<{ id: string; title: string; note: string; loading: boolean; regenerateImage: boolean } | null>>;
+  reEvaluate: {
+    id: string;
+    title: string;
+    note: string;
+    loading: boolean;
+    regenerateImage: boolean;
+  } | null;
+  setReEvaluate: React.Dispatch<
+    React.SetStateAction<{
+      id: string;
+      title: string;
+      note: string;
+      loading: boolean;
+      regenerateImage: boolean;
+    } | null>
+  >;
   openReEvaluate: (id: string, title: string) => void;
   cancelReEvaluate: () => void;
   confirmReEvaluate: () => Promise<void>;
@@ -797,40 +800,63 @@ function ArticlesPageContent({
             <AlertDialogDescription asChild>
               <div className="space-y-4">
                 <p>
-                  <span className="font-medium">{reEvaluate?.title}</span> başlıklı haber yapay zeka tarafından yeniden değerlendirilecek.
+                  <span className="font-medium">{reEvaluate?.title}</span>{" "}
+                  başlıklı haber yapay zeka tarafından yeniden
+                  değerlendirilecek.
                 </p>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Not (yapay zekaya talimat)</label>
+                  <label className="text-sm font-medium">
+                    Not (yapay zekaya talimat)
+                  </label>
                   <Textarea
                     placeholder="Örn: Haberde 2024 yazıyor ama 2026 olmalı, tarihleri güncelle..."
                     value={reEvaluate?.note || ""}
-                    onChange={(e) => setReEvaluate(prev => prev ? { ...prev, note: e.target.value } : null)}
+                    onChange={(e) =>
+                      setReEvaluate((prev) =>
+                        prev ? { ...prev, note: e.target.value } : null,
+                      )
+                    }
                     className="min-h-[100px]"
                     disabled={reEvaluate?.loading}
                   />
-                  <p className="text-xs text-muted-foreground">Minimum 10 karakter</p>
+                  <p className="text-xs text-muted-foreground">
+                    Minimum 10 karakter
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="regenerateImage"
                     checked={reEvaluate?.regenerateImage || false}
-                    onChange={(e) => setReEvaluate(prev => prev ? { ...prev, regenerateImage: e.target.checked } : null)}
+                    onChange={(e) =>
+                      setReEvaluate((prev) =>
+                        prev
+                          ? { ...prev, regenerateImage: e.target.checked }
+                          : null,
+                      )
+                    }
                     disabled={reEvaluate?.loading}
                     className="h-4 w-4 rounded border-gray-300"
                   />
-                  <label htmlFor="regenerateImage" className="text-sm">Görseli de yeniden oluştur</label>
+                  <label htmlFor="regenerateImage" className="text-sm">
+                    Görseli de yeniden oluştur
+                  </label>
                 </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelReEvaluate} disabled={reEvaluate?.loading}>
+            <AlertDialogCancel
+              onClick={cancelReEvaluate}
+              disabled={reEvaluate?.loading}
+            >
               İptal
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmReEvaluate}
-              disabled={reEvaluate?.loading || (reEvaluate?.note?.length || 0) < 10}
+              disabled={
+                reEvaluate?.loading || (reEvaluate?.note?.length || 0) < 10
+              }
               className="bg-blue-600 text-white hover:bg-blue-700"
             >
               {reEvaluate?.loading ? (
@@ -1225,21 +1251,24 @@ function ArticlesPageContent({
                       <TableCell>
                         {(article.trendScore ?? 0) > 0 ? (
                           <Badge
-                            className={`text-xs font-bold tabular-nums ${(article.trendScore ?? 0) >= 80
+                            className={`text-xs font-bold tabular-nums ${
+                              (article.trendScore ?? 0) >= 80
                                 ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                                 : (article.trendScore ?? 0) >= 60
                                   ? "bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30"
                                   : (article.trendScore ?? 0) >= 40
                                     ? "bg-violet-500/20 text-violet-700 dark:text-violet-300 border-violet-500/30"
                                     : "bg-slate-500/20 text-slate-700 dark:text-slate-300 border-slate-500/30"
-                              }`}
+                            }`}
                             variant="outline"
                           >
                             <TrendingUp className="h-3 w-3 mr-1" />
                             {article.trendScore}
                           </Badge>
                         ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
+                          <span className="text-xs text-muted-foreground">
+                            -
+                          </span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">

@@ -52,7 +52,6 @@ export async function Footer() {
     twitter: "alternate_email",
     bluesky: "cloud",
     mastodon: "diversity_3",
-    tumblr: "rss_feed",
     linkedin: "work",
   };
 
@@ -67,7 +66,9 @@ export async function Footer() {
                 <span className="material-symbols-outlined text-ai-primary text-[28px]">
                   mail
                 </span>
-                <h3 className="text-xl font-bold text-white">Bültenimize Abone Olun</h3>
+                <h3 className="text-xl font-bold text-white">
+                  Bültenimize Abone Olun
+                </h3>
               </div>
               <p className="text-ai-text-secondary text-sm">
                 Haftalık AI haberlerini ve özel içerikleri kaçırmayın
@@ -90,8 +91,9 @@ export async function Footer() {
               <span className="text-xl font-bold text-white">AI Haberleri</span>
             </Link>
             <p className="text-sm text-ai-text-secondary mb-6 leading-relaxed">
-              Türkiye'nin en kapsamlı yapay zeka haber platformu. Güncel AI haberleri,
-              trendler ve analizlerle teknoloji dünyasına bakış açınızı genişletin.
+              Türkiye'nin en kapsamlı yapay zeka haber platformu. Güncel AI
+              haberleri, trendler ve analizlerle teknoloji dünyasına bakış
+              açınızı genişletin.
             </p>
             <div className="flex items-center gap-3 mb-4">
               <PushNotificationButton />
@@ -119,28 +121,34 @@ export async function Footer() {
                     href="https://twitter.com/aihaberleri"
                     target="_blank"
                     rel="noopener noreferrer"
-                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-surface-card text-ai-text-secondary hover:text-ai-primary hover:bg-ai-surface-hover transition-colors"
-                      title="Twitter"
+                    className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-surface-card text-ai-text-secondary hover:text-ai-primary hover:bg-ai-surface-hover transition-colors"
+                    title="Twitter"
                   >
-                      <span className="material-symbols-outlined text-[20px]">alternate_email</span>
-                    </a>
+                    <span className="material-symbols-outlined text-[20px]">
+                      alternate_email
+                    </span>
+                  </a>
                   <a
                     href="https://bsky.app/profile/aihaberleri.bsky.social"
                     target="_blank"
                     rel="noopener noreferrer"
-                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-surface-card text-ai-text-secondary hover:text-ai-primary hover:bg-ai-surface-hover transition-colors"
-                      title="Bluesky"
+                    className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-surface-card text-ai-text-secondary hover:text-ai-primary hover:bg-ai-surface-hover transition-colors"
+                    title="Bluesky"
                   >
-                      <span className="material-symbols-outlined text-[20px]">cloud</span>
-                    </a>
+                    <span className="material-symbols-outlined text-[20px]">
+                      cloud
+                    </span>
+                  </a>
                   <a
                     href="https://mastodon.social/@aihaberleri"
                     target="_blank"
                     rel="noopener noreferrer me"
-                      className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-surface-card text-ai-text-secondary hover:text-ai-primary hover:bg-ai-surface-hover transition-colors"
-                      title="Mastodon"
+                    className="flex items-center justify-center w-10 h-10 rounded-lg bg-ai-surface-card text-ai-text-secondary hover:text-ai-primary hover:bg-ai-surface-hover transition-colors"
+                    title="Mastodon"
                   >
-                      <span className="material-symbols-outlined text-[20px]">diversity_3</span>
+                    <span className="material-symbols-outlined text-[20px]">
+                      diversity_3
+                    </span>
                   </a>
                 </>
               )}
@@ -150,7 +158,9 @@ export async function Footer() {
           {/* Categories */}
           <div>
             <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-ai-primary text-[20px]">category</span>
+              <span className="material-symbols-outlined text-ai-primary text-[20px]">
+                category
+              </span>
               Kategoriler
             </h3>
             <ul className="space-y-2.5">
@@ -175,7 +185,9 @@ export async function Footer() {
           {/* Quick Links */}
           <div>
             <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-ai-primary text-[20px]">link</span>
+              <span className="material-symbols-outlined text-ai-primary text-[20px]">
+                link
+              </span>
               Hızlı Bağlantılar
             </h3>
             <ul className="space-y-2.5">
@@ -206,15 +218,29 @@ export async function Footer() {
           {/* Legal */}
           <div>
             <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-ai-primary text-[20px]">gavel</span>
+              <span className="material-symbols-outlined text-ai-primary text-[20px]">
+                gavel
+              </span>
               Yasal
             </h3>
             <ul className="space-y-2.5">
               {[
-                { href: "/privacy", label: "Gizlilik Politikası", icon: "shield" },
-                { href: "/terms", label: "Hizmet Şartları", icon: "description" },
+                {
+                  href: "/privacy",
+                  label: "Gizlilik Politikası",
+                  icon: "shield",
+                },
+                {
+                  href: "/terms",
+                  label: "Hizmet Şartları",
+                  icon: "description",
+                },
                 { href: "/cookies", label: "Çerez Politikası", icon: "cookie" },
-                { href: "/kvkk", label: "KVKK Aydınlatma", icon: "verified_user" },
+                {
+                  href: "/kvkk",
+                  label: "KVKK Aydınlatma",
+                  icon: "verified_user",
+                },
               ].map((link) => (
                 <li key={link.href}>
                   <Link
@@ -238,7 +264,9 @@ export async function Footer() {
                 href="mailto:info@aihaberleri.org"
                 className="flex items-center gap-2 text-sm text-ai-text-secondary hover:text-ai-primary transition-colors"
               >
-                <span className="material-symbols-outlined text-[18px]">mail</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  mail
+                </span>
                 info@aihaberleri.org
               </a>
             </div>
@@ -254,15 +282,24 @@ export async function Footer() {
               © {currentYear} AI Haberleri. Tüm hakları saklıdır.
             </p>
             <div className="flex items-center gap-4 text-sm text-ai-text-muted">
-              <Link href="/privacy" className="hover:text-ai-primary transition-colors">
+              <Link
+                href="/privacy"
+                className="hover:text-ai-primary transition-colors"
+              >
                 Gizlilik
               </Link>
               <span className="text-ai-surface-border">•</span>
-              <Link href="/terms" className="hover:text-ai-primary transition-colors">
+              <Link
+                href="/terms"
+                className="hover:text-ai-primary transition-colors"
+              >
                 Şartlar
               </Link>
               <span className="text-ai-surface-border">•</span>
-              <Link href="/sitemap.xml" className="hover:text-ai-primary transition-colors">
+              <Link
+                href="/sitemap.xml"
+                className="hover:text-ai-primary transition-colors"
+              >
                 Site Haritası
               </Link>
             </div>

@@ -2,7 +2,7 @@
  * Orchestrator Worker - Multi-Agent News Pipeline
  *
  * ARCHITECTURE (7+1 Agents):
- * ContentCollector → RelevanceFilter → DuplicateDetector → TrendEnricher → 
+ * ContentCollector → RelevanceFilter → DuplicateDetector → TrendEnricher →
  * ContentEnricher → VisualGenerator → SEOOptimizer → DatabasePublisher
  *
  * This worker:
@@ -379,28 +379,6 @@ async function publishArticlesToDatabase(
             }
           } catch (err) {
             logger.error(`Mastodon failed for ${slug}:`, {
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
-        })();
-
-        // Tumblr paylaşımı
-        (async () => {
-          try {
-            const { postToTumblr } = await import("@/lib/social/tumblr");
-            const tumblrResult = await postToTumblr({
-              title: synthesizedContent.tr.title,
-              slug,
-              excerpt: synthesizedContent.tr.excerpt || "",
-              imageUrl: imageUrl,
-              categoryName: categoryRecord.name,
-            });
-
-            if (tumblrResult) {
-              logger.success(`Tumblr: ${slug} paylaşıldı`);
-            }
-          } catch (err) {
-            logger.error(`Tumblr failed for ${slug}:`, {
               error: err instanceof Error ? err.message : String(err),
             });
           }

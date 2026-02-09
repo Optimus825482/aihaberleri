@@ -13,7 +13,6 @@ import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { postToFacebook } from "@/lib/social/facebook";
 import { postToBluesky } from "@/lib/social/bluesky";
 import { postToMastodon } from "@/lib/social/mastodon";
-import { postToTumblr } from "@/lib/social/tumblr";
 
 /**
  * Bugün kaç Google Indexing API isteği yapıldığını hesapla
@@ -522,7 +521,6 @@ export async function POST(request: NextRequest) {
       facebook: { success: number; failed: number };
       bluesky: { success: number; failed: number };
       mastodon?: { success: number; failed: number };
-      tumblr?: { success: number; failed: number };
     } = {
       indexNow: { success: 0, failed: 0 },
       google: { success: 0, failed: 0 },
@@ -608,23 +606,6 @@ export async function POST(request: NextRequest) {
         } catch (error) {
           results.mastodon = results.mastodon || { success: 0, failed: 0 };
           results.mastodon.failed++;
-        }
-      }
-    } else if (action === "resend_tumblr") {
-      for (const article of articles) {
-        try {
-          await postToTumblr({
-            title: article.title,
-            slug: article.slug,
-            excerpt: article.excerpt,
-            imageUrl: article.imageUrl,
-            categoryName: article.category.name,
-          });
-          results.tumblr = results.tumblr || { success: 0, failed: 0 };
-          results.tumblr.success++;
-        } catch (error) {
-          results.tumblr = results.tumblr || { success: 0, failed: 0 };
-          results.tumblr.failed++;
         }
       }
     }

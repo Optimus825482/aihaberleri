@@ -182,7 +182,6 @@ export async function initializeShareRecords(articleId: string): Promise<void> {
     "TWITTER",
     "BLUESKY",
     "MASTODON",
-    "TUMBLR",
   ];
 
   // Languages - TR for Turkish platforms, EN for English platforms

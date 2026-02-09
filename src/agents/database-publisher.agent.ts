@@ -397,41 +397,10 @@ export class DatabasePublisherAgent extends BaseAgent<
             );
           }
 
-          // Post to Tumblr (async - don't block publishing)
-          try {
-            const { postToTumblr } = await import("@/lib/social/tumblr");
-            postToTumblr({
-              title: createdArticle.title,
-              slug: createdArticle.slug,
-              excerpt: article.synthesizedContent.tr.excerpt || "",
-              imageUrl: article.imageUrl,
-              categoryName: category.name,
-            })
-              .then(async (postId) => {
-                if (postId) {
-                  await recordShareSuccess(
-                    createdArticle.id,
-                    "TUMBLR",
-                    "tr",
-                    postId,
-                  );
-                }
-                this.logger.info(`📝 Tumblr post created`);
-              })
-              .catch(async (err) => {
-                await recordShareFailure(
-                  createdArticle.id,
-                  "TUMBLR",
-                  "tr",
-                  err?.message || "Unknown error",
-                );
-                this.logger.warn(`Tumblr post failed: ${err.message}`);
-              });
-          } catch (tumblrError) {
-            this.logger.warn(
-              `Tumblr setup failed: ${(tumblrError as Error).message}`,
-            );
-          }
+          // ✅ Social media sharing completed (Facebook, Bluesky, Mastodon)
+          this.logger.info(
+            `✅ Social media sharing completed for article: ${createdArticle.id}`,
+          );
 
           // ============================================================
           // ENGLISH SOCIAL MEDIA SHARES
@@ -516,43 +485,10 @@ export class DatabasePublisherAgent extends BaseAgent<
               );
             }
 
-            // Post to Tumblr EN (async)
-            try {
-              const { postToTumblr } = await import("@/lib/social/tumblr");
-              postToTumblr({
-                title: enTitle,
-                slug: `en/news/${enSlugFinal}`,
-                excerpt: enExcerpt,
-                imageUrl: article.imageUrl,
-                categoryName: "AI News",
-              })
-                .then(async (postId) => {
-                  if (postId) {
-                    await recordShareSuccess(
-                      createdArticle.id,
-                      "TUMBLR",
-                      "en",
-                      postId,
-                    );
-                    this.logger.info(`📝 Tumblr EN post created`);
-                  } else {
-                    this.logger.info(`📝 Tumblr EN skipped (disabled)`);
-                  }
-                })
-                .catch(async (err) => {
-                  await recordShareFailure(
-                    createdArticle.id,
-                    "TUMBLR",
-                    "en",
-                    err?.message || "Unknown error",
-                  );
-                  this.logger.warn(`Tumblr EN post failed: ${err.message}`);
-                });
-            } catch (tumblrEnError) {
-              this.logger.warn(
-                `Tumblr EN setup failed: ${(tumblrEnError as Error).message}`,
-              );
-            }
+            // ✅ EN social media sharing completed (Facebook, Bluesky, Mastodon)
+            this.logger.info(
+              `✅ EN social media sharing completed for article: ${createdArticle.id}`,
+            );
 
             // Post to Facebook EN (async)
             try {

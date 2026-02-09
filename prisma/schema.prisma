@@ -802,8 +802,6 @@ enum SocialPlatform {
   BLUESKY_EN
   MASTODON
   MASTODON_EN
-  TUMBLR
-  TUMBLR_EN
 }
 
 enum ShareStatus {

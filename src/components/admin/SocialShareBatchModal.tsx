@@ -33,8 +33,6 @@ const platformConfig: Record<
   BLUESKY_EN: { icon: "🦋", color: "bg-sky-400", label: "Bluesky EN" },
   MASTODON: { icon: "🐘", color: "bg-purple-600", label: "Mastodon TR" },
   MASTODON_EN: { icon: "🐘", color: "bg-purple-500", label: "Mastodon EN" },
-  TUMBLR: { icon: "📝", color: "bg-indigo-600", label: "Tumblr TR" },
-  TUMBLR_EN: { icon: "📝", color: "bg-indigo-500", label: "Tumblr EN" },
 };
 
 interface SocialShareBatchModalProps {
@@ -63,8 +61,6 @@ export function SocialShareBatchModal({
     "BLUESKY_EN",
     "MASTODON",
     "MASTODON_EN",
-    "TUMBLR",
-    "TUMBLR_EN",
   ]);
   const [batchSize, setBatchSize] = useState(50);
   const [intervalSeconds, setIntervalSeconds] = useState(10);
