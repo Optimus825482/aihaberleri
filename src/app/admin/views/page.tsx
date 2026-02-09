@@ -94,6 +94,20 @@ interface RealtimeDataPoint {
     users: number;
 }
 
+interface LocationBreakdown {
+    country: string;
+    countryCode: string;
+    count: number;
+    cities: string[];
+}
+
+interface GeoEvent {
+    city: string;
+    country: string;
+    countryCode: string;
+    time: string;
+}
+
 interface ViewAnalytics {
   summary: ViewSummary;
   topArticlesAllTime: TopArticle[];
@@ -103,6 +117,8 @@ interface ViewAnalytics {
   categoryData: CategoryData[];
   recentViews: RecentView[];
     realtimeData: RealtimeDataPoint[];
+    locationBreakdown?: LocationBreakdown[];
+    recentGeoEvents?: GeoEvent[];
 }
 
 // Country flag emoji helper
@@ -646,6 +662,112 @@ export default function ViewsPage() {
             </div>
           </div>
         </div>
+
+              {/* Live GEO Location Map - Anlık Konum Grafiği */}
+              {data.locationBreakdown && data.locationBreakdown.length > 0 && (
+                  <div className="rounded-xl border border-cyan-500/30 bg-gradient-to-br from-cyan-500/10 to-blue-600/5 p-6">
+                      <div className="mb-4 flex items-center justify-between">
+                          <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
+                              <Globe className="h-5 w-5 text-cyan-400" />
+                              Anlık Konum Dağılımı
+                              <span className="ml-2 rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-400">
+                                  🔴 CANLI
+                              </span>
+                          </h3>
+                          <span className="text-xs text-gray-400">Son 5 dakika</span>
+                      </div>
+
+                      <div className="grid gap-6 lg:grid-cols-2">
+                          {/* Country Bar Chart */}
+                          <div className="h-64">
+                              <ResponsiveContainer width="100%" height="100%">
+                                  <BarChart
+                                      data={data.locationBreakdown}
+                                      layout="vertical"
+                                      margin={{ left: 0, right: 20 }}
+                                  >
+                                      <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+                                      <XAxis type="number" stroke="#9ca3af" fontSize={12} />
+                                      <YAxis
+                                          dataKey="country"
+                                          type="category"
+                                          stroke="#9ca3af"
+                                          fontSize={11}
+                                          width={100}
+                                          tickFormatter={(value) => {
+                                              const item = data.locationBreakdown?.find((l) => l.country === value);
+                                              return `${getCountryFlag(item?.countryCode)} ${value.substring(0, 12)}`;
+                                          }}
+                                      />
+                                      <Tooltip
+                                          contentStyle={{
+                                              backgroundColor: "#1f2937",
+                                              border: "1px solid #374151",
+                                              borderRadius: "8px",
+                                          }}
+                                          labelStyle={{ color: "#fff" }}
+                                          formatter={(value: number) => [`${value} kullanıcı`, "Aktif"]}
+                                      />
+                                      <Bar dataKey="count" fill="#06b6d4" radius={[0, 4, 4, 0]}>
+                                          {data.locationBreakdown.map((entry, index) => (
+                                              <Cell
+                                                  key={`cell-${index}`}
+                                                  fill={index === 0 ? "#22d3ee" : index === 1 ? "#06b6d4" : "#0891b2"}
+                                              />
+                                          ))}
+                                      </Bar>
+                                  </BarChart>
+                              </ResponsiveContainer>
+                          </div>
+
+                          {/* Recent GEO Events Feed */}
+                          <div className="max-h-64 space-y-2 overflow-y-auto">
+                              <h4 className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-300">
+                                  <MapPin className="h-4 w-4 text-cyan-400" />
+                                  Son Konum Tespitleri
+                              </h4>
+                              {data.recentGeoEvents?.slice(0, 10).map((event, idx) => (
+                                  <div
+                                      key={idx}
+                                      className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-sm"
+                                  >
+                                      <div className="flex items-center gap-2">
+                                          <span className="text-lg">{getCountryFlag(event.countryCode)}</span>
+                                          <div>
+                                              <span className="text-white">{event.city}</span>
+                                              <span className="text-gray-500">, {event.country}</span>
+                                          </div>
+                                      </div>
+                                      <span className="text-xs text-gray-500">
+                                          {formatTime(event.time)}
+                                      </span>
+                                  </div>
+                              ))}
+                              {(!data.recentGeoEvents || data.recentGeoEvents.length === 0) && (
+                                  <div className="py-4 text-center text-sm text-gray-500">
+                                      Henüz konum verisi yok
+                                  </div>
+                              )}
+                          </div>
+                      </div>
+
+                      {/* Quick Stats */}
+                      <div className="mt-4 flex flex-wrap gap-4 border-t border-white/10 pt-4">
+                          {data.locationBreakdown.slice(0, 5).map((loc, idx) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm">
+                                  <span className="text-lg">{getCountryFlag(loc.countryCode)}</span>
+                                  <span className="text-white">{loc.count}</span>
+                                  <span className="text-gray-500">{loc.country}</span>
+                                  {loc.cities.length > 0 && (
+                                      <span className="text-xs text-gray-600">
+                                          ({loc.cities.slice(0, 2).join(", ")})
+                                      </span>
+                                  )}
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+              )}
 
               {/* Recent Views with Location */}
         <div className="rounded-xl border border-white/10 bg-white/5 p-6">

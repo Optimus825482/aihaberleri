@@ -227,7 +227,7 @@ export async function GET() {
           city: v.city,
           region: v.region,
         },
-      ])
+      ]),
     );
 
     const recentViewsWithArticles = recentViews.map((view) => {
@@ -235,7 +235,7 @@ export async function GET() {
       // Try to extract IP from sessionId (format: ip_useragent_hash)
       const ipPart = view.sessionId.split("_")[0];
       const location = ipLocationMap.get(ipPart) || null;
-      
+
       return {
         ...view,
         articleTitle: article?.title || "Unknown",
@@ -271,6 +271,67 @@ export async function GET() {
       users: Number(item.count),
     }));
 
+    // 15. Live location breakdown (last 5 minutes active users by country/city)
+    const liveLocations = await db.visitor.findMany({
+      where: {
+        lastActivity: { gte: last5Minutes },
+        country: { not: null },
+      },
+      select: {
+        country: true,
+        countryCode: true,
+        city: true,
+        ipAddress: true,
+        lastActivity: true,
+      },
+      orderBy: { lastActivity: "desc" },
+    });
+
+    // Group by country
+    const countryGroups = liveLocations.reduce(
+      (acc, visitor) => {
+        const key = visitor.country || "Unknown";
+        if (!acc[key]) {
+          acc[key] = {
+            country: key,
+            countryCode: visitor.countryCode || "",
+            count: 0,
+            cities: new Set<string>(),
+          };
+        }
+        acc[key].count++;
+        if (visitor.city) acc[key].cities.add(visitor.city);
+        return acc;
+      },
+      {} as Record<
+        string,
+        {
+          country: string;
+          countryCode: string;
+          count: number;
+          cities: Set<string>;
+        }
+      >,
+    );
+
+    const locationBreakdown = Object.values(countryGroups)
+      .map((g) => ({
+        country: g.country,
+        countryCode: g.countryCode,
+        count: g.count,
+        cities: Array.from(g.cities).slice(0, 3), // Top 3 cities
+      }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10); // Top 10 countries
+
+    // Recent GEO events (last 20 location lookups)
+    const recentGeoEvents = liveLocations.slice(0, 20).map((v) => ({
+      city: v.city || "Unknown",
+      country: v.country || "Unknown",
+      countryCode: v.countryCode || "",
+      time: v.lastActivity,
+    }));
+
     // Calculate change percentages
     const viewChangePercent =
       yesterdayViews > 0
@@ -297,6 +358,8 @@ export async function GET() {
       categoryData,
       recentViews: recentViewsWithArticles,
       realtimeData, // Active users timeline
+      locationBreakdown, // Country breakdown
+      recentGeoEvents, // Recent GEO lookups
     });
   } catch (error) {
     console.error("View analytics error:", error);

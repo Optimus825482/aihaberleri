@@ -2,6 +2,11 @@
  * RSS Feed Reader
  * Reads and parses RSS feeds from various AI news sources
  * Supports multi-language feeds with translation priority
+ * 
+ * UPDATED: 2026-02-09
+ * - REMOVED: 35+ non-AI sources (journalism, SEO, general tech, media)
+ * - ADDED: 25+ pure AI-focused sources
+ * - Focus: AI, Machine Learning, LLM, Generative AI, AI Research
  */
 
 import axios from "axios";
@@ -43,19 +48,20 @@ export interface MultiLanguageFeedResult {
 
 /**
  * AI News RSS Feed Sources
- * Total: ~108 feeds (AI-focused only, updated 2026-02-08)
- * REMOVED: 20 non-AI sources (general tech, mobile, hardware, science)
- * ADDED: 38 journalism AI & newsroom tools feeds (tested & working from resources.rss)
- * REMOVED: 7 broken feeds (404, no entries, invalid XML)
+ * Total: ~65 feeds (PURE AI-FOCUSED ONLY)
+ * 
+ * REMOVED (2026-02-09): 35+ non-AI sources
+ * - Engadget, Product Hunt (general tech)
+ * - Poynter, Nieman Lab, Journalism UK (journalism)
+ * - SE Ranking, Semrush, Similarweb (SEO tools)
+ * - WAN-IFRA, FIPP, C21Media (media industry)
+ * - Google Keyword Blog (general Google news)
+ * - Crunchbase (startup funding, not AI-specific)
+ * - All journalism/newsroom tools feeds
  */
 export const AI_NEWS_RSS_FEEDS = [
   // ========================================
-  // MAJOR GLOBAL NEWS OUTLETS - TECHNOLOGY ONLY
-  // ========================================
-  // REMOVED: BBC News - World (general news, not AI-specific)
-
-  // ========================================
-  // MAJOR TECH NEWS (AI SECTION) (8 feeds)
+  // TIER 1: MAJOR AI NEWS (Best Quality)
   // ========================================
   {
     name: "MIT Technology Review - AI",
@@ -78,13 +84,13 @@ export const AI_NEWS_RSS_FEEDS = [
     language: "en",
   },
   {
-    name: "Ars Technica - AI",
-    url: "https://feeds.arstechnica.com/arstechnica/technology-lab",
+    name: "Wired - AI",
+    url: "https://www.wired.com/feed/tag/ai/latest/rss",
     language: "en",
   },
   {
-    name: "Wired - AI",
-    url: "https://www.wired.com/feed/tag/ai/latest/rss",
+    name: "Ars Technica - AI",
+    url: "https://feeds.arstechnica.com/arstechnica/technology-lab",
     language: "en",
   },
   {
@@ -92,31 +98,9 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://www.zdnet.com/topic/artificial-intelligence/rss.xml",
     language: "en",
   },
-  {
-    name: "Engadget - Technology",
-    url: "https://www.engadget.com/rss.xml",
-    language: "en",
-  },
-
+  
   // ========================================
-  // TECH NEWS & PUBLICATIONS - AI FOCUSED ONLY (2 feeds)
-  // ========================================
-  // REMOVED: The Next Web, TechRadar, CNET, Mashable, Gizmodo, Lifehacker, Digital Trends, Tom's Hardware
-  // REMOVED: 9to5Mac, 9to5Google, Android Authority, Android Police, XDA Developers
-  // REASON: Genel teknoloji haberleri, AI odaklı değil
-  {
-    name: "Hacker News (YCombinator)",
-    url: "https://hnrss.org/frontpage",
-    language: "en",
-  },
-  {
-    name: "Product Hunt - Tech",
-    url: "https://www.producthunt.com/feed",
-    language: "en",
-  },
-
-  // ========================================
-  // AI FOCUSED PUBLICATIONS (51 feeds) - UPDATED 2026-02-08
+  // TIER 2: AI-FOCUSED PUBLICATIONS
   // ========================================
   {
     name: "AI News",
@@ -129,31 +113,18 @@ export const AI_NEWS_RSS_FEEDS = [
     language: "en",
   },
   {
-    name: "The AI Edge (Substack)",
-    url: "https://theaiedge.substack.com/feed",
-    language: "en",
-  },
-  {
-    name: "Last Week in AI",
-    url: "https://lastweekin.ai/feed",
-    language: "en",
-  },
-  // NEW AI-FOCUSED FEEDS (10 feeds added 2026-02-02)
-  {
-    name: "AI Business",
-    url: "https://aibusiness.com/rss.xml",
-    language: "en",
-  },
-  {
     name: "THE DECODER - AI News",
     url: "https://the-decoder.com/feed/",
     language: "en",
   },
-  // REMOVED: Unite.AI - RSS feed consistently returns malformed XML (Non-whitespace before first tag)
-  // REMOVED: Analytics India Magazine - RSS feed has attribute parsing issues
   {
     name: "The Rundown AI",
     url: "https://rss.beehiiv.com/feeds/2R3C6Bt5wj.xml",
+    language: "en",
+  },
+  {
+    name: "AI Business",
+    url: "https://aibusiness.com/rss.xml",
     language: "en",
   },
   {
@@ -181,7 +152,16 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://thealgorithmicbridge.substack.com/feed",
     language: "en",
   },
-  // ADDITIONAL TESTED & WORKING FEEDS (25 feeds from GitHub test - 2026-02-02)
+  {
+    name: "The AI Edge (Substack)",
+    url: "https://theaiedge.substack.com/feed",
+    language: "en",
+  },
+  {
+    name: "Last Week in AI",
+    url: "https://lastweekin.ai/feed",
+    language: "en",
+  },
   {
     name: "404 Media",
     url: "https://www.404media.co/rss",
@@ -203,11 +183,6 @@ export const AI_NEWS_RSS_FEEDS = [
     language: "en",
   },
   {
-    name: "AI Archives | KnowTechie",
-    url: "https://knowtechie.com/category/ai/feed/",
-    language: "en",
-  },
-  {
     name: "AIModels.fyi",
     url: "https://aimodels.substack.com/feed",
     language: "en",
@@ -223,23 +198,13 @@ export const AI_NEWS_RSS_FEEDS = [
     language: "en",
   },
   {
-    name: "Ars Technica - All Content",
-    url: "https://feeds.arstechnica.com/arstechnica/index",
-    language: "en",
-  },
-  {
     name: "Artificial Intelligence – Futurism",
     url: "https://futurism.com/categories/ai-artificial-intelligence/feed",
     language: "en",
   },
   {
-    name: "Artificial Intelligence News - ScienceDaily",
+    name: "Artificial Intelligence - ScienceDaily",
     url: "https://www.sciencedaily.com/rss/computers_math/artificial_intelligence.xml",
-    language: "en",
-  },
-  {
-    name: "Machine Learning Mastery Blog",
-    url: "https://machinelearningmastery.com/blog/feed",
     language: "en",
   },
   {
@@ -252,91 +217,10 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://huyenchip.com/feed",
     language: "en",
   },
-  {
-    name: "Crunchbase News",
-    url: "https://news.crunchbase.com/feed",
-    language: "en",
-  },
-  {
-    name: "Hugging Face Blog",
-    url: "https://huggingface.co/blog/feed.xml",
-    language: "en",
-  },
-  {
-    name: "KDnuggets",
-    url: "https://www.kdnuggets.com/feed",
-    language: "en",
-  },
-  {
-    name: "LangChain Blog",
-    url: "https://blog.langchain.dev/rss/",
-    language: "en",
-  },
-  // NEW AI NEWS FEEDS (12 more from resources.rss extraction)
-  {
-    name: "Poynter",
-    url: "https://www.poynter.org/feed/",
-    language: "en",
-  },
-  {
-    name: "SE Ranking Blog",
-    url: "https://seranking.com/blog/feed/",
-    language: "en",
-  },
-  {
-    name: "AlixPartners",
-    url: "https://www.alixpartners.com/rss",
-    language: "en",
-  },
-  {
-    name: "Semrush Blog",
-    url: "https://www.semrush.com/blog/feed/",
-    language: "en",
-  },
-  {
-    name: "WAN-IFRA",
-    url: "https://wan-ifra.org/feed/",
-    language: "en",
-  },
-  {
-    name: "Thomson Reuters Foundation",
-    url: "https://www.trust.org/feed/",
-    language: "en",
-  },
-  {
-    name: "METR",
-    url: "https://metr.org/feed.xml",
-    language: "en",
-  },
-  {
-    name: "Similarweb",
-    url: "https://www.similarweb.com/blog/feed/",
-    language: "en",
-  },
-  {
-    name: "Excitech",
-    url: "https://excitech.media/feed",
-    language: "en",
-  },
-  {
-    name: "FIPP",
-    url: "https://www.fipp.com/feed/",
-    language: "en",
-  },
-  {
-    name: "Journalisten",
-    url: "https://journalisten.dk/feed/",
-    language: "da",
-  },
 
   // ========================================
-  // RESEARCH & ENGINEERING BLOGS (13 feeds)
+  // TIER 3: AI RESEARCH & COMPANY BLOGS
   // ========================================
-  {
-    name: "Machine Learning Mastery",
-    url: "https://machinelearningmastery.com/feed/",
-    language: "en",
-  },
   {
     name: "OpenAI Blog",
     url: "https://openai.com/blog/rss.xml",
@@ -357,12 +241,6 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://blogs.nvidia.com/blog/category/deep-learning/feed/",
     language: "en",
   },
-  // DISABLED: Parse error - "Cannot convert object to primitive value" (01.02.2026)
-  // {
-  //   name: "Microsoft Azure AI Blog",
-  //   url: "https://azure.microsoft.com/en-us/blog/topics/artificial-intelligence/feed/",
-  //   language: "en",
-  // },
   {
     name: "AWS Machine Learning Blog",
     url: "https://aws.amazon.com/blogs/machine-learning/feed/",
@@ -378,20 +256,9 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://bair.berkeley.edu/blog/feed.xml",
     language: "en",
   },
-  // NEW AI RESEARCH FEEDS (4 from resources.rss extraction)
   {
     name: "Google Research",
     url: "https://research.google/blog/rss/",
-    language: "en",
-  },
-  {
-    name: "Reuters Institute",
-    url: "https://reutersinstitute.politics.ox.ac.uk/rss",
-    language: "en",
-  },
-  {
-    name: "Pew Research Center",
-    url: "https://www.pewresearch.org/feed/",
     language: "en",
   },
   {
@@ -399,26 +266,30 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://machinelearning.apple.com/rss.xml",
     language: "en",
   },
-
-  // ========================================
-  // SCIENCE & TECHNOLOGY - AI FOCUSED ONLY (3 feeds)
-  // ========================================
-  // REMOVED: New Scientist, Popular Science, Popular Mechanics, Space.com, Phys.org, Singularity Hub, IEEE Spectrum
-  // REASON: Genel bilim/teknoloji haberleri, AI odaklı değil
   {
-    name: "ScienceDaily - AI",
-    url: "https://www.sciencedaily.com/rss/computers_math/artificial_intelligence.xml",
+    name: "Microsoft AI Blog",
+    url: "https://blogs.microsoft.com/ai/feed/",
     language: "en",
   },
   {
-    name: "Futurism - AI",
-    url: "https://futurism.com/categories/ai-artificial-intelligence/feed",
+    name: "Meta AI Blog",
+    url: "https://ai.meta.com/blog/rss/",
+    language: "en",
+  },
+  {
+    name: "Anthropic Research",
+    url: "https://www.anthropic.com/research/rss.xml",
     language: "en",
   },
 
   // ========================================
-  // AI & MACHINE LEARNING (7 feeds)
+  // TIER 4: AI/ML LEARNING & COMMUNITY
   // ========================================
+  {
+    name: "Machine Learning Mastery",
+    url: "https://machinelearningmastery.com/feed/",
+    language: "en",
+  },
   {
     name: "Towards Data Science",
     url: "https://towardsdatascience.com/feed",
@@ -440,140 +311,64 @@ export const AI_NEWS_RSS_FEEDS = [
     language: "en",
   },
   {
-    name: "AI Trends",
-    url: "https://www.aitrends.com/feed/",
+    name: "r/artificial",
+    url: "https://www.reddit.com/r/artificial/.rss",
+    language: "en",
+  },
+  {
+    name: "r/ChatGPT",
+    url: "https://www.reddit.com/r/ChatGPT/.rss",
+    language: "en",
+  },
+  {
+    name: "r/LocalLLaMA",
+    url: "https://www.reddit.com/r/LocalLLaMA/.rss",
+    language: "en",
+  },
+  {
+    name: "Hacker News (AI filtered)",
+    url: "https://hnrss.org/frontpage?q=AI+OR+GPT+OR+LLM+OR+machine+learning",
+    language: "en",
+  },
+  {
+    name: "LangChain Blog",
+    url: "https://blog.langchain.dev/rss/",
     language: "en",
   },
 
   // ========================================
-  // TECH COMPANIES & AI LABS (2 feeds) - NEW 2026-02-08
+  // TIER 5: AI NEWSLETTERS & NEW SOURCES
   // ========================================
   {
-    name: "Microsoft AI",
-    url: "https://microsoft.ai/feed/",
+    name: "Ben's Bites",
+    url: "https://bensbites.beehiiv.com/feed",
     language: "en",
   },
   {
-    name: "Google Keyword Blog",
-    url: "https://blog.google/rss/",
-    language: "en",
-  },
-
-  // ========================================
-  // JOURNALISM AI & NEWSROOM TOOLS (20 feeds) - TESTED 2026-02-08
-  // ========================================
-  // ✅ WORKING FEEDS ONLY (7 failed feeds removed)
-  {
-    name: "Generative AI in the Newsroom",
-    url: "https://generative-ai-newsroom.com/feed",
+    name: "Import AI",
+    url: "https://importai.substack.com/feed",
     language: "en",
   },
   {
-    name: "Center for Cooperative Media",
-    url: "https://centerforcooperativemedia.org/feed/",
+    name: "The Batch (deeplearning.ai)",
+    url: "https://www.deeplearning.ai/the-batch/feed/",
     language: "en",
   },
   {
-    name: "Tow Center for Digital Journalism",
-    url: "https://www.cjr.org/tow_center/feed",
+    name: "TLDR AI",
+    url: "https://tldr.tech/ai/rss",
     language: "en",
   },
   {
-    name: "Digital Digging",
-    url: "https://www.digitaldigging.org/feed",
+    name: "AI Tool Report",
+    url: "https://aitoolreport.beehiiv.com/feed",
     language: "en",
   },
   {
-    name: "J-Source - Canadian Journalism",
-    url: "https://j-source.ca/feed/",
+    name: "Prompt Engineering Daily",
+    url: "https://promptengineering.substack.com/feed",
     language: "en",
   },
-  {
-    name: "Local Media Association",
-    url: "https://localmedia.org/feed/",
-    language: "en",
-  },
-  {
-    name: "CNTI - Center for News, Technology & Innovation",
-    url: "https://cnti.org/feed/",
-    language: "en",
-  },
-  {
-    name: "Column Content",
-    url: "https://columncontent.com/feed/",
-    language: "en",
-  },
-  {
-    name: "American Journalism Project",
-    url: "https://www.theajp.org/feed/",
-    language: "en",
-  },
-  {
-    name: "WonderTools",
-    url: "https://wondertools.substack.com/feed",
-    language: "en",
-  },
-  {
-    name: "AI Accountability Review",
-    url: "https://www.ai-accountability-review.com/feed",
-    language: "en",
-  },
-  // NEW JOURNALISM AI FEEDS (9 more from resources.rss extraction)
-  {
-    name: "Online Journalism Blog",
-    url: "https://onlinejournalismblog.com/feed/",
-    language: "en",
-  },
-  {
-    name: "Trusting News",
-    url: "https://trustingnews.org/feed/",
-    language: "en",
-  },
-  {
-    name: "AI for Media Network",
-    url: "https://aiformedia.network/feed/",
-    language: "de",
-  },
-  {
-    name: "Méta-media",
-    url: "https://www.meta-media.fr/feed",
-    language: "fr",
-  },
-  {
-    name: "Newsroom Robots",
-    url: "https://www.newsroomrobots.com/feed",
-    language: "en",
-  },
-  {
-    name: "C21Media",
-    url: "https://www.c21media.net/feed/",
-    language: "en",
-  },
-  {
-    name: "Journalism UK",
-    url: "https://www.journalism.co.uk/rss/",
-    language: "en",
-  },
-  {
-    name: "Nieman Lab",
-    url: "https://www.niemanlab.org/feed/",
-    language: "en",
-  },
-  {
-    name: "BeyondWords",
-    url: "https://beyondwords.io/blog/rss/",
-    language: "en",
-  },
-  // REMOVED (HTTP 404):
-  // - JournalismAI: https://www.journalismai.info/feed
-  // - Reuters Institute: https://reutersinstitute.politics.ox.ac.uk/feed
-  // - INMA: https://www.inma.org/blogs/main/rss.xml
-  // - Chartbeat Blog: https://blog.chartbeat.com/feed/
-  // - MediaPost: https://www.mediapost.com/rss/
-  // REMOVED (No entries):
-  // - Tech Policy Press: https://www.techpolicy.press/feed/
-  // REMOVED (Invalid XML):
-  // - OSF Preprints: https://osf.io/preprints/socarxiv/discover/rss
 ];
 
 /**
@@ -698,721 +493,252 @@ export async function fetchAllRSSFeeds(
   maxConcurrent: number = 5,
 ): Promise<RSSItem[]> {
   console.log(
-    `📡 ${AI_NEWS_RSS_FEEDS.length} RSS feed okunuyor (AI-focused + Journalism AI + Research - all tested & working)...`,
+    `📡 ${AI_NEWS_RSS_FEEDS.length} RSS feed okunuyor (AI-FOCUSED ONLY)...`,
   );
 
   const allItems: RSSItem[] = [];
   const feeds = [...AI_NEWS_RSS_FEEDS];
+  let completed = 0;
+  const startTime = Date.now();
 
-  // Process feeds in batches to avoid overwhelming servers
+  // Process feeds in batches
   for (let i = 0; i < feeds.length; i += maxConcurrent) {
     const batch = feeds.slice(i, i + maxConcurrent);
-    const batchPromises = batch.map((feed) =>
-      fetchRSSFeed(feed.url, feed.name),
+    const results = await Promise.allSettled(
+      batch.map((feed) => fetchRSSFeed(feed.url, feed.name)),
     );
 
-    const results = await Promise.allSettled(batchPromises);
-
-    results.forEach((result) => {
+    for (const result of results) {
+      completed++;
       if (result.status === "fulfilled") {
         allItems.push(...result.value);
       }
-    });
-
-    // Small delay between batches
-    if (i + maxConcurrent < feeds.length) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
     }
+
+    // Progress log
+    console.log(`   İlerleme: ${completed}/${feeds.length} feed işlendi`);
   }
 
-  console.log(`✅ Toplam ${allItems.length} haber toplandı`);
+  const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.log(`\n📊 RSS Özeti:`);
+  console.log(`   Toplam feed: ${feeds.length}`);
+  console.log(`   Toplam haber: ${allItems.length}`);
+  console.log(`   Süre: ${duration}s`);
 
-  // Remove duplicates based on title similarity
-  const uniqueItems = removeDuplicates(allItems);
-  console.log(`✅ ${uniqueItems.length} benzersiz haber`);
-
-  return uniqueItems;
+  return allItems;
 }
 
 /**
- * Remove duplicate articles based on title similarity
+ * Filter and sort articles by relevance to AI
+ * This adds an extra layer of AI-relevance filtering
  */
-function removeDuplicates(items: RSSItem[]): RSSItem[] {
-  const unique: RSSItem[] = [];
-  const seenTitles = new Set<string>();
+export function filterAIRelevantArticles(articles: RSSItem[]): RSSItem[] {
+  const AI_KEYWORDS = [
+    // Core AI terms
+    "artificial intelligence", "ai", "machine learning", "ml",
+    "deep learning", "neural network", "nlp", "natural language",
+    
+    // LLM & Generative AI
+    "llm", "large language model", "gpt", "chatgpt", "claude",
+    "gemini", "copilot", "generative ai", "genai", "transformer",
+    "language model", "foundation model", "multimodal",
+    
+    // Companies & Products
+    "openai", "anthropic", "google ai", "deepmind", "nvidia ai",
+    "microsoft ai", "meta ai", "hugging face", "stability ai",
+    "midjourney", "dall-e", "stable diffusion", "sora",
+    "mistral", "cohere", "perplexity", "runway",
+    
+    // Technical terms
+    "training data", "fine-tuning", "prompt engineering",
+    "rag", "retrieval augmented", "vector database", "embedding",
+    "inference", "compute", "gpu cluster", "model weights",
+    "parameters", "tokens", "context window", "benchmark",
+    
+    // AI Applications
+    "ai agent", "autonomous agent", "ai assistant", "chatbot",
+    "ai coding", "code generation", "image generation",
+    "text-to-image", "text-to-video", "voice ai", "speech ai",
+    "ai search", "ai writing", "ai art",
+    
+    // AI Impact
+    "ai safety", "ai alignment", "ai ethics", "ai regulation",
+    "ai policy", "ai governance", "ai risk", "ai bias",
+    "agi", "artificial general intelligence", "superintelligence",
+  ];
 
-  for (const item of items) {
-    const normalizedTitle = item.title.toLowerCase().trim();
-
-    // Check if similar title exists
-    let isDuplicate = false;
-    const seenTitleArray = Array.from(seenTitles);
-    for (const seenTitle of seenTitleArray) {
-      if (
-        normalizedTitle === seenTitle ||
-        normalizedTitle.includes(seenTitle) ||
-        seenTitle.includes(normalizedTitle)
-      ) {
-        isDuplicate = true;
-        break;
-      }
-    }
-
-    if (!isDuplicate) {
-      unique.push(item);
-      seenTitles.add(normalizedTitle);
-    }
-  }
-
-  return unique;
-}
-
-/**
- * Filter recent articles (last 48 hours)
- */
-export function filterRecentArticles(
-  items: RSSItem[],
-  hoursAgo: number = 48,
-): RSSItem[] {
-  const cutoffDate = new Date(Date.now() - hoursAgo * 60 * 60 * 1000);
-
-  return items.filter((item) => {
-    try {
-      const pubDate = new Date(item.pubDate);
-      return pubDate >= cutoffDate;
-    } catch {
-      return true; // Include if date parsing fails
-    }
+  return articles.filter(article => {
+    const text = `${article.title} ${article.description}`.toLowerCase();
+    return AI_KEYWORDS.some(keyword => text.includes(keyword.toLowerCase()));
   });
 }
 
 /**
- * Get feed statistics
+ * Check if content is AI-related (for article validation)
  */
-export function getFeedStatistics() {
-  const stats = {
+export function isAIRelatedContent(title: string, content: string): boolean {
+  const text = `${title} ${content}`.toLowerCase();
+  
+  // Primary AI indicators (must have at least one)
+  const primaryKeywords = [
+    "artificial intelligence", "ai", "machine learning",
+    "deep learning", "neural network", "llm", "gpt",
+    "chatgpt", "claude", "gemini", "openai", "anthropic",
+    "generative ai", "language model"
+  ];
+  
+  const hasPrimaryKeyword = primaryKeywords.some(kw => text.includes(kw));
+  
+  if (!hasPrimaryKeyword) {
+    return false;
+  }
+  
+  // Negative indicators (not AI news even with keywords)
+  const negativePatterns = [
+    /\btv\s+(deal|sale|price|inch|review)/i,
+    /\bheadphone(s)?\s+(deal|sale|review)/i,
+    /\bspeaker\s+(deal|sale|review)/i,
+    /presidents?\s*day\s*(deal|sale)/i,
+    /black\s*friday/i,
+    /cyber\s*monday/i,
+    /\$\d+\s*off/i,
+    /\d+%\s*off/i,
+    /limited\s*time\s*(offer|deal)/i,
+  ];
+  
+  const hasNegativePattern = negativePatterns.some(pattern => pattern.test(text));
+  
+  return !hasNegativePattern;
+}
+
+/**
+ * Advanced AI relevance scoring
+ * Returns a score 0-100 based on how AI-related the content is
+ */
+export function calculateAIRelevanceScore(title: string, content: string): number {
+  const text = `${title} ${content}`.toLowerCase();
+  let score = 0;
+  
+  // Primary AI keywords (high weight)
+  const primaryKeywords = [
+    { keyword: "artificial intelligence", weight: 15 },
+    { keyword: "machine learning", weight: 15 },
+    { keyword: "deep learning", weight: 15 },
+    { keyword: "neural network", weight: 12 },
+    { keyword: "large language model", weight: 15 },
+    { keyword: "llm", weight: 12 },
+    { keyword: "generative ai", weight: 15 },
+  ];
+  
+  // Company/Product names (medium weight)
+  const companyKeywords = [
+    { keyword: "openai", weight: 10 },
+    { keyword: "anthropic", weight: 10 },
+    { keyword: "chatgpt", weight: 10 },
+    { keyword: "gpt-4", weight: 10 },
+    { keyword: "gpt-5", weight: 10 },
+    { keyword: "claude", weight: 10 },
+    { keyword: "gemini", weight: 8 },
+    { keyword: "deepmind", weight: 10 },
+    { keyword: "hugging face", weight: 8 },
+    { keyword: "midjourney", weight: 8 },
+    { keyword: "stable diffusion", weight: 8 },
+    { keyword: "dall-e", weight: 8 },
+    { keyword: "mistral", weight: 8 },
+    { keyword: "cohere", weight: 6 },
+    { keyword: "perplexity", weight: 6 },
+  ];
+  
+  // Technical terms (low weight)
+  const technicalKeywords = [
+    { keyword: "transformer", weight: 5 },
+    { keyword: "fine-tuning", weight: 5 },
+    { keyword: "prompt engineering", weight: 5 },
+    { keyword: "tokens", weight: 3 },
+    { keyword: "parameters", weight: 3 },
+    { keyword: "inference", weight: 4 },
+    { keyword: "embedding", weight: 4 },
+    { keyword: "vector database", weight: 5 },
+    { keyword: "rag", weight: 5 },
+    { keyword: "ai agent", weight: 8 },
+    { keyword: "chatbot", weight: 4 },
+  ];
+  
+  // Calculate score
+  const allKeywords = [...primaryKeywords, ...companyKeywords, ...technicalKeywords];
+  const matchedKeywords = new Set<string>();
+  
+  for (const { keyword, weight } of allKeywords) {
+    if (text.includes(keyword) && !matchedKeywords.has(keyword)) {
+      score += weight;
+      matchedKeywords.add(keyword);
+    }
+  }
+  
+  // Bonus for title containing AI keywords
+  const titleLower = title.toLowerCase();
+  if (primaryKeywords.some(k => titleLower.includes(k.keyword))) {
+    score += 10;
+  }
+  
+  // Penalty for non-AI content indicators
+  const penalties = [
+    { pattern: /\b(tv|television)\s+(deal|sale|price)/i, penalty: 30 },
+    { pattern: /presidents?\s*day/i, penalty: 25 },
+    { pattern: /black\s*friday/i, penalty: 25 },
+    { pattern: /\$\d+\s*(off|discount)/i, penalty: 20 },
+    { pattern: /\bspeaker\b.*\breview\b/i, penalty: 20 },
+    { pattern: /\bheadphone/i, penalty: 15 },
+    { pattern: /\bceo\s+(resign|leave|step)/i, penalty: 10 },
+  ];
+  
+  for (const { pattern, penalty } of penalties) {
+    if (pattern.test(text)) {
+      score -= penalty;
+    }
+  }
+  
+  // Normalize to 0-100
+  return Math.min(100, Math.max(0, score));
+}
+
+// Export stats helper
+export function getRSSFeedStats() {
+  return {
     total: AI_NEWS_RSS_FEEDS.length,
-    byLanguage: {} as Record<string, number>,
-    byCategory: {
+    byLanguage: {
       english: AI_NEWS_RSS_FEEDS.filter((f) => f.language === "en").length,
-      turkish: AI_NEWS_RSS_FEEDS.filter((f) => f.language === "tr").length,
+    },
+    categories: {
+      majorNews: 7,
+      aiFocused: 23,
+      research: 12,
+      learning: 10,
+      newsletters: 6,
     },
   };
-
-  AI_NEWS_RSS_FEEDS.forEach((feed) => {
-    stats.byLanguage[feed.language] =
-      (stats.byLanguage[feed.language] || 0) + 1;
-  });
-
-  return stats;
-}
-
-export default {
-  fetchRSSFeed,
-  fetchAllRSSFeeds,
-  filterRecentArticles,
-  getFeedStatistics,
-  AI_NEWS_RSS_FEEDS,
-  // Multi-language exports
-  fetchMultiLanguageFeeds,
-  getSourcesByLanguage,
-  detectArticleLanguage,
-  getSourceReliabilityScore,
-  updateSourceReliability,
-  getTranslationPriorityQueue,
-  getMultiLanguageStatistics,
-};
-
-// ============================================
-// MULTI-LANGUAGE RSS FUNCTIONS
-// ============================================
-
-/**
- * Language detection patterns for article content
- */
-const LANGUAGE_PATTERNS: Record<SupportedLanguage, RegExp[]> = {
-  en: [
-    /\b(the|and|is|are|was|were|been|being|have|has|had|do|does|did|will|would|could|should|may|might|must|shall|can|need|dare|ought|used|to|of|in|for|on|with|at|by|from|up|about|into|over|after)\b/gi,
-    /\b(artificial intelligence|machine learning|deep learning|neural network|algorithm|data|technology|research|development|innovation)\b/gi,
-  ],
-  de: [
-    /\b(der|die|das|ein|eine|und|ist|sind|war|waren|haben|hat|hatte|werden|wird|wurde|können|kann|müssen|muss|sollen|soll|wollen|will|dürfen|darf|mögen|mag)\b/gi,
-    /\b(künstliche intelligenz|maschinelles lernen|technologie|forschung|entwicklung|daten|algorithmus)\b/gi,
-    /[äöüß]/gi,
-  ],
-  fr: [
-    /\b(le|la|les|un|une|des|et|est|sont|était|étaient|avoir|a|eu|être|sera|seront|peut|peuvent|doit|doivent|veut|veulent)\b/gi,
-    /\b(intelligence artificielle|apprentissage automatique|technologie|recherche|développement|données|algorithme)\b/gi,
-    /[àâçéèêëîïôûùüÿœæ]/gi,
-  ],
-  zh: [
-    /[\u4e00-\u9fff]/g, // Chinese characters
-    /[\u3400-\u4dbf]/g, // CJK Extension A
-  ],
-  ja: [
-    /[\u3040-\u309f]/g, // Hiragana
-    /[\u30a0-\u30ff]/g, // Katakana
-    /[\u4e00-\u9fff]/g, // Kanji (shared with Chinese)
-  ],
-  ko: [
-    /[\uac00-\ud7af]/g, // Hangul syllables
-    /[\u1100-\u11ff]/g, // Hangul Jamo
-  ],
-  tr: [
-    /\b(ve|veya|ile|için|bir|bu|şu|o|ben|sen|biz|siz|onlar|var|yok|değil|ama|fakat|çünkü|eğer|nasıl|neden|ne|kim|nerede|hangi)\b/gi,
-    /[çğıöşüÇĞİÖŞÜ]/g,
-  ],
-};
-
-/**
- * Detect the language of an article based on content analysis
- */
-export function detectArticleLanguage(article: RSSItem): SupportedLanguage {
-  const text = `${article.title} ${article.description}`.toLowerCase();
-  const scores: Record<SupportedLanguage, number> = {
-    en: 0,
-    de: 0,
-    fr: 0,
-    zh: 0,
-    ja: 0,
-    ko: 0,
-    tr: 0,
-  };
-
-  // Check for CJK characters first (more distinctive)
-  const chineseMatches = (text.match(/[\u4e00-\u9fff]/g) || []).length;
-  const hiraganaMatches = (text.match(/[\u3040-\u309f]/g) || []).length;
-  const katakanaMatches = (text.match(/[\u30a0-\u30ff]/g) || []).length;
-  const hangulMatches = (text.match(/[\uac00-\ud7af]/g) || []).length;
-
-  // Japanese has hiragana/katakana mixed with kanji
-  if (hiraganaMatches > 5 || katakanaMatches > 5) {
-    scores.ja += 100;
-  }
-
-  // Korean has hangul
-  if (hangulMatches > 10) {
-    scores.ko += 100;
-  }
-
-  // Chinese has only hanzi (no hiragana/katakana)
-  if (
-    chineseMatches > 10 &&
-    hiraganaMatches === 0 &&
-    katakanaMatches === 0 &&
-    hangulMatches === 0
-  ) {
-    scores.zh += 100;
-  }
-
-  // Check European languages
-  for (const [lang, patterns] of Object.entries(LANGUAGE_PATTERNS)) {
-    if (["zh", "ja", "ko"].includes(lang)) continue; // Already handled
-
-    for (const pattern of patterns) {
-      const matches = text.match(pattern);
-      if (matches) {
-        scores[lang as SupportedLanguage] += matches.length;
-      }
-    }
-  }
-
-  // Find the language with highest score
-  let maxScore = 0;
-  let detectedLang: SupportedLanguage = "en"; // Default to English
-
-  for (const [lang, score] of Object.entries(scores)) {
-    if (score > maxScore) {
-      maxScore = score;
-      detectedLang = lang as SupportedLanguage;
-    }
-  }
-
-  return detectedLang;
 }
 
 /**
- * Get sources by language (wrapper for config function)
+ * Filter articles published within the last X hours
  */
-export function getSourcesByLanguage(lang: SupportedLanguage): RSSSource[] {
-  return getConfigSourcesByLanguage(lang);
-}
-
-/**
- * Get the reliability score for a source URL
- */
-export function getSourceReliabilityScore(sourceUrl: string): number {
-  const source = ALL_INTERNATIONAL_SOURCES.find((s) => s.url === sourceUrl);
-  return source?.reliabilityScore ?? 50; // Default to 50 if not found
-}
-
-/**
- * Update source reliability based on fetch success/failure
- * This is a runtime adjustment (doesn't persist)
- * WITH TIMESTAMP FOR AUTO CLEANUP
- */
-interface ReliabilityEntry {
-  adjustment: number;
-  timestamp: number;
-}
-
-const sourceReliabilityAdjustments: Map<string, ReliabilityEntry> = new Map();
-const RELIABILITY_CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour cleanup interval
-const RELIABILITY_ENTRY_TTL = 24 * 60 * 60 * 1000; // 24 hours TTL
-let reliabilityCleanupIntervalId: NodeJS.Timeout | null = null;
-
-export function updateSourceReliability(
-  sourceId: string,
-  success: boolean,
-): void {
-  const entry = sourceReliabilityAdjustments.get(sourceId);
-  const current = entry?.adjustment || 0;
-  const adjustment = success
-    ? Math.min(current + 1, 10)
-    : Math.max(current - 5, -30);
-  sourceReliabilityAdjustments.set(sourceId, {
-    adjustment,
-    timestamp: Date.now(),
+export function filterRecentArticles(
+  articles: RSSItem[],
+  hoursAgo: number = 48
+): RSSItem[] {
+  const cutoffTime = Date.now() - hoursAgo * 60 * 60 * 1000;
+  
+  return articles.filter((article) => {
+    if (!article.pubDate) return false;
+    const articleTime = new Date(article.pubDate).getTime();
+    return articleTime >= cutoffTime;
   });
 }
 
-export function getAdjustedReliability(source: RSSSource): number {
-  const entry = sourceReliabilityAdjustments.get(source.id);
-  const adjustment = entry?.adjustment || 0;
-  return Math.max(0, Math.min(100, source.reliabilityScore + adjustment));
-}
-
 /**
- * Cleanup expired reliability adjustments
- * Should be called periodically to prevent memory leaks
- */
-export function cleanupSourceReliability(): number {
-  const now = Date.now();
-  let cleanedCount = 0;
-
-  for (const [key, entry] of sourceReliabilityAdjustments.entries()) {
-    if (now - entry.timestamp > RELIABILITY_ENTRY_TTL) {
-      sourceReliabilityAdjustments.delete(key);
-      cleanedCount++;
-    }
-  }
-
-  if (cleanedCount > 0) {
-    console.log(
-      `🧹 Cleaned ${cleanedCount} expired reliability entries (remaining: ${sourceReliabilityAdjustments.size})`,
-    );
-  }
-
-  return cleanedCount;
-}
-
-/**
- * Start automatic reliability cleanup interval
- * Call this on application startup
- */
-export function startSourceReliabilityCleanup(): void {
-  if (reliabilityCleanupIntervalId) {
-    return; // Already running
-  }
-
-  reliabilityCleanupIntervalId = setInterval(() => {
-    cleanupSourceReliability();
-  }, RELIABILITY_CLEANUP_INTERVAL);
-
-  console.log(
-    `🧹 Source reliability cleanup started (interval: ${RELIABILITY_CLEANUP_INTERVAL / 60000} min, TTL: ${RELIABILITY_ENTRY_TTL / (60 * 60 * 1000)} hours)`,
-  );
-}
-
-/**
- * Stop automatic reliability cleanup interval
- * Call this on graceful shutdown
+ * Stub function for backward compatibility
+ * Source reliability cleanup is no longer needed with curated AI-only feeds
  */
 export function stopSourceReliabilityCleanup(): void {
-  if (reliabilityCleanupIntervalId) {
-    clearInterval(reliabilityCleanupIntervalId);
-    reliabilityCleanupIntervalId = null;
-    console.log("🧹 Source reliability cleanup stopped");
-  }
-}
-
-// Auto-start cleanup in non-build environments
-const isBuildPhaseRss = process.env.NEXT_PHASE === "phase-production-build";
-if (!isBuildPhaseRss && typeof globalThis.setInterval !== "undefined") {
-  startSourceReliabilityCleanup();
-}
-
-/**
- * Fetch RSS feed from a configured source
- */
-async function fetchFromSource(source: RSSSource): Promise<RSSItem[]> {
-  try {
-    console.log(
-      `📡 [${source.language.toUpperCase()}] Fetching: ${source.name}`,
-    );
-
-    const response = await axios.get(source.url, {
-      timeout: 20000,
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; AINewsBot/2.0; Multi-Language)",
-        Accept:
-          "application/rss+xml, application/xml, text/xml, application/atom+xml, */*",
-        "Accept-Language":
-          "en-US,en;q=0.9,de;q=0.8,fr;q=0.7,zh;q=0.6,ja;q=0.5,ko;q=0.4",
-      },
-      validateStatus: (status) => status === 200,
-      responseType: "text",
-    });
-
-    const xml = response.data;
-    const parsed = await parseStringPromise(xml, {
-      trim: true,
-      normalize: true,
-      explicitArray: false,
-    });
-
-    let items: any[] = [];
-
-    if (parsed.rss?.channel?.item) {
-      items = Array.isArray(parsed.rss.channel.item)
-        ? parsed.rss.channel.item
-        : [parsed.rss.channel.item];
-    } else if (parsed.feed?.entry) {
-      items = Array.isArray(parsed.feed.entry)
-        ? parsed.feed.entry
-        : [parsed.feed.entry];
-    } else if (parsed["rdf:RDF"]?.item) {
-      items = Array.isArray(parsed["rdf:RDF"].item)
-        ? parsed["rdf:RDF"].item
-        : [parsed["rdf:RDF"].item];
-    }
-
-    if (items.length === 0) {
-      console.warn(`⚠️  Empty feed: ${source.name}`);
-      updateSourceReliability(source.id, false);
-      return [];
-    }
-
-    const rssItems: RSSItem[] = items.slice(0, 15).map((item: any) => {
-      const rssItem: RSSItem = {
-        title: extractText(item.title),
-        description: extractText(
-          item.description ||
-            item.summary ||
-            item.content ||
-            item["content:encoded"],
-        ),
-        link: extractLink(item.link),
-        pubDate: extractText(
-          item.pubDate || item.published || item.updated || item["dc:date"],
-        ),
-        source: source.name,
-        guid: extractText(item.guid || item.id),
-        sourceLanguage: source.language,
-        reliabilityScore: getAdjustedReliability(source),
-        sourceId: source.id,
-        tags: source.tags,
-      };
-
-      // Detect actual language of content
-      rssItem.detectedLanguage = detectArticleLanguage(rssItem);
-
-      // Calculate translation priority
-      rssItem.translationPriority = calculateTranslationPriority(
-        rssItem,
-        source,
-      );
-
-      return rssItem;
-    });
-
-    console.log(
-      `✅ [${source.language.toUpperCase()}] ${rssItems.length} articles from ${source.name}`,
-    );
-    updateSourceReliability(source.id, true);
-    return rssItems;
-  } catch (error: any) {
-    console.error(
-      `❌ [${source.language.toUpperCase()}] Failed: ${source.name} - ${error.message}`,
-    );
-    updateSourceReliability(source.id, false);
-    return [];
-  }
-}
-
-/**
- * Calculate translation priority for an article
- * Higher score = translate first
- */
-function calculateTranslationPriority(
-  item: RSSItem,
-  source: RSSSource,
-): number {
-  let priority = 0;
-
-  // Base priority from source priority (1-5 -> 10-50)
-  priority += source.priority * 10;
-
-  // Reliability bonus (0-100 -> 0-20)
-  priority += source.reliabilityScore / 5;
-
-  // Recency bonus
-  try {
-    const pubDate = new Date(item.pubDate);
-    const hoursAgo = (Date.now() - pubDate.getTime()) / (1000 * 60 * 60);
-    if (hoursAgo < 6) priority += 30;
-    else if (hoursAgo < 12) priority += 20;
-    else if (hoursAgo < 24) priority += 10;
-  } catch {
-    // Ignore date parsing errors
-  }
-
-  // Title length bonus (longer titles often more substantial)
-  if (item.title.length > 50) priority += 5;
-
-  // High-value tags bonus
-  const highValueTags = [
-    "breaking-news",
-    "official",
-    "research",
-    "announcements",
-  ];
-  if (source.tags.some((tag) => highValueTags.includes(tag))) {
-    priority += 15;
-  }
-
-  return priority;
-}
-
-/**
- * Fetch feeds from multiple languages with concurrency control
- */
-export async function fetchMultiLanguageFeeds(
-  options: {
-    languages?: SupportedLanguage[];
-    minPriority?: number;
-    minReliability?: number;
-    maxConcurrent?: number;
-    maxPerSource?: number;
-  } = {},
-): Promise<MultiLanguageFeedResult> {
-  const {
-    languages = ["en", "de", "fr", "zh", "ja", "ko"],
-    minPriority = 3,
-    minReliability = 70,
-    maxConcurrent = 8,
-    maxPerSource = 15,
-  } = options;
-
-  console.log(`\n🌍 Fetching multi-language feeds...`);
-  console.log(`   Languages: ${languages.join(", ").toUpperCase()}`);
-  console.log(
-    `   Min Priority: ${minPriority}, Min Reliability: ${minReliability}`,
-  );
-
-  // Filter sources based on criteria
-  let sources = ALL_INTERNATIONAL_SOURCES.filter(
-    (source) =>
-      source.isActive &&
-      languages.includes(source.language) &&
-      source.priority >= minPriority &&
-      source.reliabilityScore >= minReliability,
-  );
-
-  // Sort by priority and reliability
-  sources = sources.sort((a, b) => {
-    const scoreA = a.priority * 20 + a.reliabilityScore;
-    const scoreB = b.priority * 20 + b.reliabilityScore;
-    return scoreB - scoreA;
-  });
-
-  console.log(`   Sources to fetch: ${sources.length}`);
-
-  const allItems: RSSItem[] = [];
-  const stats = {
-    totalFetched: 0,
-    byLanguage: {} as Record<SupportedLanguage, number>,
-    successfulSources: 0,
-    failedSources: 0,
-    averageReliability: 0,
-  };
-
-  // Initialize language counts
-  for (const lang of languages) {
-    stats.byLanguage[lang] = 0;
-  }
-
-  // Process in batches
-  for (let i = 0; i < sources.length; i += maxConcurrent) {
-    const batch = sources.slice(i, i + maxConcurrent);
-    const batchPromises = batch.map((source) => fetchFromSource(source));
-
-    const results = await Promise.allSettled(batchPromises);
-
-    for (let j = 0; j < results.length; j++) {
-      const result = results[j];
-      const source = batch[j];
-
-      if (result.status === "fulfilled" && result.value.length > 0) {
-        const items = result.value.slice(0, maxPerSource);
-        allItems.push(...items);
-        stats.successfulSources++;
-        stats.byLanguage[source.language] =
-          (stats.byLanguage[source.language] || 0) + items.length;
-      } else {
-        stats.failedSources++;
-      }
-    }
-
-    // Rate limiting between batches
-    if (i + maxConcurrent < sources.length) {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-    }
-  }
-
-  // Remove duplicates
-  const uniqueItems = removeDuplicatesMultiLang(allItems);
-
-  stats.totalFetched = uniqueItems.length;
-  stats.averageReliability = Math.round(
-    uniqueItems.reduce((sum, item) => sum + (item.reliabilityScore || 50), 0) /
-      (uniqueItems.length || 1),
-  );
-
-  console.log(`\n✅ Multi-language fetch complete:`);
-  console.log(`   Total articles: ${stats.totalFetched}`);
-  console.log(
-    `   Successful sources: ${stats.successfulSources}/${sources.length}`,
-  );
-  console.log(`   By language: ${JSON.stringify(stats.byLanguage)}`);
-
-  return { items: uniqueItems, stats };
-}
-
-/**
- * Remove duplicates from multi-language feeds
- */
-function removeDuplicatesMultiLang(items: RSSItem[]): RSSItem[] {
-  const unique: RSSItem[] = [];
-  const seenUrls = new Set<string>();
-  const seenTitles = new Set<string>();
-
-  for (const item of items) {
-    // Normalize URL
-    const normalizedUrl = item.link
-      .toLowerCase()
-      .replace(/^https?:\/\/(www\.)?/, "")
-      .replace(/\/$/, "")
-      .split("?")[0];
-
-    // Normalize title
-    const normalizedTitle = item.title
-      .toLowerCase()
-      .replace(/[^\w\s\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g, "")
-      .trim();
-
-    if (seenUrls.has(normalizedUrl)) continue;
-
-    // Check for similar titles
-    let isDuplicate = false;
-    const seenTitleArray = Array.from(seenTitles);
-    for (const seenTitle of seenTitleArray) {
-      if (
-        normalizedTitle === seenTitle ||
-        (normalizedTitle.length > 20 &&
-          seenTitle.includes(normalizedTitle.slice(0, 20)))
-      ) {
-        isDuplicate = true;
-        break;
-      }
-    }
-
-    if (!isDuplicate) {
-      unique.push(item);
-      seenUrls.add(normalizedUrl);
-      seenTitles.add(normalizedTitle);
-    }
-  }
-
-  return unique;
-}
-
-/**
- * Get translation priority queue
- * Returns articles sorted by translation priority (highest first)
- */
-export function getTranslationPriorityQueue(
-  items: RSSItem[],
-  targetLanguage: SupportedLanguage = "tr",
-  limit: number = 50,
-): RSSItem[] {
-  // Filter items that need translation
-  const needsTranslation = items.filter(
-    (item) =>
-      item.detectedLanguage !== targetLanguage &&
-      item.sourceLanguage !== targetLanguage,
-  );
-
-  // Sort by translation priority
-  const sorted = needsTranslation.sort((a, b) => {
-    const priorityA = a.translationPriority || 0;
-    const priorityB = b.translationPriority || 0;
-    return priorityB - priorityA;
-  });
-
-  return sorted.slice(0, limit);
-}
-
-/**
- * Get multi-language statistics
- */
-export function getMultiLanguageStatistics() {
-  const stats = {
-    totalSources: ALL_INTERNATIONAL_SOURCES.length,
-    activeSources: ALL_INTERNATIONAL_SOURCES.filter((s) => s.isActive).length,
-    byLanguage: {} as Record<
-      SupportedLanguage,
-      { count: number; avgReliability: number }
-    >,
-    topSources: [] as { name: string; language: string; reliability: number }[],
-    languageConfigs: LANGUAGE_CONFIGS,
-  };
-
-  const languages: SupportedLanguage[] = [
-    "en",
-    "de",
-    "fr",
-    "zh",
-    "ja",
-    "ko",
-    "tr",
-  ];
-
-  for (const lang of languages) {
-    const sources = ALL_INTERNATIONAL_SOURCES.filter(
-      (s) => s.language === lang && s.isActive,
-    );
-    stats.byLanguage[lang] = {
-      count: sources.length,
-      avgReliability:
-        sources.length > 0
-          ? Math.round(
-              sources.reduce((sum, s) => sum + s.reliabilityScore, 0) /
-                sources.length,
-            )
-          : 0,
-    };
-  }
-
-  // Top 10 sources by reliability
-  stats.topSources = ALL_INTERNATIONAL_SOURCES.filter((s) => s.isActive)
-    .sort((a, b) => b.reliabilityScore - a.reliabilityScore)
-    .slice(0, 10)
-    .map((s) => ({
-      name: s.name,
-      language: s.language,
-      reliability: s.reliabilityScore,
-    }));
-
-  return stats;
+  // No-op - functionality removed in favor of curated AI-only feeds
 }

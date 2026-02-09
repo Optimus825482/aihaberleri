@@ -32,6 +32,7 @@ import {
   ContentValidator,
   validateAndFixContent,
 } from "@/lib/content-validator";
+import { isAIRelatedContent, calculateAIRelevanceScore } from "@/lib/rss";
 
 // ============================================================================
 // CONTENT CONSTANTS - Magic numbers extracted for maintainability
@@ -544,12 +545,41 @@ export async function selectBestArticles(
     return [];
   }
 
+  // ═══════════════════════════════════════════════════════════════════
+  // AI RELEVANCE FILTER - Remove non-AI content
+  // ═══════════════════════════════════════════════════════════════════
+  const aiRelevantArticles = uniqueArticles.filter((article) => {
+    const isRelevant = isAIRelatedContent(
+      article.title,
+      article.description || "",
+    );
+    if (!isRelevant) {
+      const score = calculateAIRelevanceScore(
+        article.title,
+        article.description || "",
+      );
+      console.log(
+        `🚫 AI dışı içerik filtrelendi (skor: ${score}): ${article.title}`,
+      );
+    }
+    return isRelevant;
+  });
+
+  console.log(
+    `🤖 AI filtreleme: ${uniqueArticles.length} → ${aiRelevantArticles.length} (${uniqueArticles.length - aiRelevantArticles.length} elendi)`,
+  );
+
+  if (aiRelevantArticles.length === 0) {
+    console.log("⚠️ Tüm makaleler AI ile ilgisiz bulundu.");
+    return [];
+  }
+
   try {
     // ═══════════════════════════════════════════════════════════════════
     // PHASE 1: MULTI-SOURCE AGGREGATION
     // Check for topic clusters with 2+ sources - these become aggregated articles
     // ═══════════════════════════════════════════════════════════════════
-    const clusters = clusterArticlesByTopic(uniqueArticles);
+    const clusters = clusterArticlesByTopic(aiRelevantArticles);
     const aggregatedResults: Array<{
       article: NewsArticle;
       category: string;
@@ -622,7 +652,7 @@ export async function selectBestArticles(
     }
 
     // Filter out already-used articles from individual selection
-    const remainingArticles = uniqueArticles.filter(
+    const remainingArticles = aiRelevantArticles.filter(
       (a) => !usedArticleUrls.has(a.url),
     );
     const remainingTargetCount = targetCount - aggregatedResults.length;
@@ -727,7 +757,7 @@ export async function selectBestArticles(
   } catch (error) {
     console.error("Haber analiz hatası, fallback uygulanıyor:", error);
     // Fallback: Take the first few unique ones
-    return uniqueArticles.slice(0, targetCount).map((a) => ({
+    return aiRelevantArticles.slice(0, targetCount).map((a) => ({
       article: a,
       category: "Yapay Zeka",
     }));
