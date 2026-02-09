@@ -8,6 +8,7 @@
  * 4. Retry logic (3 attempts, exponential backoff)
  * 5. Timeout protection (30s max per image)
  * 6. Emit articles with visuals to articles-with-visuals queue
+ * 7. ⚡ Early DB Check - Skip visual generation for existing articles (09.02.2026)
  *
  * EXTRACTED FROM: src/services/intelligent-news.service.ts - generateAndUploadImageInternal()
  * INTEGRATED WITH: src/lib/pollinations.ts, src/lib/image-optimizer.ts
@@ -25,6 +26,7 @@ import { generateImagePrompt } from "@/lib/deepseek"; // UPDATED: Using DeepSeek
 import { fetchPollinationsImage } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import { generateSlug } from "@/lib/utils";
+import { db } from "@/lib/db"; // ADDED: For early DB check
 import type { EnrichedArticle } from "./content-enricher.agent";
 
 export interface ArticleWithVisuals extends EnrichedArticle {
@@ -153,6 +155,7 @@ export class VisualGeneratorAgent extends BaseAgent<
    *
    * ⚠️ IMPORTANT: Only generates visuals for articles that WILL be published.
    * Articles that fail enrichment or have low scores are skipped.
+   * ⚡ NEW (09.02.2026): Early DB check added to prevent duplicate visual generation
    */
   private async generateVisualForArticle(
     article: EnrichedArticle,
@@ -179,6 +182,34 @@ export class VisualGeneratorAgent extends BaseAgent<
         };
       }
 
+      // ⚡ NEW: Early DB check - Skip visual generation if article already exists
+      // This prevents wasting Pollinations API calls on duplicates
+      const slug = generateSlug(article.synthesizedContent.tr.title);
+      const existingArticle = await db.article.findFirst({
+        where: {
+          OR: [
+            { slug },
+            { sourceUrl: article.url },
+          ],
+        },
+        select: { id: true, slug: true },
+      });
+
+      if (existingArticle) {
+        this.logger.warn(
+          `⚡ Skipping visual: Article already in DB (slug: ${existingArticle.slug}, id: ${existingArticle.id})`,
+        );
+        return {
+          ...article,
+          imageUrl: null,
+          imageUrlMedium: null,
+          imageUrlSmall: null,
+          imageUrlThumb: null,
+          imageGenerationTime: 0,
+          _skippedReason: "Article already exists in database",
+        } as ArticleWithVisuals;
+      }
+
       // Check if article has minimum required score (if score exists)
       const articleScore =
         (article as any).score || (article as any).relevanceScore;
@@ -199,7 +230,7 @@ export class VisualGeneratorAgent extends BaseAgent<
       const title = article.synthesizedContent.tr.title;
       const content = article.synthesizedContent.tr.content;
       const category = article.suggestedCategory || "teknoloji";
-      const slug = generateSlug(title);
+      const articleSlug = generateSlug(title);
 
       this.logger.info(`Generating visual: ${title.substring(0, 50)}...`);
 
@@ -245,7 +276,7 @@ export class VisualGeneratorAgent extends BaseAgent<
 
       try {
         imageSizes = await withTimeout(
-          optimizeAndGenerateSizes(imageUrl, slug),
+          optimizeAndGenerateSizes(imageUrl, articleSlug),
           20000,
           "Image optimization timeout",
         );

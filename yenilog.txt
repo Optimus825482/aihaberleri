@@ -1,0 +1,1354 @@
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃           🤖 AGENT EXECUTION START                ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  Log ID:       cmlf70h1h000                    ┃
+┃  Start Time:   09.02.2026 13:13:31      ┃
+┃  Category:     All                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+info: 📊 Agent step: fetch_news Yapay zeka haberleri aranıyor (RSS + Trend) {"environment":"production","logId":"cmlf70h1h0000li3zd0exsldv","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-02-09 13:13:31"}
+📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...
+📰 AI haberleri toplanıyor (RSS + Trend Analizi)...
+📡 92 RSS feed okunuyor (AI-focused + Journalism AI + Research - all tested & working)...
+📡 RSS feed okunuyor: MIT Technology Review - AI
+[Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+📡 RSS feed okunuyor: VentureBeat - AI
+📡 RSS feed okunuyor: The Verge - AI
+📡 RSS feed okunuyor: TechCrunch - AI
+📡 RSS feed okunuyor: Ars Technica - AI
+✅ 10 haber bulundu: Ars Technica - AI
+📊 Günlük Google Indexing: 38/200 kullanıldı, 162 kaldı
+📊 Günlük Google Indexing: 38/200 kullanıldı, 162 kaldı
+🔐 Using GOOGLE_SERVICE_ACCOUNT_KEY from environment variable
+📦 Batch işlemi başlatılıyor: 3 URL
+✅ 10 haber bulundu: TechCrunch - AI
+✅ 10 haber bulundu: The Verge - AI
+✅ 10 haber bulundu: MIT Technology Review - AI
+✅ 7 haber bulundu: VentureBeat - AI
+✅ Batch: https://aihaberleri.org/news/prompt-muhendisligi-devrimi-mlflow-ile-yapay-zeka-testleri-otomasyona-geciyor (URL_UPDATED)
+📡 RSS feed okunuyor: Wired - AI
+📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+📡 RSS feed okunuyor: Engadget - Technology
+📡 RSS feed okunuyor: Hacker News (YCombinator)
+📡 RSS feed okunuyor: Product Hunt - Tech
+✅ 10 haber bulundu: Wired - AI
+✅ 10 haber bulundu: Product Hunt - Tech
+✅ 10 haber bulundu: ZDNet - Artificial Intelligence
+✅ 10 haber bulundu: Engadget - Technology
+✅ Batch: https://aihaberleri.org/news/avrupa-birligi-whatsappta-rakipleri-engelledigi-icin-metaya-sert-uyari-gonderdi (URL_UPDATED)
+✅ 10 haber bulundu: Hacker News (YCombinator)
+✅ Batch: https://aihaberleri.org/news/2026da-roku-tvnizi-yukseltmeli-misiniz-iste-gecerli-tek-sebep (URL_UPDATED)
+📊 Batch tamamlandı: 3 başarılı, 0 başarısız
+✅ 3 haber Google Indexing API'ye bildirildi. Kalan kota: 159
+🔧 Repeatable job sistemi başlatılıyor...
+✅ News agent queue created
+✅ Queue events listener created
+✅ Repeatable job mevcut (her 6 dakikada bir).
+📅 Sıradaki çalışma zamanı: 2/9/2026, 1:14:11 PM
+📡 RSS feed okunuyor: AI News
+📡 RSS feed okunuyor: MarkTechPost
+📡 RSS feed okunuyor: The AI Edge (Substack)
+📡 RSS feed okunuyor: Last Week in AI
+📡 RSS feed okunuyor: AI Business
+✅ 10 haber bulundu: MarkTechPost
+✅ 10 haber bulundu: The AI Edge (Substack)
+✅ 10 haber bulundu: AI News
+✅ 10 haber bulundu: Last Week in AI
+✅ 10 haber bulundu: AI Business
+📡 RSS feed okunuyor: THE DECODER - AI News
+📡 RSS feed okunuyor: The Rundown AI
+📡 RSS feed okunuyor: SiliconANGLE - AI
+📡 RSS feed okunuyor: AI Trends
+📡 RSS feed okunuyor: Synced - AI Review
+✅ 10 haber bulundu: Synced - AI Review
+✅ 10 haber bulundu: AI Trends
+✅ 10 haber bulundu: THE DECODER - AI News
+✅ 10 haber bulundu: The Rundown AI
+✅ 10 haber bulundu: SiliconANGLE - AI
+📡 RSS feed okunuyor: The Gradient
+📡 RSS feed okunuyor: The Algorithmic Bridge
+📡 RSS feed okunuyor: 404 Media
+📡 RSS feed okunuyor: Ahead of AI
+📡 RSS feed okunuyor: AI Accelerator Institute
+✅ 10 haber bulundu: 404 Media
+✅ 10 haber bulundu: AI Accelerator Institute
+✅ 10 haber bulundu: Ahead of AI
+✅ 10 haber bulundu: The Algorithmic Bridge
+✅ 10 haber bulundu: The Gradient
+
+📡 RSS feed okunuyor: AI - AI-TechPark
+📡 RSS feed okunuyor: AI Archives | KnowTechie
+📡 RSS feed okunuyor: AIModels.fyi
+📡 RSS feed okunuyor: AI Now Institute
+📡 RSS feed okunuyor: AI Snake Oil
+✅ 10 haber bulundu: AI Archives | KnowTechie
+✅ 10 haber bulundu: AIModels.fyi
+✅ 10 haber bulundu: AI - AI-TechPark
+✅ 10 haber bulundu: AI Now Institute
+✅ 10 haber bulundu: AI Snake Oil
+📡 RSS feed okunuyor: Ars Technica - All Content
+📡 RSS feed okunuyor: Artificial Intelligence – Futurism
+📡 RSS feed okunuyor: Artificial Intelligence News - ScienceDaily
+📡 RSS feed okunuyor: Machine Learning Mastery Blog
+📡 RSS feed okunuyor: Chain of Thought
+✅ 10 haber bulundu: Ars Technica - All Content
+✅ 10 haber bulundu: Artificial Intelligence – Futurism
+✅ 10 haber bulundu: Machine Learning Mastery Blog
+✅ 10 haber bulundu: Chain of Thought
+✅ 10 haber bulundu: Artificial Intelligence News - ScienceDaily
+📡 RSS feed okunuyor: Chip Huyen
+📡 RSS feed okunuyor: Crunchbase News
+📡 RSS feed okunuyor: Hugging Face Blog
+📡 RSS feed okunuyor: KDnuggets
+📡 RSS feed okunuyor: LangChain Blog
+✅ 10 haber bulundu: KDnuggets
+✅ 10 haber bulundu: Hugging Face Blog
+✅ 10 haber bulundu: LangChain Blog
+✅ 10 haber bulundu: Chip Huyen
+✅ 10 haber bulundu: Crunchbase News
+📡 RSS feed okunuyor: Poynter
+📡 RSS feed okunuyor: SE Ranking Blog
+📡 RSS feed okunuyor: AlixPartners
+📡 RSS feed okunuyor: Semrush Blog
+📡 RSS feed okunuyor: WAN-IFRA
+✅ 10 haber bulundu: Semrush Blog
+✅ 10 haber bulundu: WAN-IFRA
+✅ 10 haber bulundu: SE Ranking Blog
+✅ 10 haber bulundu: Poynter
+✅ 10 haber bulundu: AlixPartners
+📡 RSS feed okunuyor: Thomson Reuters Foundation
+📡 RSS feed okunuyor: METR
+📡 RSS feed okunuyor: Similarweb
+📡 RSS feed okunuyor: Excitech
+📡 RSS feed okunuyor: FIPP
+✅ 10 haber bulundu: FIPP
+✅ 10 haber bulundu: Excitech
+✅ 10 haber bulundu: Similarweb
+✅ 10 haber bulundu: METR
+✅ 10 haber bulundu: Thomson Reuters Foundation
+📡 RSS feed okunuyor: Journalisten
+📡 RSS feed okunuyor: Machine Learning Mastery
+📡 RSS feed okunuyor: OpenAI Blog
+📡 RSS feed okunuyor: Google AI Blog
+📡 RSS feed okunuyor: DeepMind Blog
+✅ 10 haber bulundu: Machine Learning Mastery
+✅ 10 haber bulundu: DeepMind Blog
+✅ 10 haber bulundu: Journalisten
+✅ 10 haber bulundu: OpenAI Blog
+✅ 10 haber bulundu: Google AI Blog
+📡 RSS feed okunuyor: NVIDIA Blog - AI
+📡 RSS feed okunuyor: AWS Machine Learning Blog
+📡 RSS feed okunuyor: Hugging Face Blog
+📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+📡 RSS feed okunuyor: Google Research
+✅ 10 haber bulundu: NVIDIA Blog - AI
+✅ 10 haber bulundu: Hugging Face Blog
+✅ 10 haber bulundu: Google Research
+✅ 10 haber bulundu: AWS Machine Learning Blog
+✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+📡 RSS feed okunuyor: Reuters Institute
+📡 RSS feed okunuyor: Pew Research Center
+📡 RSS feed okunuyor: Apple Machine Learning Research
+📡 RSS feed okunuyor: ScienceDaily - AI
+📡 RSS feed okunuyor: Futurism - AI
+✅ 10 haber bulundu: Pew Research Center
+✅ 10 haber bulundu: Futurism - AI
+✅ 10 haber bulundu: Reuters Institute
+✅ 10 haber bulundu: Apple Machine Learning Research
+✅ 10 haber bulundu: ScienceDaily - AI
+📡 RSS feed okunuyor: Towards Data Science
+📡 RSS feed okunuyor: Analytics Vidhya
+📡 RSS feed okunuyor: KDnuggets
+📡 RSS feed okunuyor: Machine Learning Reddit
+📡 RSS feed okunuyor: AI Trends
+✅ 10 haber bulundu: KDnuggets
+✅ 10 haber bulundu: AI Trends
+✅ 10 haber bulundu: Towards Data Science
+✅ 10 haber bulundu: Analytics Vidhya
+✅ 10 haber bulundu: Machine Learning Reddit
+📡 RSS feed okunuyor: Microsoft AI
+📡 RSS feed okunuyor: Google Keyword Blog
+📡 RSS feed okunuyor: Generative AI in the Newsroom
+📡 RSS feed okunuyor: Center for Cooperative Media
+📡 RSS feed okunuyor: Tow Center for Digital Journalism
+⚠️  Hata (Tow Center for Digital Journalism), tekrar deneniyor... Request failed with status code 403
+✅ 10 haber bulundu: Generative AI in the Newsroom
+✅ 10 haber bulundu: Center for Cooperative Media
+✅ 1 haber bulundu: Microsoft AI
+📡 RSS feed okunuyor: Tow Center for Digital Journalism (deneme 2)
+⚠️  Hata (Tow Center for Digital Journalism), tekrar deneniyor... Request failed with status code 403
+📡 RSS feed okunuyor: Tow Center for Digital Journalism (deneme 3)
+❌ RSS feed hatası (Tow Center for Digital Journalism): Request failed with status code 403
+💓 Heartbeat updated: 09.02.2026 13:14:01
+⚠️  Hata (Google Keyword Blog), tekrar deneniyor... timeout of 15000ms exceeded
+📡 RSS feed okunuyor: Google Keyword Blog (deneme 2)
+⚠️  Hata (Google Keyword Blog), tekrar deneniyor... timeout of 15000ms exceeded
+📡 RSS feed okunuyor: Google Keyword Blog (deneme 3)
+💓 Heartbeat updated: 09.02.2026 13:14:31
+❌ RSS feed hatası (Google Keyword Blog): timeout of 15000ms exceeded
+📡 RSS feed okunuyor: Digital Digging
+📡 RSS feed okunuyor: J-Source - Canadian Journalism
+📡 RSS feed okunuyor: Local Media Association
+📡 RSS feed okunuyor: CNTI - Center for News, Technology & Innovation
+📡 RSS feed okunuyor: Column Content
+✅ 10 haber bulundu: Local Media Association
+✅ 10 haber bulundu: CNTI - Center for News, Technology & Innovation
+✅ 10 haber bulundu: Digital Digging
+✅ 10 haber bulundu: J-Source - Canadian Journalism
+✅ 10 haber bulundu: Column Content
+📡 RSS feed okunuyor: American Journalism Project
+📡 RSS feed okunuyor: WonderTools
+📡 RSS feed okunuyor: AI Accountability Review
+📡 RSS feed okunuyor: Online Journalism Blog
+📡 RSS feed okunuyor: Trusting News
+✅ 10 haber bulundu: Trusting News
+✅ 10 haber bulundu: WonderTools
+✅ 10 haber bulundu: Online Journalism Blog
+✅ 10 haber bulundu: AI Accountability Review
+✅ 10 haber bulundu: American Journalism Project
+📡 RSS feed okunuyor: AI for Media Network
+📡 RSS feed okunuyor: Méta-media
+📡 RSS feed okunuyor: Newsroom Robots
+📡 RSS feed okunuyor: C21Media
+📡 RSS feed okunuyor: Journalism UK
+✅ 10 haber bulundu: Méta-media
+✅ 10 haber bulundu: AI for Media Network
+✅ 10 haber bulundu: Newsroom Robots
+✅ 10 haber bulundu: Journalism UK
+⚠️  Hata (C21Media), tekrar deneniyor... Cannot convert object to primitive value
+📡 RSS feed okunuyor: C21Media (deneme 2)
+⚠️  Hata (C21Media), tekrar deneniyor... Cannot convert object to primitive value
+📡 RSS feed okunuyor: C21Media (deneme 3)
+❌ RSS feed hatası (C21Media): Cannot convert object to primitive value
+📡 RSS feed okunuyor: Nieman Lab
+📡 RSS feed okunuyor: BeyondWords
+✅ 10 haber bulundu: Nieman Lab
+✅ 10 haber bulundu: BeyondWords
+✅ Toplam 878 haber toplandı
+✅ 816 benzersiz haber
+📥 RSS'den 816 haber alındı
+
+🔍 URL Filtering: Son 12 saatte yayınlanan URL'ler eleniyor...
+   Database'de 15 unique URL bulundu (son 12 saat)
+   ✅ 810/816 haber YENİ (99.3% yeni)
+📅 Son 48 saatte 93 haber
+   ⏭️  SKIP (Reddit discussion): [P] A Python library processing geospatial data fo...
+   ⏭️  SKIP (Reddit discussion): [P] arXiv at Home - self-hosted search engine for ...
+   ⏭️  SKIP (Reddit discussion): [R] Really nice interactive explanation of Specula...
+   ⏭️  SKIP (Reddit discussion): [D] What is your main gripe about ML environments ...
+   ⏭️  SKIP (Reddit discussion): [D] Advice on journal for work between ML, data in...
+   ⏭️  SKIP (Reddit discussion): [D] ACL ARR 2026 Jan. Anybody got reviews?...
+   ⏭️  SKIP (Reddit discussion): [P] [Torchvista] Interactive visualisation of PyTo...
+🔍 Reddit filtre: 7 discussion post elendi
+
+✅ 86 unique haber trend skorlamasına gönderilecek
+📊 86 haber için Trend analizi (SearXNG)...
+📊 Hybrid ile 86 haber analiz ediliyor...
+📦 Batch 1/9 işleniyor (10 haber)...
+🔍 SearXNG query: "ai s ai is here making" (5 keywords, 5 AI terms)
+🔍 SearXNG query: "openai s a a ‘leaked’ super" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "ai super bowl everything" (4 keywords, 1 AI terms)
+🔍 SearXNG query: "is to in ai new" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "com on ai com of crypto.com" (5 keywords, 5 AI terms)
+🔍 SearXNG query: "i m ai okay, i’m" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "to anthropic ai in svedka" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "a on new york lawmakers" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "no to ai in company" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "ai is here to replace" (5 keywords, 4 AI terms)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 24 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 15 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 15 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 41 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 17 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 40 (results: 2, domains: 2, pos: 1.5, ai_bonus: 30)
+✅ SearXNG: 4 sonuç bulundu (toplam: 4)
+📊 SearXNG trend score: 49 (results: 4, domains: 3, pos: 2.5, ai_bonus: 30)
+✅ SearXNG: 8 sonuç bulundu (toplam: 8)
+📊 SearXNG trend score: 73 (results: 8, domains: 6, pos: 4.5, ai_bonus: 30)
+✅ SearXNG: 4 sonuç bulundu (toplam: 4)
+📊 SearXNG trend score: 57 (results: 4, domains: 4, pos: 2.5, ai_bonus: 30)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 49 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+⏳ 500ms bekleniyor...
+📦 Batch 2/9 işleniyor (10 haber)...
+🔍 SearXNG query: "i ve is spotify apple" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "i of it s i bluetooth" (5 keywords, 5 AI terms)
+🔍 SearXNG query: "is i it s anker" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "i google google, samsung, honor" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "to it a how roku" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "i of (and gadgets toolkit" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "h r for file block" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "i for use why windows" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "of the 2026: expert project" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "s ive is here inside" (5 keywords, 4 AI terms)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 49 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 38 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 37 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 21 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 52 (results: 2, domains: 2, pos: 1.5, ai_bonus: 30)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 43 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 57 (results: 2, domains: 2, pos: 1.5, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 14 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+💓 Heartbeat updated: 09.02.2026 13:15:01
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 36 (results: 1, domains: 1, pos: 1.0, ai_bonus: 15)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 21 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+⏳ 500ms bekleniyor...
+📦 Batch 3/9 işleniyor (10 haber)...
+🔍 SearXNG query: "lyft accounts enhanced safety protections" (5 keywords, 0 AI terms)
+🔍 SearXNG query: "for music youtube starts limiting" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "for the apple 2026 airtag" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "for the 2026: iphones should" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "to on on to how 2026 super" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "to for to how 2026 super" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "browse internet infrastructure" (3 keywords, 0 AI terms)
+🔍 SearXNG query: "in it matrix messaging gaining" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "for minimal cloudflare workers owasp-compliant" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "offpunk 3.0" (2 keywords, 0 AI terms)
+✅ SearXNG: 3 sonuç bulundu (toplam: 3)
+📊 SearXNG trend score: 46 (results: 3, domains: 3, pos: 2.0, ai_bonus: 0)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 15 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 10 sonuç bulundu (toplam: 10)
+📊 SearXNG trend score: 66 (results: 10, domains: 6, pos: 5.5, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 10 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 10 sonuç bulundu (toplam: 10)
+📊 SearXNG trend score: 76 (results: 10, domains: 7, pos: 5.5, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 10 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 14 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 5 (results: 0, domains: 0, pos: 10.0, ai_bonus: 0)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 34 (results: 2, domains: 2, pos: 1.5, ai_bonus: 0)
+✅ SearXNG: 4 sonuç bulundu (toplam: 4)
+📊 SearXNG trend score: 44 (results: 4, domains: 4, pos: 2.5, ai_bonus: 15)
+⏳ 500ms bekleniyor...
+📦 Batch 4/9 işleniyor (10 haber)...
+🔍 SearXNG query: "algorithmically of on finding longest" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "on odd lots discord recommended" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "ai easier harder makes easy" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "a cistercian custom displays numerals" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "is toma w24) hiring founding" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "for reverse engineering prom" (4 keywords, 1 AI terms)
+🔍 SearXNG query: "apple creator studio" (3 keywords, 0 AI terms)
+🔍 SearXNG query: "ai as exclusive: why chinese" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "a for ai cryptocurrency markets" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "autonomous ai agents for goldman" (5 keywords, 4 AI terms)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 21 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 12 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 3 sonuç bulundu (toplam: 3)
+📊 SearXNG trend score: 39 (results: 3, domains: 3, pos: 2.0, ai_bonus: 15)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 18 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 11 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 31 (results: 1, domains: 1, pos: 1.0, ai_bonus: 0)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 20 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 24 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 22 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 17 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+⏳ 500ms bekleniyor...
+📦 Batch 5/9 işleniyor (10 haber)...
+🔍 SearXNG query: "scaling inference to robotics meet" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "a in releases protenix-v1: new" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "to how design mock data" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "google ai an agentic introduces" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "ai agent a malicious skills" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "multimodal t on best percent" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "claude on openai s opus" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "ai new "significant research suggests" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "anthropic s claude for at a" (5 keywords, 6 AI terms)
+🔍 SearXNG query: "ai reasoning a of study" (5 keywords, 4 AI terms)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 23 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 17 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 17 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 44 (results: 2, domains: 2, pos: 1.5, ai_bonus: 30)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 47 (results: 2, domains: 2, pos: 1.5, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 16 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 19 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 4 sonuç bulundu (toplam: 4)
+📊 SearXNG trend score: 46 (results: 4, domains: 4, pos: 2.5, ai_bonus: 15)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 39 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 5 sonuç bulundu (toplam: 5)
+📊 SearXNG trend score: 70 (results: 5, domains: 5, pos: 3.0, ai_bonus: 30)
+⏳ 500ms bekleniyor...
+📦 Batch 6/9 işleniyor (10 haber)...
+🔍 SearXNG query: "openai anthropic ai as agent" (5 keywords, 5 AI terms)
+🔍 SearXNG query: "ai at super bowl steal" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "s watch 404 media’s super" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "as in space tourism looms," (5 keywords, 2 AI terms)
+🔍 SearXNG query: "ai portal26 announces breakthrough value" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "as ai boomi sees market" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "as lumen technologies appoints jeff" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "a project hail mary yes" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "a he it jeffrey epstein" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "to gives million prize literal" (5 keywords, 1 AI terms)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 42 (results: 2, domains: 2, pos: 1.5, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 12 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 49 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 35 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 16 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 14 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 18 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 40 (results: 1, domains: 1, pos: 1.0, ai_bonus: 15)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 16 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 5 sonuç bulundu (toplam: 5)
+📊 SearXNG trend score: 62 (results: 5, domains: 4, pos: 3.0, ai_bonus: 30)
+⏳ 500ms bekleniyor...
+📦 Batch 7/9 işleniyor (10 haber)...
+🔍 SearXNG query: "microsoft s ai microsoft’s efforts" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "in on s the reviews" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "on to bots moltbook are" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "anthropic ve a insiders afraid" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "ai beyond startup sectors seeing" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "in the washington post experienced" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "a for here s super" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "ai a beyond blame game:" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "to to ai how strategy increase" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "p berlingske angreb russiske soldater" (5 keywords, 1 AI terms)
+✅ SearXNG: 4 sonuç bulundu (toplam: 4)
+📊 SearXNG trend score: 51 (results: 4, domains: 3, pos: 2.5, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 21 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 39 (results: 1, domains: 1, pos: 1.0, ai_bonus: 15)
+✅ SearXNG: 3 sonuç bulundu (toplam: 3)
+📊 SearXNG trend score: 39 (results: 3, domains: 3, pos: 2.0, ai_bonus: 15)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 22 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 16 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 10 sonuç bulundu (toplam: 10)
+📊 SearXNG trend score: 73 (results: 10, domains: 6, pos: 5.5, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 12 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 46 (results: 2, domains: 1, pos: 1.5, ai_bonus: 30)
+✅ SearXNG: 10 sonuç bulundu (toplam: 10)
+📊 SearXNG trend score: 70 (results: 10, domains: 6, pos: 5.5, ai_bonus: 30)
+⏳ 500ms bekleniyor...
+📦 Batch 8/9 işleniyor (10 haber)...
+🔍 SearXNG query: "r s r om r nordjyskes chefredakt" (5 keywords, 5 AI terms)
+🔍 SearXNG query: "ai agents the biggest misconceptions" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "of google s ai the" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "i am to as a in" (5 keywords, 6 AI terms)
+🔍 SearXNG query: "ai in custom tool development" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "agents 2026.2.3: building safer, reliable" (5 keywords, 1 AI terms)
+🔍 SearXNG query: "of ai in legal aspects" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "30+ data engineer interview questions" (5 keywords, 0 AI terms)
+🔍 SearXNG query: "agentic ai to interview questions" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "an agent for build nanobot," (5 keywords, 3 AI terms)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 16 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 46 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 20 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 10 sonuç bulundu (toplam: 10)
+📊 SearXNG trend score: 77 (results: 10, domains: 8, pos: 5.5, ai_bonus: 30)
+✅ SearXNG: 9 sonuç bulundu (toplam: 9)
+📊 SearXNG trend score: 63 (results: 9, domains: 9, pos: 5.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 17 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 11 (results: 0, domains: 0, pos: 10.0, ai_bonus: 0)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 18 (results: 0, domains: 0, pos: 10.0, ai_bonus: 15)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 34 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 18 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+⏳ 500ms bekleniyor...
+📦 Batch 9/9 işleniyor (6 haber)...
+🔍 SearXNG query: "at google deepmind p student" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "google google for in google. missed" (5 keywords, 4 AI terms)
+🔍 SearXNG query: "ai in a experimenting living" (5 keywords, 3 AI terms)
+🔍 SearXNG query: "is for an in k" (5 keywords, 5 AI terms)
+🔍 SearXNG query: "ai in how 44-year killed" (5 keywords, 2 AI terms)
+🔍 SearXNG query: "of here s it journalism" (5 keywords, 4 AI terms)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 20 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 6 sonuç bulundu (toplam: 6)
+📊 SearXNG trend score: 60 (results: 6, domains: 6, pos: 3.5, ai_bonus: 30)
+✅ SearXNG: 0 sonuç bulundu (toplam: 0)
+📊 SearXNG trend score: 16 (results: 0, domains: 0, pos: 10.0, ai_bonus: 30)
+✅ SearXNG: 1 sonuç bulundu (toplam: 1)
+📊 SearXNG trend score: 38 (results: 1, domains: 1, pos: 1.0, ai_bonus: 30)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 53 (results: 2, domains: 2, pos: 1.5, ai_bonus: 30)
+✅ SearXNG: 2 sonuç bulundu (toplam: 2)
+📊 SearXNG trend score: 45 (results: 2, domains: 2, pos: 1.5, ai_bonus: 30)
+✅ Hybrid trend sıralaması tamamlandı
+📊 İşlenen: 86/86 haber
+🏆 Top 5: #74 (skor: 77), #26 (skor: 76), #4 (skor: 73), #67 (skor: 73), #49 (skor: 70)
+📈 Provider İstatistikleri:
+   Brave: 0 istek, 0 hata, ✅ aktif
+   Tavily: 0 istek, 0 hata, ✅ aktif
+   SearXNG: 86 istek, 0 hata, ✅ aktif
+✅ 2 trend haber seçildi (TOP 2 optimization)
+Top 2 Trend Haberler:
+  1. What I Am Doing to Stay Relevant as a Senior Analytics Consu... (skor: 77)
+  2. How to stream the 2026 Super Bowl for free tonight: Patriots... (skor: 76)
+✅ 2 unique trend haber bulundu (duplicate filtering yapıldı)
+✅ [09.02.2026 13:15:12] [rss] 📰 2 unique haber bulundu
+📊 Haber sayısı ayarları: min=1, max=3
+🎯 Hedef haber sayısı: 3 (content variation mode aktif)
+info: 📊 Agent step: content_variation İçerik çeşitlendirme kontrolü {"environment":"production","logId":"cmlf70h1h0000li3zd0exsldv","module":"agent","progress":40,"service":"ai-news-agent","step":"content_variation","timestamp":"2026-02-09 13:15:12"}
+🔄 Adım 2: İçerik çeşitlendirme stratejisi...
+[Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+📚 Son 48 saatte 100 haber yayınlanmış
+info: 📊 Agent step: multi_agent_pipeline Multi-agent pipeline başlatılıyor (Enrichment + Visual + Publish) {"environment":"production","logId":"cmlf70h1h0000li3zd0exsldv","module":"agent","progress":60,"service":"ai-news-agent","step":"multi_agent_pipeline","timestamp":"2026-02-09 13:15:12"}
+🤖 Adım 3: Multi-agent pipeline başlatılıyor...
+[Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+ℹ️  [09.02.2026 13:15:12] [multi-agent-pipeline] 🚀 Starting multi-agent pipeline with 2 articles
+
+✉ Adding job to queue: unique-articles
+   Articles: 2
+   AgentLogId: cmlf70h1h0000li3zd0exsldv
+✅ Job added successfully: 812
+🔄 [duplicate-detector] Job 812 ACTIVE - processing...
+ℹ️  [09.02.2026 13:15:13] [duplicate-detector] Job 812 active
+
+🤖 [duplicate-detector] ========== PROCESSING JOB ==========
+   Job ID: 812
+   Job Name: filter-duplicates
+   Queue: unique-articles
+   Data items: 2
+   Timeout: 120s
+ℹ️  [09.02.2026 13:15:13] [duplicate-detector] Processing job 812 (timeout: 120s)
+ℹ️  [09.02.2026 13:15:13] [duplicate-detector] Checking 2 articles for duplicates...
+✅ [09.02.2026 13:15:13] [duplicate-detector] Duplicate check: 2/2 unique (0.0% duplicates)
+✅ [09.02.2026 13:15:13] [multi-agent-pipeline] ✅ Agent duplicate-detector exited RECOVERY MODE
+✅ [09.02.2026 13:15:13] [duplicate-detector] Job 812 completed in 181ms
+ℹ️  [09.02.2026 13:15:13] [duplicate-detector] Emitted to next queue: trend-enrichment
+🔄 [trend-enricher] Job 384 ACTIVE - processing...
+ℹ️  [09.02.2026 13:15:13] [TrendEnricher] Job 384 active
+
+🤖 [trend-enricher] ========== PROCESSING JOB ==========
+   Job ID: 384
+   Job Name: duplicate-detector-output
+   Queue: trend-enrichment
+   Data items: 2
+   Timeout: 60s
+ℹ️  [09.02.2026 13:15:13] [TrendEnricher] Processing job 384 (timeout: 60s)
+ℹ️  [09.02.2026 13:15:13] [TrendEnricher] 🔥 Processing 2 articles for trend enrichment...
+✅ [duplicate-detector] Job 812 COMPLETED
+✅ [09.02.2026 13:15:13] [duplicate-detector] Job 812 completed
+ℹ️  [09.02.2026 13:15:13] [queue-manager] [unique-articles] Job 812 completed
+⚠️  [09.02.2026 13:15:13] [TrendEnricher] Trend enrichment failed for "What I Am Doing to Stay Releva..."
+⚠️  [09.02.2026 13:15:13] [TrendEnricher] Trend enrichment failed for "How to stream the 2026 Super B..."
+✅ [09.02.2026 13:15:13] [TrendEnricher] ✅ Trend enrichment complete: 0/2 trending (27ms)
+✅ [09.02.2026 13:15:13] [multi-agent-pipeline] ✅ Agent trend-enricher exited RECOVERY MODE
+✅ [09.02.2026 13:15:13] [TrendEnricher] Job 384 completed in 27ms
+ℹ️  [09.02.2026 13:15:13] [TrendEnricher] Emitted to next queue: enriched-articles
+🔄 [content-enricher] Job 763 ACTIVE - processing...
+ℹ️  [09.02.2026 13:15:13] [content-enricher] Job 763 active
+
+🤖 [content-enricher] ========== PROCESSING JOB ==========
+   Job ID: 763
+   Job Name: trend-enricher-output
+   Queue: enriched-articles
+   Data items: 2
+   Timeout: 600s
+ℹ️  [09.02.2026 13:15:13] [content-enricher] Processing job 763 (timeout: 600s)
+ℹ️  [09.02.2026 13:15:13] [content-enricher] Enriching 2 articles...
+ℹ️  [09.02.2026 13:15:13] [content-enricher] 🚀 Starting CONTROLLED enrichment for 2 articles (concurrency: 2)...
+ℹ️  [09.02.2026 13:15:13] [content-enricher] 📦 Processing batch 1/1 (2 articles)
+ℹ️  [09.02.2026 13:15:13] [content-enricher] [1/2] Enriching: What I Am Doing to Stay Relevant as a Senior Analy...
+ℹ️  [09.02.2026 13:15:13] [content-enricher] 🔍 Source gathering: LOW priority (score: 0)
+ℹ️  [09.02.2026 13:15:13] [content-enricher] 🔍 SearXNG search: "what doing stay relevant senior analytics consultant 2026"
+ℹ️  [09.02.2026 13:15:13] [content-enricher] [2/2] Enriching: How to stream the 2026 Super Bowl for free tonight...
+ℹ️  [09.02.2026 13:15:13] [content-enricher] 🔍 Source gathering: LOW priority (score: 0)
+ℹ️  [09.02.2026 13:15:13] [content-enricher] 🔍 SearXNG search: "how stream 2026 super bowl free tonight patriots"
+✅ [trend-enricher] Job 384 COMPLETED
+✅ [09.02.2026 13:15:13] [TrendEnricher] Job 384 completed
+ℹ️  [09.02.2026 13:15:13] [queue-manager] [trend-enrichment] Job 384 completed
+
+📊 Queue Status (unique-articles):
+   Waiting: 0
+   Active: 0
+   Completed: 1
+   Failed: 0
+ℹ️  [09.02.2026 13:15:14] [multi-agent-pipeline] 📊 Queue status: waiting=0, active=0, completed=1, failed=0
+ℹ️  [09.02.2026 13:15:14] [multi-agent-pipeline] ✅ Job was already completed by an agent
+✅ [09.02.2026 13:15:14] [multi-agent-pipeline] ✅ 2 articles added to multi-agent pipeline
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃        🤖 MULTI-AGENT PIPELINE STARTED            ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  Articles:     2                                  ┃
+┃  Target:       3                                  ┃
+┃  Agent Log:    cmlf70h1h000...                    ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  Pipeline Flow (6 Agents) - 🆕 OPTIMIZED:         ┃
+┃  1. ✅ Content Collected (RSS + Trend)            ┃
+┃  2. 🔄 Duplicate Detection (3-layer) ← FIRST!    ┃
+┃  3. 🔄 Relevance Filter (AI scoring)              ┃
+┃  4. 🔄 Trend Enrichment                           ┃
+┃  5. 🔄 Content Enrichment (SearXNG + Jina)        ┃
+┃  6. 🔄 Visual Generation (Pollinations)           ┃
+┃  7. 🔄 Database Publishing                        ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+ℹ️  [09.02.2026 13:15:14] [agent] 🤖 Multi-agent pipeline başlatıldı: 2 haber işlenecek
+⏳ Multi-agent pipeline tamamlanması bekleniyor...
+
+⏳ Waiting for pipeline completion (timeout: 1200s)
+ℹ️  [09.02.2026 13:15:14] [multi-agent-pipeline] ⏳ Waiting for pipeline completion (timeout: 1200s)
+✅ SearXNG: 10 sonuç bulundu (toplam: 29)
+✅ SearXNG: 10 sonuç bulundu (toplam: 31)
+ℹ️  [09.02.2026 13:15:14] [content-enricher] 📋 Found 3 candidate URLs
+ℹ️  [09.02.2026 13:15:14] [content-enricher] 📖 Using Jina Reader for remaining URLs
+⚠️  [09.02.2026 13:15:14] [content-enricher] ⚠️ Jina Reader failed for https://www.merriam-webster.com/dictionary/doing: Request failed with status code 451
+✅ SearXNG: 10 sonuç bulundu (toplam: 28)
+✅ SearXNG: 10 sonuç bulundu (toplam: 29)
+ℹ️  [09.02.2026 13:15:14] [content-enricher] 📋 Found 10 candidate URLs
+ℹ️  [09.02.2026 13:15:14] [content-enricher] 📖 Using Jina Reader for remaining URLs
+⚠️  [09.02.2026 13:15:14] [content-enricher] ⚠️ Jina Reader failed for https://sports.yahoo.com/nfl/article/how-to-watch-the-2026-super-bowl-today-for-free-patriots-vs-seahawks-tv-channel-start-time-where-to-stream-and-more-184923888.html: Request failed with status code 451
+⚠️  [09.02.2026 13:15:15] [content-enricher] ⚠️ Tavily fallback failed for https://sports.yahoo.com/nfl/article/how-to-watch-the-2026-super-bowl-today-for-free-patriots-vs-seahawks-tv-channel-start-time-where-to-stream-and-more-184923888.html: Request failed with status code 432
+❌ [09.02.2026 13:15:15] [content-enricher] ❌ All extraction methods failed for https://sports.yahoo.com/nfl/article/how-to-watch-the-2026-super-bowl-today-for-free-patriots-vs-seahawks-tv-channel-start-time-where-to-stream-and-more-184923888.html
+⚠️  [09.02.2026 13:15:15] [content-enricher] ⚠️ Tavily fallback failed for https://www.merriam-webster.com/dictionary/doing: Request failed with status code 432
+❌ [09.02.2026 13:15:15] [content-enricher] ❌ All extraction methods failed for https://www.merriam-webster.com/dictionary/doing
+ℹ️  [09.02.2026 13:15:16] [content-enricher] ✅ Jina Reader: 2 total sources
+ℹ️  [09.02.2026 13:15:16] [content-enricher] ✅ Total sources: 2
+ℹ️  [09.02.2026 13:15:16] [content-enricher] 🚀 Using DeepSeek-chat for BOTH TR + EN synthesis
+
+📊 [Check #1] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:15:19] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #2] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:15:24] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+ℹ️  [09.02.2026 13:15:27] [content-enricher] ✅ Jina Reader: 2 total sources
+ℹ️  [09.02.2026 13:15:27] [content-enricher] ✅ Total sources: 2
+ℹ️  [09.02.2026 13:15:27] [content-enricher] 🚀 Using DeepSeek-chat for BOTH TR + EN synthesis
+
+📊 [Check #3] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:15:29] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+💓 Heartbeat updated: 09.02.2026 13:15:31
+⚠️  [09.02.2026 13:15:31] [queue-manager] [articles-with-visuals] Job 716 stalled
+⚠️  [09.02.2026 13:15:31] [visual-generator] Job 716 stalled
+🔄 [visual-generator] Job 716 ACTIVE - processing...
+ℹ️  [09.02.2026 13:15:31] [visual-generator] Job 716 active
+
+🤖 [visual-generator] ========== PROCESSING JOB ==========
+   Job ID: 716
+   Job Name: content-enricher-output
+   Queue: articles-with-visuals
+   Data items: 2
+   Timeout: 1200s
+ℹ️  [09.02.2026 13:15:31] [visual-generator] Processing job 716 (timeout: 1200s)
+ℹ️  [09.02.2026 13:15:31] [visual-generator] Generating visuals for 2 articles (parallel: 3)...
+ℹ️  [09.02.2026 13:15:31] [visual-generator] Processing batch 1/1 (2 articles)
+ℹ️  [09.02.2026 13:15:31] [visual-generator] Generating visual: Aronofsky'nin Yapay Zeka Dizisi: Devrim mi, Felake...
+ℹ️  [09.02.2026 13:15:31] [visual-generator] 🤖 Using DeepSeek for image prompt generation (content-aware)
+ℹ️  [09.02.2026 13:15:31] [visual-generator] Generating visual: 2026'da Analitik Danışmanı Olarak Nasıl Güncel Kal...
+ℹ️  [09.02.2026 13:15:31] [visual-generator] 🤖 Using DeepSeek for image prompt generation (content-aware)
+📊Progress: 20% - Agent still running...
+📝 Final prompt (142 chars): A close-up of an AMD processor being installed into an electric vehicle's mainboard, macro photography, shallow depth of field, no , no humans
+ℹ️  [09.02.2026 13:15:33] [visual-generator] Image prompt: A close-up of an AMD processor being installed into an electric vehicle's mainboard, macro photograp...
+🎯 Cache MISS for prompt: A close-up of an AMD processor being installed int...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: A close-up of an AMD processor being installed into an electric vehicle's mainboard, macro photograp
+🎨 Authenticated URL: https://gen.pollinations.ai/image/A%20close-up%20of%20an%20AMD%20processor%20being%20installed%20into%20an%20electric%20...
+⚠️ Prompt too long (177 chars), truncating to 150
+✅ Added strong negative prompt suffix
+📝 Final prompt (150 chars): A close-up of a vintage quill pen lying on a modern circuit board, the nib re..., no people, no humans, no faces, no hands, no body parts, empty scene
+ℹ️  [09.02.2026 13:15:33] [visual-generator] Image prompt: A close-up of a vintage quill pen lying on a modern circuit board, the nib re..., no people, no huma...
+🎯 Cache MISS for prompt: A close-up of a vintage quill pen lying on a moder...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: A close-up of a vintage quill pen lying on a modern circuit board, the nib re..., no , no humans, no
+🎨 Authenticated URL: https://gen.pollinations.ai/image/A%20close-up%20of%20a%20vintage%20quill%20pen%20lying%20on%20a%20modern%20circuit%20bo...
+
+📊 [Check #4] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:15:34] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #5] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:15:39] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #6] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:15:44] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #7] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:15:49] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #8] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:15:54] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #9] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:15:59] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+💓 Heartbeat updated: 09.02.2026 13:16:01
+Retry attempt 1/3 after 1000ms: Pollinations image fetch timeout
+Retry attempt 1/3 after 1000ms: Pollinations image fetch timeout
+
+📊 [Check #10] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:04] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+🎯 Cache MISS for prompt: A close-up of an AMD processor being installed int...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: A close-up of an AMD processor being installed into an electric vehicle's mainboard, macro photograp
+🎨 Authenticated URL: https://gen.pollinations.ai/image/A%20close-up%20of%20an%20AMD%20processor%20being%20installed%20into%20an%20electric%20...
+🎯 Cache MISS for prompt: A close-up of a vintage quill pen lying on a moder...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: A close-up of a vintage quill pen lying on a modern circuit board, the nib re..., no , no humans, no
+🎨 Authenticated URL: https://gen.pollinations.ai/image/A%20close-up%20of%20a%20vintage%20quill%20pen%20lying%20on%20a%20modern%20circuit%20bo...
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+
+📊 [Check #11] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:09] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #12] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:14] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #13] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:19] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+✅ [09.02.2026 13:16:20] [content-enricher] ✅ DeepSeek TR content generated successfully
+
+📊 [Check #14] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:24] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #15] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:29] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+💓 Heartbeat updated: 09.02.2026 13:16:31
+✅ [09.02.2026 13:16:32] [content-enricher] ✅ DeepSeek TR content generated successfully
+
+📊 [Check #16] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:34] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+Retry attempt 2/3 after 2000ms: Pollinations image fetch timeout
+Retry attempt 2/3 after 2000ms: Pollinations image fetch timeout
+🎯 Cache HIT for prompt: A close-up of an AMD processor being installed int...
+
+🖼️  Image Optimization Pipeline Started
+   Source: https://gen.pollinations.ai/image/A%20close-up%20of%20an%20AMD%20processor%20being%20installed%20into%20an%20electric%20vehicle's%20mainboard%2C%20macro%20photography%2C%20shallow%20depth%20of%20field%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+   Slug: 2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum
+📥 Downloading image from: https://gen.pollinations.ai/image/A%20close-up%20of%20an%20AMD%20processor%20being%20installed%20into%20an%20electric%20vehicle's%20mainboard%2C%20macro%20photography%2C%20shallow%20depth%20of%20field%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+🔑 Adding Pollinations API key to download request
+
+📊 Original Image:
+   Format: jpeg
+   Size: 1200x630
+   File Size: 82.9KB
+   Download Time: 462ms
+🎨 Generating 4 image sizes for: 2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum
+🎯 Cache MISS for prompt: A close-up of a vintage quill pen lying on a moder...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: A close-up of a vintage quill pen lying on a modern circuit board, the nib re..., no , no humans, no
+🎨 Authenticated URL: https://gen.pollinations.ai/image/A%20close-up%20of%20a%20vintage%20quill%20pen%20lying%20on%20a%20modern%20circuit%20bo...
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+
+🖼️  Image Optimization Pipeline Started
+   Source: https://gen.pollinations.ai/image/A%20close-up%20of%20a%20vintage%20quill%20pen%20lying%20on%20a%20modern%20circuit%20board%2C%20the%20nib%20re...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+   Slug: aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi
+📥 Downloading image from: https://gen.pollinations.ai/image/A%20close-up%20of%20a%20vintage%20quill%20pen%20lying%20on%20a%20modern%20circuit%20board%2C%20the%20nib%20re...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+🔑 Adding Pollinations API key to download request
+
+📊 Original Image:
+   Format: jpeg
+   Size: 1200x630
+   File Size: 95.5KB
+   Download Time: 325ms
+🎨 Generating 4 image sizes for: aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi
+✅ Uploaded to R2: https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum-large.webp
+  ✅ large: 59.2KB → https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum-large.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi-large.webp
+  ✅ large: 72.0KB → https://images.aihaberleri.org/aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi-large.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum-medium.webp
+  ✅ medium: 35.6KB → https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum-medium.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum-small.webp
+  ✅ small: 15.2KB → https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum-small.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi-medium.webp
+  ✅ medium: 42.3KB → https://images.aihaberleri.org/aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi-medium.webp
+
+📊 [Check #17] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:39] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+✅ Uploaded to R2: https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum-thumb.webp
+  ✅ thumb: 5.2KB → https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-guncel-kaliyorum-thumb.webp
+
+✅ Optimization Complete!
+   Total Time: 3052ms
+   Storage: Cloudflare R2
+✅ [09.02.2026 13:16:39] [visual-generator] Image optimized and uploaded
+✅ [09.02.2026 13:16:39] [visual-generator] Visual generated in 68184ms: 2026'da Analitik Danışmanı Olarak Nasıl Güncel Kal...
+✅ Uploaded to R2: https://images.aihaberleri.org/aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi-small.webp
+  ✅ small: 17.4KB → https://images.aihaberleri.org/aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi-small.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi-thumb.webp
+  ✅ thumb: 5.6KB → https://images.aihaberleri.org/aronofskynin-yapay-zeka-dizisi-devrim-mi-felaket-mi-thumb.webp
+
+✅ Optimization Complete!
+   Total Time: 2171ms
+   Storage: Cloudflare R2
+✅ [09.02.2026 13:16:39] [visual-generator] Image optimized and uploaded
+✅ [09.02.2026 13:16:39] [visual-generator] Visual generated in 68570ms: Aronofsky'nin Yapay Zeka Dizisi: Devrim mi, Felake...
+✅ [09.02.2026 13:16:39] [visual-generator] Visual generation complete: 2/2 successful (0 failed)
+✅ [09.02.2026 13:16:39] [multi-agent-pipeline] ✅ Agent visual-generator exited RECOVERY MODE
+✅ [09.02.2026 13:16:39] [visual-generator] Job 716 completed in 68573ms
+ℹ️  [09.02.2026 13:16:39] [visual-generator] Emitted to next queue: database-publisher
+✅ [visual-generator] Job 716 COMPLETED
+✅ [09.02.2026 13:16:39] [visual-generator] Job 716 completed
+🔄 [database-publisher] Job 672 ACTIVE - processing...
+ℹ️  [09.02.2026 13:16:39] [database-publisher] Job 672 active
+
+🤖 [database-publisher] ========== PROCESSING JOB ==========
+   Job ID: 672
+   Job Name: visual-generator-output
+   Queue: database-publisher
+   Data items: 2
+   Timeout: 120s
+ℹ️  [09.02.2026 13:16:39] [database-publisher] Processing job 672 (timeout: 120s)
+ℹ️  [09.02.2026 13:16:39] [database-publisher] Publishing 2 articles to database...
+ℹ️  [09.02.2026 13:16:39] [queue-manager] [articles-with-visuals] Job 716 completed
+⚠️  [09.02.2026 13:16:39] [database-publisher] Article already exists: Aronofsky'nin Yapay Zeka Dizisi: Devrim mi, Felake... (skipping)
+⚠️  [09.02.2026 13:16:39] [database-publisher] Article already exists: 2026'da Analitik Danışmanı Olarak Nasıl Güncel Kal... (skipping)
+✅ [09.02.2026 13:16:39] [database-publisher] Database publishing complete: 0/2 articles published
+✅ [09.02.2026 13:16:39] [multi-agent-pipeline] ✅ Agent database-publisher exited RECOVERY MODE
+✅ [09.02.2026 13:16:39] [database-publisher] Job 672 completed in 44ms
+ℹ️  [09.02.2026 13:16:39] [queue-manager] [database-publisher] Job 672 completed
+✅ [database-publisher] Job 672 COMPLETED
+✅ [09.02.2026 13:16:39] [database-publisher] Job 672 completed
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+
+📊 [Check #18] Pipeline Progress:
+   Stage: enriched-articles
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:44] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #19] Pipeline Progress:
+   Stage: enriched-articles
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:49] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #20] Pipeline Progress:
+   Stage: enriched-articles
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:54] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 101 completed, 3 failed)
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+
+📊 [Check #21] Pipeline Progress:
+   Stage: enriched-articles
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:16:59] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 101 completed, 3 failed)
+💓 Heartbeat updated: 09.02.2026 13:17:01
+
+📊 [Check #22] Pipeline Progress:
+   Stage: enriched-articles
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:04] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 101 completed, 3 failed)
+✅ [09.02.2026 13:17:04] [content-enricher] ✅ DeepSeek EN content generated successfully
+✅ [09.02.2026 13:17:08] [content-enricher] ✅ [1/2] Enriched: 2026'da Analitik Danışmanı Olarak Nasıl 'Geçerli' ...
+
+📊 [Check #23] Pipeline Progress:
+   Stage: enriched-articles
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:09] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #24] Pipeline Progress:
+   Stage: enriched-articles
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:14] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 101 completed, 3 failed)
+✅ [09.02.2026 13:17:16] [content-enricher] ✅ DeepSeek EN content generated successfully
+
+📊 [Check #25] Pipeline Progress:
+   Stage: enriched-articles
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:19] [multi-agent-pipeline] 📊 Pipeline progress: enriched-articles (1 in queue, 101 completed, 3 failed)
+✅ [09.02.2026 13:17:21] [content-enricher] ✅ [2/2] Enriched: 2026 Super Bowl'u Ücretsiz İzleme Rehberi: Patriot...
+✅ [09.02.2026 13:17:21] [content-enricher] 🏁 CONTROLLED enrichment complete: 2/2 articles (0 failed)
+✅ [09.02.2026 13:17:21] [multi-agent-pipeline] ✅ Agent content-enricher exited RECOVERY MODE
+✅ [09.02.2026 13:17:21] [content-enricher] Job 763 completed in 128044ms
+ℹ️  [09.02.2026 13:17:21] [content-enricher] Emitted to next queue: articles-with-visuals
+🔄 [visual-generator] Job 717 ACTIVE - processing...
+ℹ️  [09.02.2026 13:17:21] [visual-generator] Job 717 active
+
+🤖 [visual-generator] ========== PROCESSING JOB ==========
+   Job ID: 717
+   Job Name: content-enricher-output
+   Queue: articles-with-visuals
+   Data items: 2
+   Timeout: 1200s
+ℹ️  [09.02.2026 13:17:21] [visual-generator] Processing job 717 (timeout: 1200s)
+ℹ️  [09.02.2026 13:17:21] [visual-generator] Generating visuals for 2 articles (parallel: 3)...
+ℹ️  [09.02.2026 13:17:21] [visual-generator] Processing batch 1/1 (2 articles)
+ℹ️  [09.02.2026 13:17:21] [visual-generator] Generating visual: 2026'da Analitik Danışmanı Olarak Nasıl 'Geçerli' ...
+ℹ️  [09.02.2026 13:17:21] [visual-generator] 🤖 Using DeepSeek for image prompt generation (content-aware)
+ℹ️  [09.02.2026 13:17:21] [visual-generator] Generating visual: 2026 Super Bowl'u Ücretsiz İzleme Rehberi: Patriot...
+ℹ️  [09.02.2026 13:17:21] [visual-generator] 🤖 Using DeepSeek for image prompt generation (content-aware)
+✅ [content-enricher] Job 763 COMPLETED
+✅ [09.02.2026 13:17:21] [content-enricher] Job 763 completed
+ℹ️  [09.02.2026 13:17:21] [queue-manager] [enriched-articles] Job 763 completed
+📝 Final prompt (134 chars): Aerial view of Super Bowl LX stadium at night, illuminated by stadium lights and digital billboards, photorealistic 8k, no , no humans
+ℹ️  [09.02.2026 13:17:23] [visual-generator] Image prompt: Aerial view of Super Bowl LX stadium at night, illuminated by stadium lights and digital billboards,...
+🎯 Cache MISS for prompt: Aerial view of Super Bowl LX stadium at night, ill...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: Aerial view of Super Bowl LX stadium at night, illuminated by stadium lights and digital billboards,
+🎨 Authenticated URL: https://gen.pollinations.ai/image/Aerial%20view%20of%20Super%20Bowl%20LX%20stadium%20at%20night%2C%20illuminated%20by%20...
+📝 Final prompt (137 chars): Macro shot of AMD Ryzen AI processor chip on circuit board, silicon wafer background, studio lighting, photorealistic, 8k, no , no humans
+ℹ️  [09.02.2026 13:17:23] [visual-generator] Image prompt: Macro shot of AMD Ryzen AI processor chip on circuit board, silicon wafer background, studio lightin...
+🎯 Cache MISS for prompt: Macro shot of AMD Ryzen AI processor chip on circu...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: Macro shot of AMD Ryzen AI processor chip on circuit board, silicon wafer background, studio lightin
+🎨 Authenticated URL: https://gen.pollinations.ai/image/Macro%20shot%20of%20AMD%20Ryzen%20AI%20processor%20chip%20on%20circuit%20board%2C%20si...
+
+📊 [Check #26] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:24] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #27] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:29] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+💓 Heartbeat updated: 09.02.2026 13:17:31
+📊Progress: 30% - Agent still running...
+
+📊 [Check #28] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:34] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #29] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:39] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #30] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:44] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #31] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:49] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+Retry attempt 1/3 after 1000ms: Pollinations image fetch timeout
+Retry attempt 1/3 after 1000ms: Pollinations image fetch timeout
+
+📊 [Check #32] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:54] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+🎯 Cache MISS for prompt: Aerial view of Super Bowl LX stadium at night, ill...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: Aerial view of Super Bowl LX stadium at night, illuminated by stadium lights and digital billboards,
+🎨 Authenticated URL: https://gen.pollinations.ai/image/Aerial%20view%20of%20Super%20Bowl%20LX%20stadium%20at%20night%2C%20illuminated%20by%20...
+🎯 Cache MISS for prompt: Macro shot of AMD Ryzen AI processor chip on circu...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: Macro shot of AMD Ryzen AI processor chip on circuit board, silicon wafer background, studio lightin
+🎨 Authenticated URL: https://gen.pollinations.ai/image/Macro%20shot%20of%20AMD%20Ryzen%20AI%20processor%20chip%20on%20circuit%20board%2C%20si...
+
+📊 [Check #33] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:17:59] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+💓 Heartbeat updated: 09.02.2026 13:18:01
+
+📊 [Check #34] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:18:04] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #35] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:18:09] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #36] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:18:14] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #37] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:18:19] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+
+📊 [Check #38] Pipeline Progress:
+   Stage: articles-with-visuals
+   In Queue: 1
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+ℹ️  [09.02.2026 13:18:24] [multi-agent-pipeline] 📊 Pipeline progress: articles-with-visuals (1 in queue, 101 completed, 3 failed)
+Retry attempt 2/3 after 2000ms: Pollinations image fetch timeout
+Retry attempt 2/3 after 2000ms: Pollinations image fetch timeout
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+💾 Image cached for 7 days
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+🎯 Cache HIT for prompt: Aerial view of Super Bowl LX stadium at night, ill...
+
+🖼️  Image Optimization Pipeline Started
+   Source: https://gen.pollinations.ai/image/Aerial%20view%20of%20Super%20Bowl%20LX%20stadium%20at%20night%2C%20illuminated%20by%20stadium%20lights%20and%20digital%20billboards%2C%20photorealistic%208k%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+   Slug: 2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar
+📥 Downloading image from: https://gen.pollinations.ai/image/Aerial%20view%20of%20Super%20Bowl%20LX%20stadium%20at%20night%2C%20illuminated%20by%20stadium%20lights%20and%20digital%20billboards%2C%20photorealistic%208k%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+🔑 Adding Pollinations API key to download request
+🎯 Cache HIT for prompt: Macro shot of AMD Ryzen AI processor chip on circu...
+
+🖼️  Image Optimization Pipeline Started
+   Source: https://gen.pollinations.ai/image/Macro%20shot%20of%20AMD%20Ryzen%20AI%20processor%20chip%20on%20circuit%20board%2C%20silicon%20wafer%20background%2C%20studio%20lighting%2C%20photorealistic%2C%208k%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+   Slug: 2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum
+📥 Downloading image from: https://gen.pollinations.ai/image/Macro%20shot%20of%20AMD%20Ryzen%20AI%20processor%20chip%20on%20circuit%20board%2C%20silicon%20wafer%20background%2C%20studio%20lighting%2C%20photorealistic%2C%208k%2C%20no%20%2C%20no%20humans?width=1200&height=630&model=flux&enhance=true
+🔑 Adding Pollinations API key to download request
+
+📊 Original Image:
+   Format: jpeg
+   Size: 1200x630
+   File Size: 182.0KB
+   Download Time: 478ms
+🎨 Generating 4 image sizes for: 2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar
+
+📊 Original Image:
+   Format: jpeg
+   Size: 1200x630
+   File Size: 111.9KB
+   Download Time: 318ms
+🎨 Generating 4 image sizes for: 2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum
+✅ Uploaded to R2: https://images.aihaberleri.org/2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar-large.webp
+  ✅ large: 182.2KB → https://images.aihaberleri.org/2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar-large.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum-large.webp
+  ✅ large: 89.2KB → https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum-large.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar-medium.webp
+  ✅ medium: 85.6KB → https://images.aihaberleri.org/2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar-medium.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum-medium.webp
+  ✅ medium: 52.5KB → https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum-medium.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar-small.webp
+  ✅ small: 23.6KB → https://images.aihaberleri.org/2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar-small.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum-small.webp
+  ✅ small: 20.5KB → https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum-small.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar-thumb.webp
+  ✅ thumb: 5.3KB → https://images.aihaberleri.org/2026-super-bowlu-ucretsiz-izleme-rehberi-patriots-seahawks-saati-ve-tum-detaylar-thumb.webp
+
+✅ Optimization Complete!
+   Total Time: 2292ms
+   Storage: Cloudflare R2
+✅ [09.02.2026 13:18:28] [visual-generator] Image optimized and uploaded
+✅ [09.02.2026 13:18:28] [visual-generator] Visual generated in 67422ms: 2026 Super Bowl'u Ücretsiz İzleme Rehberi: Patriot...
+✅ Uploaded to R2: https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum-thumb.webp
+  ✅ thumb: 6.2KB → https://images.aihaberleri.org/2026da-analitik-danismani-olarak-nasil-gecerli-kaliyorum-thumb.webp
+
+✅ Optimization Complete!
+   Total Time: 2370ms
+   Storage: Cloudflare R2
+✅ [09.02.2026 13:18:29] [visual-generator] Image optimized and uploaded
+✅ [09.02.2026 13:18:29] [visual-generator] Visual generated in 67874ms: 2026'da Analitik Danışmanı Olarak Nasıl 'Geçerli' ...
+✅ [09.02.2026 13:18:29] [visual-generator] Visual generation complete: 2/2 successful (0 failed)
+✅ [09.02.2026 13:18:29] [multi-agent-pipeline] ✅ Agent visual-generator exited RECOVERY MODE
+✅ [09.02.2026 13:18:29] [visual-generator] Job 717 completed in 67876ms
+ℹ️  [09.02.2026 13:18:29] [visual-generator] Emitted to next queue: database-publisher
+✅ [visual-generator] Job 717 COMPLETED
+✅ [09.02.2026 13:18:29] [visual-generator] Job 717 completed
+🔄 [database-publisher] Job 673 ACTIVE - processing...
+ℹ️  [09.02.2026 13:18:29] [database-publisher] Job 673 active
+
+🤖 [database-publisher] ========== PROCESSING JOB ==========
+   Job ID: 673
+   Job Name: visual-generator-output
+   Queue: database-publisher
+   Data items: 2
+   Timeout: 120s
+ℹ️  [09.02.2026 13:18:29] [database-publisher] Processing job 673 (timeout: 120s)
+ℹ️  [09.02.2026 13:18:29] [database-publisher] Publishing 2 articles to database...
+ℹ️  [09.02.2026 13:18:29] [queue-manager] [articles-with-visuals] Job 717 completed
+⚠️  [09.02.2026 13:18:29] [database-publisher] Article already exists: 2026'da Analitik Danışmanı Olarak Nasıl 'Geçerli' ... (skipping)
+⚠️  [09.02.2026 13:18:29] [database-publisher] Article already exists: 2026 Super Bowl'u Ücretsiz İzleme Rehberi: Patriot... (skipping)
+✅ [09.02.2026 13:18:29] [database-publisher] Database publishing complete: 0/2 articles published
+✅ [09.02.2026 13:18:29] [multi-agent-pipeline] ✅ Agent database-publisher exited RECOVERY MODE
+✅ [09.02.2026 13:18:29] [database-publisher] Job 673 completed in 18ms
+✅ [database-publisher] Job 673 COMPLETED
+✅ [09.02.2026 13:18:29] [database-publisher] Job 673 completed
+ℹ️  [09.02.2026 13:18:29] [queue-manager] [database-publisher] Job 673 completed
+
+📊 [Check #39] Pipeline Progress:
+   Stage: unknown
+   In Queue: 0
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 0/3
+💓 Heartbeat updated: 09.02.2026 13:18:31
+
+📊 [Check #40] Pipeline Progress:
+   Stage: unknown
+   In Queue: 0
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 1/3
+
+📊 [Check #41] Pipeline Progress:
+   Stage: unknown
+   In Queue: 0
+   Completed: 101
+   Failed: 3
+   Has Seen Articles: true
+   Empty Checks: 2/3
+✅ [09.02.2026 13:18:39] [multi-agent-pipeline] ✅ Pipeline completed: 101 articles processed
+
+============================================================
+✅ MULTI-AGENT PIPELINE COMPLETED: 0 haber yayınlandı
+============================================================
+
+✅ [09.02.2026 13:18:39] [publish] ✅ 0 haber yayında!
+[Socket] Cannot emit 'agent:progress' - Socket.io not initialized
+⏰ Bir sonraki çalışma: 09.02.2026 13:24:39
+[Socket] Cannot emit 'agent:completed' - Socket.io not initialized
+info: ✅ Agent execution completed {"articlesCreated":0,"articlesScraped":2,"duration":308,"environment":"production","logId":"cmlf70h1h0000li3zd0exsldv","module":"agent","service":"ai-news-agent","success":true,"timestamp":"2026-02-09 13:18:39"}
+✅ Agent çalıştırması 308s içinde tamamlandı
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃           ✅ AGENT EXECUTION SUCCESS              ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃  Status:         PARTIAL                        ┃
+┃  Duration:       308s                            ┃
+┃  Articles Found: 2                              ┃
+┃  Articles Made:  0                              ┃
+┃  Next Run:       09.02.2026 13:24:39      ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+📊 Progress: 90% - Agent execution completed
+info: ✅ Job completed {"environment":"production","jobId":"repeat:c696fac75cf52f4a2fb23116b53dfd58:1770642720000","module":"worker","result":{"articlesCreated":0,"articlesScraped":2,"duration":308,"errors":[],"publishedArticles":[],"success":true},"service":"ai-news-agent","timestamp":"2026-02-09 13:18:39"}
+
+📊 Execution Summary:
+   Articles Scraped: 2
+   Articles Created: 0
+   Duration: 308s
+   Status: ✅ SUCCESS
+💾 Database connection pool kept alive for next job

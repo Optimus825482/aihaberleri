@@ -874,25 +874,103 @@ export async function fetchAINews(
       })),
     );
 
-    // Step 4: Sort by trend score and take top articles
-    // 🎯 OPTIMIZED: TOP 2 seçim (09.02.2026)
-    // Daha az haber = daha kaliteli içerik + daha az API maliyeti
-    const topArticles = trendRankings
-      .slice(0, 2) // TOP 2 trending (optimized pipeline)
-      .map((ranking) => {
+    // Step 4: Sort by trend score and take top articles with EARLY DB CHECK
+    // 🎯 OPTIMIZED: TOP 2 seçim + Early DB Check (09.02.2026)
+    // Artık üst sıradaki 2 konuyu seçmeden önce veritabanında var mı kontrol ediyoruz
+    // Eğer varsa sonraki 2'yi deniyoruz, böylece boşa işlem yapılmıyor
+
+    const BATCH_SIZE = 2; // Her seferinde 2 makale kontrol et
+    const MAX_BATCHES = 5; // Maksimum 10 makale dene (5 batch)
+    // Extended type: RSSItem + trendScore (for sorting & display)
+    type RSSItemWithScore = (typeof itemsToAnalyze)[0] & {
+      trendScore?: number;
+    };
+    let topArticles: RSSItemWithScore[] = [];
+    let batchIndex = 0;
+
+    console.log(`\n🔍 Early DB Check başlıyor (${BATCH_SIZE}'li gruplar)...`);
+
+    while (topArticles.length === 0 && batchIndex < MAX_BATCHES) {
+      const startIdx = batchIndex * BATCH_SIZE;
+      const endIdx = startIdx + BATCH_SIZE;
+
+      // Bu batch'teki makaleleri al
+      const batchRankings = trendRankings.slice(startIdx, endIdx);
+
+      if (batchRankings.length === 0) {
+        console.log(`⚠️ Batch ${batchIndex + 1}: Daha fazla makale yok`);
+        break;
+      }
+
+      console.log(
+        `\n📋 Batch ${batchIndex + 1}/${MAX_BATCHES} kontrol ediliyor (index ${startIdx}-${endIdx - 1})...`,
+      );
+
+      // Her makale için veritabanında var mı kontrol et
+      const uniqueArticles: RSSItemWithScore[] = [];
+
+      for (const ranking of batchRankings) {
         const item = itemsToAnalyze[ranking.index];
-        return {
-          ...item,
-          trendScore: ranking.score,
-        };
-      })
-      .sort((a, b) => (b.trendScore || 0) - (a.trendScore || 0));
+        const normalizedUrl = normalizeUrl(item.link);
+
+        // DB'de bu URL veya benzer başlık var mı kontrol et
+        const existingArticle = await db.article.findFirst({
+          where: {
+            OR: [{ sourceUrl: normalizedUrl }, { sourceUrl: item.link }],
+          },
+          select: { id: true, title: true },
+        });
+
+        if (existingArticle) {
+          console.log(
+            `  ⏭️ SKIP: "${item.title.substring(0, 50)}..." (DB'de var: ID ${existingArticle.id})`,
+          );
+        } else {
+          console.log(
+            `  ✅ NEW: "${item.title.substring(0, 50)}..." (DB'de yok)`,
+          );
+          const itemWithScore: RSSItemWithScore = {
+            ...item,
+            trendScore: ranking.score,
+          };
+          uniqueArticles.push(itemWithScore);
+        }
+      }
+
+      if (uniqueArticles.length > 0) {
+        topArticles = uniqueArticles;
+        console.log(
+          `\n✅ Batch ${batchIndex + 1}'de ${uniqueArticles.length} unique makale bulundu!`,
+        );
+      } else {
+        console.log(
+          `\n⚠️ Batch ${batchIndex + 1}: Tüm makaleler zaten DB'de var, sonraki batch'e geçiliyor...`,
+        );
+        batchIndex++;
+      }
+    }
+
+    // Hiç unique makale bulunamadıysa
+    if (topArticles.length === 0) {
+      console.log(
+        `\n⚠️ Early DB Check: ${MAX_BATCHES * BATCH_SIZE} makalede hiçbiri unique değil!`,
+      );
+      console.log(
+        `💡 Tüm trend haberler zaten veritabanında var. Agent bu sefer yeni içerik üretmeyecek.`,
+      );
+      return []; // Boş array dön
+    }
+
+    // Sıralama
+    topArticles = topArticles.sort(
+      (a, b) => (b.trendScore || 0) - (a.trendScore || 0),
+    );
 
     console.log(
-      `✅ ${topArticles.length} trend haber seçildi (TOP 2 optimization)`,
+      `\n✅ ${topArticles.length} UNIQUE trend haber seçildi (Early DB Check + TOP 2 optimization)`,
     );
     console.log(
-      "Top 2 Trend Haberler:",
+      "Seçilen Unique Haberler:",
       topArticles
         .slice(0, 2)
         .map(
