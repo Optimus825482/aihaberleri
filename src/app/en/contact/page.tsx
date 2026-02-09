@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import ContactFormEN from "@/components/ContactFormEN";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Contact Us | AI News - Get in Touch",
   description:

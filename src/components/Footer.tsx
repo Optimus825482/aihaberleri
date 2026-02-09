@@ -4,9 +4,6 @@ import { NewsletterForm } from "@/components/NewsletterForm";
 import { PushNotificationButton } from "@/components/PushNotificationButton";
 import { db } from "@/lib/db";
 
-// Force dynamic rendering to avoid SSR issues
-export const dynamic = "force-dynamic";
-
 interface FooterProps {
   locale?: "tr" | "en";
 }
@@ -63,22 +60,9 @@ const translations = {
 };
 
 export async function Footer({ locale }: FooterProps) {
-  // Auto-detect locale from pathname if not provided
-  let detectedLocale: "tr" | "en" = locale || "tr";
-
-  if (!locale) {
-    try {
-      // Dynamic import to avoid static analysis issues in pages router
-      const { headers } = await import("next/headers");
-      const headersList = await headers();
-      const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
-      if (pathname.startsWith("/en")) {
-        detectedLocale = "en";
-      }
-    } catch {
-      // Fallback to TR if headers not available
-    }
-  }
+  // Locale is always "tr" when rendered from root layout (LayoutWrapper hides footer for /en)
+  // For explicit usage, locale prop can be passed directly
+  const detectedLocale: "tr" | "en" = locale || "tr";
 
   const t = translations[detectedLocale];
   const basePath = detectedLocale === "en" ? "/en" : "";

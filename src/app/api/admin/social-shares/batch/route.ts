@@ -24,8 +24,6 @@ const validPlatforms = [
   "BLUESKY_EN",
   "MASTODON",
   "MASTODON_EN",
-  "TUMBLR",
-  "TUMBLR_EN",
 ];
 
 // GET: List batches with progress
@@ -147,8 +145,6 @@ export async function POST(req: NextRequest) {
         "BLUESKY_EN",
         "MASTODON",
         "MASTODON_EN",
-        "TUMBLR",
-        "TUMBLR_EN",
       ], // All platforms by default (TR + EN)
       batchSize = 50, // Increased default batch size
       intervalSeconds = 10, // Default 10 seconds between articles

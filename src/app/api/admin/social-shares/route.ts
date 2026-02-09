@@ -86,8 +86,6 @@ export async function GET(req: NextRequest) {
       "BLUESKY_EN",
       "MASTODON",
       "MASTODON_EN",
-      "TUMBLR",
-      "TUMBLR_EN",
     ];
 
     const transformedArticles = articles

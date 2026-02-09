@@ -1,19 +1,66 @@
+# Dependencies & build outputs
 node_modules
 .next
+coverage
+
+# Git
 .git
 .gitignore
+
+# Environment files
 .env
 .env.local
 .env.*.local
-README.md
-docker-compose.yml
-Dockerfile
+.env.coolify.example
+
+# Docker files (prevent recursive COPY)
+Dockerfile*
+docker-compose*.yaml
+docker-compose*.yml
 .dockerignore
+
+# Documentation (büyük dosyalar, build'e girmemeli)
+*.md
+docs/
+CLAUDE.md
+COPILOT*.md
+ENHANCED*.md
+DEPLOYMENT*.md
+REKLAM*.md
+
+# Assets not needed in app build
+all-icons/
+logos/
+stitch/
+lll/
+skills/
+migrations/
+
+# IDE & OS
+.vscode
+.idea
+.DS_Store
+
+# Logs
+*.log
 npm-debug.log
 yarn-debug.log
 yarn-error.log
-.DS_Store
-coverage
-.vscode
-.idea
-*.log
+worker-*.txt
+
+# Config files not needed at runtime
+jest.config.js
+jest.setup.ts
+
+# Old / backup Dockerfiles
+Dockerfile.old
+Dockerfile.production
+
+# RSS & misc data files
+extracted-rss-urls.txt
+resources.rss
+
+# Credentials & misc JSON (güvenlik - kritik dosyalar hariç tutuldu)
+aihaberleri-*.json
+client_secret_*.json
+*.json.bak

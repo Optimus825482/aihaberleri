@@ -4,55 +4,27 @@ import { buttonVariants } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import { MainNav } from "@/components/main-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { db } from "@/lib/db";
 
-const translations = {
-  tr: {
-    searchPlaceholder: "Haber ara...",
-    subscribe: "Abone Ol",
-    subscribeLink: "/#newsletter",
-    langToggle: "EN",
-    langToggleHref: "/en",
-    langToggleTitle: "English",
-    mainNav: [
-      { title: "Ana Sayfa", href: "/" },
-      { title: "Son Haberler", href: "/haberler" },
-      { title: "Kategoriler", href: "/kategoriler" },
-      { title: "Hakkımızda", href: "/hakkimizda" },
-      { title: "İletişim", href: "/iletisim" },
-    ],
-  },
-  en: {
-    searchPlaceholder: "Search news...",
-    subscribe: "Subscribe",
-    subscribeLink: "/en#newsletter",
-    langToggle: "TR",
-    langToggleHref: "/",
-    langToggleTitle: "Türkçe",
-    mainNav: [
-      { title: "Home", href: "/en" },
-      { title: "Latest News", href: "/en/news" },
-      { title: "Categories", href: "/en/categories" },
-      { title: "About", href: "/en/about" },
-      { title: "Contact", href: "/en/contact" },
-    ],
-  },
+// SiteHeader is only rendered for Turkish pages (LayoutWrapper hides it for /en and /admin)
+// So we hardcode Turkish translations - no need for locale detection
+const t = {
+  searchPlaceholder: "Haber ara...",
+  subscribe: "Abone Ol",
+  subscribeLink: "/#newsletter",
+  langToggle: "EN",
+  langToggleHref: "/en",
+  langToggleTitle: "English",
+  mainNav: [
+    { title: "Ana Sayfa", href: "/" },
+    { title: "Son Haberler", href: "/haberler" },
+    { title: "Kategoriler", href: "/kategoriler" },
+    { title: "Hakkımızda", href: "/hakkimizda" },
+    { title: "İletişim", href: "/iletisim" },
+  ],
 };
 
-export async function SiteHeader() {
-  // Auto-detect locale from pathname
-  let locale: "tr" | "en" = "tr";
-  try {
-    // Dynamic import to avoid static analysis issues in pages router
-    const { headers } = await import("next/headers");
-    const headersList = await headers();
-    const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
-    if (pathname.startsWith("/en")) {
-      locale = "en";
-    }
-  } catch { }
-
-  const t = translations[locale];
+export function SiteHeader() {
+  const locale = "tr" as const;
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-gray-200 dark:border-ai-surface-border bg-white/80 dark:bg-[#111518]/90 backdrop-blur-md">

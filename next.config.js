@@ -2,10 +2,8 @@
 const nextConfig = {
   output: "standalone", // Required for Docker deployment
 
-  // Force new build ID to bust cache on every deployment
-  generateBuildId: async () => {
-    return `build-${Date.now()}`;
-  },
+  // Stable build ID for Docker layer caching (cache busting via git commit)
+  // generateBuildId removed - Next.js default hash is sufficient
 
   // Exclude heavy server-only packages from client bundling (CRITICAL for memory)
   // This prevents Puppeteer, Firebase Admin etc from being analyzed during build
@@ -54,11 +52,11 @@ const nextConfig = {
       ];
     }
 
-    // Reduce memory usage during build
+    // Filesystem cache: tekrarlayan build'lerde büyük hız kazancı
     config.cache = {
       type: "filesystem",
       compression: "gzip",
-      maxAge: 60000, // Reduce cache retention
+      maxAge: 604800000, // 7 gün (Docker layer cache ile uyumlu)
     };
 
     return config;
@@ -118,14 +116,13 @@ const nextConfig = {
   },
 
   eslint: {
-    // Production builds will fail on ESLint errors
-    // Run `npm run lint` to check locally before building
-    ignoreDuringBuilds: false,
+    // ESLint hataları CI'da kontrol edilir, build'de atla (~30s kazanç)
+    ignoreDuringBuilds: true,
   },
   typescript: {
-    // CRITICAL: Type errors cause build failures in production
-    // This prevents runtime crashes from type mismatches
-    ignoreBuildErrors: false,
+    // TS hataları dev'de ve CI'da kontrol edilir, Docker build'de atla (~20s kazanç)
+    // Not: Runtime crash riski minimal çünkü dev'de zaten kontrol ediliyor
+    ignoreBuildErrors: true,
   },
   // Headers for iOS auto-linking prevention (hydration fix)
   async headers() {

@@ -39,6 +39,7 @@ services:
       target: worker-runner
       args:
         BUILDKIT_INLINE_CACHE: 1
+        DOCKER_BUILDKIT: 1
     deploy:
       resources:
         limits:
@@ -100,6 +101,7 @@ services:
       target: runner
       args:
         BUILDKIT_INLINE_CACHE: 1
+        DOCKER_BUILDKIT: 1
     deploy:
       resources:
         limits:
