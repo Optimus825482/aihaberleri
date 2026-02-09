@@ -63,10 +63,66 @@ export interface EnrichedArticle extends UniqueArticle {
 }
 
 const JINA_READER_URL = "https://r.jina.ai";
-const JINA_TIMEOUT = 10000; // Increased from 5s to 10s to prevent timeouts
+const JINA_TIMEOUT = 8000; // Aggressive: 8s (reduced from 10s for faster fail)
 const TAVILY_EXTRACT_URL = "https://api.tavily.com/extract";
-const TAVILY_TIMEOUT = 15000; // Increased from 8s to 15s to prevent timeouts
-const TARGET_SOURCE_COUNT = 5; // Reduced from 8 to 5 for faster processing
+const TAVILY_TIMEOUT = 12000; // Aggressive: 12s (reduced from 15s for faster fail)
+const SEARXNG_TIMEOUT = 5000; // New: 5s timeout for SearXNG
+const TARGET_SOURCE_COUNT = 3; // Reduced from 5 to 3 for faster processing
+
+// Layer timeouts for fallback strategy
+const LAYER_1_TIMEOUT = 20000; // 20s for Tavily (high-priority)
+const LAYER_2_TIMEOUT = 25000; // 25s for SearXNG + Jina
+const LAYER_3_TIMEOUT = 30000; // 30s for LLM synthesis
+const MAX_ARTICLE_TIMEOUT = 60000; // 60s HARD LIMIT per article
+
+/**
+ * Circuit Breaker for API failure protection
+ */
+class CircuitBreaker {
+  private failures = 0;
+  private lastFailTime = 0;
+  private state: "CLOSED" | "OPEN" | "HALF_OPEN" = "CLOSED";
+
+  async execute<T>(fn: () => Promise<T>, fallback: () => T): Promise<T> {
+    // If circuit is OPEN, use fallback immediately
+    if (this.state === "OPEN") {
+      if (Date.now() - this.lastFailTime > 60000) {
+        this.state = "HALF_OPEN"; // Try again after 1 minute
+      } else {
+        return fallback();
+      }
+    }
+
+    try {
+      const result = await fn();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      return fallback();
+    }
+  }
+
+  private onSuccess() {
+    this.failures = 0;
+    this.state = "CLOSED";
+  }
+
+  private onFailure() {
+    this.failures++;
+    this.lastFailTime = Date.now();
+
+    if (this.failures >= 3) {
+      this.state = "OPEN"; // Stop trying after 3 failures
+      this.logger?.warn(`Circuit breaker OPEN after ${this.failures} failures`);
+    }
+  }
+
+  private logger?: any;
+  setLogger(logger: any) {
+    this.logger = logger;
+  }
+}
 
 export class ContentEnricherAgent extends BaseAgent<
   UniqueArticle[],
@@ -79,8 +135,16 @@ export class ContentEnricherAgent extends BaseAgent<
     enableMetrics: true,
   };
 
+  // Circuit breakers for API protection
+  private tavilyBreaker = new CircuitBreaker();
+  private jinaBreaker = new CircuitBreaker();
+  private llmBreaker = new CircuitBreaker();
+
   constructor() {
     super("content-enricher");
+    this.tavilyBreaker.setLogger(this.logger);
+    this.jinaBreaker.setLogger(this.logger);
+    this.llmBreaker.setLogger(this.logger);
   }
 
   protected async process(
@@ -108,123 +172,130 @@ export class ContentEnricherAgent extends BaseAgent<
     }
 
     try {
-      // 🚀 PARALLEL PROCESSING: Process all articles concurrently for 5x speed boost
+      // 🚀 CONTROLLED CONCURRENCY: Process 2 articles at a time to avoid API overload
       this.logger.info(
-        `🚀 Starting PARALLEL enrichment for ${articles.length} articles...`,
+        `🚀 Starting CONTROLLED enrichment for ${articles.length} articles (concurrency: 2)...`,
       );
 
-      const enrichmentPromises = articles.map(async (article, index) => {
-        const articleNum = index + 1;
+      const enrichedArticles: EnrichedArticle[] = [];
+      const CONCURRENCY = 2;
+
+      for (let i = 0; i < articles.length; i += CONCURRENCY) {
+        const batch = articles.slice(i, i + CONCURRENCY);
         this.logger.info(
-          `[${articleNum}/${articles.length}] Enriching: ${article.title.substring(0, 50)}...`,
+          `📦 Processing batch ${Math.floor(i / CONCURRENCY) + 1}/${Math.ceil(articles.length / CONCURRENCY)} (${batch.length} articles)`,
         );
 
-        try {
-          // Step 1: Gather sources (priority-based: Tavily for high-priority, Jina for low-priority)
-          // TIMEOUT PROTECTION: Wrap in Promise.race with 30s timeout
-          const sources = await Promise.race([
-            this.gatherSourcesWithPriority(article),
-            new Promise<any>((_, reject) =>
-              setTimeout(
-                () => reject(new Error("Source gathering timeout (30s)")),
-                30000,
-              ),
-            ),
-          ]);
+        const enrichmentPromises = batch.map(async (article, batchIndex) => {
+          const index = i + batchIndex;
+          const articleNum = index + 1;
+          this.logger.info(
+            `[${articleNum}/${articles.length}] Enriching: ${article.title.substring(0, 50)}...`,
+          );
 
-          if (sources.length < 2) {
-            this.logger.warn(
-              `[${articleNum}] Insufficient sources (${sources.length}), using fallback`,
-            );
-            sources.push({
-              title: article.title,
-              url: article.url,
-              content: article.description || "",
-              relevanceScore: 100,
-            });
-          }
-
-          // Step 2: Synthesize content (TR + EN) - these run in parallel across articles
-          // TIMEOUT PROTECTION: Wrap in Promise.race with 45s timeout
-          const synthesized = await Promise.race([
-            this.synthesizeContent(
-              article,
-              sources,
-              article.suggestedCategory || "teknoloji",
-            ),
-            new Promise<any>((_, reject) =>
-              setTimeout(
-                () => reject(new Error("Content synthesis timeout (45s)")),
-                45000,
-              ),
-            ),
-          ]);
-
-          // Step 3: Generate Title A/B Test Variants
-          // TIMEOUT PROTECTION: Wrap in Promise.race with 10s timeout
-          let titleABTest: TitleABTestData | undefined;
           try {
-            const variants = await Promise.race([
-              generateTitleVariants(
-                synthesized.tr.content,
+            // Step 1: Gather sources (priority-based: Tavily for high-priority, Jina for low-priority)
+            // TIMEOUT PROTECTION: Wrap in Promise.race with 30s timeout
+            const sources = await Promise.race([
+              this.gatherSourcesWithPriority(article),
+              new Promise<any>((_, reject) =>
+                setTimeout(
+                  () => reject(new Error("Source gathering timeout (30s)")),
+                  30000,
+                ),
+              ),
+            ]);
+
+            if (sources.length < 2) {
+              this.logger.warn(
+                `[${articleNum}] Insufficient sources (${sources.length}), using fallback`,
+              );
+              sources.push({
+                title: article.title,
+                url: article.url,
+                content: article.description || "",
+                relevanceScore: 100,
+              });
+            }
+
+            // Step 2: Synthesize content (TR + EN) - these run in parallel across articles
+            // TIMEOUT PROTECTION: Wrap in Promise.race with 45s timeout
+            const synthesized = await Promise.race([
+              this.synthesizeContent(
+                article,
+                sources,
                 article.suggestedCategory || "teknoloji",
               ),
               new Promise<any>((_, reject) =>
                 setTimeout(
-                  () => reject(new Error("A/B test timeout (10s)")),
-                  10000,
+                  () => reject(new Error("Content synthesis timeout (45s)")),
+                  45000,
                 ),
               ),
             ]);
-            titleABTest = initializeABTestData(variants);
-          } catch (abTestError) {
-            this.logger.warn(
-              `[${articleNum}] Title A/B test failed, continuing without`,
+
+            // Step 3: Generate Title A/B Test Variants
+            // TIMEOUT PROTECTION: Wrap in Promise.race with 10s timeout
+            let titleABTest: TitleABTestData | undefined;
+            try {
+              const variants = await Promise.race([
+                generateTitleVariants(
+                  synthesized.tr.content,
+                  article.suggestedCategory || "teknoloji",
+                ),
+                new Promise<any>((_, reject) =>
+                  setTimeout(
+                    () => reject(new Error("A/B test timeout (10s)")),
+                    10000,
+                  ),
+                ),
+              ]);
+              titleABTest = initializeABTestData(variants);
+            } catch (abTestError) {
+              this.logger.warn(
+                `[${articleNum}] Title A/B test failed, continuing without`,
+              );
+            }
+
+            this.logger.success(
+              `✅ [${articleNum}/${articles.length}] Enriched: ${synthesized.tr.title.substring(0, 50)}...`,
             );
+
+            return {
+              success: true as const,
+              data: {
+                ...article,
+                sources,
+                synthesizedContent: synthesized,
+                titleABTest,
+              },
+            };
+          } catch (error) {
+            this.logger.error(
+              `❌ [${articleNum}] Failed to enrich: ${article.title.substring(0, 50)}...`,
+              this.serializeError(error),
+            );
+            return { success: false as const, error };
           }
+        });
 
-          this.logger.success(
-            `✅ [${articleNum}/${articles.length}] Enriched: ${synthesized.tr.title.substring(0, 50)}...`,
-          );
+        // Wait for batch to complete
+        const results = await Promise.allSettled(enrichmentPromises);
 
-          return {
-            success: true as const,
-            data: {
-              ...article,
-              sources,
-              synthesizedContent: synthesized,
-              titleABTest,
-            },
-          };
-        } catch (error) {
-          this.logger.error(
-            `❌ [${articleNum}] Failed to enrich: ${article.title.substring(0, 50)}...`,
-            this.serializeError(error),
-          );
-          return { success: false as const, error };
-        }
-      });
-
-      // Wait for all articles to complete in parallel
-      const results = await Promise.allSettled(enrichmentPromises);
-
-      const enrichedArticles: EnrichedArticle[] = [];
-      let successCount = 0;
-      let failCount = 0;
-
-      for (const result of results) {
-        if (result.status === "fulfilled" && result.value.success) {
-          enrichedArticles.push(result.value.data);
-          successCount++;
-          apiCalls += 8; // Approximate: 5 SearXNG + 2 LLM + 1 A/B test
-          tokensUsed += 12500;
-        } else {
-          failCount++;
+        for (const result of results) {
+          if (result.status === "fulfilled" && result.value.success) {
+            enrichedArticles.push(result.value.data);
+            apiCalls += 8; // Approximate: 5 SearXNG + 2 LLM + 1 A/B test
+            tokensUsed += 12500;
+          }
         }
       }
 
+      const successCount = enrichedArticles.length;
+      const failCount = articles.length - successCount;
+
       this.logger.success(
-        `🏁 PARALLEL enrichment complete: ${successCount}/${articles.length} articles (${failCount} failed)`,
+        `🏁 CONTROLLED enrichment complete: ${successCount}/${articles.length} articles (${failCount} failed)`,
       );
 
       return {
@@ -1038,5 +1109,101 @@ Respond in JSON:
     } catch {
       return url;
     }
+  }
+
+  /**
+   * Generate emergency template content (Layer 4 fallback)
+   * Used when all other methods fail - GUARANTEED to succeed
+   */
+  private generateEmergencyTemplate(
+    article: UniqueArticle,
+    sources: Array<{ title: string; url: string; content: string }>,
+  ): {
+    tr: {
+      title: string;
+      excerpt: string;
+      content: string;
+      keywords: string[];
+      metaDescription: string;
+      score: number;
+    };
+    en: {
+      title: string;
+      excerpt: string;
+      content: string;
+      keywords: string[];
+      metaDescription: string;
+    };
+  } {
+    const category = article.suggestedCategory || "teknoloji";
+    const sourceContent =
+      sources[0]?.content || article.description || article.title;
+
+    // Turkish content (template-based)
+    const trTitle = article.title;
+    const trExcerpt = sourceContent.substring(0, 200) + "...";
+    const trContent = `
+<p>${sourceContent}</p>
+
+<h2>Detaylar</h2>
+<p>Bu haber ${category} kategorisinde yayınlanmıştır.</p>
+
+<p><strong>Kaynak:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow">${new URL(article.url).hostname}</a></p>
+
+<div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
+  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8a4 4 0 0 1 0 8"/><path d="M12 8a4 4 0 0 0 0 8"/></svg>
+    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">Yapay Zeka Destekli İçerik</span>
+  </div>
+  <div style="font-size: 0.65rem; color: #94a3b8;">
+    <strong style="color: #64748b;">Kaynak:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${new URL(article.url).hostname}</a>
+  </div>
+</div>`;
+
+    // English content (template-based)
+    const enTitle = article.title;
+    const enExcerpt = sourceContent.substring(0, 200) + "...";
+    const enContent = `
+<p>${sourceContent}</p>
+
+<h2>Details</h2>
+<p>This news was published in the ${category} category.</p>
+
+<p><strong>Source:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow">${new URL(article.url).hostname}</a></p>
+
+<div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
+  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8a4 4 0 0 1 0 8"/><path d="M12 8a4 4 0 0 0 0 8"/></svg>
+    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">AI-Powered Content</span>
+  </div>
+  <div style="font-size: 0.65rem; color: #94a3b8;">
+    <strong style="color: #64748b;">Source:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${new URL(article.url).hostname}</a>
+  </div>
+</div>`;
+
+    // Extract keywords from title
+    const keywords = article.title
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 3)
+      .slice(0, 6);
+
+    return {
+      tr: {
+        title: trTitle,
+        excerpt: trExcerpt,
+        content: trContent,
+        keywords,
+        metaDescription: trExcerpt.substring(0, 160),
+        score: 50, // Emergency template = low score
+      },
+      en: {
+        title: enTitle,
+        excerpt: enExcerpt,
+        content: enContent,
+        keywords,
+        metaDescription: enExcerpt.substring(0, 160),
+      },
+    };
   }
 }
