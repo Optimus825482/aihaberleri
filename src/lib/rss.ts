@@ -2,7 +2,7 @@
  * RSS Feed Reader
  * Reads and parses RSS feeds from various AI news sources
  * Supports multi-language feeds with translation priority
- * 
+ *
  * UPDATED: 2026-02-09
  * - REMOVED: 35+ non-AI sources (journalism, SEO, general tech, media)
  * - ADDED: 25+ pure AI-focused sources
@@ -49,7 +49,7 @@ export interface MultiLanguageFeedResult {
 /**
  * AI News RSS Feed Sources
  * Total: ~65 feeds (PURE AI-FOCUSED ONLY)
- * 
+ *
  * REMOVED (2026-02-09): 35+ non-AI sources
  * - Engadget, Product Hunt (general tech)
  * - Poynter, Nieman Lab, Journalism UK (journalism)
@@ -88,17 +88,14 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://www.wired.com/feed/tag/ai/latest/rss",
     language: "en",
   },
-  {
-    name: "Ars Technica - AI",
-    url: "https://feeds.arstechnica.com/arstechnica/technology-lab",
-    language: "en",
-  },
+  // REMOVED: Ars Technica - uses general technology-lab feed, not AI-specific
+  // Was causing non-AI tech articles to leak through
   {
     name: "ZDNet - Artificial Intelligence",
     url: "https://www.zdnet.com/topic/artificial-intelligence/rss.xml",
     language: "en",
   },
-  
+
   // ========================================
   // TIER 2: AI-FOCUSED PUBLICATIONS
   // ========================================
@@ -162,11 +159,7 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://lastweekin.ai/feed",
     language: "en",
   },
-  {
-    name: "404 Media",
-    url: "https://www.404media.co/rss",
-    language: "en",
-  },
+  // REMOVED: 404 Media - general tech/privacy news, not AI-focused
   {
     name: "Ahead of AI",
     url: "https://magazine.sebastianraschka.com/feed",
@@ -369,6 +362,72 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://promptengineering.substack.com/feed",
     language: "en",
   },
+
+  // ========================================
+  // TIER 6: MULTI-LANGUAGE AI SOURCES
+  // ========================================
+
+  // 🇩🇪 German AI Sources
+  {
+    name: "THE DECODER (DE)",
+    url: "https://the-decoder.de/feed/",
+    language: "de",
+  },
+  {
+    name: "Heise Online - KI",
+    url: "https://www.heise.de/thema/Kuenstliche-Intelligenz?view=atom",
+    language: "de",
+  },
+
+  // 🇫🇷 French AI Sources
+  {
+    name: "LeBigData.fr - IA",
+    url: "https://www.lebigdata.fr/tag/intelligence-artificielle/feed",
+    language: "fr",
+  },
+  {
+    name: "ActuIA",
+    url: "https://www.actuia.com/feed/",
+    language: "fr",
+  },
+
+  // 🇨🇳 Chinese AI Sources
+  {
+    name: "机器之心 (Synced China)",
+    url: "https://www.jiqizhixin.com/rss",
+    language: "zh",
+  },
+  {
+    name: "量子位 (QbitAI)",
+    url: "https://www.qbitai.com/feed",
+    language: "zh",
+  },
+
+  // 🇯🇵 Japanese AI Sources
+  {
+    name: "ITmedia AI+",
+    url: "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml",
+    language: "ja",
+  },
+  {
+    name: "Ledge.ai",
+    url: "https://ledge.ai/feed/",
+    language: "ja",
+  },
+
+  // 🇰🇷 Korean AI Sources
+  {
+    name: "AI타임스",
+    url: "https://www.aitimes.com/rss/allArticle.xml",
+    language: "ko",
+  },
+
+  // 🇹🇷 Turkish AI Sources
+  {
+    name: "Yapay Zeka Türkiye",
+    url: "https://yapayzekaturkiye.com/feed/",
+    language: "tr",
+  },
 ];
 
 /**
@@ -535,41 +594,99 @@ export async function fetchAllRSSFeeds(
 export function filterAIRelevantArticles(articles: RSSItem[]): RSSItem[] {
   const AI_KEYWORDS = [
     // Core AI terms
-    "artificial intelligence", "ai", "machine learning", "ml",
-    "deep learning", "neural network", "nlp", "natural language",
-    
+    "artificial intelligence",
+    "ai",
+    "machine learning",
+    "ml",
+    "deep learning",
+    "neural network",
+    "nlp",
+    "natural language",
+
     // LLM & Generative AI
-    "llm", "large language model", "gpt", "chatgpt", "claude",
-    "gemini", "copilot", "generative ai", "genai", "transformer",
-    "language model", "foundation model", "multimodal",
-    
+    "llm",
+    "large language model",
+    "gpt",
+    "chatgpt",
+    "claude",
+    "gemini",
+    "copilot",
+    "generative ai",
+    "genai",
+    "transformer",
+    "language model",
+    "foundation model",
+    "multimodal",
+
     // Companies & Products
-    "openai", "anthropic", "google ai", "deepmind", "nvidia ai",
-    "microsoft ai", "meta ai", "hugging face", "stability ai",
-    "midjourney", "dall-e", "stable diffusion", "sora",
-    "mistral", "cohere", "perplexity", "runway",
-    
+    "openai",
+    "anthropic",
+    "google ai",
+    "deepmind",
+    "nvidia ai",
+    "microsoft ai",
+    "meta ai",
+    "hugging face",
+    "stability ai",
+    "midjourney",
+    "dall-e",
+    "stable diffusion",
+    "sora",
+    "mistral",
+    "cohere",
+    "perplexity",
+    "runway",
+
     // Technical terms
-    "training data", "fine-tuning", "prompt engineering",
-    "rag", "retrieval augmented", "vector database", "embedding",
-    "inference", "compute", "gpu cluster", "model weights",
-    "parameters", "tokens", "context window", "benchmark",
-    
+    "training data",
+    "fine-tuning",
+    "prompt engineering",
+    "rag",
+    "retrieval augmented",
+    "vector database",
+    "embedding",
+    "inference",
+    "compute",
+    "gpu cluster",
+    "model weights",
+    "parameters",
+    "tokens",
+    "context window",
+    "benchmark",
+
     // AI Applications
-    "ai agent", "autonomous agent", "ai assistant", "chatbot",
-    "ai coding", "code generation", "image generation",
-    "text-to-image", "text-to-video", "voice ai", "speech ai",
-    "ai search", "ai writing", "ai art",
-    
+    "ai agent",
+    "autonomous agent",
+    "ai assistant",
+    "chatbot",
+    "ai coding",
+    "code generation",
+    "image generation",
+    "text-to-image",
+    "text-to-video",
+    "voice ai",
+    "speech ai",
+    "ai search",
+    "ai writing",
+    "ai art",
+
     // AI Impact
-    "ai safety", "ai alignment", "ai ethics", "ai regulation",
-    "ai policy", "ai governance", "ai risk", "ai bias",
-    "agi", "artificial general intelligence", "superintelligence",
+    "ai safety",
+    "ai alignment",
+    "ai ethics",
+    "ai regulation",
+    "ai policy",
+    "ai governance",
+    "ai risk",
+    "ai bias",
+    "agi",
+    "artificial general intelligence",
+    "superintelligence",
   ];
 
-  return articles.filter(article => {
+  return articles.filter((article) => {
     const text = `${article.title} ${article.description}`.toLowerCase();
-    return AI_KEYWORDS.some(keyword => text.includes(keyword.toLowerCase()));
+    return AI_KEYWORDS.some((keyword) => text.includes(keyword.toLowerCase()));
   });
 }
 
@@ -578,21 +695,31 @@ export function filterAIRelevantArticles(articles: RSSItem[]): RSSItem[] {
  */
 export function isAIRelatedContent(title: string, content: string): boolean {
   const text = `${title} ${content}`.toLowerCase();
-  
+
   // Primary AI indicators (must have at least one)
   const primaryKeywords = [
-    "artificial intelligence", "ai", "machine learning",
-    "deep learning", "neural network", "llm", "gpt",
-    "chatgpt", "claude", "gemini", "openai", "anthropic",
-    "generative ai", "language model"
+    "artificial intelligence",
+    "ai",
+    "machine learning",
+    "deep learning",
+    "neural network",
+    "llm",
+    "gpt",
+    "chatgpt",
+    "claude",
+    "gemini",
+    "openai",
+    "anthropic",
+    "generative ai",
+    "language model",
   ];
-  
-  const hasPrimaryKeyword = primaryKeywords.some(kw => text.includes(kw));
-  
+
+  const hasPrimaryKeyword = primaryKeywords.some((kw) => text.includes(kw));
+
   if (!hasPrimaryKeyword) {
     return false;
   }
-  
+
   // Negative indicators (not AI news even with keywords)
   const negativePatterns = [
     /\btv\s+(deal|sale|price|inch|review)/i,
@@ -605,9 +732,11 @@ export function isAIRelatedContent(title: string, content: string): boolean {
     /\d+%\s*off/i,
     /limited\s*time\s*(offer|deal)/i,
   ];
-  
-  const hasNegativePattern = negativePatterns.some(pattern => pattern.test(text));
-  
+
+  const hasNegativePattern = negativePatterns.some((pattern) =>
+    pattern.test(text),
+  );
+
   return !hasNegativePattern;
 }
 
@@ -615,10 +744,13 @@ export function isAIRelatedContent(title: string, content: string): boolean {
  * Advanced AI relevance scoring
  * Returns a score 0-100 based on how AI-related the content is
  */
-export function calculateAIRelevanceScore(title: string, content: string): number {
+export function calculateAIRelevanceScore(
+  title: string,
+  content: string,
+): number {
   const text = `${title} ${content}`.toLowerCase();
   let score = 0;
-  
+
   // Primary AI keywords (high weight)
   const primaryKeywords = [
     { keyword: "artificial intelligence", weight: 15 },
@@ -629,7 +761,7 @@ export function calculateAIRelevanceScore(title: string, content: string): numbe
     { keyword: "llm", weight: 12 },
     { keyword: "generative ai", weight: 15 },
   ];
-  
+
   // Company/Product names (medium weight)
   const companyKeywords = [
     { keyword: "openai", weight: 10 },
@@ -648,7 +780,7 @@ export function calculateAIRelevanceScore(title: string, content: string): numbe
     { keyword: "cohere", weight: 6 },
     { keyword: "perplexity", weight: 6 },
   ];
-  
+
   // Technical terms (low weight)
   const technicalKeywords = [
     { keyword: "transformer", weight: 5 },
@@ -663,24 +795,28 @@ export function calculateAIRelevanceScore(title: string, content: string): numbe
     { keyword: "ai agent", weight: 8 },
     { keyword: "chatbot", weight: 4 },
   ];
-  
+
   // Calculate score
-  const allKeywords = [...primaryKeywords, ...companyKeywords, ...technicalKeywords];
+  const allKeywords = [
+    ...primaryKeywords,
+    ...companyKeywords,
+    ...technicalKeywords,
+  ];
   const matchedKeywords = new Set<string>();
-  
+
   for (const { keyword, weight } of allKeywords) {
     if (text.includes(keyword) && !matchedKeywords.has(keyword)) {
       score += weight;
       matchedKeywords.add(keyword);
     }
   }
-  
+
   // Bonus for title containing AI keywords
   const titleLower = title.toLowerCase();
-  if (primaryKeywords.some(k => titleLower.includes(k.keyword))) {
+  if (primaryKeywords.some((k) => titleLower.includes(k.keyword))) {
     score += 10;
   }
-  
+
   // Penalty for non-AI content indicators
   const penalties = [
     { pattern: /\b(tv|television)\s+(deal|sale|price)/i, penalty: 30 },
@@ -691,13 +827,13 @@ export function calculateAIRelevanceScore(title: string, content: string): numbe
     { pattern: /\bheadphone/i, penalty: 15 },
     { pattern: /\bceo\s+(resign|leave|step)/i, penalty: 10 },
   ];
-  
+
   for (const { pattern, penalty } of penalties) {
     if (pattern.test(text)) {
       score -= penalty;
     }
   }
-  
+
   // Normalize to 0-100
   return Math.min(100, Math.max(0, score));
 }
@@ -724,10 +860,10 @@ export function getRSSFeedStats() {
  */
 export function filterRecentArticles(
   articles: RSSItem[],
-  hoursAgo: number = 48
+  hoursAgo: number = 48,
 ): RSSItem[] {
   const cutoffTime = Date.now() - hoursAgo * 60 * 60 * 1000;
-  
+
   return articles.filter((article) => {
     if (!article.pubDate) return false;
     const articleTime = new Date(article.pubDate).getTime();

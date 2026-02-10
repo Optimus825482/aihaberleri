@@ -59,29 +59,25 @@ const AI_KEYWORDS = [
   "gpt",
   "chatgpt",
   "openai",
-  "gemini",
-  "claude",
+  "claude ai",
   "anthropic",
-  "llama",
-  "mistral",
+  "llama model",
+  "mistral ai",
   "deepseek",
-  "copilot",
-  "bard",
-  "palm",
   "dall-e",
   "midjourney",
   "stable diffusion",
-  "sora",
+  "sora ai",
 
   // AI Techniques
   "nlp",
-  "natural language",
-  "doğal dil",
-  "dogal dil",
+  "natural language processing",
+  "doğal dil işleme",
+  "dogal dil isleme",
   "computer vision",
   "bilgisayarlı görü",
   "bilgisayarli goru",
-  "transformer",
+  "transformer model",
   "language model",
   "dil modeli",
   "generative ai",
@@ -91,36 +87,40 @@ const AI_KEYWORDS = [
   "llm",
   "büyük dil modeli",
 
-  // AI Companies
-  "nvidia",
+  // AI Companies (specific AI context)
+  "nvidia ai",
+  "nvidia cuda",
+  "nvidia gpu ai",
   "tesla autopilot",
   "otonom sürüş",
   "otonom surus",
   "hugging face",
-  "cohere",
+  "cohere ai",
   "stability ai",
-  "runway",
+  "runway ai",
   "google ai",
   "microsoft ai",
   "meta ai",
   "amazon ai",
+  "perplexity ai",
 
   // AI Applications
   "chatbot",
   "sohbet botu",
-  "robot",
-  "robotik",
-  "robotic",
-  "autonomous",
-  "otonom",
-  "automation",
-  "otomasyon",
   "ai assistant",
   "ai asistan",
   "yapay zeka asistan",
   "ai tool",
   "ai araç",
   "ai arac",
+  "ai agent",
+  "ai coding",
+  "code generation",
+  "image generation",
+  "text-to-image",
+  "text-to-video",
+  "voice ai",
+  "speech recognition",
 
   // AI Ethics & Regulation
   "ai ethics",
@@ -136,6 +136,57 @@ const AI_KEYWORDS = [
   "ai bias",
   "ai önyargı",
   "ai onyargi",
+  "agi",
+  "artificial general intelligence",
+];
+
+/**
+ * NON-AI REJECT PATTERNS
+ * Articles matching these patterns are REJECTED even if they contain AI keywords.
+ * This prevents consumer electronics, deals, gaming peripherals, etc. from leaking through.
+ */
+const NON_AI_REJECT_PATTERNS: RegExp[] = [
+  // Shopping & Deals
+  /\b(deal|deals|indirim|fırsat|fırsatlar|kampanya)\b/i,
+  /\b(sale|sales|discount|coupon|promo)\b/i,
+  /\$\d+\s*(off|discount)/i,
+  /\d+%\s*(off|indirim|discount)/i,
+  /\b(presidents?\s*day|black\s*friday|cyber\s*monday|prime\s*day)\b/i,
+  /\b(best\s*buy|amazon\s*deal|walmart\s*deal)\b/i,
+
+  // Consumer Electronics (non-AI)
+  /\b(headphone|kulaklık|kulaklik|earbuds?|earbud)\b/i,
+  /\b(speaker|hoparlör|hoparlor|soundbar)\b/i,
+  /\b(camera|kamera)\s*(review|inceleme|test|deal|fiyat)/i,
+  /\b(tv|television|televizyon)\s*(deal|sale|review|inceleme|inch|model)/i,
+  /\b(monitor|ekran)\s*(deal|sale|review|inceleme|inch)/i,
+  /\b(keyboard|klavye|mouse|fare)\s*(review|inceleme|deal)/i,
+  /\b(printer|yazıcı|yazici|scanner|tarayıcı)\b/i,
+  /\b(charger|şarj|sarj|power\s*bank|adaptör|adaptor)\b/i,
+  /\b(cable|kablo|usb\s*hub|dock)\s*(review|deal|best)/i,
+
+  // Gaming (non-AI)
+  /\b(ps5|ps4|playstation|xbox|nintendo|switch)\s*(game|oyun|deal|sale|indirim)/i,
+  /\b(gaming\s*(headset|mouse|keyboard|chair|monitor|laptop))\b/i,
+  /\b(game\s*pass|oyun\s*indirim)\b/i,
+
+  // Fashion & Lifestyle Tech
+  /\b(watch\s*band|kayış|kayis|kordon)\b/i,
+  /\b(case|kılıf|kilif|cover)\s*(for|için|icin)/i,
+  /\b(backpack|çanta|canta|bag)\s*(review|inceleme|deal)/i,
+
+  // General Product Reviews (non-AI)
+  /\b(best|en\s*iyi)\s+\d+\s+(tech|teknoloji|gadget|product|ürün)/i,
+  /\b(unboxing|kutu\s*açılım|kutu\s*acilim)\b/i,
+  /\byatırım\s*yap(arım|ıyorum|iyorum)\b/i,
+
+  // Home & Appliance
+  /\b(vacuum|süpürge|supurge|air\s*purifier|hava\s*temizleyici)\b/i,
+  /\b(coffee\s*maker|kahve\s*makinesi|blender|mikser)\b/i,
+
+  // Telecom & Mobile (non-AI specific)
+  /\b(phone\s*deal|telefon\s*fırsat|telefon\s*firsat)\b/i,
+  /\b(carrier|operatör|operator)\s*(deal|plan|tarife)/i,
 ];
 
 /**
@@ -338,8 +389,28 @@ export class ContentCollectorAgent extends BaseAgent<
         };
       }
 
+      // Step 4.5: Reject non-AI content (deals, consumer electronics, gaming, etc.)
+      const cleanedItems = this.rejectNonAIContent(aiFilteredItems);
+      this.logger.info(
+        `Non-AI rejection: ${aiFilteredItems.length - cleanedItems.length} articles rejected, ${cleanedItems.length} remaining`,
+      );
+
+      if (cleanedItems.length === 0) {
+        this.logger.warn("All articles rejected by non-AI filter");
+        return {
+          success: true,
+          data: [],
+          skipNextQueue: true,
+          metrics: {
+            processingTime: Date.now() - startTime,
+            apiCalls: 0,
+            itemsProcessed: 0,
+          },
+        };
+      }
+
       // Step 5: Smart sampling if too many articles
-      let itemsToAnalyze = aiFilteredItems;
+      let itemsToAnalyze = cleanedItems;
       const MAX_ARTICLES_TO_ANALYZE = 100;
 
       if (itemsToAnalyze.length > MAX_ARTICLES_TO_ANALYZE) {
@@ -438,6 +509,25 @@ export class ContentCollectorAgent extends BaseAgent<
       return AI_KEYWORDS.some((keyword) =>
         text.includes(keyword.toLowerCase()),
       );
+    });
+  }
+
+  /**
+   * Reject articles that match non-AI patterns (deals, consumer electronics, gaming, etc.)
+   * Applied AFTER AI keyword filter to catch false positives
+   */
+  private rejectNonAIContent(items: RSSItem[]): RSSItem[] {
+    return items.filter((item) => {
+      const text = `${item.title} ${item.description}`;
+      const isNonAI = NON_AI_REJECT_PATTERNS.some((pattern) =>
+        pattern.test(text),
+      );
+      if (isNonAI) {
+        this.logger.info(
+          `  ❌ REJECTED (non-AI): "${item.title.substring(0, 60)}..."`,
+        );
+      }
+      return !isNonAI;
     });
   }
 }

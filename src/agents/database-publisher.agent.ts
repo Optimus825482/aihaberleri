@@ -19,7 +19,7 @@ import { BaseAgent, AgentResult } from "./base-agent";
 import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
 import type { ArticleWithVisuals } from "./visual-generator.agent";
-import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
+import { notifyBothLanguages } from "@/lib/seo/indexing-tracker";
 import {
   recordShareSuccess,
   recordShareFailure,
@@ -230,25 +230,33 @@ export class DatabasePublisherAgent extends BaseAgent<
             }
           }
 
-          // Submit to IndexNow (Bing, Yandex) for both TR and EN URLs
+          // Submit to IndexNow + Google Indexing API (both TR and EN)
+          // Uses indexing-tracker which handles DB status updates automatically
           try {
-            // Submit Turkish URL
-            await submitArticleToIndexNow(createdArticle.slug);
-            this.logger.info(`IndexNow: Turkish URL submitted`);
-
-            // Submit English URL if available
-            if (enSlugFinal) {
-              const baseUrl =
-                process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-              const enUrl = `${baseUrl}/en/news/${enSlugFinal}`;
-              const { submitUrlToIndexNow } =
-                await import("@/lib/seo/indexnow");
-              await submitUrlToIndexNow(enUrl, createdArticle.id);
-              this.logger.info(`IndexNow: English URL submitted`);
-            }
+            notifyBothLanguages(
+              createdArticle.id,
+              createdArticle.slug,
+              enSlugFinal || undefined,
+            )
+              .then((results) => {
+                const trSuccess = results.turkish.filter(
+                  (r) => r.success,
+                ).length;
+                const enSuccess = results.english.filter(
+                  (r) => r.success,
+                ).length;
+                this.logger.info(
+                  `🔍 Indexing: TR ${trSuccess}/${results.turkish.length}, EN ${enSuccess}/${results.english.length}`,
+                );
+              })
+              .catch((err) =>
+                this.logger.warn(
+                  `Indexing notification failed: ${err.message}`,
+                ),
+              );
           } catch (indexError) {
             this.logger.warn(
-              `IndexNow submission failed: ${(indexError as Error).message}`,
+              `Indexing setup failed: ${(indexError as Error).message}`,
             );
           }
 

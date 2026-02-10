@@ -117,28 +117,19 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
       throw new Error(`Queue config not found: ${this.config.queueName}`);
     }
 
-    this.logger.info(`Starting agent: ${this.config.name}`);
-    this.logger.info(`Queue: ${this.config.queueName}`);
-    this.logger.info(`Concurrency: ${queueConfig.concurrency}`);
+    this.logger.info(
+      `Starting — queue: ${this.config.queueName}, concurrency: ${queueConfig.concurrency}`,
+    );
 
     this.worker = new Worker(
       this.config.queueName,
       async (job) => {
         const startTime = Date.now();
         const agentTimeout = getAgentTimeout(this.config.name);
+        const itemCount = Array.isArray(job.data) ? job.data.length : 1;
 
-        console.log(
-          `\n🤖 [${this.config.name}] ========== PROCESSING JOB ==========`,
-        );
-        console.log(`   Job ID: ${job.id}`);
-        console.log(`   Job Name: ${job.name}`);
-        console.log(`   Queue: ${this.config.queueName}`);
-        console.log(
-          `   Data items: ${Array.isArray(job.data) ? job.data.length : 1}`,
-        );
-        console.log(`   Timeout: ${Math.round(agentTimeout / 1000)}s`);
         this.logger.info(
-          `Processing job ${job.id} (timeout: ${Math.round(agentTimeout / 1000)}s)`,
+          `Job ${job.id} started — ${itemCount} items (timeout: ${Math.round(agentTimeout / 1000)}s)`,
         );
 
         try {
@@ -171,7 +162,10 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
           }
 
           // Log success
-          this.logger.success(`Job ${job.id} completed in ${processingTime}ms`);
+          const secs = (processingTime / 1000).toFixed(1);
+          this.logger.success(
+            `Job ${job.id} done — ${result.metrics?.itemsProcessed ?? 0} items in ${secs}s`,
+          );
 
           // Emit to next queue if specified
           if (result.success && !result.skipNextQueue && result.data) {
@@ -181,9 +175,9 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
           return result;
         } catch (error) {
           const processingTime = Date.now() - startTime;
+          const secs = (processingTime / 1000).toFixed(1);
           this.logger.error(
-            `Job ${job.id} failed after ${processingTime}ms:`,
-            this.serializeError(error),
+            `Job ${job.id} failed after ${secs}s: ${error instanceof Error ? error.message : "Unknown"}`,
           );
 
           // FAZ 3: Update agent health status on failure
@@ -220,7 +214,7 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
     // Setup event handlers
     this.setupEventHandlers();
 
-    this.logger.success(`Agent started: ${this.config.name}`);
+    this.logger.success(`Ready`);
   }
 
   /**
@@ -252,10 +246,7 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
   ): Promise<void> {
     const nextQueue = customQueue || this.config.nextQueueName;
 
-    if (!nextQueue) {
-      this.logger.warn("No next queue specified, skipping emit");
-      return;
-    }
+    if (!nextQueue) return;
 
     const queue = getQueue(nextQueue);
     if (!queue) {
@@ -267,12 +258,10 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
       await queue.add(`${this.config.name}-output`, data, {
         removeOnComplete: true,
       });
-
-      this.logger.info(`Emitted to next queue: ${nextQueue}`);
+      this.logger.info(`→ ${nextQueue}`);
     } catch (error) {
       this.logger.error(
-        `Failed to emit to ${nextQueue}:`,
-        this.serializeError(error),
+        `Failed to emit to ${nextQueue}: ${error instanceof Error ? error.message : "Unknown"}`,
       );
       throw error;
     }
@@ -285,43 +274,22 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
     if (!this.worker) return;
 
     this.worker.on("ready", () => {
-      console.log(
-        `🟢 [${this.config.name}] Worker READY - listening for jobs on queue: ${this.config.queueName}`,
-      );
-      this.logger.info("Worker ready");
+      this.logger.info(`Listening on queue: ${this.config.queueName}`);
     });
 
-    this.worker.on("active", (job) => {
-      console.log(
-        `🔄 [${this.config.name}] Job ${job.id} ACTIVE - processing...`,
-      );
-      this.logger.info(`Job ${job.id} active`);
-    });
-
-    this.worker.on("completed", (job) => {
-      console.log(`✅ [${this.config.name}] Job ${job.id} COMPLETED`);
-      this.logger.success(`Job ${job.id} completed`);
-    });
+    // 'active' and 'completed' are already logged in the job handler — skip here
 
     this.worker.on("failed", (job, error) => {
-      console.log(`❌ [${this.config.name}] Job ${job?.id} FAILED: ${error}`);
-      this.logger.error(`Job ${job?.id} failed:`, this.serializeError(error));
+      this.logger.error(`Job ${job?.id} failed: ${error.message}`);
     });
 
     this.worker.on("stalled", (jobId) => {
-      this.logger.warn(`Job ${jobId} stalled`);
+      this.logger.warn(`Job ${jobId} stalled — will be retried`);
     });
 
     this.worker.on("error", (error) => {
-      // Suppress NOAUTH errors
-      if (error.message && error.message.includes("NOAUTH")) {
-        return;
-      }
-      this.logger.error("Worker error:", this.serializeError(error));
-    });
-
-    this.worker.on("closing", () => {
-      this.logger.info("Worker closing");
+      if (error.message?.includes("NOAUTH")) return;
+      this.logger.error(`Worker error: ${error.message}`);
     });
   }
 

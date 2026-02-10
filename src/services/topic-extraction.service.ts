@@ -7,6 +7,9 @@
 
 import { callDeepSeek } from "@/lib/deepseek";
 import { db } from "@/lib/db";
+import { createModuleLogger } from "@/lib/agent-log-stream";
+
+const logger = createModuleLogger("content");
 
 /**
  * AI Keywords for quick relevance check
@@ -104,9 +107,7 @@ export async function extractTopic(title: string): Promise<string> {
   // Topic extraction was causing 100+ second delays per batch
   // Duplicate detection already has 3 layers (URL, title, content)
   // Topic is not critical for the pipeline
-  console.log(
-    `⚡ FAST: Using fallback topic for: ${title.substring(0, 50)}...`,
-  );
+  logger.debug(`Fallback topic: ${title.substring(0, 50)}…`);
   return generateFallbackTopic(title);
 }
 
@@ -133,45 +134,34 @@ export async function extractTopicsBatch(
   articles: ArticleWithTopic[],
   batchSize: number = 20, // ✅ 4→20 (5x faster, fewer batches)
 ): Promise<ArticleWithTopic[]> {
-  console.log(`🧠 Topic extraction başlatılıyor: ${articles.length} haber`);
+  logger.info(`Topic extraction: ${articles.length} haber`);
 
   const results: ArticleWithTopic[] = [];
-  const topicCache = new Map<string, string>(); // ✅ Cache for duplicate titles
+  const topicCache = new Map<string, string>();
 
-  // Batch'lere böl
   for (let i = 0; i < articles.length; i += batchSize) {
     const batch = articles.slice(i, i + batchSize);
     const batchNum = Math.floor(i / batchSize) + 1;
     const totalBatches = Math.ceil(articles.length / batchSize);
 
-    console.log(
-      `📦 Batch ${batchNum}/${totalBatches} işleniyor (${batch.length} haber)...`,
-    );
+    logger.debug(`Batch ${batchNum}/${totalBatches} (${batch.length} haber)`);
 
-    // ✅ Check cache first, only extract new topics
     const topicPromises = batch.map((article) => {
       const cached = topicCache.get(article.title);
-      if (cached) {
-        console.log(
-          `   💾 CACHE HIT: ${article.title.substring(0, 40)}... → ${cached}`,
-        );
-        return Promise.resolve(cached);
-      }
+      if (cached) return Promise.resolve(cached);
       return extractTopic(article.title);
     });
 
     const topics = await Promise.all(topicPromises);
 
-    // Her habere topic'ini ekle ve cache'e kaydet
     batch.forEach((article, index) => {
       const topic = topics[index];
-      topicCache.set(article.title, topic); // ✅ Cache for future
+      topicCache.set(article.title, topic);
 
       results.push({
         ...article,
         topic: topic,
       });
-      console.log(`   ✅ ${article.title.substring(0, 50)}... → ${topic}`);
     });
 
     // ⚡ NO DELAY: Fallback is instant, no API rate limit needed
@@ -180,10 +170,7 @@ export async function extractTopicsBatch(
     // }
   }
 
-  console.log(`✅ Topic extraction tamamlandı: ${results.length} haber`);
-  console.log(
-    `   💾 Cache hits: ${topicCache.size - results.length} (saved API calls)`,
-  );
+  logger.success(`Topic extraction: ${results.length} haber tamamlandı`);
   return results;
 }
 
@@ -246,7 +233,9 @@ export async function checkTopicDuplicate(
 
     return { isDuplicate: false };
   } catch (error) {
-    console.error("❌ Topic duplicate check error:", error);
+    logger.error(
+      `Topic duplicate check: ${error instanceof Error ? error.message : String(error)}`,
+    );
     // Fail-open: Eğer hata olursa, duplicate değil kabul et
     return { isDuplicate: false };
   }
@@ -261,11 +250,8 @@ export async function selectUniqueTopicArticles(
   timeWindowDays: number = 0.25, // 6 saate düşürüldü (0.25 gün)
 ): Promise<ArticleWithTopic[]> {
   const timeWindowHours = timeWindowDays * 24;
-  console.log(`\n🎯 Akıllı haber seçimi başlatılıyor...`);
-  console.log(`   Aday sayısı: ${articles.length}`);
-  console.log(`   Hedef: ${targetCount} unique topic`);
-  console.log(
-    `   Zaman penceresi: ${timeWindowHours.toFixed(1)} saat (${timeWindowDays.toFixed(3)} gün)`,
+  logger.info(
+    `Haber seçimi: ${articles.length} aday → hedef ${targetCount} (${timeWindowHours.toFixed(1)}h pencere)`,
   );
 
   // Puana göre sırala (en yüksek önce)
@@ -281,7 +267,6 @@ export async function selectUniqueTopicArticles(
 
   for (const article of sortedArticles) {
     if (selected.length >= targetCount) {
-      console.log(`✅ Hedef sayıya ulaşıldı (${targetCount} haber)`);
       break;
     }
 
@@ -289,18 +274,12 @@ export async function selectUniqueTopicArticles(
 
     // NEW: Quick AI relevance check BEFORE expensive duplicate checks
     if (!isAIRelevant(article.title, article.description)) {
-      console.log(
-        `   ⏭️  SKIP (not AI-related): "${article.title.substring(0, 50)}..."`,
-      );
       skippedNotAI++;
       continue;
     }
 
     // Bu topic'i daha önce seçtik mi?
     if (seenTopics.has(topic)) {
-      console.log(
-        `   ⏭️  SKIP (topic already selected): ${topic} - "${article.title.substring(0, 50)}..."`,
-      );
       skippedSameTopic++;
       continue;
     }
@@ -308,12 +287,6 @@ export async function selectUniqueTopicArticles(
     // Veritabanında bu topic var mı?
     const duplicateCheck = await checkTopicDuplicate(topic, timeWindowDays);
     if (duplicateCheck.isDuplicate) {
-      console.log(
-        `   ⏭️  SKIP (topic in database): ${topic} - "${article.title.substring(0, 50)}..."`,
-      );
-      console.log(
-        `      Existing: "${duplicateCheck.existingArticle?.title.substring(0, 50)}..." (${duplicateCheck.existingArticle?.publishedAt?.toLocaleDateString() || "N/A"})`,
-      );
       skippedDuplicate++;
       continue;
     }
@@ -337,12 +310,6 @@ export async function selectUniqueTopicArticles(
       });
 
       if (existingByUrl) {
-        console.log(
-          `   ⏭️  SKIP (URL in database): ${article.url.substring(0, 60)}...`,
-        );
-        console.log(
-          `      Existing: "${existingByUrl.title.substring(0, 50)}..." (${existingByUrl.publishedAt?.toLocaleDateString() || "N/A"})`,
-        );
         skippedDuplicate++;
         continue;
       }
@@ -351,24 +318,18 @@ export async function selectUniqueTopicArticles(
     // ✅ Unique topic! Seç
     selected.push(article);
     seenTopics.add(topic);
-    console.log(
-      `   ✅ SELECTED [${selected.length}/${targetCount}]: ${topic} (score: ${article.trendScore || 0})`,
+    logger.debug(
+      `SELECTED [${selected.length}/${targetCount}]: ${topic} (score: ${article.trendScore || 0})`,
     );
-    console.log(`      "${article.title.substring(0, 60)}...")`);
   }
 
-  console.log(`\n📊 Seçim özeti:`);
-  console.log(`   Seçilen: ${selected.length}`);
-  console.log(`   Atlanan (AI değil): ${skippedNotAI}`);
-  console.log(`   Atlanan (aynı topic): ${skippedSameTopic}`);
-  console.log(`   Atlanan (duplicate): ${skippedDuplicate}`);
-  console.log(`   Toplam işlenen: ${sortedArticles.length}`);
+  logger.info(
+    `Seçim: ${selected.length} seçildi, ${skippedNotAI} AI-dışı, ${skippedSameTopic} aynı-topic, ${skippedDuplicate} duplicate`,
+  );
 
   // 🔧 RECOVERY MECHANISM: Eğer 0 haber seçildiyse, relaxed mode ile tekrar dene
   if (selected.length === 0 && articles.length > 0) {
-    console.log(
-      `\n⚠️  RECOVERY MODE: Tüm haberler elendi, relaxed seçim yapılıyor...`,
-    );
+    logger.warn("RECOVERY MODE: Tüm haberler elendi, relaxed seçim yapılıyor…");
 
     // Relaxed retry: AI relevance check'i kaldır, sadece URL duplicate kontrolü yap
     for (const article of sortedArticles) {
@@ -398,13 +359,12 @@ export async function selectUniqueTopicArticles(
       // RELAXED: AI check ve topic duplicate check atlanıyor
       selected.push(article);
       seenTopics.add(topic);
-      console.log(
-        `   🔄 RECOVERY SELECTED: ${topic} (score: ${article.trendScore || 0})`,
+      logger.debug(
+        `RECOVERY SELECTED: ${topic} (score: ${article.trendScore || 0})`,
       );
-      console.log(`      "${article.title.substring(0, 60)}...")`);
     }
 
-    console.log(`\n📊 Recovery sonucu: ${selected.length} haber seçildi`);
+    logger.info(`Recovery sonucu: ${selected.length} haber seçildi`);
   }
 
   return selected;
@@ -416,9 +376,7 @@ export async function selectUniqueTopicArticles(
 export async function extractTopicsForExistingArticles(
   limit: number = 100,
 ): Promise<{ processed: number; failed: number }> {
-  console.log(
-    `🔄 Mevcut haberler için topic extraction başlatılıyor (limit: ${limit})...`,
-  );
+  logger.info(`Mevcut haberler topic extraction (limit: ${limit})`);
 
   const whereClause: any = {
     topic: null,
@@ -437,7 +395,7 @@ export async function extractTopicsForExistingArticles(
     },
   });
 
-  console.log(`📰 ${articles.length} haber bulundu`);
+  logger.info(`${articles.length} haber bulundu`);
 
   let processed = 0;
   let failed = 0;
@@ -455,14 +413,10 @@ export async function extractTopicsForExistingArticles(
           data: updateData,
         });
         processed++;
-        console.log(
-          `   ✅ [${processed}/${articles.length}] ${article.title.substring(0, 50)}... → ${topic}`,
-        );
       } catch (error) {
         failed++;
-        console.error(
-          `   ❌ [${processed + failed}/${articles.length}] Failed:`,
-          error,
+        logger.error(
+          `Topic extraction failed [${processed + failed}/${articles.length}]: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     }
@@ -473,9 +427,9 @@ export async function extractTopicsForExistingArticles(
     }
   }
 
-  console.log(`\n✅ Topic extraction tamamlandı:`);
-  console.log(`   Başarılı: ${processed}`);
-  console.log(`   Başarısız: ${failed}`);
+  logger.success(
+    `Topic extraction: ${processed} başarılı, ${failed} başarısız`,
+  );
 
   return { processed, failed };
 }
@@ -607,12 +561,9 @@ export async function filterDuplicatesByTopicAndUrl(
   timeWindowDays: number = 0.25, // 6 saate düşürüldü (daha esnek)
 ): Promise<ArticleWithTopic[]> {
   const timeWindowHours = timeWindowDays * 24;
-  console.log(`\n🔍 ====== EARLY DUPLICATE FILTERING (RELAXED MODE) ======`);
-  console.log(`   Input: ${articles.length} haber`);
-  console.log(
-    `   Topic time window: ${timeWindowHours.toFixed(1)} saat (${timeWindowDays.toFixed(2)} gün)`,
+  logger.info(
+    `Early duplicate filter: ${articles.length} haber, ${timeWindowHours.toFixed(1)}h pencere`,
   );
-  console.log(`   URL check: Son 6 saat (esnek mod)`);
 
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - timeWindowDays);
@@ -625,9 +576,8 @@ export async function filterDuplicatesByTopicAndUrl(
   // 🔄 RELAXED: Fetch URLs from last 24 hours only (instead of entire DB)
   // This allows similar topics from different days to pass through
   const urlCutoffDate = new Date();
-  urlCutoffDate.setHours(urlCutoffDate.getHours() - 24); // Son 24 saat
+  urlCutoffDate.setHours(urlCutoffDate.getHours() - 24);
 
-  console.log(`   📡 Fetching URLs from last 24 hours...`);
   const allUrls = await db.article.findMany({
     select: {
       sourceUrl: true,
@@ -651,7 +601,7 @@ export async function filterDuplicatesByTopicAndUrl(
     }
   }
 
-  console.log(`   📚 URL Database: ${existingUrls.size} unique URLs loaded`);
+  logger.debug(`URL DB: ${existingUrls.size} URLs loaded`);
 
   // Fetch recent articles for TOPIC check (time-limited)
   const recentArticles = await db.article.findMany({
@@ -668,9 +618,7 @@ export async function filterDuplicatesByTopicAndUrl(
     take: 500, // Son 500 makale (topic için)
   });
 
-  console.log(
-    `   📚 Topic Database: ${recentArticles.length} recent articles (${timeWindowDays} gün)`,
-  );
+  logger.debug(`Topic DB: ${recentArticles.length} recent articles`);
 
   for (const article of articles) {
     let isDuplicate = false;
@@ -684,9 +632,6 @@ export async function filterDuplicatesByTopicAndUrl(
         existingUrls.has(article.url) ||
         existingUrlPrefixes.has(urlWithoutParams)
       ) {
-        console.log(
-          `   ⏭️  URL DUPLICATE (DB): ${article.url.substring(0, 60)}...`,
-        );
         urlDuplicateCount++;
         isDuplicate = true;
         continue;
@@ -698,9 +643,6 @@ export async function filterDuplicatesByTopicAndUrl(
           u.url === article.url || u.url?.split("?")[0] === urlWithoutParams,
       );
       if (batchUrlDuplicate) {
-        console.log(
-          `   ⏭️  URL DUPLICATE (BATCH): ${article.url.substring(0, 60)}...`,
-        );
         batchDuplicateCount++;
         isDuplicate = true;
         continue;
@@ -714,9 +656,6 @@ export async function filterDuplicatesByTopicAndUrl(
       );
 
       if (existingByTopic) {
-        console.log(
-          `   ⏭️  TOPIC DUPLICATE (DB): ${article.topic} - "${article.title.substring(0, 50)}..."`,
-        );
         topicDuplicateCount++;
         isDuplicate = true;
         continue;
@@ -725,7 +664,6 @@ export async function filterDuplicatesByTopicAndUrl(
       // Check topic against ALREADY SELECTED articles in this batch
       const batchDuplicate = unique.find((u) => u.topic === article.topic);
       if (batchDuplicate) {
-        console.log(`   ⏭️  TOPIC DUPLICATE (BATCH): ${article.topic}`);
         batchDuplicateCount++;
         isDuplicate = true;
         continue;
@@ -757,10 +695,6 @@ export async function filterDuplicatesByTopicAndUrl(
 
             // If 50%+ keyword similarity with same entities = duplicate (esnek modda)
             if (similarity >= 0.65) {
-              // %50'den %65'e çıkarıldı (daha esnek)
-              console.log(
-                `   ⏭️  ENTITY DUPLICATE (DB): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
-              );
               topicDuplicateCount++;
               isDuplicate = true;
               break;
@@ -786,12 +720,7 @@ export async function filterDuplicatesByTopicAndUrl(
               const similarity =
                 commonKeywords.length / Math.max(keywords.length, 1);
 
-              // If 50%+ keyword similarity with same entities = duplicate (esnek modda)
               if (similarity >= 0.65) {
-                // %50'den %65'e çıkarıldı (daha esnek)
-                console.log(
-                  `   ⏭️  ENTITY DUPLICATE (BATCH): [${commonEntities.join(", ")}] + ${(similarity * 100).toFixed(0)}% similarity`,
-                );
                 batchDuplicateCount++;
                 isDuplicate = true;
                 break;
@@ -815,21 +744,14 @@ export async function filterDuplicatesByTopicAndUrl(
   const totalDuplicates =
     urlDuplicateCount + topicDuplicateCount + batchDuplicateCount;
 
-  console.log(`\n📊 ====== EARLY FILTERING SONUÇLARI ======`);
-  console.log(`   Input: ${articles.length} haber`);
-  console.log(`   ❌ URL Duplicates (DB): ${urlDuplicateCount}`);
-  console.log(`   ❌ Topic Duplicates: ${topicDuplicateCount}`);
-  console.log(`   ❌ Batch Duplicates: ${batchDuplicateCount}`);
-  console.log(`   ─────────────────────────`);
-  console.log(`   ❌ TOTAL FILTERED: ${totalDuplicates} haber`);
-  console.log(`   ✅ UNIQUE REMAINING: ${unique.length} haber`);
-  console.log(
-    `   📈 Duplicate Rate: ${((totalDuplicates / articles.length) * 100).toFixed(1)}%`,
+  const dupeRate =
+    articles.length > 0
+      ? ((totalDuplicates / articles.length) * 100).toFixed(1)
+      : "0";
+
+  logger.info(
+    `Early filter: ${unique.length}/${articles.length} unique (${dupeRate}% duplicate — URL:${urlDuplicateCount} Topic:${topicDuplicateCount} Batch:${batchDuplicateCount})`,
   );
-  console.log(
-    `   💰 API Savings: %${((totalDuplicates / articles.length) * 100).toFixed(0)} Brave/DeepSeek call saved!`,
-  );
-  console.log(`==========================================\n`);
 
   return unique;
 }

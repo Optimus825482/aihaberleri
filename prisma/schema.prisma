@@ -906,3 +906,30 @@ model TavilyUsage {
   @@index([timestamp(sort: Desc)])
   @@index([feature, timestamp])
 }
+
+// =============================================
+// YouTube Channel Monitoring
+// =============================================
+
+model YouTubeChannel {
+  id              String   @id @default(cuid())
+  channelId       String   @unique // YouTube channel ID (UCxxxx)
+  name            String
+  language        String   @default("en")
+  category        String   @default("ai_news") // ai_news, ai_research, ai_tools, ai_business, ai_turkish
+  priority        Int      @default(3) // 1-5
+  isActive        Boolean  @default(true)
+  thumbnailUrl    String?
+  subscriberCount Int?
+  lastFetchedAt   DateTime?
+  lastVideoId     String?  // Son taranan video ID (duplicate önleme)
+  totalVideos     Int      @default(0)
+  failureCount    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([category])
+  @@index([priority(sort: Desc)])
+  @@index([lastFetchedAt])
+}

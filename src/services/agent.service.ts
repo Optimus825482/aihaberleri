@@ -18,9 +18,9 @@ import { emailService } from "@/lib/email";
 import { getRedis } from "@/lib/redis";
 import { emitToAdmin, SocketEvents } from "@/lib/socket";
 import { pingSitemaps } from "@/lib/seo";
-import { createModuleLogger } from "@/lib/agent-log-stream";
+import { createModuleLogger, logPipelineBanner } from "@/lib/agent-log-stream";
 
-// Create module-specific loggers for live streaming
+// Module loggers
 const liveLog = {
   agent: createModuleLogger("agent"),
   rss: createModuleLogger("rss"),
@@ -29,60 +29,6 @@ const liveLog = {
   image: createModuleLogger("image"),
   publish: createModuleLogger("publish"),
 };
-
-// ============================================================================
-// UI UTILITIES - Box drawing for console output
-// ============================================================================
-
-/**
- * Create a formatted box header for agent execution logs
- */
-function createAgentBoxHeader(data: {
-  logId: string;
-  startTime: Date;
-  category: string;
-}): string {
-  const shortId = data.logId.substring(0, 12);
-  const startTimeStr = data.startTime.toLocaleString("tr-TR").padEnd(25);
-  const category = (data.category || "All").padEnd(28);
-
-  return `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃           🤖 AGENT EXECUTION START                ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  Log ID:       ${shortId}                    ┃
-┃  Start Time:   ${startTimeStr}┃
-┃  Category:     ${category}┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
-}
-
-/**
- * Create a formatted box footer for agent execution logs
- */
-function createAgentBoxFooter(data: {
-  status: string;
-  duration: number;
-  articlesScraped: number;
-  articlesCreated: number;
-  nextRun: Date;
-}): string {
-  const status = data.status.padEnd(31);
-  const duration = `${data.duration}s${" ".repeat(31 - String(data.duration).length)}`;
-  const scraped = `${data.articlesScraped}${" ".repeat(31 - String(data.articlesScraped).length)}`;
-  const created = `${data.articlesCreated}${" ".repeat(31 - String(data.articlesCreated).length)}`;
-  const nextRun = data.nextRun.toLocaleString("tr-TR").padEnd(25);
-
-  return `
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃           ✅ AGENT EXECUTION SUCCESS              ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  Status:         ${status}┃
-┃  Duration:       ${duration}┃
-┃  Articles Found: ${scraped}┃
-┃  Articles Made:  ${created}┃
-┃  Next Run:       ${nextRun}┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛`;
-}
 
 export interface AgentExecutionResult {
   success: boolean;
@@ -170,83 +116,61 @@ export async function executeNewsAgent(
     },
   });
 
-  agentLogger.start(agentLog.id, categorySlug);
-
   // Live log: Agent started
   await liveLog.agent.info(
-    `🚀 Agent başlatıldı (ID: ${agentLog.id.substring(0, 8)}...)`,
-    {
-      categorySlug: categorySlug || "all",
-    },
+    `Agent başlatıldı (${agentLog.id.substring(0, 8)}…)`,
   );
+  agentLogger.start(agentLog.id, categorySlug);
 
-  // Emit agent started event
   emitToAdmin(SocketEvents.AGENT_STARTED, {
     timestamp: new Date().toISOString(),
     logId: agentLog.id,
     categorySlug: categorySlug || null,
   });
 
-  // Add to Redis log stream
-  await addLogMessage(
-    agentLog.id,
-    `🚀 Agent başlatıldı - ${new Date().toLocaleString("tr-TR")}`,
-  );
-
-  console.log(
-    createAgentBoxHeader({
-      logId: agentLog.id,
-      startTime: new Date(),
-      category: categorySlug || "All",
-    }),
-  );
+  await addLogMessage(agentLog.id, `Agent başlatıldı`);
 
   try {
-    // Step 1: Search for AI news (RSS + Trend Analysis)
-    agentLogger.step(
-      agentLog.id,
-      "fetch_news",
-      "Yapay zeka haberleri aranıyor (RSS + Trend)",
-      20,
-    );
-    console.log("📰 Adım 1: Yapay zeka haberleri aranıyor (RSS + Trend)...");
-    await addLogMessage(
-      agentLog.id,
-      "📰 RSS kaynaklarından haberler toplanıyor...",
-    );
-    await updateJobProgress(
-      agentLog.id,
-      "fetching",
-      "Yapay zeka haberleri toplanıyor...",
-      20,
-    );
+    // Step 1: Collect news (RSS + YouTube)
+    agentLogger.step(agentLog.id, "fetch_news", "Haberler toplanıyor", 20);
+    await liveLog.rss.info("RSS + YouTube taranıyor…");
 
-    // Emit progress
     emitToAdmin(SocketEvents.AGENT_PROGRESS, {
       step: "fetching",
-      message: "Yapay zeka haberleri toplanıyor (RSS + Trend)...",
+      message: "Haberler toplanıyor (RSS + YouTube)…",
       progress: 20,
     });
 
     const newsArticles = await fetchAINews(categorySlug);
-    articlesScraped = newsArticles.length;
-    console.log(
-      `✅ ${articlesScraped} unique trend haber bulundu (duplicate filtering yapıldı)`,
-    );
 
-    // Live log: Articles fetched
-    await liveLog.rss.success(`📰 ${articlesScraped} unique haber bulundu`);
+    // YouTube topics
+    let youtubeTopics: typeof newsArticles = [];
+    try {
+      const { discoverYouTubeTopics } = await import("@/lib/youtube-pipeline");
+      youtubeTopics = await discoverYouTubeTopics(72, 15);
+      if (youtubeTopics.length > 0) {
+        await liveLog.rss.info(
+          `${youtubeTopics.length} YouTube konusu keşfedildi`,
+        );
+      }
+    } catch (ytError: any) {
+      await liveLog.rss.warn(`YouTube tarama hatası: ${ytError.message}`);
+    }
+
+    // Merge RSS + YouTube
+    const allArticles = [...newsArticles, ...youtubeTopics];
+    articlesScraped = allArticles.length;
+
+    await liveLog.rss.success(
+      `${articlesScraped} haber bulundu (RSS: ${newsArticles.length}, YT: ${youtubeTopics.length})`,
+    );
     await addLogMessage(
       agentLog.id,
-      `✅ ${articlesScraped} unique haber bulundu`,
+      `${articlesScraped} haber bulundu (RSS: ${newsArticles.length}, YT: ${youtubeTopics.length})`,
     );
 
-    if (newsArticles.length === 0) {
-      console.log(`\n⚠️  Tüm haberler duplicate! Yeni haber yok.`);
-      await addLogMessage(
-        agentLog.id,
-        "⚠️ Tüm haberler duplicate - yeni haber yok",
-      );
+    if (allArticles.length === 0) {
+      await liveLog.agent.warn("Tüm haberler duplicate — yeni haber yok");
       throw new Error("Tüm haberler duplicate - yeni haber bulunamadı");
     }
 
@@ -278,39 +202,30 @@ export async function executeNewsAgent(
     const minArticles = minSetting ? parseInt(minSetting.value) : envMin;
     const maxArticles = maxSetting ? parseInt(maxSetting.value) : envMax;
 
-    // 🎯 15 dk = 0.25 saat. En az 1 haber garanti!
-    const targetCount = Math.max(1, Math.min(
-      Math.floor(Math.random() * (maxArticles - minArticles + 1)) + minArticles,
-      3, // Maksimum 3 article (her biri farklı açı)
-    ));
-
-    console.log(
-      `📊 Haber sayısı ayarları: min=${minArticles}, max=${maxArticles}`,
-    );
-    console.log(
-      `🎯 Hedef haber sayısı: ${targetCount} (content variation mode aktif)`,
+    const targetCount = Math.max(
+      1,
+      Math.min(
+        Math.floor(Math.random() * (maxArticles - minArticles + 1)) +
+          minArticles,
+        3,
+      ),
     );
 
-    // Step 2: Content Variation Check
+    await liveLog.agent.info(
+      `Hedef: ${targetCount} haber (min=${minArticles}, max=${maxArticles})`,
+    );
+
+    // Step 2: Content variation check
     agentLogger.step(
       agentLog.id,
       "content_variation",
-      "İçerik çeşitlendirme kontrolü",
-      40,
-    );
-    console.log("🔄 Adım 2: İçerik çeşitlendirme stratejisi...");
-    await addLogMessage(agentLog.id, "🔄 İçerik çeşitlendirme kontrolü yapılıyor...");
-    await updateJobProgress(
-      agentLog.id,
-      "variation",
-      "Benzer konular için farklı açılar araştırılıyor...",
+      "İçerik çeşitlendirme",
       40,
     );
 
-    // Emit progress
     emitToAdmin(SocketEvents.AGENT_PROGRESS, {
       step: "variation",
-      message: "İçerik çeşitlendirme stratejisi uygulanıyor...",
+      message: "İçerik çeşitlendirme kontrolü…",
       progress: 40,
     });
 
@@ -334,27 +249,21 @@ export async function executeNewsAgent(
       take: 100,
     });
 
-    console.log(`📚 Son ${recentHours} saatte ${recentArticles.length} haber yayınlanmış`);
+    await liveLog.agent.info(
+      `Son ${recentHours} saatte ${recentArticles.length} haber yayınlanmış`,
+    );
 
-    // Use newsArticles directly (already filtered for duplicates in fetchAINews)
-    const uniqueArticles = newsArticles;
+    // Use allArticles (RSS + YouTube, already filtered for duplicates)
+    const uniqueArticles = allArticles;
 
-    // Step 3: Start Multi-Agent Pipeline (NEW!)
+    // Step 3: Multi-agent pipeline
     agentLogger.step(
       agentLog.id,
       "multi_agent_pipeline",
-      "Multi-agent pipeline başlatılıyor (Enrichment + Visual + Publish)",
-      60,
-    );
-    console.log("🤖 Adım 3: Multi-agent pipeline başlatılıyor...");
-    await updateJobProgress(
-      agentLog.id,
-      "pipeline",
-      "Multi-agent pipeline: Enrichment → Visual → Publish",
+      "Pipeline başlatılıyor",
       60,
     );
 
-    // Emit progress
     emitToAdmin(SocketEvents.AGENT_PROGRESS, {
       step: "pipeline",
       message: "Multi-agent pipeline başlatıldı",
@@ -371,21 +280,22 @@ export async function executeNewsAgent(
       targetCount,
     });
 
-    // Live log: Pipeline started
+    logPipelineBanner("start", {
+      articles: uniqueArticles.length,
+      target: targetCount,
+      logId: agentLog.id,
+    });
+
     await liveLog.agent.info(
-      `🤖 Multi-agent pipeline başlatıldı: ${uniqueArticles.length} haber işlenecek`,
+      `Pipeline: ${uniqueArticles.length} haber işlenecek`,
     );
     await addLogMessage(
       agentLog.id,
-      `🤖 Multi-agent pipeline başlatıldı: ${uniqueArticles.length} haber işlenecek`,
+      `Pipeline başlatıldı: ${uniqueArticles.length} haber`,
     );
 
-    // Wait for pipeline completion
-    console.log("⏳ Multi-agent pipeline tamamlanması bekleniyor...");
-    await addLogMessage(
-      agentLog.id,
-      "⏳ Haberler işleniyor (içerik + görsel + çeviri)...",
-    );
+    // Wait for pipeline
+    await addLogMessage(agentLog.id, "Haberler işleniyor…");
     const pipelineResult = await waitForPipelineCompletion(
       agentLog.id,
       20 * 60 * 1000, // 20 minutes timeout
@@ -394,11 +304,9 @@ export async function executeNewsAgent(
     if (!pipelineResult.success) {
       await addLogMessage(
         agentLog.id,
-        `❌ Pipeline hatası: ${pipelineResult.errors.join(", ")}`,
+        `Pipeline hatası: ${pipelineResult.errors.join(", ")}`,
       );
-      throw new Error(
-        `Multi-agent pipeline failed: ${pipelineResult.errors.join(", ")}`,
-      );
+      throw new Error(`Pipeline failed: ${pipelineResult.errors.join(", ")}`);
     }
 
     articlesCreated = pipelineResult.articlesPublished;
@@ -417,38 +325,25 @@ export async function executeNewsAgent(
 
     publishedArticles.push(...publishedArticlesData);
 
-    console.log(`\n${"=".repeat(60)}`);
-    console.log(
-      `✅ MULTI-AGENT PIPELINE COMPLETED: ${articlesCreated} haber yayınlandı`,
-    );
-    console.log(`${"=".repeat(60)}\n`);
-    await addLogMessage(
-      agentLog.id,
-      `🎉 ${articlesCreated} haber başarıyla yayınlandı!`,
-    );
+    logPipelineBanner("complete", {
+      published: articlesCreated,
+      duration: Math.floor((Date.now() - startTime) / 1000),
+    });
+    await addLogMessage(agentLog.id, `${articlesCreated} haber yayınlandı`);
+    await liveLog.publish.success(`${articlesCreated} haber yayında`);
 
-    // Live log: Articles created
-    await liveLog.publish.success(`✅ ${articlesCreated} haber yayında!`);
-
-    // Ping search engines to update sitemaps (non-blocking)
-    // Uses multiple methods: IndexNow, WebSub, legacy ping
     if (articlesCreated > 0) {
       pingSitemaps()
         .then((results) => {
-          const successCount = [
+          const ok = [
             results.google,
             results.bing,
             results.indexNow,
             results.webSub,
           ].filter(Boolean).length;
-          console.log(`🔔 Sitemap ping: ${successCount}/4 yöntem başarılı`);
-          if (results.indexNow)
-            console.log("   ✅ IndexNow: Bing/Yandex bildirildi");
-          if (results.webSub) console.log("   ✅ WebSub: Google bildirildi");
+          liveLog.publish.info(`Sitemap ping: ${ok}/4 başarılı`);
         })
-        .catch((err) => {
-          console.warn("⚠️ Sitemap ping hatası:", err.message);
-        });
+        .catch(() => {});
     }
 
     // Emit article published events
@@ -477,6 +372,10 @@ export async function executeNewsAgent(
     const duration = Math.floor((Date.now() - startTime) / 1000);
     const status = articlesCreated > 0 ? "SUCCESS" : "PARTIAL";
 
+    await liveLog.agent.success(
+      `Tamamlandı: ${articlesCreated} haber, ${duration}s`,
+    );
+
     // Update last run time
     await db.setting.upsert({
       where: { key: "agent.lastRun" },
@@ -501,7 +400,9 @@ export async function executeNewsAgent(
       create: { key: "agent.nextRun", value: nextRun.toISOString() },
     });
 
-    console.log(`⏰ Bir sonraki çalışma: ${nextRun.toLocaleString("tr-TR")}`);
+    await liveLog.agent.info(
+      `Sonraki çalışma: ${nextRun.toLocaleString("tr-TR")}`,
+    );
 
     // Get email settings
     const emailSettings = await db.setting.findMany({
@@ -515,8 +416,8 @@ export async function executeNewsAgent(
     )?.value;
 
     if (!adminEmail) {
-      console.warn(
-        "⚠️ Agent admin email not configured in settings. Email notification skipped.",
+      await liveLog.agent.warn(
+        "Admin email not configured — email notification skipped",
       );
     }
 
@@ -537,7 +438,9 @@ export async function executeNewsAgent(
           publishedArticles: articlesWithTitles,
         });
       } catch (e) {
-        console.error("Failed to send agent success email:", e);
+        await liveLog.agent.error(
+          `Email gönderimi başarısız: ${e instanceof Error ? e.message : String(e)}`,
+        );
       }
     }
 
@@ -577,27 +480,12 @@ export async function executeNewsAgent(
       errors,
     });
 
-    // Track in Sentry for monitoring
     trackAgentExecution(agentLog.id, {
       success: true,
       articlesCreated,
       duration,
       errors,
     });
-
-    console.log(`✅ Agent çalıştırması ${duration}s içinde tamamlandı`);
-
-    console.log(`
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃           ✅ AGENT EXECUTION SUCCESS              ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  Status:         ${status.padEnd(31)}┃
-┃  Duration:       ${duration}s${" ".repeat(31 - String(duration).length)}┃
-┃  Articles Found: ${articlesScraped}${" ".repeat(31 - String(articlesScraped).length)}┃
-┃  Articles Made:  ${articlesCreated}${" ".repeat(31 - String(articlesCreated).length)}┃
-┃  Next Run:       ${nextRun.toLocaleString("tr-TR").padEnd(25)}┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-`);
 
     return {
       success: true,
@@ -614,7 +502,8 @@ export async function executeNewsAgent(
 
     const duration = Math.floor((Date.now() - startTime) / 1000);
 
-    // Emit failure event
+    logPipelineBanner("error", { error: errorMessage, duration });
+
     emitToAdmin(SocketEvents.AGENT_FAILED, {
       error: errorMessage,
       logId: agentLog.id,
@@ -629,7 +518,6 @@ export async function executeNewsAgent(
       duration,
     });
 
-    // Track in Sentry
     trackAgentExecution(agentLog.id, {
       success: false,
       articlesCreated,
@@ -637,7 +525,7 @@ export async function executeNewsAgent(
       errors,
     });
 
-    console.error("❌ Agent çalıştırması başarısız:", error);
+    await liveLog.agent.error(`Başarısız: ${errorMessage} (${duration}s)`);
 
     const status = articlesCreated > 0 ? "PARTIAL" : "FAILED";
 
@@ -657,7 +545,7 @@ export async function executeNewsAgent(
       agentLogger.error(agentLog.id, logError as Error, {
         context: "critical_log_update_failed",
       });
-      console.error("❌ CRITICAL: Failed to update agent log:", logError);
+      console.error("CRITICAL: Failed to update agent log:", logError);
     }
 
     // Get email settings
@@ -670,13 +558,12 @@ export async function executeNewsAgent(
       const emailNotify =
         emailSettings.find((s: any) => s.key === "agent.emailNotifications")
           ?.value !== "false";
-      const adminEmail =
-        emailSettings.find((s: any) => s.key === "agent.adminEmail")?.value;
+      const adminEmail = emailSettings.find(
+        (s: any) => s.key === "agent.adminEmail",
+      )?.value;
 
       if (!adminEmail) {
-        console.warn(
-          "⚠️ Agent admin email not configured. Error email notification skipped.",
-        );
+        // Silent — already logged above
       }
 
       // Send email report
@@ -696,11 +583,11 @@ export async function executeNewsAgent(
             publishedArticles: articlesWithTitles,
           });
         } catch (e) {
-          console.error("Failed to send agent failure email:", e);
+          // Email failure is non-critical
         }
       }
     } catch (emailError) {
-      console.error("❌ Failed to send error notification:", emailError);
+      // Email error is non-critical
     }
 
     return {

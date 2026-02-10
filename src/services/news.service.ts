@@ -604,33 +604,28 @@ const AI_KEYWORDS = [
   "sinir ağı",
   "sinir agi",
 
-  // AI Models & Products
+  // AI Models & Products (tightened - removed ambiguous terms like "gemini", "copilot", "robot")
   "gpt",
   "chatgpt",
   "openai",
-  "gemini",
-  "claude",
+  "claude ai",
   "anthropic",
-  "llama",
-  "mistral",
+  "mistral ai",
   "deepseek",
-  "copilot",
-  "bard",
-  "palm",
   "dall-e",
   "midjourney",
   "stable diffusion",
-  "sora",
+  "sora ai",
 
   // AI Techniques
   "nlp",
-  "natural language",
-  "doğal dil",
-  "dogal dil",
+  "natural language processing",
+  "doğal dil işleme",
+  "dogal dil isleme",
   "computer vision",
   "bilgisayarlı görü",
   "bilgisayarli goru",
-  "transformer",
+  "transformer model",
   "language model",
   "dil modeli",
   "generative ai",
@@ -640,36 +635,37 @@ const AI_KEYWORDS = [
   "llm",
   "büyük dil modeli",
 
-  // AI Companies
-  "nvidia",
+  // AI Companies (specific AI context)
+  "nvidia ai",
+  "nvidia cuda",
   "tesla autopilot",
   "otonom sürüş",
   "otonom surus",
   "hugging face",
-  "cohere",
+  "cohere ai",
   "stability ai",
-  "runway",
+  "runway ai",
   "google ai",
   "microsoft ai",
   "meta ai",
   "amazon ai",
+  "perplexity ai",
 
   // AI Applications
   "chatbot",
   "sohbet botu",
-  "robot",
-  "robotik",
-  "robotic",
-  "autonomous",
-  "otonom",
-  "automation",
-  "otomasyon",
   "ai assistant",
   "ai asistan",
   "yapay zeka asistan",
   "ai tool",
   "ai araç",
   "ai arac",
+  "ai agent",
+  "ai coding",
+  "code generation",
+  "image generation",
+  "text-to-image",
+  "text-to-video",
 
   // AI Ethics & Regulation
   "ai ethics",
@@ -685,6 +681,8 @@ const AI_KEYWORDS = [
   "ai bias",
   "ai önyargı",
   "ai onyargi",
+  "agi",
+  "artificial general intelligence",
 ];
 
 /**
@@ -1111,38 +1109,43 @@ function getCategoryKeywords(categorySlug: string): string[] {
  */
 function isValidContent(content: string): { valid: boolean; reason?: string } {
   const lowerContent = content.toLowerCase();
-  
+
   // Critical error patterns that indicate scraping failure
   const errorPatterns = [
-    { pattern: 'shadow dom', reason: 'Shadow DOM barrier detected' },
-    { pattern: 'warning:', reason: 'Warning message in content' },
-    { pattern: 'published time:', reason: 'Raw metadata instead of content' },
-    { pattern: 'unable to access', reason: 'Access restriction' },
-    { pattern: 'javascript required', reason: 'JS-only site' },
-    { pattern: 'enable javascript', reason: 'JS-only site' },
-    { pattern: 'cookies must be enabled', reason: 'Cookie wall' },
-    { pattern: 'please enable cookies', reason: 'Cookie wall' },
-    { pattern: 'access denied', reason: 'Access denied' },
-    { pattern: '403 forbidden', reason: '403 Forbidden' },
-    { pattern: 'captcha', reason: 'CAPTCHA challenge' },
-    { pattern: 'robot verification', reason: 'Bot detection' },
+    { pattern: "shadow dom", reason: "Shadow DOM barrier detected" },
+    { pattern: "warning:", reason: "Warning message in content" },
+    { pattern: "published time:", reason: "Raw metadata instead of content" },
+    { pattern: "unable to access", reason: "Access restriction" },
+    { pattern: "javascript required", reason: "JS-only site" },
+    { pattern: "enable javascript", reason: "JS-only site" },
+    { pattern: "cookies must be enabled", reason: "Cookie wall" },
+    { pattern: "please enable cookies", reason: "Cookie wall" },
+    { pattern: "access denied", reason: "Access denied" },
+    { pattern: "403 forbidden", reason: "403 Forbidden" },
+    { pattern: "captcha", reason: "CAPTCHA challenge" },
+    { pattern: "robot verification", reason: "Bot detection" },
   ];
-  
+
   for (const { pattern, reason } of errorPatterns) {
     if (lowerContent.includes(pattern)) {
       return { valid: false, reason };
     }
   }
-  
+
   // Check for gibberish: too many special characters relative to alphanumeric
-  const alphanumeric = (content.match(/[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]/g) || []).length;
+  const alphanumeric = (
+    content.match(/[a-zA-Z0-9\u00C0-\u024F\u1E00-\u1EFF]/g) || []
+  ).length;
   const total = content.length;
   const alphaRatio = alphanumeric / total;
-  
+
   if (alphaRatio < 0.5 && total > 100) {
-    return { valid: false, reason: `Low text quality (${Math.round(alphaRatio * 100)}% alphanumeric)` };
+    return {
+      valid: false,
+      reason: `Low text quality (${Math.round(alphaRatio * 100)}% alphanumeric)`,
+    };
   }
-  
+
   return { valid: true };
 }
 
@@ -1177,7 +1180,9 @@ export async function fetchArticleContent(url: string): Promise<string> {
         if (!validation.valid) {
           console.warn(`⚠️ Jina Reader içerik geçersiz: ${validation.reason}`);
           console.warn(`   URL: ${url}`);
-          console.warn(`   İçerik önizleme: ${jinaContent.substring(0, 100)}...`);
+          console.warn(
+            `   İçerik önizleme: ${jinaContent.substring(0, 100)}...`,
+          );
           throw new Error(`Invalid content: ${validation.reason}`);
         }
 
@@ -1264,7 +1269,9 @@ export async function fetchArticleContent(url: string): Promise<string> {
 
     // 🚨 CRITICAL: Throw error instead of returning garbage
     // This allows the caller to skip this article instead of processing bad content
-    throw new Error(`Content fetch failed: ${error.message || 'Unknown error'}`);
+    throw new Error(
+      `Content fetch failed: ${error.message || "Unknown error"}`,
+    );
   }
 }
 

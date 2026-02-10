@@ -130,7 +130,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
       return {
         success: true,
         data: uniqueArticles,
-        nextQueue: QUEUE_NAMES.TREND_ENRICHMENT, // Route to TrendEnricher
+        nextQueue: QUEUE_NAMES.RELEVANT_ARTICLES, // Route to RelevanceFilter (Duplicate → Relevance → Trend)
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls: 0,

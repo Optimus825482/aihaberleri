@@ -24,12 +24,12 @@ export interface ScoredArticle extends CollectedArticle {
   suggestedTags?: string[];
 }
 
-// 🔧 RELAXED: 60 → 50 to allow more articles through (06.02.2026)
-// Duplicate detection will catch truly duplicates, relevance filter should be permissive
-const RELEVANCE_THRESHOLD = 50; // Minimum score to pass
+// 🔧 TIGHTENED: 50 → 65 to prevent non-AI content from passing (10.02.2026)
+// Combined with negative keyword filtering in content-collector for double protection
+const RELEVANCE_THRESHOLD = 65; // Minimum score to pass
 const BATCH_SIZE = 10; // Articles per batch
 
-// BYPASS MODE: If Gemini fails, pass all articles with high scores (based on trend)
+// BYPASS MODE: If DeepSeek fails, apply basic AI keyword validation instead of passing everything
 const BYPASS_MODE_ENABLED = true;
 
 export class RelevanceFilterAgent extends BaseAgent<
@@ -122,7 +122,7 @@ export class RelevanceFilterAgent extends BaseAgent<
       return {
         success: true,
         data: relevantArticles,
-        nextQueue: QUEUE_NAMES.UNIQUE_ARTICLES,
+        nextQueue: QUEUE_NAMES.TREND_ENRICHMENT, // Route to TrendEnricher (Relevance → Trend → Enrichment)
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls,

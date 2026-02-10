@@ -27,6 +27,7 @@ import {
   PlusCircle,
   Share2,
   TrendingUp,
+  Youtube,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -47,48 +48,139 @@ const menuGroups = [
   {
     title: "Genel",
     items: [
-      { title: "Dashboard", href: "/admin", icon: LayoutDashboard, requiredResource: null },
-      { title: "Sistem İzleme", href: "/admin/monitoring", icon: Monitor, requiredResource: null },
+      {
+        title: "Dashboard",
+        href: "/admin",
+        icon: LayoutDashboard,
+        requiredResource: null,
+      },
+      {
+        title: "Sistem İzleme",
+        href: "/admin/monitoring",
+        icon: Monitor,
+        requiredResource: null,
+      },
     ],
   },
   {
     title: "İçerik Yönetimi",
     items: [
-      { title: "Haberler", href: "/admin/articles", icon: FileText, requiredResource: "articles" as const },
-      { title: "Yeni Haber Ekle", href: "/admin/add-news", icon: PlusCircle, requiredResource: null },
-      { title: "Kategoriler", href: "/admin/categories", icon: Tags, requiredResource: "categories" as const },
+      {
+        title: "Haberler",
+        href: "/admin/articles",
+        icon: FileText,
+        requiredResource: "articles" as const,
+      },
+      {
+        title: "Yeni Haber Ekle",
+        href: "/admin/add-news",
+        icon: PlusCircle,
+        requiredResource: null,
+      },
+      {
+        title: "Kategoriler",
+        href: "/admin/categories",
+        icon: Tags,
+        requiredResource: "categories" as const,
+      },
+      {
+        title: "YouTube Kanalları",
+        href: "/admin/youtube-channels",
+        icon: Youtube,
+        requiredResource: null,
+      },
     ],
   },
   {
     title: "Analitik",
     items: [
-      { title: "Analytics", href: "/admin/analytics", icon: BarChart, requiredResource: null },
-      { title: "Trendler", href: "/admin/trends", icon: TrendingUp, requiredResource: null },
+      {
+        title: "Analytics",
+        href: "/admin/analytics",
+        icon: BarChart,
+        requiredResource: null,
+      },
+      {
+        title: "Trendler",
+        href: "/admin/trends",
+        icon: TrendingUp,
+        requiredResource: null,
+      },
     ],
   },
   {
     title: "Agent & SEO",
     items: [
-      { title: "Agent Ayarları", href: "/admin/agent-settings", icon: Bot, requiredResource: "settings" as const },
-      { title: "SEO Dashboard", href: "/admin/seo", icon: Search, requiredResource: null },
-      { title: "SEO Bildirimleri", href: "/admin/seo-notifications", icon: Bell, requiredResource: null },
+      {
+        title: "Agent Ayarları",
+        href: "/admin/agent-settings",
+        icon: Bot,
+        requiredResource: "settings" as const,
+      },
+      {
+        title: "SEO Dashboard",
+        href: "/admin/seo",
+        icon: Search,
+        requiredResource: null,
+      },
+      {
+        title: "SEO Bildirimleri",
+        href: "/admin/seo-notifications",
+        icon: Bell,
+        requiredResource: null,
+      },
     ],
   },
   {
     title: "Dağıtım",
     items: [
-      { title: "Sosyal Medya", href: "/admin/social-shares", icon: Share2, requiredResource: null },
-      { title: "Newsletter", href: "/admin/newsletter", icon: Mail, requiredResource: "settings" as const },
-      { title: "Bildirimler", href: "/admin/notifications", icon: Bell, requiredResource: "settings" as const },
+      {
+        title: "Sosyal Medya",
+        href: "/admin/social-shares",
+        icon: Share2,
+        requiredResource: null,
+      },
+      {
+        title: "Newsletter",
+        href: "/admin/newsletter",
+        icon: Mail,
+        requiredResource: "settings" as const,
+      },
+      {
+        title: "Bildirimler",
+        href: "/admin/notifications",
+        icon: Bell,
+        requiredResource: "settings" as const,
+      },
     ],
   },
   {
     title: "Yönetim",
     items: [
-      { title: "Kullanıcılar", href: "/admin/users", icon: Users, requiredResource: "users" as const },
-      { title: "İletişim", href: "/admin/messages", icon: MessageSquare, requiredResource: "messages" as const },
-      { title: "İşlem Geçmişi", href: "/admin/audit-logs", icon: Shield, requiredResource: null },
-      { title: "Ayarlar", href: "/admin/settings", icon: Settings, requiredResource: "settings" as const },
+      {
+        title: "Kullanıcılar",
+        href: "/admin/users",
+        icon: Users,
+        requiredResource: "users" as const,
+      },
+      {
+        title: "İletişim",
+        href: "/admin/messages",
+        icon: MessageSquare,
+        requiredResource: "messages" as const,
+      },
+      {
+        title: "İşlem Geçmişi",
+        href: "/admin/audit-logs",
+        icon: Shield,
+        requiredResource: null,
+      },
+      {
+        title: "Ayarlar",
+        href: "/admin/settings",
+        icon: Settings,
+        requiredResource: "settings" as const,
+      },
     ],
   },
 ];
@@ -291,26 +383,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   </span>
                 </div>
                 {group.items.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              const hasSubmenu =
-                "submenu" in item &&
-                Array.isArray((item as any).submenu) &&
-                (item as any).submenu.length > 0;
-              const isExpanded = expandedMenus[item.title];
-              const isSubmenuActive =
-                hasSubmenu &&
-                (item as any).submenu?.some(
-                  (sub: any) => pathname === sub.href,
-                );
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  const hasSubmenu =
+                    "submenu" in item &&
+                    Array.isArray((item as any).submenu) &&
+                    (item as any).submenu.length > 0;
+                  const isExpanded = expandedMenus[item.title];
+                  const isSubmenuActive =
+                    hasSubmenu &&
+                    (item as any).submenu?.some(
+                      (sub: any) => pathname === sub.href,
+                    );
 
-              return (
-                <div key={item.href}>
-                  {/* Main Menu Item */}
-                  {hasSubmenu ? (
-                    <button
-                      onClick={() => toggleSubmenu(item.title)}
-                      className={`
+                  return (
+                    <div key={item.href}>
+                      {/* Main Menu Item */}
+                      {hasSubmenu ? (
+                        <button
+                          onClick={() => toggleSubmenu(item.title)}
+                          className={`
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden w-full
                       touch-manipulation active:scale-[0.98]
@@ -320,41 +412,41 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                           : "hover:bg-primary/5 hover:translate-x-1"
                       }
                     `}
-                    >
-                      {/* Active Indicator */}
-                      {isSubmenuActive && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
-                      )}
+                        >
+                          {/* Active Indicator */}
+                          {isSubmenuActive && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                          )}
 
-                      <div
-                        className={`
+                          <div
+                            className={`
                       p-2 rounded-lg transition-all
                       ${isSubmenuActive ? "bg-primary/20" : "bg-primary/10 group-hover:bg-primary/20"}
                     `}
-                      >
-                        <Icon className="h-4 w-4 flex-shrink-0" />
-                      </div>
-                      <span className="truncate font-bold text-sm flex-1 text-left">
-                        {item.title}
-                      </span>
+                          >
+                            <Icon className="h-4 w-4 flex-shrink-0" />
+                          </div>
+                          <span className="truncate font-bold text-sm flex-1 text-left">
+                            {item.title}
+                          </span>
 
-                      {/* Chevron Icon */}
-                      {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 transition-transform" />
+                          {/* Chevron Icon */}
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 transition-transform" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 transition-transform" />
+                          )}
+
+                          {/* Hover Effect */}
+                          {!isSubmenuActive && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </button>
                       ) : (
-                        <ChevronRight className="h-4 w-4 transition-transform" />
-                      )}
-
-                      {/* Hover Effect */}
-                      {!isSubmenuActive && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      )}
-                    </button>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      onClick={closeMobileMenu}
-                      className={`
+                        <Link
+                          href={item.href}
+                          onClick={closeMobileMenu}
+                          className={`
                       group flex items-center gap-3 px-4 py-4 lg:py-3 rounded-xl
                       transition-all duration-200 relative overflow-hidden
                       touch-manipulation active:scale-[0.98]
@@ -364,44 +456,44 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                           : "hover:bg-primary/5 hover:translate-x-1"
                       }
                     `}
-                    >
-                      {/* Active Indicator */}
-                      {isActive && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />
-                      )}
+                        >
+                          {/* Active Indicator */}
+                          {isActive && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />
+                          )}
 
-                      <div
-                        className={`
+                          <div
+                            className={`
                       p-2 rounded-lg transition-all
                       ${isActive ? "bg-white/20" : "bg-primary/10 group-hover:bg-primary/20"}
                     `}
-                      >
-                        <Icon className="h-4 w-4 flex-shrink-0" />
-                      </div>
-                      <span className="truncate font-bold text-sm">
-                        {item.title}
-                      </span>
+                          >
+                            <Icon className="h-4 w-4 flex-shrink-0" />
+                          </div>
+                          <span className="truncate font-bold text-sm">
+                            {item.title}
+                          </span>
 
-                      {/* Hover Effect */}
-                      {!isActive && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          {/* Hover Effect */}
+                          {!isActive && (
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
+                        </Link>
                       )}
-                    </Link>
-                  )}
 
-                  {/* Submenu Items */}
-                  {hasSubmenu && isExpanded && (
-                    <div className="ml-4 mt-1 space-y-1 border-l-2 border-primary/10 pl-2">
-                      {(item as any).submenu?.map((subItem: any) => {
-                        const SubIcon = subItem.icon;
-                        const isSubActive = pathname === subItem.href;
+                      {/* Submenu Items */}
+                      {hasSubmenu && isExpanded && (
+                        <div className="ml-4 mt-1 space-y-1 border-l-2 border-primary/10 pl-2">
+                          {(item as any).submenu?.map((subItem: any) => {
+                            const SubIcon = subItem.icon;
+                            const isSubActive = pathname === subItem.href;
 
-                        return (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                            onClick={closeMobileMenu}
-                            className={`
+                            return (
+                              <Link
+                                key={subItem.href}
+                                href={subItem.href}
+                                onClick={closeMobileMenu}
+                                className={`
                             group flex items-center gap-2 px-3 py-2.5 rounded-lg
                             transition-all duration-200 relative
                             touch-manipulation active:scale-[0.98]
@@ -411,26 +503,26 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                                 : "hover:bg-primary/10 hover:translate-x-1"
                             }
                           `}
-                          >
-                            <div
-                              className={`
+                              >
+                                <div
+                                  className={`
                             p-1.5 rounded-md transition-all
                             ${isSubActive ? "bg-white/20" : "bg-primary/10 group-hover:bg-primary/20"}
                           `}
-                            >
-                              <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
-                            </div>
-                            <span className="truncate font-semibold text-xs">
-                              {subItem.title}
-                            </span>
-                          </Link>
-                        );
-                      })}
+                                >
+                                  <SubIcon className="h-3.5 w-3.5 flex-shrink-0" />
+                                </div>
+                                <span className="truncate font-semibold text-xs">
+                                  {subItem.title}
+                                </span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              );
-            })}
+                  );
+                })}
               </div>
             ))}
           </nav>

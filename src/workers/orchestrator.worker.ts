@@ -1,20 +1,18 @@
 /**
  * Orchestrator Worker - Multi-Agent News Pipeline
  *
- * ARCHITECTURE (7+1 Agents):
- * ContentCollector → RelevanceFilter → DuplicateDetector → TrendEnricher →
- * ContentEnricher → VisualGenerator → SEOOptimizer → DatabasePublisher
+ * ARCHITECTURE (7 Agents):
+ * DuplicateDetector → RelevanceFilter → TrendEnricher →
+ * ContentEnricher → VisualGenerator → DatabasePublisher
+ * (+ ContentCollector for standalone RSS collection)
  *
  * This worker:
- * 1. Starts all 7 agents (+ SEO Calculator background worker)
+ * 1. Starts all 7 agents
  * 2. Triggers ContentCollectorAgent on schedule
  * 3. Monitors pipeline health
  * 4. Handles graceful shutdown
- * 5. Coordinates SEO optimization before publishing
- * 6. Publishes final articles to database
  */
 
-import { Worker } from "bullmq";
 import { getRedis } from "@/lib/redis";
 import { db } from "@/lib/db";
 import { PrismaClient } from "@prisma/client";
@@ -25,6 +23,11 @@ import {
   getAllQueueStats,
   QUEUE_NAMES,
 } from "@/lib/queue-manager";
+import {
+  logPipelineBanner,
+  logAgentInit,
+  logHealthSummary,
+} from "@/lib/agent-log-stream";
 
 // Import agents
 import { ContentCollectorAgent } from "@/agents/content-collector.agent";
@@ -39,7 +42,6 @@ import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
 import {
   createDynamicScheduler,
   getScheduleInfo,
-  recordLastRun,
   type ScheduleInfo,
 } from "@/lib/smart-scheduler";
 
@@ -70,7 +72,17 @@ let dynamicScheduler: {
  * Initialize all agents
  */
 async function initializeAgents(): Promise<void> {
-  logger.info("Initializing 7-agent pipeline (with TrendEnricher)...");
+  const agentNames = [
+    "duplicate-detector",
+    "relevance-filter",
+    "trend-enricher",
+    "content-enricher",
+    "visual-generator",
+    "database-publisher",
+    "content-collector",
+  ];
+
+  logAgentInit(agentNames);
 
   contentCollector = new ContentCollectorAgent();
   relevanceFilter = new RelevanceFilterAgent();
@@ -90,7 +102,7 @@ async function initializeAgents(): Promise<void> {
     databasePublisher.start(),
   ]);
 
-  logger.success("All 7 agents started successfully");
+  logger.success("All 7 agents initialized");
 }
 
 /**
@@ -146,307 +158,17 @@ async function triggerContentCollection(
 async function monitorPipelineHealth(): Promise<void> {
   const stats = await getAllQueueStats();
 
-  logger.info("Pipeline Health:");
-  for (const stat of stats) {
-    if (stat) {
-      logger.info(
-        `  ${stat.queueName}: ${stat.active} active, ${stat.waiting} waiting, ${stat.completed} completed, ${stat.failed} failed`,
-      );
-    }
-  }
+  const queueSummary = stats
+    .filter((s): s is NonNullable<typeof s> => s !== null)
+    .map((s) => ({
+      name: s.queueName.replace("news-pipeline:", ""),
+      active: s.active,
+      waiting: s.waiting,
+      completed: s.completed,
+      failed: s.failed,
+    }));
 
-  // Check agent health
-  const agentHealths = await Promise.all([
-    contentCollector?.healthCheck(),
-    relevanceFilter?.healthCheck(),
-    duplicateDetector?.healthCheck(),
-    trendEnricher?.healthCheck(),
-    contentEnricher?.healthCheck(),
-    visualGenerator?.healthCheck(),
-    databasePublisher?.healthCheck(),
-  ]);
-
-  logger.info("Agent Health:");
-  for (const health of agentHealths) {
-    if (health) {
-      logger.info(
-        `  ${health.queueName}: ${health.workerStatus} (${health.metricsCount} metrics)`,
-      );
-    }
-  }
-}
-
-/**
- * Publish articles to database (called after VisualGenerator completes)
- */
-async function publishArticlesToDatabase(
-  articles: any[],
-  agentLogId?: string,
-): Promise<void> {
-  logger.info(`Publishing ${articles.length} articles to database...`);
-
-  let publishedCount = 0;
-  let failedCount = 0;
-
-  for (const article of articles) {
-    try {
-      const {
-        synthesizedContent,
-        imageUrl,
-        imageUrlMedium,
-        imageUrlSmall,
-        imageUrlThumb,
-        topic,
-      } = article;
-
-      // Get category
-      const categoryRecord = await db.category.findUnique({
-        where: { slug: article.suggestedCategory || "yapay-zeka" },
-      });
-
-      if (!categoryRecord) {
-        logger.warn(`Category not found: ${article.suggestedCategory}`);
-        continue;
-      }
-
-      // Generate slug
-      const slug = synthesizedContent.tr.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .substring(0, 100);
-
-      // Create Turkish article
-      const trArticle = await db.article.create({
-        data: {
-          title: synthesizedContent.tr.title,
-          slug,
-          excerpt: synthesizedContent.tr.excerpt,
-          content: synthesizedContent.tr.content,
-          imageUrl: imageUrl || "/logos/og-image.png",
-          imageUrlMedium: imageUrlMedium || "/logos/og-image.png",
-          imageUrlSmall: imageUrlSmall || "/logos/og-image.png",
-          imageUrlThumb: imageUrlThumb || "/logos/og-image.png",
-          sourceUrl: article.url,
-          categoryId: categoryRecord.id,
-          status: synthesizedContent.tr.score >= 750 ? "PUBLISHED" : "DRAFT",
-          score: synthesizedContent.tr.score || 800,
-          publishedAt: synthesizedContent.tr.score >= 750 ? new Date() : null,
-          metaTitle: synthesizedContent.tr.title,
-          metaDescription: synthesizedContent.tr.metaDescription,
-          keywords: synthesizedContent.tr.keywords,
-          topic,
-          agentLogId,
-          language: "tr", // Türkçe haber
-        },
-      });
-
-      // Post-publish notifications (non-blocking)
-      if (synthesizedContent.tr.score >= 750) {
-        // IndexNow bildirimi
-        (async () => {
-          try {
-            const { submitArticleToIndexNow } =
-              await import("@/lib/seo/indexnow");
-            const indexNowSuccess = await submitArticleToIndexNow(
-              slug,
-              trArticle.id,
-            );
-
-            // IndexNow başarılıysa googleIndexed'i true yap
-            if (indexNowSuccess) {
-              await db.article.update({
-                where: { id: trArticle.id },
-                data: {
-                  googleIndexed: true,
-                  indexNowStatus: "SUBMITTED",
-                  indexedAt: new Date(),
-                },
-              });
-              logger.success(`IndexNow: ${slug} bildirildi`);
-            }
-          } catch (err) {
-            logger.error(`IndexNow failed for ${slug}:`, {
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
-        })();
-
-        // Google Indexing API bildirimi (günlük limit kontrolü ile)
-        (async () => {
-          try {
-            const { notifyGoogle, getRemainingDailyQuota } =
-              await import("@/lib/seo/google-indexing-api");
-
-            // Önce kalan kotayı kontrol et
-            const remainingQuota = await getRemainingDailyQuota();
-
-            if (remainingQuota === 0) {
-              logger.warn(
-                `Google Indexing API: ${slug} - günlük limit doldu, atlanıyor`,
-              );
-              return;
-            }
-
-            const baseUrl =
-              process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-            const articleUrl = `${baseUrl}/news/${slug}`;
-
-            const result = await notifyGoogle(articleUrl, "URL_UPDATED");
-
-            if (result.success) {
-              await db.article.update({
-                where: { id: trArticle.id },
-                data: {
-                  googleIndexStatus: "SUBMITTED",
-                  googleIndexedAt: new Date(),
-                },
-              });
-              logger.success(
-                `Google Indexing API: ${slug} bildirildi (kota: ${remainingQuota - 1})`,
-              );
-            }
-          } catch (err) {
-            logger.error(`Google Indexing API failed for ${slug}:`, {
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
-        })();
-
-        // Facebook paylaşımı
-        (async () => {
-          try {
-            const { postToFacebook } = await import("@/lib/social/facebook");
-            const facebookSuccess = await postToFacebook({
-              title: synthesizedContent.tr.title,
-              slug,
-              excerpt: synthesizedContent.tr.excerpt || "",
-              imageUrl: imageUrl,
-              categoryName: categoryRecord.name,
-            });
-
-            // Facebook başarılıysa facebookShared'i true yap
-            if (facebookSuccess) {
-              await db.article.update({
-                where: { id: trArticle.id },
-                data: { facebookShared: true },
-              });
-              logger.success(`Facebook: ${slug} paylaşıldı`);
-            }
-          } catch (err) {
-            logger.error(`Facebook failed for ${slug}:`, {
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
-        })();
-
-        // Bluesky paylaşımı
-        (async () => {
-          try {
-            const { postToBluesky } = await import("@/lib/social/bluesky");
-            const blueskyResult = await postToBluesky({
-              title: synthesizedContent.tr.title,
-              slug,
-              excerpt: synthesizedContent.tr.excerpt || "",
-              imageUrl: imageUrl,
-              categoryName: categoryRecord.name,
-            });
-
-            if (blueskyResult) {
-              logger.success(`Bluesky: ${slug} paylaşıldı`);
-            }
-          } catch (err) {
-            logger.error(`Bluesky failed for ${slug}:`, {
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
-        })();
-
-        // Mastodon paylaşımı
-        (async () => {
-          try {
-            const { postToMastodon } = await import("@/lib/social/mastodon");
-            const mastodonResult = await postToMastodon({
-              title: synthesizedContent.tr.title,
-              slug,
-              excerpt: synthesizedContent.tr.excerpt || "",
-              imageUrl: imageUrl,
-              categoryName: categoryRecord.name,
-            });
-
-            if (mastodonResult) {
-              logger.success(`Mastodon: ${slug} paylaşıldı`);
-            }
-          } catch (err) {
-            logger.error(`Mastodon failed for ${slug}:`, {
-              error: err instanceof Error ? err.message : String(err),
-            });
-          }
-        })();
-      }
-
-      // Create translations (TR + EN)
-      await db.$executeRaw`
-        INSERT INTO "ArticleTranslation" (
-          id, "articleId", locale, title, slug, excerpt, content, 
-          "metaTitle", "metaDescription", "createdAt", "updatedAt"
-        ) VALUES (
-          gen_random_uuid(), ${trArticle.id}, 'tr', ${synthesizedContent.tr.title}, 
-          ${slug}, ${synthesizedContent.tr.excerpt}, ${synthesizedContent.tr.content},
-          ${synthesizedContent.tr.title}, ${synthesizedContent.tr.metaDescription}, 
-          NOW(), NOW()
-        )
-        ON CONFLICT ("articleId", locale) DO UPDATE SET
-          title = EXCLUDED.title,
-          slug = EXCLUDED.slug,
-          excerpt = EXCLUDED.excerpt,
-          content = EXCLUDED.content,
-          "metaTitle" = EXCLUDED."metaTitle",
-          "metaDescription" = EXCLUDED."metaDescription",
-          "updatedAt" = NOW()
-      `;
-
-      const enSlug = synthesizedContent.en.title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .substring(0, 100);
-
-      await db.$executeRaw`
-        INSERT INTO "ArticleTranslation" (
-          id, "articleId", locale, title, slug, excerpt, content, 
-          "metaTitle", "metaDescription", "createdAt", "updatedAt"
-        ) VALUES (
-          gen_random_uuid(), ${trArticle.id}, 'en', ${synthesizedContent.en.title}, 
-          ${enSlug}, ${synthesizedContent.en.excerpt}, ${synthesizedContent.en.content},
-          ${synthesizedContent.en.title}, ${synthesizedContent.en.metaDescription}, 
-          NOW(), NOW()
-        )
-        ON CONFLICT ("articleId", locale) DO UPDATE SET
-          title = EXCLUDED.title,
-          slug = EXCLUDED.slug,
-          excerpt = EXCLUDED.excerpt,
-          content = EXCLUDED.content,
-          "metaTitle" = EXCLUDED."metaTitle",
-          "metaDescription" = EXCLUDED."metaDescription",
-          "updatedAt" = NOW()
-      `;
-
-      publishedCount++;
-      logger.success(
-        `Published: ${synthesizedContent.tr.title.substring(0, 50)}...`,
-      );
-    } catch (error) {
-      failedCount++;
-      logger.error(`Failed to publish article:`, {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-
-  logger.success(
-    `Publishing complete: ${publishedCount} published, ${failedCount} failed`,
-  );
+  logHealthSummary(queueSummary);
 }
 
 /**
@@ -479,7 +201,7 @@ async function main() {
   // Initialize agents
   await initializeAgents();
 
-  // Start heartbeat
+  // Start heartbeat (silent — only logs on failure)
   setInterval(async () => {
     try {
       await redis.set(
@@ -488,7 +210,6 @@ async function main() {
         "EX",
         60,
       );
-      logger.info(`💓 Heartbeat: ${new Date().toLocaleString("tr-TR")}`);
     } catch (error) {
       logger.error("Heartbeat failed:", {
         error: error instanceof Error ? error.message : String(error),
@@ -521,10 +242,9 @@ async function main() {
 
     // Get initial schedule info
     const initialInfo = await getScheduleInfo();
-    logger.info(`🇹🇷 Turkey time: ${initialInfo.turkeyTime}`);
-    logger.info(`📊 Time slot: ${initialInfo.timeSlot}`);
-    logger.info(`⏱️ Initial interval: ${initialInfo.interval} minutes`);
-    logger.info(`📋 Reason: ${initialInfo.reason}`);
+    logger.info(
+      `Schedule: ${initialInfo.timeSlot} — ${initialInfo.interval}min interval — ${initialInfo.reason}`,
+    );
 
     // Create dynamic scheduler with Turkey timezone awareness
     dynamicScheduler = createDynamicScheduler(
@@ -533,7 +253,7 @@ async function main() {
         await triggerContentCollection();
       },
       {
-        immediate: true, // Run immediately on startup
+        immediate: true,
         onScheduleChange: (info) => {
           logger.info(
             `📅 Schedule updated: ${info.interval} min | ${info.reason} | Next: ${info.nextRun.toLocaleString("tr-TR")}`,
@@ -542,17 +262,14 @@ async function main() {
       },
     );
 
-    logger.success(
-      "✅ Smart Scheduler initialized with Turkey timezone awareness",
-    );
+    logger.success("Smart Scheduler initialized");
     logger.info(
-      `📅 Next run at: ${initialInfo.nextRun.toLocaleString("tr-TR")} (${initialInfo.interval} min)`,
+      `Next run: ${initialInfo.nextRun.toLocaleString("tr-TR")} (${initialInfo.interval}min)`,
     );
 
-    // Start Trend Fetcher cron job
-    logger.info("🔥 Starting Trend Fetcher for social media trends...");
+    logger.info("Starting Trend Fetcher...");
     startTrendFetcher();
-    logger.success("✅ Trend Fetcher started (every 15 minutes)");
+    logger.success("Trend Fetcher started");
   } else {
     logger.info("Agent disabled, skipping scheduled collection");
   }

@@ -1,13 +1,8 @@
 /**
  * Multi-Agent Pipeline Service
  *
- * MODERN ARCHITECTURE (6 Agents):
- * ContentCollector → RelevanceFilter → DuplicateDetector → TrendEnricher → ContentEnricher → VisualGenerator → DatabasePublisher
- *
+ * Pipeline: Duplicate → Relevance → Trend → Enrich → Visual → Publish
  * Each agent is autonomous and communicates via BullMQ queues.
- * This replaces the monolithic processAndPublishArticles approach.
- *
- * NOTE: SEO Optimization agent was removed from pipeline for performance.
  */
 
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
@@ -177,10 +172,9 @@ export async function startMultiAgentPipeline(
   config: PipelineConfig,
 ): Promise<void> {
   logger.info(
-    `🚀 Starting multi-agent pipeline with ${articles.length} articles`,
+    `Pipeline starting: ${articles.length} articles → duplicate-detector`,
   );
 
-  // Transform to format expected by ContentCollectorAgent
   const collectedArticles = articles.map((article) => ({
     title: article.title,
     description: article.description || "",
@@ -190,104 +184,41 @@ export async function startMultiAgentPipeline(
     topic: article.topic,
     trendScore: article.trendScore,
     suggestedCategory: config.categorySlug || "yapay-zeka",
-    agentLogId: config.agentLogId, // Pass agentLogId through pipeline
+    agentLogId: config.agentLogId,
   }));
 
-  // 🆕 Pipeline artık DUPLICATE CHECK ile başlıyor (09.02.2026)
-  // Eski sıra: Relevance → Duplicate → Trend
-  // Yeni sıra: Duplicate → Relevance → Trend (daha az API çağrısı)
-
-  console.log(`\n✉ Adding job to queue: ${QUEUE_NAMES.UNIQUE_ARTICLES}`); // 🆕 Duplicate check FIRST!
-  console.log(`   Articles: ${collectedArticles.length}`);
-  console.log(`   AgentLogId: ${config.agentLogId}`);
-
-  // 🆕 START WITH DUPLICATE CHECK (09.02.2026)
-  // Eski sıra: Relevance → Duplicate → Trend
-  // Yeni sıra: Duplicate → Relevance → Trend (daha az API call)
   const duplicateQueue = getQueue(QUEUE_NAMES.UNIQUE_ARTICLES);
-
   if (!duplicateQueue) {
     throw new Error("Duplicate detector queue not available");
   }
 
   const job = await duplicateQueue.add("filter-duplicates", collectedArticles, {
-    removeOnComplete: 100, // Keep last 100 for debugging
+    removeOnComplete: 100,
     removeOnFail: 50,
     attempts: 3,
     priority: 1,
   });
 
-  console.log(`✅ Job added successfully: ${job.id}`);
-
-  // Wait a moment for job to be picked up
-  await new Promise((resolve) => setTimeout(resolve, 1000)); // Increased to 1s
-
-  // Verify job was added
-  const waitingCount = await duplicateQueue.getWaitingCount();
-  const activeCount = await duplicateQueue.getActiveCount();
-  const completedCount = await duplicateQueue.getCompletedCount();
-  const failedCount = await duplicateQueue.getFailedCount();
-
-  console.log(`\n📊 Queue Status (${QUEUE_NAMES.UNIQUE_ARTICLES}):`);
-  console.log(`   Waiting: ${waitingCount}`);
-  console.log(`   Active: ${activeCount}`);
-  console.log(`   Completed: ${completedCount}`);
-  console.log(`   Failed: ${failedCount}`);
-
-  logger.info(
-    `📊 Queue status: waiting=${waitingCount}, active=${activeCount}, completed=${completedCount}, failed=${failedCount}`,
+  logger.success(
+    `Job ${job.id} added — ${collectedArticles.length} articles queued`,
   );
+
+  // Brief queue status check
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const activeCount = await duplicateQueue.getActiveCount();
+  const waitingCount = await duplicateQueue.getWaitingCount();
 
   if (activeCount > 0) {
-    logger.success(`✅ Job is being processed by an agent!`);
+    logger.info("Job is being processed");
   } else if (waitingCount > 0) {
-    logger.warn(
-      `⚠️ Job is waiting but no agent is processing - agents may not have started`,
-    );
-  } else if (completedCount > 0) {
-    logger.info(`✅ Job was already completed by an agent`);
-  } else {
-    logger.error(`❌ CRITICAL: Job was added but queue appears empty!`);
-    logger.error(`   This usually means the agent workers are not running.`);
-    logger.error(`   Check if initializeMultiAgentPipeline() succeeded.`);
+    logger.warn("Job waiting — agents may not have started");
   }
-
-  logger.success(
-    `✅ ${articles.length} articles added to multi-agent pipeline`,
-  );
-
-  console.log(`
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃        🤖 MULTI-AGENT PIPELINE STARTED            ┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  Articles:     ${articles.length.toString().padEnd(35)}┃
-┃  Target:       ${config.targetCount.toString().padEnd(35)}┃
-┃  Agent Log:    ${config.agentLogId.substring(0, 12)}...${" ".repeat(20)}┃
-┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
-┃  Pipeline Flow (6 Agents) - 🆕 OPTIMIZED:         ┃
-┃  1. ✅ Content Collected (RSS + Trend)            ┃
-┃  2. 🔄 Duplicate Detection (3-layer) ← FIRST!    ┃
-┃  3. 🔄 Relevance Filter (AI scoring)              ┃
-┃  4. 🔄 Trend Enrichment                           ┃
-┃  5. 🔄 Content Enrichment (SearXNG + Jina)        ┃
-┃  6. 🔄 Visual Generation (Pollinations)           ┃
-┃  7. 🔄 Database Publishing                        ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-  `);
 }
 
 /**
  * Monitor pipeline progress
  *
- * PIPELINE FLOW (6 stages) - 🆕 OPTIMIZED ORDER (09.02.2026):
- * 1. UNIQUE_ARTICLES → DuplicateDetector (FIRST - saves API calls!)
- * 2. RELEVANT_ARTICLES → RelevanceFilter
- * 3. TREND_ENRICHMENT → TrendEnricher
- * 4. ENRICHED_ARTICLES → ContentEnricher
- * 5. ARTICLES_WITH_VISUALS → VisualGenerator
- * 6. DATABASE_PUBLISHER → DatabasePublisher
- *
- * NOTE: SEO Optimization was removed - articles go directly from Visual Generator to Database Publisher
+ * Pipeline: Duplicate → Relevance → Trend → Enrich → Visual → Publish
  */
 export async function monitorPipelineProgress(agentLogId: string): Promise<{
   stage: string;
@@ -352,11 +283,8 @@ export async function waitForPipelineCompletion(
   const startTime = Date.now();
   const errors: string[] = [];
 
-  console.log(
-    `\n⏳ Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s)`,
-  );
   logger.info(
-    `⏳ Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s)`,
+    `Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s)`,
   );
 
   // CRITICAL: Wait longer for agents to pick up jobs before first check
@@ -377,16 +305,16 @@ export async function waitForPipelineCompletion(
       hasSeenArticlesInQueue = true;
     }
 
-    // Log detailed progress every check
-    console.log(`\n📊 [Check #${checkCount}] Pipeline Progress:`);
-    console.log(`   Stage: ${progress.stage}`);
-    console.log(`   In Queue: ${progress.articlesInQueue}`);
-    console.log(`   Completed: ${progress.completed}`);
-    console.log(`   Failed: ${progress.failed}`);
-    console.log(`   Has Seen Articles: ${hasSeenArticlesInQueue}`);
-    console.log(
-      `   Empty Checks: ${consecutiveEmptyChecks}/${REQUIRED_EMPTY_CHECKS}`,
-    );
+    // Log progress only when there's activity (avoid spam)
+    if (
+      progress.articlesInQueue > 0 ||
+      progress.failed > 0 ||
+      checkCount <= 2
+    ) {
+      logger.debug(
+        `Check #${checkCount}: ${progress.stage} — ${progress.articlesInQueue} queued, ${progress.completed} done, ${progress.failed} failed`,
+      );
+    }
 
     // Check if all queues are empty (pipeline completed)
     // Require multiple consecutive empty checks to avoid race conditions
