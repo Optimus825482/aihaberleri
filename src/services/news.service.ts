@@ -8,10 +8,7 @@ import {
   filterRecentArticles,
   type RSSItem,
 } from "@/lib/rss";
-import {
-  rankArticlesByTrendScore,
-  addSearXNGVerificationBonus,
-} from "@/lib/trend-scoring";
+import { rankArticlesByTrendScore } from "@/lib/trend-scoring";
 import { distance } from "fastest-levenshtein";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 import { db } from "@/lib/db";
@@ -819,9 +816,9 @@ export async function fetchAINews(
       `✅ ${itemsToAnalyze.length} haber trend puanlamaya gönderilecek`,
     );
 
-    // Step 3: Multi-signal trend scoring (NO external API dependency)
+    // Step 3: Multi-signal trend scoring v3.0 (NO external API dependency)
     console.log(
-      `📊 ${itemsToAnalyze.length} haber için trend puanlama (multi-signal)...`,
+      `📊 ${itemsToAnalyze.length} haber için trend puanlama (7-signal v3)...`,
     );
 
     const trendRankings = rankArticlesByTrendScore(
@@ -834,15 +831,8 @@ export async function fetchAINews(
       })),
     );
 
-    // Optional: Add SearXNG verification bonus for top 10 articles
-    const verifiedRankings = await addSearXNGVerificationBonus(
-      itemsToAnalyze.map((item) => ({
-        title: item.title,
-        description: item.description,
-      })),
-      trendRankings,
-      10,
-    ).catch(() => trendRankings); // Fallback to unverified if SearXNG fails
+    // v3.0: No SearXNG verification — all signals are local
+    const verifiedRankings = trendRankings;
 
     // Step 4: Sort by trend score and take top articles with EARLY DB CHECK
     // 🎯 OPTIMIZED: Progressive DB Check (09.02.2026 - V2)

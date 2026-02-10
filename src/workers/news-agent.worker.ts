@@ -1,18 +1,17 @@
 /**
  * News Agent Worker - Background job processor
  * Run this with: npm run worker
- *
- * 🤖 AI AGENT ASSIGNMENT
- * Assigned Agent: @backend-specialist
- * Skills: nodejs-best-practices, performance-profiling, database-design, api-patterns
- * Documentation: See WORKER-AGENT-ASSIGNMENT.md for monitoring details
- *
- * The @backend-specialist agent automatically monitors this worker for:
- * - Performance issues (timeout, slow execution)
- * - Connection problems (Redis, PostgreSQL)
- * - Memory leaks and resource usage
- * - Job queue health and error patterns
  */
+
+// Suppress BullMQ "IMPORTANT! Eviction policy" spam
+// BullMQ prints this warning for EVERY Redis connection when maxmemory-policy != noeviction
+// This is informational only and not a real problem for our use case
+const _originalConsoleWarn = console.warn;
+console.warn = (...args: any[]) => {
+  if (typeof args[0] === "string" && args[0].includes("Eviction policy"))
+    return;
+  _originalConsoleWarn.apply(console, args);
+};
 
 import { Worker } from "bullmq";
 import { getRedis } from "@/lib/redis";
@@ -87,7 +86,9 @@ const log = {
     if (err) console.error(`  └─ ${err instanceof Error ? err.message : err}`);
   },
   job: (id: string, name: string, info: Record<string, any>) => {
-    const parts = Object.entries(info).map(([k, v]) => `${k}=${v}`).join(' | ');
+    const parts = Object.entries(info)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(" | ");
     console.log(`\n[JOB:${id}] ${name} | ${parts}`);
   },
   summary: (title: string, data: Record<string, any>) => {
@@ -101,11 +102,11 @@ const log = {
  * Pipeline: Relevance → Duplicate → Trend → Enrich → Visual → Publish
  */
 async function initializeMultiAgentPipeline(): Promise<void> {
-  log.info('Initializing multi-agent pipeline...');
+  log.info("Initializing multi-agent pipeline...");
 
   try {
     await initializeQueues();
-    
+
     // Create agent instances
     relevanceFilter = new RelevanceFilterAgent();
     duplicateDetector = new DuplicateDetectorAgent();
@@ -116,35 +117,37 @@ async function initializeMultiAgentPipeline(): Promise<void> {
 
     // Start all agents
     const agents = [
-      { name: 'Relevance', agent: relevanceFilter },
-      { name: 'Duplicate', agent: duplicateDetector },
-      { name: 'Trend', agent: trendEnricher },
-      { name: 'Enrich', agent: contentEnricher },
-      { name: 'Visual', agent: visualGenerator },
-      { name: 'Publish', agent: databasePublisher },
+      { name: "Relevance", agent: relevanceFilter },
+      { name: "Duplicate", agent: duplicateDetector },
+      { name: "Trend", agent: trendEnricher },
+      { name: "Enrich", agent: contentEnricher },
+      { name: "Visual", agent: visualGenerator },
+      { name: "Publish", agent: databasePublisher },
     ];
 
     const results = await Promise.allSettled(
       agents.map(async ({ name, agent }) => {
         await agent.start();
         return name;
-      })
+      }),
     );
 
-    const ok = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected');
-    
+    const ok = results.filter((r) => r.status === "fulfilled").length;
+    const failed = results.filter((r) => r.status === "rejected");
+
     if (failed.length > 0) {
       failed.forEach((r, i) => {
-        if (r.status === 'rejected') {
+        if (r.status === "rejected") {
           log.error(`Agent[${agents[i]?.name}] start failed`, r.reason);
         }
       });
     }
 
-    log.success(`Pipeline ready: ${ok}/6 agents | Relevance→Duplicate→Trend→Enrich→Visual→Publish`);
+    log.success(
+      `Pipeline ready: ${ok}/6 agents | Relevance→Duplicate→Trend→Enrich→Visual→Publish`,
+    );
   } catch (error) {
-    log.error('Pipeline init failed', error);
+    log.error("Pipeline init failed", error);
     throw error;
   }
 }
@@ -153,7 +156,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
  * Stop multi-agent pipeline agents
  */
 async function stopMultiAgentPipeline(): Promise<void> {
-  log.info('Stopping pipeline...');
+  log.info("Stopping pipeline...");
   await Promise.all([
     relevanceFilter?.stop(),
     duplicateDetector?.stop(),
@@ -163,14 +166,14 @@ async function stopMultiAgentPipeline(): Promise<void> {
     databasePublisher?.stop(),
     seoCalculatorWorker?.close(),
   ]);
-  log.success('Pipeline stopped');
+  log.success("Pipeline stopped");
 }
 
 /**
  * Cleanup memory resources before shutdown
  */
 async function cleanupMemoryResources(): Promise<void> {
-  log.info('Cleaning up resources...');
+  log.info("Cleaning up resources...");
 
   try {
     const { stopTrendCacheCleanup } = await import("@/lib/brave");
@@ -193,7 +196,7 @@ async function cleanupMemoryResources(): Promise<void> {
     // Silent - not critical
   }
 
-  log.success('Resources cleaned');
+  log.success("Resources cleaned");
 }
 
 /**
@@ -312,13 +315,13 @@ async function getJobProgress(agentLogId: string): Promise<ProgressUpdate[]> {
 }
 
 workerLogger.start();
-log.info('Starting News Agent Worker...');
+log.info("Starting News Agent Worker...");
 
 const redis = getRedis();
 
 if (!redis) {
   workerLogger.connection("redis", "failed");
-  log.error('Redis not available. Exiting.');
+  log.error("Redis not available. Exiting.");
   process.exit(1);
 }
 
@@ -330,13 +333,13 @@ async function ensureRedisConnection() {
     if (redis.status === "wait") await redis.connect();
     const pong = await redis.ping();
     if (pong === "PONG") {
-      log.success('Redis connected');
+      log.success("Redis connected");
       return true;
     }
-    log.error('Redis ping failed');
+    log.error("Redis ping failed");
     return false;
   } catch (error) {
-    log.error('Redis connection failed', error);
+    log.error("Redis connection failed", error);
     return false;
   }
 }
@@ -349,7 +352,7 @@ async function testDatabaseConnection() {
     return true;
   } catch (error) {
     workerLogger.connection("database", "failed");
-    log.error('Database connection failed', error);
+    log.error("Database connection failed", error);
     return false;
   }
 }
@@ -361,23 +364,29 @@ async function waitForDatabase(
   for (let i = 1; i <= maxRetries; i++) {
     log.info(`DB connection attempt ${i}/${maxRetries}`);
     if (await testDatabaseConnection()) {
-      log.success('Database connected');
+      log.success("Database connected");
       return true;
     }
     if (i < maxRetries) await new Promise((r) => setTimeout(r, delayMs));
   }
-  log.error('Database connection failed after all retries');
+  log.error("Database connection failed after all retries");
   return false;
 }
 
 async function initializeWorker() {
   const redisReady = await ensureRedisConnection();
-  if (!redisReady) { log.error('Cannot start - Redis unavailable'); process.exit(1); }
+  if (!redisReady) {
+    log.error("Cannot start - Redis unavailable");
+    process.exit(1);
+  }
 
   const dbReady = await waitForDatabase();
-  if (!dbReady) { log.error('Cannot start - Database unavailable'); process.exit(1); }
+  if (!dbReady) {
+    log.error("Cannot start - Database unavailable");
+    process.exit(1);
+  }
 
-  log.success('All systems ready');
+  log.success("All systems ready");
   startHeartbeat();
   await startWorker();
 }
@@ -405,22 +414,22 @@ function startHeartbeat() {
 }
 
 async function startWorker() {
-  log.info('Initializing BullMQ Worker (news-agent, concurrency=1)');
+  log.info("Initializing BullMQ Worker (news-agent, concurrency=1)");
 
   // Initialize multi-agent pipeline agents BEFORE creating worker
   let pipelineReady = false;
   try {
     await initializeMultiAgentPipeline();
-    log.success('Multi-agent pipeline ready');
+    log.success("Multi-agent pipeline ready");
     pipelineReady = true;
   } catch (error) {
-    log.error('Multi-agent pipeline init failed', error);
-    log.warn('Articles will be queued but NOT processed!');
+    log.error("Multi-agent pipeline init failed", error);
+    log.warn("Articles will be queued but NOT processed!");
     // Don't exit - main worker can still run for other tasks
   }
 
   // Log pipeline status
-  log.info(`Pipeline: ${pipelineReady ? 'READY' : 'NOT READY'}`);
+  log.info(`Pipeline: ${pipelineReady ? "READY" : "NOT READY"}`);
 
   // Create worker
   const worker = new Worker(
@@ -428,7 +437,7 @@ async function startWorker() {
     async (job) => {
       workerLogger.jobStart(job.id!, job.name);
       log.job(job.id!, job.name, {
-        priority: job.opts.priority || 'default',
+        priority: job.opts.priority || "default",
         attempt: `${job.attemptsMade + 1}/${job.opts.attempts || 3}`,
       });
 
@@ -440,7 +449,7 @@ async function startWorker() {
 
         // Update job progress to prevent stalling
         await job.updateProgress(10);
-        log.info('Job started (10%)');
+        log.info("Job started (10%)");
 
         // Execute the news agent with timeout protection
         const timeoutPromise = new Promise((_, reject) => {
@@ -466,7 +475,9 @@ async function startWorker() {
               if (currentProgress < 80) {
                 await job.updateProgress(Math.min(currentProgress + 10, 80));
               }
-            } catch { /* silent */ }
+            } catch {
+              /* silent */
+            }
           }, WORKER_CONSTANTS.PROGRESS_UPDATE_INTERVAL_MS);
         };
 
@@ -486,12 +497,13 @@ async function startWorker() {
 
         workerLogger.jobComplete(job.id!, result);
 
-        log.summary('Job Complete', {
+        log.summary("Job Complete", {
           scraped: result.articlesScraped,
           created: result.articlesCreated,
           duration: `${result.duration}s`,
-          status: result.success ? 'SUCCESS' : 'FAILED',
-          errors: result.errors.length > 0 ? result.errors.join(', ') : undefined,
+          status: result.success ? "SUCCESS" : "FAILED",
+          errors:
+            result.errors.length > 0 ? result.errors.join(", ") : undefined,
         });
       } catch (error) {
         workerLogger.jobFailed(job.id!, error as Error);
@@ -500,7 +512,7 @@ async function startWorker() {
           attempt: job.attemptsMade,
         });
 
-        log.error('Agent execution failed', error);
+        log.error("Agent execution failed", error);
         // Create a failed result object
         result = {
           success: false,
@@ -515,14 +527,22 @@ async function startWorker() {
 
         // Log next execution time
         try {
-          const enabledSetting = await db.setting.findUnique({ where: { key: "agent.enabled" } });
+          const enabledSetting = await db.setting.findUnique({
+            where: { key: "agent.enabled" },
+          });
           if (enabledSetting?.value !== "false") {
-            const nextRunSetting = await db.setting.findUnique({ where: { key: "agent.nextRun" } });
+            const nextRunSetting = await db.setting.findUnique({
+              where: { key: "agent.nextRun" },
+            });
             if (nextRunSetting) {
-              log.info(`Next run: ${new Date(nextRunSetting.value).toLocaleString()}`);
+              log.info(
+                `Next run: ${new Date(nextRunSetting.value).toLocaleString()}`,
+              );
             }
           }
-        } catch { /* silent */ }
+        } catch {
+          /* silent */
+        }
       }
 
       return result;
@@ -541,21 +561,25 @@ async function startWorker() {
   );
 
   // Worker event handlers (compact)
-  worker.on("ready", () => log.success('Worker ready'));
+  worker.on("ready", () => log.success("Worker ready"));
   worker.on("active", (job) => log.info(`Job ${job.id} active`));
   worker.on("completed", (job) => log.success(`Job ${job.id} completed`));
   worker.on("failed", (job, err) => log.error(`Job ${job?.id} failed`, err));
   worker.on("error", (err) => {
-    if (!err.message?.includes("NOAUTH")) log.error('Worker error', err);
+    if (!err.message?.includes("NOAUTH")) log.error("Worker error", err);
   });
   worker.on("stalled", (jobId) => log.warn(`Job ${jobId} stalled`));
 
-  log.success('Worker started - listening on queue: news-agent');
+  log.success("Worker started - listening on queue: news-agent");
 
   // Worker closing event
   worker.on("closing", async () => {
-    log.info('Worker closing...');
-    try { await (db as PrismaClient).$disconnect(); } catch { /* silent */ }
+    log.info("Worker closing...");
+    try {
+      await (db as PrismaClient).$disconnect();
+    } catch {
+      /* silent */
+    }
   });
 
   // Graceful shutdown with active job waiting
@@ -567,7 +591,7 @@ async function startWorker() {
 
     try {
       await worker.pause();
-      log.info('Waiting for active jobs...');
+      log.info("Waiting for active jobs...");
 
       let attempts = 0;
       const maxAttempts = Math.ceil(SHUTDOWN_TIMEOUT / 1000);
@@ -605,7 +629,7 @@ async function startWorker() {
       log.success(`Shutdown completed (${Date.now() - startTime}ms)`);
       process.exit(0);
     } catch (error) {
-      log.error('Shutdown error', error);
+      log.error("Shutdown error", error);
       await new Promise((resolve) => setTimeout(resolve, 5000));
       process.exit(1);
     }
@@ -618,15 +642,17 @@ async function startWorker() {
   // Initial scheduling check and system sync on startup
   async function initStartupSync() {
     try {
-      log.info('Startup sync started');
+      log.info("Startup sync started");
 
       // 1. IndexNow Sync
       try {
-        const { submitPendingArticlesToIndexNow } = await import("@/lib/seo/indexnow");
+        const { submitPendingArticlesToIndexNow } =
+          await import("@/lib/seo/indexnow");
         const result = await submitPendingArticlesToIndexNow();
-        if (result.count > 0) log.success(`IndexNow: ${result.count} articles submitted`);
+        if (result.count > 0)
+          log.success(`IndexNow: ${result.count} articles submitted`);
       } catch (seoErr) {
-        log.warn('IndexNow sync failed');
+        log.warn("IndexNow sync failed");
       }
 
       // 1.5 Google Indexing API Senkronizasyonu (PENDING olan haberler - günlük limit: 200)
@@ -638,7 +664,7 @@ async function startWorker() {
         const remainingQuota = await getRemainingDailyQuota();
 
         if (remainingQuota === 0) {
-          log.warn('Google Index günlük limiti doldu');
+          log.warn("Google Index günlük limiti doldu");
         } else {
           const baseUrl =
             process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
@@ -676,7 +702,9 @@ async function startWorker() {
                 },
               });
 
-              log.success(`Google Index: ${result.successCount} bildirildi | Kota: ${result.remainingQuota}`);
+              log.success(
+                `Google Index: ${result.successCount} bildirildi | Kota: ${result.remainingQuota}`,
+              );
             }
 
             if (result.failCount > 0) {
@@ -700,37 +728,49 @@ async function startWorker() {
         db.setting.findUnique({ where: { key: "agent.nextRun" } }),
       ]);
 
-      const isEnabled = enabledSetting ? enabledSetting.value !== "false" : true;
+      const isEnabled = enabledSetting
+        ? enabledSetting.value !== "false"
+        : true;
 
       if (isEnabled) {
         const { newsAgentQueue } = await import("@/lib/queue");
         if (newsAgentQueue) {
           const repeatableJobs = await newsAgentQueue.getRepeatableJobs();
-          const hasRepeatable = repeatableJobs.some((j) => j.name === "scrape-and-publish");
+          const hasRepeatable = repeatableJobs.some(
+            (j) => j.name === "scrape-and-publish",
+          );
           const nextRunStr = nextRunSetting?.value;
           const missedRun = nextRunStr && new Date(nextRunStr) <= new Date();
 
           if (!hasRepeatable || missedRun) {
             if (missedRun) {
-              log.warn('Missed job detected - running catchup');
-              await newsAgentQueue.add("scrape-and-publish", {}, {
-                jobId: `immediate-catchup-${Date.now()}`,
-                removeOnComplete: true,
-              });
+              log.warn("Missed job detected - running catchup");
+              await newsAgentQueue.add(
+                "scrape-and-publish",
+                {},
+                {
+                  jobId: `immediate-catchup-${Date.now()}`,
+                  removeOnComplete: true,
+                },
+              );
             }
             await scheduleNewsAgentJob();
-            log.success('Repeatable job configured');
+            log.success("Repeatable job configured");
           } else {
-            const setting = await db.setting.findUnique({ where: { key: "agent.intervalHours" } });
+            const setting = await db.setting.findUnique({
+              where: { key: "agent.intervalHours" },
+            });
             const intervalHours = setting ? parseFloat(setting.value) : 0.167;
-            log.info(`Schedule: every ${intervalHours < 1 ? Math.round(intervalHours * 60) + 'min' : intervalHours + 'h'}, next: ${nextRunStr ? new Date(nextRunStr).toLocaleString() : 'pending'}`);
+            log.info(
+              `Schedule: every ${intervalHours < 1 ? Math.round(intervalHours * 60) + "min" : intervalHours + "h"}, next: ${nextRunStr ? new Date(nextRunStr).toLocaleString() : "pending"}`,
+            );
           }
         }
       } else {
-        log.info('Agent disabled - skipping schedule');
+        log.info("Agent disabled - skipping schedule");
       }
     } catch (err) {
-      log.error('Startup sync failed', err);
+      log.error("Startup sync failed", err);
     }
   }
 
@@ -739,27 +779,27 @@ async function startWorker() {
   // NEWSLETTER WORKER - Daily at 19:00 Turkey Time
   const newsletterQueue = getNewsletterQueue();
   if (newsletterQueue) {
-    log.info('Initializing Newsletter Worker');
+    log.info("Initializing Newsletter Worker");
 
     const newsletterWorker = new Worker(
       "newsletter",
       async (job) => {
-        log.job(job.id!, 'newsletter', { manual: job.data?.manual || false });
+        log.job(job.id!, "newsletter", { manual: job.data?.manual || false });
 
         try {
           const result = await sendDailyDigest();
 
-          log.summary('Newsletter', {
+          log.summary("Newsletter", {
             articles: result.articlesCount,
             subscribers: result.subscribersCount,
             sent: result.sent,
             failed: result.failed,
-            push: result.pushSent
+            push: result.pushSent,
           });
 
           return result;
         } catch (error) {
-          log.error('Newsletter job failed', error);
+          log.error("Newsletter job failed", error);
           throw error;
         }
       },
@@ -778,16 +818,18 @@ async function startWorker() {
       log.error(`Newsletter ${job?.id} failed`, error);
     });
 
-    scheduleNewsletterJob().then(() => log.success('Newsletter scheduler ready'));
-    log.success('Newsletter worker started');
+    scheduleNewsletterJob().then(() =>
+      log.success("Newsletter scheduler ready"),
+    );
+    log.success("Newsletter worker started");
   } else {
-    log.warn('Newsletter queue not available');
+    log.warn("Newsletter queue not available");
   }
 
   // SOCIAL BATCH WORKER - Background social media sharing
   const socialBatchQueue = getSocialBatchQueue();
   if (socialBatchQueue) {
-    log.info('Initializing Social Batch Worker');
+    log.info("Initializing Social Batch Worker");
 
     // Platform posting functions map
     const platformPosters: Record<
@@ -818,12 +860,12 @@ async function startWorker() {
         const { batchId, platforms, intervalSeconds, batchSize } = job.data;
         const articleIds = job.data.articleIds;
 
-        log.job(job.id!, 'social-batch', {
+        log.job(job.id!, "social-batch", {
           batch: batchId,
-          platforms: platforms.join(','),
+          platforms: platforms.join(","),
           interval: `${intervalSeconds}s`,
           size: batchSize,
-          targets: articleIds?.length || 'all'
+          targets: articleIds?.length || "all",
         });
 
         try {
@@ -885,7 +927,7 @@ async function startWorker() {
               where: { id: batchId },
             });
             if (batch?.status === "CANCELLED") {
-              log.warn('Social batch cancelled by user');
+              log.warn("Social batch cancelled by user");
               return {
                 success: false,
                 processed,
@@ -918,9 +960,15 @@ async function startWorker() {
             for (const platform of platforms) {
               const language = platformLanguage[platform] || "tr";
               const key = `${platform}_${language}`;
-              if (sharedPlatforms.has(key)) { skipped++; continue; }
+              if (sharedPlatforms.has(key)) {
+                skipped++;
+                continue;
+              }
               const isEnglish = platform.endsWith("_EN");
-              if (isEnglish && !enTranslation) { skipped++; continue; }
+              if (isEnglish && !enTranslation) {
+                skipped++;
+                continue;
+              }
               platformsToPost.push(platform);
             }
 
@@ -929,7 +977,8 @@ async function startWorker() {
             // Post to all platforms in PARALLEL
             const postPromises = platformsToPost.map(async (platform) => {
               const poster = platformPosters[platform];
-              if (!poster) return { platform, success: false, error: "No poster" };
+              if (!poster)
+                return { platform, success: false, error: "No poster" };
 
               const isEnglish = platform.endsWith("_EN");
               const language = isEnglish ? "en" : "tr";
@@ -1068,7 +1117,9 @@ async function startWorker() {
 
             // Wait before next article (except for last one)
             if (i < allArticles.length - 1 && platformsToPost.length > 0) {
-              await new Promise((resolve) => setTimeout(resolve, intervalSeconds * 1000));
+              await new Promise((resolve) =>
+                setTimeout(resolve, intervalSeconds * 1000),
+              );
             }
           }
 
@@ -1084,11 +1135,11 @@ async function startWorker() {
             },
           });
 
-          log.summary('Social Batch', {
+          log.summary("Social Batch", {
             processed,
             failed,
             skipped,
-            total: totalChecked + skipped
+            total: totalChecked + skipped,
           });
 
           return {
@@ -1099,7 +1150,7 @@ async function startWorker() {
             total: totalChecked + skipped,
           };
         } catch (error) {
-          log.error('Social batch job error', error);
+          log.error("Social batch job error", error);
 
           await db.socialShareBatch.update({
             where: { id: batchId },
@@ -1120,7 +1171,9 @@ async function startWorker() {
     );
 
     socialBatchWorker.on("completed", (job, result) => {
-      log.success(`Social batch ${job.id}: ${result?.processed || 0} shared, ${result?.failed || 0} failed`);
+      log.success(
+        `Social batch ${job.id}: ${result?.processed || 0} shared, ${result?.failed || 0} failed`,
+      );
     });
 
     socialBatchWorker.on("failed", (job, error) => {
@@ -1128,12 +1181,14 @@ async function startWorker() {
     });
 
     socialBatchWorker.on("progress", (job, progress: any) => {
-      log.info(`Batch ${progress.currentArticle}/${progress.totalArticles}: ${progress.processed} done, ${progress.failed} failed`);
+      log.info(
+        `Batch ${progress.currentArticle}/${progress.totalArticles}: ${progress.processed} done, ${progress.failed} failed`,
+      );
     });
 
-    log.success('Social batch worker started');
+    log.success("Social batch worker started");
   } else {
-    log.warn('Social batch queue not available');
+    log.warn("Social batch queue not available");
   }
 
   // Keep the process running
@@ -1142,16 +1197,16 @@ async function startWorker() {
 
 // Global error handlers (don't crash)
 process.on("unhandledRejection", (reason) => {
-  log.error('Unhandled Rejection', reason);
+  log.error("Unhandled Rejection", reason);
 });
 
 process.on("uncaughtException", (error) => {
-  log.error('Uncaught Exception', error);
+  log.error("Uncaught Exception", error);
   setTimeout(() => process.exit(1), 1000);
 });
 
 // Start initialization
 initializeWorker().catch((error) => {
-  log.error('Fatal initialization error', error);
+  log.error("Fatal initialization error", error);
   process.exit(1);
 });

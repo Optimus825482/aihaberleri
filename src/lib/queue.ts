@@ -260,14 +260,9 @@ export async function scheduleNewsletterJob() {
       },
     );
 
-    console.log(`
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📧 NEWSLETTER SCHEDULE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⏰ Time: Every day at 19:00 (Turkey)
-🆔 Job Type: Cron (daily-digest)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`);
+    console.log(
+      `📧 Newsletter: daily at 19:00 (Europe/Istanbul) | cron: daily-digest`,
+    );
 
     return { scheduled: true, time: "19:00 Europe/Istanbul" };
   } catch (error) {
