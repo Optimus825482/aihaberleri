@@ -10,6 +10,10 @@ import {
   generateWebSiteSchema,
   generateJsonLd,
 } from "@/lib/seo";
+import {
+  BidvertiserBanner,
+  BidvertiserNative,
+} from "@/components/ads/BidvertiserAd";
 
 // Force dynamic rendering - database queries require runtime
 export const dynamic = "force-dynamic";
@@ -202,6 +206,24 @@ export default async function HomePage() {
                   />
                 ))}
               </div>
+
+              {/* Bidvertiser Ad - Between articles and empty state */}
+              {articles.length > 0 && (
+                <div className="my-6 flex justify-center">
+                  <BidvertiserBanner
+                    slot="homepage-banner"
+                    className="hidden md:flex"
+                  />
+                  <BidvertiserNative
+                    slot="homepage-native"
+                    cols={2}
+                    rows={1}
+                    mobileCols={1}
+                    imageWidth={150}
+                    className="md:hidden"
+                  />
+                </div>
+              )}
 
               {articles.length === 0 && (
                 <div className="text-center py-16 bg-white dark:bg-ai-surface-card rounded-xl lg:rounded-2xl border border-gray-200 dark:border-ai-surface-border shadow-sm">

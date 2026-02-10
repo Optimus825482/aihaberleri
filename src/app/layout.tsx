@@ -190,6 +190,7 @@ export default function RootLayout({
                 >
                   {children}
                 </LayoutWrapper>
+
                 <ClientProviders />
                 <ServiceWorkerRegistration />
                 <TailwindIndicator />
