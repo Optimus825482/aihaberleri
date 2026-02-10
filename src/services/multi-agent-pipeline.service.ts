@@ -368,14 +368,12 @@ export async function waitForPipelineCompletion(
         const draftCount = await db.article.count({
           where: {
             agentLogId,
-            status: { in: ["DRAFT", "PROCESSING"] },
+            status: "DRAFT",
           },
         });
 
         if (publishedCount === 0 && draftCount > 0) {
-          errors.push(
-            `${draftCount} article(s) stuck in DRAFT/PROCESSING state`,
-          );
+          errors.push(`${draftCount} article(s) stuck in DRAFT state`);
         }
 
         return {
