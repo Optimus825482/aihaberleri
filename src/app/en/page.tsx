@@ -12,6 +12,7 @@ import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { TrendingSidebar } from "@/components/TrendingSidebar";
 import { CategoryFilters } from "@/components/CategoryFilters";
+import { TodayTrending } from "@/components/TodayTrending";
 import {
   generateOrganizationSchema,
   generateWebSiteSchema,
@@ -106,6 +107,11 @@ export default async function EnglishHomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {/* Category Filter Chips */}
           <CategoryFilters categories={categories} locale="en" />
+
+          {/* Today's Trending — Top 5 by trend score */}
+          <div className="mt-8">
+            <TodayTrending locale="en" />
+          </div>
 
           {/* Main Content Area - Two Column Layout */}
           <div className="flex flex-col gap-10 lg:gap-12 lg:flex-row mt-8 lg:mt-10">

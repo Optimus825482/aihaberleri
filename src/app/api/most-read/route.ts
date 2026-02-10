@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { recalculateTrendScore } from "@/lib/trend-service";
 
 export const dynamic = "force-dynamic";
 
@@ -9,16 +8,16 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const period = searchParams.get("period") || "week";
     const limit = parseInt(searchParams.get("limit") || "5");
+    const sortBy = searchParams.get("sort") || "views"; // "views" | "trend"
 
     // Calculate date limit based on period
     const dateLimit = new Date();
-    // Use 'any' to allow dynamic property addition
-    let whereClause: any = {
+    const whereClause: any = {
       status: "PUBLISHED",
     };
 
     if (period === "today") {
-      dateLimit.setHours(0, 0, 0, 0); // Start of today
+      dateLimit.setHours(0, 0, 0, 0);
       whereClause.publishedAt = { gte: dateLimit };
     } else if (period === "week") {
       dateLimit.setDate(dateLimit.getDate() - 7);
@@ -27,22 +26,28 @@ export async function GET(request: NextRequest) {
       dateLimit.setDate(dateLimit.getDate() - 30);
       whereClause.publishedAt = { gte: dateLimit };
     }
-    // For "all" period, don't filter by date
+    // "all" — no date filter
+
+    // Sort by trend score or views
+    const orderBy =
+      sortBy === "trend"
+        ? [{ trendScore: "desc" as const }, { views: "desc" as const }]
+        : [{ views: "desc" as const }];
 
     const articles = await db.article.findMany({
       where: whereClause,
-      orderBy: {
-        views: "desc",
-      },
+      orderBy,
       take: limit,
       select: {
         id: true,
         title: true,
         slug: true,
+        excerpt: true,
         imageUrl: true,
         views: true,
         publishedAt: true,
         trendScore: true,
+        isTrending: true,
         category: {
           select: {
             name: true,
@@ -52,22 +57,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Fire-and-forget trend recalculation for these popular articles
-    // This ensures that articles appearing in the "Most Read" list have up-to-date trend scores
-    // We don't await this to keep the API response fast
-    (async () => {
-      try {
-        await Promise.allSettled(
-          articles.map((a) => recalculateTrendScore(a.id)),
-        );
-      } catch (e) {
-        console.error("Background trend update error:", e);
-      }
-    })();
-
     return NextResponse.json({
       articles,
       period,
+      sortBy,
       count: articles.length,
     });
   } catch (error) {

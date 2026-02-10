@@ -39,13 +39,13 @@ export function startCronJobs() {
     15 * 60 * 1000,
   ); // Every 15 minutes
 
-  // Recalculate trend scores every 2 hours (view-based scoring)
+  // Recalculate trend scores every 30 minutes (view-based scoring)
   trendInterval = setInterval(
     async () => {
       await recalculateTrendScores();
     },
-    2 * 60 * 60 * 1000,
-  ); // Every 2 hours
+    30 * 60 * 1000,
+  ); // Every 30 minutes
 
   // Run immediately on startup (after 30 seconds)
   setTimeout(() => {
@@ -245,7 +245,7 @@ export function getCronStatus() {
       },
       {
         name: "Trend Score Recalculation",
-        interval: "2 hours",
+        interval: "30 minutes",
         enabled: trendInterval !== null,
       },
     ],

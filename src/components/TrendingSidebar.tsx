@@ -9,7 +9,7 @@ interface TrendingSidebarProps {
   locale?: "tr" | "en";
 }
 
-type TimePeriod = "today" | "week" | "month" | "all";
+type TimePeriod = "week" | "month" | "all";
 
 const texts = {
   tr: {
@@ -18,11 +18,8 @@ const texts = {
     hot: "HOT",
     score: "Score",
     views: "",
-    specialReport: "Özel Rapor",
-    reportDesc: "Yapay Zeka Sektör Raporu 2024 Yayında! Hemen indirin.",
-    downloadReport: "Raporu İndir",
+    seeAll: "Tümünü Gör",
     periods: {
-      today: "Bugün",
       week: "Bu Hafta",
       month: "Bu Ay",
       all: "Tüm Zamanlar",
@@ -34,11 +31,8 @@ const texts = {
     hot: "HOT",
     score: "Score",
     views: "",
-    specialReport: "Special Report",
-    reportDesc: "AI Sector Report 2024 is now available! Download now.",
-    downloadReport: "Download Report",
+    seeAll: "See All",
     periods: {
-      today: "Today",
       week: "This Week",
       month: "This Month",
       all: "All Time",
@@ -51,7 +45,12 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
   const t = texts[locale];
 
   // SWR: auto-dedup, caching, background revalidation, keepPreviousData
-  const { data, isLoading: loading } = useTrendingArticles(timePeriod);
+  // Sort by trend score instead of views
+  const { data, isLoading: loading } = useTrendingArticles(
+    timePeriod,
+    5,
+    "trend",
+  );
   const articles = data?.articles ?? [];
 
   const getArticleLink = (slug: string) => {
@@ -76,9 +75,12 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
             </span>
             {t.trendingNews}
           </h3>
-          <span className="text-[10px] sm:text-xs font-bold text-ai-primary bg-gradient-to-r from-ai-primary/20 to-ai-primary/10 px-2.5 py-1 rounded-lg border border-ai-primary/20 shadow-sm">
-            {t.top5}
-          </span>
+          <Link
+            href={locale === "en" ? "/en/trending" : "/trending"}
+            className="text-[10px] sm:text-xs font-bold text-ai-primary bg-gradient-to-r from-ai-primary/20 to-ai-primary/10 px-2.5 py-1 rounded-lg border border-ai-primary/20 shadow-sm hover:from-ai-primary/30 hover:to-ai-primary/20 transition-colors"
+          >
+            {t.seeAll}
+          </Link>
         </div>
 
         {/* Time Period Tabs */}
