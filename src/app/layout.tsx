@@ -19,7 +19,6 @@ import { AudioProvider } from "@/context/AudioContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { HydrationErrorBoundary } from "@/components/HydrationErrorBoundary";
 import { VisitorTracker } from "@/components/VisitorTracker";
-import { MontagAds } from "@/components/MontagAds";
 import { Suspense } from "react";
 import { PageLoadingIndicator } from "@/components/PageLoadingIndicator";
 
@@ -162,7 +161,7 @@ export default function RootLayout({
       >
         {/* Bidvertiser Ad Network Verification */}
         <div
-          dangerouslySetInnerHTML={{ __html: '<!-- Bidvertiser2103678 -->' }}
+          dangerouslySetInnerHTML={{ __html: "<!-- Bidvertiser2103678 -->" }}
           className="hidden"
         />
         <ThemeProvider
@@ -194,7 +193,6 @@ export default function RootLayout({
                 <ClientProviders />
                 <ServiceWorkerRegistration />
                 <TailwindIndicator />
-                <MontagAds />
               </AudioProvider>
             </ErrorBoundary>
           </HydrationErrorBoundary>

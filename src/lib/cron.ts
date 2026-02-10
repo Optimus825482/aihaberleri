@@ -7,14 +7,16 @@ import { db } from "./db";
 
 let cleanupInterval: NodeJS.Timeout | null = null;
 let indexingInterval: NodeJS.Timeout | null = null;
+let trendInterval: NodeJS.Timeout | null = null;
 let isCleanupRunning = false;
 let isIndexingRunning = false;
+let isTrendRunning = false;
 
 /**
  * Start all cron jobs
  */
 export function startCronJobs() {
-  if (cleanupInterval && indexingInterval) {
+  if (cleanupInterval && indexingInterval && trendInterval) {
     console.log("⏰ Cron jobs already running");
     return;
   }
@@ -37,11 +39,24 @@ export function startCronJobs() {
     15 * 60 * 1000,
   ); // Every 15 minutes
 
+  // Recalculate trend scores every 2 hours (view-based scoring)
+  trendInterval = setInterval(
+    async () => {
+      await recalculateTrendScores();
+    },
+    2 * 60 * 60 * 1000,
+  ); // Every 2 hours
+
   // Run immediately on startup (after 30 seconds)
   setTimeout(() => {
     cleanupOldVisitors();
     aggressiveIndexPendingArticles();
   }, 30000);
+
+  // Run trend recalculation after 2 minutes (give DB time to settle)
+  setTimeout(() => {
+    recalculateTrendScores();
+  }, 120000);
 
   console.log("✅ Cron jobs started");
 }
@@ -57,6 +72,10 @@ export function stopCronJobs() {
   if (indexingInterval) {
     clearInterval(indexingInterval);
     indexingInterval = null;
+  }
+  if (trendInterval) {
+    clearInterval(trendInterval);
+    trendInterval = null;
   }
   console.log("⏹️ Cron jobs stopped");
 }
@@ -123,6 +142,30 @@ async function aggressiveIndexPendingArticles() {
 }
 
 /**
+ * Recalculate trend scores for recent articles (view-based scoring)
+ * Runs every 2 hours to keep trend scores fresh based on actual engagement
+ */
+async function recalculateTrendScores() {
+  if (isTrendRunning) {
+    console.log("⏭️ Trend recalculation already running, skipping...");
+    return;
+  }
+
+  isTrendRunning = true;
+
+  try {
+    const { bulkRecalculateTrends } = await import("./trend-service");
+    // Recalculate for articles from last 72 hours
+    await bulkRecalculateTrends(72);
+    console.log("📊 Trend score recalculation completed");
+  } catch (error) {
+    console.error("❌ Trend recalculation cron error:", error);
+  } finally {
+    isTrendRunning = false;
+  }
+}
+
+/**
  * Manual cleanup trigger (for API endpoint)
  */
 export async function triggerVisitorCleanup(): Promise<{
@@ -185,7 +228,10 @@ export async function triggerAggressiveIndexing(): Promise<{
  */
 export function getCronStatus() {
   return {
-    running: cleanupInterval !== null && indexingInterval !== null,
+    running:
+      cleanupInterval !== null &&
+      indexingInterval !== null &&
+      trendInterval !== null,
     jobs: [
       {
         name: "Visitor Cleanup",
@@ -196,6 +242,11 @@ export function getCronStatus() {
         name: "Aggressive Indexing",
         interval: "15 minutes",
         enabled: indexingInterval !== null,
+      },
+      {
+        name: "Trend Score Recalculation",
+        interval: "2 hours",
+        enabled: trendInterval !== null,
       },
     ],
   };

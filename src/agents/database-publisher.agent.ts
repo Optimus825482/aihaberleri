@@ -24,6 +24,7 @@ import {
   recordShareSuccess,
   recordShareFailure,
 } from "@/services/social-share.service";
+import { calculateTrendScore } from "@/lib/trend-scoring";
 
 export interface PublishedArticle {
   id: string;
@@ -129,6 +130,26 @@ export class DatabasePublisherAgent extends BaseAgent<
             continue;
           }
 
+          // Calculate content-based trend score if pipeline didn't provide one
+          const pipelineTrendScore = article.trendScore || 0;
+          let finalTrendScore = pipelineTrendScore;
+
+          if (pipelineTrendScore === 0) {
+            const contentScore = calculateTrendScore({
+              title: article.synthesizedContent.tr.title,
+              description:
+                article.synthesizedContent.tr.excerpt ||
+                article.description ||
+                "",
+              publishedAt: (article as any).publishedAt || new Date(),
+              url: article.url,
+            });
+            finalTrendScore = contentScore.total;
+            this.logger.info(
+              `📊 Content-based trend score: ${finalTrendScore} (AI:${contentScore.aiRelevance} F:${contentScore.freshness} S:${contentScore.sourceAuthority} T:${contentScore.titleQuality})`,
+            );
+          }
+
           // Create article in database
           const createdArticle = await db.article.create({
             data: {
@@ -161,9 +182,10 @@ export class DatabasePublisherAgent extends BaseAgent<
               sourceDescription: article.description,
               publishedAt: (article as any).publishedAt || new Date(),
               topic: article.topic,
-              trendScore: article.trendScore || 0,
+              trendScore: finalTrendScore,
+              isTrending: finalTrendScore >= 50,
               score:
-                article.synthesizedContent.tr.score || article.trendScore || 0,
+                article.synthesizedContent.tr.score || finalTrendScore || 0,
 
               // Relations
               categoryId: category.id,
