@@ -106,12 +106,12 @@ export function TodayTrending({ locale = "tr" }: TodayTrendingProps) {
                   {/* Rank badge */}
                   <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
                     <span
-                      className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black text-white bg-gradient-to-br ${getTrendColor(score)} shadow-lg`}
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black text-white bg-gradient-to-br ${getTrendColor(score)} shadow-lg ring-2 ring-white/20`}
                     >
                       {index + 1}
                     </span>
-                    <span className="text-[10px] font-bold text-white/90 bg-black/40 backdrop-blur-sm px-1.5 py-0.5 rounded">
-                      <span className="material-symbols-outlined text-[10px] align-middle mr-0.5">
+                    <span className="text-xs font-black text-white bg-black/60 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg">
+                      <span className="material-symbols-outlined text-[14px] text-green-400 align-middle">
                         trending_up
                       </span>
                       {score}

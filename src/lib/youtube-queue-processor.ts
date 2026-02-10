@@ -153,19 +153,24 @@ export async function processNextYouTubeTopic(): Promise<boolean> {
           },
         });
       } else {
+        // Pipeline completed but no articles published — could be duplicate or enrichment failure
+        const errorMsg = result.errors?.length
+          ? result.errors[0]
+          : result.success
+            ? "Haber oluşturulamadı (muhtemelen duplicate veya enrichment hatası)"
+            : "Pipeline başarısız";
         queue[pendingIndex].status = "failed";
-        queue[pendingIndex].error =
-          result.errors?.join(", ") || "Pipeline başarısız";
+        queue[pendingIndex].error = errorMsg;
         status.failedItems++;
         logger.warn(
-          `YouTube konu başarısız: ${topic.topic.substring(0, 60)}...`,
+          `YouTube konu başarısız: ${topic.topic.substring(0, 60)}... — ${errorMsg}`,
         );
 
         await db.agentLog.update({
           where: { id: agentLog.id },
           data: {
             status: "FAILED",
-            errors: result.errors || ["Pipeline failed"],
+            errors: result.errors || [errorMsg],
           },
         });
       }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
   Card,
@@ -39,9 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import {
   Youtube,
@@ -49,7 +48,6 @@ import {
   RefreshCw,
   Trash2,
   Edit,
-  Play,
   Loader2,
   Search,
   Globe,
@@ -59,13 +57,7 @@ import {
   CheckCircle,
   XCircle,
   ExternalLink,
-  Hash,
   Newspaper,
-  Timer,
-  StopCircle,
-  CircleDot,
-  Square,
-  CheckSquare,
 } from "lucide-react";
 
 // Types
@@ -85,46 +77,6 @@ interface YouTubeChannel {
   failureCount: number;
   createdAt: string;
   updatedAt: string;
-}
-
-interface ScanResult {
-  topicsFound: number;
-  coveredCount: number;
-  uncoveredCount: number;
-  topics: Array<{
-    topic: string;
-    originalTitle: string;
-    description: string;
-    source: string;
-    sourceUrl: string;
-    confidence: number;
-    keywords: string[];
-    isCovered: boolean;
-    publishedAt?: string;
-  }>;
-}
-
-interface QueueStatus {
-  isActive: boolean;
-  intervalMinutes: number;
-  totalItems: number;
-  completedItems: number;
-  failedItems: number;
-  currentItem: string | null;
-  startedAt: string | null;
-  nextPublishAt: string | null;
-}
-
-interface QueueItem {
-  topic: string;
-  description: string;
-  source: string;
-  sourceUrl: string;
-  keywords: string[];
-  confidence: number;
-  queuedAt: string;
-  status: "pending" | "processing" | "completed" | "failed";
-  error?: string;
 }
 
 interface ChannelStats {
@@ -199,6 +151,7 @@ function getPriorityStars(priority: number) {
 }
 
 export default function YouTubeChannelsPage() {
+  const router = useRouter();
   const [channels, setChannels] = useState<YouTubeChannel[]>([]);
   const [stats, setStats] = useState<ChannelStats>({
     total: 0,
@@ -206,20 +159,8 @@ export default function YouTubeChannelsPage() {
     byCategory: {},
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [isScanning, setIsScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
-
-  // Topic selection for publishing
-  const [selectedTopics, setSelectedTopics] = useState<Set<number>>(new Set());
-  const [isPublishDialogOpen, setIsPublishDialogOpen] = useState(false);
-  const [publishInterval, setPublishInterval] = useState(15);
-  const [isQueueing, setIsQueueing] = useState(false);
-
-  // Queue status
-  const [queueStatus, setQueueStatus] = useState<QueueStatus | null>(null);
-  const [queueItems, setQueueItems] = useState<QueueItem[]>([]);
 
   // Add channel dialog
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -267,121 +208,6 @@ export default function YouTubeChannelsPage() {
   useEffect(() => {
     fetchChannels();
   }, [fetchChannels]);
-
-  // Fetch queue status
-  const fetchQueueStatus = useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/youtube/queue-publish");
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setQueueStatus(data.data.status);
-          setQueueItems(data.data.queue);
-        }
-      }
-    } catch {
-      // Silent
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchQueueStatus();
-    // Poll queue status every 30 seconds when active
-    const interval = setInterval(fetchQueueStatus, 30000);
-    return () => clearInterval(interval);
-  }, [fetchQueueStatus]);
-
-  // Toggle topic selection
-  const toggleTopicSelection = (index: number) => {
-    setSelectedTopics((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  };
-
-  // Select all uncovered topics
-  const selectAllUncovered = () => {
-    if (!scanResult) return;
-    const uncoveredIndices = new Set<number>();
-    scanResult.topics.forEach((topic, i) => {
-      if (!topic.isCovered) uncoveredIndices.add(i);
-    });
-    setSelectedTopics(uncoveredIndices);
-  };
-
-  // Deselect all
-  const deselectAll = () => setSelectedTopics(new Set());
-
-  // Queue selected topics for publishing
-  const handleQueuePublish = async () => {
-    if (!scanResult || selectedTopics.size === 0) return;
-    setIsQueueing(true);
-    try {
-      const topicsToQueue = Array.from(selectedTopics).map(
-        (i) => scanResult.topics[i],
-      );
-      const res = await fetch("/api/admin/youtube/queue-publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topics: topicsToQueue,
-          intervalMinutes: publishInterval,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast({
-          title: "Kuyruk Oluşturuldu",
-          description: data.data.message,
-        });
-        setIsPublishDialogOpen(false);
-        setSelectedTopics(new Set());
-        fetchQueueStatus();
-      } else {
-        toast({
-          title: "Hata",
-          description: data.error,
-          variant: "destructive",
-        });
-      }
-    } catch {
-      toast({
-        title: "Hata",
-        description: "Kuyruk oluşturulamadı",
-        variant: "destructive",
-      });
-    } finally {
-      setIsQueueing(false);
-    }
-  };
-
-  // Cancel queue
-  const handleCancelQueue = async () => {
-    try {
-      const res = await fetch("/api/admin/youtube/queue-publish", {
-        method: "DELETE",
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast({
-          title: "İptal Edildi",
-          description: "Yayın kuyruğu iptal edildi",
-        });
-        fetchQueueStatus();
-      }
-    } catch {
-      toast({
-        title: "Hata",
-        description: "Kuyruk iptal edilemedi",
-        variant: "destructive",
-      });
-    }
-  };
 
   // Add channel
   const handleAddChannel = async () => {
@@ -519,41 +345,9 @@ export default function YouTubeChannelsPage() {
     }
   };
 
-  // Scan channels
-  const handleScan = async () => {
-    setIsScanning(true);
-    setScanResult(null);
-    setSelectedTopics(new Set());
-    try {
-      const res = await fetch("/api/admin/youtube/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ hoursAgo: 48 }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setScanResult(data.data);
-        toast({
-          title: "Tarama Tamamlandı",
-          description: `${data.data.topicsFound} AI konusu bulundu (${data.data.coveredCount} haber yapılmış, ${data.data.uncoveredCount} yeni)`,
-        });
-        fetchChannels();
-      } else {
-        toast({
-          title: "Hata",
-          description: data.error,
-          variant: "destructive",
-        });
-      }
-    } catch {
-      toast({
-        title: "Hata",
-        description: "Tarama başarısız",
-        variant: "destructive",
-      });
-    } finally {
-      setIsScanning(false);
-    }
+  // Scan channels — redirects to topics page
+  const handleScan = () => {
+    router.push("/admin/youtube-topics");
   };
 
   // Filter channels
@@ -605,20 +399,10 @@ export default function YouTubeChannelsPage() {
             </Button>
             <Button
               onClick={handleScan}
-              disabled={isScanning}
               className="bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800"
             >
-              {isScanning ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Taranıyor...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-2" />
-                  Kanalları Tara
-                </>
-              )}
+              <Newspaper className="h-4 w-4 mr-2" />
+              Konuları Tara
             </Button>
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
@@ -798,365 +582,6 @@ export default function YouTubeChannelsPage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Active Queue Status */}
-        {queueStatus?.isActive && (
-          <Card className="border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-indigo-500/5">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-blue-600">
-                  <Timer className="h-5 w-5 animate-pulse" />
-                  Yayın Kuyruğu Aktif
-                </CardTitle>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleCancelQueue}
-                >
-                  <StopCircle className="h-4 w-4 mr-1" />
-                  İptal Et
-                </Button>
-              </div>
-              <CardDescription>
-                {queueStatus.completedItems + queueStatus.failedItems} /{" "}
-                {queueStatus.totalItems} konu işlendi
-                {" • "}
-                {queueStatus.intervalMinutes} dk aralık
-                {queueStatus.nextPublishAt && (
-                  <>
-                    {" "}
-                    {" • "}Sonraki:{" "}
-                    {new Date(queueStatus.nextPublishAt).toLocaleTimeString(
-                      "tr-TR",
-                    )}
-                  </>
-                )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4 mb-3">
-                <div className="flex items-center gap-1.5 text-sm">
-                  <div className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
-                  <span>
-                    Bekliyor:{" "}
-                    {queueStatus.totalItems -
-                      queueStatus.completedItems -
-                      queueStatus.failedItems}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-sm">
-                  <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
-                  <span>Tamamlandı: {queueStatus.completedItems}</span>
-                </div>
-                {queueStatus.failedItems > 0 && (
-                  <div className="flex items-center gap-1.5 text-sm">
-                    <div className="h-2.5 w-2.5 rounded-full bg-red-500" />
-                    <span>Başarısız: {queueStatus.failedItems}</span>
-                  </div>
-                )}
-                {queueStatus.currentItem && (
-                  <div className="flex items-center gap-1.5 text-sm text-blue-600">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    <span className="truncate max-w-[300px]">
-                      {queueStatus.currentItem}
-                    </span>
-                  </div>
-                )}
-              </div>
-              {/* Progress bar */}
-              <div className="w-full bg-muted rounded-full h-2">
-                <div
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full transition-all duration-500"
-                  style={{
-                    width: `${queueStatus.totalItems > 0 ? ((queueStatus.completedItems + queueStatus.failedItems) / queueStatus.totalItems) * 100 : 0}%`,
-                  }}
-                />
-              </div>
-              {/* Queue items list */}
-              {queueItems.length > 0 && (
-                <ScrollArea className="max-h-[200px] mt-3">
-                  <div className="space-y-1">
-                    {queueItems.map((item, i) => (
-                      <div
-                        key={i}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded text-xs ${
-                          item.status === "completed"
-                            ? "text-green-600 bg-green-500/5"
-                            : item.status === "processing"
-                              ? "text-blue-600 bg-blue-500/5"
-                              : item.status === "failed"
-                                ? "text-red-600 bg-red-500/5"
-                                : "text-muted-foreground"
-                        }`}
-                      >
-                        {item.status === "completed" && (
-                          <CheckCircle className="h-3 w-3 shrink-0" />
-                        )}
-                        {item.status === "processing" && (
-                          <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
-                        )}
-                        {item.status === "failed" && (
-                          <XCircle className="h-3 w-3 shrink-0" />
-                        )}
-                        {item.status === "pending" && (
-                          <Clock className="h-3 w-3 shrink-0" />
-                        )}
-                        <span className="truncate">{item.topic}</span>
-                        {item.error && (
-                          <span className="text-red-500 shrink-0">
-                            ({item.error})
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </ScrollArea>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Scan Results */}
-        {scanResult && (
-          <Card className="border-2 border-green-500/20 bg-gradient-to-br from-green-500/5 to-emerald-500/5">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-green-600">
-                    <CheckCircle className="h-5 w-5" />
-                    Tarama Sonuçları — {scanResult.topicsFound} AI Konusu
-                  </CardTitle>
-                  <CardDescription className="mt-1">
-                    <span className="text-green-600 font-medium">
-                      {scanResult.coveredCount} haber yapılmış
-                    </span>
-                    {" • "}
-                    <span className="text-orange-600 font-medium">
-                      {scanResult.uncoveredCount} yeni konu
-                    </span>
-                    {selectedTopics.size > 0 && (
-                      <>
-                        {" "}
-                        {" • "}
-                        <span className="text-blue-600 font-medium">
-                          {selectedTopics.size} seçili
-                        </span>
-                      </>
-                    )}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={selectAllUncovered}
-                  >
-                    <CheckSquare className="h-4 w-4 mr-1" />
-                    Tümünü Seç
-                  </Button>
-                  {selectedTopics.size > 0 && (
-                    <>
-                      <Button variant="outline" size="sm" onClick={deselectAll}>
-                        <Square className="h-4 w-4 mr-1" />
-                        Temizle
-                      </Button>
-                      <Dialog
-                        open={isPublishDialogOpen}
-                        onOpenChange={setIsPublishDialogOpen}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700"
-                          >
-                            <Newspaper className="h-4 w-4 mr-1" />
-                            Haber Oluştur ({selectedTopics.size})
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Haber Yayın Planı</DialogTitle>
-                            <DialogDescription>
-                              {selectedTopics.size} konu seçildi. Haberler
-                              belirtilen aralıkla sırayla yayınlanacak.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                              <Label>Yayın Aralığı (dakika)</Label>
-                              <Select
-                                value={String(publishInterval)}
-                                onValueChange={(v) =>
-                                  setPublishInterval(Number(v))
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="5">5 dakika</SelectItem>
-                                  <SelectItem value="10">10 dakika</SelectItem>
-                                  <SelectItem value="15">
-                                    15 dakika (Önerilen)
-                                  </SelectItem>
-                                  <SelectItem value="20">20 dakika</SelectItem>
-                                  <SelectItem value="30">30 dakika</SelectItem>
-                                  <SelectItem value="45">45 dakika</SelectItem>
-                                  <SelectItem value="60">1 saat</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="rounded-lg border p-3 bg-muted/50">
-                              <p className="text-sm font-medium mb-1">Özet</p>
-                              <p className="text-xs text-muted-foreground">
-                                {selectedTopics.size} haber × {publishInterval}{" "}
-                                dk = yaklaşık{" "}
-                                {Math.round(
-                                  (selectedTopics.size * publishInterval) / 60,
-                                )}{" "}
-                                saat
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Haberler normal pipeline üzerinden işlenecek ve
-                                sırayla yayınlanacak.
-                              </p>
-                            </div>
-                            <div className="space-y-1 max-h-[200px] overflow-y-auto">
-                              {Array.from(selectedTopics).map((idx) => (
-                                <div
-                                  key={idx}
-                                  className="text-xs px-2 py-1 rounded bg-card border truncate"
-                                >
-                                  {scanResult.topics[idx]?.topic}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <DialogFooter>
-                            <Button
-                              variant="outline"
-                              onClick={() => setIsPublishDialogOpen(false)}
-                            >
-                              İptal
-                            </Button>
-                            <Button
-                              onClick={handleQueuePublish}
-                              disabled={isQueueing}
-                              className="bg-gradient-to-r from-orange-500 to-red-600"
-                            >
-                              {isQueueing ? (
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              ) : (
-                                <Play className="h-4 w-4 mr-2" />
-                              )}
-                              Başlat
-                            </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="max-h-[500px]">
-                <div className="space-y-2">
-                  {scanResult.topics.map((topic, i) => (
-                    <div
-                      key={i}
-                      className={`p-3 rounded-lg border transition-colors ${
-                        topic.isCovered
-                          ? "bg-green-500/5 border-green-500/20 opacity-70"
-                          : selectedTopics.has(i)
-                            ? "bg-blue-500/10 border-blue-500/30"
-                            : "bg-card/50 hover:bg-muted/50 border-border"
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Checkbox — only for uncovered topics */}
-                        <div className="pt-0.5 shrink-0">
-                          {topic.isCovered ? (
-                            <div className="h-4 w-4 rounded flex items-center justify-center bg-green-500/20">
-                              <CheckCircle className="h-3 w-3 text-green-600" />
-                            </div>
-                          ) : (
-                            <Checkbox
-                              checked={selectedTopics.has(i)}
-                              onCheckedChange={() => toggleTopicSelection(i)}
-                              aria-label={`${topic.topic} seç`}
-                            />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1 min-w-0">
-                              <p
-                                className={`font-semibold text-sm ${topic.isCovered ? "line-through text-muted-foreground" : ""}`}
-                              >
-                                {topic.topic}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                {topic.source}
-                                {topic.isCovered && (
-                                  <span className="ml-2 text-green-600 font-medium">
-                                    ✓ Haber yapılmış
-                                  </span>
-                                )}
-                              </p>
-                              {topic.keywords.length > 0 && (
-                                <div className="flex flex-wrap gap-1 mt-1.5">
-                                  {topic.keywords.slice(0, 4).map((kw, j) => (
-                                    <Badge
-                                      key={j}
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      <Hash className="h-2.5 w-2.5 mr-0.5" />
-                                      {kw}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                              <Badge
-                                className={
-                                  topic.confidence >= 70
-                                    ? "bg-green-500/20 text-green-600"
-                                    : topic.confidence >= 50
-                                      ? "bg-yellow-500/20 text-yellow-600"
-                                      : "bg-red-500/20 text-red-600"
-                                }
-                              >
-                                %{topic.confidence}
-                              </Badge>
-                              {topic.isCovered ? (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs bg-green-500/10 text-green-600 border-green-500/30"
-                                >
-                                  Yapılmış
-                                </Badge>
-                              ) : (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs bg-orange-500/10 text-orange-600 border-orange-500/30"
-                                >
-                                  Yeni
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">

@@ -28,6 +28,7 @@ import {
   Share2,
   TrendingUp,
   Youtube,
+  Newspaper,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,12 @@ const menuGroups = [
         title: "YouTube Kanalları",
         href: "/admin/youtube-channels",
         icon: Youtube,
+        requiredResource: null,
+      },
+      {
+        title: "YouTube Konuları",
+        href: "/admin/youtube-topics",
+        icon: Newspaper,
         requiredResource: null,
       },
     ],

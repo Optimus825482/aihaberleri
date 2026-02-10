@@ -364,8 +364,22 @@ export async function waitForPipelineCompletion(
           },
         });
 
+        // Also check for DRAFT articles (enrichment may have partially succeeded)
+        const draftCount = await db.article.count({
+          where: {
+            agentLogId,
+            status: { in: ["DRAFT", "PROCESSING"] },
+          },
+        });
+
+        if (publishedCount === 0 && draftCount > 0) {
+          errors.push(
+            `${draftCount} article(s) stuck in DRAFT/PROCESSING state`,
+          );
+        }
+
         return {
-          success: true,
+          success: publishedCount > 0 || draftCount > 0,
           articlesPublished: publishedCount,
           errors,
         };
@@ -382,7 +396,10 @@ export async function waitForPipelineCompletion(
     }
 
     // Check for failures
-    if (progress.failed > 0) {
+    if (
+      progress.failed > 0 &&
+      !errors.some((e) => e.includes("articles failed"))
+    ) {
       errors.push(`${progress.failed} articles failed in pipeline`);
     }
 
