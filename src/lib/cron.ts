@@ -8,6 +8,7 @@ import { db } from "./db";
 let cleanupInterval: NodeJS.Timeout | null = null;
 let indexingInterval: NodeJS.Timeout | null = null;
 let trendInterval: NodeJS.Timeout | null = null;
+let youtubeQueueInterval: NodeJS.Timeout | null = null;
 let isCleanupRunning = false;
 let isIndexingRunning = false;
 let isTrendRunning = false;
@@ -16,7 +17,12 @@ let isTrendRunning = false;
  * Start all cron jobs
  */
 export function startCronJobs() {
-  if (cleanupInterval && indexingInterval && trendInterval) {
+  if (
+    cleanupInterval &&
+    indexingInterval &&
+    trendInterval &&
+    youtubeQueueInterval
+  ) {
     console.log("⏰ Cron jobs already running");
     return;
   }
@@ -47,6 +53,17 @@ export function startCronJobs() {
     30 * 60 * 1000,
   ); // Every 30 minutes
 
+  // Check YouTube publish queue every 1 minute
+  youtubeQueueInterval = setInterval(async () => {
+    try {
+      const { checkAndProcessYouTubeQueue } =
+        await import("./youtube-queue-processor");
+      await checkAndProcessYouTubeQueue();
+    } catch {
+      // Silent — will retry next interval
+    }
+  }, 60 * 1000); // Every 1 minute
+
   // Run immediately on startup (after 30 seconds)
   setTimeout(() => {
     cleanupOldVisitors();
@@ -76,6 +93,10 @@ export function stopCronJobs() {
   if (trendInterval) {
     clearInterval(trendInterval);
     trendInterval = null;
+  }
+  if (youtubeQueueInterval) {
+    clearInterval(youtubeQueueInterval);
+    youtubeQueueInterval = null;
   }
   console.log("⏹️ Cron jobs stopped");
 }
@@ -247,6 +268,11 @@ export function getCronStatus() {
         name: "Trend Score Recalculation",
         interval: "30 minutes",
         enabled: trendInterval !== null,
+      },
+      {
+        name: "YouTube Queue Processor",
+        interval: "1 minute",
+        enabled: youtubeQueueInterval !== null,
       },
     ],
   };
