@@ -319,8 +319,8 @@ export const AI_NEWS_RSS_FEEDS = [
     language: "en",
   },
   {
-    name: "Hacker News (AI filtered)",
-    url: "https://hnrss.org/frontpage?q=AI+OR+GPT+OR+LLM+OR+machine+learning",
+    name: "Hacker News (AI filtered - 50+ points)",
+    url: "https://hnrss.org/newest?q=AI+OR+GPT+OR+LLM+OR+machine+learning+OR+OpenAI+OR+Anthropic+OR+Claude+OR+Gemini&points=50",
     language: "en",
   },
   {
@@ -360,6 +360,106 @@ export const AI_NEWS_RSS_FEEDS = [
   {
     name: "Prompt Engineering Daily",
     url: "https://promptengineering.substack.com/feed",
+    language: "en",
+  },
+
+  // ========================================
+  // TIER 5.5: HIGH-FREQUENCY AI SOURCES (2026-02-10)
+  // Added to guarantee minimum 1 article per 15 minutes
+  // ========================================
+  {
+    name: "Ars Technica - AI",
+    url: "https://feeds.arstechnica.com/arstechnica/features",
+    language: "en",
+  },
+  {
+    name: "The Register - AI",
+    url: "https://www.theregister.com/software/ai_ml/headlines.atom",
+    language: "en",
+  },
+  {
+    name: "InfoWorld - AI",
+    url: "https://www.infoworld.com/category/artificial-intelligence/index.rss",
+    language: "en",
+  },
+  {
+    name: "Unite.AI",
+    url: "https://www.unite.ai/feed/",
+    language: "en",
+  },
+  {
+    name: "DataCamp Blog",
+    url: "https://www.datacamp.com/blog/rss.xml",
+    language: "en",
+  },
+  {
+    name: "Weights & Biases Blog",
+    url: "https://wandb.ai/fully-connected/rss.xml",
+    language: "en",
+  },
+  {
+    name: "Papers With Code",
+    url: "https://paperswithcode.com/rss.xml",
+    language: "en",
+  },
+  {
+    name: "Hacker News - AI",
+    url: "https://hnrss.org/newest?q=AI+OR+GPT+OR+LLM+OR+machine+learning+OR+OpenAI+OR+Anthropic+OR+Claude+OR+Gemini&points=50",
+    language: "en",
+  },
+  {
+    name: "r/singularity",
+    url: "https://www.reddit.com/r/singularity/.rss",
+    language: "en",
+  },
+  {
+    name: "r/OpenAI",
+    url: "https://www.reddit.com/r/OpenAI/.rss",
+    language: "en",
+  },
+  {
+    name: "r/StableDiffusion",
+    url: "https://www.reddit.com/r/StableDiffusion/.rss",
+    language: "en",
+  },
+  {
+    name: "Simon Willison's Weblog",
+    url: "https://simonwillison.net/atom/everything/",
+    language: "en",
+  },
+  {
+    name: "Lilian Weng Blog",
+    url: "https://lilianweng.github.io/index.xml",
+    language: "en",
+  },
+  {
+    name: "Jay Alammar Blog",
+    url: "https://jalammar.github.io/feed.xml",
+    language: "en",
+  },
+  {
+    name: "Cohere Blog",
+    url: "https://cohere.com/blog/rss.xml",
+    language: "en",
+  },
+  {
+    name: "Mistral AI Blog",
+    url: "https://mistral.ai/feed.xml",
+    language: "en",
+  },
+  {
+    name: "Replicate Blog",
+    url: "https://replicate.com/blog/rss.xml",
+    language: "en",
+  },
+  {
+    name: "AI Supremacy (Substack)",
+    url: "https://aisupremacy.substack.com/feed",
+    language: "en",
+  },
+  {
+    name: "One Useful Thing",
+    url: "https://www.oneusefulthing.org/feed",
     language: "en",
   },
 
@@ -482,7 +582,7 @@ export async function fetchRSSFeed(
         return [];
       }
 
-      const rssItems: RSSItem[] = items.slice(0, 10).map((item: any) => ({
+      const rssItems: RSSItem[] = items.slice(0, 15).map((item: any) => ({
         title: extractText(item.title),
         description: extractText(
           item.description || item.summary || item.content,
@@ -549,7 +649,7 @@ function extractLink(element: any): string {
  * Fetch all RSS feeds with concurrency control
  */
 export async function fetchAllRSSFeeds(
-  maxConcurrent: number = 5,
+  maxConcurrent: number = 8,
 ): Promise<RSSItem[]> {
   console.log(
     `📡 ${AI_NEWS_RSS_FEEDS.length} RSS feed okunuyor (AI-FOCUSED ONLY)...`,
@@ -851,6 +951,7 @@ export function getRSSFeedStats() {
       research: 12,
       learning: 10,
       newsletters: 6,
+      highFrequency: 19, // New high-frequency sources added 2026-02-10
     },
   };
 }

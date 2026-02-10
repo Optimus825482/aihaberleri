@@ -54,13 +54,14 @@ export class DatabasePublisherAgent extends BaseAgent<
     const startTime = Date.now();
 
     // Get targetCount from DB settings to enforce publish limit
+    // UPDATED 2026-02-10: Default increased to guarantee 1+ article per pipeline run
     let maxPublish = articles.length; // default: publish all
     try {
       const setting = await db.setting.findUnique({
         where: { key: "agent.articlesPerRun" },
       });
       if (setting) {
-        maxPublish = Math.max(1, parseInt(setting.value));
+        maxPublish = Math.max(2, parseInt(setting.value)); // Minimum 2 articles per run
       }
     } catch {
       // Fallback to publishing all articles

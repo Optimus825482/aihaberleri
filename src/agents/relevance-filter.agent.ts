@@ -27,7 +27,7 @@ export interface ScoredArticle extends CollectedArticle {
 // 🔧 TIGHTENED: 50 → 65 to prevent non-AI content from passing (10.02.2026)
 // Combined with negative keyword filtering in content-collector for double protection
 const RELEVANCE_THRESHOLD = 65; // Minimum score to pass
-const BATCH_SIZE = 10; // Articles per batch
+const BATCH_SIZE = 15; // Articles per batch (10 → 15 for faster processing)
 
 // BYPASS MODE: If DeepSeek fails, apply basic AI keyword validation instead of passing everything
 const BYPASS_MODE_ENABLED = true;

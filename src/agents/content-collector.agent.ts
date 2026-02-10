@@ -310,7 +310,7 @@ export class ContentCollectorAgent extends BaseAgent<
   protected async process(
     job: Job<CollectorInput>,
   ): Promise<AgentResult<CollectedArticle[]>> {
-    const { categoryFilter, maxArticles = 50 } = job.data;
+    const { categoryFilter, maxArticles = 80 } = job.data; // 50 → 80 for more candidates
     const startTime = Date.now();
     let apiCalls = 0;
 
@@ -363,8 +363,8 @@ export class ContentCollectorAgent extends BaseAgent<
         }
       }
 
-      // Step 3: Filter recent articles (last 48 hours)
-      const recentItems = filterRecentArticles(filteredItems, 48);
+      // Step 3: Filter recent articles (last 36 hours — tighter for freshness)
+      const recentItems = filterRecentArticles(filteredItems, 36);
       this.logger.info(`Recent filter: ${recentItems.length} articles`);
 
       // Step 4: Filter by AI keywords
@@ -411,7 +411,7 @@ export class ContentCollectorAgent extends BaseAgent<
 
       // Step 5: Smart sampling if too many articles
       let itemsToAnalyze = cleanedItems;
-      const MAX_ARTICLES_TO_ANALYZE = 100;
+      const MAX_ARTICLES_TO_ANALYZE = 150; // 100 → 150 for more source coverage
 
       if (itemsToAnalyze.length > MAX_ARTICLES_TO_ANALYZE) {
         this.logger.info(

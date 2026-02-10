@@ -141,7 +141,7 @@ async function triggerContentCollection(
     "collect-content",
     {
       categoryFilter,
-      maxArticles: 50,
+      maxArticles: 80, // 50 → 80 for more article candidates per run
     },
     {
       removeOnComplete: true,

@@ -64,17 +64,18 @@ export type TimeSlot =
 const TURKEY_TIMEZONE = "Europe/Istanbul"; // UTC+3
 
 // Default intervals (in minutes)
+// UPDATED 2026-02-10: Intervals tightened to guarantee 1 article per 15 min
 const DEFAULT_CONFIG: SchedulerConfig = {
   enabled: true,
   breakingNewsMode: false,
   breakingNewsInterval: 5,
-  peakMorningInterval: 8,   // 10 → 8 dakika (daha sık)
-  peakLunchInterval: 8,     // 10 → 8 dakika (daha sık)
-  peakEveningInterval: 8,   // 10 → 8 dakika (daha sık)
-  nightInterval: 10,        // 15 → 10 dakika (daha sık)
-  normalInterval: 10,       // 15 → 10 dakika (daha sık)
-  weekendMultiplier: 1.0, // FIXED: No slowdown on weekends (was 1.5)
-  holidayMultiplier: 1.0, // FIXED: No slowdown on holidays (was 2.0)
+  peakMorningInterval: 7, // 8 → 7 dakika (peak saatlerde daha sık)
+  peakLunchInterval: 7, // 8 → 7 dakika
+  peakEveningInterval: 7, // 8 → 7 dakika
+  nightInterval: 10, // Gece sabit 10 dakika
+  normalInterval: 8, // 10 → 8 dakika (normal saatlerde de sıklaştı)
+  weekendMultiplier: 1.0, // No slowdown on weekends
+  holidayMultiplier: 1.0, // No slowdown on holidays
 };
 
 // Turkish public holidays (month-day format)
