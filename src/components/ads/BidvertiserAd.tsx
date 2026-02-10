@@ -1,42 +1,51 @@
 "use client";
 
-import { useEffect, useRef, useId } from "react";
+/**
+ * Bidvertiser Ad Components for Next.js
+ *
+ * Problem: Bidvertiser scripts use document.write() and getElementById()
+ * internally. In React/Next.js:
+ *   - document.write() is blocked in dynamically injected scripts
+ *   - getElementById() fails because React manages the DOM
+ *
+ * Solution: Use srcdoc iframes. The browser parses srcdoc as a fresh
+ * HTML document where document.write() works naturally and getElementById()
+ * always finds the correct element. Complete isolation from React's DOM.
+ */
 
 interface BidvertiserBannerProps {
   className?: string;
   slot?: string;
 }
 
+const BANNER_HTML = `<!DOCTYPE html>
+<html><head>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
+  body { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+</style>
+</head><body>
+<!-- Begin BidVertiser code -->
+<SCRIPT data-cfasync="false" SRC="//bdv.bidvertiser.com/BidVertiser.dbm?pid=941460&bid=2103678&fid=2103678" TYPE="text/javascript"></SCRIPT>
+<!-- End BidVertiser code -->
+</body></html>`;
+
 /**
- * Bidvertiser Banner Ad — pid=941460, bid=2103678, fid=2103678
- * Injects the official Bidvertiser script directly into the DOM.
+ * Bidvertiser Banner Ad
+ * Renders the official banner script inside an isolated srcdoc iframe.
  */
 export function BidvertiserBanner({
   className = "",
   slot = "banner",
 }: BidvertiserBannerProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const injectedRef = useRef(false);
-
-  useEffect(() => {
-    if (!containerRef.current || injectedRef.current) return;
-    injectedRef.current = true;
-
-    const script = document.createElement("script");
-    script.setAttribute("data-cfasync", "false");
-    script.type = "text/javascript";
-    script.src =
-      "//bdv.bidvertiser.com/BidVertiser.dbm?pid=941460&bid=2103678&fid=2103678";
-    containerRef.current.appendChild(script);
-  }, []);
-
   return (
-    <div
-      ref={containerRef}
-      className={`bidvertiser-banner ${className}`}
+    <iframe
+      srcDoc={BANNER_HTML}
+      className={`bidvertiser-banner border-0 block ${className}`}
+      style={{ width: 468, height: 60, overflow: "hidden" }}
       data-ad-slot={slot}
-      aria-label="Advertisement"
-      role="complementary"
+      title="Advertisement"
+      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"
     />
   );
 }
@@ -50,15 +59,51 @@ interface BidvertiserNativeProps {
   imageWidth?: number;
 }
 
+function buildNativeHtml(
+  cols: number,
+  rows: number,
+  mobileCols: number,
+  imageWidth: number,
+): string {
+  return `<!DOCTYPE html>
+<html><head>
+<style>
+  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
+</style>
+</head><body>
+<div id="ntv_2103678"></div>
+<script type="text/javascript">
+(function(d) {
+  var params = {
+    bvwidgetid: "ntv_2103678",
+    bvlinksownid: 2103678,
+    rows: ${rows},
+    cols: ${cols},
+    textpos: "left",
+    imagewidth: ${imageWidth},
+    mobilecols: ${mobileCols},
+    cb: (new Date()).getTime()
+  };
+  params.bvwidgetid = "ntv_2103678" + params.cb;
+  d.getElementById("ntv_2103678").id = params.bvwidgetid;
+  var qs = Object.keys(params).reduce(function(a, k){
+    a.push(k + '=' + encodeURIComponent(params[k]));
+    return a;
+  }, []).join(String.fromCharCode(38));
+  var s = d.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  var p = 'https:' == document.location.protocol ? 'https' : 'http';
+  s.src = p + "://cdn.hyperpromote.com/bidvertiser/tags/active/bdvws.js?" + qs;
+  d.getElementById(params.bvwidgetid).appendChild(s);
+})(document);
+</script>
+</body></html>`;
+}
+
 /**
- * Bidvertiser Native Widget — bvlinksownid=2103678
- *
- * Key insight: bdvws.js uses document.getElementById to find the widget div,
- * then sets innerHTML on it in an XHR onload callback. The div MUST exist
- * in the real DOM with the correct ID at the time the callback fires.
- *
- * We use a stable unique ID per instance and ensure the div is in the DOM
- * before the script loads.
+ * Bidvertiser Native Widget
+ * Renders the official native ad widget inside an isolated srcdoc iframe.
  */
 export function BidvertiserNative({
   className = "",
@@ -68,64 +113,16 @@ export function BidvertiserNative({
   mobileCols = 1,
   imageWidth = 150,
 }: BidvertiserNativeProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const injectedRef = useRef(false);
-  // Stable unique suffix per component instance
-  const instanceId = useId().replace(/:/g, "");
-
-  useEffect(() => {
-    if (!containerRef.current || injectedRef.current) return;
-    injectedRef.current = true;
-
-    const container = containerRef.current;
-    const baseId = `ntv_2103678_${instanceId}`;
-
-    // 1. Create the target div that bdvws.js will look for
-    const ntvDiv = document.createElement("div");
-    ntvDiv.id = baseId;
-    container.appendChild(ntvDiv);
-
-    // 2. Build params exactly like Bidvertiser's original code
-    const cb = new Date().getTime();
-    const finalId = baseId + cb;
-
-    // 3. Rename the div ID (Bidvertiser's code does this)
-    ntvDiv.id = finalId;
-
-    // 4. Build query string
-    const params: Record<string, string | number> = {
-      bvwidgetid: finalId,
-      bvlinksownid: 2103678,
-      rows,
-      cols,
-      textpos: "left",
-      imagewidth: imageWidth,
-      mobilecols: mobileCols,
-      cb,
-    };
-
-    const qs = Object.keys(params)
-      .map((k) => `${k}=${encodeURIComponent(params[k])}`)
-      .join("&");
-
-    // 5. Load bdvws.js — it will find the div by finalId in the real DOM
-    const protocol = document.location.protocol === "https:" ? "https" : "http";
-    const script = document.createElement("script");
-    script.type = "text/javascript";
-    script.async = true;
-    script.src = `${protocol}://cdn.hyperpromote.com/bidvertiser/tags/active/bdvws.js?${qs}`;
-
-    // Append script to the widget div (same as original code)
-    ntvDiv.appendChild(script);
-  }, [instanceId, cols, rows, mobileCols, imageWidth]);
+  const html = buildNativeHtml(cols, rows, mobileCols, imageWidth);
 
   return (
-    <div
-      ref={containerRef}
-      className={`bidvertiser-native ${className}`}
+    <iframe
+      srcDoc={html}
+      className={`bidvertiser-native border-0 block ${className}`}
+      style={{ width: "100%", minHeight: rows * 200, overflow: "hidden" }}
       data-ad-slot={slot}
-      aria-label="Sponsored content"
-      role="complementary"
+      title="Sponsored content"
+      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"
     />
   );
 }
