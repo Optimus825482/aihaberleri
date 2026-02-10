@@ -167,17 +167,9 @@ export async function scheduleNewsAgentJob() {
     const intervalDisplay =
       intervalHours < 1 ? `${intervalMinutes} dakika` : `${intervalHours} saat`;
 
-    console.log(`
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📅 AGENT SCHEDULE (REPEATABLE):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⏰ Current time:  ${new Date().toLocaleString("tr-TR")}
-⏰ Next run time: ${nextTime.toLocaleString("tr-TR")}
-⚙️  Interval:      ${intervalDisplay} (${intervalMs}ms)
-🆔 Job Type:      Repeatable (every ${intervalDisplay})
-📊 Queue length:  ${queueLength}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`);
+    console.log(
+      `📅 Agent schedule: every ${intervalDisplay} | next: ${nextTime.toLocaleString("tr-TR")} | queue: ${queueLength}`,
+    );
 
     return {
       nextExecutionTime: nextTime,

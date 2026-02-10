@@ -52,7 +52,22 @@ export class DatabasePublisherAgent extends BaseAgent<
     const articles = job.data;
     const startTime = Date.now();
 
-    this.logger.info(`Publishing ${articles.length} articles to database...`);
+    // Get targetCount from DB settings to enforce publish limit
+    let maxPublish = articles.length; // default: publish all
+    try {
+      const setting = await db.setting.findUnique({
+        where: { key: "agent.articlesPerRun" },
+      });
+      if (setting) {
+        maxPublish = Math.max(1, parseInt(setting.value));
+      }
+    } catch {
+      // Fallback to publishing all articles
+    }
+
+    this.logger.info(
+      `Publishing ${articles.length} articles (limit: ${maxPublish})...`,
+    );
 
     if (articles.length === 0) {
       return {
@@ -71,6 +86,14 @@ export class DatabasePublisherAgent extends BaseAgent<
       const publishedArticles: PublishedArticle[] = [];
 
       for (const article of articles) {
+        // Enforce targetCount limit — stop publishing after reaching max
+        if (publishedArticles.length >= maxPublish) {
+          this.logger.info(
+            `Target reached (${maxPublish}) — skipping remaining ${articles.length - articles.indexOf(article)} articles`,
+          );
+          break;
+        }
+
         try {
           // Get or create category
           const categorySlug = article.suggestedCategory || "yapay-zeka";

@@ -187,32 +187,21 @@ export async function executeNewsAgent(
     // Adım 4: Benzer konu yoksa → Normal akış
     // ═══════════════════════════════════════════════════════════════════
 
-    // Get article count from database settings (priority) or env vars (fallback)
-    const minSetting = await db.setting.findUnique({
-      where: { key: "agent.minArticles" },
-    });
-    const maxSetting = await db.setting.findUnique({
-      where: { key: "agent.maxArticles" },
+    // Get article count from database settings (admin panel saves "agent.articlesPerRun")
+    const articlesPerRunSetting = await db.setting.findUnique({
+      where: { key: "agent.articlesPerRun" },
     });
 
-    const envMin = parseInt(process.env.AGENT_MIN_ARTICLES_PER_RUN || "1");
-    const envMax = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "1");
+    const envMax = parseInt(process.env.AGENT_MAX_ARTICLES_PER_RUN || "2");
+    const maxArticles = articlesPerRunSetting
+      ? parseInt(articlesPerRunSetting.value)
+      : envMax;
 
-    // Use DB setting if exists, otherwise env var (defaults to 1)
-    const minArticles = minSetting ? parseInt(minSetting.value) : envMin;
-    const maxArticles = maxSetting ? parseInt(maxSetting.value) : envMax;
-
-    const targetCount = Math.max(
-      1,
-      Math.min(
-        Math.floor(Math.random() * (maxArticles - minArticles + 1)) +
-          minArticles,
-        3,
-      ),
-    );
+    // targetCount = admin panel setting (1-10), default 2
+    const targetCount = Math.max(1, Math.min(maxArticles, 10));
 
     await liveLog.agent.info(
-      `Hedef: ${targetCount} haber (min=${minArticles}, max=${maxArticles})`,
+      `Hedef: ${targetCount} haber (ayar: ${maxArticles})`,
     );
 
     // Step 2: Content variation check
@@ -254,7 +243,18 @@ export async function executeNewsAgent(
     );
 
     // Use allArticles (RSS + YouTube, already filtered for duplicates)
-    const uniqueArticles = allArticles;
+    // Limit articles entering pipeline to targetCount * 3 (buffer for filtering losses)
+    const pipelineLimit = targetCount * 3;
+    const uniqueArticles =
+      allArticles.length > pipelineLimit
+        ? allArticles.slice(0, pipelineLimit)
+        : allArticles;
+
+    if (allArticles.length > pipelineLimit) {
+      await liveLog.agent.info(
+        `Pipeline limiti: ${allArticles.length} → ${uniqueArticles.length} (hedef: ${targetCount})`,
+      );
+    }
 
     // Step 3: Multi-agent pipeline
     agentLogger.step(
