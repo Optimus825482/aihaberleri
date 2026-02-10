@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useId } from "react";
+import { useEffect, useRef } from "react";
 
 /**
  * Bidvertiser Ad Components for Next.js
@@ -18,14 +18,18 @@ import { useEffect, useRef, useId } from "react";
 interface BidvertiserBannerProps {
   className?: string;
   slot?: string;
+  /** Include fid parameter (use false for the basic banner code) */
+  withFid?: boolean;
 }
 
 /**
- * Bidvertiser Banner Ad — pid=941460, bid=2103678, fid=2103678
+ * Bidvertiser Banner Ad — pid=941460, bid=2103678
+ * Set withFid=true for the fid=2103678 variant.
  */
 export function BidvertiserBanner({
   className = "",
   slot = "banner",
+  withFid = false,
 }: BidvertiserBannerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const injectedRef = useRef(false);
@@ -46,15 +50,18 @@ export function BidvertiserBanner({
 
     const doc = iframe.contentDocument;
     if (doc) {
+      const src = withFid
+        ? "//bdv.bidvertiser.com/BidVertiser.dbm?pid=941460&bid=2103678&fid=2103678"
+        : "//bdv.bidvertiser.com/BidVertiser.dbm?pid=941460&bid=2103678";
       doc.open();
       doc.write(`<!DOCTYPE html><html><head>
 <style>html,body{margin:0;padding:0;overflow:hidden;background:transparent;}</style>
 </head><body>
-<script data-cfasync="false" src="//bdv.bidvertiser.com/BidVertiser.dbm?pid=941460&bid=2103678&fid=2103678" type="text/javascript"><\/script>
+<script data-cfasync="false" src="${src}" type="text/javascript"><\/script>
 </body></html>`);
       doc.close();
     }
-  }, []);
+  }, [withFid]);
 
   return (
     <div

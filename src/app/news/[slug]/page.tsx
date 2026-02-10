@@ -346,7 +346,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   />
                 </div>
 
-                {/* Bidvertiser Sidebar Ad */}
+                {/* Bidvertiser Sidebar Ad - Native */}
                 <div className="bg-ai-surface-card rounded-xl p-4 border border-ai-surface-border flex justify-center">
                   <BidvertiserNative
                     slot="article-sidebar-tr"
@@ -355,6 +355,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     mobileCols={1}
                     imageWidth={120}
                   />
+                </div>
+
+                {/* Bidvertiser Sidebar Ad - Banner (fid) */}
+                <div className="bg-ai-surface-card rounded-xl p-4 border border-ai-surface-border flex justify-center">
+                  <BidvertiserBanner slot="article-sidebar-banner-tr" withFid />
                 </div>
 
                 {/* Trending / Related */}

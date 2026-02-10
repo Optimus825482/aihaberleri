@@ -327,6 +327,11 @@ export default async function EnglishArticlePage({ params }: Props) {
             <BidvertiserBanner slot="article-mid-en" />
           </div>
 
+          {/* Bidvertiser In-Content Ad (fid) */}
+          <div className="my-6 flex justify-center">
+            <BidvertiserBanner slot="article-mid-en-fid" withFid />
+          </div>
+
           {/* Bidvertiser Native Widget */}
           <div className="my-4 flex justify-center">
             <BidvertiserNative
@@ -347,6 +352,11 @@ export default async function EnglishArticlePage({ params }: Props) {
           {/* Bidvertiser After-Content Ad */}
           <div className="my-6 flex justify-center">
             <BidvertiserBanner slot="article-bottom-en" />
+          </div>
+
+          {/* Bidvertiser After-Content Ad (fid) */}
+          <div className="my-6 flex justify-center">
+            <BidvertiserBanner slot="article-bottom-en-fid" withFid />
           </div>
 
           {/* Share */}
