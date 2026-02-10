@@ -381,7 +381,10 @@ export async function waitForPipelineCompletion(
         }
 
         return {
-          success: publishedCount > 0 || draftCount > 0,
+          success:
+            publishedCount > 0 ||
+            draftCount > 0 ||
+            progress.completed > baselineProgress.completed,
           articlesPublished: publishedCount,
           errors,
         };

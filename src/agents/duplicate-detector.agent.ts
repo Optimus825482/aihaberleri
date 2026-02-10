@@ -172,17 +172,22 @@ export class DuplicateDetectorAgent extends BaseAgent<
     // Layer 1: Exact URL match (last 6 hours) - ONLY CHECK!
     const normalizedUrl = this.normalizeUrl(article.url);
     const urlTimeWindow = new Date(Date.now() - 6 * 60 * 60 * 1000); // 6 hours (changed from 12)
+
+    // For YouTube URLs, only match exact normalized URL (including ?v= param)
+    // For other URLs, also try startsWith match (without query params)
+    const isYouTubeUrl =
+      article.url.includes("youtube.com/watch") ||
+      article.url.includes("youtu.be/");
+    const urlConditions: any[] = [{ sourceUrl: normalizedUrl }];
+    if (!isYouTubeUrl) {
+      urlConditions.push({
+        sourceUrl: { startsWith: normalizedUrl.split("?")[0] },
+      });
+    }
+
     const existingByUrl = await db.article.findFirst({
       where: {
-        AND: [
-          {
-            OR: [
-              { sourceUrl: normalizedUrl },
-              { sourceUrl: { startsWith: normalizedUrl.split("?")[0] } },
-            ],
-          },
-          { publishedAt: { gte: urlTimeWindow } },
-        ],
+        AND: [{ OR: urlConditions }, { publishedAt: { gte: urlTimeWindow } }],
       },
       select: { id: true, title: true },
     });
@@ -236,10 +241,23 @@ export class DuplicateDetectorAgent extends BaseAgent<
 
   /**
    * Normalize URL for comparison
+   * IMPORTANT: Preserves query params for YouTube URLs (watch?v=xxx is the unique identifier)
    */
   private normalizeUrl(url: string): string {
     try {
       const urlObj = new URL(url);
+      // YouTube URLs: the video ID is in the query param ?v=xxx
+      // Stripping query params would make ALL YouTube URLs identical!
+      if (
+        urlObj.hostname.includes("youtube.com") &&
+        urlObj.searchParams.has("v")
+      ) {
+        return `${urlObj.origin}${urlObj.pathname}?v=${urlObj.searchParams.get("v")}`;
+      }
+      // For youtu.be short URLs, the path IS the video ID
+      if (urlObj.hostname === "youtu.be") {
+        return `${urlObj.origin}${urlObj.pathname.replace(/\/$/, "")}`;
+      }
       return `${urlObj.origin}${urlObj.pathname.replace(/\/$/, "")}`;
     } catch {
       return url;

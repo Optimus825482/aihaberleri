@@ -297,12 +297,18 @@ export async function isArticleDuplicate(article: NewsArticle): Promise<{
 
   // Layer 1: Exact URL match
   const normalizedUrl = normalizeUrl(article.url);
+  const isYouTubeUrl =
+    article.url.includes("youtube.com/watch") ||
+    article.url.includes("youtu.be/");
+  const urlConditions: any[] = [{ sourceUrl: normalizedUrl }];
+  if (!isYouTubeUrl) {
+    urlConditions.push({
+      sourceUrl: { startsWith: normalizedUrl.split("?")[0] },
+    });
+  }
   const existingByUrl = await db.article.findFirst({
     where: {
-      OR: [
-        { sourceUrl: normalizedUrl },
-        { sourceUrl: { startsWith: normalizedUrl.split("?")[0] } },
-      ],
+      OR: urlConditions,
     },
     select: { id: true, title: true, slug: true, sourceUrl: true },
   });
@@ -463,6 +469,16 @@ function extractEntities(text: string): string[] {
 function normalizeUrl(url: string): string {
   try {
     const urlObj = new URL(url);
+    // YouTube URLs: video ID is in ?v= query param — MUST preserve it
+    if (
+      urlObj.hostname.includes("youtube.com") &&
+      urlObj.searchParams.has("v")
+    ) {
+      return `${urlObj.origin}${urlObj.pathname}?v=${urlObj.searchParams.get("v")}`;
+    }
+    if (urlObj.hostname === "youtu.be") {
+      return `${urlObj.origin}${urlObj.pathname.replace(/\/$/, "")}`;
+    }
     // Query params ve fragment'ı kaldır
     return `${urlObj.origin}${urlObj.pathname.replace(/\/$/, "")}`;
   } catch {

@@ -302,11 +302,25 @@ export async function executeNewsAgent(
     );
 
     if (!pipelineResult.success) {
+      // Only throw if pipeline actually failed (not just "no relevant articles found")
+      if (
+        pipelineResult.errors.length > 0 &&
+        !pipelineResult.errors.every((e) => e.includes("articles failed"))
+      ) {
+        await addLogMessage(
+          agentLog.id,
+          `Pipeline hatası: ${pipelineResult.errors.join(", ")}`,
+        );
+        throw new Error(`Pipeline failed: ${pipelineResult.errors.join(", ")}`);
+      }
+      // Pipeline completed but no articles were relevant — this is NOT a failure
+      await liveLog.agent.warn(
+        "Pipeline tamamlandı ama ilgili haber bulunamadı",
+      );
       await addLogMessage(
         agentLog.id,
-        `Pipeline hatası: ${pipelineResult.errors.join(", ")}`,
+        "Pipeline tamamlandı — ilgili haber bulunamadı",
       );
-      throw new Error(`Pipeline failed: ${pipelineResult.errors.join(", ")}`);
     }
 
     articlesCreated = pipelineResult.articlesPublished;

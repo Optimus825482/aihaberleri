@@ -152,13 +152,31 @@ export async function processNextYouTubeTopic(): Promise<boolean> {
             ),
           },
         });
+      } else if (result.success && result.articlesPublished === 0) {
+        // Pipeline completed successfully but no articles were relevant/unique
+        // This is NOT a failure — mark as completed with a note
+        queue[pendingIndex].status = "completed";
+        queue[pendingIndex].error = "İlgili/benzersiz haber bulunamadı";
+        status.completedItems++;
+        logger.info(
+          `YouTube konu atlandı (ilgili haber yok): ${topic.topic.substring(0, 60)}...`,
+        );
+
+        await db.agentLog.update({
+          where: { id: agentLog.id },
+          data: {
+            status: "PARTIAL",
+            articlesCreated: 0,
+            duration: Math.floor(
+              (Date.now() - new Date(topic.queuedAt).getTime()) / 1000,
+            ),
+          },
+        });
       } else {
-        // Pipeline completed but no articles published — could be duplicate or enrichment failure
+        // Pipeline actually failed
         const errorMsg = result.errors?.length
-          ? result.errors[0]
-          : result.success
-            ? "Haber oluşturulamadı (muhtemelen duplicate veya enrichment hatası)"
-            : "Pipeline başarısız";
+          ? result.errors.join(", ")
+          : "Pipeline başarısız";
         queue[pendingIndex].status = "failed";
         queue[pendingIndex].error = errorMsg;
         status.failedItems++;
