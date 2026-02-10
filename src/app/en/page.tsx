@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 };
 
 async function getEnglishArticles() {
-  // Get articles with English translations
+  // Get articles with English translations (12 for grid + hero uses first 10)
   const translations = await db.articleTranslation.findMany({
     where: {
       locale: "en",
@@ -73,50 +73,18 @@ async function getCategories() {
   });
 }
 
-async function getHeroArticles() {
-  const translations = await db.articleTranslation.findMany({
-    where: {
-      locale: "en",
-      article: {
-        status: "PUBLISHED",
-      },
-    },
-    include: {
-      article: {
-        include: {
-          category: true,
-        },
-      },
-    },
-    orderBy: {
-      article: {
-        publishedAt: "desc",
-      },
-    },
-    take: 10,
-  });
-
-  return translations.map((t: any) => ({
-    id: t.article.id,
-    title: t.title,
-    slug: t.slug,
-    excerpt: t.excerpt || "",
-    imageUrl: t.article.imageUrl,
-    publishedAt: t.article.publishedAt,
-    category: t.article.category,
-  }));
-}
-
 export default async function EnglishHomePage() {
   // Structured Data
   const organizationSchema = generateOrganizationSchema();
   const websiteSchema = generateWebSiteSchema();
 
-  const [articles, categories, heroArticles] = await Promise.all([
+  // Single query for articles — hero uses first 10, grid uses all 12
+  const [articles, categories] = await Promise.all([
     getEnglishArticles(),
     getCategories(),
-    getHeroArticles(),
   ]);
+
+  const heroArticles = articles.slice(0, 10);
 
   return (
     <div className="min-h-screen flex flex-col bg-ai-background-dark">
@@ -186,19 +154,19 @@ export default async function EnglishHomePage() {
                   </Link>
                 </div>
               ) : (
-                  <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2">
-                    {articles.map((article: any, index: number) => (
-                      <ArticleCard
-                        key={article.id}
-                        article={{
-                          ...article,
-                          publishedAt: article.publishedAt || new Date(),
-                          category: {
-                            name: article.category.name,
-                            slug: article.category.slug,
-                          },
-                        }}
-                        locale="en"
+                <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2">
+                  {articles.map((article: any, index: number) => (
+                    <ArticleCard
+                      key={article.id}
+                      article={{
+                        ...article,
+                        publishedAt: article.publishedAt || new Date(),
+                        category: {
+                          name: article.category.name,
+                          slug: article.category.slug,
+                        },
+                      }}
+                      locale="en"
                       priority={index < 4}
                     />
                   ))}

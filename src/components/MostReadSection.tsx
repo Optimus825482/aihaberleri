@@ -86,7 +86,7 @@ export async function MostReadSection() {
               <div className="flex flex-col h-full bg-card/40 backdrop-blur-md rounded-2xl border border-border/50 overflow-hidden hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 transform hover:-translate-y-1">
                 {/* Image Container */}
                 <Link
-                  href={`/haber/${article.slug}`}
+                  href={`/news/${article.slug}`}
                   className="relative aspect-[4/3] overflow-hidden"
                 >
                   {/* Rank Badge */}
@@ -128,7 +128,7 @@ export async function MostReadSection() {
                 <div className="flex flex-col flex-1 p-4 gap-3">
                   <div className="flex items-start justify-between gap-2">
                     <Link
-                      href={`/haber/${article.slug}`}
+                      href={`/news/${article.slug}`}
                       className="group-hover:text-primary transition-colors duration-200"
                     >
                       <h3

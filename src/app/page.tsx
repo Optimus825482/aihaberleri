@@ -186,7 +186,7 @@ export default async function HomePage() {
                   </h2>
                 </div>
                 <Link
-                  href="/haberler"
+                  href="/news"
                   className="group flex items-center gap-1.5 text-sm font-semibold text-ai-primary hover:text-ai-primary-hover transition-colors duration-300"
                 >
                   <span>Tümünü Gör</span>
@@ -245,7 +245,7 @@ export default async function HomePage() {
               {articles.length > 0 && (
                 <div className="mt-8 sm:mt-10 text-center">
                   <Link
-                    href="/haberler"
+                    href="/news"
                     className="inline-block group rounded-xl border-2 border-gray-300 dark:border-ai-surface-border bg-transparent px-6 sm:px-8 py-3 text-sm font-bold text-slate-700 dark:text-white hover:bg-gray-100 dark:hover:bg-ai-surface-border hover:border-ai-primary/50 dark:hover:border-ai-primary/50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
                   >
                     <span className="flex items-center gap-2">

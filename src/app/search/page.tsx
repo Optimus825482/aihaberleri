@@ -6,8 +6,6 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 
 interface SearchResult {
   id: string;
@@ -30,26 +28,8 @@ function SearchContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState(query);
-  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
-
-  // Fetch categories for Header
-  useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data.categories || []))
-      .catch(() => setCategories([]));
-  }, []);
 
   // Search when query changes
-  useEffect(() => {
-    if (query) {
-      performSearch(query);
-      setSearchInput(query);
-    } else {
-      setResults([]);
-    }
-  }, [query]);
-
   const performSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
 
@@ -58,7 +38,7 @@ function SearchContent() {
 
     try {
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(searchQuery.trim())}`
+        `/api/search?q=${encodeURIComponent(searchQuery.trim())}`,
       );
       const data = await response.json();
 
@@ -77,6 +57,16 @@ function SearchContent() {
     }
   };
 
+  // Trigger search when query param changes
+  useEffect(() => {
+    if (query) {
+      performSearch(query);
+      setSearchInput(query);
+    } else {
+      setResults([]);
+    }
+  }, [query]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchInput.trim()) {
@@ -84,7 +74,7 @@ function SearchContent() {
       window.history.pushState(
         {},
         "",
-        `/search?q=${encodeURIComponent(searchInput.trim())}`
+        `/search?q=${encodeURIComponent(searchInput.trim())}`,
       );
       performSearch(searchInput.trim());
     }
@@ -101,8 +91,6 @@ function SearchContent() {
 
   return (
     <div className="min-h-screen flex flex-col bg-ai-background-dark">
-      <Header categories={categories} />
-
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
         {/* Search Header */}
         <div className="mb-8">
@@ -193,7 +181,7 @@ function SearchContent() {
             {results.map((article) => (
               <Link
                 key={article.id}
-                href={`/haber/${article.slug}`}
+                href={`/news/${article.slug}`}
                 className="group bg-ai-surface-card rounded-xl overflow-hidden border border-ai-surface-border hover:border-ai-primary/50 transition-all hover:shadow-xl hover:shadow-ai-primary/10 hover:-translate-y-1"
               >
                 {/* Image */}
@@ -269,7 +257,7 @@ function SearchContent() {
                       window.history.pushState(
                         {},
                         "",
-                        `/search?q=${encodeURIComponent(suggestion)}`
+                        `/search?q=${encodeURIComponent(suggestion)}`,
                       );
                       performSearch(suggestion);
                     }}
@@ -277,7 +265,7 @@ function SearchContent() {
                   >
                     {suggestion}
                   </button>
-                )
+                ),
               )}
             </div>
           </div>
@@ -298,31 +286,34 @@ function SearchContent() {
               Şirket adı, teknoloji veya konu yazarak başlayın.
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
-              {["ChatGPT", "Yapay Zeka", "OpenAI", "Gemini", "Claude", "Sora"].map(
-                (suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => {
-                      setSearchInput(suggestion);
-                      window.history.pushState(
-                        {},
-                        "",
-                        `/search?q=${encodeURIComponent(suggestion)}`
-                      );
-                      performSearch(suggestion);
-                    }}
-                    className="px-4 py-2 rounded-full bg-ai-surface-card border border-ai-surface-border text-ai-text-secondary hover:text-white hover:border-ai-primary/50 transition-colors"
-                  >
-                    {suggestion}
-                  </button>
-                )
-              )}
+              {[
+                "ChatGPT",
+                "Yapay Zeka",
+                "OpenAI",
+                "Gemini",
+                "Claude",
+                "Sora",
+              ].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => {
+                    setSearchInput(suggestion);
+                    window.history.pushState(
+                      {},
+                      "",
+                      `/search?q=${encodeURIComponent(suggestion)}`,
+                    );
+                    performSearch(suggestion);
+                  }}
+                  className="px-4 py-2 rounded-full bg-ai-surface-card border border-ai-surface-border text-ai-text-secondary hover:text-white hover:border-ai-primary/50 transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))}
             </div>
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

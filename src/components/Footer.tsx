@@ -31,7 +31,7 @@ const translations = {
     privacyShort: "Gizlilik",
     termsShort: "Şartlar",
     sitemap: "Site Haritası",
-    newsPath: "/haberler",
+    newsPath: "/news",
     categoryPath: "/category",
   },
   en: {

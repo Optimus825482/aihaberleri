@@ -95,7 +95,9 @@ export default async function MostReadPage({
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
             <div className="flex items-center gap-4">
               <div className="p-4 bg-ai-primary/20 rounded-2xl border border-ai-primary/10 shadow-lg">
-                <span className="material-symbols-outlined text-[32px] text-ai-primary">trending_up</span>
+                <span className="material-symbols-outlined text-[32px] text-ai-primary">
+                  trending_up
+                </span>
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
@@ -121,11 +123,13 @@ export default async function MostReadPage({
                     href={`/en-cok-okunanlar?period=${item.key}`}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                       isActive
-                      ? "bg-ai-primary text-white shadow-md"
-                      : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-hover"
+                        ? "bg-ai-primary text-white shadow-md"
+                        : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-hover"
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[16px]">{item.icon}</span>
+                    <span className="material-symbols-outlined text-[16px]">
+                      {item.icon}
+                    </span>
                     <span className="hidden sm:inline">{item.label}</span>
                   </Link>
                 );
@@ -146,8 +150,8 @@ export default async function MostReadPage({
                     <span
                       className={`w-10 h-10 flex items-center justify-center font-bold rounded-full text-lg shadow-sm border ${
                         index < 3
-                        ? "bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 text-white shadow-orange-500/20 border-transparent"
-                        : "bg-ai-surface-dark text-ai-text-secondary border-ai-surface-border"
+                          ? "bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 text-white shadow-orange-500/20 border-transparent"
+                          : "bg-ai-surface-dark text-ai-text-secondary border-ai-surface-border"
                       }`}
                     >
                       {index + 1}
@@ -156,7 +160,7 @@ export default async function MostReadPage({
 
                   {/* Image */}
                   <Link
-                    href={`/haber/${article.slug}`}
+                    href={`/news/${article.slug}`}
                     className="relative flex-shrink-0 w-full sm:w-56 h-48 sm:h-36 rounded-xl overflow-hidden shadow-sm group-hover:shadow-md transition-shadow"
                   >
                     {article.imageUrl ? (
@@ -173,8 +177,10 @@ export default async function MostReadPage({
                         }
                       />
                     ) : (
-                        <div className="w-full h-full bg-ai-surface-dark flex items-center justify-center">
-                          <span className="material-symbols-outlined text-[32px] text-ai-text-muted">trending_up</span>
+                      <div className="w-full h-full bg-ai-surface-dark flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[32px] text-ai-text-muted">
+                          trending_up
+                        </span>
                       </div>
                     )}
                   </Link>
@@ -185,7 +191,7 @@ export default async function MostReadPage({
                       {/* Category */}
                       {article.category && (
                         <Link
-                          href={`/kategori/${article.category.slug}`}
+                          href={`/category/${article.category.slug}`}
                           className="px-2.5 py-1 rounded-md bg-ai-primary/10 text-ai-primary text-[10px] font-bold uppercase tracking-wider hover:bg-ai-primary/20 transition-colors w-fit"
                         >
                           {article.category.name}
@@ -199,7 +205,7 @@ export default async function MostReadPage({
                     </div>
 
                     {/* Title */}
-                    <Link href={`/haber/${article.slug}`}>
+                    <Link href={`/news/${article.slug}`}>
                       <h2 className="text-lg md:text-xl font-bold leading-tight text-white group-hover:text-ai-primary transition-colors line-clamp-2">
                         {article.title}
                       </h2>
@@ -215,7 +221,9 @@ export default async function MostReadPage({
                     {/* Meta */}
                     <div className="flex items-center flex-wrap gap-4 text-xs text-ai-text-secondary mt-auto pt-3 border-t border-ai-surface-border/30">
                       <div className="flex items-center gap-1.5 bg-ai-surface-dark px-2 py-1 rounded-md">
-                        <span className="material-symbols-outlined text-[14px] text-ai-primary/70">visibility</span>
+                        <span className="material-symbols-outlined text-[14px] text-ai-primary/70">
+                          visibility
+                        </span>
                         <span className="text-white font-medium">
                           {article.views.toLocaleString("tr-TR")}
                         </span>
@@ -223,7 +231,9 @@ export default async function MostReadPage({
 
                       {article.publishedAt && (
                         <div className="flex items-center gap-1.5">
-                          <span className="material-symbols-outlined text-[14px]">schedule</span>
+                          <span className="material-symbols-outlined text-[14px]">
+                            schedule
+                          </span>
                           <span>{formatDate(article.publishedAt)}</span>
                         </div>
                       )}
@@ -240,18 +250,22 @@ export default async function MostReadPage({
               ))}
             </div>
           ) : (
-              <div className="text-center py-20 bg-ai-surface-card rounded-3xl border border-dashed border-ai-surface-border">
-                <div className="w-20 h-20 bg-ai-surface-dark rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="material-symbols-outlined text-[40px] text-ai-text-muted">trending_up</span>
+            <div className="text-center py-20 bg-ai-surface-card rounded-3xl border border-dashed border-ai-surface-border">
+              <div className="w-20 h-20 bg-ai-surface-dark rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="material-symbols-outlined text-[40px] text-ai-text-muted">
+                  trending_up
+                </span>
               </div>
-                <h3 className="text-2xl font-bold mb-3 text-white">Henüz Veri Yok</h3>
-                <p className="text-ai-text-secondary max-w-md mx-auto mb-8">
+              <h3 className="text-2xl font-bold mb-3 text-white">
+                Henüz Veri Yok
+              </h3>
+              <p className="text-ai-text-secondary max-w-md mx-auto mb-8">
                 Seçili dönemde ({periodLabels[period]}) henüz yeterli okuma
                 verisi bulunmuyor. Daha sonra tekrar deneyin.
               </p>
               <Link
                 href="/"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-ai-primary text-white font-medium hover:bg-ai-primary-hover transition-all shadow-lg shadow-ai-primary/20"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-ai-primary text-white font-medium hover:bg-ai-primary-hover transition-all shadow-lg shadow-ai-primary/20"
               >
                 Ana Sayfaya Dön
               </Link>

@@ -1,9 +1,5 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
 interface LogoProps {
   variant?: "primary" | "secondary" | "icon";
@@ -36,14 +32,6 @@ export function Logo({
   href = "/",
   priority = false,
 }: LogoProps) {
-  const { theme, systemTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // Hydration mismatch'i önlemek için
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Icon boyutu
   const iconSize = iconSizeMap[size];
   const textSize = textSizeMap[size];
@@ -75,7 +63,11 @@ export function Logo({
   );
 
   return href ? (
-    <Link href={href} className="inline-block" aria-label="AI Haberleri Ana Sayfa">
+    <Link
+      href={href}
+      className="inline-block"
+      aria-label="AI Haberleri Ana Sayfa"
+    >
       {logoContent}
     </Link>
   ) : (

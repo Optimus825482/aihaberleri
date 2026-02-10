@@ -55,7 +55,9 @@ export default function ContactForm() {
     return (
       <div className="bg-ai-surface-card border border-green-700/50 rounded-xl p-6 text-center">
         <div className="w-16 h-16 bg-green-900/30 border border-green-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="material-symbols-outlined text-[32px] text-green-500">check_circle</span>
+          <span className="material-symbols-outlined text-[32px] text-green-500">
+            check_circle
+          </span>
         </div>
         <h3 className="text-xl font-semibold text-green-400 mb-2">
           Mesajınız Gönderildi!
@@ -82,7 +84,10 @@ export default function ContactForm() {
       )}
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium mb-2 text-white">
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium mb-2 text-white"
+        >
           Ad Soyad *
         </label>
         <input
@@ -90,14 +95,19 @@ export default function ContactForm() {
           id="name"
           required
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, name: e.target.value }))
+          }
           className="w-full px-4 py-3 border border-ai-surface-border rounded-xl bg-ai-surface-dark text-white placeholder:text-ai-text-muted focus:ring-2 focus:ring-ai-primary focus:border-transparent transition"
           placeholder="Adınız Soyadınız"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-2 text-white">
+        <label
+          htmlFor="email"
+          className="block text-sm font-medium mb-2 text-white"
+        >
           E-posta *
         </label>
         <input
@@ -105,14 +115,19 @@ export default function ContactForm() {
           id="email"
           required
           value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, email: e.target.value }))
+          }
           className="w-full px-4 py-3 border border-ai-surface-border rounded-xl bg-ai-surface-dark text-white placeholder:text-ai-text-muted focus:ring-2 focus:ring-ai-primary focus:border-transparent transition"
           placeholder="ornek@email.com"
         />
       </div>
 
       <div>
-        <label htmlFor="subject" className="block text-sm font-medium mb-2 text-white">
+        <label
+          htmlFor="subject"
+          className="block text-sm font-medium mb-2 text-white"
+        >
           Konu *
         </label>
         <select
@@ -120,7 +135,7 @@ export default function ContactForm() {
           required
           value={formData.subject}
           onChange={(e) =>
-            setFormData({ ...formData, subject: e.target.value })
+            setFormData((prev) => ({ ...prev, subject: e.target.value }))
           }
           className="w-full px-4 py-3 border border-ai-surface-border rounded-xl bg-ai-surface-dark text-white focus:ring-2 focus:ring-ai-primary focus:border-transparent transition"
         >
@@ -135,7 +150,10 @@ export default function ContactForm() {
       </div>
 
       <div>
-        <label htmlFor="message" className="block text-sm font-medium mb-2 text-white">
+        <label
+          htmlFor="message"
+          className="block text-sm font-medium mb-2 text-white"
+        >
           Mesajınız *
         </label>
         <textarea
@@ -144,7 +162,7 @@ export default function ContactForm() {
           rows={5}
           value={formData.message}
           onChange={(e) =>
-            setFormData({ ...formData, message: e.target.value })
+            setFormData((prev) => ({ ...prev, message: e.target.value }))
           }
           className="w-full px-4 py-3 border border-ai-surface-border rounded-xl bg-ai-surface-dark text-white placeholder:text-ai-text-muted focus:ring-2 focus:ring-ai-primary focus:border-transparent transition resize-none"
           placeholder="Mesajınızı buraya yazın..."
@@ -178,7 +196,7 @@ export default function ContactForm() {
           </>
         ) : (
           <>
-              <span className="material-symbols-outlined text-[20px]">send</span>
+            <span className="material-symbols-outlined text-[20px]">send</span>
             Mesaj Gönder
           </>
         )}

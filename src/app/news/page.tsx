@@ -24,6 +24,7 @@ export default async function NewsPage() {
     orderBy: {
       publishedAt: "desc",
     },
+    take: 30,
   });
 
   return (

@@ -47,7 +47,7 @@ export function Header({ categories }: HeaderProps) {
 
   const navLinks = [
     { href: "/", label: "Ana Sayfa", icon: "home" },
-    { href: "/haberler", label: "Haberler", icon: "newspaper" },
+    { href: "/news", label: "Haberler", icon: "newspaper" },
     { href: "/categories", label: "Kategoriler", icon: "category" },
     { href: "/about", label: "Hakkımızda", icon: "info" },
     { href: "/contact", label: "İletişim", icon: "mail" },
@@ -75,7 +75,7 @@ export function Header({ categories }: HeaderProps) {
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                   isActive(link.href)
                     ? "bg-ai-primary text-white"
-                    : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card"
+                    : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card",
                 )}
               >
                 <span className="material-symbols-outlined text-[20px]">
@@ -115,7 +115,9 @@ export function Header({ categories }: HeaderProps) {
 
             {/* Notification Bell */}
             <button className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg text-ai-text-secondary hover:text-white hover:bg-ai-surface-card transition-colors relative">
-              <span className="material-symbols-outlined text-[22px]">notifications</span>
+              <span className="material-symbols-outlined text-[22px]">
+                notifications
+              </span>
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-ai-primary rounded-full"></span>
             </button>
 
@@ -129,7 +131,9 @@ export function Header({ categories }: HeaderProps) {
               size="sm"
               className="bg-ai-primary hover:bg-ai-primary-hover text-white font-semibold px-4 h-10 rounded-lg transition-colors"
             >
-              <span className="material-symbols-outlined text-[18px] mr-1.5">bookmark_add</span>
+              <span className="material-symbols-outlined text-[18px] mr-1.5">
+                bookmark_add
+              </span>
               <span className="hidden sm:inline">Abone Ol</span>
             </Button>
 
@@ -137,7 +141,9 @@ export function Header({ categories }: HeaderProps) {
             <Sheet>
               <SheetTrigger asChild>
                 <button className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg text-ai-text-secondary hover:text-white hover:bg-ai-surface-card transition-colors">
-                  <span className="material-symbols-outlined text-[24px]">menu</span>
+                  <span className="material-symbols-outlined text-[24px]">
+                    menu
+                  </span>
                 </button>
               </SheetTrigger>
               <SheetContent
@@ -147,7 +153,9 @@ export function Header({ categories }: HeaderProps) {
                 <SheetHeader className="p-4 border-b border-ai-surface-border">
                   <SheetTitle className="flex items-center gap-3">
                     <Logo size="sm" showText={false} />
-                    <span className="text-lg font-bold text-white">AI Haberleri</span>
+                    <span className="text-lg font-bold text-white">
+                      AI Haberleri
+                    </span>
                   </SheetTitle>
                 </SheetHeader>
 
@@ -180,7 +188,7 @@ export function Header({ categories }: HeaderProps) {
                             "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors",
                             isActive(link.href)
                               ? "bg-ai-primary text-white"
-                              : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card"
+                              : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card",
                           )}
                         >
                           <span className="material-symbols-outlined text-[20px]">
@@ -204,7 +212,7 @@ export function Header({ categories }: HeaderProps) {
                               "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
                               isActive(`/category/${category.slug}`)
                                 ? "bg-ai-primary/10 text-ai-primary"
-                                : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card"
+                                : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card",
                             )}
                           >
                             <span className="material-symbols-outlined text-[18px]">
@@ -232,7 +240,9 @@ export function Header({ categories }: HeaderProps) {
                 <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-ai-surface-border bg-ai-surface-dark">
                   <SheetClose asChild>
                     <Button className="w-full bg-ai-primary hover:bg-ai-primary-hover text-white font-semibold h-11 rounded-lg">
-                      <span className="material-symbols-outlined text-[20px] mr-2">bookmark_add</span>
+                      <span className="material-symbols-outlined text-[20px] mr-2">
+                        bookmark_add
+                      </span>
                       Abone Ol
                     </Button>
                   </SheetClose>

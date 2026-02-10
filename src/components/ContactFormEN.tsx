@@ -102,7 +102,9 @@ export default function ContactFormEN() {
           id="name"
           required
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, name: e.target.value }))
+          }
           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           placeholder="Your full name"
         />
@@ -117,7 +119,9 @@ export default function ContactFormEN() {
           id="email"
           required
           value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, email: e.target.value }))
+          }
           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
           placeholder="example@email.com"
         />
@@ -132,7 +136,7 @@ export default function ContactFormEN() {
           required
           value={formData.subject}
           onChange={(e) =>
-            setFormData({ ...formData, subject: e.target.value })
+            setFormData((prev) => ({ ...prev, subject: e.target.value }))
           }
           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
         >
@@ -156,7 +160,7 @@ export default function ContactFormEN() {
           rows={5}
           value={formData.message}
           onChange={(e) =>
-            setFormData({ ...formData, message: e.target.value })
+            setFormData((prev) => ({ ...prev, message: e.target.value }))
           }
           className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
           placeholder="Write your message here..."

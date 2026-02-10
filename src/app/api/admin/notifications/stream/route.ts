@@ -106,7 +106,7 @@ export async function GET() {
                 "article",
                 "Yeni Makale",
                 article.title,
-                { label: "Görüntüle", href: `/haberler/${article.slug}` },
+                { label: "Görüntüle", href: `/news/${article.slug}` },
               );
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify(notification)}\n\n`),

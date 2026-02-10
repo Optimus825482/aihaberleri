@@ -76,7 +76,7 @@ export class TechnicalSEOAgent {
     const relatedArticlesText = relatedArticles
       ? relatedArticles
           .map(
-            (a, i) => `${i + 1}. "${a.title}" - /haber/${a.slug} (ID: ${a.id})`,
+            (a, i) => `${i + 1}. "${a.title}" - /news/${a.slug} (ID: ${a.id})`,
           )
           .join("\n")
       : "İlgili makale bulunamadı";
@@ -138,7 +138,7 @@ JSON formatında yanıt ver:
   "internalLinks": [
     {
       "anchor": "doğal anchor text",
-      "url": "/haber/related-article-slug",
+      "url": "/news/related-article-slug",
       "placement": "2. paragraf sonunda",
       "reasoning": "Bu makale X konusunu detaylandırıyor"
     }
@@ -157,7 +157,8 @@ SADECE GEÇERLİ JSON YANIT VER. AÇIKLAMA YOK.`;
         [
           {
             role: "system",
-            content: "Sen bir technical SEO uzmanısın. Sadece geçerli JSON yanıtı ver.",
+            content:
+              "Sen bir technical SEO uzmanısın. Sadece geçerli JSON yanıtı ver.",
           },
           {
             role: "user",
@@ -168,7 +169,7 @@ SADECE GEÇERLİ JSON YANIT VER. AÇIKLAMA YOK.`;
           model: "deepseek-chat",
           temperature: 0.3,
           maxTokens: 2000,
-        }
+        },
       );
 
       // JSON parse et
@@ -218,14 +219,11 @@ SEO-friendly slug oluştur:
 Sadece slug'ı yanıtla, açıklama yok.`;
 
     try {
-      const response = await callDeepSeek(
-        [{ role: "user", content: prompt }],
-        {
-          model: "deepseek-chat",
-          temperature: 0.2,
-          maxTokens: 100,
-        }
-      );
+      const response = await callDeepSeek([{ role: "user", content: prompt }], {
+        model: "deepseek-chat",
+        temperature: 0.2,
+        maxTokens: 100,
+      });
 
       return response.trim().toLowerCase();
     } catch (error) {
@@ -274,14 +272,11 @@ Bu haber için SEO-friendly image alt text oluştur:
 Sadece alt text'i yanıtla, açıklama yok.`;
 
     try {
-      const response = await callDeepSeek(
-        [{ role: "user", content: prompt }],
-        {
-          model: "deepseek-chat",
-          temperature: 0.5,
-          maxTokens: 150,
-        }
-      );
+      const response = await callDeepSeek([{ role: "user", content: prompt }], {
+        model: "deepseek-chat",
+        temperature: 0.5,
+        maxTokens: 150,
+      });
 
       return response.trim().substring(0, 125);
     } catch (error) {

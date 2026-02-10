@@ -2,47 +2,17 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
-
-interface MostReadArticle {
-  id: string;
-  title: string;
-  slug: string;
-  imageUrl: string | null;
-  views: number;
-  publishedAt: string | null;
-  trendScore?: number | null;
-  category?: {
-    name: string;
-    slug: string;
-  } | null;
-}
+import { useTrendingArticles } from "@/hooks/use-trending";
 
 // Client Component - Sidebar variant for Most Read with Period Selection
 export function MostReadSidebarClient() {
   const [period, setPeriod] = useState<"today" | "week">("week");
-  const [articles, setArticles] = useState<MostReadArticle[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/most-read?period=${period}&limit=5`);
-        if (res.ok) {
-          const data = await res.json();
-          setArticles(data.articles || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch most read articles:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArticles();
-  }, [period]);
+  // SWR: auto-dedup, caching, keepPreviousData
+  const { data, isLoading: loading } = useTrendingArticles(period);
+  const articles = data?.articles ?? [];
 
   // Format date helper
   const formatDate = (dateString: string | null) => {
@@ -65,10 +35,14 @@ export function MostReadSidebarClient() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 pb-3 border-b border-ai-surface-border">
         <div className="p-2.5 bg-ai-primary/10 rounded-lg">
-          <span className="material-symbols-outlined text-[24px] text-ai-primary">trending_up</span>
+          <span className="material-symbols-outlined text-[24px] text-ai-primary">
+            trending_up
+          </span>
         </div>
         <div className="flex-1">
-          <h3 className="text-xl font-bold tracking-tight text-white">En Çok Okunanlar</h3>
+          <h3 className="text-xl font-bold tracking-tight text-white">
+            En Çok Okunanlar
+          </h3>
           <p className="text-xs text-ai-text-secondary">
             {period === "today" ? "Bugün" : "Bu hafta"} en popüler
           </p>
@@ -81,22 +55,26 @@ export function MostReadSidebarClient() {
           onClick={() => setPeriod("today")}
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
             period === "today"
-            ? "bg-ai-primary text-white shadow-sm"
-            : "text-ai-text-secondary hover:text-white"
+              ? "bg-ai-primary text-white shadow-sm"
+              : "text-ai-text-secondary hover:text-white"
           }`}
         >
-          <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
+          <span className="material-symbols-outlined text-[16px]">
+            local_fire_department
+          </span>
           Bugün
         </button>
         <button
           onClick={() => setPeriod("week")}
           className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all ${
             period === "week"
-            ? "bg-ai-primary text-white shadow-sm"
-            : "text-ai-text-secondary hover:text-white"
+              ? "bg-ai-primary text-white shadow-sm"
+              : "text-ai-text-secondary hover:text-white"
           }`}
         >
-          <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+          <span className="material-symbols-outlined text-[16px]">
+            calendar_today
+          </span>
           Bu Hafta
         </button>
       </div>
@@ -123,7 +101,7 @@ export function MostReadSidebarClient() {
                 className={`absolute -left-1 -top-1 w-6 h-6 flex items-center justify-center font-bold rounded-full shadow-md z-10 text-sm ${
                   index < 3
                     ? "bg-gradient-to-br from-yellow-400 to-orange-500 text-white"
-                  : "bg-ai-primary text-white"
+                    : "bg-ai-primary text-white"
                 }`}
               >
                 {index + 1}
@@ -131,7 +109,7 @@ export function MostReadSidebarClient() {
 
               {/* Thumbnail */}
               <Link
-                href={`/haber/${article.slug}`}
+                href={`/news/${article.slug}`}
                 className="block flex-shrink-0 overflow-hidden rounded-lg w-20 h-16 relative"
               >
                 {article.imageUrl ? (
@@ -148,8 +126,10 @@ export function MostReadSidebarClient() {
                     }
                   />
                 ) : (
-                    <div className="w-full h-full bg-ai-surface-dark flex items-center justify-center">
-                      <span className="material-symbols-outlined text-[24px] text-ai-text-muted">trending_up</span>
+                  <div className="w-full h-full bg-ai-surface-dark flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[24px] text-ai-text-muted">
+                      trending_up
+                    </span>
                   </div>
                 )}
               </Link>
@@ -157,7 +137,7 @@ export function MostReadSidebarClient() {
               {/* Content */}
               <div className="flex flex-col gap-1 min-w-0">
                 <Link
-                  href={`/haber/${article.slug}`}
+                  href={`/news/${article.slug}`}
                   className="group-hover:text-ai-primary transition-colors"
                 >
                   <h4
@@ -170,12 +150,16 @@ export function MostReadSidebarClient() {
 
                 <div className="flex items-center gap-2 text-xs text-ai-text-secondary mt-auto flex-wrap">
                   <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[12px]">visibility</span>
+                    <span className="material-symbols-outlined text-[12px]">
+                      visibility
+                    </span>
                     {article.views.toLocaleString("tr-TR")}
                   </span>
                   {article.publishedAt && (
                     <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[12px]">schedule</span>
+                      <span className="material-symbols-outlined text-[12px]">
+                        schedule
+                      </span>
                       {formatDate(article.publishedAt)}
                     </span>
                   )}
@@ -185,7 +169,7 @@ export function MostReadSidebarClient() {
             </div>
           ))
         ) : (
-              <div className="text-center py-6 text-ai-text-secondary text-sm">
+          <div className="text-center py-6 text-ai-text-secondary text-sm">
             {period === "today" ? "Bugün henüz veri yok" : "Bu hafta veri yok"}
           </div>
         )}
@@ -197,7 +181,9 @@ export function MostReadSidebarClient() {
         className="group block mt-4 pt-3 border-t border-ai-surface-border text-center text-sm font-medium text-ai-primary hover:text-ai-primary-hover transition-colors"
       >
         Tümünü Gör
-        <span className="inline-block transition-transform group-hover:translate-x-1">→</span>
+        <span className="inline-block transition-transform group-hover:translate-x-1">
+          →
+        </span>
       </Link>
     </aside>
   );

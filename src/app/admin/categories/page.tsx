@@ -589,7 +589,7 @@ export default function CategoriesPage() {
                                       </Button>
                                     </Link>
                                     <Link
-                                      href={`/haberler/${article.slug}`}
+                                      href={`/news/${article.slug}`}
                                       target="_blank"
                                     >
                                       <Button variant="ghost" size="sm">

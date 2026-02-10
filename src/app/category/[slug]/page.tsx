@@ -1,6 +1,6 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { Footer } from "@/components/Footer";
 import { ArticleCard } from "@/components/ArticleCard";
 import { CategoryHero } from "@/components/CategoryHero";
 import type { Metadata } from "next";
@@ -11,18 +11,19 @@ interface CategoryPageProps {
   }>;
 }
 
+// React.cache() — per-request dedup: generateMetadata + page share same DB query
+const getCategory = cache(async (slug: string) => {
+  return db.category.findUnique({ where: { slug } });
+});
+
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const category = await db.category.findUnique({
-    where: { slug },
-  });
+  const category = await getCategory(slug); // Deduped with page
 
   if (!category) {
-    return {
-      title: "Kategori Bulunamadı",
-    };
+    return { title: "Kategori Bulunamadı" };
   }
 
   return {
@@ -35,9 +36,7 @@ export async function generateMetadata({
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const category = await db.category.findUnique({
-    where: { slug },
-  });
+  const category = await getCategory(slug); // React.cache — deduped with generateMetadata
 
   if (!category) {
     notFound();
@@ -57,9 +56,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         },
       },
     },
-    orderBy: {
-      publishedAt: "desc",
-    },
+    orderBy: { publishedAt: "desc" },
     take: 24,
   });
 
@@ -85,15 +82,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             </div>
           ) : (
             <div className="text-center py-12">
-                <p className="text-ai-text-secondary">
+              <p className="text-ai-text-secondary">
                 Bu kategoride henüz haber yok.
               </p>
             </div>
           )}
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }

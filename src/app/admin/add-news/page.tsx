@@ -465,7 +465,7 @@ export default function AddNewsPage() {
                                                 asChild
                                                 title="Haberi görüntüle"
                                             >
-                                                <a href={`/haberler/${article.slug}`} target="_blank" rel="noopener noreferrer" title="Haberi görüntüle">
+                                                <a href={`/news/${article.slug}`} target="_blank" rel="noopener noreferrer" title="Haberi görüntüle">
                                                     <ExternalLink className="w-4 h-4" />
                                                     <span className="sr-only">Haberi görüntüle</span>
                                                 </a>
@@ -533,7 +533,7 @@ export default function AddNewsPage() {
                                             <p className="text-sm mt-1">{createdArticle.title}</p>
                                         </div>
                                         <Button asChild variant="outline" className="border-green-500 text-green-700">
-                                            <a href={`/haberler/${createdArticle.slug}`} target="_blank" rel="noopener noreferrer" title="Haberi görüntüle">
+                                            <a href={`/news/${createdArticle.slug}`} target="_blank" rel="noopener noreferrer" title="Haberi görüntüle">
                                                 <Newspaper className="w-4 h-4 mr-2" />
                                                 Haberi Görüntüle
                                             </a>

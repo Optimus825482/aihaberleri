@@ -1,16 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { BidvertiserNative } from "@/components/ads/BidvertiserAd";
-
-interface TrendingArticle {
-  id: string;
-  title: string;
-  slug: string;
-  views: number;
-  trendScore?: number | null;
-}
+import { useTrendingArticles } from "@/hooks/use-trending";
 
 interface TrendingSidebarProps {
   locale?: "tr" | "en";
@@ -54,37 +47,12 @@ const texts = {
 };
 
 export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
-  const [articles, setArticles] = useState<TrendingArticle[]>([]);
-  const [loading, setLoading] = useState(true);
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("week");
   const t = texts[locale];
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      setLoading(true);
-      try {
-        const periodMap: Record<TimePeriod, string> = {
-          today: "today",
-          week: "week",
-          month: "month",
-          all: "all",
-        };
-        const res = await fetch(
-          `/api/most-read?period=${periodMap[timePeriod]}&limit=5`,
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setArticles(data.articles || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch trending articles:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArticles();
-  }, [timePeriod]);
+  // SWR: auto-dedup, caching, background revalidation, keepPreviousData
+  const { data, isLoading: loading } = useTrendingArticles(timePeriod);
+  const articles = data?.articles ?? [];
 
   const getArticleLink = (slug: string) => {
     return locale === "en" ? `/en/news/${slug}` : `/news/${slug}`;

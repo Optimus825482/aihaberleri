@@ -42,6 +42,16 @@ export function useAgentStats(refreshInterval = 30000) {
 }
 
 /**
+ * System Stats Hook (RAM, Disk) with SWR caching
+ */
+export function useSystemStats(refreshInterval = 30000) {
+  return useSWR("/api/admin/system-stats", fetcher, {
+    ...defaultConfig,
+    refreshInterval,
+  });
+}
+
+/**
  * Analytics Data Hook with SWR caching
  */
 export function useAnalyticsData(refreshInterval = 60000) {

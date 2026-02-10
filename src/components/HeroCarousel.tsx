@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -102,6 +102,9 @@ function HeroCarouselContent({
   const [touchEnd, setTouchEnd] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
 
+  // Ref for auto-resume timeout cleanup
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+
   const labels = {
     tr: {
       readMore: "Haberi Oku",
@@ -135,25 +138,35 @@ function HeroCarouselContent({
     return () => clearInterval(interval);
   }, [isAutoPlaying, articles.length, autoPlayInterval]);
 
+  // Cleanup resume timer on unmount
+  useEffect(() => {
+    return () => {
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    };
+  }, []);
+
+  const pauseAutoPlay = () => {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    setIsAutoPlaying(false);
+    resumeTimerRef.current = setTimeout(() => setIsAutoPlaying(true), 5000);
+  };
+
   const goToSlide = (index: number) => {
     setDirection(index > currentIndex ? "right" : "left");
     setCurrentIndex(index);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 5000);
+    pauseAutoPlay();
   };
 
   const goToPrevious = () => {
     setDirection("left");
     setCurrentIndex((prev) => (prev - 1 + articles.length) % articles.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 5000);
+    pauseAutoPlay();
   };
 
   const goToNext = () => {
     setDirection("right");
     setCurrentIndex((prev) => (prev + 1) % articles.length);
-    setIsAutoPlaying(false);
-    setTimeout(() => setIsAutoPlaying(true), 5000);
+    pauseAutoPlay();
   };
 
   // Touch event handlers for mobile swipe support

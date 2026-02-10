@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,33 +33,35 @@ interface ArticlePageProps {
   }>;
 }
 
+// React.cache() — per-request dedup: generateMetadata + page share same DB query
+const getArticle = cache(async (slug: string) => {
+  return db.article.findUnique({
+    where: { slug },
+    include: { category: true },
+  });
+});
+
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = await db.article.findUnique({
-    where: { slug },
-    include: {
-      category: true,
-    },
-  });
+  const article = await getArticle(slug); // Uses React.cache — deduped with page
 
   if (!article) {
-    return {
-      title: "Haber Bulunamadı",
-    };
+    return { title: "Haber Bulunamadı" };
   }
 
-  const baseMetadata = generateArticleMetadata(article);
+  // Parallel: metadata generation + EN translation lookup
+  const [baseMetadata, enTranslation] = await Promise.all([
+    Promise.resolve(generateArticleMetadata(article)),
+    db.$queryRaw<{ slug: string }[]>`
+      SELECT slug FROM "ArticleTranslation" 
+      WHERE "articleId" = ${article.id} AND locale = 'en'
+      LIMIT 1
+    `,
+  ]);
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-
-  // Find English translation for hreflang using raw query
-  const enTranslation = await db.$queryRaw<{ slug: string }[]>`
-    SELECT slug FROM "ArticleTranslation" 
-    WHERE "articleId" = ${article.id} AND locale = 'en'
-    LIMIT 1
-  `;
-
   const hasEnglish = enTranslation.length > 0;
 
   return {
@@ -79,30 +82,21 @@ export async function generateMetadata({
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = await db.article.findUnique({
-    where: { slug },
-    include: {
-      category: true,
-    },
-  });
+  const article = await getArticle(slug); // React.cache — deduped with generateMetadata
 
   if (!article || article.status !== "PUBLISHED") {
     notFound();
   }
 
-  // View tracking is now handled client-side with ViewTracker component
-  // This prevents duplicate counts on page refresh/bot crawls
-
-  // Get related articles (now 6 for sidebar and bottom)
+  // Parallel: relatedArticles doesn't need to wait for article render
+  // article is already resolved, so we can fire relatedArticles immediately
   const relatedArticles = await db.article.findMany({
     where: {
       categoryId: article.categoryId,
       id: { not: article.id },
       status: "PUBLISHED",
     },
-    include: {
-      category: true,
-    },
+    include: { category: true },
     take: 6,
     orderBy: { publishedAt: "desc" },
   });

@@ -61,16 +61,15 @@ export function NewsletterCTA({ locale = "tr" }: NewsletterCTAProps) {
   const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
   const [pushSubscribed, setPushSubscribed] = useState(false);
-  const [pushSupported, setPushSupported] = useState(false);
+
+  // Derived during render — no useEffect needed
+  const pushSupported =
+    typeof window !== "undefined" &&
+    "Notification" in window &&
+    "serviceWorker" in navigator &&
+    "PushManager" in window;
 
   useEffect(() => {
-    // Check if push notifications are supported
-    setPushSupported(
-      "Notification" in window &&
-        "serviceWorker" in navigator &&
-        "PushManager" in window,
-    );
-
     // Check if already subscribed to push
     checkPushSubscription();
   }, []);

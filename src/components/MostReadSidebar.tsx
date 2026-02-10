@@ -49,9 +49,7 @@ export async function MostReadSidebar() {
           <TrendingUp className="w-6 h-6 text-primary" />
         </div>
         <div className="flex-1">
-          <h3 className="text-xl font-bold tracking-tight">
-            En Çok Okunanlar
-          </h3>
+          <h3 className="text-xl font-bold tracking-tight">En Çok Okunanlar</h3>
           <p className="text-xs text-muted-foreground">Bu hafta en popüler</p>
         </div>
       </div>
@@ -59,10 +57,7 @@ export async function MostReadSidebar() {
       {/* Article List */}
       <div className="space-y-4">
         {mostReadArticles.map((article, index) => (
-          <div
-            key={article.id}
-            className="group flex gap-3 relative"
-          >
+          <div key={article.id} className="group flex gap-3 relative">
             {/* Rank Number */}
             <span
               className={`absolute -left-1 -top-1 w-6 h-6 flex items-center justify-center font-bold rounded-full shadow-md z-10 text-sm ${
@@ -76,7 +71,7 @@ export async function MostReadSidebar() {
 
             {/* Thumbnail */}
             <Link
-              href={`/haber/${article.slug}`}
+              href={`/news/${article.slug}`}
               className="block flex-shrink-0 overflow-hidden rounded-lg w-20 h-16 relative"
             >
               {article.imageUrl ? (
@@ -102,7 +97,7 @@ export async function MostReadSidebar() {
             {/* Content */}
             <div className="flex flex-col gap-1 min-w-0">
               <Link
-                href={`/haber/${article.slug}`}
+                href={`/news/${article.slug}`}
                 className="group-hover:text-primary transition-colors"
               >
                 <h4

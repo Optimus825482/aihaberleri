@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { calculateReadingTime, formatRelativeTime } from "@/lib/utils";
@@ -47,7 +48,7 @@ const texts = {
   },
 };
 
-export function ArticleCard({
+export const ArticleCard = memo(function ArticleCard({
   article,
   locale = "tr",
   priority = false,
@@ -231,4 +232,6 @@ export function ArticleCard({
       </div>
     </article>
   );
-}
+});
+
+ArticleCard.displayName = "ArticleCard";

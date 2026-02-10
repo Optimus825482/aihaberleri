@@ -51,9 +51,16 @@ function checkRateLimit(ip: string): boolean {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { ipAddress, userAgent, currentPage } = body;
+    const { userAgent, currentPage } = body;
 
-    if (!ipAddress) {
+    // Get IP from request headers (server-side) — no need for client-side external API
+    const ipAddress =
+      body.ipAddress || // backward compat
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+
+    if (!ipAddress || ipAddress === "unknown") {
       return NextResponse.json(
         { success: false, error: "IP address required" },
         { status: 400 },

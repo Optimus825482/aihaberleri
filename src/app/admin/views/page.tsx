@@ -598,7 +598,7 @@ export default function ViewsPage() {
                       </div>
                     </div>
                     <Link
-                      href={`/haberler/${article.slug}`}
+                      href={`/news/${article.slug}`}
                       target="_blank"
                       className="text-gray-400 hover:text-white"
                     >
@@ -651,7 +651,7 @@ export default function ViewsPage() {
                     </div>
                   </div>
                   <Link
-                    href={`/haberler/${article.slug}`}
+                    href={`/news/${article.slug}`}
                     target="_blank"
                     className="text-gray-400 hover:text-white"
                   >
@@ -836,7 +836,7 @@ export default function ViewsPage() {
                   >
                     <td className="py-2 pr-4">
                       <Link
-                        href={`/haberler/${view.articleSlug}`}
+                        href={`/news/${view.articleSlug}`}
                         target="_blank"
                         className="line-clamp-1 max-w-xs text-white hover:text-blue-400"
                       >

@@ -3,6 +3,7 @@
  * Route: /en/news/[slug]
  */
 
+import { cache } from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -25,14 +26,13 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-async function getArticle(slug: string) {
+// React.cache() — per-request dedup: generateMetadata + page share same DB query
+const getArticle = cache(async (slug: string) => {
   const translation = await db.articleTranslation.findFirst({
     where: {
       slug,
       locale: "en",
-      article: {
-        status: "PUBLISHED",
-      },
+      article: { status: "PUBLISHED" },
     },
     include: {
       article: {
@@ -44,12 +44,7 @@ async function getArticle(slug: string) {
     },
   });
 
-  if (!translation) {
-    return null;
-  }
-
-  // View tracking is now handled client-side with ViewTracker component
-  // This prevents duplicate counts on page refresh/bot crawls
+  if (!translation) return null;
 
   return {
     id: translation.article.id,
@@ -67,10 +62,9 @@ async function getArticle(slug: string) {
     views: translation.article.views,
     category: translation.article.category,
     author: translation.article.author,
-    // Original Turkish slug for hreflang
     originalSlug: translation.article.slug,
   };
-}
+});
 
 async function getRelatedArticles(categoryId: string, excludeId: string) {
   const translations = await db.articleTranslation.findMany({
