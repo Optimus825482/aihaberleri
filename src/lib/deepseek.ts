@@ -34,6 +34,20 @@ if (!DEEPSEEK_API_KEY) {
   console.warn("⚠️  DEEPSEEK_API_KEY is not set");
 }
 
+/**
+ * Sanitize text for safe JSON serialization
+ * Removes broken hex/unicode escapes and control characters that break API calls
+ */
+function sanitizeForJson(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/\\x[0-9a-fA-F]{0,2}/g, "") // Remove hex escapes like \x1b
+    .replace(/\\u[0-9a-fA-F]{0,4}/g, "") // Remove broken unicode escapes
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // Remove control chars
+    .replace(/\\/g, "\\\\") // Escape remaining backslashes
+    .trim();
+}
+
 export interface DeepSeekMessage {
   role: "system" | "user" | "assistant";
   content: string;
@@ -122,9 +136,7 @@ function recordFailure(): void {
   deepSeekCircuitBreaker.failureCount++;
   deepSeekCircuitBreaker.lastFailureTime = Date.now();
 
-  if (
-    deepSeekCircuitBreaker.failureCount >= circuitBreakerConfig.threshold
-  ) {
+  if (deepSeekCircuitBreaker.failureCount >= circuitBreakerConfig.threshold) {
     deepSeekCircuitBreaker.state = "OPEN";
     deepSeekCircuitBreaker.nextAttemptTime =
       Date.now() + circuitBreakerConfig.timeout;
@@ -1179,8 +1191,8 @@ export async function batchScoreArticles(
     .map(
       (article, index) => `
 --- MAKALE ${index + 1} ---
-Başlık: ${article.title}
-Açıklama: ${article.description}
+Başlık: ${sanitizeForJson(article.title)}
+Açıklama: ${sanitizeForJson(article.description)}
 Kaynak: ${article.source || "Bilinmiyor"}
 Yayın Tarihi: ${article.publishedDate || "Bilinmiyor"}
 Trend Skoru: ${article.trendScore || 0}

@@ -207,21 +207,23 @@ export class RelevanceFilterAgent extends BaseAgent<
 
   /**
    * Bypass scoring - use trend scores directly
-   * All articles with trendScore >= 200 get high relevance scores
+   * When DeepSeek fails, articles should PASS (that's the point of bypass)
+   * Score is set to RELEVANCE_THRESHOLD + buffer so they pass the filter
    */
   private bypassScoring(
     articles: CollectedArticle[],
     reason: string,
   ): ScoredArticle[] {
     return articles.map((article) => {
-      // Convert trend score (0-300) to relevance score (0-100)
-      // trendScore 200+ = relevanceScore 70+
-      const trendScore = article.trendScore || 100;
-      const relevanceScore = Math.min(Math.max(trendScore / 3, 50), 100);
+      // BYPASS = let articles through. Give them threshold + small bonus from trendScore
+      const trendScore = article.trendScore || 0;
+      // Base: threshold (65) + bonus from trend (0-20)
+      const bonus = Math.min(trendScore / 15, 20);
+      const relevanceScore = RELEVANCE_THRESHOLD + bonus;
 
       return {
         ...article,
-        relevanceScore: Math.round(relevanceScore),
+        relevanceScore: Math.round(Math.min(relevanceScore, 100)),
         reasoning: `BYPASS MODE: ${reason}. Trend score: ${trendScore}`,
         suggestedTags: [],
       };
