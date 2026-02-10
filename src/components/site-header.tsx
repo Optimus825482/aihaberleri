@@ -19,10 +19,10 @@ const translations = {
     langToggleTitle: "Switch to English",
     mainNav: [
       { title: "Ana Sayfa", href: "/" },
-      { title: "Son Haberler", href: "/haberler" },
-      { title: "Kategoriler", href: "/kategoriler" },
-      { title: "Hakkımızda", href: "/hakkimizda" },
-      { title: "İletişim", href: "/iletisim" },
+      { title: "Son Haberler", href: "/news" },
+      { title: "Kategoriler", href: "/categories" },
+      { title: "Hakkımızda", href: "/about" },
+      { title: "İletişim", href: "/contact" },
     ],
   },
   en: {
@@ -53,9 +53,15 @@ export function SiteHeader({ locale = "tr" }: SiteHeaderProps) {
         </div>
         <div className="flex items-center gap-3 sm:gap-4">
           {/* Search Form - Desktop */}
-          <form action={locale === "en" ? "/en/search" : "/search"} method="get" className="relative hidden sm:block">
+          <form
+            action={locale === "en" ? "/en/search" : "/search"}
+            method="get"
+            className="relative hidden sm:block"
+          >
             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-ai-text-secondary pointer-events-none">
-              <span className="material-symbols-outlined text-[20px]">search</span>
+              <span className="material-symbols-outlined text-[20px]">
+                search
+              </span>
             </span>
             <input
               name="q"

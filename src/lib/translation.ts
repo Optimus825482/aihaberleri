@@ -4,8 +4,8 @@
  */
 
 import { db } from "@/lib/db";
-import { postToBluesky } from "@/lib/social/bluesky";
-import { postToMastodon } from "@/lib/social/mastodon";
+import { postToBluesky, postToBlueskyEN } from "@/lib/social/bluesky";
+import { postToMastodon, postToMastodonEN } from "@/lib/social/mastodon";
 import { postToFacebookEN } from "@/lib/social/facebook";
 import {
   recordShareSuccess,
@@ -311,10 +311,10 @@ export async function translateAndSaveArticle(
       const enArticleUrl = `https://aihaberleri.org/en/news/${translation.slug}`;
 
       // Bluesky - English
-      console.log(`📢 [EN-SHARE] Calling postToBluesky...`);
-      postToBluesky({
+      console.log(`📢 [EN-SHARE] Calling postToBlueskyEN...`);
+      postToBlueskyEN({
         title: translation.title,
-        slug: `en/news/${translation.slug}`, // English URL path
+        slug: translation.slug, // Just the slug, postToBlueskyEN handles /en/news/ prefix
         excerpt: translation.excerpt,
         imageUrl: article.imageUrl,
         categoryName: "AI News",
@@ -340,10 +340,10 @@ export async function translateAndSaveArticle(
         });
 
       // Mastodon - English
-      console.log(`📢 [EN-SHARE] Calling postToMastodon...`);
-      postToMastodon({
+      console.log(`📢 [EN-SHARE] Calling postToMastodonEN...`);
+      postToMastodonEN({
         title: translation.title,
-        slug: `en/news/${translation.slug}`,
+        slug: translation.slug, // Just the slug, postToMastodonEN handles /en/news/ prefix
         excerpt: translation.excerpt,
         imageUrl: article.imageUrl,
         categoryName: "AI News",
