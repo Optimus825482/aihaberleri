@@ -291,28 +291,32 @@ export async function waitForPipelineCompletion(
   // This prevents false "completed" detection when queues haven't been processed yet
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
+  // Capture baseline failed count — old pipeline failures should not affect this run
+  const baselineProgress = await monitorPipelineProgress(agentLogId);
+  const baselineFailedCount = baselineProgress.failed;
+
   let consecutiveEmptyChecks = 0;
-  const REQUIRED_EMPTY_CHECKS = 3; // FAZ 3: Reduced from 5 to 3 for faster completion detection
-  let hasSeenArticlesInQueue = false; // Track if we've ever seen articles in queue
+  const REQUIRED_EMPTY_CHECKS = 3;
+  let hasSeenArticlesInQueue = false;
   let checkCount = 0;
 
   while (Date.now() - startTime < timeoutMs) {
     checkCount++;
     const progress = await monitorPipelineProgress(agentLogId);
+    const newFailures = progress.failed - baselineFailedCount;
 
     // Track if we've seen any articles in queue
-    if (progress.articlesInQueue > 0 || progress.completed > 0) {
+    if (
+      progress.articlesInQueue > 0 ||
+      progress.completed > baselineProgress.completed
+    ) {
       hasSeenArticlesInQueue = true;
     }
 
     // Log progress only when there's activity (avoid spam)
-    if (
-      progress.articlesInQueue > 0 ||
-      progress.failed > 0 ||
-      checkCount <= 2
-    ) {
+    if (progress.articlesInQueue > 0 || newFailures > 0 || checkCount <= 2) {
       logger.debug(
-        `Check #${checkCount}: ${progress.stage} — ${progress.articlesInQueue} queued, ${progress.completed} done, ${progress.failed} failed`,
+        `Check #${checkCount}: ${progress.stage} — ${progress.articlesInQueue} queued, ${progress.completed} done, ${newFailures} new failures`,
       );
     }
 
@@ -393,12 +397,9 @@ export async function waitForPipelineCompletion(
       );
     }
 
-    // Check for failures
-    if (
-      progress.failed > 0 &&
-      !errors.some((e) => e.includes("articles failed"))
-    ) {
-      errors.push(`${progress.failed} articles failed in pipeline`);
+    // Check for failures (only new ones from this pipeline run)
+    if (newFailures > 0 && !errors.some((e) => e.includes("articles failed"))) {
+      errors.push(`${newFailures} articles failed in pipeline`);
     }
 
     // Wait before next check

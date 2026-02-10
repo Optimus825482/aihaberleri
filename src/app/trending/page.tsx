@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import Link from "next/link";
 import Image from "next/image";
-import { formatDate } from "@/lib/utils";
 import { TrendInfoBox } from "@/components/TrendInfoBox";
 import type { Metadata } from "next";
 
@@ -192,7 +191,15 @@ export default async function TrendingPage() {
                             <span className="material-symbols-outlined text-[11px] md:text-[12px]">
                               schedule
                             </span>
-                            {formatDate(article.publishedAt)}
+                            {new Date(article.publishedAt).toLocaleString(
+                              "tr-TR",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
                           </span>
                         )}
                         <span className="flex items-center gap-1">
