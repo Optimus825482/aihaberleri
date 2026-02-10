@@ -93,7 +93,7 @@ function buildNativeHtml(
   var s = d.createElement('script');
   s.type = 'text/javascript';
   s.async = true;
-  var p = 'https:' == document.location.protocol ? 'https' : 'http';
+  var p = 'https';
   s.src = p + "://cdn.hyperpromote.com/bidvertiser/tags/active/bdvws.js?" + qs;
   d.getElementById(params.bvwidgetid).appendChild(s);
 })(document);
