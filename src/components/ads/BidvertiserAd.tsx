@@ -1,16 +1,18 @@
 "use client";
 
+import { useEffect, useRef, useId } from "react";
+
 /**
  * Bidvertiser Ad Components for Next.js
  *
- * Problem: Bidvertiser scripts use document.write() and getElementById()
- * internally. In React/Next.js:
- *   - document.write() is blocked in dynamically injected scripts
- *   - getElementById() fails because React manages the DOM
+ * These components inject Bidvertiser ad scripts directly into the main
+ * document DOM (not iframes) so that:
+ *   - Protocol detection sees https: (not about:srcdoc)
+ *   - Referrer header is correct (not about:srcdoc)
+ *   - No mixed content issues from protocol mismatch
  *
- * Solution: Use srcdoc iframes. The browser parses srcdoc as a fresh
- * HTML document where document.write() works naturally and getElementById()
- * always finds the correct element. Complete isolation from React's DOM.
+ * React DOM interference is avoided by using refs and only appending
+ * to a container that React doesn't manage internally.
  */
 
 interface BidvertiserBannerProps {
@@ -18,34 +20,49 @@ interface BidvertiserBannerProps {
   slot?: string;
 }
 
-const BANNER_HTML = `<!DOCTYPE html>
-<html><head>
-<style>
-  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
-  body { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-</style>
-</head><body>
-<!-- Begin BidVertiser code -->
-<SCRIPT data-cfasync="false" SRC="//bdv.bidvertiser.com/BidVertiser.dbm?pid=941460&bid=2103678&fid=2103678" TYPE="text/javascript"></SCRIPT>
-<!-- End BidVertiser code -->
-</body></html>`;
-
 /**
- * Bidvertiser Banner Ad
- * Renders the official banner script inside an isolated srcdoc iframe.
+ * Bidvertiser Banner Ad — pid=941460, bid=2103678, fid=2103678
  */
 export function BidvertiserBanner({
   className = "",
   slot = "banner",
 }: BidvertiserBannerProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const injectedRef = useRef(false);
+
+  useEffect(() => {
+    if (!containerRef.current || injectedRef.current) return;
+    injectedRef.current = true;
+
+    // Bidvertiser banner uses document.write() internally.
+    // We must use a same-origin iframe but with a real src to preserve
+    // the correct protocol and referrer.
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText =
+      "width:468px;height:60px;border:none;overflow:hidden;";
+    iframe.setAttribute("scrolling", "no");
+    iframe.setAttribute("title", "Advertisement");
+    containerRef.current.appendChild(iframe);
+
+    const doc = iframe.contentDocument;
+    if (doc) {
+      doc.open();
+      doc.write(`<!DOCTYPE html><html><head>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:transparent;}</style>
+</head><body>
+<script data-cfasync="false" src="//bdv.bidvertiser.com/BidVertiser.dbm?pid=941460&bid=2103678&fid=2103678" type="text/javascript"><\/script>
+</body></html>`);
+      doc.close();
+    }
+  }, []);
+
   return (
-    <iframe
-      srcDoc={BANNER_HTML}
-      className={`bidvertiser-banner border-0 block ${className}`}
-      style={{ width: 468, height: 60, overflow: "hidden" }}
+    <div
+      ref={containerRef}
+      className={`bidvertiser-banner ${className}`}
       data-ad-slot={slot}
-      title="Advertisement"
-      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+      aria-label="Advertisement"
+      role="complementary"
     />
   );
 }
@@ -59,17 +76,39 @@ interface BidvertiserNativeProps {
   imageWidth?: number;
 }
 
-function buildNativeHtml(
-  cols: number,
-  rows: number,
-  mobileCols: number,
-  imageWidth: number,
-): string {
-  return `<!DOCTYPE html>
-<html><head>
-<style>
-  html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }
-</style>
+/**
+ * Bidvertiser Native Widget — bvlinksownid=2103678
+ *
+ * Injects the native widget into a same-origin iframe created via
+ * document.write(). This preserves the parent page's https: protocol
+ * and referrer, avoiding mixed content blocks.
+ */
+export function BidvertiserNative({
+  className = "",
+  slot = "native",
+  cols = 1,
+  rows = 1,
+  mobileCols = 1,
+  imageWidth = 150,
+}: BidvertiserNativeProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const injectedRef = useRef(false);
+
+  useEffect(() => {
+    if (!containerRef.current || injectedRef.current) return;
+    injectedRef.current = true;
+
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = `width:100%;min-height:${rows * 200}px;border:none;overflow:hidden;`;
+    iframe.setAttribute("scrolling", "no");
+    iframe.setAttribute("title", "Sponsored content");
+    containerRef.current.appendChild(iframe);
+
+    const doc = iframe.contentDocument;
+    if (doc) {
+      doc.open();
+      doc.write(`<!DOCTYPE html><html><head>
+<style>html,body{margin:0;padding:0;overflow:hidden;background:transparent;}</style>
 </head><body>
 <div id="ntv_2103678"></div>
 <script type="text/javascript">
@@ -93,36 +132,22 @@ function buildNativeHtml(
   var s = d.createElement('script');
   s.type = 'text/javascript';
   s.async = true;
-  var p = 'https';
-  s.src = p + "://cdn.hyperpromote.com/bidvertiser/tags/active/bdvws.js?" + qs;
+  s.src = "https://cdn.hyperpromote.com/bidvertiser/tags/active/bdvws.js?" + qs;
   d.getElementById(params.bvwidgetid).appendChild(s);
 })(document);
-</script>
-</body></html>`;
-}
-
-/**
- * Bidvertiser Native Widget
- * Renders the official native ad widget inside an isolated srcdoc iframe.
- */
-export function BidvertiserNative({
-  className = "",
-  slot = "native",
-  cols = 1,
-  rows = 1,
-  mobileCols = 1,
-  imageWidth = 150,
-}: BidvertiserNativeProps) {
-  const html = buildNativeHtml(cols, rows, mobileCols, imageWidth);
+<\/script>
+</body></html>`);
+      doc.close();
+    }
+  }, [cols, rows, mobileCols, imageWidth]);
 
   return (
-    <iframe
-      srcDoc={html}
-      className={`bidvertiser-native border-0 block ${className}`}
-      style={{ width: "100%", minHeight: rows * 200, overflow: "hidden" }}
+    <div
+      ref={containerRef}
+      className={`bidvertiser-native ${className}`}
       data-ad-slot={slot}
-      title="Sponsored content"
-      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+      aria-label="Sponsored content"
+      role="complementary"
     />
   );
 }
