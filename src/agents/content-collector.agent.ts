@@ -19,7 +19,7 @@ import {
   filterRecentArticles,
   type RSSItem,
 } from "@/lib/rss";
-import { rankArticlesByTrendHybrid } from "@/lib/hybrid-search";
+import { rankArticlesByTrendScore } from "@/lib/trend-scoring";
 
 export interface CollectorInput {
   categoryFilter?: string;
@@ -426,19 +426,20 @@ export class ContentCollectorAgent extends BaseAgent<
           .slice(0, MAX_ARTICLES_TO_ANALYZE);
       }
 
-      // Step 6: Rank by trend analysis (Brave API)
+      // Step 6: Rank by trend analysis (multi-signal scoring)
       this.logger.info(
-        `Ranking ${itemsToAnalyze.length} articles by trend (Brave API)...`,
+        `Ranking ${itemsToAnalyze.length} articles by trend (multi-signal)...`,
       );
 
-      const trendRankings = await rankArticlesByTrendHybrid(
+      const trendRankings = rankArticlesByTrendScore(
         itemsToAnalyze.map((item) => ({
           title: item.title,
           description: item.description,
+          publishedAt: item.pubDate ? new Date(item.pubDate) : undefined,
+          source: item.source,
+          url: item.link,
         })),
       );
-
-      apiCalls++; // Brave API call
 
       // Step 7: Sort by trend score and take top articles
       const topArticles = trendRankings

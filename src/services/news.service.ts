@@ -8,10 +8,16 @@ import {
   filterRecentArticles,
   type RSSItem,
 } from "@/lib/rss";
-import { rankArticlesByTrendHybrid } from "@/lib/hybrid-search";
+import {
+  rankArticlesByTrendScore,
+  addSearXNGVerificationBonus,
+} from "@/lib/trend-scoring";
 import { distance } from "fastest-levenshtein";
+import { createModuleLogger } from "@/lib/agent-log-stream";
 import { db } from "@/lib/db";
 import { normalizeUrl } from "@/lib/url-utils";
+
+const logger = createModuleLogger("rss");
 
 export interface NewsArticle {
   title: string;
@@ -717,7 +723,7 @@ export async function fetchAINews(
   categoryFilter?: string,
 ): Promise<NewsArticle[]> {
   console.log(
-    `📰 AI haberleri toplanıyor (RSS + Trend Analizi)${categoryFilter ? ` - Kategori: ${categoryFilter}` : ""}...`,
+    `📰 AI haberleri toplanıyor${categoryFilter ? ` (${categoryFilter})` : ""}...`,
   );
 
   try {
@@ -729,14 +735,9 @@ export async function fetchAINews(
       return [];
     }
 
-    console.log(`📥 RSS'den ${rssItems.length} haber alındı`);
+    console.log(`📥 RSS: ${rssItems.length} haber`);
 
-    // ⚡ STEP 1.5: SIMPLE URL FILTERING (son 12 saat)
-    // Sadece URL bazlı duplicate check - başka filtreleme YOK!
-    console.log(
-      `\n🔍 URL Filtering: Son 12 saatte yayınlanan URL'ler eleniyor...`,
-    );
-
+    // URL Filtering (son 12 saat)
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
     const recentUrls = await db.article.findMany({
       where: {
@@ -751,10 +752,6 @@ export async function fetchAINews(
         .map((a) => normalizeUrl(a.sourceUrl)),
     );
 
-    console.log(
-      `   Database'de ${recentUrlSet.size} unique URL bulundu (son 12 saat)`,
-    );
-
     // Filter RSS items - ONLY NEW URLs
     const newRssItems = rssItems.filter((item) => {
       const normalized = normalizeUrl(item.link);
@@ -762,24 +759,21 @@ export async function fetchAINews(
     });
 
     console.log(
-      `   ✅ ${newRssItems.length}/${rssItems.length} haber YENİ (${((newRssItems.length / rssItems.length) * 100).toFixed(1)}% yeni)`,
+      `🔍 URL filter: ${recentUrlSet.size} known, ${newRssItems.length}/${rssItems.length} new`,
     );
 
     if (newRssItems.length === 0) {
-      console.log(
-        "⚠️  Son 12 saatte tüm haberler zaten yayınlanmış! Boş array döndürülüyor.",
-      );
+      console.log("⚠️ Tüm haberler zaten yayınlanmış");
       return [];
     }
 
-    // Step 1.6: Filter by category keywords if specified
+    // Filter by category keywords if specified
     let filteredItems = newRssItems;
     if (categoryFilter) {
       const categoryKeywords = getCategoryKeywords(categoryFilter);
       console.log(
-        `🔍 "${categoryFilter}" kategorisi için filtreleme yapılıyor...`,
+        `🔍 Kategori filtresi: "${categoryFilter}" (${categoryKeywords.length} keyword)`,
       );
-      console.log(`📝 Anahtar kelimeler: ${categoryKeywords.join(", ")}`);
 
       filteredItems = newRssItems.filter((item) => {
         const text = `${item.title} ${item.description}`.toLowerCase();
@@ -787,90 +781,68 @@ export async function fetchAINews(
       });
 
       console.log(
-        `✅ ${filteredItems.length}/${newRssItems.length} haber kategoriye uygun`,
+        `✅ Kategori: ${filteredItems.length}/${newRssItems.length} uygun`,
       );
 
       if (filteredItems.length === 0) {
-        console.log(
-          "⚠️  Kategoriye uygun haber bulunamadı, tüm haberler kullanılacak",
-        );
+        console.log("⚠️ Kategoriye uygun haber yok, tümü kullanılacak");
         filteredItems = newRssItems;
       }
     }
 
-    // Step 2: Filter recent articles (last 48 hours)
+    // Filter recent articles (last 48 hours)
     const recentItems = filterRecentArticles(filteredItems, 48);
-    console.log(`📅 Son 48 saatte ${recentItems.length} haber`);
-
-    // ✅ AI KEYWORD FILTERING KALDIRILDI - Gereksiz filtreleme!
-    // Tüm haberler trend skorlamasına gidecek
+    console.log(`📅 Son 48 saat: ${recentItems.length} haber`);
 
     // SMART SAMPLING: Prioritize recent + diverse sources
     let itemsToAnalyze = recentItems.length > 0 ? recentItems : filteredItems;
 
-    // 🆕 STEP 2.6: Filter Reddit discussion posts (not news articles)
-    // Reddit tags: [D]=Discussion, [R]=Research, [P]=Project, [N]=News
+    // Filter Reddit discussion posts
     const REDDIT_DISCUSSION_PATTERNS =
       /^\s*\[(D|R|P|Discussion|Research|Project)\]/i;
-    const beforeRedditFilter = itemsToAnalyze.length;
-    itemsToAnalyze = itemsToAnalyze.filter((item) => {
-      if (REDDIT_DISCUSSION_PATTERNS.test(item.title)) {
-        console.log(
-          `   ⏭️  SKIP (Reddit discussion): ${item.title.substring(0, 50)}...`,
-        );
-        return false;
-      }
-      return true;
-    });
-    if (beforeRedditFilter !== itemsToAnalyze.length) {
-      console.log(
-        `🔍 Reddit filtre: ${beforeRedditFilter - itemsToAnalyze.length} discussion post elendi`,
-      );
-    }
+    itemsToAnalyze = itemsToAnalyze.filter(
+      (item) => !REDDIT_DISCUSSION_PATTERNS.test(item.title),
+    );
 
-    // If too many articles, sample intelligently
+    // Smart sampling if too many articles
     const MAX_ARTICLES_TO_ANALYZE = 100;
     if (itemsToAnalyze.length > MAX_ARTICLES_TO_ANALYZE) {
-      console.log(
-        `⚡ Smart Sampling: ${itemsToAnalyze.length} haber → ${MAX_ARTICLES_TO_ANALYZE} habere düşürülüyor`,
-      );
-
-      // Sort by date (most recent first) and take top 100
       itemsToAnalyze = itemsToAnalyze
         .sort(
           (a, b) =>
             new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime(),
         )
         .slice(0, MAX_ARTICLES_TO_ANALYZE);
-
-      console.log(`✅ En güncel ${MAX_ARTICLES_TO_ANALYZE} haber seçildi`);
     }
 
-    // ❌ REMOVED: Early duplicate filtering (satır ~850-900)
-    // Neden kaldırıldı:
-    // 1. Çok yavaş (topic extraction + database query her haber için)
-    // 2. Gereksiz (duplicate-detector agent zaten var)
-    // 3. URL filtering yukarıda yapıldı (daha hızlı)
-    //
-    // Eski kod:
-    // const articlesWithTopics = await extractTopicsBatch(newsArticlesForCheck, 20);
-    // const uniqueArticles = await filterDuplicatesByTopicAndUrl(articlesWithTopics, 1);
-
     console.log(
-      `\n✅ ${itemsToAnalyze.length} unique haber trend skorlamasına gönderilecek`,
+      `✅ ${itemsToAnalyze.length} haber trend puanlamaya gönderilecek`,
     );
 
-    // Step 3: Analyze trends using SearXNG (NOT Brave API)
+    // Step 3: Multi-signal trend scoring (NO external API dependency)
     console.log(
-      `📊 ${itemsToAnalyze.length} haber için Trend analizi (SearXNG)...`,
+      `📊 ${itemsToAnalyze.length} haber için trend puanlama (multi-signal)...`,
     );
 
-    const trendRankings = await rankArticlesByTrendHybrid(
+    const trendRankings = rankArticlesByTrendScore(
+      itemsToAnalyze.map((item) => ({
+        title: item.title,
+        description: item.description,
+        publishedAt: item.pubDate ? new Date(item.pubDate) : undefined,
+        source: item.source,
+        url: item.link,
+      })),
+    );
+
+    // Optional: Add SearXNG verification bonus for top 10 articles
+    const verifiedRankings = await addSearXNGVerificationBonus(
       itemsToAnalyze.map((item) => ({
         title: item.title,
         description: item.description,
       })),
-    );
+      trendRankings,
+      10,
+    ).catch(() => trendRankings); // Fallback to unverified if SearXNG fails
 
     // Step 4: Sort by trend score and take top articles with EARLY DB CHECK
     // 🎯 OPTIMIZED: Progressive DB Check (09.02.2026 - V2)
@@ -879,7 +851,7 @@ export async function fetchAINews(
 
     const BATCH_SIZE = 2; // Her seferinde 2 makale kontrol et
     const MIN_UNIQUE_NEEDED = 2; // En az 2 unique makale bul
-    const TOTAL_ARTICLES = trendRankings.length;
+    const TOTAL_ARTICLES = verifiedRankings.length;
     const MAX_BATCHES = Math.ceil(TOTAL_ARTICLES / BATCH_SIZE); // TÜM listeyi tara
     // Extended type: RSSItem + trendScore (for sorting & display)
     type RSSItemWithScore = (typeof itemsToAnalyze)[0] & {
@@ -888,25 +860,12 @@ export async function fetchAINews(
     let topArticles: RSSItemWithScore[] = [];
     let batchIndex = 0;
 
-    console.log(
-      `\n🔍 Early DB Check başlıyor (${BATCH_SIZE}'li gruplar, ${TOTAL_ARTICLES} haber taranacak)...`,
-    );
-
     while (topArticles.length < MIN_UNIQUE_NEEDED && batchIndex < MAX_BATCHES) {
       const startIdx = batchIndex * BATCH_SIZE;
       const endIdx = startIdx + BATCH_SIZE;
+      const batchRankings = verifiedRankings.slice(startIdx, endIdx);
 
-      // Bu batch'teki makaleleri al
-      const batchRankings = trendRankings.slice(startIdx, endIdx);
-
-      if (batchRankings.length === 0) {
-        console.log(`⚠️ Batch ${batchIndex + 1}: Daha fazla makale yok`);
-        break;
-      }
-
-      console.log(
-        `\n📋 Batch ${batchIndex + 1}/${MAX_BATCHES} kontrol ediliyor (index ${startIdx}-${endIdx - 1})...`,
-      );
+      if (batchRankings.length === 0) break;
 
       // Her makale için veritabanında var mı kontrol et
       const uniqueArticles: RSSItemWithScore[] = [];
@@ -924,13 +883,8 @@ export async function fetchAINews(
         });
 
         if (existingArticle) {
-          console.log(
-            `  ⏭️ SKIP: "${item.title.substring(0, 50)}..." (DB'de var: ID ${existingArticle.id})`,
-          );
+          // Skip — already in DB
         } else {
-          console.log(
-            `  ✅ NEW: "${item.title.substring(0, 50)}..." (DB'de yok)`,
-          );
           const itemWithScore: RSSItemWithScore = {
             ...item,
             trendScore: ranking.score,
@@ -940,15 +894,7 @@ export async function fetchAINews(
       }
 
       if (uniqueArticles.length > 0) {
-        // Unique makaleleri topArticles'a EKLE (üzerine yazma, biriktir!)
         topArticles.push(...uniqueArticles);
-        console.log(
-          `\n✅ Batch ${batchIndex + 1}'de ${uniqueArticles.length} unique makale bulundu! (Toplam: ${topArticles.length})`,
-        );
-      } else {
-        console.log(
-          `\n⚠️ Batch ${batchIndex + 1}: Tüm makaleler zaten DB'de var, sonraki batch'e geçiliyor...`,
-        );
       }
 
       // Her zaman sonraki batch'e geç (MIN_UNIQUE_NEEDED'a ulaşana kadar)
@@ -957,18 +903,9 @@ export async function fetchAINews(
 
     // Hiç unique makale bulunamadıysa
     if (topArticles.length === 0) {
-      console.log(
-        `\n⚠️ Early DB Check: ${TOTAL_ARTICLES} makalede hiçbiri unique değil!`,
-      );
-      console.log(
-        `💡 Tüm trend haberler zaten veritabanında var. Agent bu sefer yeni içerik üretmeyecek.`,
-      );
-      return []; // Boş array dön
+      console.log(`⚠️ ${TOTAL_ARTICLES} makalede hiçbiri unique değil`);
+      return [];
     }
-
-    console.log(
-      `\n📊 DB Check tamamlandı: ${batchIndex} batch tarandı, ${topArticles.length} unique bulundu`,
-    );
 
     // Sıralama
     topArticles = topArticles.sort(
@@ -976,17 +913,7 @@ export async function fetchAINews(
     );
 
     console.log(
-      `\n✅ ${topArticles.length} UNIQUE trend haber seçildi (Early DB Check + TOP 2 optimization)`,
-    );
-    console.log(
-      "Seçilen Unique Haberler:",
-      topArticles
-        .slice(0, 2)
-        .map(
-          (a, i) =>
-            `\n  ${i + 1}. ${a.title.substring(0, 60)}... (skor: ${Math.round(a.trendScore || 0)})`,
-        )
-        .join(""),
+      `✅ ${topArticles.length} unique trend haber seçildi (${batchIndex} batch tarandı)`,
     );
 
     return convertRSSToNews(topArticles);
