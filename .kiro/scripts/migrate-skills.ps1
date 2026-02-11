@@ -61,7 +61,7 @@ function Parse-Frontmatter {
 # Migrate Skills
 Write-Host "`n📚 Migrating Skills..." -ForegroundColor Yellow
 
-$skillDirs = Get-ChildItem "$sourceRoot/skills" -Directory
+$skillDirs = Get-ChildItem "$sourceRoot/sk2" -Directory
 
 foreach ($skillDir in $skillDirs) {
     $skillFile = Join-Path $skillDir.FullName "SKILL.md"

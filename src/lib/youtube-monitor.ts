@@ -310,22 +310,8 @@ export const DEFAULT_YOUTUBE_CHANNELS = [
     priority: 3,
   },
   // ═══════════════════════════════════════════════════════════════
-  // TIER 7: TURKISH AI — Türkçe AI kanalları
+  // TIER 7: TURKISH AI — Türkçe AI kanalları (disabled — 404 errors)
   // ═══════════════════════════════════════════════════════════════
-  {
-    channelId: "UCrmeEMg_-fX1LQAR3MnGkjQ",
-    name: "Yapay Zeka",
-    language: "tr",
-    category: "ai_turkish",
-    priority: 5,
-  },
-  {
-    channelId: "UCpyb4aGBpTg0wnEVBPHaGSQ",
-    name: "Turkish AI Hub",
-    language: "tr",
-    category: "ai_turkish",
-    priority: 4,
-  },
 ];
 
 // ============================================================================

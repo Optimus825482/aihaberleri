@@ -333,28 +333,8 @@ export const AI_NEWS_RSS_FEEDS = [
   // TIER 5: AI NEWSLETTERS & NEW SOURCES
   // ========================================
   {
-    name: "Ben's Bites",
-    url: "https://bensbites.beehiiv.com/feed",
-    language: "en",
-  },
-  {
     name: "Import AI",
     url: "https://importai.substack.com/feed",
-    language: "en",
-  },
-  {
-    name: "The Batch (deeplearning.ai)",
-    url: "https://www.deeplearning.ai/the-batch/feed/",
-    language: "en",
-  },
-  {
-    name: "TLDR AI",
-    url: "https://tldr.tech/ai/rss",
-    language: "en",
-  },
-  {
-    name: "AI Tool Report",
-    url: "https://aitoolreport.beehiiv.com/feed",
     language: "en",
   },
   {
@@ -362,10 +342,56 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://promptengineering.substack.com/feed",
     language: "en",
   },
+  {
+    name: "Last Week in AI",
+    url: "https://lastweekin.ai/feed",
+    language: "en",
+  },
+  {
+    name: "Gary Marcus",
+    url: "https://garymarcus.substack.com/feed",
+    language: "en",
+  },
+  {
+    name: "Cognitive Revolution",
+    url: "https://cognitiverevolution.substack.com/feed",
+    language: "en",
+  },
+  {
+    name: "AI Tidbits",
+    url: "https://aitidbits.substack.com/feed",
+    language: "en",
+  },
+  {
+    name: "The Neuron Daily",
+    url: "https://www.theneurondaily.com/feed",
+    language: "en",
+  },
+  {
+    name: "Interconnects",
+    url: "https://www.interconnects.ai/feed",
+    language: "en",
+  },
+  {
+    name: "Ahead of AI (Sebastian Raschka)",
+    url: "https://magazine.sebastianraschka.com/feed",
+    language: "en",
+  },
+  {
+    name: "Latent Space",
+    url: "https://www.latent.space/feed",
+    language: "en",
+  },
+  {
+    name: "The Algorithmic Bridge",
+    url: "https://thealgorithmicbridge.substack.com/feed",
+    language: "en",
+  },
 
   // ========================================
   // TIER 5.5: HIGH-FREQUENCY AI SOURCES (2026-02-10)
   // Added to guarantee minimum 1 article per 15 minutes
+  // Updated 2026-02-11: Removed broken feeds (404/403/parse errors)
   // ========================================
   {
     name: "Ars Technica - AI",
@@ -378,28 +404,8 @@ export const AI_NEWS_RSS_FEEDS = [
     language: "en",
   },
   {
-    name: "InfoWorld - AI",
-    url: "https://www.infoworld.com/category/artificial-intelligence/index.rss",
-    language: "en",
-  },
-  {
-    name: "Unite.AI",
-    url: "https://www.unite.ai/feed/",
-    language: "en",
-  },
-  {
-    name: "DataCamp Blog",
-    url: "https://www.datacamp.com/blog/rss.xml",
-    language: "en",
-  },
-  {
     name: "Weights & Biases Blog",
     url: "https://wandb.ai/fully-connected/rss.xml",
-    language: "en",
-  },
-  {
-    name: "Papers With Code",
-    url: "https://paperswithcode.com/rss.xml",
     language: "en",
   },
   {
@@ -443,13 +449,8 @@ export const AI_NEWS_RSS_FEEDS = [
     language: "en",
   },
   {
-    name: "Mistral AI Blog",
-    url: "https://mistral.ai/feed.xml",
-    language: "en",
-  },
-  {
     name: "Replicate Blog",
-    url: "https://replicate.com/blog/rss.xml",
+    url: "https://replicate.com/blog/rss",
     language: "en",
   },
   {
@@ -471,11 +472,6 @@ export const AI_NEWS_RSS_FEEDS = [
   {
     name: "THE DECODER (DE)",
     url: "https://the-decoder.de/feed/",
-    language: "de",
-  },
-  {
-    name: "Heise Online - KI",
-    url: "https://www.heise.de/thema/Kuenstliche-Intelligenz?view=atom",
     language: "de",
   },
 
@@ -507,11 +503,6 @@ export const AI_NEWS_RSS_FEEDS = [
   {
     name: "ITmedia AI+",
     url: "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml",
-    language: "ja",
-  },
-  {
-    name: "Ledge.ai",
-    url: "https://ledge.ai/feed/",
     language: "ja",
   },
 
