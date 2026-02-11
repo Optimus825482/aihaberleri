@@ -14,7 +14,7 @@ Write-Host "=" * 60
 # Configuration
 $sourceRoot = ".agent"
 $targetRoot = ".kiro"
-$migrationLog = ".kiro/migration-log.txt"
+$migrationLog = ".kiro/migration-log2.txt"
 
 # Statistics
 $stats = @{

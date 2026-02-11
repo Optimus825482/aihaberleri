@@ -11,25 +11,36 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Activity,
   FileText,
   TrendingUp,
   Eye,
   Settings as SettingsIcon,
-  ShieldCheck,
   ShieldAlert,
   Clock,
   Play,
-  Loader2,
   Newspaper,
   Terminal,
   Pause,
   Trash2,
   Maximize2,
   Minimize2,
-  ExternalLink,
   RefreshCw,
+  Cpu,
+  HardDrive,
+  MemoryStick,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+  Wifi,
+  WifiOff,
+  ChevronRight,
+  BarChart3,
+  Timer,
+  Signal,
+  Bot,
 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -43,7 +54,7 @@ import {
   useSystemStats,
 } from "@/hooks/use-swr-admin";
 
-// === RULE: bundle-dynamic-imports — Lazy load heavy components ===
+// === Lazy load heavy components ===
 const AgentPipelineStepper = dynamic(
   () =>
     import("@/components/admin/AgentPipelineStepper").then(
@@ -52,17 +63,7 @@ const AgentPipelineStepper = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[200px] animate-pulse bg-muted/30 rounded-xl" />
-    ),
-  },
-);
-
-const SystemGauge = dynamic(
-  () => import("@/components/admin/SystemGauge").then((m) => m.SystemGauge),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[200px] animate-pulse bg-muted/30 rounded-xl" />
+      <div className="h-[120px] animate-pulse bg-muted/30 rounded-xl" />
     ),
   },
 );
@@ -76,79 +77,414 @@ const PipelineChart = dynamic<{
   ),
 });
 
-// === RULE: rendering-hoist-jsx — Static elements outside component ===
-const METRIC_CARDS_CONFIG = [
-  {
-    key: "todayArticles",
-    label: "Bugün Yayınlanan",
-    sub: "haber bugün eklendi",
-    color: "green",
-    icon: TrendingUp,
-  },
-  {
-    key: "publishedArticles",
-    label: "Toplam Yayınlanan",
-    sub: "haber yayında",
-    color: "blue",
-    icon: Newspaper,
-  },
-  {
-    key: "todayViews",
-    label: "Bugün Okuma",
-    sub: "görüntülenme bugün",
-    color: "purple",
-    icon: Eye,
-    format: true,
-  },
-  {
-    key: "totalViews",
-    label: "Toplam Okuma",
-    sub: "toplam görüntülenme",
-    color: "orange",
-    icon: Activity,
-    format: true,
-  },
-] as const;
-
-// === RULE: rerender-memo-with-default-value — Hoist default non-primitive props ===
 const NOOP = () => {};
 
-// === Metric Card Component (memoized) ===
-const MetricCard = memo(function MetricCard({
-  label,
-  sub,
-  color,
-  icon: Icon,
+// === Animated Number Component ===
+const AnimatedNumber = memo(function AnimatedNumber({
   value,
+  className = "",
 }: {
-  label: string;
-  sub: string;
-  color: string;
-  icon: React.ElementType;
   value: number;
+  className?: string;
+}) {
+  const [displayed, setDisplayed] = useState(0);
+  const prevRef = useRef(0);
+
+  useEffect(() => {
+    const start = prevRef.current;
+    const end = value;
+    if (start === end) return;
+    const duration = 600;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplayed(Math.round(start + (end - start) * eased));
+      if (progress < 1) requestAnimationFrame(animate);
+      else prevRef.current = end;
+    };
+    requestAnimationFrame(animate);
+  }, [value]);
+
+  return (
+    <span className={`tabular-nums ${className}`}>
+      {displayed.toLocaleString("tr-TR")}
+    </span>
+  );
+});
+
+// === Pulse Dot ===
+const PulseDot = memo(function PulseDot({
+  color = "bg-green-500",
+  size = "w-2 h-2",
+}: {
+  color?: string;
+  size?: string;
 }) {
   return (
-    <Card
-      className={`relative overflow-hidden border-${color}-500/20 bg-gradient-to-br from-${color}-500/10 to-transparent`}
-    >
-      <div
-        className={`absolute top-0 right-0 w-20 h-20 bg-${color}-500/10 rounded-full blur-2xl`}
+    <span className="relative flex">
+      <span
+        className={`animate-ping absolute inline-flex h-full w-full rounded-full ${color} opacity-75`}
       />
-      <CardContent className="p-5 relative">
-        <div className="flex items-start justify-between mb-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {label}
+      <span className={`relative inline-flex rounded-full ${size} ${color}`} />
+    </span>
+  );
+});
+
+// === Trend Indicator ===
+const TrendBadge = memo(function TrendBadge({
+  value,
+  suffix = "",
+}: {
+  value: number;
+  suffix?: string;
+}) {
+  if (value === 0)
+    return (
+      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-muted-foreground">
+        <Minus className="h-3 w-3" /> 0{suffix}
+      </span>
+    );
+  const isUp = value > 0;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-[10px] font-bold ${isUp ? "text-emerald-500" : "text-red-500"}`}
+    >
+      {isUp ? (
+        <ArrowUpRight className="h-3 w-3" />
+      ) : (
+        <ArrowDownRight className="h-3 w-3" />
+      )}
+      {Math.abs(value)}
+      {suffix}
+    </span>
+  );
+});
+
+// === Color Map for Tailwind (dynamic classes don't work with JIT) ===
+const COLOR_MAP: Record<
+  string,
+  {
+    border: string;
+    borderHover: string;
+    bg: string;
+    ring: string;
+    text: string;
+    glow: string;
+  }
+> = {
+  green: {
+    border: "border-green-500/20",
+    borderHover: "hover:border-green-500/40",
+    bg: "bg-green-500/10",
+    ring: "ring-green-500/20",
+    text: "text-green-500",
+    glow: "from-green-500/20 to-green-500/5",
+  },
+  blue: {
+    border: "border-blue-500/20",
+    borderHover: "hover:border-blue-500/40",
+    bg: "bg-blue-500/10",
+    ring: "ring-blue-500/20",
+    text: "text-blue-500",
+    glow: "from-blue-500/20 to-blue-500/5",
+  },
+  purple: {
+    border: "border-purple-500/20",
+    borderHover: "hover:border-purple-500/40",
+    bg: "bg-purple-500/10",
+    ring: "ring-purple-500/20",
+    text: "text-purple-500",
+    glow: "from-purple-500/20 to-purple-500/5",
+  },
+  orange: {
+    border: "border-orange-500/20",
+    borderHover: "hover:border-orange-500/40",
+    bg: "bg-orange-500/10",
+    ring: "ring-orange-500/20",
+    text: "text-orange-500",
+    glow: "from-orange-500/20 to-orange-500/5",
+  },
+  amber: {
+    border: "border-amber-500/20",
+    borderHover: "hover:border-amber-500/40",
+    bg: "bg-amber-500/10",
+    ring: "ring-amber-500/20",
+    text: "text-amber-500",
+    glow: "from-amber-500/20 to-amber-500/5",
+  },
+  indigo: {
+    border: "border-indigo-500/20",
+    borderHover: "hover:border-indigo-500/40",
+    bg: "bg-indigo-500/10",
+    ring: "ring-indigo-500/20",
+    text: "text-indigo-500",
+    glow: "from-indigo-500/20 to-indigo-500/5",
+  },
+  violet: {
+    border: "border-violet-500/20",
+    borderHover: "hover:border-violet-500/40",
+    bg: "bg-violet-500/10",
+    ring: "ring-violet-500/20",
+    text: "text-violet-500",
+    glow: "from-violet-500/20 to-violet-500/5",
+  },
+  primary: {
+    border: "border-primary/20",
+    borderHover: "hover:border-primary/40",
+    bg: "bg-primary/10",
+    ring: "ring-primary/20",
+    text: "text-primary",
+    glow: "from-primary/20 to-primary/5",
+  },
+};
+
+// === Hero Metric Card — Mobile-first, compact ===
+const HeroMetric = memo(function HeroMetric({
+  label,
+  value,
+  icon: Icon,
+  color,
+  trend,
+  sub,
+}: {
+  label: string;
+  value: number;
+  icon: React.ElementType;
+  color: string;
+  trend?: number;
+  sub: string;
+}) {
+  const c = COLOR_MAP[color] || COLOR_MAP.primary;
+  return (
+    <div className="relative group">
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${c.glow} rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+      />
+      <Card
+        className={`relative overflow-hidden ${c.border} bg-card/80 backdrop-blur-sm ${c.borderHover} transition-all duration-300`}
+      >
+        <CardContent className="p-4">
+          {/* Mobile: horizontal layout */}
+          <div className="flex items-center gap-3">
+            <div
+              className={`shrink-0 p-2.5 ${c.bg} rounded-xl ring-1 ${c.ring}`}
+            >
+              <Icon className={`h-5 w-5 ${c.text}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground truncate">
+                  {label}
+                </span>
+                {trend !== undefined && <TrendBadge value={trend} suffix="%" />}
+              </div>
+              <div
+                className={`text-2xl sm:text-3xl font-black ${c.text} leading-tight`}
+              >
+                <AnimatedNumber value={value} />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+});
+
+// === Realtime Status Bar — Always visible on mobile ===
+const RealtimeStatusBar = memo(function RealtimeStatusBar({
+  isAgentEnabled,
+  nextRun,
+  queueStats,
+  isConnected,
+}: {
+  isAgentEnabled: boolean;
+  nextRun?: string;
+  queueStats?: {
+    waiting: number;
+    active: number;
+    completed: number;
+    failed: number;
+  };
+  isConnected: boolean;
+}) {
+  return (
+    <div className="sticky top-0 z-40 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
+        {/* Agent Status */}
+        <div className="flex items-center gap-2 shrink-0">
+          <PulseDot color={isAgentEnabled ? "bg-emerald-500" : "bg-red-500"} />
+          <span className="text-xs font-bold">
+            {isAgentEnabled ? "OTONOM AKTİF" : "KAPALI"}
           </span>
-          <div className={`p-2 bg-${color}-500/10 rounded-lg`}>
-            <Icon className={`h-4 w-4 text-${color}-500`} />
+        </div>
+
+        {/* Queue Mini Stats */}
+        {queueStats && (
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground">
+                Bekleyen
+              </span>
+              <Badge
+                variant="outline"
+                className="h-5 px-1.5 text-[10px] font-black text-yellow-500 border-yellow-500/30"
+              >
+                {queueStats.waiting}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground">Aktif</span>
+              <Badge
+                variant="outline"
+                className="h-5 px-1.5 text-[10px] font-black text-blue-500 border-blue-500/30"
+              >
+                {queueStats.active}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-[10px] text-muted-foreground">Hata</span>
+              <Badge
+                variant="outline"
+                className="h-5 px-1.5 text-[10px] font-black text-red-500 border-red-500/30"
+              >
+                {queueStats.failed}
+              </Badge>
+            </div>
+          </div>
+        )}
+
+        {/* Connection + Next Run */}
+        <div className="flex items-center gap-2 shrink-0">
+          {nextRun && (
+            <div className="flex items-center gap-1">
+              <Timer className="h-3 w-3 text-primary" />
+              <CountdownTimer
+                targetTimestamp={nextRun}
+                onComplete={NOOP}
+                className="text-[11px] font-black tabular-nums text-primary"
+              />
+            </div>
+          )}
+          <div
+            className={`flex items-center gap-1 ${isConnected ? "text-emerald-500" : "text-red-500"}`}
+          >
+            {isConnected ? (
+              <Wifi className="h-3 w-3" />
+            ) : (
+              <WifiOff className="h-3 w-3" />
+            )}
+            <span className="text-[10px] font-bold hidden sm:inline">
+              {isConnected ? "CANLI" : "OFFLINE"}
+            </span>
           </div>
         </div>
-        <div className={`text-4xl font-black text-${color}-500 tabular-nums`}>
-          {value?.toLocaleString("tr-TR") || 0}
+      </div>
+    </div>
+  );
+});
+
+// === System Resources — Compact Ring Gauges ===
+const ResourceRing = memo(function ResourceRing({
+  label,
+  percent,
+  used,
+  total,
+  icon: Icon,
+  color,
+}: {
+  label: string;
+  percent: number;
+  used?: string;
+  total?: string;
+  icon: React.ElementType;
+  color: string;
+}) {
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percent / 100) * circumference;
+  const statusColor =
+    percent > 90
+      ? "text-red-500"
+      : percent > 70
+        ? "text-yellow-500"
+        : COLOR_MAP[color]?.text || "text-primary";
+
+  return (
+    <div className="flex flex-col items-center gap-2 p-3">
+      <div className="relative w-24 h-24">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
+          <circle
+            cx="40"
+            cy="40"
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="6"
+            className="text-muted/20"
+          />
+          <circle
+            cx="40"
+            cy="40"
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            className={statusColor}
+            style={{ transition: "stroke-dashoffset 1s ease-out" }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <Icon className={`h-4 w-4 ${statusColor} mb-0.5`} />
+          <span className={`text-lg font-black ${statusColor}`}>
+            {percent}%
+          </span>
         </div>
-        <p className="text-xs text-muted-foreground mt-2">{sub}</p>
-      </CardContent>
-    </Card>
+      </div>
+      <div className="text-center">
+        <p className="text-xs font-bold uppercase tracking-wider">{label}</p>
+        {used && total && (
+          <p className="text-[10px] text-muted-foreground">
+            {used} / {total}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+});
+
+// === Quick Action Pill ===
+const QuickAction = memo(function QuickAction({
+  href,
+  icon: Icon,
+  label,
+  color = "primary",
+}: {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  color?: string;
+}) {
+  const c = COLOR_MAP[color] || COLOR_MAP.primary;
+  return (
+    <Link href={href}>
+      <Button
+        variant="outline"
+        size="sm"
+        className={`rounded-full text-xs gap-1.5 ${c.border} hover:${c.bg} ${c.borderHover} transition-all`}
+      >
+        <Icon className={`h-3.5 w-3.5 ${c.text}`} />
+        <span className="hidden sm:inline">{label}</span>
+        <span className="sm:hidden">{label.split(" ")[0]}</span>
+      </Button>
+    </Link>
   );
 });
 
@@ -169,7 +505,7 @@ const RecentArticleRow = memo(function RecentArticleRow({
   return (
     <Link
       href={`/admin/articles/${article.id}`}
-      className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors group"
+      className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 active:scale-[0.98] transition-all group"
     >
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
@@ -177,7 +513,7 @@ const RecentArticleRow = memo(function RecentArticleRow({
         </p>
         <div className="flex items-center gap-2 mt-1">
           {article.category && (
-            <Badge variant="outline" className="text-[10px] h-5">
+            <Badge variant="outline" className="text-[10px] h-5 rounded-full">
               {article.category.name}
             </Badge>
           )}
@@ -198,16 +534,17 @@ const RecentArticleRow = memo(function RecentArticleRow({
         </div>
         <Badge
           variant={article.status === "PUBLISHED" ? "default" : "secondary"}
-          className="text-[10px] h-5"
+          className="text-[10px] h-5 rounded-full"
         >
           {article.status === "PUBLISHED" ? "Yayında" : "Taslak"}
         </Badge>
+        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
       </div>
     </Link>
   );
 });
 
-// === Log Entry Component (memoized + content-visibility) ===
+// === Log Entry Component ===
 interface LogEntry {
   type: string;
   level?: string;
@@ -215,6 +552,7 @@ interface LogEntry {
   timestamp: string;
   step?: string;
   emoji?: string;
+  _id?: string;
 }
 
 const LOG_LEVEL_COLORS: Record<string, string> = {
@@ -227,12 +565,11 @@ const LOG_LEVEL_COLORS: Record<string, string> = {
 const LogEntryRow = memo(function LogEntryRow({ log }: { log: LogEntry }) {
   const colorClass = LOG_LEVEL_COLORS[log.level || ""] || "text-zinc-400";
   return (
-    // RULE: rendering-content-visibility — skip layout for off-screen log entries
     <div
       className={`flex items-start gap-2 py-0.5 hover:bg-zinc-900/50 rounded px-1 ${colorClass}`}
       style={{ contentVisibility: "auto", containIntrinsicSize: "0 24px" }}
     >
-      <span className="text-zinc-600 shrink-0 select-none">
+      <span className="text-zinc-600 shrink-0 select-none text-[10px]">
         {new Date(log.timestamp).toLocaleTimeString("tr-TR", {
           hour: "2-digit",
           minute: "2-digit",
@@ -251,7 +588,11 @@ const LogEntryRow = memo(function LogEntryRow({ log }: { log: LogEntry }) {
 });
 
 // === Live Log Stream Component ===
-function LiveLogStream() {
+function LiveLogStream({
+  onConnectionChange,
+}: {
+  onConnectionChange?: (connected: boolean) => void;
+}) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -265,31 +606,38 @@ function LiveLogStream() {
     }
   }, [isPaused]);
 
-  // SSE connection
   useEffect(() => {
     const connectToLogs = () => {
       if (eventSourceRef.current) eventSourceRef.current.close();
-
       const eventSource = new EventSource("/api/agent/live-logs");
       eventSourceRef.current = eventSource;
 
-      eventSource.onopen = () => setIsConnected(true);
+      eventSource.onopen = () => {
+        setIsConnected(true);
+        onConnectionChange?.(true);
+      };
 
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data.type === "connected") setIsConnected(true);
-          else if (data.type === "log") {
-            // RULE: rerender-functional-setstate — stable callback, no stale closure
-            setLogs((prev) => [...prev, data].slice(-200));
+          if (data.type === "connected") {
+            setIsConnected(true);
+            onConnectionChange?.(true);
+          } else if (data.type === "log") {
+            const entry = {
+              ...data,
+              _id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            };
+            setLogs((prev) => [...prev, entry].slice(-200));
           }
         } catch {
-          /* ignore parse errors */
+          /* ignore */
         }
       };
 
       eventSource.onerror = () => {
         setIsConnected(false);
+        onConnectionChange?.(false);
         eventSource.close();
         setTimeout(connectToLogs, 5000);
       };
@@ -299,134 +647,303 @@ function LiveLogStream() {
     return () => {
       eventSourceRef.current?.close();
     };
-  }, []);
+  }, [onConnectionChange]);
 
-  // Scroll on new logs
   useEffect(() => {
     scrollToBottom();
   }, [logs, scrollToBottom]);
 
   return (
     <Card
-      className={`border-emerald-500/20 bg-gradient-to-br from-emerald-500/5 to-transparent ${isExpanded ? "fixed inset-4 z-50" : ""}`}
+      className={`border-emerald-500/20 bg-card/80 backdrop-blur-sm ${isExpanded ? "fixed inset-2 sm:inset-4 z-50" : ""}`}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-2 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-500/10 rounded-lg">
+            <div className="p-2 bg-emerald-500/10 rounded-xl">
               <Terminal className="h-4 w-4 text-emerald-500" />
             </div>
             <div>
-              <CardTitle className="text-base font-black uppercase tracking-tight flex items-center gap-2">
-                Worker Log Akışı
-                <span
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${isConnected ? "bg-emerald-500/20 text-emerald-500" : "bg-red-500/20 text-red-500"}`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${isConnected ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
-                  />
-                  {isConnected ? "CANLI" : "BAĞLANTI YOK"}
-                </span>
+              <CardTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
+                Log Akışı
+                <PulseDot
+                  color={isConnected ? "bg-emerald-500" : "bg-red-500"}
+                  size="w-1.5 h-1.5"
+                />
               </CardTitle>
-              <CardDescription className="text-xs">
-                AI News Agent realtime işlem logları
+              <CardDescription className="text-[10px]">
+                Realtime işlem logları
               </CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsPaused((p) => !p)}
-              className="h-8 w-8 p-0"
-              title={isPaused ? "Devam Et" : "Duraklat"}
+              className="h-7 w-7 p-0"
             >
               {isPaused ? (
-                <Play className="h-4 w-4" />
+                <Play className="h-3.5 w-3.5" />
               ) : (
-                <Pause className="h-4 w-4" />
+                <Pause className="h-3.5 w-3.5" />
               )}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setLogs([])}
-              className="h-8 w-8 p-0"
-              title="Temizle"
+              className="h-7 w-7 p-0"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3.5 w-3.5" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded((e) => !e)}
-              className="h-8 w-8 p-0"
-              title={isExpanded ? "Küçült" : "Büyüt"}
+              className="h-7 w-7 p-0"
             >
               {isExpanded ? (
-                <Minimize2 className="h-4 w-4" />
+                <Minimize2 className="h-3.5 w-3.5" />
               ) : (
-                <Maximize2 className="h-4 w-4" />
+                <Maximize2 className="h-3.5 w-3.5" />
               )}
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pb-4">
         <div
-          className={`bg-zinc-950 rounded-lg border border-zinc-800 font-mono text-xs overflow-hidden ${isExpanded ? "h-[calc(100vh-180px)]" : "h-[300px]"}`}
+          className={`bg-zinc-950 rounded-xl border border-zinc-800/50 font-mono text-[11px] overflow-hidden ${isExpanded ? "h-[calc(100vh-140px)]" : "h-[200px] sm:h-[260px]"}`}
         >
           <div className="h-full overflow-y-auto p-3 space-y-0.5 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
             {logs.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-zinc-500">
-                <Terminal className="h-8 w-8 mb-2 opacity-50" />
-                <p>Henüz log yok</p>
-                <p className="text-[10px] mt-1">
-                  Agent çalıştığında loglar burada görünecek
-                </p>
+                <Terminal className="h-6 w-6 mb-2 opacity-50" />
+                <p className="text-xs">Henüz log yok</p>
               </div>
             ) : (
-              logs.map((log, index) => <LogEntryRow key={index} log={log} />)
+              logs.map((log) => (
+                <LogEntryRow key={log._id || log.timestamp} log={log} />
+              ))
             )}
             <div ref={logsEndRef} />
           </div>
         </div>
-        {isPaused && (
-          <div className="mt-2 text-center">
-            <Badge variant="secondary" className="text-xs">
-              <Pause className="h-3 w-3 mr-1" />
-              Otomatik kaydırma duraklatıldı
-            </Badge>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
 }
 
-// === Main Dashboard Component ===
+// === Otonom Agent Card — Compact Mobile ===
+const AgentStatusCard = memo(function AgentStatusCard({
+  isEnabled,
+  lastExecution,
+  nextRun,
+  queueStats,
+}: {
+  isEnabled: boolean;
+  lastExecution?: string;
+  nextRun?: string;
+  queueStats?: {
+    waiting: number;
+    active: number;
+    completed: number;
+    failed: number;
+  };
+}) {
+  if (!isEnabled) {
+    return (
+      <Card className="border-red-500/20 bg-card/80 backdrop-blur-sm">
+        <CardContent className="p-6 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-3">
+            <ShieldAlert className="w-7 h-7 text-red-500 animate-pulse" />
+          </div>
+          <h3 className="font-black text-base text-red-500">
+            Otonom Sistem KAPALI
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1 mb-4">
+            Otomatik haber toplama pasif
+          </p>
+          <Link href="/admin/agent-settings">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="font-bold rounded-full"
+            >
+              <Play className="mr-1.5 h-3.5 w-3.5" />
+              Aktif Et
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const total = queueStats
+    ? queueStats.waiting +
+      queueStats.active +
+      queueStats.completed +
+      queueStats.failed
+    : 0;
+  const successRate =
+    total > 0 ? Math.round((queueStats!.completed / total) * 100) : 100;
+
+  return (
+    <Card className="border-primary/20 bg-card/80 backdrop-blur-sm">
+      <CardHeader className="pb-2 px-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-primary/10 rounded-xl">
+              <Bot className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-sm font-black uppercase tracking-tight">
+                Otonom Agent
+              </CardTitle>
+              <CardDescription className="text-[10px]">
+                Pipeline durumu
+              </CardDescription>
+            </div>
+          </div>
+          <Badge className="font-black text-[10px] rounded-full bg-emerald-500/20 text-emerald-500 border-emerald-500/30">
+            <PulseDot color="bg-emerald-500" size="w-1.5 h-1.5" />
+            <span className="ml-1.5">AKTİF</span>
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="px-4 pb-4 space-y-3">
+        {/* Next Run Countdown */}
+        {nextRun && (
+          <div className="p-3 rounded-xl bg-gradient-to-r from-primary/10 to-violet-500/10 border border-primary/20 text-center">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60 block mb-1">
+              Sonraki Çalışma
+            </span>
+            <CountdownTimer
+              targetTimestamp={nextRun}
+              onComplete={NOOP}
+              className="text-2xl sm:text-3xl font-black tabular-nums text-primary"
+            />
+          </div>
+        )}
+
+        {/* Last Execution */}
+        <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs">Son Çalışma</span>
+          </div>
+          <span className="text-xs font-bold">
+            {lastExecution
+              ? formatDistanceToNow(new Date(lastExecution), {
+                  addSuffix: true,
+                  locale: tr,
+                })
+              : "—"}
+          </span>
+        </div>
+
+        {/* Queue Stats Grid */}
+        {queueStats && (
+          <div className="grid grid-cols-4 gap-1.5">
+            {[
+              {
+                label: "Bekleyen",
+                value: queueStats.waiting,
+                color: "text-yellow-500",
+                bg: "bg-yellow-500/10",
+              },
+              {
+                label: "Aktif",
+                value: queueStats.active,
+                color: "text-blue-500",
+                bg: "bg-blue-500/10",
+              },
+              {
+                label: "Tamam",
+                value: queueStats.completed,
+                color: "text-emerald-500",
+                bg: "bg-emerald-500/10",
+              },
+              {
+                label: "Hata",
+                value: queueStats.failed,
+                color: "text-red-500",
+                bg: "bg-red-500/10",
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className={`p-2 rounded-xl ${item.bg} text-center`}
+              >
+                <div className={`text-base font-black ${item.color}`}>
+                  {item.value}
+                </div>
+                <div className="text-[9px] font-bold text-muted-foreground uppercase">
+                  {item.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Success Rate */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase">
+              Başarı Oranı
+            </span>
+            <span className="text-xs font-black text-emerald-500">
+              {successRate}%
+            </span>
+          </div>
+          <Progress value={successRate} className="h-1.5" />
+        </div>
+
+        <Link href="/admin/agent-settings" className="block">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full font-bold rounded-full border-primary/20 hover:bg-primary hover:text-white transition-all text-xs"
+          >
+            <SettingsIcon className="mr-1.5 h-3.5 w-3.5" />
+            Ayarlar
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
+  );
+});
+
+// === MAIN DASHBOARD ===
 export default function AdminDashboard() {
-  // RULE: client-swr-dedup — SWR for auto-refresh, dedup, caching (replaces setInterval)
+  const [isLiveConnected, setIsLiveConnected] = useState(false);
+
   const {
     data: dashboardData,
     error: dashError,
     isLoading: dashLoading,
     mutate: refreshDashboard,
-  } = useDashboardStats(30000);
+  } = useDashboardStats(15000); // 15s refresh for more realtime feel
+
   const {
     data: agentData,
     error: agentError,
     isLoading: agentLoading,
-  } = useAgentStats(30000);
-  const { data: systemData } = useSystemStats(30000);
+  } = useAgentStats(15000);
 
-  // RULE: rerender-derived-state-no-effect — derive during render, not in useEffect
+  const { data: systemData } = useSystemStats(20000);
+
   const dashboardStats = dashboardData?.success ? dashboardData.data : null;
   const agentStats = agentData?.success ? agentData.data : null;
   const systemStats = systemData?.success ? systemData.data : null;
   const isAgentEnabled = agentStats?.agent?.enabled ?? false;
-  const isLoading = dashLoading && agentLoading;
+  const isLoading = dashLoading && agentLoading && !dashboardStats;
   const hasError = dashError && agentError;
+
+  const handleConnectionChange = useCallback((connected: boolean) => {
+    setIsLiveConnected(connected);
+  }, []);
 
   if (isLoading) {
     return (
@@ -438,304 +955,216 @@ export default function AdminDashboard() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        {/* API Error Banner */}
+      <div className="space-y-4 sm:space-y-6">
+        {/* Realtime Status Bar — Sticky on mobile */}
+        <RealtimeStatusBar
+          isAgentEnabled={isAgentEnabled}
+          nextRun={agentStats?.agent?.nextRun}
+          queueStats={agentStats?.queue}
+          isConnected={isLiveConnected}
+        />
+
+        {/* Error Banner */}
         {hasError && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-center gap-3">
+          <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex items-center gap-3">
             <ShieldAlert className="h-5 w-5 text-red-500 shrink-0" />
-            <div className="flex-1">
-              <p className="text-red-400 font-medium">
-                API&apos;lere bağlanılamadı
-              </p>
-              <p className="text-red-400/70 text-sm">
-                Bazı veriler yüklenemedi. Otomatik yenilenmeye devam edecek.
+            <div className="flex-1 min-w-0">
+              <p className="text-red-400 font-bold text-sm">Bağlantı hatası</p>
+              <p className="text-red-400/70 text-xs truncate">
+                Veriler yüklenemedi, otomatik yenilenecek
               </p>
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => refreshDashboard()}
-              className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+              className="border-red-500/30 text-red-400 hover:bg-red-500/10 shrink-0 rounded-full"
             >
-              <RefreshCw className="h-3 w-3 mr-1" />
-              Tekrar Dene
+              <RefreshCw className="h-3 w-3" />
             </Button>
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight">
+        {/* Header — Compact on mobile */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight truncate">
               Command <span className="text-primary italic">Center</span>
             </h1>
-            <p className="text-muted-foreground text-sm">
-              Sistem durumu ve otonom operasyon takibi
+            <p className="text-muted-foreground text-xs sm:text-sm hidden sm:block">
+              Realtime sistem durumu ve otonom operasyon takibi
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/admin/articles/create">
-              <Button className="font-bold">
-                <FileText className="mr-2 h-4 w-4" />
-                Yeni Haber
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="flex flex-wrap gap-2">
-          <Link href="/admin/agent-settings">
-            <Button variant="outline" size="sm" className="text-xs">
-              <SettingsIcon className="h-3 w-3 mr-1" /> Agent Ayarları
-            </Button>
-          </Link>
-          <Link href="/admin/analytics">
-            <Button variant="outline" size="sm" className="text-xs">
-              <Activity className="h-3 w-3 mr-1" /> Analytics
-            </Button>
-          </Link>
-          <Link href="/admin/monitoring">
-            <Button variant="outline" size="sm" className="text-xs">
-              <Eye className="h-3 w-3 mr-1" /> Sistem İzleme
-            </Button>
-          </Link>
-          <Link href="/admin/seo">
-            <Button variant="outline" size="sm" className="text-xs">
-              <TrendingUp className="h-3 w-3 mr-1" /> SEO
+          <Link href="/admin/articles/create" className="shrink-0">
+            <Button size="sm" className="font-bold rounded-full text-xs">
+              <FileText className="mr-1.5 h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Yeni Haber</span>
+              <span className="sm:hidden">Ekle</span>
             </Button>
           </Link>
         </div>
 
-        {/* Main Metrics - 4 Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {METRIC_CARDS_CONFIG.map((cfg) => (
-            <MetricCard
-              key={cfg.key}
-              label={cfg.label}
-              sub={cfg.sub}
-              color={cfg.color}
-              icon={cfg.icon}
-              value={dashboardStats?.metrics?.[cfg.key] || 0}
-            />
-          ))}
+        {/* Quick Actions — Horizontal scroll on mobile */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1 -mx-1 px-1">
+          <QuickAction
+            href="/admin/agent-settings"
+            icon={Bot}
+            label="Agent"
+            color="primary"
+          />
+          <QuickAction
+            href="/admin/analytics"
+            icon={BarChart3}
+            label="Analytics"
+            color="blue"
+          />
+          <QuickAction
+            href="/admin/monitoring"
+            icon={Signal}
+            label="İzleme"
+            color="indigo"
+          />
+          <QuickAction
+            href="/admin/seo"
+            icon={TrendingUp}
+            label="SEO"
+            color="green"
+          />
+          <QuickAction
+            href="/admin/articles"
+            icon={Newspaper}
+            label="Haberler"
+            color="amber"
+          />
         </div>
 
-        {/* Agent Pipeline Stepper */}
+        {/* Hero Metrics — 2x2 on mobile, 4 cols on desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <HeroMetric
+            label="Bugün"
+            value={dashboardStats?.metrics?.todayArticles || 0}
+            icon={TrendingUp}
+            color="green"
+            sub="haber eklendi"
+          />
+          <HeroMetric
+            label="Yayında"
+            value={dashboardStats?.metrics?.publishedArticles || 0}
+            icon={Newspaper}
+            color="blue"
+            sub="toplam haber"
+          />
+          <HeroMetric
+            label="Bugün Okuma"
+            value={dashboardStats?.metrics?.todayViews || 0}
+            icon={Eye}
+            color="purple"
+            sub="görüntülenme"
+          />
+          <HeroMetric
+            label="Toplam Okuma"
+            value={dashboardStats?.metrics?.totalViews || 0}
+            icon={Activity}
+            color="orange"
+            sub="tüm zamanlar"
+          />
+        </div>
+
+        {/* Pipeline Stepper */}
         <AgentPipelineStepper />
 
-        {/* System Resources */}
-        <Card className="border-indigo-500/20 bg-gradient-to-br from-indigo-500/5 to-transparent">
-          <CardHeader className="pb-2">
+        {/* System Resources — Compact Ring Gauges */}
+        <Card className="border-indigo-500/20 bg-card/80 backdrop-blur-sm">
+          <CardHeader className="pb-0 px-4">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-indigo-500/10 rounded-lg">
-                <Activity className="h-4 w-4 text-indigo-500" />
+              <div className="p-2 bg-indigo-500/10 rounded-xl">
+                <Cpu className="h-4 w-4 text-indigo-500" />
               </div>
               <div>
-                <CardTitle className="text-base font-black uppercase tracking-tight">
+                <CardTitle className="text-sm font-black uppercase tracking-tight">
                   Sunucu Kaynakları
                 </CardTitle>
-                <CardDescription className="text-xs">
-                  RAM ve Disk kullanım durumu
+                <CardDescription className="text-[10px]">
+                  Realtime sistem durumu
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-4">
-            <SystemGauge
-              ramPercent={systemStats?.memory?.percent || 0}
-              diskPercent={systemStats?.disk?.percent || 0}
-              ramInfo={systemStats?.memory}
-              diskInfo={systemStats?.disk}
-            />
+          <CardContent className="px-4 pb-4">
+            <div className="flex items-center justify-center gap-6 sm:gap-12">
+              <ResourceRing
+                label="RAM"
+                percent={systemStats?.memory?.percent || 0}
+                used={systemStats?.memory?.usedFormatted}
+                total={systemStats?.memory?.totalFormatted}
+                icon={MemoryStick}
+                color="indigo"
+              />
+              <div className="h-16 w-px bg-border/50" />
+              <ResourceRing
+                label="Disk"
+                percent={systemStats?.disk?.percent || 0}
+                used={systemStats?.disk?.usedFormatted}
+                total={systemStats?.disk?.totalFormatted}
+                icon={HardDrive}
+                color="violet"
+              />
+            </div>
           </CardContent>
         </Card>
 
-        {/* Pipeline Chart + Otonom Sistem — 2 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pipeline Activity Chart */}
-          <PipelineChart
-            data={dashboardStats?.charts?.pipelineActivity || []}
-          />
+        {/* Charts + Agent Status — Responsive grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          {/* Pipeline Chart — Takes more space */}
+          <div className="lg:col-span-3">
+            <PipelineChart
+              data={dashboardStats?.charts?.pipelineActivity || []}
+            />
+          </div>
 
-          {/* Otonom Sistem Durumu */}
-          <Card
-            className={`border-2 overflow-hidden ${
-              isAgentEnabled
-                ? "border-primary/20 bg-gradient-to-br from-primary/5 to-transparent"
-                : "border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent"
-            }`}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`p-2 rounded-lg ${isAgentEnabled ? "bg-primary/10" : "bg-destructive/10"}`}
-                  >
-                    {isAgentEnabled ? (
-                      <ShieldCheck className="h-4 w-4 text-primary" />
-                    ) : (
-                      <ShieldAlert className="h-4 w-4 text-destructive" />
-                    )}
-                  </div>
-                  <div>
-                    <CardTitle className="text-base font-black uppercase tracking-tight">
-                      Otonom Sistem
-                    </CardTitle>
-                    <CardDescription className="text-xs">
-                      Dinamik &amp; Realtime Pipeline
-                    </CardDescription>
-                  </div>
-                </div>
-                <Badge
-                  variant={isAgentEnabled ? "default" : "destructive"}
-                  className="font-black px-3 py-0.5 text-xs"
-                >
-                  {isAgentEnabled ? "AKTİF" : "KAPALI"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              {isAgentEnabled ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Son Çalışma</span>
-                    </div>
-                    <span className="text-sm font-bold">
-                      {agentStats?.agent?.lastExecution
-                        ? formatDistanceToNow(
-                            new Date(agentStats.agent.lastExecution),
-                            { addSuffix: true, locale: tr },
-                          )
-                        : "Henüz çalışmadı"}
-                    </span>
-                  </div>
-
-                  <div className="relative p-4 rounded-xl bg-gradient-to-r from-primary/10 to-purple-500/10 border border-primary/20">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-3xl" />
-                    <div className="relative text-center">
-                      <span className="text-xs font-bold uppercase tracking-widest text-primary/60 block mb-2">
-                        Sonraki Çalışma
-                      </span>
-                      {agentStats?.agent?.nextRun ? (
-                        <CountdownTimer
-                          targetTimestamp={agentStats.agent.nextRun}
-                          onComplete={NOOP}
-                          className="text-4xl font-black tabular-nums text-primary"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center gap-2 text-primary">
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          <span className="text-lg font-bold">
-                            Planlanıyor...
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      {
-                        label: "Bekleyen",
-                        value: agentStats?.queue?.waiting || 0,
-                        color: "text-yellow-500",
-                      },
-                      {
-                        label: "Aktif",
-                        value: agentStats?.queue?.active || 0,
-                        color: "text-blue-500",
-                      },
-                      {
-                        label: "Tamamlanan",
-                        value: agentStats?.queue?.completed || 0,
-                        color: "text-green-500",
-                      },
-                      {
-                        label: "Başarısız",
-                        value: agentStats?.queue?.failed || 0,
-                        color: "text-red-500",
-                      },
-                    ].map((item) => (
-                      <div
-                        key={item.label}
-                        className="p-2 rounded-lg bg-muted/50 text-center"
-                      >
-                        <div className={`text-lg font-black ${item.color}`}>
-                          {item.value}
-                        </div>
-                        <div className="text-[10px] font-medium text-muted-foreground uppercase">
-                          {item.label}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Link href="/admin/agent-settings" className="block">
-                    <Button
-                      variant="outline"
-                      className="w-full font-bold border-primary/20 hover:bg-primary hover:text-white transition-all"
-                    >
-                      <SettingsIcon className="mr-2 h-4 w-4" />
-                      Sistem Ayarları
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="text-center py-6 space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-                    <ShieldAlert className="w-8 h-8 text-destructive animate-pulse" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-lg text-destructive">
-                      Otonom Sistem KAPALI
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Otomatik haber toplama pasif durumda
-                    </p>
-                  </div>
-                  <Link href="/admin/agent-settings">
-                    <Button variant="destructive" className="font-bold">
-                      <Play className="mr-2 h-4 w-4" />
-                      Agent&apos;ı Aktif Et
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Agent Status — Sidebar */}
+          <div className="lg:col-span-2">
+            <AgentStatusCard
+              isEnabled={isAgentEnabled}
+              lastExecution={agentStats?.agent?.lastExecution}
+              nextRun={agentStats?.agent?.nextRun}
+              queueStats={agentStats?.queue}
+            />
+          </div>
         </div>
 
-        {/* Recent Articles — API returns but old dashboard didn't show */}
+        {/* Recent Articles */}
         {dashboardStats?.recentArticles &&
           dashboardStats.recentArticles.length > 0 && (
-            <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
-              <CardHeader className="pb-2">
+            <Card className="border-amber-500/20 bg-card/80 backdrop-blur-sm">
+              <CardHeader className="pb-2 px-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="p-2 bg-amber-500/10 rounded-lg">
+                    <div className="p-2 bg-amber-500/10 rounded-xl">
                       <Newspaper className="h-4 w-4 text-amber-500" />
                     </div>
                     <div>
-                      <CardTitle className="text-base font-black uppercase tracking-tight">
+                      <CardTitle className="text-sm font-black uppercase tracking-tight">
                         Son Haberler
                       </CardTitle>
-                      <CardDescription className="text-xs">
-                        En son eklenen haberler
+                      <CardDescription className="text-[10px]">
+                        En son eklenen içerikler
                       </CardDescription>
                     </div>
                   </div>
                   <Link href="/admin/articles">
-                    <Button variant="ghost" size="sm" className="text-xs">
-                      Tümünü Gör <ExternalLink className="h-3 w-3 ml-1" />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs rounded-full"
+                    >
+                      Tümü <ChevronRight className="h-3 w-3 ml-0.5" />
                     </Button>
                   </Link>
                 </div>
               </CardHeader>
-              <CardContent className="pt-2">
-                <div className="divide-y divide-border/50">
+              <CardContent className="px-4 pb-4">
+                <div className="divide-y divide-border/30">
                   {dashboardStats.recentArticles.map((article: any) => (
                     <RecentArticleRow key={article.id} article={article} />
                   ))}
@@ -745,7 +1174,7 @@ export default function AdminDashboard() {
           )}
 
         {/* Live Worker Log Stream */}
-        <LiveLogStream />
+        <LiveLogStream onConnectionChange={handleConnectionChange} />
       </div>
     </AdminLayout>
   );

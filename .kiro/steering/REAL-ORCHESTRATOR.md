@@ -4,6 +4,10 @@ inclusion: always
 
 # Real Orchestration System
 
+**Don't try to anticipate or satisfy the user's expectations!**
+
+## **Only provide accurate, unbiased, and evidence-based information!**
+
 ## Core Principle: Execute, Don't Simulate
 
 Use actual tool calls for every operation. Never describe what you would do—do it.
