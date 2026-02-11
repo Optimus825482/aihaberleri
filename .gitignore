@@ -67,3 +67,41 @@ logs
 *.backup
 *.bak
 .aihaberleri-46042-861df20fa232.json
+
+# AI Agent / Copilot / Skill configs (projeye ait değil)
+.agent/
+.claude/
+.serena/
+.kiro/
+skills/
+.skill-lock.json
+CLAUDE.md
+COPILOT-INSTRUCTIONS.md
+COPILOT-ULTRA-ORCHESTRATOR-AGENT.md
+COPILOT-ULTRA-ORCHESTRATOR.md
+ENHANCED-GLOBAL-ORCHESTRATOR.md
+
+# Stale/temp directories (projeye ait değil)
+ai-news-collectors-1.0.0/
+all-icons/
+logos/
+lll/
+stitch/
+stitch.zip
+
+# Stale docs & notes (projeye ait değil)
+## Chat Customization Diagnostics.md
+DEPLOYMENT-TEST.md
+Dizine Ekleme API'si Hızlı Başlangıç.md
+GOOGLE-ADSENSE-ONAY-PLANI.md
+REKLAM-ALTERNATIFLERI-KARSILASTIRMA.md
+Untitled-1.md
+extracted-rss-urls.txt
+resources.rss
+
+# Old Dockerfiles
+Dockerfile.backup
+Dockerfile.old
+
+# Google OAuth client secret
+client_secret_*.apps.googleusercontent.com.json
