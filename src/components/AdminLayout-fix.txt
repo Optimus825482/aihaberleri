@@ -1,5 +1,0 @@
-      {/* Toast Notifications */}
-      <Toaster />
-    </div>
-  );
-}
