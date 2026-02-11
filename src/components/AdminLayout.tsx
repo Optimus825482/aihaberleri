@@ -29,6 +29,7 @@ import {
   TrendingUp,
   Youtube,
   Newspaper,
+  Activity,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,12 @@ const menuGroups = [
         title: "Analytics",
         href: "/admin/analytics",
         icon: BarChart,
+        requiredResource: null,
+      },
+      {
+        title: "Ziyaretçi Analizi",
+        href: "/admin/visitor-analytics",
+        icon: Activity,
         requiredResource: null,
       },
       {

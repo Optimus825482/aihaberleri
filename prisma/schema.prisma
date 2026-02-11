@@ -276,6 +276,13 @@ model ArticleAnalytics {
   city        String?
   latitude    Float?
   longitude   Float?
+  // New fields
+  scrollDepth Int      @default(0) // Max scroll percentage 0-100
+  device      String?  // Desktop, Mobile, Tablet
+  browser     String?  // Chrome, Firefox, Safari
+  os          String?  // Windows, macOS, Linux
+  referrer    String?  // Traffic source
+  screenWidth Int?     // Viewport width
   article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@index([articleId])
@@ -284,6 +291,8 @@ model ArticleAnalytics {
   @@index([country])
   @@index([city])
   @@index([articleId, createdAt(sort: Desc)])
+  @@index([device])
+  @@index([referrer])
 }
 
 model AgentLog {
@@ -373,25 +382,66 @@ model ContactMessage {
 }
 
 model Visitor {
-  id           String   @id @default(cuid())
-  ipAddress    String   @unique
+  id           String      @id @default(cuid())
+  ipAddress    String      @unique
   userAgent    String?
   currentPage  String
   country      String?
   countryCode  String?
   city         String?
   region       String?
-  lastActivity DateTime @default(now())
-  createdAt    DateTime @default(now())
+  lastActivity DateTime    @default(now())
+  createdAt    DateTime    @default(now())
   isp          String?
   latitude     Float?
   longitude    Float?
   timezone     String?
   provider     String?
+  // New fields
+  device       String?     // Desktop, Mobile, Tablet
+  browser      String?     // Chrome, Firefox, Safari, Edge
+  os           String?     // Windows, macOS, Linux, Android, iOS
+  totalVisits  Int         @default(1)
+  lastReferrer String?
+  pageViews    PageView[]
 
   @@index([ipAddress])
   @@index([lastActivity])
   @@index([createdAt])
+  @@index([country])
+  @@index([device])
+  @@index([browser])
+}
+
+// Detailed page view tracking - every single page visit
+model PageView {
+  id          String   @id @default(cuid())
+  visitorId   String
+  visitor     Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  path        String   // URL path visited
+  referrer    String?  // Where they came from
+  duration    Int      @default(0) // Seconds spent on page
+  scrollDepth Int      @default(0) // Max scroll percentage (0-100)
+  articleId   String?  // If it's an article page
+  device      String?  // Desktop, Mobile, Tablet
+  browser     String?  // Chrome, Firefox, etc.
+  os          String?  // Windows, macOS, etc.
+  screenWidth Int?     // Viewport width
+  country     String?
+  countryCode String?
+  city        String?
+  exitPage    Boolean  @default(false) // Was this the last page?
+  bounced     Boolean  @default(false) // Left without interaction?
+  createdAt   DateTime @default(now())
+
+  @@index([visitorId])
+  @@index([path])
+  @@index([articleId])
+  @@index([createdAt])
+  @@index([createdAt, path])
+  @@index([country])
+  @@index([device])
+  @@index([visitorId, createdAt])
 }
 
 model AuditLog {

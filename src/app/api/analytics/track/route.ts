@@ -1,12 +1,18 @@
+/**
+ * Article Analytics Tracking API
+ * Enhanced with scroll depth, device info, referrer
+ */
+
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { headers } from "next/headers";
 import { getGeolocation } from "@/lib/geolocation";
+import { parseUserAgent } from "@/lib/ua-parser";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { articleId, duration } = body;
+    const { articleId, duration, scrollDepth, referrer, screenWidth } = body;
 
     if (!articleId) {
       return NextResponse.json(
@@ -15,29 +21,32 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get client IP
     const headersList = await headers();
     const forwarded = headersList.get("x-forwarded-for");
     const realIp = headersList.get("x-real-ip");
     const ip = forwarded?.split(",")[0] || realIp || "127.0.0.1";
     const userAgent = headersList.get("user-agent") || "unknown";
+    const { device, browser, os } = parseUserAgent(userAgent);
 
-    // Get location from IP (dual-provider: ipwho.is + ip-api.com)
     let locationData = null;
     try {
       locationData = await getGeolocation(ip);
-    } catch (geoError) {
-      console.warn("[TRACK] GeoIP lookup failed:", geoError);
-      // Continue without location data
+    } catch {
+      // Continue without location
     }
 
-    // Update or create analytics record for this session
     await db.articleAnalytics.create({
       data: {
         articleId,
         ipAddress: ip,
         userAgent,
         duration: duration || 0,
+        scrollDepth: scrollDepth || 0,
+        device,
+        browser,
+        os,
+        referrer: referrer || null,
+        screenWidth: screenWidth || null,
         country: locationData?.country || null,
         countryCode: locationData?.countryCode || null,
         region: locationData?.region || null,
