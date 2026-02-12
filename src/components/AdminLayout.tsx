@@ -30,6 +30,7 @@ import {
   Newspaper,
   Activity,
   Gauge,
+  RotateCcw,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -140,6 +141,12 @@ const menuGroups = [
         title: "Paylaşılmayan Haberler",
         href: "/admin/unshared-articles",
         icon: AlertCircle,
+        requiredResource: null,
+      },
+      {
+        title: "Eksik Paylaşım Retry",
+        href: "/admin/retry-shares",
+        icon: RotateCcw,
         requiredResource: null,
       },
       {
