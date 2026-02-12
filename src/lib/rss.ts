@@ -170,11 +170,11 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://aiacceleratorinstitute.com/rss/",
     language: "en",
   },
-  {
-    name: "AI - AI-TechPark",
-    url: "https://ai-techpark.com/category/ai/feed/",
-    language: "en",
-  },
+  // {
+  //   name: "AI - AI-TechPark",
+  //   url: "https://ai-techpark.com/category/ai/feed/",
+  //   language: "en",
+  // }, // Disabled: 403 since 2026-02-12
   {
     name: "AIModels.fyi",
     url: "https://aimodels.substack.com/feed",
@@ -239,11 +239,11 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://aws.amazon.com/blogs/machine-learning/feed/",
     language: "en",
   },
-  {
-    name: "Hugging Face Blog",
-    url: "https://huggingface.co/blog/feed.xml",
-    language: "en",
-  },
+  // {
+  //   name: "Hugging Face Blog",
+  //   url: "https://huggingface.co/blog/feed.xml",
+  //   language: "en",
+  // }, // Disabled: 403 since 2026-02-12 (also in rss-sources.ts)
   {
     name: "Berkeley AI Research (BAIR)",
     url: "https://bair.berkeley.edu/blog/feed.xml",

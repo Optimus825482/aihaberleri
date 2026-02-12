@@ -172,7 +172,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 1,
     requiresTranslation: true,
     priority: 5,
-    isActive: true,
+    isActive: false, // 403 since 2026-02-12, disabled
     tags: ["open-source", "models", "transformers", "community"],
   },
   {
