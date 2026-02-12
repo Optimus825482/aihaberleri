@@ -676,72 +676,12 @@ async function startWorker() {
         log.warn("IndexNow sync failed");
       }
 
-      // 1.5 Google Indexing API Senkronizasyonu (PENDING olan haberler - günlük limit: 200)
-      try {
-        const { notifyGoogleBatchWithLimit, getRemainingDailyQuota } =
-          await import("@/lib/seo/google-indexing-api");
-
-        // Önce kalan kotayı kontrol et
-        const remainingQuota = await getRemainingDailyQuota();
-
-        if (remainingQuota === 0) {
-          log.warn("Google Index günlük limiti doldu");
-        } else {
-          const baseUrl =
-            process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-
-          // PENDING olan haberleri bul (sadece bugünkü - günlük limitten tasarruf için)
-          const pendingArticles = await db.article.findMany({
-            where: {
-              googleIndexStatus: "PENDING",
-              status: "PUBLISHED",
-              createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Son 24 saat
-            },
-            select: { id: true, slug: true },
-            take: Math.min(remainingQuota, 20), // Max 20 per cycle (was 50 — exhausted daily quota too fast)
-          });
-
-          if (pendingArticles.length > 0) {
-            const urls = pendingArticles.map((a) => ({
-              url: `${baseUrl}/news/${a.slug}`,
-              type: "URL_UPDATED" as const,
-            }));
-
-            const result = await notifyGoogleBatchWithLimit(urls);
-
-            if (result.successCount > 0) {
-              // Başarılı olanları güncelle
-              const successfulSlugs = result.results
-                .filter((r: any) => r.success)
-                .map((r: any) => r.url.replace(`${baseUrl}/news/`, ""));
-
-              await db.article.updateMany({
-                where: { slug: { in: successfulSlugs } },
-                data: {
-                  googleIndexStatus: "SUBMITTED",
-                  googleIndexedAt: new Date(),
-                },
-              });
-
-              log.success(
-                `Google Index: ${result.successCount} bildirildi | Kota: ${result.remainingQuota}`,
-              );
-            }
-
-            if (result.failCount > 0) {
-              log.warn(`Google Index: ${result.failCount} başarısız`);
-            }
-
-            if (result.skipped > 0) {
-              log.info(`Google Index: ${result.skipped} atlandı (limit)`);
-            }
-          } else {
-            // Silent - no pending articles
-          }
-        }
-      } catch {
-        // Silent - Google Indexing sync error (non-critical)
-      }
+      // 1.5 Google Indexing API — Startup'ta toplu bildirim devre dışı.
+      // Her haber paylaşıldığında zaten tek tek bildiriliyor, startup sync kotayı gereksiz tüketiyor.
+      // Manuel gerekirse: /api/indexing/batch endpoint'i kullanılabilir.
+      // try {
+      //   ... (disabled to preserve daily quota)
+      // }
 
       // 2. Agent Schedule Check - Repeatable Job Setup
       const [enabledSetting, nextRunSetting] = await Promise.all([
