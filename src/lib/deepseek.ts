@@ -423,9 +423,7 @@ URL: ${article.url}
         content: prompt,
       },
     ],
-    {
-      model: "deepseek-chat", // Use chat model for analysis
-    },
+    {},
   );
 
   // Extract JSON from response
@@ -621,9 +619,8 @@ JSON formatında yanıt ver:
       },
     ],
     {
-      model: "deepseek-chat",
       maxTokens: 4000,
-      temperature: 1.0, // Maximum creativity/randomness for burstiness
+      temperature: 1.0,
     },
   );
 
@@ -814,73 +811,78 @@ export async function generateImagePrompt(
       ? `\n\n### DETECTED KEY SUBJECTS (USE THESE!):\n${entityHints.join("\n")}`
       : "";
 
-  const prompt = `Sen dünya çapında ödüllü bir haber fotoğrafçısısın. Bu yapay zeka haberi için REALISTIC, UNIQUE ve KONU-ODAKLI görsel prompt oluştur.
+  // Use entity-based visual style if detected
+  const detectedEntity = detectEntityForVisual(title);
+  const entityStyle = detectedEntity
+    ? ENTITY_VISUAL_STYLES[detectedEntity]
+    : null;
 
-Haber Başlığı: ${title}
-Kategori: ${category}
-İçerik Özeti: ${content.substring(0, 600)}
-${entityContext}
+  // Pick a random camera angle for variety
+  const cameraAngles = [
+    "macro photography",
+    "wide angle shot",
+    "aerial view",
+    "close-up detail",
+    "symmetrical composition",
+    "low angle perspective",
+    "bird's eye view",
+    "cinematic wide shot",
+    "product photography",
+    "architectural photography",
+  ];
+  const randomAngle =
+    cameraAngles[Math.floor(Math.random() * cameraAngles.length)];
 
-### PROMPT OLUŞTURMA ADIMLARI:
+  // Pick a random lighting style for variety
+  const lightingStyles = [
+    "golden hour lighting",
+    "blue hour atmosphere",
+    "studio lighting",
+    "natural daylight",
+    "dramatic side lighting",
+    "soft diffused light",
+    "neon accent lighting",
+    "backlit silhouette",
+    "overcast even lighting",
+  ];
+  const randomLighting =
+    lightingStyles[Math.floor(Math.random() * lightingStyles.length)];
 
-**ADIM 1 - ANA KONU BELİRLE:**
-Haberin EN ÖNEMLİ öğesini seç (öncelik sırası):
-1. Şirket adı varsa → O şirketin ürünü/binası/logosu ile ilgili görsel
-2. Ürün adı varsa → O ürünün kendisi veya kullanım ortamı
-3. Robot/cihaz varsa → O robotun/cihazın görseli
-4. Olay tipi varsa → O olayı temsil eden sembolik görsel
+  const entityHint = entityStyle
+    ? `\n\n### DETECTED ENTITY STYLE (USE THIS AS BASE!):\nEntity: ${detectedEntity?.toUpperCase()}\nSuggested style: ${entityStyle}\nAdapt this style to the specific news angle.`
+    : "";
 
-**ADIM 2 - GÖRSEL TİPİ SEÇ:**
-- Macro shot (chip, devre, cihaz detayı)
-- Exterior shot (bina, fabrika, kampüs)
-- Product shot (cihaz, robot, ürün)
-- Environment shot (data center, lab, factory)
-- Aerial view (fabrika, kampüs, şehir)
-- Conceptual (soyut teknoloji görseli)
+  const prompt = `Generate a photorealistic image prompt for this AI news article.
 
-**ADIM 3 - STİL EKLE:**
-Lighting: golden hour | blue hour | studio | natural
-Quality: photorealistic | 8k | sharp focus | editorial
+Title: ${title}
+Category: ${category}
+Content: ${content.substring(0, 400)}
+${entityContext}${entityHint}
 
-### YASAKLAR (KESINLIKLE KULLANMA!):
-❌ İnsan, yüz, el, parmak, vücut parçası
-❌ "empty office", "conference room", "meeting room" 
-❌ "holographic brain", "neon glow", "futuristic"
-❌ Yazı, metin, logo yazısı
-❌ Generic stock photo tarzı görseller
+CAMERA: ${randomAngle}
+LIGHTING: ${randomLighting}
 
-### KONU-GÖRSEL EŞLEŞTİRME ÖRNEKLERİ:
+RULES:
+1. Be SPECIFIC to the news topic — not generic tech imagery
+2. NO humans, faces, hands, body parts — EVER
+3. NO text, logos, or writing in the image
+4. NO "holographic brain", "neon glow", "futuristic" clichés
+5. Focus on REAL objects: devices, buildings, chips, robots, screens, labs
+6. Max 120 characters
 
-ROBOT HABERİ → "bipedal robot standing in clean lab, white chassis, professional lighting"
-NVIDIA HABERİ → "Nvidia H100 GPU close-up, green PCB, macro photography"
-OPENAI HABERİ → "Modern glass office building exterior, San Francisco skyline"
-GOOGLE HABERİ → "Googleplex campus courtyard, Android statue, sunny day"
-TESLA HABERİ → "Tesla Model S charging at Supercharger station, sunset"
-EV/ARAÇ HABERİ → "Electric vehicle charging port close-up, LED indicator"
-CHIP HABERİ → "Silicon wafer with microchips, clean room photography"
-DATA CENTER → "Server room corridor, blue LED rack lights, symmetrical"
-DRONE HABERİ → "Autonomous delivery drone in flight, clear sky background"
-QUANTUM → "Quantum computer cooling chamber, golden wiring, cryogenic"
-SIBER GÜVENLİK → "Digital padlock visualization, circuit pattern background"
-STARTUP/YATIRIM → "Modern tech startup office lobby, glass and steel"
+EXAMPLES:
+- "Nvidia H100 GPU array in server rack, green LED indicators, ${randomAngle}, ${randomLighting}"
+- "Autonomous delivery drone hovering over suburban neighborhood, clear sky, ${randomAngle}"
+- "Quantum computer golden wiring close-up, cryogenic chamber, ${randomAngle}, ${randomLighting}"
 
-### SON KONTROL:
-✅ Haberin ana konusuyla DOĞRUDAN ilgili mi?
-✅ Generic değil, SPESIFIK mi?
-✅ İnsan içermiyor mu?
-✅ 120 karakter altında mı?
-
-### FORMAT:
-[Ana Konu] + [Detay/Ortam] + [Açı/Stil] + ", no people, no humans"
-
-SADECE PROMPT YAZ. AÇIKLAMA YAPMA.`;
+OUTPUT: Only the prompt text. No explanation.`;
 
   const response = await callDeepSeek(
     [
       {
         role: "system",
         content:
-          "Sen uzman bir haber fotoğrafçısısın. Haberin içeriğini analiz et ve SPESIFIK, ÇEŞITLI görsel prompt oluştur. Generic ofis görselleri YASAK. Her haber için FARKLI bir görsel seç.",
+          "You are an expert editorial photographer. Generate a single image prompt that is SPECIFIC to the news topic. No humans ever. No explanations. Just the prompt.",
       },
       {
         role: "user",
@@ -888,9 +890,8 @@ SADECE PROMPT YAZ. AÇIKLAMA YAPMA.`;
       },
     ],
     {
-      model: "deepseek-chat",
       maxTokens: 200,
-      temperature: 1.0, // Increased to 1.0 for maximum variety
+      temperature: 1.0,
     },
   );
 
@@ -1089,8 +1090,7 @@ JSON formatında yanıt ver:
       },
     ],
     {
-      model: "deepseek-chat",
-      maxTokens: 6000, // Larger for comprehensive articles
+      maxTokens: 6000,
       temperature: 0.9,
     },
   );
@@ -1225,7 +1225,6 @@ ${originalContent}
       },
     ],
     {
-      model: "deepseek-chat",
       maxTokens: 4000,
       temperature: 0.7,
     },
@@ -1329,7 +1328,6 @@ Katı ama adil ol. Düşük kaliteli, eski veya alakasız içeriği reddet.`;
         },
       ],
       {
-        model: "deepseek-chat",
         temperature: 0.3,
         maxTokens: 4000,
       },

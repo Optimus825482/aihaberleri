@@ -530,20 +530,9 @@ export async function selectBestArticles(
 
   if (articles.length === 0) return [];
 
-  // Filter out duplicates BEFORE AI analysis to save tokens and avoid duplicate processing
-  const uniqueArticles: NewsArticle[] = [];
-  for (const article of articles) {
-    if (!(await isDuplicate(article))) {
-      uniqueArticles.push(article);
-    } else {
-      console.log(`🗑️ Duplicate skipped: ${article.title}`);
-    }
-  }
-
-  if (uniqueArticles.length === 0) {
-    console.log("⚠️ All articles were duplicates.");
-    return [];
-  }
+  // Duplicate check removed from here — processAndPublishArticles already does it
+  // before processing each article (saves redundant DB queries)
+  const uniqueArticles = articles;
 
   // ═══════════════════════════════════════════════════════════════════
   // AI RELEVANCE FILTER - Remove non-AI content
@@ -830,58 +819,9 @@ export async function processArticle(
       `✅ Kaynak içerik kalite kontrolünden geçti (${earlyValidation.score}/100)`,
     );
 
-    // Step 1.5: 🆕 DEEP RESEARCH - Gather additional context
-    console.log("🔬 Deep research yapılıyor...");
-    await liveLog.content.info(`🔬 Ek araştırma yapılıyor...`);
-
-    const researchSpan = tracer?.span("deep-research");
-    await researchSpan?.start({ title: article.title });
-
-    const { deepResearchArticle } = await import("@/lib/brave");
-    const researchData = await deepResearchArticle(
-      article.title,
-      article.description,
-    );
-
-    // Build enriched content with research findings
-    let enrichedContent = fullContent;
+    // Content enrichment - use original content directly (Brave deep research removed)
+    const enrichedContent = fullContent;
     const additionalSources: Array<{ title: string; url: string }> = [];
-
-    // Add statistics if found
-    if (researchData.statistics.length > 0) {
-      enrichedContent += "\n\n[ADDITIONAL STATISTICS FROM RESEARCH]:\n";
-      enrichedContent += researchData.statistics
-        .map((s) => `- ${s}`)
-        .join("\n");
-    }
-
-    // Add expert quotes if found
-    if (researchData.expertQuotes.length > 0) {
-      enrichedContent += "\n\n[EXPERT QUOTES FROM RESEARCH]:\n";
-      enrichedContent += researchData.expertQuotes
-        .map((q) => `"${q}"`)
-        .join("\n");
-    }
-
-    // Add related context
-    if (researchData.relatedContext.length > 0) {
-      enrichedContent += "\n\n[ADDITIONAL CONTEXT FROM RESEARCH]:\n";
-      enrichedContent += researchData.relatedContext
-        .slice(0, 3)
-        .map((c) => `- ${c}`)
-        .join("\n");
-    }
-
-    // Collect sources for footer
-    additionalSources.push(...researchData.sources);
-
-    console.log(
-      `✅ Deep research tamamlandı: ${researchData.sources.length} ek kaynak bulundu`,
-    );
-    await researchSpan?.end({ sourcesFound: researchData.sources.length });
-    await liveLog.content.success(
-      `✅ ${researchData.sources.length} ek kaynak ile zenginleştirildi`,
-    );
 
     // Step 2: Fetch recent articles for internal linking context (max 3 to avoid over-linking)
     const recentArticles = await db.article.findMany({
@@ -894,10 +834,8 @@ export async function processArticle(
       orderBy: { createdAt: "desc" },
     });
 
-    // Step 3: Rewrite article using DeepSeek with ENRICHED content
-    console.log(
-      "🤖 DeepSeek ile zenginleştirilmiş içerik yeniden yazılıyor...",
-    );
+    // Step 3: Rewrite article using DeepSeek
+    console.log("🤖 DeepSeek ile içerik yeniden yazılıyor...");
 
     // Live log: Rewriting
     await liveLog.deepseek.info(
@@ -915,12 +853,12 @@ export async function processArticle(
     }
 
     const rewriteSpan = tracer?.span("deepseek-rewrite");
-    await rewriteSpan?.start({ model: "deepseek-chat" });
+    await rewriteSpan?.start({});
     const rewriteStart = Date.now();
 
     const rewritten = (await rewriteArticle(
       article.title,
-      enrichedContent, // 🆕 Use enriched content instead of plain fullContent
+      enrichedContent,
       category,
       recentArticles,
     )) as RewriteResult;
@@ -935,13 +873,12 @@ export async function processArticle(
     // 🆕 Add sources footer to content
     let finalContent = rewritten.content;
 
-    // Build sources list (original + research sources)
+    // Build sources list (original source only — Brave deep research removed)
     const allSources = [
       {
         title: new URL(article.url).hostname.replace("www.", ""),
         url: article.url,
       },
-      ...additionalSources.slice(0, 4), // Limit to 4 additional sources
     ];
 
     // Create compact AI disclosure + sources footer
@@ -964,85 +901,58 @@ export async function processArticle(
   </div>
 </div>`;
 
-    // �️ TÜM HABERLER İÇİN GÖRSEL ÜRETİMİ ZORUNLU
-    // Elemeler zaten öncesinde yapılıyor, görsel üretiminde ek elemeye gerek yok
-    const shouldGenerateImage = true; // Skor eşiği kaldırıldı - her haber için görsel üretilecek
+    // Step 4: Generate AI image prompt using DeepSeek
+    console.log("🎨 DeepSeek ile görsel prompt oluşturuluyor...");
+    const imageSpan = tracer?.span("image-generation");
+    await imageSpan?.start();
+    const imagePrompt = await generateImagePrompt(
+      rewritten.title,
+      rewritten.content,
+      category,
+    );
+    console.log("📝 Görsel prompt:", imagePrompt);
 
-    let imageUrl: string;
-    let slug: string; // Declare slug at outer scope
-    let imageSizes: {
-      large: string;
-      medium: string;
-      small: string;
-      thumb: string;
+    // Step 5: Get image from Pollinations.ai
+    console.log("🖼️  Pollinations.ai'dan görsel alınıyor...");
+    let imageUrl = await fetchPollinationsImage(imagePrompt, {
+      width: 1200,
+      height: 630,
+      model: "flux",
+      enhance: true,
+      nologo: true,
+    });
+    console.log("✅ Görsel URL:", imageUrl);
+
+    // Step 5.5: Generate slug (needed for image optimization)
+    const slug = generateSlug(rewritten.title);
+
+    // Live log: Image generated
+    await liveLog.image.success(`🖼️ Görsel oluşturuldu: ${slug}`);
+
+    // Step 6: Optimize image and generate multiple sizes
+    console.log("🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...");
+    let imageSizes = {
+      large: imageUrl,
+      medium: imageUrl,
+      small: imageUrl,
+      thumb: imageUrl,
     };
 
-    if (shouldGenerateImage) {
-      // Step 4: Generate AI image prompt using DeepSeek
-      console.log("🎨 DeepSeek ile görsel prompt oluşturuluyor...");
-      const imageSpan = tracer?.span("image-generation");
-      await imageSpan?.start();
-      const imagePrompt = await generateImagePrompt(
-        rewritten.title,
-        rewritten.content,
-        category,
+    try {
+      imageSizes = await optimizeAndGenerateSizes(imageUrl, slug);
+      console.log("✅ Görsel optimizasyonu tamamlandı");
+      console.log(`   Large: ${imageSizes.large}`);
+      console.log(`   Medium: ${imageSizes.medium}`);
+      console.log(`   Small: ${imageSizes.small}`);
+      console.log(`   Thumb: ${imageSizes.thumb}`);
+      await imageSpan?.end({ prompt: imagePrompt.substring(0, 100) });
+    } catch (optimizeError) {
+      console.error(
+        "⚠️  Görsel optimizasyonu başarısız, orijinal kullanılacak:",
+        optimizeError,
       );
-      console.log("📝 Görsel prompt:", imagePrompt);
-
-      // Step 5: Get image from Pollinations.ai
-      console.log("🖼️  Pollinations.ai'dan görsel alınıyor...");
-      imageUrl = await fetchPollinationsImage(imagePrompt, {
-        width: 1200,
-        height: 630,
-        model: "flux",
-        enhance: true,
-        nologo: true,
-      });
-      console.log("✅ Görsel URL:", imageUrl);
-
-      // Step 5.5: Generate slug (needed for image optimization)
-      slug = generateSlug(rewritten.title);
-
-      // Live log: Image generated
-      await liveLog.image.success(`🖼️ Görsel oluşturuldu: ${slug}`);
-
-      // Step 6: Optimize image and generate multiple sizes
-      console.log("🎨 Görsel optimize ediliyor ve boyutlar oluşturuluyor...");
-      imageSizes = {
-        large: imageUrl,
-        medium: imageUrl,
-        small: imageUrl,
-        thumb: imageUrl,
-      };
-
-      try {
-        imageSizes = await optimizeAndGenerateSizes(imageUrl, slug);
-        console.log("✅ Görsel optimizasyonu tamamlandı");
-        console.log(`   Large: ${imageSizes.large}`);
-        console.log(`   Medium: ${imageSizes.medium}`);
-        console.log(`   Small: ${imageSizes.small}`);
-        console.log(`   Thumb: ${imageSizes.thumb}`);
-        await imageSpan?.end({ prompt: imagePrompt.substring(0, 100) });
-      } catch (optimizeError) {
-        console.error(
-          "⚠️  Görsel optimizasyonu başarısız, orijinal kullanılacak:",
-          optimizeError,
-        );
-        await imageSpan?.end({ fallback: true });
-        // Continue with original image URL for all sizes
-      }
-    } else {
-      // Bu blok artık çalışmayacak çünkü shouldGenerateImage = true
-      // Yine de güvenlik için bırakılıyor
-      console.log(`⚠️ Beklenmeyen durum: Görsel oluşturma atlandı`);
-      imageUrl = "/logos/og-image.png";
-      slug = generateSlug(rewritten.title);
-      imageSizes = {
-        large: imageUrl,
-        medium: imageUrl,
-        small: imageUrl,
-        thumb: imageUrl,
-      };
+      await imageSpan?.end({ fallback: true });
+      // Continue with original image URL for all sizes
     }
 
     // Step 7: Get or create category

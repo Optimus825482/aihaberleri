@@ -334,6 +334,7 @@ export async function isDuplicateNews(
     }
 
     // Fetch recent articles within time window
+    // Optimization: only fetch content field when content param is provided
     const recentArticles = await db.article.findMany({
       where: {
         publishedAt: {
@@ -344,7 +345,7 @@ export async function isDuplicateNews(
       select: {
         id: true,
         title: true,
-        content: true,
+        ...(content ? { content: true } : {}),
         slug: true,
         publishedAt: true,
       },
