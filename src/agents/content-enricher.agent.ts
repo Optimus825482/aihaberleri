@@ -812,8 +812,8 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
       )
       .join("\n");
 
-    // Using DeepSeek-chat for BOTH TR and EN content synthesis
-    this.logger.info(`🚀 Using DeepSeek-chat for BOTH TR + EN synthesis`);
+    // Using LLM for BOTH TR and EN content synthesis (NVIDIA Qwen3 primary, DeepSeek fallback)
+    this.logger.info(`🚀 Using LLM for BOTH TR + EN synthesis`);
 
     // Turkish content (DeepSeek-chat)
     const trPrompt = `Sen usta bir araştırmacı gazeteci ve baş editörsün.

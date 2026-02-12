@@ -155,23 +155,21 @@ export class DuplicateDetectorAgent extends BaseAgent<
   }
 
   /**
-   * Check if article is duplicate using SIMPLE URL-only detection
+   * Check if article is duplicate using URL detection
    *
-   * SIMPLIFIED (2026-02-08):
-   * - ONLY Layer 1: URL match (12 hours)
-   * - NO semantic similarity
-   * - NO title/content similarity
-   * - NO entity matching
+   * UPDATED (2026-02-12):
+   * - Layer 1: URL match WITHOUT time window (prevents wasted pipeline runs)
+   * - Layer 2: Recent URL match with time window (6h) as fallback
    *
-   * Reason: Duplicate filtering already done in news.service.ts
-   * This is just a safety check
+   * Previous bug: 6-hour time window meant articles published >6h ago
+   * would pass duplicate check, go through entire pipeline (enrichment,
+   * visual generation, API calls), only to be rejected at database-publisher.
+   * Each wasted run cost ~130s + DeepSeek + Pollinations API calls.
    */
   private async checkDuplicate(
     article: ScoredArticle,
   ): Promise<{ isDuplicate: boolean; reason?: string }> {
-    // Layer 1: Exact URL match (last 6 hours) - ONLY CHECK!
     const normalizedUrl = this.normalizeUrl(article.url);
-    const urlTimeWindow = new Date(Date.now() - 6 * 60 * 60 * 1000); // 6 hours (changed from 12)
 
     // For YouTube URLs, only match exact normalized URL (including ?v= param)
     // For other URLs, also try startsWith match (without query params)
@@ -185,9 +183,12 @@ export class DuplicateDetectorAgent extends BaseAgent<
       });
     }
 
+    // Layer 1: Check if URL exists in DB at ALL (no time window)
+    // This is the critical fix — prevents entire pipeline from running
+    // on articles that are already published
     const existingByUrl = await db.article.findFirst({
       where: {
-        AND: [{ OR: urlConditions }, { publishedAt: { gte: urlTimeWindow } }],
+        OR: urlConditions,
       },
       select: { id: true, title: true },
     });
@@ -195,11 +196,10 @@ export class DuplicateDetectorAgent extends BaseAgent<
     if (existingByUrl) {
       return {
         isDuplicate: true,
-        reason: "EXACT_URL_MATCH_12H",
+        reason: "URL_EXISTS_IN_DB",
       };
     }
 
-    // ✅ NO OTHER CHECKS - Keep it simple!
     return { isDuplicate: false };
   }
 

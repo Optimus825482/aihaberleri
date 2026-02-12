@@ -219,6 +219,7 @@ async function callProvider(
   const apiKey = isNvidia ? NVIDIA_API_KEY : DEEPSEEK_API_KEY;
   const model = isNvidia ? NVIDIA_MODEL : options.model || "deepseek-chat";
   const breaker = isNvidia ? nvidiaCircuitBreaker : deepSeekCircuitBreaker;
+  const providerLabel = isNvidia ? `NVIDIA/${NVIDIA_MODEL}` : "DeepSeek-chat";
 
   if (!apiKey) {
     throw new Error(`${provider.toUpperCase()} API key not configured`);
@@ -226,6 +227,8 @@ async function callProvider(
   if (!canProceedWith(breaker)) {
     throw new Error(`${provider.toUpperCase()} circuit breaker is OPEN`);
   }
+
+  console.log(`🤖 LLM call → ${providerLabel} (circuit: ${breaker.state})`);
 
   try {
     const response = await axios.post<DeepSeekResponse>(

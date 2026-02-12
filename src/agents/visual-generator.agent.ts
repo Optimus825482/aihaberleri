@@ -187,10 +187,7 @@ export class VisualGeneratorAgent extends BaseAgent<
       const slug = generateSlug(article.synthesizedContent.tr.title);
       const existingArticle = await db.article.findFirst({
         where: {
-          OR: [
-            { slug },
-            { sourceUrl: article.url },
-          ],
+          OR: [{ slug }, { sourceUrl: article.url }],
         },
         select: { id: true, slug: true },
       });
@@ -236,7 +233,7 @@ export class VisualGeneratorAgent extends BaseAgent<
 
       // Step 1: Generate image prompt with DeepSeek (content-focused, diverse prompts)
       this.logger.info(
-        `🤖 Using DeepSeek for image prompt generation (content-aware)`,
+        `🤖 Using LLM for image prompt generation (content-aware)`,
       );
       const imagePrompt: string = await retryWithBackoff(
         async () =>

@@ -166,7 +166,7 @@ export class RelevanceFilterAgent extends BaseAgent<
     }
 
     try {
-      this.logger.info(`🤖 Using DeepSeek-chat for batch scoring`);
+      this.logger.info(`🤖 Using LLM for batch scoring`);
 
       const scores = await batchScoreArticles(articles);
 
