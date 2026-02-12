@@ -127,6 +127,70 @@ async function testFacebookToken() {
   }
 
   console.log("\n✅ Facebook TR token testi tamamlandı.");
+
+  // === EN Token Test ===
+  const EN_PAGE_ID = process.env.FACEBOOK_EN_PAGE_ID;
+  const EN_TOKEN = process.env.FACEBOOK_EN_PAGE_ACCESS_TOKEN;
+  const EN_ENABLED = process.env.FACEBOOK_EN_ENABLED === "true";
+
+  if (!EN_ENABLED) {
+    console.log("\n⏭️ Facebook EN devre dışı (FACEBOOK_EN_ENABLED != true)");
+    return;
+  }
+
+  if (!EN_PAGE_ID || !EN_TOKEN) {
+    console.error("\n❌ Facebook EN credentials eksik (.env)");
+    return;
+  }
+
+  console.log("\n" + "=".repeat(50));
+  console.log("🔍 Facebook EN Token Test\n");
+  console.log(`📋 EN Page ID: ${EN_PAGE_ID}`);
+  console.log(
+    `🔑 EN Token: ${EN_TOKEN.substring(0, 15)}...${EN_TOKEN.substring(EN_TOKEN.length - 10)}\n`,
+  );
+
+  try {
+    const pageRes = await axios.get(`${GRAPH_API_URL}/${EN_PAGE_ID}`, {
+      params: {
+        fields: "name,id,fan_count,followers_count",
+        access_token: EN_TOKEN,
+      },
+    });
+    console.log("✅ EN Sayfa bilgisi alındı:");
+    console.log(`   Sayfa: ${pageRes.data.name}`);
+    console.log(`   ID: ${pageRes.data.id}`);
+  } catch (err: any) {
+    const fbErr = err?.response?.data?.error;
+    console.error("❌ EN Sayfa bilgisi alınamadı:");
+    if (fbErr) console.error(`   Kod: ${fbErr.code} — ${fbErr.message}`);
+    else console.error(`   ${err.message}`);
+    return;
+  }
+
+  try {
+    const debugRes = await axios.get(`${GRAPH_API_URL}/debug_token`, {
+      params: { input_token: EN_TOKEN, access_token: EN_TOKEN },
+    });
+    const data = debugRes.data.data;
+    console.log("\n🔍 EN Token detayları:");
+    console.log(`   Geçerli: ${data.is_valid ? "✅ EVET" : "❌ HAYIR"}`);
+    console.log(`   Tip: ${data.type}`);
+    if (data.scopes) {
+      console.log(`   İzinler: ${data.scopes.join(", ")}`);
+      const hasPublish = data.scopes.includes("pages_manage_posts");
+      const hasRead = data.scopes.includes("pages_read_engagement");
+      console.log(`   pages_manage_posts: ${hasPublish ? "✅" : "❌ EKSİK"}`);
+      console.log(`   pages_read_engagement: ${hasRead ? "✅" : "❌ EKSİK"}`);
+    }
+  } catch (err: any) {
+    console.warn(
+      "⚠️ EN Token debug alınamadı:",
+      err?.response?.data?.error?.message || err.message,
+    );
+  }
+
+  console.log("\n✅ Facebook EN token testi tamamlandı.");
 }
 
 testFacebookToken().catch(console.error);

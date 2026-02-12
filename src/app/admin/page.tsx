@@ -22,11 +22,6 @@ import {
   Clock,
   Play,
   Newspaper,
-  Terminal,
-  Pause,
-  Trash2,
-  Maximize2,
-  Minimize2,
   RefreshCw,
   Cpu,
   HardDrive,
@@ -76,6 +71,16 @@ const PipelineChart = dynamic<{
     <div className="h-[200px] animate-pulse bg-muted/30 rounded-xl" />
   ),
 });
+
+const DashboardPipelineWidget = dynamic(
+  () => import("@/components/admin/DashboardPipelineWidget"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[160px] animate-pulse bg-muted/30 rounded-xl" />
+    ),
+  },
+);
 
 const NOOP = () => {};
 
@@ -544,197 +549,6 @@ const RecentArticleRow = memo(function RecentArticleRow({
   );
 });
 
-// === Log Entry Component ===
-interface LogEntry {
-  type: string;
-  level?: string;
-  message?: string;
-  timestamp: string;
-  step?: string;
-  emoji?: string;
-  _id?: string;
-}
-
-const LOG_LEVEL_COLORS: Record<string, string> = {
-  error: "text-red-400",
-  warn: "text-yellow-400",
-  success: "text-emerald-400",
-  info: "text-blue-400",
-};
-
-const LogEntryRow = memo(function LogEntryRow({ log }: { log: LogEntry }) {
-  const colorClass = LOG_LEVEL_COLORS[log.level || ""] || "text-zinc-400";
-  return (
-    <div
-      className={`flex items-start gap-2 py-0.5 hover:bg-zinc-900/50 rounded px-1 ${colorClass}`}
-      style={{ contentVisibility: "auto", containIntrinsicSize: "0 24px" }}
-    >
-      <span className="text-zinc-600 shrink-0 select-none text-[10px]">
-        {new Date(log.timestamp).toLocaleTimeString("tr-TR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })}
-      </span>
-      {log.emoji && <span className="shrink-0">{log.emoji}</span>}
-      {log.step && (
-        <span className="shrink-0 px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 text-[10px] uppercase font-bold">
-          {log.step}
-        </span>
-      )}
-      <span className="break-all">{log.message}</span>
-    </div>
-  );
-});
-
-// === Live Log Stream Component ===
-function LiveLogStream({
-  onConnectionChange,
-}: {
-  onConnectionChange?: (connected: boolean) => void;
-}) {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const logsEndRef = useRef<HTMLDivElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
-
-  const scrollToBottom = useCallback(() => {
-    if (!isPaused && logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [isPaused]);
-
-  useEffect(() => {
-    const connectToLogs = () => {
-      if (eventSourceRef.current) eventSourceRef.current.close();
-      const eventSource = new EventSource("/api/agent/live-logs");
-      eventSourceRef.current = eventSource;
-
-      eventSource.onopen = () => {
-        setIsConnected(true);
-        onConnectionChange?.(true);
-      };
-
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === "connected") {
-            setIsConnected(true);
-            onConnectionChange?.(true);
-          } else if (data.type === "log") {
-            const entry = {
-              ...data,
-              _id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            };
-            setLogs((prev) => [...prev, entry].slice(-200));
-          }
-        } catch {
-          /* ignore */
-        }
-      };
-
-      eventSource.onerror = () => {
-        setIsConnected(false);
-        onConnectionChange?.(false);
-        eventSource.close();
-        setTimeout(connectToLogs, 5000);
-      };
-    };
-
-    connectToLogs();
-    return () => {
-      eventSourceRef.current?.close();
-    };
-  }, [onConnectionChange]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [logs, scrollToBottom]);
-
-  return (
-    <Card
-      className={`border-emerald-500/20 bg-card/80 backdrop-blur-sm ${isExpanded ? "fixed inset-2 sm:inset-4 z-50" : ""}`}
-    >
-      <CardHeader className="pb-2 px-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-500/10 rounded-xl">
-              <Terminal className="h-4 w-4 text-emerald-500" />
-            </div>
-            <div>
-              <CardTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
-                Log Akışı
-                <PulseDot
-                  color={isConnected ? "bg-emerald-500" : "bg-red-500"}
-                  size="w-1.5 h-1.5"
-                />
-              </CardTitle>
-              <CardDescription className="text-[10px]">
-                Realtime işlem logları
-              </CardDescription>
-            </div>
-          </div>
-          <div className="flex items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsPaused((p) => !p)}
-              className="h-7 w-7 p-0"
-            >
-              {isPaused ? (
-                <Play className="h-3.5 w-3.5" />
-              ) : (
-                <Pause className="h-3.5 w-3.5" />
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLogs([])}
-              className="h-7 w-7 p-0"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsExpanded((e) => !e)}
-              className="h-7 w-7 p-0"
-            >
-              {isExpanded ? (
-                <Minimize2 className="h-3.5 w-3.5" />
-              ) : (
-                <Maximize2 className="h-3.5 w-3.5" />
-              )}
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="px-4 pb-4">
-        <div
-          className={`bg-zinc-950 rounded-xl border border-zinc-800/50 font-mono text-[11px] overflow-hidden ${isExpanded ? "h-[calc(100vh-140px)]" : "h-[200px] sm:h-[260px]"}`}
-        >
-          <div className="h-full overflow-y-auto p-3 space-y-0.5 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-            {logs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-zinc-500">
-                <Terminal className="h-6 w-6 mb-2 opacity-50" />
-                <p className="text-xs">Henüz log yok</p>
-              </div>
-            ) : (
-              logs.map((log) => (
-                <LogEntryRow key={log._id || log.timestamp} log={log} />
-              ))
-            )}
-            <div ref={logsEndRef} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 // === Otonom Agent Card — Compact Mobile ===
 const AgentStatusCard = memo(function AgentStatusCard({
   isEnabled,
@@ -917,8 +731,6 @@ const AgentStatusCard = memo(function AgentStatusCard({
 
 // === MAIN DASHBOARD ===
 export default function AdminDashboard() {
-  const [isLiveConnected, setIsLiveConnected] = useState(false);
-
   const {
     data: dashboardData,
     error: dashError,
@@ -941,10 +753,6 @@ export default function AdminDashboard() {
   const isLoading = dashLoading && agentLoading && !dashboardStats;
   const hasError = dashError && agentError;
 
-  const handleConnectionChange = useCallback((connected: boolean) => {
-    setIsLiveConnected(connected);
-  }, []);
-
   if (isLoading) {
     return (
       <AdminLayout>
@@ -961,7 +769,7 @@ export default function AdminDashboard() {
           isAgentEnabled={isAgentEnabled}
           nextRun={agentStats?.agent?.nextRun}
           queueStats={agentStats?.queue}
-          isConnected={isLiveConnected}
+          isConnected={true}
         />
 
         {/* Error Banner */}
@@ -1173,8 +981,8 @@ export default function AdminDashboard() {
             </Card>
           )}
 
-        {/* Live Worker Log Stream */}
-        <LiveLogStream onConnectionChange={handleConnectionChange} />
+        {/* Pipeline Realtime Monitor */}
+        <DashboardPipelineWidget />
       </div>
     </AdminLayout>
   );

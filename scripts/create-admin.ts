@@ -1,72 +1,27 @@
-/**
- * Script to create admin user
- * Run with: npx tsx scripts/create-admin.ts
- */
-
-import { db } from "../src/lib/db";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import readline from "readline";
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
+async function main() {
+  const prisma = new PrismaClient();
 
-function question(query: string): Promise<string> {
-  return new Promise((resolve) => {
-    rl.question(query, resolve);
+  const email = "admin@aihaberleri.org";
+  const password = "518518";
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  const user = await prisma.user.upsert({
+    where: { email },
+    update: { password: hashedPassword, role: "SUPER_ADMIN", isActive: true },
+    create: {
+      email,
+      password: hashedPassword,
+      name: "Admin",
+      role: "SUPER_ADMIN",
+      isActive: true,
+    },
   });
+
+  console.log(`✅ Admin oluşturuldu: ${user.email} (${user.id})`);
+  await prisma.$disconnect();
 }
 
-async function createAdmin() {
-  console.log("🔧 Admin Kullanıcısı Oluştur\n");
-
-  const email = await question("E-posta: ");
-  const password = await question("Şifre: ");
-  const name = await question("İsim (opsiyonel): ");
-
-  if (!email || !password) {
-    console.error("❌ E-posta ve şifre gereklidir");
-    process.exit(1);
-  }
-
-  try {
-    // Check if user exists
-    const existing = await db.user.findUnique({
-      where: { email },
-    });
-
-    if (existing) {
-      console.error("❌ Bu e-posta ile kayıtlı kullanıcı zaten var");
-      process.exit(1);
-    }
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create user
-    const user = await db.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name: name || undefined,
-        role: "ADMIN",
-      },
-    });
-
-    console.log("\n✅ Admin kullanıcısı başarıyla oluşturuldu!");
-    console.log(`   E-posta: ${user.email}`);
-    console.log(`   ID: ${user.id}`);
-    console.log(
-      `\n🔗 Giriş: ${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/admin/login`,
-    );
-  } catch (error) {
-    console.error("❌ Admin kullanıcısı oluşturma hatası:", error);
-    process.exit(1);
-  } finally {
-    rl.close();
-    await db.$disconnect();
-  }
-}
-
-createAdmin();
+main().catch(console.error);
