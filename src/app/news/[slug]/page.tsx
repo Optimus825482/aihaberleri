@@ -21,6 +21,7 @@ import { ArticleImage } from "@/components/ResponsiveImage";
 import { LikeButton } from "@/components/interactions/LikeButton";
 import { StarRating } from "@/components/interactions/StarRating";
 import { ViewTracker } from "@/components/ViewTracker";
+import { ReadCount } from "@/components/ReadCount";
 import {
   BidvertiserBanner,
   BidvertiserNative,
@@ -192,14 +193,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   </span>
                   <span>{readingTime} dk okuma</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-[16px]">
-                    visibility
-                  </span>
-                  <span>
-                    {article.views.toLocaleString("tr-TR")} görüntülenme
-                  </span>
-                </div>
+                <ReadCount slug={article.slug} fallbackViews={article.views} />
                 <div className="flex items-center gap-1 border-l border-ai-surface-border pl-4 ml-2">
                   <LikeButton
                     articleId={article.id}
