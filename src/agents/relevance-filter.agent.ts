@@ -108,16 +108,28 @@ export class RelevanceFilterAgent extends BaseAgent<
         `Filtered: ${relevantArticles.length}/${scoredArticles.length} articles passed (${rejectionRate}% rejected)`,
       );
 
-      // Log top 5 relevant articles
-      this.logger.info("Top 5 relevant articles:");
-      relevantArticles
+      // 🔍 Log ALL scored articles for debugging (not just passed ones)
+      this.logger.info("All scored articles:");
+      scoredArticles
         .sort((a, b) => b.relevanceScore - a.relevanceScore)
-        .slice(0, 5)
         .forEach((article, i) => {
+          const status =
+            article.relevanceScore >= RELEVANCE_THRESHOLD ? "✅" : "❌";
           this.logger.info(
-            `  ${i + 1}. [${article.relevanceScore}] ${article.title.substring(0, 50)}...`,
+            `  ${status} [${article.relevanceScore}] ${article.title.substring(0, 60)}`,
           );
         });
+
+      // 🛡️ SAFETY NET: If ALL articles rejected but we have scored articles, take the best one
+      if (relevantArticles.length === 0 && scoredArticles.length > 0) {
+        const bestArticle = scoredArticles.sort(
+          (a, b) => b.relevanceScore - a.relevanceScore,
+        )[0];
+        this.logger.warn(
+          `⚠️ All ${scoredArticles.length} articles rejected! Taking best scorer: [${bestArticle.relevanceScore}] ${bestArticle.title.substring(0, 50)}`,
+        );
+        relevantArticles.push(bestArticle);
+      }
 
       return {
         success: true,

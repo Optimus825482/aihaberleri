@@ -1375,7 +1375,7 @@ PUANLAMA KRİTERLERİ (0-100):
 4. İçerik Derinliği (0-15): Yeterli bilgi sağlıyor mu?
 5. Hedef Kitle Uyumu (0-15): Türk AI/teknoloji kitlesi için uygun mu?
 
-EŞIK: >= 60 puan alan makaleler yayınlanacak.
+EŞIK: >= 45 puan alan makaleler yayınlanacak. AI ile ilgili içerikler genellikle 50+ almalıdır.
 
 KATEGORİ SEÇENEKLERİ (sadece bu slug'lardan birini kullan):
 - ai-modelleri (AI modelleri, LLM'ler, yeni model duyuruları)
@@ -1397,7 +1397,7 @@ JSON dizisi ile yanıt ver (makale başına bir nesne):
   ...
 ]
 
-Katı ama adil ol. Düşük kaliteli, eski veya alakasız içeriği reddet.`;
+AI/teknoloji haberleri için cömert ol — gerçekten alakasız olan içerikleri reddet ama AI ile ilgili haberlere en az 50 puan ver. Her makalenin en az 1 güçlü yönünü değerlendir.`;
 
   try {
     const response = await callDeepSeek(
