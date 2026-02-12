@@ -150,6 +150,22 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     log.success(
       `Pipeline ready: ${ok}/6 agents | Relevance→Duplicate→Trend→Enrich→Visual→Publish`,
     );
+
+    // FIX (12.02.2026): Clear stale recovery mode states on worker startup
+    // Prevents agents from starting in recovery mode due to previous session failures
+    try {
+      const { getRedis } = await import("@/lib/redis");
+      const redisClient = getRedis();
+      if (redisClient) {
+        const healthKeys = await redisClient.keys("agent:health:status:*");
+        if (healthKeys.length > 0) {
+          await redisClient.del(...healthKeys);
+          log.info(`Cleared ${healthKeys.length} stale agent health states`);
+        }
+      }
+    } catch {
+      // Non-critical — agents will recover naturally
+    }
   } catch (error) {
     log.error("Pipeline init failed", error);
     throw error;
@@ -682,7 +698,7 @@ async function startWorker() {
               createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }, // Son 24 saat
             },
             select: { id: true, slug: true },
-            take: Math.min(remainingQuota, 50), // Kota veya 50, hangisi küçükse
+            take: Math.min(remainingQuota, 20), // Max 20 per cycle (was 50 — exhausted daily quota too fast)
           });
 
           if (pendingArticles.length > 0) {

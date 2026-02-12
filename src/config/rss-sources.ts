@@ -387,7 +387,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 1,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (12.02.2026): Consistently returns empty feed
     tags: ["official", "enterprise-ai", "rag", "embeddings"],
   },
   {
@@ -480,7 +480,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 1,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (12.02.2026): HTTP 403 Forbidden
     tags: ["daily", "newsletter", "curated"],
   },
   {
@@ -717,7 +717,7 @@ export const TURKISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 3,
     requiresTranslation: false,
     priority: 5,
-    isActive: true,
+    isActive: false, // DISABLED (12.02.2026): Consistently returns empty feed
     tags: ["yapay-zeka", "makine-ogrenmesi", "veri-bilimi"],
   },
 ];

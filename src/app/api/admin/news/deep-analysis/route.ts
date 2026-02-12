@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { processArticle } from "@/services/content.service";
 import { prisma } from "@/lib/prisma";
+import {
+  enrichArticleWithTrends,
+  updateArticleTrendData,
+  type ArticleForMatching,
+} from "@/services/trend-matcher.service";
 
 /**
  * POST /api/admin/news/deep-analysis
@@ -135,6 +140,50 @@ export async function POST(request: NextRequest) {
             language: topic.language || "tr",
           },
         });
+
+        // Step 3.5: Trend score calculation
+        await sendEvent({
+          type: "progress",
+          step: "trend",
+          message: "📊 Trend puanı hesaplanıyor...",
+        });
+
+        try {
+          const articleForMatching: ArticleForMatching = {
+            id: article.id,
+            title: article.title,
+            content: processed.content,
+            keywords: processed.keywords || [],
+            language: topic.language || "tr",
+          };
+
+          const enrichment = await enrichArticleWithTrends(articleForMatching);
+          await updateArticleTrendData(article.id, enrichment);
+
+          if (enrichment.trendScore > 0) {
+            await sendEvent({
+              type: "progress",
+              step: "trend-done",
+              message: `📊 Trend puanı: ${enrichment.trendScore} ${enrichment.isTrending ? "🔥 Trending!" : ""}`,
+            });
+          } else {
+            await sendEvent({
+              type: "progress",
+              step: "trend-done",
+              message: "📊 Trend verisi hesaplandı (aktif trend eşleşmesi yok)",
+            });
+          }
+        } catch (trendError) {
+          console.warn(
+            "⚠️ Trend enrichment failed (non-blocking):",
+            trendError,
+          );
+          await sendEvent({
+            type: "progress",
+            step: "trend-skip",
+            message: "⚠️ Trend hesaplaması atlandı (bloke etmiyor)",
+          });
+        }
 
         // Step 4: Complete
         await sendEvent({

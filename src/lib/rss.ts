@@ -264,16 +264,18 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://blogs.microsoft.com/ai/feed/",
     language: "en",
   },
-  {
-    name: "Meta AI Blog",
-    url: "https://ai.meta.com/blog/rss/",
-    language: "en",
-  },
-  {
-    name: "Anthropic Research",
-    url: "https://www.anthropic.com/research/rss.xml",
-    language: "en",
-  },
+  // DISABLED (12.02.2026): Consistently returns empty RSS feed
+  // {
+  //   name: "Meta AI Blog",
+  //   url: "https://ai.meta.com/blog/rss/",
+  //   language: "en",
+  // },
+  // DISABLED (12.02.2026): HTTP 404 — feed URL no longer exists
+  // {
+  //   name: "Anthropic Research",
+  //   url: "https://www.anthropic.com/research/rss.xml",
+  //   language: "en",
+  // },
 
   // ========================================
   // TIER 4: AI/ML LEARNING & COMMUNITY
@@ -362,11 +364,12 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://aitidbits.substack.com/feed",
     language: "en",
   },
-  {
-    name: "The Neuron Daily",
-    url: "https://www.theneurondaily.com/feed",
-    language: "en",
-  },
+  // DISABLED (12.02.2026): HTTP 403 Forbidden
+  // {
+  //   name: "The Neuron Daily",
+  //   url: "https://www.theneurondaily.com/feed",
+  //   language: "en",
+  // },
   {
     name: "Interconnects",
     url: "https://www.interconnects.ai/feed",
@@ -514,11 +517,12 @@ export const AI_NEWS_RSS_FEEDS = [
   },
 
   // 🇹🇷 Turkish AI Sources
-  {
-    name: "Yapay Zeka Türkiye",
-    url: "https://yapayzekaturkiye.com/feed/",
-    language: "tr",
-  },
+  // DISABLED (12.02.2026): Consistently returns empty feed
+  // {
+  //   name: "Yapay Zeka Türkiye",
+  //   url: "https://yapayzekaturkiye.com/feed/",
+  //   language: "tr",
+  // },
 ];
 
 /**

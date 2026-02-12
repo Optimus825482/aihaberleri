@@ -17,11 +17,11 @@ import { getQueue, getQueueConfig } from "@/lib/queue-manager";
 const AGENT_TIMEOUTS: Record<string, number> = {
   "relevance-filter": 3 * 60 * 1000, // 3 minutes
   "duplicate-detector": 2 * 60 * 1000, // 2 minutes
-  "content-enricher": 10 * 60 * 1000, // 10 minutes
-  "visual-generator": 20 * 60 * 1000, // 20 minutes (INCREASED: 44 articles × ~25s = ~18 min)
+  "content-enricher": 12 * 60 * 1000, // 12 minutes (was 10 — increased per-article timeout to 90s)
+  "visual-generator": 20 * 60 * 1000, // 20 minutes
   "database-publisher": 2 * 60 * 1000, // 2 minutes
   "seo-optimizer": 15 * 60 * 1000, // 15 minutes
-  "trend-enricher": 1 * 60 * 1000, // 1 minute
+  "trend-enricher": 2 * 60 * 1000, // 2 minutes (was 1min — too tight for API calls)
   default: 5 * 60 * 1000, // 5 minutes default
 };
 
@@ -206,8 +206,8 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
         concurrency: queueConfig.concurrency,
         limiter: queueConfig.rateLimit,
         lockDuration: queueConfig.lockDuration,
-        maxStalledCount: 2,
-        stalledInterval: 60000,
+        maxStalledCount: 3, // FIX: Allow 3 stall retries (was 2 — too aggressive for slow enrichment)
+        stalledInterval: 90000, // FIX: Check every 90s (was 60s — stall detection was too eager)
       },
     );
 

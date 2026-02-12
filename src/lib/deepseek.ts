@@ -101,8 +101,8 @@ interface CircuitBreakerState {
 }
 
 const circuitBreakerConfig = {
-  threshold: 3, // Open circuit after 3 consecutive failures
-  timeout: 5 * 60 * 1000, // 5 minutes before trying again
+  threshold: 5, // Open circuit after 5 consecutive failures (was 3 — too sensitive)
+  timeout: 2 * 60 * 1000, // 2 minutes before trying again (was 5min — too long, blocks pipeline)
   halfOpenMaxCalls: 1,
 };
 
@@ -267,6 +267,25 @@ async function callProvider(
       const status = error.response?.status;
       const msg = error.response?.data?.error?.message || error.message;
       console.error(`${provider.toUpperCase()} API Error:`, { status, msg });
+
+      // Retry-worthy errors: add retry hint for caller
+      if (
+        status === 429 ||
+        status === 500 ||
+        status === 502 ||
+        status === 503
+      ) {
+        const retryAfter = error.response?.headers?.["retry-after"];
+        const err = new Error(
+          `${provider.toUpperCase()} API error (${status}): ${msg}`,
+        );
+        (err as any).retryable = true;
+        (err as any).retryAfter = retryAfter
+          ? parseInt(retryAfter) * 1000
+          : 3000;
+        throw err;
+      }
+
       throw new Error(
         `${provider.toUpperCase()} API error (${status}): ${msg}`,
       );
@@ -309,7 +328,23 @@ export async function callDeepSeek(
         nvidiaError instanceof Error
           ? nvidiaError.message
           : String(nvidiaError);
-      console.warn(`⚠️ NVIDIA failed, falling back to DeepSeek: ${errMsg}`);
+
+      // If retryable (429/5xx), wait and retry once before fallback
+      if ((nvidiaError as any)?.retryable) {
+        const waitMs = (nvidiaError as any).retryAfter || 3000;
+        console.warn(
+          `⏳ NVIDIA retryable error, waiting ${waitMs}ms before retry...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+        try {
+          const retryResult = await callProvider("nvidia", messages, options);
+          return retryResult;
+        } catch {
+          console.warn(`⚠️ NVIDIA retry also failed, falling back to DeepSeek`);
+        }
+      } else {
+        console.warn(`⚠️ NVIDIA failed, falling back to DeepSeek: ${errMsg}`);
+      }
 
       // Fall through to DeepSeek
       if (!deepseekAvailable) {
@@ -651,32 +686,27 @@ JSON formatında yanıt ver:
  * Entity-based visual style mappings for consistent brand imagery
  */
 const ENTITY_VISUAL_STYLES: Record<string, string> = {
-  // Company-specific styles
-  openai:
-    "green holographic interface, ChatGPT style, emerald glow, dark background",
-  nvidia:
-    "green and black theme, GPU chips, gaming aesthetic, neon green accents",
-  google:
-    "colorful Google colors (blue red yellow green), clean material design",
-  microsoft: "blue corporate theme, Windows style, azure cloud elements",
-  meta: "blue infinity symbol, VR headset, metaverse portal, purple-blue gradient",
-  apple: "minimalist white, sleek curves, premium aesthetic, silver metallic",
-  tesla: "electric blue, futuristic car silhouette, Elon Musk style innovation",
-  anthropic: "warm orange-brown tones, Claude AI style, safe AI symbolism",
-  amazon: "orange and black, AWS cloud icons, e-commerce futuristic",
-  // Technology-specific styles
-  robot: "humanoid robot, mechanical joints, glowing eyes, industrial setting",
-  autonomous: "self-driving car sensors, LIDAR visualization, road mapping",
-  drone: "aerial drone swarm, sky background, delivery or surveillance theme",
-  chip: "semiconductor close-up, silicon wafer, golden circuits, macro photography",
-  quantum: "quantum computer, blue cryogenic chamber, superconducting qubits",
-  // Category-specific styles
-  healthcare: "medical AI, DNA helix, hospital technology, blue-white clean",
-  finance:
-    "trading algorithms, stock charts, digital currency, gold-blue theme",
-  gaming: "gaming setup, RGB lighting, esports arena, neon purple-cyan",
-  security:
-    "cyber security, digital lock, matrix code, red-black warning theme",
+  // Company hints (subtle, not dominating)
+  openai: "emerald accent tones, minimal tech aesthetic",
+  nvidia: "GPU hardware close-up, green circuit traces",
+  google: "multicolor accents on clean white surface",
+  microsoft: "azure blue gradient, cloud infrastructure",
+  meta: "purple-blue VR environment, spatial computing",
+  apple: "premium metallic finish, minimalist product shot",
+  tesla: "electric vehicle technology, blue energy lines",
+  anthropic: "warm amber interface glow, safety-focused design",
+  amazon: "cloud server architecture, orange accent lighting",
+  // Technology hints
+  robot: "articulated robotic arm in motion, industrial lab",
+  autonomous: "LiDAR point cloud visualization, road environment",
+  drone: "quadcopter in flight, landscape below",
+  chip: "silicon die macro, golden wire bonds, clean room",
+  quantum: "dilution refrigerator interior, superconducting circuits",
+  // Domain hints
+  healthcare: "medical imaging display, clinical technology",
+  finance: "algorithmic trading terminal, data visualization",
+  gaming: "GPU rendering pipeline, real-time graphics",
+  security: "encrypted data flow visualization, firewall architecture",
 };
 
 /**
@@ -811,7 +841,7 @@ export async function generateImagePrompt(
 
   const entityContext =
     entityHints.length > 0
-      ? `\n\n### DETECTED KEY SUBJECTS (USE THESE!):\n${entityHints.join("\n")}`
+      ? `\n\nDETECTED KEY SUBJECTS:\n${entityHints.join("\n")}`
       : "";
 
   // Use entity-based visual style if detected
@@ -820,7 +850,7 @@ export async function generateImagePrompt(
     ? ENTITY_VISUAL_STYLES[detectedEntity]
     : null;
 
-  // Pick a random camera angle for variety
+  // Diverse camera angles
   const cameraAngles = [
     "macro photography",
     "wide angle shot",
@@ -832,11 +862,16 @@ export async function generateImagePrompt(
     "cinematic wide shot",
     "product photography",
     "architectural photography",
+    "isometric view",
+    "dutch angle",
+    "tilt-shift miniature effect",
+    "extreme close-up",
+    "panoramic shot",
   ];
   const randomAngle =
     cameraAngles[Math.floor(Math.random() * cameraAngles.length)];
 
-  // Pick a random lighting style for variety
+  // Diverse lighting styles
   const lightingStyles = [
     "golden hour lighting",
     "blue hour atmosphere",
@@ -847,45 +882,83 @@ export async function generateImagePrompt(
     "neon accent lighting",
     "backlit silhouette",
     "overcast even lighting",
+    "rim lighting with dark background",
+    "chiaroscuro contrast",
+    "volumetric fog lighting",
+    "sunset warm tones",
+    "fluorescent lab lighting",
   ];
   const randomLighting =
     lightingStyles[Math.floor(Math.random() * lightingStyles.length)];
 
-  const entityHint = entityStyle
-    ? `\n\n### DETECTED ENTITY STYLE (USE THIS AS BASE!):\nEntity: ${detectedEntity?.toUpperCase()}\nSuggested style: ${entityStyle}\nAdapt this style to the specific news angle.`
-    : "";
+  // Visual style variation — pick a random rendering approach
+  const visualStyles = [
+    "photorealistic editorial photography",
+    "hyper-detailed 3D render, octane render quality",
+    "technical illustration with depth",
+    "documentary-style photojournalism",
+    "minimalist product photography",
+    "cinematic still frame, anamorphic lens",
+    "scientific visualization, data-driven aesthetic",
+    "architectural interior photography",
+  ];
+  const randomVisualStyle =
+    visualStyles[Math.floor(Math.random() * visualStyles.length)];
 
-  const prompt = `Generate a photorealistic image prompt for this AI news article.
+  // Color mood variation
+  const colorMoods = [
+    "cool blue-steel palette",
+    "warm amber and gold tones",
+    "monochromatic with single color accent",
+    "high contrast black and white with color pop",
+    "muted desaturated tones",
+    "vivid saturated colors",
+    "earth tones with metallic accents",
+    "deep teal and copper",
+  ];
+  const randomColorMood =
+    colorMoods[Math.floor(Math.random() * colorMoods.length)];
 
-Title: ${title}
-Category: ${category}
-Content: ${content.substring(0, 400)}
+  const entityHint = entityStyle ? `\nENTITY STYLE HINT: ${entityStyle}` : "";
+
+  // Extract a unique content excerpt — skip first 100 chars to avoid boilerplate
+  const contentExcerpt = content
+    .substring(100, 600)
+    .replace(/\n+/g, " ")
+    .trim();
+
+  const prompt = `You are a creative director creating a UNIQUE editorial image for this specific AI news story. Each image must be visually distinct from all others.
+
+ARTICLE TITLE: ${title}
+CATEGORY: ${category}
+CONTENT EXCERPT: ${contentExcerpt.substring(0, 300)}
 ${entityContext}${entityHint}
 
-CAMERA: ${randomAngle}
-LIGHTING: ${randomLighting}
+VISUAL DIRECTION:
+- Style: ${randomVisualStyle}
+- Camera: ${randomAngle}
+- Lighting: ${randomLighting}
+- Color mood: ${randomColorMood}
 
-RULES:
-1. Be SPECIFIC to the news topic — not generic tech imagery
-2. NO humans, faces, hands, body parts — EVER
-3. NO text, logos, or writing in the image
-4. NO "holographic brain", "neon glow", "futuristic" clichés
-5. Focus on REAL objects: devices, buildings, chips, robots, screens, labs
-6. Max 120 characters
+YOUR TASK:
+Create a single image description that captures the SPECIFIC subject of THIS article — not generic "AI technology" imagery. 
 
-EXAMPLES:
-- "Nvidia H100 GPU array in server rack, green LED indicators, ${randomAngle}, ${randomLighting}"
-- "Autonomous delivery drone hovering over suburban neighborhood, clear sky, ${randomAngle}"
-- "Quantum computer golden wiring close-up, cryogenic chamber, ${randomAngle}, ${randomLighting}"
+Think about: What PHYSICAL OBJECT, DEVICE, ENVIRONMENT, or SCENE best represents this specific news story? Be concrete and literal.
 
-OUTPUT: Only the prompt text. No explanation.`;
+ABSOLUTE RULES:
+1. NO humans, faces, hands, body parts — EVER
+2. NO text, logos, brand names, or writing visible in the image
+3. NO generic clichés: "holographic brain", "digital network", "glowing circuits", "abstract data"
+4. Focus on TANGIBLE subjects: specific devices, real environments, actual hardware, physical spaces
+5. Each prompt must describe a UNIQUE scene — avoid repeating common tech stock photo compositions
+6. Output ONLY the prompt text (max 140 chars). No explanation, no quotes.`;
 
   const response = await callDeepSeek(
     [
       {
         role: "system",
         content:
-          "You are an expert editorial photographer. Generate a single image prompt that is SPECIFIC to the news topic. No humans ever. No explanations. Just the prompt.",
+          "You are an award-winning editorial photographer. Generate ONE unique, specific image prompt for this news article. Be concrete and original — never generic. No humans. Just the prompt text.",
       },
       {
         role: "user",
@@ -894,7 +967,7 @@ OUTPUT: Only the prompt text. No explanation.`;
     ],
     {
       maxTokens: 200,
-      temperature: 1.0,
+      temperature: 1.2, // Higher temperature for more creative variety
     },
   );
 

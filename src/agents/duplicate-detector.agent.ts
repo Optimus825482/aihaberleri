@@ -174,7 +174,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
 
     const normalizedUrl = this.normalizeUrl(url);
     const lockKey = `pipeline:lock:${normalizedUrl}`;
-    const LOCK_TTL_SECONDS = 600; // 10 minutes — enough for full pipeline run
+    const LOCK_TTL_SECONDS = 300; // 5 minutes (was 10min — too long, blocks next cycle)
 
     try {
       // SET NX EX = set only if not exists, with expiry

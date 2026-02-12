@@ -57,17 +57,17 @@ export interface EnrichedArticle extends UniqueArticle {
 }
 
 const JINA_READER_URL = "https://r.jina.ai";
-const JINA_TIMEOUT = 15000; // FIXED: 15s (increased from 8s - heavy sites need more time)
+const JINA_TIMEOUT = 20000; // FIX: 20s (was 15s — heavy sites cause timeouts)
 const TAVILY_EXTRACT_URL = "https://api.tavily.com/extract";
-const TAVILY_TIMEOUT = 20000; // FIXED: 20s (increased from 12s for reliability)
-const SEARXNG_TIMEOUT = 8000; // FIXED: 8s (increased from 5s)
+const TAVILY_TIMEOUT = 20000;
+const SEARXNG_TIMEOUT = 10000; // FIX: 10s (was 8s)
 const TARGET_SOURCE_COUNT = 3; // Keep at 3 for speed
 
 // Layer timeouts for fallback strategy
 const LAYER_1_TIMEOUT = 20000; // 20s for Tavily (high-priority)
 const LAYER_2_TIMEOUT = 25000; // 25s for SearXNG + Jina
 const LAYER_3_TIMEOUT = 30000; // 30s for LLM synthesis
-const MAX_ARTICLE_TIMEOUT = 60000; // 60s HARD LIMIT per article
+const MAX_ARTICLE_TIMEOUT = 90000; // FIX: 90s HARD LIMIT per article (was 60s — too tight for heavy enrichment)
 
 /**
  * Circuit Breaker for API failure protection

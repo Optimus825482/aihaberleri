@@ -13,6 +13,9 @@
 
 import { Server as SocketIOServer } from "socket.io";
 
+// Track if we've already warned about missing Socket.io to avoid log spam in worker context
+let _socketWarningLogged = false;
+
 /**
  * Get the Socket.io server instance
  *
@@ -37,7 +40,11 @@ export function emitToAdmin(event: string, data: unknown): boolean {
   const io = getSocketIO();
 
   if (!io) {
-    console.warn(`[Socket] Cannot emit '${event}' - Socket.io not initialized`);
+    // Only warn once to avoid log spam in worker context (no HTTP server = no Socket.io)
+    if (!_socketWarningLogged) {
+      console.warn(`[Socket] Socket.io not initialized (worker context) - real-time events disabled`);
+      _socketWarningLogged = true;
+    }
     return false;
   }
 
@@ -57,7 +64,7 @@ export function emitToAll(event: string, data: unknown): boolean {
   const io = getSocketIO();
 
   if (!io) {
-    console.warn(`[Socket] Cannot emit '${event}' - Socket.io not initialized`);
+    // Silently skip — already warned in emitToAdmin
     return false;
   }
 

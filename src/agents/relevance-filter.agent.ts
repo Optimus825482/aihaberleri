@@ -24,9 +24,9 @@ export interface ScoredArticle extends CollectedArticle {
   suggestedTags?: string[];
 }
 
-// 🔧 TIGHTENED: 50 → 65 to prevent non-AI content from passing (10.02.2026)
-// Combined with negative keyword filtering in content-collector for double protection
-const RELEVANCE_THRESHOLD = 65; // Minimum score to pass
+// 🔧 FIX: 65 → 45 — threshold was too aggressive, rejecting ~100% of articles (12.02.2026)
+// Content-collector already has negative keyword filtering for non-AI content
+const RELEVANCE_THRESHOLD = 45; // Minimum score to pass
 const BATCH_SIZE = 15; // Articles per batch (10 → 15 for faster processing)
 
 // BYPASS MODE: If DeepSeek fails, apply basic AI keyword validation instead of passing everything
@@ -215,7 +215,7 @@ export class RelevanceFilterAgent extends BaseAgent<
     articles: CollectedArticle[],
     reason: string,
   ): ScoredArticle[] {
-    const MIN_TREND_FOR_BYPASS = 50; // Only pass articles with decent trend score
+    const MIN_TREND_FOR_BYPASS = 30; // Lowered from 50 — was too strict (12.02.2026)
 
     return articles.map((article) => {
       const trendScore = article.trendScore || 0;

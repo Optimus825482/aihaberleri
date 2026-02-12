@@ -25,8 +25,8 @@ export interface AgentHealthStatus {
 }
 
 const AGENT_HEALTH_STORE_KEY = "agent:health:status";
-const AGENT_RECOVERY_TIMEOUT = 5 * 60 * 1000; // 5 minutes
-const MAX_CONSECUTIVE_FAILURES = 3;
+const AGENT_RECOVERY_TIMEOUT = 3 * 60 * 1000; // 3 minutes (was 5min — shorter recovery for faster pipeline)
+const MAX_CONSECUTIVE_FAILURES = 5; // 5 failures before recovery mode (was 3 — too sensitive, caused cycling)
 
 /**
  * Update agent health status in Redis
