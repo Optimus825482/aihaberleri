@@ -1204,6 +1204,79 @@ export async function fetchArticleContent(url: string): Promise<string> {
     );
     return content;
   } catch (error: any) {
+    // 🔄 Fallback 2: Google Web Cache
+    try {
+      console.log("🔄 Google Web Cache ile deneniyor...");
+      const cacheUrl = `https://webcache.googleusercontent.com/search?q=cache:${encodeURIComponent(url)}`;
+      const cacheResponse = await axios.get(cacheUrl, {
+        timeout: 15000,
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          Referer: "https://www.google.com/",
+        },
+      });
+
+      let cacheContent = cacheResponse.data
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ")
+        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ")
+        .replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, " ")
+        .replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, " ")
+        .replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .substring(0, 10000);
+
+      if (cacheContent.length > 200) {
+        const cacheValidation = isValidContent(cacheContent);
+        if (cacheValidation.valid) {
+          console.log(
+            `✅ Google Cache ile içerik alındı: ${cacheContent.length} karakter`,
+          );
+          return cacheContent;
+        }
+      }
+    } catch (cacheError) {
+      console.warn("⚠️ Google Cache başarısız");
+    }
+
+    // 🔄 Fallback 3: Wayback Machine (archive.org)
+    try {
+      console.log("🔄 Wayback Machine ile deneniyor...");
+      const waybackUrl = `https://web.archive.org/web/2/${url}`;
+      const waybackResponse = await axios.get(waybackUrl, {
+        timeout: 20000,
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        },
+        maxRedirects: 5,
+      });
+
+      let waybackContent = waybackResponse.data
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, " ")
+        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, " ")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .substring(0, 10000);
+
+      if (waybackContent.length > 200) {
+        const waybackValidation = isValidContent(waybackContent);
+        if (waybackValidation.valid) {
+          console.log(
+            `✅ Wayback Machine ile içerik alındı: ${waybackContent.length} karakter`,
+          );
+          return waybackContent;
+        }
+      }
+    } catch (waybackError) {
+      console.warn("⚠️ Wayback Machine başarısız");
+    }
+
     console.error(
       `❌ İçerik alma hatası (${url}):`,
       error.message || error.code,

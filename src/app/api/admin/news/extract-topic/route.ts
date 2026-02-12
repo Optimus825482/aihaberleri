@@ -59,9 +59,15 @@ export async function POST(request: NextRequest) {
     try {
       const response = await fetch(url, {
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+          Referer: "https://www.google.com/",
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "cross-site",
         },
         signal: AbortSignal.timeout(15000), // 15 second timeout
       });
@@ -71,25 +77,34 @@ export async function POST(request: NextRequest) {
       }
 
       const html = await response.text();
-      
+
       // Extract title from HTML
       const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
       sourceTitle = titleMatch ? titleMatch[1].trim() : "";
 
       // Extract meta description
-      const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i) ||
-                        html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
+      const descMatch =
+        html.match(
+          /<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i,
+        ) ||
+        html.match(
+          /<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i,
+        );
       sourceDescription = descMatch ? descMatch[1].trim() : "";
 
       // Extract og:title if title is empty
       if (!sourceTitle) {
-        const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
+        const ogTitleMatch = html.match(
+          /<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i,
+        );
         sourceTitle = ogTitleMatch ? ogTitleMatch[1].trim() : "";
       }
 
       // Extract og:description if description is empty
       if (!sourceDescription) {
-        const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
+        const ogDescMatch = html.match(
+          /<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i,
+        );
         sourceDescription = ogDescMatch ? ogDescMatch[1].trim() : "";
       }
 
@@ -104,11 +119,62 @@ export async function POST(request: NextRequest) {
         .replace(/\s+/g, " ")
         .trim()
         .substring(0, 5000); // First 5000 chars
-
     } catch (fetchError) {
-      console.error(`❌ Failed to fetch URL: ${fetchError}`);
-      // Continue with fallback - use URL-based analysis
-      sourceTitle = new URL(url).pathname.split("/").pop() || "";
+      console.warn(
+        `⚠️ Direct fetch başarısız (${fetchError}), Jina Reader deneniyor...`,
+      );
+
+      // 🔄 Fallback: Jina Reader API
+      if (process.env.JINA_READER_API_KEY) {
+        try {
+          const jinaUrl = `https://r.jina.ai/${url}`;
+          const jinaResponse = await fetch(jinaUrl, {
+            headers: {
+              Authorization: `Bearer ${process.env.JINA_READER_API_KEY}`,
+              "X-Return-Format": "text",
+            },
+            signal: AbortSignal.timeout(20000),
+          });
+
+          if (jinaResponse.ok) {
+            const jinaText = await jinaResponse.text();
+            if (jinaText.length > 100) {
+              // Jina returns markdown — extract title from first heading
+              const headingMatch = jinaText.match(/^#\s+(.+)$/m);
+              if (headingMatch) {
+                sourceTitle = headingMatch[1].trim();
+              }
+              // Extract first paragraph as description
+              const lines = jinaText
+                .split("\n")
+                .filter(
+                  (l: string) => l.trim().length > 30 && !l.startsWith("#"),
+                );
+              if (lines.length > 0) {
+                sourceDescription = lines[0].trim().substring(0, 300);
+              }
+              pageContent = jinaText.substring(0, 5000);
+              console.log(
+                `✅ Jina Reader ile extract-topic içeriği alındı: ${pageContent.length} karakter`,
+              );
+            }
+          }
+        } catch (jinaError) {
+          console.warn(`⚠️ Jina Reader da başarısız: ${jinaError}`);
+        }
+      }
+
+      // Son çare: URL'den anlamlı bilgi çıkar
+      if (!sourceTitle && !pageContent) {
+        const pathParts = new URL(url).pathname.split("/").filter(Boolean);
+        // URL slug'ını başlık olarak kullan ("/copilot-ai-productivity" -> "Copilot AI Productivity")
+        const lastSlug = pathParts[pathParts.length - 1] || "";
+        sourceTitle = lastSlug
+          .replace(/[-_]/g, " ")
+          .replace(/\b\w/g, (c: string) => c.toUpperCase())
+          .trim();
+        console.log(`⚠️ URL'den başlık çıkarıldı: "${sourceTitle}"`);
+      }
     }
 
     // Detect language
