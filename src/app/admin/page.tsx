@@ -40,6 +40,7 @@ import {
   BarChart3,
   Timer,
   Bot,
+  Share2,
 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -1027,6 +1028,12 @@ export default function AdminDashboard() {
             href="/admin/articles"
             icon={Newspaper}
             label="Haberler"
+            color="amber"
+          />
+          <QuickAction
+            href="/admin/unshared-articles"
+            icon={Share2}
+            label="Paylaşılmayan"
             color="amber"
           />
         </div>

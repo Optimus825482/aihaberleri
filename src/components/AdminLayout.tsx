@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Mail,
   PlusCircle,
+  AlertCircle,
   Share2,
   TrendingUp,
   Youtube,
@@ -135,6 +136,12 @@ const menuGroups = [
   {
     title: "Dağıtım",
     items: [
+      {
+        title: "Paylaşılmayan Haberler",
+        href: "/admin/unshared-articles",
+        icon: AlertCircle,
+        requiredResource: null,
+      },
       {
         title: "Sosyal Medya",
         href: "/admin/social-shares",
