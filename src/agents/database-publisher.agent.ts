@@ -114,8 +114,19 @@ export class DatabasePublisherAgent extends BaseAgent<
             }
           }
 
+          // Validate required fields before DB insert
+          const trContent = article.synthesizedContent?.tr;
+          const enContent = article.synthesizedContent?.en;
+
+          if (!trContent?.title || !trContent?.content || !trContent?.excerpt) {
+            this.logger.warn(
+              `Skipping article — missing required TR fields: title=${!!trContent?.title}, content=${!!trContent?.content}, excerpt=${!!trContent?.excerpt}`,
+            );
+            continue;
+          }
+
           // Generate slug
-          const slug = generateSlug(article.synthesizedContent.tr.title);
+          const slug = generateSlug(trContent.title);
 
           // Check if article already exists (duplicate check)
           const existing = await db.article.findFirst({
@@ -126,7 +137,7 @@ export class DatabasePublisherAgent extends BaseAgent<
 
           if (existing) {
             this.logger.warn(
-              `Article already exists: ${article.synthesizedContent.tr.title.substring(0, 50)}... (skipping)`,
+              `Article already exists: ${trContent.title.substring(0, 50)}... (skipping)`,
             );
             continue;
           }
@@ -137,11 +148,8 @@ export class DatabasePublisherAgent extends BaseAgent<
 
           if (pipelineTrendScore === 0) {
             const contentScore = calculateTrendScore({
-              title: article.synthesizedContent.tr.title,
-              description:
-                article.synthesizedContent.tr.excerpt ||
-                article.description ||
-                "",
+              title: trContent.title,
+              description: trContent.excerpt || article.description || "",
               publishedAt: (article as any).publishedAt || new Date(),
               url: article.url,
             });
@@ -155,21 +163,21 @@ export class DatabasePublisherAgent extends BaseAgent<
           const createdArticle = await db.article.create({
             data: {
               // Turkish version (primary)
-              title: article.synthesizedContent.tr.title,
+              title: trContent.title,
               slug,
-              excerpt: article.synthesizedContent.tr.excerpt,
-              content: article.synthesizedContent.tr.content,
+              excerpt: trContent.excerpt,
+              content: trContent.content,
 
               // English version
-              titleEn: article.synthesizedContent.en.title,
-              excerptEn: article.synthesizedContent.en.excerpt,
-              contentEn: article.synthesizedContent.en.content,
+              titleEn: enContent?.title || null,
+              excerptEn: enContent?.excerpt || null,
+              contentEn: enContent?.content || null,
 
               // SEO
-              metaDescription: article.synthesizedContent.tr.metaDescription,
-              metaDescriptionEn: article.synthesizedContent.en.metaDescription,
-              keywords: article.synthesizedContent.tr.keywords,
-              keywordsEn: article.synthesizedContent.en.keywords,
+              metaDescription: trContent.metaDescription || null,
+              metaDescriptionEn: enContent?.metaDescription || null,
+              keywords: trContent.keywords || [],
+              keywordsEn: enContent?.keywords || [],
 
               // Images
               imageUrl: article.imageUrl,
@@ -183,8 +191,7 @@ export class DatabasePublisherAgent extends BaseAgent<
               topic: article.topic,
               trendScore: finalTrendScore,
               isTrending: finalTrendScore >= 50,
-              score:
-                article.synthesizedContent.tr.score || finalTrendScore || 0,
+              score: trContent.score || finalTrendScore || 0,
 
               // Relations
               categoryId: category.id,
@@ -202,13 +209,12 @@ export class DatabasePublisherAgent extends BaseAgent<
               data: {
                 articleId: createdArticle.id,
                 locale: "tr",
-                title: article.synthesizedContent.tr.title,
+                title: trContent.title,
                 slug: createdArticle.slug,
-                excerpt: article.synthesizedContent.tr.excerpt || null,
-                content: article.synthesizedContent.tr.content,
-                metaTitle: article.synthesizedContent.tr.title,
-                metaDescription:
-                  article.synthesizedContent.tr.metaDescription || null,
+                excerpt: trContent.excerpt || null,
+                content: trContent.content,
+                metaTitle: trContent.title,
+                metaDescription: trContent.metaDescription || null,
               },
             });
             this.logger.info(
@@ -225,24 +231,20 @@ export class DatabasePublisherAgent extends BaseAgent<
 
           // Create English translation in ArticleTranslation table
           let enSlugFinal = "";
-          if (
-            article.synthesizedContent.en?.title &&
-            article.synthesizedContent.en?.content
-          ) {
-            const enSlug = generateSlug(article.synthesizedContent.en.title);
+          if (enContent?.title && enContent?.content) {
+            const enSlug = generateSlug(enContent.title);
             enSlugFinal = enSlug;
             try {
               await db.articleTranslation.create({
                 data: {
                   articleId: createdArticle.id,
                   locale: "en",
-                  title: article.synthesizedContent.en.title,
+                  title: enContent.title,
                   slug: enSlug,
-                  excerpt: article.synthesizedContent.en.excerpt || null,
-                  content: article.synthesizedContent.en.content,
-                  metaTitle: article.synthesizedContent.en.title,
-                  metaDescription:
-                    article.synthesizedContent.en.metaDescription || null,
+                  excerpt: enContent.excerpt || null,
+                  content: enContent.content,
+                  metaTitle: enContent.title,
+                  metaDescription: enContent.metaDescription || null,
                 },
               });
               this.logger.info(`English translation created: ${enSlug}`);
@@ -254,13 +256,12 @@ export class DatabasePublisherAgent extends BaseAgent<
                   data: {
                     articleId: createdArticle.id,
                     locale: "en",
-                    title: article.synthesizedContent.en.title,
+                    title: enContent.title,
                     slug: enSlugFinal,
-                    excerpt: article.synthesizedContent.en.excerpt || null,
-                    content: article.synthesizedContent.en.content,
-                    metaTitle: article.synthesizedContent.en.title,
-                    metaDescription:
-                      article.synthesizedContent.en.metaDescription || null,
+                    excerpt: enContent.excerpt || null,
+                    content: enContent.content,
+                    metaTitle: enContent.title,
+                    metaDescription: enContent.metaDescription || null,
                   },
                 });
                 this.logger.info(
@@ -310,8 +311,7 @@ export class DatabasePublisherAgent extends BaseAgent<
             const articleUrl = `https://aihaberleri.org/news/${createdArticle.slug}`;
             sendPushNotification(
               createdArticle.title,
-              article.synthesizedContent.tr.excerpt ||
-                createdArticle.title.substring(0, 100),
+              trContent.excerpt || createdArticle.title.substring(0, 100),
               articleUrl,
             )
               .then(() => this.logger.info(`📱 Push notification sent`))
@@ -330,7 +330,7 @@ export class DatabasePublisherAgent extends BaseAgent<
             postTweet({
               title: createdArticle.title,
               slug: createdArticle.slug,
-              excerpt: article.synthesizedContent.tr.excerpt || "",
+              excerpt: trContent.excerpt || "",
               categoryName: category.name,
             })
               .then(() => this.logger.info(`🐦 Tweet posted`))
@@ -347,7 +347,7 @@ export class DatabasePublisherAgent extends BaseAgent<
             postToFacebook({
               title: createdArticle.title,
               slug: createdArticle.slug,
-              excerpt: article.synthesizedContent.tr.excerpt || "",
+              excerpt: trContent.excerpt || "",
               imageUrl: article.imageUrl,
               categoryName: category.name,
             })
@@ -383,7 +383,7 @@ export class DatabasePublisherAgent extends BaseAgent<
             postToBluesky({
               title: createdArticle.title,
               slug: createdArticle.slug,
-              excerpt: article.synthesizedContent.tr.excerpt || "",
+              excerpt: trContent.excerpt || "",
               imageUrl: article.imageUrl,
               categoryName: category.name,
             })
@@ -419,7 +419,7 @@ export class DatabasePublisherAgent extends BaseAgent<
             postToMastodon({
               title: createdArticle.title,
               slug: createdArticle.slug,
-              excerpt: article.synthesizedContent.tr.excerpt || "",
+              excerpt: trContent.excerpt || "",
               imageUrl: article.imageUrl,
               categoryName: category.name,
             })
@@ -457,9 +457,9 @@ export class DatabasePublisherAgent extends BaseAgent<
           // ============================================================
           // ENGLISH SOCIAL MEDIA SHARES
           // ============================================================
-          if (enSlugFinal && article.synthesizedContent.en?.title) {
-            const enExcerpt = article.synthesizedContent.en.excerpt || "";
-            const enTitle = article.synthesizedContent.en.title;
+          if (enSlugFinal && enContent?.title) {
+            const enExcerpt = enContent.excerpt || "";
+            const enTitle = enContent.title;
 
             // Post to Bluesky EN (async)
             try {
@@ -619,10 +619,18 @@ export class DatabasePublisherAgent extends BaseAgent<
             `Published: ${createdArticle.title.substring(0, 50)}... (${createdArticle.slug})`,
           );
         } catch (error) {
+          const errDetail =
+            error instanceof Error ? error.message : String(error);
+          const errName = error instanceof Error ? error.name : "UnknownError";
           this.logger.error(
-            `Failed to publish article: ${article.synthesizedContent.tr.title.substring(0, 50)}...`,
-            this.serializeError(error),
+            `Failed to publish article: ${article.synthesizedContent?.tr?.title?.substring(0, 50) || "unknown"}... [${errName}]: ${errDetail}`,
           );
+          // Log Prisma-specific details
+          if ((error as any)?.code) {
+            this.logger.error(
+              `Prisma error code: ${(error as any).code}, meta: ${JSON.stringify((error as any).meta || {})}`,
+            );
+          }
           // Continue with next article
         }
       }
