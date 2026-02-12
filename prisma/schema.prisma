@@ -754,3 +754,64 @@ model YouTubeChannel {
   @@index([priority(sort: Desc)])
   @@index([lastFetchedAt])
 }
+
+// =============================================
+// Pipeline Tracing & Prompt Versioning
+// =============================================
+
+// Pipeline execution traces - her pipeline çalışmasının adım adım kaydı
+model PipelineTrace {
+  id            String          @id @default(cuid())
+  agentLogId    String?         // İlişkili agent log
+  pipelineName  String          // "news-pipeline", "seo-pipeline" etc.
+  status        String          @default("RUNNING") // RUNNING, SUCCESS, FAILED, PARTIAL
+  totalDuration Int?            // ms cinsinden toplam süre
+  metadata      Json?           // Ek bilgiler
+  createdAt     DateTime        @default(now())
+  completedAt   DateTime?
+  spans         PipelineSpan[]
+
+  @@index([pipelineName])
+  @@index([status])
+  @@index([createdAt])
+  @@index([agentLogId])
+}
+
+// Pipeline span - her adımın detaylı kaydı
+model PipelineSpan {
+  id            String        @id @default(cuid())
+  traceId       String
+  trace         PipelineTrace @relation(fields: [traceId], references: [id], onDelete: Cascade)
+  parentSpanId  String?       // Nested span desteği
+  name          String        // "rss-fetch", "deepseek-rewrite", "image-generate" etc.
+  status        String        @default("RUNNING") // RUNNING, SUCCESS, FAILED
+  duration      Int?          // ms
+  startedAt     DateTime      @default(now())
+  completedAt   DateTime?
+  attributes    Json?         // { model: "deepseek-chat", tokens: 1500, promptVersion: "v2" }
+  error         String?       // Hata mesajı (varsa)
+
+  @@index([traceId])
+  @@index([name])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// Prompt versioning - DeepSeek prompt'larının versiyonlanması
+model PromptVersion {
+  id            String   @id @default(cuid())
+  name          String   // "article-rewrite", "article-analyze", "image-prompt", "translation"
+  version       String   // "v1", "v2", "v3"
+  isActive      Boolean  @default(false) // Aktif versiyon
+  systemPrompt  String   @db.Text
+  userTemplate  String   @db.Text // {{title}}, {{content}} gibi placeholder'lar
+  config        Json?    // { temperature: 0.7, maxTokens: 4000, model: "deepseek-chat" }
+  description   String?  // Değişiklik açıklaması
+  metrics       Json?    // { avgScore: 820, usageCount: 150, avgDuration: 3200 }
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([name, version])
+  @@index([name, isActive])
+  @@index([name])
+}

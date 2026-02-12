@@ -10,8 +10,10 @@ export async function POST(request: Request) {
   const startTime = Date.now();
   try {
     // Check authentication - support both NextAuth and admin-session JWT
-    const session = await auth();
-    const adminSession = await getAdminSession();
+    const [session, adminSession] = await Promise.all([
+      auth(),
+      getAdminSession(),
+    ]);
     if (!session && !adminSession) {
       apiLogger.response(
         "POST",

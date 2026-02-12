@@ -19,6 +19,7 @@ import { getRedis } from "@/lib/redis";
 import { emitToAdmin, SocketEvents } from "@/lib/socket";
 import { pingSitemaps } from "@/lib/seo";
 import { createModuleLogger, logPipelineBanner } from "@/lib/agent-log-stream";
+import { PipelineTracer } from "@/lib/pipeline-tracer";
 
 // Module loggers
 const liveLog = {
@@ -116,6 +117,10 @@ export async function executeNewsAgent(
     },
   });
 
+  // Initialize pipeline tracer
+  const tracer = new PipelineTracer("news-pipeline");
+  await tracer.startTrace(agentLog.id, { categorySlug });
+
   // Live log: Agent started
   await liveLog.agent.info(
     `Agent başlatıldı (${agentLog.id.substring(0, 8)}…)`,
@@ -134,6 +139,9 @@ export async function executeNewsAgent(
     // Step 1: Collect news (RSS + YouTube)
     agentLogger.step(agentLog.id, "fetch_news", "Haberler toplanıyor", 20);
     await liveLog.rss.info("RSS + YouTube taranıyor…");
+
+    const rssSpan = tracer.span("rss-fetch");
+    await rssSpan.start();
 
     emitToAdmin(SocketEvents.AGENT_PROGRESS, {
       step: "fetching",
@@ -160,6 +168,12 @@ export async function executeNewsAgent(
     // Merge RSS + YouTube
     const allArticles = [...newsArticles, ...youtubeTopics];
     articlesScraped = allArticles.length;
+
+    await rssSpan.end({
+      rssCount: newsArticles.length,
+      ytCount: youtubeTopics.length,
+      total: allArticles.length,
+    });
 
     await liveLog.rss.success(
       `${articlesScraped} haber bulundu (RSS: ${newsArticles.length}, YT: ${youtubeTopics.length})`,
@@ -274,6 +288,12 @@ export async function executeNewsAgent(
     const { startMultiAgentPipeline, waitForPipelineCompletion } =
       await import("./multi-agent-pipeline.service");
 
+    const pipelineSpan = tracer.span("multi-agent-pipeline");
+    await pipelineSpan.start({
+      articleCount: uniqueArticles.length,
+      targetCount,
+    });
+
     await startMultiAgentPipeline(uniqueArticles, {
       agentLogId: agentLog.id,
       categorySlug,
@@ -302,6 +322,10 @@ export async function executeNewsAgent(
     );
 
     if (!pipelineResult.success) {
+      await pipelineSpan.end({
+        success: false,
+        errors: pipelineResult.errors.length,
+      });
       // Only throw if pipeline actually failed (not just "no relevant articles found")
       if (
         pipelineResult.errors.length > 0 &&
@@ -324,6 +348,8 @@ export async function executeNewsAgent(
     }
 
     articlesCreated = pipelineResult.articlesPublished;
+
+    await pipelineSpan.end({ articlesPublished: articlesCreated });
 
     // Get published articles
     const publishedArticlesData = await db.article.findMany({
@@ -385,6 +411,12 @@ export async function executeNewsAgent(
 
     const duration = Math.floor((Date.now() - startTime) / 1000);
     const status = articlesCreated > 0 ? "SUCCESS" : "PARTIAL";
+
+    await tracer.endTrace(status as any, {
+      articlesCreated,
+      articlesScraped,
+      duration,
+    });
 
     await liveLog.agent.success(
       `Tamamlandı: ${articlesCreated} haber, ${duration}s`,
@@ -515,6 +547,12 @@ export async function executeNewsAgent(
     errors.push(errorMessage);
 
     const duration = Math.floor((Date.now() - startTime) / 1000);
+
+    await tracer.endTrace("FAILED", {
+      error: errorMessage,
+      articlesCreated,
+      duration,
+    });
 
     logPipelineBanner("error", { error: errorMessage, duration });
 

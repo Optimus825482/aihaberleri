@@ -26,10 +26,24 @@ const AggregationResultSchema = z.object({
   metaDescription: z.string().min(1),
 });
 
+// ============================================
+// PROVIDER CONFIGURATION
+// Primary: NVIDIA NIM (Qwen3), Fallback: DeepSeek
+// ============================================
+
+const NVIDIA_API_URL =
+  process.env.NVIDIA_API_URL || "https://integrate.api.nvidia.com/v1";
+const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
+const NVIDIA_MODEL =
+  process.env.NVIDIA_MODEL || "qwen/qwen3-next-80b-a3b-instruct";
+
 const DEEPSEEK_API_URL =
   process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1";
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
+if (!NVIDIA_API_KEY) {
+  console.warn("⚠️  NVIDIA_API_KEY is not set — will use DeepSeek as primary");
+}
 if (!DEEPSEEK_API_KEY) {
   console.warn("⚠️  DEEPSEEK_API_KEY is not set");
 }
@@ -74,7 +88,8 @@ export interface DeepSeekResponse {
 }
 
 // ============================================
-// CIRCUIT BREAKER PATTERN (FAZ 3)
+// CIRCUIT BREAKER PATTERN — Per-Provider
+// Primary: NVIDIA NIM (Qwen3), Fallback: DeepSeek
 // ============================================
 type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
@@ -88,7 +103,15 @@ interface CircuitBreakerState {
 const circuitBreakerConfig = {
   threshold: 3, // Open circuit after 3 consecutive failures
   timeout: 5 * 60 * 1000, // 5 minutes before trying again
-  halfOpenMaxCalls: 1, // Only 1 call allowed in half-open state
+  halfOpenMaxCalls: 1,
+};
+
+// Separate circuit breakers for each provider
+const nvidiaCircuitBreaker: CircuitBreakerState = {
+  state: "CLOSED",
+  failureCount: 0,
+  lastFailureTime: 0,
+  nextAttemptTime: 0,
 };
 
 const deepSeekCircuitBreaker: CircuitBreakerState = {
@@ -98,78 +121,160 @@ const deepSeekCircuitBreaker: CircuitBreakerState = {
   nextAttemptTime: 0,
 };
 
-/**
- * Check if circuit breaker allows the request
- */
-function canProceed(): boolean {
+function canProceedWith(breaker: CircuitBreakerState): boolean {
   const now = Date.now();
-
-  if (deepSeekCircuitBreaker.state === "OPEN") {
-    if (now >= deepSeekCircuitBreaker.nextAttemptTime) {
-      // Transition to HALF_OPEN
-      console.log("🔄 Circuit breaker: OPEN → HALF_OPEN");
-      deepSeekCircuitBreaker.state = "HALF_OPEN";
+  if (breaker.state === "OPEN") {
+    if (now >= breaker.nextAttemptTime) {
+      breaker.state = "HALF_OPEN";
       return true;
     }
-    console.warn("⚠️ Circuit breaker is OPEN - blocking request");
     return false;
   }
-
   return true;
 }
 
-/**
- * Record a successful API call
- */
-function recordSuccess(): void {
-  if (deepSeekCircuitBreaker.state === "HALF_OPEN") {
-    console.log("✅ Circuit breaker: HALF_OPEN → CLOSED (call succeeded)");
-    deepSeekCircuitBreaker.state = "CLOSED";
+function recordProviderSuccess(breaker: CircuitBreakerState): void {
+  if (breaker.state === "HALF_OPEN") {
+    breaker.state = "CLOSED";
   }
-  deepSeekCircuitBreaker.failureCount = 0;
+  breaker.failureCount = 0;
 }
 
-/**
- * Record a failed API call and potentially open circuit
- */
-function recordFailure(): void {
-  deepSeekCircuitBreaker.failureCount++;
-  deepSeekCircuitBreaker.lastFailureTime = Date.now();
-
-  if (deepSeekCircuitBreaker.failureCount >= circuitBreakerConfig.threshold) {
-    deepSeekCircuitBreaker.state = "OPEN";
-    deepSeekCircuitBreaker.nextAttemptTime =
-      Date.now() + circuitBreakerConfig.timeout;
+function recordProviderFailure(
+  breaker: CircuitBreakerState,
+  label: string,
+): void {
+  breaker.failureCount++;
+  breaker.lastFailureTime = Date.now();
+  if (breaker.failureCount >= circuitBreakerConfig.threshold) {
+    breaker.state = "OPEN";
+    breaker.nextAttemptTime = Date.now() + circuitBreakerConfig.timeout;
     console.error(
-      `❌ Circuit breaker: opened after ${deepSeekCircuitBreaker.failureCount} failures. Next attempt in ${circuitBreakerConfig.timeout / 1000}s`,
+      `❌ ${label} circuit breaker OPEN after ${breaker.failureCount} failures. Retry in ${circuitBreakerConfig.timeout / 1000}s`,
     );
   } else {
     console.warn(
-      `⚠️ Circuit breaker: ${deepSeekCircuitBreaker.failureCount}/${circuitBreakerConfig.threshold} failures`,
+      `⚠️ ${label} circuit: ${breaker.failureCount}/${circuitBreakerConfig.threshold} failures`,
     );
   }
 }
 
-/**
- * Get current circuit breaker state (for monitoring)
- */
-export function getCircuitBreakerState(): CircuitState {
-  return deepSeekCircuitBreaker.state;
+// Legacy aliases for backward compat (batchScoreArticles uses these)
+function canProceed(): boolean {
+  return (
+    canProceedWith(nvidiaCircuitBreaker) ||
+    canProceedWith(deepSeekCircuitBreaker)
+  );
+}
+function recordSuccess(): void {
+  // Called from batchScoreArticles — no-op, handled internally
+}
+function recordFailure(): void {
+  // Called from batchScoreArticles — no-op, handled internally
 }
 
 /**
- * Reset circuit breaker (for manual recovery)
+ * Get current circuit breaker states (for monitoring)
+ */
+export function getCircuitBreakerState(): {
+  nvidia: CircuitState;
+  deepseek: CircuitState;
+} {
+  return {
+    nvidia: nvidiaCircuitBreaker.state,
+    deepseek: deepSeekCircuitBreaker.state,
+  };
+}
+
+/**
+ * Reset circuit breakers (for manual recovery)
  */
 export function resetCircuitBreaker(): void {
-  deepSeekCircuitBreaker.state = "CLOSED";
-  deepSeekCircuitBreaker.failureCount = 0;
-  deepSeekCircuitBreaker.lastFailureTime = 0;
-  deepSeekCircuitBreaker.nextAttemptTime = 0;
-  console.log("🔄 Circuit breaker manually reset to CLOSED");
+  for (const breaker of [nvidiaCircuitBreaker, deepSeekCircuitBreaker]) {
+    breaker.state = "CLOSED";
+    breaker.failureCount = 0;
+    breaker.lastFailureTime = 0;
+    breaker.nextAttemptTime = 0;
+  }
+  console.log("🔄 All circuit breakers reset to CLOSED");
 }
 
 /**
- * Call DeepSeek API with circuit breaker protection
+ * Strip Qwen3 <think>...</think> reasoning tags from response
+ */
+function stripThinkingTags(text: string): string {
+  return text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+}
+
+/**
+ * Call a single LLM provider (NVIDIA NIM or DeepSeek)
+ */
+async function callProvider(
+  provider: "nvidia" | "deepseek",
+  messages: DeepSeekMessage[],
+  options: { model?: string; temperature?: number; maxTokens?: number },
+): Promise<string> {
+  const isNvidia = provider === "nvidia";
+  const apiUrl = isNvidia ? NVIDIA_API_URL : DEEPSEEK_API_URL;
+  const apiKey = isNvidia ? NVIDIA_API_KEY : DEEPSEEK_API_KEY;
+  const model = isNvidia ? NVIDIA_MODEL : options.model || "deepseek-chat";
+  const breaker = isNvidia ? nvidiaCircuitBreaker : deepSeekCircuitBreaker;
+
+  if (!apiKey) {
+    throw new Error(`${provider.toUpperCase()} API key not configured`);
+  }
+  if (!canProceedWith(breaker)) {
+    throw new Error(`${provider.toUpperCase()} circuit breaker is OPEN`);
+  }
+
+  try {
+    const response = await axios.post<DeepSeekResponse>(
+      `${apiUrl}/chat/completions`,
+      {
+        model,
+        messages,
+        temperature: options.temperature ?? 0.7,
+        max_tokens: options.maxTokens ?? 2000,
+        // Qwen3 thinking mode — disable for structured JSON output
+        ...(isNvidia ? { thinking: { type: "disabled" } } : {}),
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        timeout: 120000,
+      },
+    );
+
+    recordProviderSuccess(breaker);
+
+    let content = response.data.choices[0]?.message?.content || "";
+
+    // Strip <think> tags if Qwen3 still includes them
+    if (isNvidia && content.includes("<think>")) {
+      content = stripThinkingTags(content);
+    }
+
+    return content;
+  } catch (error) {
+    recordProviderFailure(breaker, provider.toUpperCase());
+
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const msg = error.response?.data?.error?.message || error.message;
+      console.error(`${provider.toUpperCase()} API Error:`, { status, msg });
+      throw new Error(
+        `${provider.toUpperCase()} API error (${status}): ${msg}`,
+      );
+    }
+    throw error;
+  }
+}
+
+/**
+ * Call LLM API — NVIDIA NIM primary, DeepSeek fallback
+ * If NVIDIA fails or circuit is open, automatically falls back to DeepSeek
  */
 export async function callDeepSeek(
   messages: DeepSeekMessage[],
@@ -179,55 +284,39 @@ export async function callDeepSeek(
     maxTokens?: number;
   } = {},
 ): Promise<string> {
-  if (!DEEPSEEK_API_KEY) {
-    throw new Error("DEEPSEEK_API_KEY is not configured");
-  }
+  // Determine if NVIDIA is available as primary
+  const nvidiaAvailable =
+    !!NVIDIA_API_KEY && canProceedWith(nvidiaCircuitBreaker);
+  const deepseekAvailable =
+    !!DEEPSEEK_API_KEY && canProceedWith(deepSeekCircuitBreaker);
 
-  // Check circuit breaker before proceeding
-  if (!canProceed()) {
+  if (!nvidiaAvailable && !deepseekAvailable) {
     throw new Error(
-      "DeepSeek API circuit breaker is OPEN - too many recent failures. Please try again later.",
+      "Both NVIDIA and DeepSeek circuit breakers are OPEN or unconfigured. Please try again later.",
     );
   }
 
-  try {
-    const response = await axios.post<DeepSeekResponse>(
-      `${DEEPSEEK_API_URL}/chat/completions`,
-      {
-        model: options.model || "deepseek-chat",
-        messages,
-        temperature: options.temperature || 0.7,
-        max_tokens: options.maxTokens || 2000,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
-        },
-        timeout: 120000, // 120 seconds (2 minutes)
-      },
-    );
+  // Try NVIDIA first (primary)
+  if (nvidiaAvailable) {
+    try {
+      const result = await callProvider("nvidia", messages, options);
+      return result;
+    } catch (nvidiaError) {
+      const errMsg =
+        nvidiaError instanceof Error
+          ? nvidiaError.message
+          : String(nvidiaError);
+      console.warn(`⚠️ NVIDIA failed, falling back to DeepSeek: ${errMsg}`);
 
-    // Record success and reset failure count
-    recordSuccess();
-
-    return response.data.choices[0]?.message?.content || "";
-  } catch (error) {
-    // Record failure and potentially open circuit
-    recordFailure();
-
-    if (axios.isAxiosError(error)) {
-      console.error("DeepSeek API Error:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
-      throw new Error(
-        `DeepSeek API error: ${error.response?.data?.error?.message || error.message}`,
-      );
+      // Fall through to DeepSeek
+      if (!deepseekAvailable) {
+        throw new Error(`NVIDIA failed and DeepSeek unavailable: ${errMsg}`);
+      }
     }
-    throw error;
   }
+
+  // DeepSeek fallback (or primary if NVIDIA not configured)
+  return callProvider("deepseek", messages, options);
 }
 
 /**

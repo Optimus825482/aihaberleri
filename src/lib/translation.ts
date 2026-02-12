@@ -67,17 +67,15 @@ function generateSlug(title: string, locale: SupportedLocale): string {
 }
 
 /**
- * Translate text using DeepSeek API
+ * Translate text using LLM API (NVIDIA NIM primary, DeepSeek fallback)
+ * Uses shared callDeepSeek() for automatic failover + circuit breaker
  */
 async function translateWithDeepSeek(
   text: string,
   from: SupportedLocale,
   to: SupportedLocale,
 ): Promise<string> {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
-  if (!apiKey) {
-    throw new Error("DEEPSEEK_API_KEY is not set");
-  }
+  const { callDeepSeek } = await import("@/lib/deepseek");
 
   const systemPrompt =
     from === "tr"
@@ -85,32 +83,18 @@ async function translateWithDeepSeek(
       : TRANSLATION_PROMPTS["en-to-tr"];
 
   try {
-    const response = await fetch(
-      "https://api.deepseek.com/v1/chat/completions",
+    const result = await callDeepSeek(
+      [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: text },
+      ],
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: text },
-          ],
-          temperature: 0.3, // Lower temperature for more accurate translations
-          max_tokens: 8000,
-        }),
+        temperature: 0.3,
+        maxTokens: 8000,
       },
     );
 
-    if (!response.ok) {
-      throw new Error(`DeepSeek API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0]?.message?.content?.trim() || "";
+    return result.trim();
   } catch (error) {
     console.error("Translation error:", error);
     throw error;

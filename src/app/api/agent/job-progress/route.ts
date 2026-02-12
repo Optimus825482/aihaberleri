@@ -14,8 +14,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   try {
     // Check authentication
-    const session = await auth();
-    const adminSession = await getAdminSession();
+    const [session, adminSession] = await Promise.all([
+      auth(),
+      getAdminSession(),
+    ]);
     if (!session && !adminSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

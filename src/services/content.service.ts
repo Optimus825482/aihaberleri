@@ -771,6 +771,7 @@ export async function selectBestArticles(
 export async function processArticle(
   article: NewsArticle,
   category: string,
+  tracer?: import("@/lib/pipeline-tracer").PipelineTracer,
 ): Promise<ProcessedArticle> {
   console.log(`📝 Haber işleniyor: ${article.title}`);
 
@@ -791,7 +792,10 @@ export async function processArticle(
 
   try {
     // Step 1: Fetch full article content
+    const fetchSpan = tracer?.span("fetch-article-content");
+    await fetchSpan?.start({ url: article.url });
     const fullContent = await fetchArticleContent(article.url);
+    await fetchSpan?.end({ contentLength: fullContent.length });
 
     // Step 1.1: 🆕 EARLY CONTENT VALIDATION - Catch garbage before processing
     console.log("🔍 Kaynak içerik kalite kontrolü yapılıyor...");
@@ -829,6 +833,9 @@ export async function processArticle(
     // Step 1.5: 🆕 DEEP RESEARCH - Gather additional context
     console.log("🔬 Deep research yapılıyor...");
     await liveLog.content.info(`🔬 Ek araştırma yapılıyor...`);
+
+    const researchSpan = tracer?.span("deep-research");
+    await researchSpan?.start({ title: article.title });
 
     const { deepResearchArticle } = await import("@/lib/brave");
     const researchData = await deepResearchArticle(
@@ -871,6 +878,7 @@ export async function processArticle(
     console.log(
       `✅ Deep research tamamlandı: ${researchData.sources.length} ek kaynak bulundu`,
     );
+    await researchSpan?.end({ sourcesFound: researchData.sources.length });
     await liveLog.content.success(
       `✅ ${researchData.sources.length} ek kaynak ile zenginleştirildi`,
     );
@@ -906,6 +914,10 @@ export async function processArticle(
       score?: number;
     }
 
+    const rewriteSpan = tracer?.span("deepseek-rewrite");
+    await rewriteSpan?.start({ model: "deepseek-chat" });
+    const rewriteStart = Date.now();
+
     const rewritten = (await rewriteArticle(
       article.title,
       enrichedContent, // 🆕 Use enriched content instead of plain fullContent
@@ -915,6 +927,7 @@ export async function processArticle(
 
     const score = rewritten.score || 0;
     console.log(`📊 Haber Puanı: ${score}/1000`);
+    await rewriteSpan?.end({ score, durationMs: Date.now() - rewriteStart });
 
     // Live log: Rewritten
     await liveLog.deepseek.success(`✅ Yeniden yazıldı (Puan: ${score}/1000)`);
@@ -967,6 +980,8 @@ export async function processArticle(
     if (shouldGenerateImage) {
       // Step 4: Generate AI image prompt using DeepSeek
       console.log("🎨 DeepSeek ile görsel prompt oluşturuluyor...");
+      const imageSpan = tracer?.span("image-generation");
+      await imageSpan?.start();
       const imagePrompt = await generateImagePrompt(
         rewritten.title,
         rewritten.content,
@@ -1007,11 +1022,13 @@ export async function processArticle(
         console.log(`   Medium: ${imageSizes.medium}`);
         console.log(`   Small: ${imageSizes.small}`);
         console.log(`   Thumb: ${imageSizes.thumb}`);
+        await imageSpan?.end({ prompt: imagePrompt.substring(0, 100) });
       } catch (optimizeError) {
         console.error(
           "⚠️  Görsel optimizasyonu başarısız, orijinal kullanılacak:",
           optimizeError,
         );
+        await imageSpan?.end({ fallback: true });
         // Continue with original image URL for all sizes
       }
     } else {

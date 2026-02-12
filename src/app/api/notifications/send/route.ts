@@ -7,8 +7,10 @@ import { db } from "@/lib/db";
 export async function POST(req: Request) {
   try {
     // Auth check for admin - support both NextAuth and admin-session JWT
-    const session = await auth();
-    const adminSession = await getAdminSession();
+    const [session, adminSession] = await Promise.all([
+      auth(),
+      getAdminSession(),
+    ]);
     if (!session && !adminSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -65,8 +67,10 @@ export async function POST(req: Request) {
 export async function GET() {
   try {
     // Auth check - support both NextAuth and admin-session JWT
-    const session = await auth();
-    const adminSession = await getAdminSession();
+    const [session, adminSession] = await Promise.all([
+      auth(),
+      getAdminSession(),
+    ]);
     if (!session && !adminSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

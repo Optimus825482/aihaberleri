@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +25,20 @@ import {
   Code2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { SEODiffView, SEODiff } from "./SEODiffView";
+import type { SEODiff } from "./SEODiffView";
+export type { SEODiff };
+
+const SEODiffView = dynamic(
+  () => import("./SEODiffView").then((mod) => mod.SEODiffView),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[300px] w-full animate-pulse bg-muted/50 rounded-lg flex items-center justify-center">
+        <span className="text-muted-foreground text-sm">Yükleniyor...</span>
+      </div>
+    ),
+  },
+);
 
 export type SEOAgent = "analyzer" | "content" | "technical";
 export type SEOMode = "auto" | "review";

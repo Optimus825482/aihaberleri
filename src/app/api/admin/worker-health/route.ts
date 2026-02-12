@@ -107,7 +107,9 @@ export async function GET() {
         const heartbeatData = await redis.get("worker:heartbeat");
         if (heartbeatData) {
           const lastHeartbeat = parseInt(heartbeatData);
-          healthStatus.heartbeat.lastSeen = new Date(lastHeartbeat).toISOString();
+          healthStatus.heartbeat.lastSeen = new Date(
+            lastHeartbeat,
+          ).toISOString();
           healthStatus.heartbeat.secondsSince = Math.floor(
             (Date.now() - lastHeartbeat) / 1000,
           );
@@ -123,13 +125,14 @@ export async function GET() {
         const { getNewsAgentQueue } = await import("@/lib/queue");
         const newsAgentQueue = getNewsAgentQueue();
         if (newsAgentQueue) {
-          const [waiting, active, completed, failed, delayed] = await Promise.all([
-            newsAgentQueue.getWaitingCount(),
-            newsAgentQueue.getActiveCount(),
-            newsAgentQueue.getCompletedCount(),
-            newsAgentQueue.getFailedCount(),
-            newsAgentQueue.getDelayedCount(),
-          ]);
+          const [waiting, active, completed, failed, delayed] =
+            await Promise.all([
+              newsAgentQueue.getWaitingCount(),
+              newsAgentQueue.getActiveCount(),
+              newsAgentQueue.getCompletedCount(),
+              newsAgentQueue.getFailedCount(),
+              newsAgentQueue.getDelayedCount(),
+            ]);
 
           const isPaused = await newsAgentQueue.isPaused();
 
@@ -209,9 +212,12 @@ export async function GET() {
 
       // 4. Check multi-agent pipeline readiness and status
       try {
-        const pipelineReady = await redis.get("pipeline:ready");
-        const agentsStarted = await redis.get("pipeline:agents:started");
-        const pipelineStatusData = await redis.get("pipeline:status");
+        const [pipelineReady, agentsStarted, pipelineStatusData] =
+          await Promise.all([
+            redis.get("pipeline:ready"),
+            redis.get("pipeline:agents:started"),
+            redis.get("pipeline:status"),
+          ]);
 
         healthStatus.agentPipeline.isReady = pipelineReady === "true";
         healthStatus.agentPipeline.agentsStarted = agentsStarted === "true";

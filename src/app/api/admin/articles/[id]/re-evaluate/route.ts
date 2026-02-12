@@ -16,11 +16,13 @@ export async function POST(
   { params }: { params: { id: string } },
 ) {
   const startTime = Date.now();
-  
+
   try {
     // Auth kontrolü - support both NextAuth and admin-session JWT
-    const session = await auth();
-    const adminSession = await getAdminSession();
+    const [session, adminSession] = await Promise.all([
+      auth(),
+      getAdminSession(),
+    ]);
     if (!session && !adminSession) {
       return NextResponse.json(
         { success: false, error: "Yetkisiz erişim" },
@@ -34,9 +36,9 @@ export async function POST(
 
     if (!note || typeof note !== "string" || note.trim().length < 10) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: "Not en az 10 karakter olmalıdır" 
+        {
+          success: false,
+          error: "Not en az 10 karakter olmalıdır",
         },
         { status: 400 },
       );
@@ -57,7 +59,9 @@ export async function POST(
       );
     }
 
-    console.log(`🔄 Makale yeniden değerlendiriliyor: ${article.title.substring(0, 50)}...`);
+    console.log(
+      `🔄 Makale yeniden değerlendiriliyor: ${article.title.substring(0, 50)}...`,
+    );
     console.log(`📝 Admin notu: ${note}`);
 
     // Get recent articles for context (avoid repetition)
@@ -89,9 +93,9 @@ export async function POST(
 
     if (!rewritten || !rewritten.content) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: "DeepSeek ile yeniden yazma başarısız oldu" 
+        {
+          success: false,
+          error: "DeepSeek ile yeniden yazma başarısız oldu",
         },
         { status: 500 },
       );
@@ -116,7 +120,7 @@ export async function POST(
     // Regenerate image if requested
     if (regenerateImage) {
       console.log("🎨 Görsel yeniden oluşturuluyor...");
-      
+
       const imagePrompt = await generateImagePrompt(
         rewritten.title,
         rewritten.content,
@@ -133,7 +137,10 @@ export async function POST(
 
       if (imageUrl) {
         try {
-          const imageSizes = await optimizeAndGenerateSizes(imageUrl, article.slug);
+          const imageSizes = await optimizeAndGenerateSizes(
+            imageUrl,
+            article.slug,
+          );
           updateData.imageUrl = imageSizes.large;
           updateData.imageUrlMedium = imageSizes.medium;
           updateData.imageUrlSmall = imageSizes.small;
@@ -182,13 +189,13 @@ export async function POST(
       },
       duration: Math.round((Date.now() - startTime) / 1000),
     });
-
   } catch (error) {
     console.error("❌ Yeniden değerlendirme hatası:", error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : "Beklenmeyen hata oluştu" 
+      {
+        success: false,
+        error:
+          error instanceof Error ? error.message : "Beklenmeyen hata oluştu",
       },
       { status: 500 },
     );

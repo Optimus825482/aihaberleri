@@ -194,7 +194,9 @@ async function sendEmailNotification(alert: Alert): Promise<void> {
       });
     }
 
-    console.log(`📧 Email alert sent to ${config.email.recipients.length} recipients`);
+    console.log(
+      `📧 Email alert sent to ${config.email.recipients.length} recipients`,
+    );
   } catch (error) {
     console.error("Failed to send email notification:", error);
   }
@@ -235,7 +237,9 @@ async function sendWebhookNotification(alert: Alert): Promise<void> {
     });
 
     if (!response.ok) {
-      throw new Error(`Webhook returned ${response.status}: ${response.statusText}`);
+      throw new Error(
+        `Webhook returned ${response.status}: ${response.statusText}`,
+      );
     }
 
     console.log(`🔗 Webhook alert sent to ${config.webhook.url}`);
@@ -359,7 +363,8 @@ const alertRules: AlertRule[] = [
     cooldown: 10 * 60 * 1000, // 10 minutes
     check: async () => {
       const { getCircuitBreakerState } = await import("@/lib/deepseek");
-      return getCircuitBreakerState() === "OPEN";
+      const state = getCircuitBreakerState();
+      return state.nvidia === "OPEN" && state.deepseek === "OPEN";
     },
     action: async (alert) => {
       await defaultAlertAction(alert);

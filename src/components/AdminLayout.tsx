@@ -28,6 +28,7 @@ import {
   Youtube,
   Newspaper,
   Activity,
+  Gauge,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -104,6 +105,12 @@ const menuGroups = [
         title: "Trendler",
         href: "/admin/trends",
         icon: TrendingUp,
+        requiredResource: null,
+      },
+      {
+        title: "Pipeline Metrikleri",
+        href: "/admin/pipeline-metrics",
+        icon: Gauge,
         requiredResource: null,
       },
     ],

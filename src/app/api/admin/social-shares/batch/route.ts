@@ -30,8 +30,10 @@ const validPlatforms = [
 export async function GET(req: NextRequest) {
   try {
     // Check authentication - support both NextAuth and admin-session JWT
-    const session = await auth();
-    const adminSession = await getAdminSession();
+    const [session, adminSession] = await Promise.all([
+      auth(),
+      getAdminSession(),
+    ]);
     if (!session && !adminSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -130,8 +132,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     // Check authentication - support both NextAuth and admin-session JWT
-    const session = await auth();
-    const adminSession = await getAdminSession();
+    const [session, adminSession] = await Promise.all([
+      auth(),
+      getAdminSession(),
+    ]);
     if (!session && !adminSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -311,8 +315,10 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     // Check authentication
-    const session = await auth();
-    const adminSession = await getAdminSession();
+    const [session, adminSession] = await Promise.all([
+      auth(),
+      getAdminSession(),
+    ]);
     if (!session && !adminSession) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

@@ -112,9 +112,11 @@ export async function GET() {
       }
 
       // 2. Get system metrics
-      const pipelineReady = await redis.get("pipeline:ready");
-      const agentsStarted = await redis.get("pipeline:agents:started");
-      const pipelineStart = await redis.get("pipeline:start-time");
+      const [pipelineReady, agentsStarted, pipelineStart] = await Promise.all([
+        redis.get("pipeline:ready"),
+        redis.get("pipeline:agents:started"),
+        redis.get("pipeline:start-time"),
+      ]);
 
       dashboard.systemMetrics.pipelineReady = pipelineReady === "true";
       dashboard.systemMetrics.agentsStarted = agentsStarted === "true";
