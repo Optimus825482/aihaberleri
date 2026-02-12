@@ -110,7 +110,18 @@ export class DatabasePublisherAgent extends BaseAgent<
             });
 
             if (!category) {
-              throw new Error("Default category not found");
+              // Auto-create default category if missing
+              this.logger.warn(
+                `⚠️ Default category "yapay-zeka" not found — creating it automatically`,
+              );
+              category = await db.category.create({
+                data: {
+                  name: "Yapay Zeka",
+                  slug: "yapay-zeka",
+                  description: "Yapay zeka haberleri ve gelişmeleri",
+                },
+              });
+              this.logger.success(`✅ Default category created: yapay-zeka`);
             }
           }
 
