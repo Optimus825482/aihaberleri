@@ -1,8 +1,8 @@
 /**
  * Centralized Queue Manager for Multi-Agent News Pipeline
  *
- * 5-AGENT ARCHITECTURE:
- * ContentCollector → RelevanceFilter → DuplicateDetector → ContentEnricher → VisualGenerator
+ * 7-AGENT ARCHITECTURE (2026-02-12):
+ * ContentCollector → DuplicateDetector → RelevanceFilter → TrendEnricher → ContentEnricher → VisualGenerator → DatabasePublisher
  *
  * Each agent has its own queue with specific concurrency and rate limits.
  */
@@ -30,9 +30,10 @@ export const QUEUE_NAMES = {
   ENRICHED_ARTICLES: "enriched-articles",
   CONTENT_ENRICHER: "enriched-articles", // Alias for backward compatibility
   ARTICLES_WITH_VISUALS: "articles-with-visuals",
-  DATABASE_PUBLISHER: "database-publisher", // NEW: Final publishing step
-  SEO_CALCULATION: "seo-calculation", // NEW: Bulk SEO calculation
-  SEO_OPTIMIZATION: "seo-optimization", // NEW: Bulk SEO optimization
+  DATABASE_PUBLISHER: "database-publisher", // Final publishing step
+  SOCIAL_SHARE: "social-share", // NEW: Social media sharing (split from publisher) (2026-02-12)
+  SEO_CALCULATION: "seo-calculation", // Bulk SEO calculation
+  SEO_OPTIMIZATION: "seo-optimization", // Bulk SEO optimization
 } as const;
 
 // Queue instances (lazy initialization)
@@ -131,6 +132,16 @@ const QUEUE_CONFIG = {
     },
     lockDuration: 120000, // 2 minutes
     jobTimeout: 180000, // FAZ 3: 3 minutes job timeout
+    attempts: 3,
+  },
+  [QUEUE_NAMES.SOCIAL_SHARE]: {
+    concurrency: 2, // Social media API calls (rate limited by platforms)
+    rateLimit: {
+      max: 3,
+      duration: 1000,
+    },
+    lockDuration: 300000, // 5 minutes (social APIs can be slow)
+    jobTimeout: 300000, // 5 minutes job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.SEO_CALCULATION]: {

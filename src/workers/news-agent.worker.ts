@@ -40,6 +40,7 @@ import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
 import { SEOOptimizerAgent } from "@/agents/seo-optimizer.agent"; // NEW: SEO before publish
 import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
+import { SocialShareAgent } from "@/agents/social-share.agent";
 import {
   startSEOCalculatorWorker,
   queuePendingSEOCalculations,
@@ -72,6 +73,7 @@ let contentEnricher: ContentEnricherAgent;
 let visualGenerator: VisualGeneratorAgent;
 let seoOptimizer: SEOOptimizerAgent; // NEW: SEO Optimizer before publish
 let databasePublisher: DatabasePublisherAgent;
+let socialShare: SocialShareAgent;
 let seoCalculatorWorker: BullMQWorker | null = null;
 
 // ============================================================================
@@ -114,6 +116,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     contentEnricher = new ContentEnricherAgent();
     visualGenerator = new VisualGeneratorAgent();
     databasePublisher = new DatabasePublisherAgent();
+    socialShare = new SocialShareAgent();
 
     // Start all agents
     const agents = [
@@ -123,6 +126,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
       { name: "Enrich", agent: contentEnricher },
       { name: "Visual", agent: visualGenerator },
       { name: "Publish", agent: databasePublisher },
+      { name: "Social", agent: socialShare },
     ];
 
     const results = await Promise.allSettled(
@@ -164,6 +168,7 @@ async function stopMultiAgentPipeline(): Promise<void> {
     contentEnricher?.stop(),
     visualGenerator?.stop(),
     databasePublisher?.stop(),
+    socialShare?.stop(),
     seoCalculatorWorker?.close(),
   ]);
   log.success("Pipeline stopped");

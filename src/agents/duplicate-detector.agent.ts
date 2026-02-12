@@ -17,6 +17,7 @@ import {
   generateEmbedding,
   EMBEDDING_DIMENSIONS,
 } from "@/lib/embeddings";
+import { getRedis } from "@/lib/redis";
 import type { ScoredArticle } from "./relevance-filter.agent";
 
 export interface UniqueArticle extends ScoredArticle {
@@ -155,11 +156,50 @@ export class DuplicateDetectorAgent extends BaseAgent<
   }
 
   /**
+   * Acquire distributed lock for article URL to prevent race conditions.
+   * Uses Redis SET NX EX pattern — if another pipeline run is already
+   * processing this URL, we skip it.
+   *
+   * @returns true if lock acquired (we should process), false if already locked
+   */
+  private async acquireArticleLock(url: string): Promise<boolean> {
+    const redis = getRedis();
+    if (!redis) {
+      // If Redis unavailable, proceed without lock (graceful degradation)
+      this.logger.warn(
+        "⚠️ Redis unavailable for distributed lock, proceeding without lock",
+      );
+      return true;
+    }
+
+    const normalizedUrl = this.normalizeUrl(url);
+    const lockKey = `pipeline:lock:${normalizedUrl}`;
+    const LOCK_TTL_SECONDS = 600; // 10 minutes — enough for full pipeline run
+
+    try {
+      // SET NX EX = set only if not exists, with expiry
+      const result = await redis.set(
+        lockKey,
+        Date.now().toString(),
+        "EX",
+        LOCK_TTL_SECONDS,
+        "NX",
+      );
+      return result === "OK";
+    } catch (error) {
+      this.logger.warn(
+        `⚠️ Redis lock error: ${error instanceof Error ? error.message : "Unknown"}`,
+      );
+      return true; // Proceed on error (graceful degradation)
+    }
+  }
+
+  /**
    * Check if article is duplicate using URL detection
    *
    * UPDATED (2026-02-12):
+   * - Layer 0: Distributed lock (Redis SET NX EX) — prevents race conditions
    * - Layer 1: URL match WITHOUT time window (prevents wasted pipeline runs)
-   * - Layer 2: Recent URL match with time window (6h) as fallback
    *
    * Previous bug: 6-hour time window meant articles published >6h ago
    * would pass duplicate check, go through entire pipeline (enrichment,
@@ -169,6 +209,15 @@ export class DuplicateDetectorAgent extends BaseAgent<
   private async checkDuplicate(
     article: ScoredArticle,
   ): Promise<{ isDuplicate: boolean; reason?: string }> {
+    // Layer 0: Distributed lock — prevent race conditions between pipeline runs
+    const lockAcquired = await this.acquireArticleLock(article.url);
+    if (!lockAcquired) {
+      return {
+        isDuplicate: true,
+        reason: "PIPELINE_LOCK_EXISTS (another run is processing this URL)",
+      };
+    }
+
     const normalizedUrl = this.normalizeUrl(article.url);
 
     // For YouTube URLs, only match exact normalized URL (including ?v= param)

@@ -299,7 +299,7 @@ export class ContentCollectorAgent extends BaseAgent<
   protected config = {
     name: "content-collector",
     queueName: QUEUE_NAMES.COLLECTED_ARTICLES,
-    nextQueueName: QUEUE_NAMES.RELEVANT_ARTICLES,
+    nextQueueName: QUEUE_NAMES.UNIQUE_ARTICLES, // 🔗 Route to DuplicateDetector FIRST (2026-02-12)
     enableMetrics: true,
   };
 
@@ -477,7 +477,7 @@ export class ContentCollectorAgent extends BaseAgent<
       return {
         success: true,
         data: collectedArticles,
-        nextQueue: QUEUE_NAMES.RELEVANT_ARTICLES,
+        nextQueue: QUEUE_NAMES.UNIQUE_ARTICLES, // 🔗 Route to DuplicateDetector FIRST (2026-02-12)
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls,

@@ -10,21 +10,21 @@
  * 6. Link to agent log for tracking
  * 7. Send push notifications (Firebase)
  * 8. Notify search engines (IndexNow)
+ * 9. Queue social media sharing to SocialShareAgent
  *
- * This is the FINAL step in the multi-agent pipeline.
+ * REFACTORED (2026-02-12): Social media sharing moved to SocialShareAgent.
+ * Publisher now only handles DB + indexing + push + cache, then queues social sharing.
  */
 
 import { Job } from "bullmq";
 import { BaseAgent, AgentResult } from "./base-agent";
 import { db } from "@/lib/db";
 import { generateSlug } from "@/lib/utils";
+import { QUEUE_NAMES, getQueue } from "@/lib/queue-manager";
 import type { ArticleWithVisuals } from "./visual-generator.agent";
 import { notifyBothLanguages } from "@/lib/seo/indexing-tracker";
-import {
-  recordShareSuccess,
-  recordShareFailure,
-} from "@/services/social-share.service";
 import { calculateTrendScore } from "@/lib/trend-scoring";
+import type { SocialShareInput } from "./social-share.agent";
 
 export interface PublishedArticle {
   id: string;
@@ -40,6 +40,7 @@ export class DatabasePublisherAgent extends BaseAgent<
   protected config = {
     name: "database-publisher",
     queueName: "database-publisher",
+    nextQueueName: QUEUE_NAMES.SOCIAL_SHARE, // 🔗 Route to SocialShareAgent (2026-02-12)
     enableMetrics: true,
   };
 
@@ -339,262 +340,25 @@ export class DatabasePublisherAgent extends BaseAgent<
           }
 
           // Post to Twitter (async - don't block publishing)
-          try {
-            const { postTweet } = await import("@/lib/social/twitter");
-            postTweet({
-              title: createdArticle.title,
-              slug: createdArticle.slug,
-              excerpt: trContent.excerpt || "",
-              categoryName: category.name,
-            })
-              .then(() => this.logger.info(`🐦 Tweet posted`))
-              .catch((err) => this.logger.warn(`Tweet failed: ${err.message}`));
-          } catch (twitterError) {
-            this.logger.warn(
-              `Twitter setup failed: ${(twitterError as Error).message}`,
-            );
-          }
+          // 🔗 MOVED TO SocialShareAgent (2026-02-12) — see social-share.agent.ts
 
-          // Post to Facebook (async - don't block publishing)
-          try {
-            const { postToFacebook } = await import("@/lib/social/facebook");
-            postToFacebook({
-              title: createdArticle.title,
-              slug: createdArticle.slug,
-              excerpt: trContent.excerpt || "",
-              imageUrl: article.imageUrl,
-              categoryName: category.name,
-            })
-              .then(async (postId) => {
-                if (postId) {
-                  await recordShareSuccess(
-                    createdArticle.id,
-                    "FACEBOOK",
-                    "tr",
-                    postId,
-                  );
-                }
-                this.logger.info(`📘 Facebook post created`);
-              })
-              .catch(async (err) => {
-                await recordShareFailure(
-                  createdArticle.id,
-                  "FACEBOOK",
-                  "tr",
-                  err?.message || "Unknown error",
-                );
-                this.logger.warn(`Facebook post failed: ${err.message}`);
-              });
-          } catch (facebookError) {
-            this.logger.warn(
-              `Facebook setup failed: ${(facebookError as Error).message}`,
-            );
-          }
+          // Queue social media sharing via SocialShareAgent
+          const socialShareData: SocialShareInput = {
+            articleId: createdArticle.id,
+            slug: createdArticle.slug,
+            title: createdArticle.title,
+            excerpt: trContent.excerpt || "",
+            imageUrl: article.imageUrl,
+            categoryName: category.name,
+            enSlug: enSlugFinal || undefined,
+            enTitle: enContent?.title || undefined,
+            enExcerpt: enContent?.excerpt || undefined,
+          };
 
-          // Post to Bluesky (async - don't block publishing)
-          try {
-            const { postToBluesky } = await import("@/lib/social/bluesky");
-            postToBluesky({
-              title: createdArticle.title,
-              slug: createdArticle.slug,
-              excerpt: trContent.excerpt || "",
-              imageUrl: article.imageUrl,
-              categoryName: category.name,
-            })
-              .then(async (postId) => {
-                if (postId) {
-                  await recordShareSuccess(
-                    createdArticle.id,
-                    "BLUESKY",
-                    "tr",
-                    postId,
-                  );
-                }
-                this.logger.info(`🦋 Bluesky post created`);
-              })
-              .catch(async (err) => {
-                await recordShareFailure(
-                  createdArticle.id,
-                  "BLUESKY",
-                  "tr",
-                  err?.message || "Unknown error",
-                );
-                this.logger.warn(`Bluesky post failed: ${err.message}`);
-              });
-          } catch (blueskyError) {
-            this.logger.warn(
-              `Bluesky setup failed: ${(blueskyError as Error).message}`,
-            );
-          }
-
-          // Post to Mastodon (async - don't block publishing)
-          try {
-            const { postToMastodon } = await import("@/lib/social/mastodon");
-            postToMastodon({
-              title: createdArticle.title,
-              slug: createdArticle.slug,
-              excerpt: trContent.excerpt || "",
-              imageUrl: article.imageUrl,
-              categoryName: category.name,
-            })
-              .then(async (postId) => {
-                if (postId) {
-                  await recordShareSuccess(
-                    createdArticle.id,
-                    "MASTODON",
-                    "tr",
-                    postId,
-                  );
-                }
-                this.logger.info(`🐘 Mastodon post created`);
-              })
-              .catch(async (err) => {
-                await recordShareFailure(
-                  createdArticle.id,
-                  "MASTODON",
-                  "tr",
-                  err?.message || "Unknown error",
-                );
-                this.logger.warn(`Mastodon post failed: ${err.message}`);
-              });
-          } catch (mastodonError) {
-            this.logger.warn(
-              `Mastodon setup failed: ${(mastodonError as Error).message}`,
-            );
-          }
-
-          // ✅ Social media sharing completed (Facebook, Bluesky, Mastodon)
-          this.logger.info(
-            `✅ Social media sharing completed for article: ${createdArticle.id}`,
-          );
-
-          // ============================================================
-          // ENGLISH SOCIAL MEDIA SHARES
-          // ============================================================
-          if (enSlugFinal && enContent?.title) {
-            const enExcerpt = enContent.excerpt || "";
-            const enTitle = enContent.title;
-
-            // Post to Bluesky EN (async)
-            try {
-              const { postToBluesky } = await import("@/lib/social/bluesky");
-              postToBluesky({
-                title: enTitle,
-                slug: `en/news/${enSlugFinal}`,
-                excerpt: enExcerpt,
-                imageUrl: article.imageUrl,
-                categoryName: "AI News",
-              })
-                .then(async (postId) => {
-                  if (postId) {
-                    await recordShareSuccess(
-                      createdArticle.id,
-                      "BLUESKY",
-                      "en",
-                      postId,
-                    );
-                    this.logger.info(`🦋 Bluesky EN post created`);
-                  } else {
-                    this.logger.info(`🦋 Bluesky EN skipped (disabled)`);
-                  }
-                })
-                .catch(async (err) => {
-                  await recordShareFailure(
-                    createdArticle.id,
-                    "BLUESKY",
-                    "en",
-                    err?.message || "Unknown error",
-                  );
-                  this.logger.warn(`Bluesky EN post failed: ${err.message}`);
-                });
-            } catch (blueskyEnError) {
-              this.logger.warn(
-                `Bluesky EN setup failed: ${(blueskyEnError as Error).message}`,
-              );
-            }
-
-            // Post to Mastodon EN (async)
-            try {
-              const { postToMastodon } = await import("@/lib/social/mastodon");
-              postToMastodon({
-                title: enTitle,
-                slug: `en/news/${enSlugFinal}`,
-                excerpt: enExcerpt,
-                imageUrl: article.imageUrl,
-                categoryName: "AI News",
-              })
-                .then(async (postId) => {
-                  if (postId) {
-                    await recordShareSuccess(
-                      createdArticle.id,
-                      "MASTODON",
-                      "en",
-                      postId,
-                    );
-                    this.logger.info(`🐘 Mastodon EN post created`);
-                  } else {
-                    this.logger.info(`🐘 Mastodon EN skipped (disabled)`);
-                  }
-                })
-                .catch(async (err) => {
-                  await recordShareFailure(
-                    createdArticle.id,
-                    "MASTODON",
-                    "en",
-                    err?.message || "Unknown error",
-                  );
-                  this.logger.warn(`Mastodon EN post failed: ${err.message}`);
-                });
-            } catch (mastodonEnError) {
-              this.logger.warn(
-                `Mastodon EN setup failed: ${(mastodonEnError as Error).message}`,
-              );
-            }
-
-            // ✅ EN social media sharing completed (Facebook, Bluesky, Mastodon)
-            this.logger.info(
-              `✅ EN social media sharing completed for article: ${createdArticle.id}`,
-            );
-
-            // Post to Facebook EN (async)
-            try {
-              const { postToFacebookEN } =
-                await import("@/lib/social/facebook");
-              postToFacebookEN({
-                title: enTitle,
-                slug: `en/news/${enSlugFinal}`,
-                excerpt: enExcerpt,
-                imageUrl: article.imageUrl,
-                categoryName: "AI News",
-              })
-                .then(async (postId) => {
-                  if (postId) {
-                    await recordShareSuccess(
-                      createdArticle.id,
-                      "FACEBOOK_EN",
-                      "en",
-                      postId,
-                    );
-                    this.logger.info(`📘 Facebook EN post created`);
-                  } else {
-                    this.logger.info(`📘 Facebook EN skipped (disabled)`);
-                  }
-                })
-                .catch(async (err) => {
-                  await recordShareFailure(
-                    createdArticle.id,
-                    "FACEBOOK_EN",
-                    "en",
-                    err?.message || "Unknown error",
-                  );
-                  this.logger.warn(`Facebook EN post failed: ${err.message}`);
-                });
-            } catch (facebookEnError) {
-              this.logger.warn(
-                `Facebook EN setup failed: ${(facebookEnError as Error).message}`,
-              );
-            }
-          }
+          // Will be batched and sent to SOCIAL_SHARE queue after all articles are published
+          (publishedArticles as any).__socialShareQueue =
+            (publishedArticles as any).__socialShareQueue || [];
+          (publishedArticles as any).__socialShareQueue.push(socialShareData);
 
           // Invalidate cache (async - don't block)
           try {
@@ -666,12 +430,37 @@ export class DatabasePublisherAgent extends BaseAgent<
             `Sitemap ping failed: ${(pingError as Error).message}`,
           );
         }
+
+        // 🔗 Send social share data to SocialShareAgent queue (2026-02-12)
+        const socialShareQueue = getQueue(QUEUE_NAMES.SOCIAL_SHARE);
+        const socialShareData: SocialShareInput[] =
+          (publishedArticles as any).__socialShareQueue || [];
+
+        if (socialShareQueue && socialShareData.length > 0) {
+          try {
+            await socialShareQueue.add("share-articles", socialShareData, {
+              removeOnComplete: 100,
+              removeOnFail: 50,
+              attempts: 3,
+            });
+            this.logger.success(
+              `📱 ${socialShareData.length} articles queued for social sharing`,
+            );
+          } catch (shareQueueError) {
+            this.logger.warn(
+              `Social share queue failed: ${(shareQueueError as Error).message} — articles are published, sharing will be retried`,
+            );
+          }
+        }
       }
+
+      // Clean up internal property
+      delete (publishedArticles as any).__socialShareQueue;
 
       return {
         success: true,
         data: publishedArticles,
-        skipNextQueue: true, // This is the final step
+        skipNextQueue: true, // Social share is handled via direct queue add above
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls: 0,

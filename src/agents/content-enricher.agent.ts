@@ -1124,6 +1124,57 @@ Respond in JSON:
    * Generate emergency template content (Layer 4 fallback)
    * Used when all other methods fail - GUARANTEED to succeed
    */
+  /**
+   * Validate source content quality before using in emergency template
+   * Prevents garbage HTML/JS/metadata from being published
+   */
+  private isSourceContentClean(content: string): boolean {
+    if (!content || content.length < 50) return false;
+
+    const lowerContent = content.toLowerCase();
+    const garbagePatterns = [
+      "shadow dom",
+      "published time:",
+      "warning:",
+      "this page contains",
+      "<script",
+      "javascript:",
+      "window.__",
+      "document.get",
+      "classname=",
+      "onclick=",
+      "adsbygoogle",
+      "googletag",
+      "cookie policy",
+      "accept cookies",
+      "privacy policy",
+      "subscribe to newsletter",
+      "sign up for",
+      "enable javascript",
+      "captcha",
+      "403 forbidden",
+      "access denied",
+      "robot verification",
+      "cloudflare",
+      "just a moment",
+      "checking your browser",
+    ];
+
+    const matchCount = garbagePatterns.filter((p) =>
+      lowerContent.includes(p),
+    ).length;
+    if (matchCount >= 2) return false; // Multiple garbage signals = bad content
+
+    // Check alphanumeric ratio (garbage HTML has lots of special chars)
+    const alphanumeric = (
+      content.match(/[a-zA-Z0-9\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF]/g) || []
+    ).length;
+    const ratio = alphanumeric / content.length;
+    if (ratio < 0.5 && content.length > 200) return false;
+
+    return true;
+  }
+
   private generateEmergencyTemplate(
     article: UniqueArticle,
     sources: Array<{ title: string; url: string; content: string }>,
@@ -1145,19 +1196,72 @@ Respond in JSON:
     };
   } {
     const category = article.suggestedCategory || "yapay-zeka";
-    const sourceContent =
-      sources[0]?.content || article.description || article.title;
 
-    // Turkish content (template-based)
-    const trTitle = article.title;
-    const trExcerpt = sourceContent.substring(0, 200) + "...";
+    // 🛡️ VALIDATE source content — never publish raw scraped garbage
+    const cleanSources = sources.filter((s) =>
+      this.isSourceContentClean(s.content),
+    );
+    const bestSource = cleanSources[0]?.content || "";
+
+    // If NO clean source content available, use only description (safe)
+    const safeContent = bestSource
+      ? bestSource.substring(0, 500)
+      : article.description || "";
+
+    // If even description is garbage, REJECT this article entirely
+    if (!safeContent || safeContent.length < 30) {
+      this.logger.error(
+        `🚫 Emergency template REJECTED: No clean content for "${article.title.substring(0, 50)}"`,
+      );
+      // Return minimal content that will be caught by publisher's validation
+      return {
+        tr: {
+          title: "",
+          excerpt: "",
+          content: "",
+          keywords: [],
+          metaDescription: "",
+          score: 0,
+        },
+        en: {
+          title: "",
+          excerpt: "",
+          content: "",
+          keywords: [],
+          metaDescription: "",
+        },
+      };
+    }
+
+    // 🌍 TRANSLATE TITLE: Emergency template must still produce Turkish title
+    // Simple heuristic: if title is mostly ASCII (English), mark it
+    const isEnglishTitle = /^[a-zA-Z0-9\s\-:,.'""!?&@#$%()]+$/.test(
+      article.title.trim(),
+    );
+
+    // For emergency template, prefix with category context if English
+    const trTitle = isEnglishTitle
+      ? `${article.title} — Gelişme Detayları`
+      : article.title;
+
+    const trExcerpt =
+      safeContent.substring(0, 200).replace(/<[^>]+>/g, "") + "...";
+
+    const hostname = (() => {
+      try {
+        return new URL(article.url).hostname;
+      } catch {
+        return "kaynak";
+      }
+    })();
+
     const trContent = `
-<p>${sourceContent}</p>
+<p>${safeContent.replace(/<[^>]+>/g, "")}</p>
 
 <h2>Detaylar</h2>
-<p>Bu haber ${category} kategorisinde yayınlanmıştır.</p>
+<p>Bu haber ${category} kategorisinde yayınlanmıştır. Daha fazla bilgi için orijinal kaynağı ziyaret edebilirsiniz.</p>
 
-<p><strong>Kaynak:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow">${new URL(article.url).hostname}</a></p>
+<p><strong>Kaynak:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow">${hostname}</a></p>
 
 <div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
@@ -1165,20 +1269,21 @@ Respond in JSON:
     <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">Yapay Zeka Destekli İçerik</span>
   </div>
   <div style="font-size: 0.65rem; color: #94a3b8;">
-    <strong style="color: #64748b;">Kaynak:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${new URL(article.url).hostname}</a>
+    <strong style="color: #64748b;">Kaynak:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${hostname}</a>
   </div>
 </div>`;
 
-    // English content (template-based)
+    // English content
     const enTitle = article.title;
-    const enExcerpt = sourceContent.substring(0, 200) + "...";
+    const enExcerpt =
+      safeContent.substring(0, 200).replace(/<[^>]+>/g, "") + "...";
     const enContent = `
-<p>${sourceContent}</p>
+<p>${safeContent.replace(/<[^>]+>/g, "")}</p>
 
 <h2>Details</h2>
 <p>This news was published in the ${category} category.</p>
 
-<p><strong>Source:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow">${new URL(article.url).hostname}</a></p>
+<p><strong>Source:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow">${hostname}</a></p>
 
 <div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
@@ -1186,11 +1291,10 @@ Respond in JSON:
     <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">AI-Powered Content</span>
   </div>
   <div style="font-size: 0.65rem; color: #94a3b8;">
-    <strong style="color: #64748b;">Source:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${new URL(article.url).hostname}</a>
+    <strong style="color: #64748b;">Source:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${hostname}</a>
   </div>
 </div>`;
 
-    // Extract keywords from title
     const keywords = article.title
       .toLowerCase()
       .split(/\s+/)
@@ -1204,7 +1308,7 @@ Respond in JSON:
         content: trContent,
         keywords,
         metaDescription: trExcerpt.substring(0, 160),
-        score: 50, // Emergency template = low score
+        score: 30, // Emergency template = very low score (was 50)
       },
       en: {
         title: enTitle,

@@ -206,25 +206,38 @@ export class RelevanceFilterAgent extends BaseAgent<
   }
 
   /**
-   * Bypass scoring - use trend scores directly
-   * When DeepSeek fails, articles should PASS (that's the point of bypass)
-   * Score is set to RELEVANCE_THRESHOLD + buffer so they pass the filter
+   * Bypass scoring - use trend scores as quality filter
+   * 🛡️ FIXED (2026-02-12): Only pass articles with trendScore > 50
+   * Previously: ALL articles got threshold+bonus → zero quality control
+   * Now: Only trending articles pass, rest are filtered out
    */
   private bypassScoring(
     articles: CollectedArticle[],
     reason: string,
   ): ScoredArticle[] {
+    const MIN_TREND_FOR_BYPASS = 50; // Only pass articles with decent trend score
+
     return articles.map((article) => {
-      // BYPASS = let articles through. Give them threshold + small bonus from trendScore
       const trendScore = article.trendScore || 0;
-      // Base: threshold (65) + bonus from trend (0-20)
-      const bonus = Math.min(trendScore / 15, 20);
+
+      // 🛡️ KEY FIX: If trend score is too low, give score BELOW threshold → filtered out
+      if (trendScore < MIN_TREND_FOR_BYPASS) {
+        return {
+          ...article,
+          relevanceScore: Math.round(trendScore / 2), // Will be below 65 threshold
+          reasoning: `BYPASS MODE (FILTERED): ${reason}. Trend score ${trendScore} < ${MIN_TREND_FOR_BYPASS} minimum`,
+          suggestedTags: [],
+        };
+      }
+
+      // High trend articles: pass with threshold + bonus
+      const bonus = Math.min((trendScore - MIN_TREND_FOR_BYPASS) / 10, 20);
       const relevanceScore = RELEVANCE_THRESHOLD + bonus;
 
       return {
         ...article,
         relevanceScore: Math.round(Math.min(relevanceScore, 100)),
-        reasoning: `BYPASS MODE: ${reason}. Trend score: ${trendScore}`,
+        reasoning: `BYPASS MODE (PASSED): ${reason}. Trend score: ${trendScore}`,
         suggestedTags: [],
       };
     });

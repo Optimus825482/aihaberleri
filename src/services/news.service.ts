@@ -1054,6 +1054,18 @@ function isValidContent(content: string): { valid: boolean; reason?: string } {
     { pattern: "403 forbidden", reason: "403 Forbidden" },
     { pattern: "captcha", reason: "CAPTCHA challenge" },
     { pattern: "robot verification", reason: "Bot detection" },
+    // 🛡️ NEW: Additional garbage content patterns (2026-02-12)
+    { pattern: "this page contains shadow", reason: "Shadow DOM page warning" },
+    { pattern: "window.__", reason: "Raw JavaScript variable leak" },
+    { pattern: "document.getelementby", reason: "Raw DOM manipulation code" },
+    { pattern: "adsbygoogle", reason: "Ad script leak" },
+    { pattern: "googletag.cmd", reason: "Ad script leak" },
+    { pattern: "classname=", reason: "Raw HTML attribute leak" },
+    { pattern: "just a moment", reason: "Cloudflare challenge page" },
+    { pattern: "checking your browser", reason: "Bot protection page" },
+    { pattern: "onclick=", reason: "Raw HTML event handler" },
+    { pattern: "data-reactroot", reason: "Raw React DOM leak" },
+    { pattern: "__next_data__", reason: "Raw Next.js data leak" },
   ];
 
   for (const { pattern, reason } of errorPatterns) {

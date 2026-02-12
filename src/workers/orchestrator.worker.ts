@@ -37,6 +37,7 @@ import { TrendEnricherAgent } from "@/agents/trend-enricher.agent";
 import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
 import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
+import { SocialShareAgent } from "@/agents/social-share.agent";
 
 // Smart Scheduler for Turkey timezone-aware scheduling
 import {
@@ -61,6 +62,7 @@ let trendEnricher: TrendEnricherAgent;
 let contentEnricher: ContentEnricherAgent;
 let visualGenerator: VisualGeneratorAgent;
 let databasePublisher: DatabasePublisherAgent;
+let socialShare: SocialShareAgent;
 
 // Smart scheduler instance for cleanup on shutdown
 let dynamicScheduler: {
@@ -79,6 +81,7 @@ async function initializeAgents(): Promise<void> {
     "content-enricher",
     "visual-generator",
     "database-publisher",
+    "social-share",
     "content-collector",
   ];
 
@@ -91,6 +94,7 @@ async function initializeAgents(): Promise<void> {
   contentEnricher = new ContentEnricherAgent();
   visualGenerator = new VisualGeneratorAgent();
   databasePublisher = new DatabasePublisherAgent();
+  socialShare = new SocialShareAgent();
 
   await Promise.all([
     contentCollector.start(),
@@ -100,9 +104,10 @@ async function initializeAgents(): Promise<void> {
     contentEnricher.start(),
     visualGenerator.start(),
     databasePublisher.start(),
+    socialShare.start(),
   ]);
 
-  logger.success("All 7 agents initialized");
+  logger.success("All 8 agents initialized");
 }
 
 /**
@@ -119,6 +124,7 @@ async function stopAgents(): Promise<void> {
     contentEnricher?.stop(),
     visualGenerator?.stop(),
     databasePublisher?.stop(),
+    socialShare?.stop(),
   ]);
 
   logger.success("All agents stopped");
