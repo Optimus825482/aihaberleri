@@ -120,7 +120,7 @@ export class DatabasePublisherAgent extends BaseAgent<
 
           if (!trContent?.title || !trContent?.content || !trContent?.excerpt) {
             this.logger.warn(
-              `Skipping article — missing required TR fields: title=${!!trContent?.title}, content=${!!trContent?.content}, excerpt=${!!trContent?.excerpt}`,
+              `⛔ CONTENT REJECTED at publisher: "${article.url.substring(0, 60)}" — missing TR fields: title=${!!trContent?.title}, content=${!!trContent?.content}, excerpt=${!!trContent?.excerpt}`,
             );
             continue;
           }
@@ -136,8 +136,9 @@ export class DatabasePublisherAgent extends BaseAgent<
           });
 
           if (existing) {
+            const matchType = existing.slug === slug ? "slug" : "sourceUrl";
             this.logger.warn(
-              `Article already exists: ${trContent.title.substring(0, 50)}... (skipping)`,
+              `⛔ DUPLICATE REJECTED at publisher: "${trContent.title.substring(0, 60)}..." — matched by ${matchType} (existing ID: ${existing.id})`,
             );
             continue;
           }
