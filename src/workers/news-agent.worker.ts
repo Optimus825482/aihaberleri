@@ -948,11 +948,15 @@ async function startWorker() {
             );
 
             // Get existing shares for this article
+            // Include both SHARED and permanently FAILED (3+ retries) to avoid infinite retry loops
             const existingShares = await db.socialShare.findMany({
               where: {
                 articleId: article.id,
                 platform: { in: platforms as any[] },
-                status: "SHARED",
+                OR: [
+                  { status: "SHARED" },
+                  { status: "FAILED", retryCount: { gte: 3 } },
+                ],
               },
             });
 

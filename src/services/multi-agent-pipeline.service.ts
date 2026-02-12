@@ -225,11 +225,12 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
   articlesInQueue: number;
   completed: number;
   failed: number;
+  firstQueueCompleted: number;
 }> {
   // Monitor all active pipeline queues (SEO removed from pipeline)
   const queues = [
-    QUEUE_NAMES.RELEVANT_ARTICLES,
     QUEUE_NAMES.UNIQUE_ARTICLES,
+    QUEUE_NAMES.RELEVANT_ARTICLES,
     QUEUE_NAMES.TREND_ENRICHMENT,
     QUEUE_NAMES.ENRICHED_ARTICLES,
     QUEUE_NAMES.ARTICLES_WITH_VISUALS,
@@ -240,8 +241,10 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
   let articlesInQueue = 0;
   let completed = 0;
   let failed = 0;
+  let firstQueueCompleted = 0;
 
-  for (const queueName of queues) {
+  for (let i = 0; i < queues.length; i++) {
+    const queueName = queues[i];
     const queue = getQueue(queueName);
     if (!queue) continue;
 
@@ -259,6 +262,11 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
 
     completed += completedCount;
     failed += failedCount;
+
+    // Track first queue (duplicate-detector) completed count separately
+    if (i === 0) {
+      firstQueueCompleted = completedCount;
+    }
   }
 
   return {
@@ -266,6 +274,7 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
     articlesInQueue,
     completed,
     failed,
+    firstQueueCompleted,
   };
 }
 
@@ -294,6 +303,7 @@ export async function waitForPipelineCompletion(
   // Capture baseline failed count — old pipeline failures should not affect this run
   const baselineProgress = await monitorPipelineProgress(agentLogId);
   const baselineFailedCount = baselineProgress.failed;
+  const baselineFirstQueueCompleted = baselineProgress.firstQueueCompleted;
 
   let consecutiveEmptyChecks = 0;
   const REQUIRED_EMPTY_CHECKS = 3;
@@ -304,11 +314,14 @@ export async function waitForPipelineCompletion(
     checkCount++;
     const progress = await monitorPipelineProgress(agentLogId);
     const newFailures = progress.failed - baselineFailedCount;
+    const firstQueueProcessed =
+      progress.firstQueueCompleted > baselineFirstQueueCompleted;
 
-    // Track if we've seen any articles in queue
+    // Track if we've seen any articles in queue OR if first queue processed new jobs
     if (
       progress.articlesInQueue > 0 ||
-      progress.completed > baselineProgress.completed
+      progress.completed > baselineProgress.completed ||
+      firstQueueProcessed
     ) {
       hasSeenArticlesInQueue = true;
     }
@@ -380,11 +393,19 @@ export async function waitForPipelineCompletion(
           errors.push(`${draftCount} article(s) stuck in DRAFT state`);
         }
 
+        // Pipeline completed successfully if:
+        // 1. Articles were published, OR
+        // 2. Articles are in draft state, OR
+        // 3. New completions were recorded, OR
+        // 4. Articles were seen in queue (processed but filtered out as duplicate/irrelevant)
+        const pipelineRan =
+          publishedCount > 0 ||
+          draftCount > 0 ||
+          progress.completed > baselineProgress.completed ||
+          hasSeenArticlesInQueue;
+
         return {
-          success:
-            publishedCount > 0 ||
-            draftCount > 0 ||
-            progress.completed > baselineProgress.completed,
+          success: pipelineRan,
           articlesPublished: publishedCount,
           errors,
         };
