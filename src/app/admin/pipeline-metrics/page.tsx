@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
+import PipelineLiveWidget from "@/components/PipelineLiveWidget";
 import {
   BarChart,
   Bar,
@@ -36,14 +37,6 @@ interface PipelineSummary {
   totalSpans: number;
 }
 
-interface RecentTrace {
-  id: string;
-  pipelineName: string;
-  status: string;
-  totalDuration: number | null;
-  createdAt: string;
-}
-
 interface PromptVersion {
   id: string;
   name: string;
@@ -75,29 +68,12 @@ function formatDuration(ms: number): string {
   return `${(ms / 60000).toFixed(1)}m`;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    SUCCESS: "bg-green-500/20 text-green-400",
-    FAILED: "bg-red-500/20 text-red-400",
-    PARTIAL: "bg-yellow-500/20 text-yellow-400",
-    RUNNING: "bg-blue-500/20 text-blue-400",
-  };
-  return (
-    <span
-      className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] || "bg-gray-500/20 text-gray-400"}`}
-    >
-      {status}
-    </span>
-  );
-}
-
 export default function PipelineMetricsPage() {
   const [days, setDays] = useState(7);
   const [tab, setTab] = useState<"metrics" | "prompts">("metrics");
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<PipelineSummary | null>(null);
   const [steps, setSteps] = useState<StepMetric[]>([]);
-  const [recentTraces, setRecentTraces] = useState<RecentTrace[]>([]);
   const [prompts, setPrompts] = useState<PromptVersion[]>([]);
   const [promptsLoading, setPromptsLoading] = useState(false);
 
@@ -108,7 +84,6 @@ export default function PipelineMetricsPage() {
       const data = await res.json();
       setSummary(data.summary);
       setSteps(data.steps || []);
-      setRecentTraces(data.recentTraces || []);
     } catch (e) {
       console.error("Failed to fetch metrics:", e);
     }
@@ -404,41 +379,8 @@ export default function PipelineMetricsPage() {
                   </div>
                 )}
 
-                {/* Recent Traces */}
-                {recentTraces.length > 0 && (
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-700">
-                      <h3 className="text-sm font-medium text-gray-300">
-                        Son Çalışmalar
-                      </h3>
-                    </div>
-                    <div className="divide-y divide-gray-700/50">
-                      {recentTraces.map((trace) => (
-                        <div
-                          key={trace.id}
-                          className="px-4 py-2.5 flex items-center justify-between hover:bg-gray-700/30"
-                        >
-                          <div className="flex items-center gap-3">
-                            <StatusBadge status={trace.status} />
-                            <span className="text-xs text-gray-300 font-mono">
-                              {trace.pipelineName}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-4 text-xs text-gray-400">
-                            {trace.totalDuration && (
-                              <span>{formatDuration(trace.totalDuration)}</span>
-                            )}
-                            <span>
-                              {new Date(trace.createdAt).toLocaleString(
-                                "tr-TR",
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* Pipeline Live Widget */}
+                <PipelineLiveWidget />
 
                 {/* Empty State */}
                 {!summary || summary.totalRuns === 0 ? (

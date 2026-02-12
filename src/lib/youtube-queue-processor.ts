@@ -124,7 +124,7 @@ export async function processNextYouTubeTopic(): Promise<boolean> {
         },
       ];
 
-      await startMultiAgentPipeline(articleInput, {
+      const { jobId: ytJobId } = await startMultiAgentPipeline(articleInput, {
         agentLogId: agentLog.id,
         targetCount: 1,
       });
@@ -133,6 +133,7 @@ export async function processNextYouTubeTopic(): Promise<boolean> {
       const result = await waitForPipelineCompletion(
         agentLog.id,
         10 * 60 * 1000,
+        ytJobId,
       );
 
       if (result.success && result.articlesPublished > 0) {

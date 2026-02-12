@@ -294,11 +294,14 @@ export async function executeNewsAgent(
       targetCount,
     });
 
-    await startMultiAgentPipeline(uniqueArticles, {
-      agentLogId: agentLog.id,
-      categorySlug,
-      targetCount,
-    });
+    const { jobId: pipelineJobId } = await startMultiAgentPipeline(
+      uniqueArticles,
+      {
+        agentLogId: agentLog.id,
+        categorySlug,
+        targetCount,
+      },
+    );
 
     logPipelineBanner("start", {
       articles: uniqueArticles.length,
@@ -319,6 +322,7 @@ export async function executeNewsAgent(
     const pipelineResult = await waitForPipelineCompletion(
       agentLog.id,
       20 * 60 * 1000, // 20 minutes timeout
+      pipelineJobId,
     );
 
     if (!pipelineResult.success) {

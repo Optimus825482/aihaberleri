@@ -170,7 +170,7 @@ export interface PipelineConfig {
 export async function startMultiAgentPipeline(
   articles: ArticleWithTopic[],
   config: PipelineConfig,
-): Promise<void> {
+): Promise<{ jobId: string }> {
   logger.info(
     `Pipeline starting: ${articles.length} articles → duplicate-detector`,
   );
@@ -213,6 +213,8 @@ export async function startMultiAgentPipeline(
   } else if (waitingCount > 0) {
     logger.warn("Job waiting — agents may not have started");
   }
+
+  return { jobId: job.id! };
 }
 
 /**
@@ -284,6 +286,7 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
 export async function waitForPipelineCompletion(
   agentLogId: string,
   timeoutMs: number = 20 * 60 * 1000, // 20 minutes
+  initialJobId?: string,
 ): Promise<{
   success: boolean;
   articlesPublished: number;
@@ -293,55 +296,70 @@ export async function waitForPipelineCompletion(
   const errors: string[] = [];
 
   logger.info(
-    `Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s)`,
+    `Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s${initialJobId ? `, tracking job ${initialJobId}` : ""})`,
   );
 
-  // CRITICAL: Capture baseline BEFORE the initial wait!
-  // If duplicate-detector finishes within the wait period (e.g. all articles are duplicates),
-  // we need the pre-wait baseline to detect that work actually happened.
-  const baselineProgress = await monitorPipelineProgress(agentLogId);
-  const baselineFailedCount = baselineProgress.failed;
-  const baselineFirstQueueCompleted = baselineProgress.firstQueueCompleted;
+  // RELIABLE DETECTION: Track the initial job directly via BullMQ
+  // This eliminates all race conditions with global counter baselines
+  let initialJobCompleted = false;
+  if (initialJobId) {
+    const duplicateQueue = getQueue(QUEUE_NAMES.UNIQUE_ARTICLES);
+    if (duplicateQueue) {
+      const jobPollStart = Date.now();
+      while (Date.now() - jobPollStart < 120_000) {
+        const job = await duplicateQueue.getJob(initialJobId);
+        if (!job) {
+          // Job removed by removeOnComplete — it completed
+          initialJobCompleted = true;
+          logger.info(
+            `Initial job ${initialJobId} completed (removed from queue)`,
+          );
+          break;
+        }
+        const state = await job.getState();
+        if (state === "completed") {
+          initialJobCompleted = true;
+          logger.info(`Initial job ${initialJobId} completed`);
+          break;
+        }
+        if (state === "failed") {
+          initialJobCompleted = true;
+          logger.warn(`Initial job ${initialJobId} failed`);
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      }
+    }
+  } else {
+    // Fallback: no job ID — wait for agents to pick up jobs
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
 
-  // Brief wait for agents to pick up jobs
-  await new Promise((resolve) => setTimeout(resolve, 5000));
+  // Brief wait for downstream queues to receive forwarded articles
+  await new Promise((resolve) => setTimeout(resolve, 3000));
 
   let consecutiveEmptyChecks = 0;
   const REQUIRED_EMPTY_CHECKS = 3;
-  let hasSeenArticlesInQueue = false;
+  let hasSeenArticlesInQueue = initialJobCompleted;
   let checkCount = 0;
 
   while (Date.now() - startTime < timeoutMs) {
     checkCount++;
     const progress = await monitorPipelineProgress(agentLogId);
-    const newFailures = progress.failed - baselineFailedCount;
-    const firstQueueProcessed =
-      progress.firstQueueCompleted > baselineFirstQueueCompleted;
 
-    // Track if we've seen any articles in queue OR if first queue processed new jobs
-    if (
-      progress.articlesInQueue > 0 ||
-      progress.completed > baselineProgress.completed ||
-      firstQueueProcessed
-    ) {
+    if (progress.articlesInQueue > 0 || progress.completed > 0) {
       hasSeenArticlesInQueue = true;
     }
 
-    // Log progress only when there's activity (avoid spam)
-    if (progress.articlesInQueue > 0 || newFailures > 0 || checkCount <= 2) {
+    if (progress.articlesInQueue > 0 || checkCount <= 2) {
       logger.debug(
-        `Check #${checkCount}: ${progress.stage} — ${progress.articlesInQueue} queued, ${progress.completed} done, ${newFailures} new failures`,
+        `Check #${checkCount}: ${progress.stage} — ${progress.articlesInQueue} queued, ${progress.completed} done, ${progress.failed} failed`,
       );
     }
 
-    // Check if all queues are empty (pipeline completed)
-    // Require multiple consecutive empty checks to avoid race conditions
     if (progress.articlesInQueue === 0 && progress.stage === "unknown") {
-      // If we've never seen articles in queue, agents might not be running
-      // Wait longer before declaring completion
       if (!hasSeenArticlesInQueue) {
         if (consecutiveEmptyChecks < 12) {
-          // Wait up to 60 seconds (12 * 5s) for agents to start
           logger.warn(
             `⚠️ Queue appears empty but never saw articles - waiting for agents to start (${consecutiveEmptyChecks + 1}/12)`,
           );
@@ -349,7 +367,6 @@ export async function waitForPipelineCompletion(
           await new Promise((resolve) => setTimeout(resolve, 5000));
           continue;
         } else {
-          // After 60 seconds, assume agents are not running
           logger.error(
             `❌ CRITICAL: Agents never started processing. Pipeline cannot complete.`,
           );
@@ -373,37 +390,21 @@ export async function waitForPipelineCompletion(
           `✅ Pipeline completed: ${progress.completed} articles processed`,
         );
 
-        // Get published articles count from database
         const { db } = await import("@/lib/db");
         const publishedCount = await db.article.count({
-          where: {
-            agentLogId,
-            status: "PUBLISHED",
-          },
+          where: { agentLogId, status: "PUBLISHED" },
         });
 
-        // Also check for DRAFT articles (enrichment may have partially succeeded)
         const draftCount = await db.article.count({
-          where: {
-            agentLogId,
-            status: "DRAFT",
-          },
+          where: { agentLogId, status: "DRAFT" },
         });
 
         if (publishedCount === 0 && draftCount > 0) {
           errors.push(`${draftCount} article(s) stuck in DRAFT state`);
         }
 
-        // Pipeline completed successfully if:
-        // 1. Articles were published, OR
-        // 2. Articles are in draft state, OR
-        // 3. New completions were recorded, OR
-        // 4. Articles were seen in queue (processed but filtered out as duplicate/irrelevant)
         const pipelineRan =
-          publishedCount > 0 ||
-          draftCount > 0 ||
-          progress.completed > baselineProgress.completed ||
-          hasSeenArticlesInQueue;
+          publishedCount > 0 || draftCount > 0 || hasSeenArticlesInQueue;
 
         return {
           success: pipelineRan,
@@ -412,26 +413,25 @@ export async function waitForPipelineCompletion(
         };
       }
     } else {
-      consecutiveEmptyChecks = 0; // Reset counter if queue has items
+      consecutiveEmptyChecks = 0;
     }
 
-    // Log progress
     if (progress.articlesInQueue > 0) {
       logger.info(
         `📊 Pipeline progress: ${progress.stage} (${progress.articlesInQueue} in queue, ${progress.completed} completed, ${progress.failed} failed)`,
       );
     }
 
-    // Check for failures (only new ones from this pipeline run)
-    if (newFailures > 0 && !errors.some((e) => e.includes("articles failed"))) {
-      errors.push(`${newFailures} articles failed in pipeline`);
+    if (
+      progress.failed > 0 &&
+      !errors.some((e) => e.includes("articles failed"))
+    ) {
+      errors.push(`${progress.failed} articles failed in pipeline`);
     }
 
-    // Wait before next check
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // Check every 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 
-  // Timeout
   logger.error(`❌ Pipeline timeout after ${timeoutMs / 1000}s`);
   return {
     success: false,
