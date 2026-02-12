@@ -62,33 +62,18 @@ export async function postToFacebook(article: {
 
     let postId: string;
 
-    // Post as link with optional image thumbnail
-    // Graph API: POST /{page-id}/feed with message + link + picture
-    if (article.imageUrl) {
-      const response = await axios.post(
-        `${GRAPH_API_URL}/${FACEBOOK_PAGE_ID}/feed`,
-        {
-          message,
-          link: articleUrl,
-          picture: article.imageUrl,
-          published: 1,
-          access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
-        },
-      );
-      postId = response.data.id;
-    } else {
-      // Link post without explicit image — Facebook will scrape OG tags
-      const response = await axios.post(
-        `${GRAPH_API_URL}/${FACEBOOK_PAGE_ID}/feed`,
-        {
-          message,
-          link: articleUrl,
-          published: 1,
-          access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
-        },
-      );
-      postId = response.data.id;
-    }
+    // Post as link — Facebook scrapes OG tags from the URL for image/title/description
+    // Note: picture param requires domain ownership verification, so we rely on OG tags
+    const response = await axios.post(
+      `${GRAPH_API_URL}/${FACEBOOK_PAGE_ID}/feed`,
+      {
+        message,
+        link: articleUrl,
+        published: 1,
+        access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
+      },
+    );
+    postId = response.data.id;
 
     console.log(`✅ Facebook post successful! ID: ${postId}`);
     return postId;
@@ -231,34 +216,19 @@ export async function postToFacebookEN(article: {
 
     let postId: string;
 
-    // Use link post for clickable preview card (not photo post)
-    // Graph API: POST /{page-id}/feed with message + link + picture
+    // Use link post for clickable preview card — Facebook scrapes OG tags for image
     const message = `📰 ${article.title}\n\n${article.excerpt}\n\n${hashtags}`;
 
-    if (article.imageUrl) {
-      const response = await axios.post(
-        `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/feed`,
-        {
-          message,
-          link: articleUrl,
-          picture: article.imageUrl,
-          published: 1,
-          access_token: FACEBOOK_EN_PAGE_ACCESS_TOKEN,
-        },
-      );
-      postId = response.data.id;
-    } else {
-      const response = await axios.post(
-        `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/feed`,
-        {
-          message,
-          link: articleUrl,
-          published: 1,
-          access_token: FACEBOOK_EN_PAGE_ACCESS_TOKEN,
-        },
-      );
-      postId = response.data.id;
-    }
+    const response = await axios.post(
+      `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/feed`,
+      {
+        message,
+        link: articleUrl,
+        published: 1,
+        access_token: FACEBOOK_EN_PAGE_ACCESS_TOKEN,
+      },
+    );
+    postId = response.data.id;
 
     console.log(`✅ Facebook EN post successful! ID: ${postId}`);
     return postId;
