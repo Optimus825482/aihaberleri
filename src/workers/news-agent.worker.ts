@@ -683,6 +683,31 @@ async function startWorker() {
       //   ... (disabled to preserve daily quota)
       // }
 
+      // 1.6 GA4 → DB Views Sync
+      try {
+        const { getAllArticlePageViews } = await import("@/lib/ga4-client");
+        const viewsMap = await getAllArticlePageViews();
+        if (viewsMap.size > 0) {
+          let synced = 0;
+          const entries = Array.from(viewsMap.entries());
+          for (let i = 0; i < entries.length; i += 50) {
+            const batch = entries.slice(i, i + 50);
+            await Promise.all(
+              batch.map(([slug, views]) =>
+                db.article.updateMany({
+                  where: { slug },
+                  data: { views },
+                }),
+              ),
+            );
+            synced += batch.length;
+          }
+          log.success(`GA4 sync: ${synced} articles updated`);
+        }
+      } catch (gaErr) {
+        log.warn("GA4 views sync failed (will retry periodically)");
+      }
+
       // 2. Agent Schedule Check - Repeatable Job Setup
       const [enabledSetting, nextRunSetting] = await Promise.all([
         db.setting.findUnique({ where: { key: "agent.enabled" } }),
@@ -736,6 +761,36 @@ async function startWorker() {
   }
 
   initStartupSync();
+
+  // GA4 Periodic Sync — Her 15 dakikada bir article.views güncelle
+  setInterval(
+    async () => {
+      try {
+        const { getAllArticlePageViews } = await import("@/lib/ga4-client");
+        const viewsMap = await getAllArticlePageViews();
+        if (viewsMap.size > 0) {
+          const entries = Array.from(viewsMap.entries());
+          let synced = 0;
+          for (let i = 0; i < entries.length; i += 50) {
+            const batch = entries.slice(i, i + 50);
+            await Promise.all(
+              batch.map(([slug, views]) =>
+                db.article.updateMany({
+                  where: { slug },
+                  data: { views },
+                }),
+              ),
+            );
+            synced += batch.length;
+          }
+          log.info(`GA4 periodic sync: ${synced} articles`);
+        }
+      } catch (err) {
+        log.warn("GA4 periodic sync failed");
+      }
+    },
+    15 * 60 * 1000,
+  ); // 15 dakika
 
   // NEWSLETTER WORKER - Daily at 19:00 Turkey Time
   const newsletterQueue = getNewsletterQueue();

@@ -91,13 +91,38 @@ export function useNewsletterSubscribers() {
 }
 
 /**
- * Realtime Visitors SSE Hook - custom implementation
+ * GA4 Realtime Visitors Hook
+ */
+export function useGA4Realtime(refreshInterval = 30000) {
+  return useSWR("/api/admin/analytics/ga4-realtime", fetcher, {
+    ...defaultConfig,
+    refreshInterval,
+    dedupingInterval: 15000,
+  });
+}
+
+/**
+ * GA4 Traffic Overview Hook (period-based)
+ */
+export function useGA4Traffic(period: string = "7d") {
+  return useSWR(
+    `/api/admin/analytics/ga4-realtime?period=${period}`,
+    fetcher,
+    {
+      ...defaultConfig,
+      refreshInterval: 300000, // 5 dakika
+      dedupingInterval: 60000,
+    },
+  );
+}
+
+/**
+ * Realtime Visitors SSE Hook - legacy (deprecated, use useGA4Realtime)
  */
 export function useRealtimeVisitors() {
   return useSWR(
     "/api/admin/realtime",
     async () => {
-      // Return initial empty state, SSE will update
       return { visitors: [], count: 0 };
     },
     {

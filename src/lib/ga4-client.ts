@@ -177,6 +177,292 @@ export async function getAllArticlePageViews(): Promise<Map<string, number>> {
   }
 }
 
+// ─── GA4 Realtime Visitors ──────────────────────────────
+let realtimeCache: {
+  data: RealtimeData;
+  expiresAt: number;
+} | null = null;
+const REALTIME_CACHE_TTL_MS = 30 * 1000; // 30 saniye
+
+export interface RealtimeData {
+  activeUsers: number;
+  minuteData: Array<{ minutesAgo: number; users: number }>;
+  topPages: Array<{ page: string; users: number }>;
+  devices: Array<{ device: string; users: number }>;
+  countries: Array<{ country: string; users: number }>;
+}
+
+export async function getRealtimeVisitors(): Promise<RealtimeData> {
+  // Cache kontrolü
+  if (realtimeCache && realtimeCache.expiresAt > Date.now()) {
+    return realtimeCache.data;
+  }
+
+  const emptyResult: RealtimeData = {
+    activeUsers: 0,
+    minuteData: [],
+    topPages: [],
+    devices: [],
+    countries: [],
+  };
+
+  try {
+    const client = getClient();
+
+    // Paralel 4 realtime sorgu
+    const [minuteRes, pageRes, deviceRes, countryRes] = await Promise.all([
+      // Dakika bazlı aktif kullanıcılar (son 30 dk)
+      client.properties.runRealtimeReport({
+        property: getPropertyId(),
+        requestBody: {
+          dimensions: [{ name: "minutesAgo" }],
+          metrics: [{ name: "activeUsers" }],
+        },
+      }),
+      // Top sayfalar
+      client.properties.runRealtimeReport({
+        property: getPropertyId(),
+        requestBody: {
+          dimensions: [{ name: "unifiedScreenName" }],
+          metrics: [{ name: "activeUsers" }],
+          limit: "10",
+        },
+      }),
+      // Cihaz dağılımı
+      client.properties.runRealtimeReport({
+        property: getPropertyId(),
+        requestBody: {
+          dimensions: [{ name: "deviceCategory" }],
+          metrics: [{ name: "activeUsers" }],
+        },
+      }),
+      // Ülke dağılımı
+      client.properties.runRealtimeReport({
+        property: getPropertyId(),
+        requestBody: {
+          dimensions: [{ name: "country" }],
+          metrics: [{ name: "activeUsers" }],
+          limit: "10",
+        },
+      }),
+    ]);
+
+    // Minute data parse
+    const minuteRows = (minuteRes as any).data?.rows || [];
+    const minuteData: Array<{ minutesAgo: number; users: number }> = [];
+    let totalActive = 0;
+
+    for (const row of minuteRows) {
+      const minutesAgo = parseInt(row.dimensionValues?.[0]?.value || "0", 10);
+      const users = parseInt(row.metricValues?.[0]?.value || "0", 10);
+      minuteData.push({ minutesAgo, users });
+      totalActive += users;
+    }
+
+    // 0-29 arası tüm dakikaları doldur (boş olanlar 0)
+    const fullMinuteData: Array<{ minutesAgo: number; users: number }> = [];
+    for (let i = 29; i >= 0; i--) {
+      const existing = minuteData.find((m) => m.minutesAgo === i);
+      fullMinuteData.push({ minutesAgo: i, users: existing?.users || 0 });
+    }
+
+    // Top pages parse
+    const pageRows = (pageRes as any).data?.rows || [];
+    const topPages = pageRows.map((row: any) => ({
+      page: row.dimensionValues?.[0]?.value || "",
+      users: parseInt(row.metricValues?.[0]?.value || "0", 10),
+    }));
+
+    // Device parse
+    const deviceRows = (deviceRes as any).data?.rows || [];
+    const devices = deviceRows.map((row: any) => ({
+      device: row.dimensionValues?.[0]?.value || "",
+      users: parseInt(row.metricValues?.[0]?.value || "0", 10),
+    }));
+
+    // Country parse
+    const countryRows = (countryRes as any).data?.rows || [];
+    const countries = countryRows.map((row: any) => ({
+      country: row.dimensionValues?.[0]?.value || "",
+      users: parseInt(row.metricValues?.[0]?.value || "0", 10),
+    }));
+
+    const result: RealtimeData = {
+      activeUsers: totalActive,
+      minuteData: fullMinuteData,
+      topPages,
+      devices,
+      countries,
+    };
+
+    realtimeCache = { data: result, expiresAt: Date.now() + REALTIME_CACHE_TTL_MS };
+    return result;
+  } catch (error) {
+    console.error("[GA4 Realtime] Error:", error);
+    return emptyResult;
+  }
+}
+
+// ─── GA4 Trafik Özeti (Dönem Bazlı) ────────────────────
+let trafficCache: {
+  key: string;
+  data: GA4TrafficOverview;
+  expiresAt: number;
+} | null = null;
+const TRAFFIC_CACHE_TTL_MS = 5 * 60 * 1000; // 5 dakika
+
+export interface GA4TrafficOverview {
+  totalPageViews: number;
+  totalUsers: number;
+  newUsers: number;
+  sessions: number;
+  avgSessionDuration: number;
+  bounceRate: number;
+  dailyData: Array<{ date: string; pageViews: number; users: number }>;
+  topPages: Array<{ page: string; views: number; users: number }>;
+}
+
+export async function getGA4TrafficOverview(
+  startDate: string,
+  endDate: string = "today",
+): Promise<GA4TrafficOverview> {
+  const cacheKey = `${startDate}_${endDate}`;
+
+  if (
+    trafficCache &&
+    trafficCache.key === cacheKey &&
+    trafficCache.expiresAt > Date.now()
+  ) {
+    return trafficCache.data;
+  }
+
+  const emptyResult: GA4TrafficOverview = {
+    totalPageViews: 0,
+    totalUsers: 0,
+    newUsers: 0,
+    sessions: 0,
+    avgSessionDuration: 0,
+    bounceRate: 0,
+    dailyData: [],
+    topPages: [],
+  };
+
+  try {
+    const client = getClient();
+
+    const [overviewRes, dailyRes, pagesRes] = await Promise.all([
+      // Genel metrikler
+      client.properties.runReport({
+        property: getPropertyId(),
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          metrics: [
+            { name: "screenPageViews" },
+            { name: "totalUsers" },
+            { name: "newUsers" },
+            { name: "sessions" },
+            { name: "averageSessionDuration" },
+            { name: "bounceRate" },
+          ],
+        },
+      }),
+      // Günlük kırılım
+      client.properties.runReport({
+        property: getPropertyId(),
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: "date" }],
+          metrics: [
+            { name: "screenPageViews" },
+            { name: "totalUsers" },
+          ],
+          orderBys: [{ dimension: { dimensionName: "date" } }],
+        },
+      }),
+      // Top sayfalar
+      client.properties.runReport({
+        property: getPropertyId(),
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: "pagePath" }],
+          metrics: [
+            { name: "screenPageViews" },
+            { name: "totalUsers" },
+          ],
+          orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
+          limit: "20",
+        },
+      }),
+    ]);
+
+    // Overview parse
+    const overviewRows = (overviewRes as any).data?.rows || [];
+    const ov = overviewRows[0];
+    const totalPageViews = ov
+      ? parseInt(ov.metricValues?.[0]?.value || "0", 10)
+      : 0;
+    const totalUsers = ov
+      ? parseInt(ov.metricValues?.[1]?.value || "0", 10)
+      : 0;
+    const newUsers = ov
+      ? parseInt(ov.metricValues?.[2]?.value || "0", 10)
+      : 0;
+    const sessions = ov
+      ? parseInt(ov.metricValues?.[3]?.value || "0", 10)
+      : 0;
+    const avgSessionDuration = ov
+      ? Math.round(parseFloat(ov.metricValues?.[4]?.value || "0"))
+      : 0;
+    const bounceRate = ov
+      ? Math.round(parseFloat(ov.metricValues?.[5]?.value || "0") * 100)
+      : 0;
+
+    // Daily data parse
+    const dailyRows = (dailyRes as any).data?.rows || [];
+    const dailyData = dailyRows.map((row: any) => {
+      const rawDate = row.dimensionValues?.[0]?.value || "";
+      const formatted = rawDate.length === 8
+        ? `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
+        : rawDate;
+      return {
+        date: formatted,
+        pageViews: parseInt(row.metricValues?.[0]?.value || "0", 10),
+        users: parseInt(row.metricValues?.[1]?.value || "0", 10),
+      };
+    });
+
+    // Top pages parse
+    const pageRows = (pagesRes as any).data?.rows || [];
+    const topPages = pageRows.map((row: any) => ({
+      page: row.dimensionValues?.[0]?.value || "",
+      views: parseInt(row.metricValues?.[0]?.value || "0", 10),
+      users: parseInt(row.metricValues?.[1]?.value || "0", 10),
+    }));
+
+    const result: GA4TrafficOverview = {
+      totalPageViews,
+      totalUsers,
+      newUsers,
+      sessions,
+      avgSessionDuration,
+      bounceRate,
+      dailyData,
+      topPages,
+    };
+
+    trafficCache = {
+      key: cacheKey,
+      data: result,
+      expiresAt: Date.now() + TRAFFIC_CACHE_TTL_MS,
+    };
+
+    return result;
+  } catch (error) {
+    console.error("[GA4 Traffic] Error:", error);
+    return emptyResult;
+  }
+}
+
 // ─── GA4 Yapılandırma Kontrolü ──────────────────────────
 export function isGA4Configured(): boolean {
   return !!(

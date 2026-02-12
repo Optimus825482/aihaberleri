@@ -198,6 +198,18 @@ export default function VisitorAnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<Period>("7d");
   const [refreshing, setRefreshing] = useState(false);
+  const [ga4Data, setGa4Data] = useState<{
+    totalPageViews: number;
+    totalUsers: number;
+    newUsers: number;
+    sessions: number;
+    avgSessionDuration: number;
+    bounceRate: number;
+    dailyData: Array<{ date: string; pageViews: number; users: number }>;
+    topPages: Array<{ page: string; views: number; users: number }>;
+  } | null>(null);
+  const [ga4Loading, setGa4Loading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -217,11 +229,45 @@ export default function VisitorAnalyticsPage() {
     }
   }, [period]);
 
+  const fetchGA4 = useCallback(async () => {
+    try {
+      setGa4Loading(true);
+      const res = await fetch(
+        `/api/admin/analytics/ga4-realtime?period=${period}`,
+      );
+      const result = await res.json();
+      if (result.success && result.data) {
+        setGa4Data(result.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch GA4 data:", error);
+    } finally {
+      setGa4Loading(false);
+    }
+  }, [period]);
+
+  const syncGA4Views = useCallback(async () => {
+    try {
+      setSyncing(true);
+      const res = await fetch("/api/analytics/ga-views?sync=true");
+      const result = await res.json();
+      if (result.synced) {
+        alert(`✅ ${result.synced} makale GA4 verileri ile güncellendi`);
+        fetchData(); // Refresh stats
+      }
+    } catch (error) {
+      alert("❌ GA4 senkronizasyonu başarısız");
+    } finally {
+      setSyncing(false);
+    }
+  }, [fetchData]);
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 60000); // Auto-refresh every minute
+    fetchGA4();
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [fetchData, fetchGA4]);
 
   if (loading && !data) {
     return (
@@ -310,6 +356,103 @@ export default function VisitorAnalyticsPage() {
             )}
           </div>
         </div>
+
+        {/* GA4 Overview Section */}
+        {ga4Data && (
+          <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 backdrop-blur">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] font-black">
+                    GA4
+                  </Badge>
+                  <CardTitle className="text-sm font-bold">
+                    Google Analytics 4 Özeti
+                  </CardTitle>
+                </div>
+                <button
+                  onClick={syncGA4Views}
+                  disabled={syncing}
+                  className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all disabled:opacity-50"
+                >
+                  <RefreshCw className={cn("h-3 w-3", syncing && "animate-spin")} />
+                  {syncing ? "Senkronize..." : "DB Senkronize"}
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div className="rounded-xl bg-background/50 p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Görüntüleme</p>
+                  <p className="text-xl font-black text-emerald-400 tabular-nums">{ga4Data.totalPageViews.toLocaleString("tr-TR")}</p>
+                </div>
+                <div className="rounded-xl bg-background/50 p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Kullanıcı</p>
+                  <p className="text-xl font-black text-cyan-400 tabular-nums">{ga4Data.totalUsers.toLocaleString("tr-TR")}</p>
+                </div>
+                <div className="rounded-xl bg-background/50 p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Yeni</p>
+                  <p className="text-xl font-black text-violet-400 tabular-nums">{ga4Data.newUsers.toLocaleString("tr-TR")}</p>
+                </div>
+                <div className="rounded-xl bg-background/50 p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Oturum</p>
+                  <p className="text-xl font-black text-amber-400 tabular-nums">{ga4Data.sessions.toLocaleString("tr-TR")}</p>
+                </div>
+                <div className="rounded-xl bg-background/50 p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Ort. Süre</p>
+                  <p className="text-xl font-black text-blue-400 tabular-nums">{formatDuration(ga4Data.avgSessionDuration)}</p>
+                </div>
+                <div className="rounded-xl bg-background/50 p-3 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Bounce</p>
+                  <p className="text-xl font-black text-rose-400 tabular-nums">%{ga4Data.bounceRate}</p>
+                </div>
+              </div>
+
+              {/* GA4 Daily Chart */}
+              {ga4Data.dailyData.length > 1 && (
+                <div className="mt-4 h-[180px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={ga4Data.dailyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="ga4PageViews" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="ga4Users" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis
+                        dataKey="date"
+                        stroke="#6b7280"
+                        fontSize={10}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => {
+                          const d = new Date(v);
+                          return `${d.getDate()}/${d.getMonth() + 1}`;
+                        }}
+                      />
+                      <YAxis stroke="#6b7280" fontSize={10} tickLine={false} axisLine={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                        }}
+                        labelFormatter={(v) => new Date(v).toLocaleDateString("tr-TR")}
+                      />
+                      <Area type="monotone" dataKey="pageViews" name="Görüntüleme" stroke="#10b981" strokeWidth={2} fill="url(#ga4PageViews)" />
+                      <Area type="monotone" dataKey="users" name="Kullanıcı" stroke="#06b6d4" strokeWidth={2} fill="url(#ga4Users)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Overview Stats */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">

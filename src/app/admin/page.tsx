@@ -82,6 +82,16 @@ const DashboardPipelineWidget = dynamic(
   },
 );
 
+const RealtimeVisitorChart = dynamic(
+  () => import("@/components/admin/RealtimeVisitorChart"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[350px] animate-pulse bg-muted/30 rounded-xl" />
+    ),
+  },
+);
+
 const NOOP = () => {};
 
 // === Animated Number Component ===
@@ -877,6 +887,9 @@ export default function AdminDashboard() {
             sub="tüm zamanlar"
           />
         </div>
+
+        {/* Realtime Visitor Chart — GA4 Canlı Ziyaretçiler */}
+        <RealtimeVisitorChart />
 
         {/* Pipeline Stepper */}
         <AgentPipelineStepper />
