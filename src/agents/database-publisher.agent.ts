@@ -97,8 +97,10 @@ export class DatabasePublisherAgent extends BaseAgent<
         }
 
         try {
-          // Get or create category
-          const categorySlug = article.suggestedCategory || "yapay-zeka";
+          // Get or create category — normalize LLM-suggested slugs to DB slugs
+          const categorySlug = this.normalizeCategorySlug(
+            article.suggestedCategory || "yapay-zeka",
+          );
           let category = await db.category.findUnique({
             where: { slug: categorySlug },
           });
@@ -691,5 +693,49 @@ export class DatabasePublisherAgent extends BaseAgent<
         },
       };
     }
+  }
+
+  /**
+   * Normalize LLM-suggested category slugs to actual DB slugs.
+   * LLM may return arbitrary slugs — this maps them to real categories.
+   */
+  private normalizeCategorySlug(slug: string): string {
+    const SLUG_MAP: Record<string, string> = {
+      // Direct DB slugs (pass through)
+      "ai-modelleri": "ai-modelleri",
+      "sektor-is-dunyasi": "sektor-is-dunyasi",
+      "ai-araclari-urunler": "ai-araclari-urunler",
+      "robotik-otonom": "robotik-otonom",
+      "etik-guvenlik-regulasyon": "etik-guvenlik-regulasyon",
+      "bilim-arastirma": "bilim-arastirma",
+      "ai-toplum": "ai-toplum",
+      "yapay-zeka": "yapay-zeka",
+
+      // Common LLM variations → correct DB slug
+      "sektor-haberleri": "sektor-is-dunyasi",
+      sektor: "sektor-is-dunyasi",
+      "is-dunyasi": "sektor-is-dunyasi",
+      "yapay-zeka-modelleri": "ai-modelleri",
+      modeller: "ai-modelleri",
+      llm: "ai-modelleri",
+      "yapay-zeka-araclari": "ai-araclari-urunler",
+      araclar: "ai-araclari-urunler",
+      urunler: "ai-araclari-urunler",
+      robotik: "robotik-otonom",
+      otonom: "robotik-otonom",
+      etik: "etik-guvenlik-regulasyon",
+      guvenlik: "etik-guvenlik-regulasyon",
+      regulasyon: "etik-guvenlik-regulasyon",
+      arastirma: "bilim-arastirma",
+      bilim: "bilim-arastirma",
+      toplum: "ai-toplum",
+      "makine-ogrenmesi": "ai-modelleri",
+      "dogal-dil-isleme": "ai-modelleri",
+      "bilgisayarli-goru": "ai-modelleri",
+      "yapay-zeka-etigi": "etik-guvenlik-regulasyon",
+    };
+
+    const normalized = slug.toLowerCase().trim();
+    return SLUG_MAP[normalized] || "yapay-zeka";
   }
 }

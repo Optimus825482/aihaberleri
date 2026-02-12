@@ -1304,12 +1304,21 @@ PUANLAMA KRİTERLERİ (0-100):
 
 EŞIK: >= 60 puan alan makaleler yayınlanacak.
 
+KATEGORİ SEÇENEKLERİ (sadece bu slug'lardan birini kullan):
+- ai-modelleri (AI modelleri, LLM'ler, yeni model duyuruları)
+- sektor-is-dunyasi (şirket haberleri, yatırımlar, satın almalar)
+- ai-araclari-urunler (AI araçları, ürün lansmanları, yazılımlar)
+- robotik-otonom (robotik, otonom sistemler, drone'lar)
+- etik-guvenlik-regulasyon (AI etiği, güvenlik, yasal düzenlemeler)
+- bilim-arastirma (akademik araştırmalar, bilimsel keşifler)
+- ai-toplum (AI'ın topluma etkisi, iş gücü, eğitim)
+
 JSON dizisi ile yanıt ver (makale başına bir nesne):
 [
   {
     "score": 85,
     "reasoning": "Büyük AI şirketi duyurusu, çok alakalı",
-    "category": "sektor-haberleri",
+    "category": "sektor-is-dunyasi",
     "tags": ["openai", "gpt-5", "duyuru"]
   },
   ...
