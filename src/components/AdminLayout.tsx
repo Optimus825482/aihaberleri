@@ -16,10 +16,8 @@ import {
   MessageSquare,
   Tags,
   Users,
-  BarChart,
   Shield,
   Bell,
-  Monitor,
   Search,
   ChevronDown,
   ChevronRight,
@@ -54,12 +52,6 @@ const menuGroups = [
         title: "Dashboard",
         href: "/admin",
         icon: LayoutDashboard,
-        requiredResource: null,
-      },
-      {
-        title: "Sistem İzleme",
-        href: "/admin/monitoring",
-        icon: Monitor,
         requiredResource: null,
       },
     ],
@@ -103,12 +95,6 @@ const menuGroups = [
     title: "Analitik",
     items: [
       {
-        title: "Analytics",
-        href: "/admin/analytics",
-        icon: BarChart,
-        requiredResource: null,
-      },
-      {
         title: "Ziyaretçi Analizi",
         href: "/admin/visitor-analytics",
         icon: Activity,
@@ -135,12 +121,6 @@ const menuGroups = [
         title: "SEO Dashboard",
         href: "/admin/seo",
         icon: Search,
-        requiredResource: null,
-      },
-      {
-        title: "SEO Bildirimleri",
-        href: "/admin/seo-notifications",
-        icon: Bell,
         requiredResource: null,
       },
     ],
@@ -218,13 +198,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       [title]: !prev[title],
     }));
   };
-
-  // Auto-expand monitoring submenu if on monitoring page
-  useEffect(() => {
-    if (pathname?.startsWith("/admin/monitoring")) {
-      setExpandedMenus((prev) => ({ ...prev, Monitoring: true }));
-    }
-  }, [pathname]);
 
   // 🚀 PHASE 1: Keyboard shortcuts activated
   useAdminShortcuts({

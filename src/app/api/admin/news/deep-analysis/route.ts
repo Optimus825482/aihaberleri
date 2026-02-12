@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 /**
  * POST /api/admin/news/deep-analysis
  * Deep analysis ile haber oluşturma - streaming response
- * 
+ *
  * Request: { url: string, topic: TopicAnalysis, forceNew: boolean }
  * Response: Server-Sent Events stream
  */
@@ -34,16 +34,13 @@ export async function POST(request: NextRequest) {
     const { url, topic, forceNew = false } = body;
 
     if (!url) {
-      return NextResponse.json(
-        { error: "URL is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
     if (!topic) {
       return NextResponse.json(
         { error: "Topic analysis is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -63,30 +60,30 @@ export async function POST(request: NextRequest) {
     (async () => {
       try {
         // Step 1: Progress - Starting
-        await sendEvent({ 
-          type: "progress", 
-          step: "fetch", 
-          message: "📰 Kaynak haber içeriği getiriliyor..." 
+        await sendEvent({
+          type: "progress",
+          step: "fetch",
+          message: "📰 Kaynak haber içeriği getiriliyor...",
         });
 
         // Get default category (AI & Technology)
         const defaultCategory = await prisma.category.findFirst({
-          where: { 
+          where: {
             OR: [
               { slug: "yapay-zeka" },
               { slug: "teknoloji" },
               { name: { contains: "AI", mode: "insensitive" } },
-            ]
+            ],
           },
         });
 
         const categoryName = defaultCategory?.name || "Yapay Zeka";
 
         // Step 2: Process article
-        await sendEvent({ 
-          type: "progress", 
-          step: "research", 
-          message: "🔬 Deep research yapılıyor, ek kaynaklar aranıyor..." 
+        await sendEvent({
+          type: "progress",
+          step: "research",
+          message: "🔬 Deep research yapılıyor, ek kaynaklar aranıyor...",
         });
 
         // Create article object for processing
@@ -102,10 +99,10 @@ export async function POST(request: NextRequest) {
         const processed = await processArticle(newsArticle, categoryName);
 
         // Step 3: Progress - Saving
-        await sendEvent({ 
-          type: "progress", 
-          step: "save", 
-          message: "💾 Haber veritabanına kaydediliyor..." 
+        await sendEvent({
+          type: "progress",
+          step: "save",
+          message: "💾 Haber veritabanına kaydediliyor...",
         });
 
         // Save to database
@@ -116,7 +113,7 @@ export async function POST(request: NextRequest) {
           where: { slug },
         });
 
-        const finalSlug = existingSlug 
+        const finalSlug = existingSlug
           ? `${slug}-${Date.now().toString(36)}`
           : slug;
 
@@ -135,17 +132,15 @@ export async function POST(request: NextRequest) {
             metaDescription: processed.metaDescription,
             keywords: processed.keywords,
             topic: topic.topic,
-            sourceTitle: topic.sourceTitle,
-            sourceDescription: topic.sourceDescription,
             language: topic.language || "tr",
           },
         });
 
         // Step 4: Complete
-        await sendEvent({ 
-          type: "progress", 
-          step: "complete", 
-          message: "✅ Haber başarıyla oluşturuldu ve yayınlandı!" 
+        await sendEvent({
+          type: "progress",
+          step: "complete",
+          message: "✅ Haber başarıyla oluşturuldu ve yayınlandı!",
         });
 
         await sendEvent({
@@ -154,12 +149,14 @@ export async function POST(request: NextRequest) {
           slug: article.slug,
           id: article.id,
         });
-
       } catch (error) {
         console.error("❌ Deep analysis error:", error);
         await sendEvent({
           type: "error",
-          message: error instanceof Error ? error.message : "İşlem sırasında hata oluştu",
+          message:
+            error instanceof Error
+              ? error.message
+              : "İşlem sırasında hata oluştu",
         });
       } finally {
         await writer.close();
@@ -170,15 +167,16 @@ export async function POST(request: NextRequest) {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
       },
     });
-
   } catch (error) {
     console.error("❌ Deep analysis error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Deep analysis failed" },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : "Deep analysis failed",
+      },
+      { status: 500 },
     );
   }
 }

@@ -1,38 +1,45 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { HighlightedText } from '../HighlightedText';
+// @ts-nocheck
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import { HighlightedText } from "../HighlightedText";
 
 // Mock Audio Context values
-jest.mock('../../../context/AudioContext', () => {
+jest.mock("../../../context/AudioContext", () => {
   return {
     useAudio: () => ({
       currentWordIndex: 1,
       metadata: [
-        { text: 'Merhaba', start: 0, duration: 1 },
-        { text: 'Dünya', start: 1, duration: 1 },
+        { text: "Merhaba", start: 0, duration: 1 },
+        { text: "Dünya", start: 1, duration: 1 },
       ],
-      title: 'Test Title',
+      title: "Test Title",
       isPlaying: true,
     }),
   };
 });
 
-describe('HighlightedText', () => {
-  it('renders words as spans when active', () => {
+describe("HighlightedText", () => {
+  it("renders words as spans when active", () => {
     render(
-      <HighlightedText htmlContent="<p>Merhaba Dünya</p>" articleTitle="Test Title" />
+      <HighlightedText
+        htmlContent="<p>Merhaba Dünya</p>"
+        articleTitle="Test Title"
+      />,
     );
 
-    expect(screen.getByText('Merhaba')).toBeInTheDocument();
-    expect(screen.getByText('Dünya')).toBeInTheDocument();
+    expect(screen.getByText("Merhaba")).toBeInTheDocument();
+    expect(screen.getByText("Dünya")).toBeInTheDocument();
   });
 
-  it('applies highlight class to current word', () => {
+  it("applies highlight class to current word", () => {
     render(
-      <HighlightedText htmlContent="<p>Merhaba Dünya</p>" articleTitle="Test Title" />
+      <HighlightedText
+        htmlContent="<p>Merhaba Dünya</p>"
+        articleTitle="Test Title"
+      />,
     );
 
-    const highlightedWord = screen.getByText('Dünya');
-    expect(highlightedWord).toHaveClass('bg-yellow-200');
+    const highlightedWord = screen.getByText("Dünya");
+    expect(highlightedWord).toHaveClass("bg-yellow-200");
   });
 });

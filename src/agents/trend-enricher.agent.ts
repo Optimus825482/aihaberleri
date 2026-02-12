@@ -40,9 +40,7 @@ export interface ArticleWithTrend {
   language?: string;
   trendScore?: number;
   isTrending?: boolean;
-  trendBadgeTr?: string | null;
-  trendBadgeEn?: string | null;
-  trendHashtags?: string[];
+
   // Pass-through other fields
   [key: string]: unknown;
 }
@@ -155,12 +153,8 @@ export class TrendEnricherAgent extends BaseAgent<
 
       // Log trending articles
       if (enrichment.trendScore >= CONFIG.logThreshold) {
-        const badge =
-          article.language === "en"
-            ? enrichment.trendBadgeEn
-            : enrichment.trendBadgeTr;
         logger.info(
-          `   ${badge} "${article.title.substring(0, 50)}..." (Score: ${enrichment.trendScore})`,
+          `   🔥 "${article.title.substring(0, 50)}..." (Score: ${enrichment.trendScore})`,
         );
       }
 
@@ -168,9 +162,6 @@ export class TrendEnricherAgent extends BaseAgent<
         ...article,
         trendScore: enrichment.trendScore,
         isTrending: enrichment.isTrending,
-        trendBadgeTr: enrichment.trendBadgeTr,
-        trendBadgeEn: enrichment.trendBadgeEn,
-        trendHashtags: enrichment.trendHashtags,
       };
     } catch (error) {
       // Graceful degradation: return article without trend data
@@ -181,9 +172,6 @@ export class TrendEnricherAgent extends BaseAgent<
         ...article,
         trendScore: 0,
         isTrending: false,
-        trendBadgeTr: null,
-        trendBadgeEn: null,
-        trendHashtags: [],
       };
     }
   }
@@ -222,9 +210,6 @@ export class TrendEnricherAgent extends BaseAgent<
           ...article,
           trendScore: 0,
           isTrending: false,
-          trendBadgeTr: null,
-          trendBadgeEn: null,
-          trendHashtags: [],
         }));
 
         return {

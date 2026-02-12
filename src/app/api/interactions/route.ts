@@ -59,20 +59,14 @@ export async function POST(req: Request) {
       });
     }
 
-    // Now update article aggregates
+    // Return aggregates from interaction table (no Article columns needed)
     if (type === "LIKE") {
       const likeCount = await db.articleInteraction.count({
         where: { articleId, type: "LIKE" },
       });
 
-      const updatedArticle = await db.article.update({
-        where: { id: articleId },
-        data: { likes: likeCount },
-        select: { likes: true },
-      });
-
       return NextResponse.json({
-        likes: updatedArticle.likes,
+        likes: likeCount,
         hasLiked: !existingInteraction,
       });
     }
@@ -86,14 +80,6 @@ export async function POST(req: Request) {
 
       const newRating = ratings._avg.value || 0;
       const newCount = ratings._count.value || 0;
-
-      await db.article.update({
-        where: { id: articleId },
-        data: {
-          rating: newRating,
-          ratingCount: newCount,
-        },
-      });
 
       return NextResponse.json({ rating: newRating, ratingCount: newCount });
     }

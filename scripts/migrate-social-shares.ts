@@ -63,45 +63,13 @@ async function migrateSocialShares() {
     `   ✅ Oluşturuldu: ${facebookTRCreated}, ⏭️ Zaten var: ${facebookTRSkipped}`,
   );
 
-  // 2. Facebook EN - facebookSharedEn=true olanlar
-  const facebookENArticles = await prisma.article.findMany({
-    where: {
-      facebookSharedEn: true,
-      status: "PUBLISHED",
-    },
-    select: { id: true, slug: true, publishedAt: true },
-  });
-
-  console.log(`\n📘 Facebook EN: ${facebookENArticles.length} makale bulundu`);
+  // 2. Facebook EN - facebookSharedEn was removed from schema
+  // This section is no longer functional since the column was deleted
+  // Keeping the structure but skipping the query
+  console.log(`\n📘 Facebook EN: Skipped (facebookSharedEn column removed)`);
 
   let facebookENCreated = 0;
   let facebookENSkipped = 0;
-
-  for (const article of facebookENArticles) {
-    try {
-      await prisma.socialShare.upsert({
-        where: {
-          articleId_platform_language: {
-            articleId: article.id,
-            platform: "FACEBOOK",
-            language: "en",
-          },
-        },
-        create: {
-          articleId: article.id,
-          platform: "FACEBOOK",
-          language: "en",
-          status: "SHARED",
-          sharedAt: article.publishedAt || new Date(),
-          postId: "migrated-from-legacy",
-        },
-        update: {},
-      });
-      facebookENCreated++;
-    } catch (e) {
-      facebookENSkipped++;
-    }
-  }
 
   console.log(
     `   ✅ Oluşturuldu: ${facebookENCreated}, ⏭️ Zaten var: ${facebookENSkipped}`,

@@ -22,13 +22,9 @@ model User {
   permissions   String[]          @default([])
   isActive      Boolean           @default(true)
   deletedAt     DateTime?
-  accounts      Account[]
   articles      Article[]
-  sessions      Session[]
   auditLogs     AuditLog[]
-  templates     ArticleTemplate[]
   userSessions  UserSession[]
-  filterPresets FilterPreset[]
 
   @@index([email])
   @@index([role])
@@ -36,39 +32,7 @@ model User {
   @@index([lastLogin])
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
+// Account, Session, VerificationToken tabloları silindi (boş, kullanılmıyor)
 
 model Category {
   id          String    @id @default(cuid())
@@ -107,11 +71,9 @@ model Article {
   indexNowStatus            IndexStatus               @default(PENDING)
   indexedAt                 DateTime?
   score                     Int                       @default(0)
+  seoScore                  Int?
   facebookShared            Boolean                   @default(false)
-  seoScore                  Int?                      @default(0)
   readingTime               Int?                      @default(0)
-  scheduledPublishAt        DateTime?                 @db.Timestamp(6)
-  templateId                String?                   @db.VarChar(36)
   imageUrlMedium            String?
   imageUrlSmall             String?
   imageUrlThumb             String?
@@ -120,34 +82,21 @@ model Article {
   excerptEn                 String?
   contentEn                 String?
   metaDescriptionEn         String?
-  sourceTitle               String?
-  sourceDescription         String?
   trendScore                Int?                      @default(0)
   isTrending                Boolean                   @default(false)
-  trendBadgeTr              String?                   // "🔥 Gündem"
-  trendBadgeEn              String?                   // "🔥 Trending"
-  trendHashtags             String[]                  @default([]) // Sosyal paylaşım için
   keywordsEn                String[]                  @default([])
-  titleABTest               Json?
-  embedding                 Json?
   googleIndexStatus         String?                   @default("PENDING")
   googleIndexedAt           DateTime?
   indexNowStatusEn          String?                   @default("PENDING")
   indexedAtEn               DateTime?
   googleIndexStatusEn       String?                   @default("PENDING")
   googleIndexedAtEn         DateTime?
-  facebookSharedEn          Boolean?                  @default(false)
   language                  String                    @default("tr")
   googleIndexed             Boolean                   @default(false)
   googleIndexingScheduled   Boolean                   @default(false)
   googleIndexingScheduledAt DateTime?
   indexNowSubmittedAt       DateTime?
   indexNowRetryCount        Int                       @default(0)
-  
-  // Interaction Metrics
-  likes                     Int                       @default(0)
-  rating                    Float                     @default(0)
-  ratingCount               Int                       @default(0)
   
   // Relations
   interactions              ArticleInteraction[]
@@ -156,17 +105,14 @@ model Article {
   googleIndexRetryCount     Int                       @default(0)
   googleIndexNextRetryAt    DateTime?
   googleIndexLastError      String?
-  googleIndexBatchId        String?
   agentLog                  AgentLog?                 @relation(fields: [agentLogId], references: [id])
   author                    User?                     @relation(fields: [authorId], references: [id])
   category                  Category                  @relation(fields: [categoryId], references: [id])
-  template                  ArticleTemplate?          @relation(fields: [templateId], references: [id], onDelete: SetNull)
   analytics                 ArticleAnalytics[]
   translations              ArticleTranslation[]
   seoRecommendations        SEORecommendation[]
   duplicatesAsOriginal      ArticleDuplicate[]        @relation("OriginalArticle")
   duplicatesAsDuplicate     ArticleDuplicate[]        @relation("DuplicateArticle")
-  googleIndexingBatchItems  GoogleIndexingBatchItem[]
   socialShares              SocialShare[]
   trendMatches              TrendArticleMatch[]       // Trend eşleşmeleri
 
@@ -179,23 +125,16 @@ model Article {
   @@index([topic, publishedAt(sort: Desc)])
   @@index([language])
   @@index([googleIndexed, language])
-  @@index([googleIndexBatchId])
   @@index([googleIndexStatusEn])
   @@index([googleIndexStatus, googleIndexNextRetryAt])
   @@index([googleIndexStatus])
   @@index([googleIndexStatus, publishedAt])
   @@index([googleIndexedAtEn])
-  @@index([googleIndexedAt])
-  @@index([googleIndexingScheduled])
-  @@index([imageUrlMedium])
-  @@index([imageUrlSmall])
-  @@index([imageUrlThumb])
   @@index([indexNowStatusEn])
   @@index([indexNowStatus, indexNowNextRetryAt])
   @@index([indexedAtEn])
   @@index([status, googleIndexStatusEn])
   @@index([status, googleIndexStatus])
-  @@index([seoScore], map: "idx_article_seo_score")
 
   // =============================================
   // FAZ 4: Database Optimizasyonu
@@ -462,22 +401,7 @@ model AuditLog {
   @@index([createdAt(sort: Desc)])
 }
 
-model ArticleTemplate {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(36)
-  name        String    @db.VarChar(255)
-  description String?
-  content     String
-  category    String?   @db.VarChar(100)
-  isActive    Boolean?  @default(true)
-  usageCount  Int?      @default(0)
-  createdBy   String    @db.VarChar(36)
-  createdAt   DateTime? @default(now()) @db.Timestamp(6)
-  updatedAt   DateTime? @default(now()) @updatedAt @db.Timestamp(6)
-  creator     User      @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  articles    Article[]
-
-  @@index([createdBy], map: "idx_template_creator")
-}
+// ArticleTemplate silindi (boş, kullanılmıyor)
 
 model SEORecommendation {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.VarChar(36)
@@ -575,45 +499,9 @@ model ErrorLog {
   @@index([level, resolved])
 }
 
-model BatchOperation {
-  id             String    @id @default(cuid())
-  operationType  String
-  status         String    @default("pending")
-  totalItems     Int
-  processedItems Int       @default(0)
-  successCount   Int       @default(0)
-  failureCount   Int       @default(0)
-  errors         Json?
-  metadata       Json?
-  startedAt      DateTime?
-  completedAt    DateTime?
-  createdBy      String
-  createdAt      DateTime  @default(now())
+// BatchOperation silindi (boş, kullanılmıyor)
 
-  @@index([status])
-  @@index([operationType])
-  @@index([createdBy])
-  @@index([createdAt(sort: Desc)])
-  @@index([status, operationType])
-}
-
-model FilterPreset {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  description String?
-  filters     Json
-  isDefault   Boolean  @default(false)
-  isPublic    Boolean  @default(false)
-  usageCount  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([isDefault])
-  @@index([isPublic])
-}
+// FilterPreset silindi (boş, kullanılmıyor)
 
 model SearchProviderMetric {
   id              String   @id @default(cuid())
@@ -628,98 +516,9 @@ model SearchProviderMetric {
   @@index([timestamp])
 }
 
-model GoogleIndexingBatch {
-  id                String                    @id @default(cuid())
-  scheduledFor      DateTime
-  status            String                    @default("PENDING")
-  totalArticles     Int
-  processedArticles Int                       @default(0)
-  failedArticles    Int                       @default(0)
-  startedAt         DateTime?
-  completedAt       DateTime?
-  error             String?
-  createdAt         DateTime                  @default(now())
-  updatedAt         DateTime                  @updatedAt
-  batchType         String                    @default("MANUAL")
-  language          String                    @default("tr")
-  submittedCount    Int                       @default(0)
-  successCount      Int                       @default(0)
-  failedCount       Int                       @default(0)
-  skippedCount      Int                       @default(0)
-  scheduledAt       DateTime?
-  estimatedDuration Int?
-  actualDuration    Int?
-  rateLimitHit      Boolean                   @default(false)
-  rateLimitResetAt  DateTime?
-  requestsPerMinute Int                       @default(0)
-  errors            Json?
-  retryCount        Int                       @default(0)
-  maxRetries        Int                       @default(3)
-  nextRetryAt       DateTime?
-  metadata          Json?
-  createdBy         String?
-  items             GoogleIndexingBatchItem[]
+// GoogleIndexingBatch + GoogleIndexingBatchItem silindi (boş, kullanılmıyor)
 
-  @@index([scheduledFor])
-  @@index([status])
-  @@index([createdAt(sort: Desc)])
-  @@index([batchType])
-  @@index([completedAt])
-  @@index([createdBy])
-  @@index([language])
-  @@index([scheduledAt])
-  @@index([startedAt])
-  @@index([status, scheduledAt])
-}
-
-model GoogleIndexingBatchItem {
-  id          String              @id @default(cuid())
-  batchId     String
-  articleId   String
-  status      String              @default("PENDING")
-  error       String?
-  processedAt DateTime?
-  createdAt   DateTime            @default(now())
-  batch       GoogleIndexingBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  article     Article             @relation(fields: [articleId], references: [id], onDelete: Cascade)
-
-  @@index([batchId])
-  @@index([articleId])
-  @@index([status])
-}
-
-model IndexingHistory {
-  id             String      @id
-  articleId      String
-  batchId        String?
-  indexType      IndexType
-  action         IndexAction
-  status         IndexStatus
-  requestUrl     String?
-  requestPayload Json?
-  responseStatus Int?
-  responseBody   Json?
-  submittedAt    DateTime    @default(now())
-  respondedAt    DateTime?
-  duration       Int?
-  errorCode      String?
-  errorMessage   String?
-  errorDetails   Json?
-  retryAttempt   Int         @default(0)
-  isRetry        Boolean     @default(false)
-  originalId     String?
-  userAgent      String?
-  ipAddress      String?
-  metadata       Json?
-
-  @@index([articleId])
-  @@index([articleId, indexType, submittedAt])
-  @@index([batchId])
-  @@index([indexType])
-  @@index([status])
-  @@index([status, submittedAt])
-  @@index([submittedAt(sort: Desc)])
-}
+// IndexingHistory silindi (boş, kullanılmıyor)
 
 enum Role {
   ADMIN
@@ -763,24 +562,6 @@ enum EmailFrequency {
   DAILY
   WEEKLY
   MONTHLY
-}
-
-enum BatchStatus {
-  PENDING
-  QUEUED
-  PROCESSING
-  COMPLETED
-  FAILED
-  CANCELLED
-  PAUSED
-}
-
-enum BatchType {
-  MANUAL
-  SCHEDULED
-  AUTO_PUBLISH
-  RETRY
-  BULK_UPDATE
 }
 
 enum IndexAction {
@@ -945,17 +726,7 @@ model TrendArticleMatch {
 // Tavily Credit Usage Tracking
 // =============================================
 
-model TavilyUsage {
-  id        String   @id @default(cuid())
-  feature   String   // "search" | "extract" | "crawl" | "map" | "research"
-  credits   Int      // Number of credits consumed
-  timestamp DateTime @default(now())
-  metadata  String?  // JSON metadata (optional)
-  
-  @@index([feature])
-  @@index([timestamp(sort: Desc)])
-  @@index([feature, timestamp])
-}
+// TavilyUsage silindi (boş, kullanılmıyor)
 
 // =============================================
 // YouTube Channel Monitoring

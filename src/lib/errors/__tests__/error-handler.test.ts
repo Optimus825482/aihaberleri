@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Error Handler Test Suite
  * TDD: Test-Driven Development approach

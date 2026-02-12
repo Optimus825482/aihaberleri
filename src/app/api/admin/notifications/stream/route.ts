@@ -161,7 +161,7 @@ export async function GET() {
                 "visitor",
                 "Ziyaretçi Hedefi!",
                 `Tebrikler! ${milestone.toLocaleString("tr-TR")} ziyaretçiye ulaştınız!`,
-                { label: "Analitiği Gör", href: "/admin/analytics" },
+                { label: "Analitiği Gör", href: "/admin/visitor-analytics" },
               );
               controller.enqueue(
                 encoder.encode(`data: ${JSON.stringify(notification)}\n\n`),

@@ -39,7 +39,6 @@ import {
   ChevronRight,
   BarChart3,
   Timer,
-  Signal,
   Bot,
 } from "lucide-react";
 import Link from "next/link";
@@ -1013,16 +1012,10 @@ export default function AdminDashboard() {
             color="primary"
           />
           <QuickAction
-            href="/admin/analytics"
+            href="/admin/visitor-analytics"
             icon={BarChart3}
             label="Analytics"
             color="blue"
-          />
-          <QuickAction
-            href="/admin/monitoring"
-            icon={Signal}
-            label="İzleme"
-            color="indigo"
           />
           <QuickAction
             href="/admin/seo"

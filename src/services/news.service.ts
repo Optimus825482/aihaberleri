@@ -749,8 +749,20 @@ export async function fetchAINews(
         .map((a) => normalizeUrl(a.sourceUrl)),
     );
 
-    // Filter RSS items - ONLY NEW URLs
+    // Filter RSS items - ONLY NEW URLs + block own domain
+    const BLOCKED_DOMAINS = ["aihaberleri.org", "www.aihaberleri.org"];
     const newRssItems = rssItems.filter((item) => {
+      // Block own site to prevent self-referencing loops
+      try {
+        const hostname = new URL(item.link).hostname.toLowerCase();
+        if (
+          BLOCKED_DOMAINS.some(
+            (d) => hostname === d || hostname.endsWith(`.${d}`),
+          )
+        ) {
+          return false;
+        }
+      } catch {}
       const normalized = normalizeUrl(item.link);
       return !recentUrlSet.has(normalized);
     });

@@ -1,0 +1,23 @@
+{
+  "phase": "tr",
+  "index": 16,
+  "total": 708,
+  "stats": {
+    "tr": {
+      "bluesky": 16,
+      "mastodon": 14,
+      "facebook": 0,
+      "indexed": 0,
+      "failed": 0
+    },
+    "en": {
+      "bluesky": 0,
+      "mastodon": 0,
+      "facebook": 0,
+      "indexed": 0,
+      "failed": 0
+    },
+    "errors": []
+  },
+  "timestamp": "2026-02-12T03:19:32.784Z"
+}

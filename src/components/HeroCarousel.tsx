@@ -103,7 +103,7 @@ function HeroCarouselContent({
   const [isSwiping, setIsSwiping] = useState(false);
 
   // Ref for auto-resume timeout cleanup
-  const resumeTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const labels = {
     tr: {

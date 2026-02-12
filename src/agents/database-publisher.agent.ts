@@ -179,8 +179,6 @@ export class DatabasePublisherAgent extends BaseAgent<
 
               // Metadata
               sourceUrl: article.url,
-              sourceTitle: article.title,
-              sourceDescription: article.description,
               publishedAt: (article as any).publishedAt || new Date(),
               topic: article.topic,
               trendScore: finalTrendScore,

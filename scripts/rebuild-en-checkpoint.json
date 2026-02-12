@@ -1,0 +1,15 @@
+{
+  "lastIndex": 0,
+  "timestamp": "2026-02-12T01:48:57.253Z",
+  "stats": {
+    "total": 692,
+    "translated": 0,
+    "generated": 0,
+    "skippedExisting": 0,
+    "trNotInDb": 0,
+    "contentFailed": 0,
+    "updated": 0,
+    "translationCreated": 0,
+    "errors": []
+  }
+}

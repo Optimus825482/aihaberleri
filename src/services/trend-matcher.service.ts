@@ -73,9 +73,6 @@ export interface TrendMatch {
 export interface TrendEnrichmentResult {
   trendScore: number;
   isTrending: boolean;
-  trendBadgeTr: string | null;
-  trendBadgeEn: string | null;
-  trendHashtags: string[];
   matches: TrendMatch[];
 }
 
@@ -340,23 +337,16 @@ export async function enrichArticleWithTrends(
     return {
       trendScore: 0,
       isTrending: false,
-      trendBadgeTr: null,
-      trendBadgeEn: null,
-      trendHashtags: [],
       matches: [],
     };
   }
 
   const trendScore = calculateTrendScore(matches);
   const isTrending = trendScore >= MATCH_CONFIG.trendingThreshold;
-  const hashtags = generateHashtags(matches);
 
   return {
     trendScore,
     isTrending,
-    trendBadgeTr: isTrending ? MATCH_CONFIG.badges.tr : null,
-    trendBadgeEn: isTrending ? MATCH_CONFIG.badges.en : null,
-    trendHashtags: hashtags,
     matches,
   };
 }
@@ -419,9 +409,6 @@ export async function updateArticleTrendData(
     data: {
       trendScore: enrichment.trendScore,
       isTrending: enrichment.isTrending,
-      trendBadgeTr: enrichment.trendBadgeTr,
-      trendBadgeEn: enrichment.trendBadgeEn,
-      trendHashtags: enrichment.trendHashtags,
     },
   });
 
@@ -454,9 +441,6 @@ export async function enrichArticlesBatch(
       results.set(article.id, {
         trendScore: 0,
         isTrending: false,
-        trendBadgeTr: null,
-        trendBadgeEn: null,
-        trendHashtags: [],
         matches: [],
       });
     }

@@ -127,7 +127,6 @@ async function processBatch(
       await db.article.update({
         where: { id: articleId },
         data: {
-          score,
           seoScore: score,
         },
       });

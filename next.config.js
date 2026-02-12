@@ -82,6 +82,9 @@ const nextConfig = {
   },
 
   images: {
+    // All images are pre-optimized webp on R2 — skip Next.js image proxy entirely
+    // This eliminates all /_next/image 400 errors
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

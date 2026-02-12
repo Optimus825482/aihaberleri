@@ -52,16 +52,6 @@ export function useSystemStats(refreshInterval = 30000) {
 }
 
 /**
- * Analytics Data Hook with SWR caching
- */
-export function useAnalyticsData(refreshInterval = 60000) {
-  return useSWR("/api/admin/analytics", fetcher, {
-    ...defaultConfig,
-    refreshInterval,
-  });
-}
-
-/**
  * Categories Data Hook with SWR caching
  */
 export function useCategories() {

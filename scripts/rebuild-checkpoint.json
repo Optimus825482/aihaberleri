@@ -1,0 +1,21 @@
+{
+  "lastIndex": 1241,
+  "timestamp": "2026-02-11T22:08:58.498Z",
+  "stats": {
+    "total": 1241,
+    "processed": 0,
+    "skippedExisting": 4,
+    "contentGenerated": 1080,
+    "contentFailed": 2,
+    "searchEnriched": 1063,
+    "searchFailed": 19,
+    "imageFromR2": 955,
+    "imageRegenerated": 0,
+    "imageSkipped": 127,
+    "created": 1080,
+    "errors": [
+      "anthropic-reklamsiz-ai-politikasini-super-bowl-reklamiyla-taclandirdi: İçerik üretilemedi",
+      "moltbook-yapay-zeka-sosyal-agi-guvenlik-endiseleriyle-karsi-karsiya: İçerik üretilemedi"
+    ]
+  }
+}

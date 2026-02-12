@@ -21,11 +21,7 @@ import { QUEUE_NAMES } from "@/lib/queue-manager";
 import { searxngSearch, type SearXNGResult } from "@/lib/searxng";
 import { callDeepSeek } from "@/lib/deepseek";
 // callGemini REMOVED - Using DeepSeek-only (Gemini API deprecated due to 404 errors)
-import {
-  generateTitleVariants,
-  initializeABTestData,
-  TitleABTestData,
-} from "@/lib/title-ab-testing";
+
 import {
   batchExtract,
   priorityExtract,
@@ -58,8 +54,6 @@ export interface EnrichedArticle extends UniqueArticle {
       metaDescription: string;
     };
   };
-  // Title A/B Testing data
-  titleABTest?: TitleABTestData;
 }
 
 const JINA_READER_URL = "https://r.jina.ai";
@@ -234,29 +228,6 @@ export class ContentEnricherAgent extends BaseAgent<
               ),
             ]);
 
-            // Step 3: Generate Title A/B Test Variants
-            // TIMEOUT PROTECTION: Wrap in Promise.race with 10s timeout
-            let titleABTest: TitleABTestData | undefined;
-            try {
-              const variants = await Promise.race([
-                generateTitleVariants(
-                  synthesized.tr.content,
-                  article.suggestedCategory || "yapay-zeka",
-                ),
-                new Promise<any>((_, reject) =>
-                  setTimeout(
-                    () => reject(new Error("A/B test timeout (10s)")),
-                    10000,
-                  ),
-                ),
-              ]);
-              titleABTest = initializeABTestData(variants);
-            } catch (abTestError) {
-              this.logger.warn(
-                `[${articleNum}] Title A/B test failed, continuing without`,
-              );
-            }
-
             this.logger.success(
               `✅ [${articleNum}/${articles.length}] Enriched: ${synthesized.tr.title.substring(0, 50)}...`,
             );
@@ -267,7 +238,6 @@ export class ContentEnricherAgent extends BaseAgent<
                 ...article,
                 sources,
                 synthesizedContent: synthesized,
-                titleABTest,
               },
             };
           } catch (error) {

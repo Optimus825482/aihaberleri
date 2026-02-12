@@ -125,7 +125,7 @@ export function useAdminShortcuts(options?: {
             router.push("/admin/newsletter");
             break;
           case "v":
-            router.push("/admin/visitors");
+            router.push("/admin/visitor-analytics");
             break;
         }
         keySequence = "";
@@ -143,7 +143,7 @@ export function useAdminShortcuts(options?: {
             "/admin/messages", // 4: Messages
             "/admin/newsletter", // 5: Newsletter
             "/admin/notifications", // 6: Notifications
-            "/admin/visitors", // 7: Visitors
+            "/admin/visitor-analytics", // 7: Visitor Analytics
             "/admin/settings", // 8: Settings
             "/admin/agent-settings", // 9: Agent
           ];

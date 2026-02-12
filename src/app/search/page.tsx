@@ -23,7 +23,7 @@ interface SearchResult {
 
 function SearchContent() {
   const searchParams = useSearchParams();
-  const query = searchParams.get("q") || "";
+  const query = searchParams?.get("q") || "";
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -192,6 +192,11 @@ function SearchContent() {
                       alt={article.title}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      unoptimized={
+                        article.imageUrl.includes("pollinations.ai") ||
+                        article.imageUrl.includes("r2.dev") ||
+                        article.imageUrl.includes("images.aihaberleri.org")
+                      }
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center">

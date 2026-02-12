@@ -69,6 +69,7 @@ export function FilterProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize filters from URL
   useEffect(() => {
+    if (!searchParams) return;
     const initialFilters: FilterState = {};
 
     const search = searchParams.get("search");

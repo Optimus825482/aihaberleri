@@ -96,7 +96,6 @@ async function main() {
       select: {
         id: true,
         title: true,
-        sourceDescription: true,
         excerpt: true,
         publishedAt: true,
         sourceUrl: true,
@@ -111,7 +110,7 @@ async function main() {
 
     // Her makaleyi tek tek güncelle (transaction timeout'u önlemek için)
     for (const art of articles) {
-      const desc = art.sourceDescription || art.excerpt || "";
+      const desc = art.excerpt || "";
       const breakdown = calculateTrendScore({
         title: art.title,
         description: desc,

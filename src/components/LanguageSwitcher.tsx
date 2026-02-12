@@ -172,7 +172,7 @@ export function LanguageSwitcher({
   const pathname = usePathname();
 
   // Detect current locale from pathname
-  const detectedLocale = pathname.startsWith("/en") ? "en" : "tr";
+  const detectedLocale = pathname?.startsWith("/en") ? "en" : "tr";
   const activeLocale = currentLocale || detectedLocale;
 
   if (variant === "inline") {
@@ -184,7 +184,7 @@ export function LanguageSwitcher({
           return (
             <Link
               key={lang.code}
-              href={getAlternateUrl(pathname, lang.code)}
+              href={getAlternateUrl(pathname || "/", lang.code)}
               className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md transition-all ${
                 isActive
                   ? "bg-primary/10 text-primary"
@@ -227,7 +227,7 @@ export function LanguageSwitcher({
           return (
             <DropdownMenuItem key={lang.code} asChild>
               <Link
-                href={getAlternateUrl(pathname, lang.code)}
+                href={getAlternateUrl(pathname || "/", lang.code)}
                 className={`flex items-center gap-2 w-full ${
                   activeLocale === lang.code ? "font-semibold" : ""
                 }`}

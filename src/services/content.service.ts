@@ -774,6 +774,16 @@ export async function processArticle(
 ): Promise<ProcessedArticle> {
   console.log(`📝 Haber işleniyor: ${article.title}`);
 
+  // Block self-referencing: reject own site as source
+  try {
+    const hostname = new URL(article.url).hostname.toLowerCase();
+    if (hostname === "aihaberleri.org" || hostname === "www.aihaberleri.org") {
+      throw new Error(`Self-reference blocked: ${article.url}`);
+    }
+  } catch (e: any) {
+    if (e.message?.includes("Self-reference")) throw e;
+  }
+
   // Live log: Processing article
   await liveLog.content.info(
     `📝 İşleniyor: ${article.title.substring(0, 60)}...`,
