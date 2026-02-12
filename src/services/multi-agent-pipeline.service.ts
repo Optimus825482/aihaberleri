@@ -296,14 +296,15 @@ export async function waitForPipelineCompletion(
     `Waiting for pipeline completion (timeout: ${timeoutMs / 1000}s)`,
   );
 
-  // CRITICAL: Wait longer for agents to pick up jobs before first check
-  // This prevents false "completed" detection when queues haven't been processed yet
-  await new Promise((resolve) => setTimeout(resolve, 5000));
-
-  // Capture baseline failed count — old pipeline failures should not affect this run
+  // CRITICAL: Capture baseline BEFORE the initial wait!
+  // If duplicate-detector finishes within the wait period (e.g. all articles are duplicates),
+  // we need the pre-wait baseline to detect that work actually happened.
   const baselineProgress = await monitorPipelineProgress(agentLogId);
   const baselineFailedCount = baselineProgress.failed;
   const baselineFirstQueueCompleted = baselineProgress.firstQueueCompleted;
+
+  // Brief wait for agents to pick up jobs
+  await new Promise((resolve) => setTimeout(resolve, 5000));
 
   let consecutiveEmptyChecks = 0;
   const REQUIRED_EMPTY_CHECKS = 3;

@@ -6,7 +6,7 @@
 import "dotenv/config";
 import axios from "axios";
 
-const GRAPH_API_URL = "https://graph.facebook.com/v18.0";
+const GRAPH_API_URL = "https://graph.facebook.com/v21.0";
 const PAGE_ID = process.env.FACEBOOK_PAGE_ID;
 const TOKEN = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 

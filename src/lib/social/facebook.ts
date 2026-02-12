@@ -23,7 +23,7 @@ const FACEBOOK_EN_ENABLED = process.env.FACEBOOK_EN_ENABLED === "true";
 const FACEBOOK_EN_PAGE_ID = process.env.FACEBOOK_EN_PAGE_ID;
 const FACEBOOK_EN_PAGE_ACCESS_TOKEN = process.env.FACEBOOK_EN_PAGE_ACCESS_TOKEN;
 
-const GRAPH_API_URL = "https://graph.facebook.com/v18.0";
+const GRAPH_API_URL = "https://graph.facebook.com/v21.0";
 
 /**
  * Post to Facebook Page
@@ -62,24 +62,28 @@ export async function postToFacebook(article: {
 
     let postId: string;
 
-    // If we have an image, post with image (link post)
+    // Post as link with optional image thumbnail
+    // Graph API: POST /{page-id}/feed with message + link + picture
     if (article.imageUrl) {
-      // Post as link with image preview
       const response = await axios.post(
         `${GRAPH_API_URL}/${FACEBOOK_PAGE_ID}/feed`,
         {
           message,
           link: articleUrl,
+          picture: article.imageUrl,
+          published: 1,
           access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
         },
       );
       postId = response.data.id;
     } else {
-      // Post as text with link
+      // Link post without explicit image — Facebook will scrape OG tags
       const response = await axios.post(
         `${GRAPH_API_URL}/${FACEBOOK_PAGE_ID}/feed`,
         {
-          message: `${message}\n\n🔗 ${articleUrl}`,
+          message,
+          link: articleUrl,
+          published: 1,
           access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
         },
       );
@@ -92,11 +96,8 @@ export async function postToFacebook(article: {
     const errorData = error?.response?.data?.error;
 
     if (errorData) {
-      console.error("❌ Facebook API Error:", {
-        message: errorData.message,
-        type: errorData.type,
-        code: errorData.code,
-      });
+      const errMsg = `Facebook API Error: ${errorData.message} (code: ${errorData.code}, type: ${errorData.type})`;
+      console.error(`❌ ${errMsg}`);
 
       // Handle specific errors
       if (errorData.code === 190) {
@@ -108,11 +109,13 @@ export async function postToFacebook(article: {
       } else if (errorData.code === 368) {
         console.warn("   📌 Content policy violation. Check post content.");
       }
-    } else {
-      console.error("❌ Facebook post failed:", error?.message || error);
-    }
 
-    return null;
+      throw new Error(errMsg);
+    } else {
+      const errMsg = `Facebook post failed: ${error?.message || error}`;
+      console.error(`❌ ${errMsg}`);
+      throw new Error(errMsg);
+    }
   }
 }
 
@@ -228,26 +231,29 @@ export async function postToFacebookEN(article: {
 
     let postId: string;
 
-    // If we have an image, post as PHOTO (more reliable image display)
-    if (article.imageUrl) {
-      const caption = `📰 ${article.title}\n\n${article.excerpt}\n\n${hashtags}\n\n🔗 ${articleUrl}`;
+    // Use link post for clickable preview card (not photo post)
+    // Graph API: POST /{page-id}/feed with message + link + picture
+    const message = `📰 ${article.title}\n\n${article.excerpt}\n\n${hashtags}`;
 
+    if (article.imageUrl) {
       const response = await axios.post(
-        `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/photos`,
+        `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/feed`,
         {
-          url: article.imageUrl,
-          caption,
+          message,
+          link: articleUrl,
+          picture: article.imageUrl,
+          published: 1,
           access_token: FACEBOOK_EN_PAGE_ACCESS_TOKEN,
         },
       );
       postId = response.data.id;
     } else {
-      // No image - post as text
-      const message = `📰 ${article.title}\n\n${article.excerpt}\n\n${hashtags}\n\n🔗 ${articleUrl}`;
       const response = await axios.post(
         `${GRAPH_API_URL}/${FACEBOOK_EN_PAGE_ID}/feed`,
         {
           message,
+          link: articleUrl,
+          published: 1,
           access_token: FACEBOOK_EN_PAGE_ACCESS_TOKEN,
         },
       );
@@ -260,16 +266,14 @@ export async function postToFacebookEN(article: {
     const errorData = error?.response?.data?.error;
 
     if (errorData) {
-      console.error("❌ Facebook EN API Error:", {
-        message: errorData.message,
-        type: errorData.type,
-        code: errorData.code,
-      });
+      const errMsg = `Facebook EN API Error: ${errorData.message} (code: ${errorData.code}, type: ${errorData.type})`;
+      console.error(`❌ ${errMsg}`);
+      throw new Error(errMsg);
     } else {
-      console.error("❌ Facebook EN post failed:", error?.message || error);
+      const errMsg = `Facebook EN post failed: ${error?.message || error}`;
+      console.error(`❌ ${errMsg}`);
+      throw new Error(errMsg);
     }
-
-    return null;
   }
 }
 
