@@ -3,6 +3,32 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+const COMPANY_ALIASES: Record<string, string[]> = {
+  openai: ["openai"],
+  google: ["google", "deepmind"],
+  anthropic: ["anthropic"],
+  meta: ["meta"],
+  microsoft: ["microsoft"],
+  nvidia: ["nvidia"],
+};
+
+function resolveCompanyTerms(term: string): string[] {
+  const normalized = term.trim().toLowerCase();
+  return COMPANY_ALIASES[normalized] || [normalized];
+}
+
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasWholeWordMatch(text: string, term: string): boolean {
+  const pattern = new RegExp(
+    `(^|[^\\p{L}\\p{N}])${escapeRegex(term)}([^\\p{L}\\p{N}]|$)`,
+    "iu",
+  );
+  return pattern.test(text);
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -21,30 +47,81 @@ export async function GET(request: Request) {
     const searchTerm = query.trim();
     const skip = (page - 1) * limit;
 
-    const searchWhere =
-      mode === "company"
-        ? {
-            status: "PUBLISHED" as const,
-            OR: [
-              { title: { contains: searchTerm, mode: "insensitive" as const } },
-              {
-                excerpt: { contains: searchTerm, mode: "insensitive" as const },
-              },
-              { keywords: { has: searchTerm } },
-            ],
-          }
-        : {
-            status: "PUBLISHED" as const,
-            OR: [
-              { title: { contains: searchTerm, mode: "insensitive" as const } },
-              {
-                excerpt: { contains: searchTerm, mode: "insensitive" as const },
-              },
-              {
-                content: { contains: searchTerm, mode: "insensitive" as const },
-              },
-            ],
-          };
+    if (mode === "company") {
+      const companyTerms = resolveCompanyTerms(searchTerm);
+      const companyWhere = {
+        status: "PUBLISHED" as const,
+        OR: companyTerms.flatMap((term) => [
+          { title: { contains: term, mode: "insensitive" as const } },
+          { keywords: { has: term } },
+        ]),
+      };
+
+      const candidates = await db.article.findMany({
+        where: companyWhere,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          excerpt: true,
+          imageUrl: true,
+          publishedAt: true,
+          views: true,
+          trendScore: true,
+          keywords: true,
+          category: {
+            select: {
+              name: true,
+              slug: true,
+            },
+          },
+        },
+        orderBy: [{ trendScore: "desc" }, { publishedAt: "desc" }],
+        take: 300,
+      });
+
+      const strictResults = candidates.filter((article) =>
+        companyTerms.some((term) => {
+          const titleMatch = hasWholeWordMatch(
+            article.title.toLowerCase(),
+            term,
+          );
+          const keywordMatch = article.keywords.some(
+            (keyword) => keyword.toLowerCase() === term,
+          );
+          return titleMatch || keywordMatch;
+        }),
+      );
+
+      const totalCount = strictResults.length;
+      const articles = strictResults
+        .slice(skip, skip + limit)
+        .map(({ keywords, ...article }) => article);
+
+      return NextResponse.json({
+        articles,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          hasMore: skip + articles.length < totalCount,
+        },
+      });
+    }
+
+    const searchWhere = {
+      status: "PUBLISHED" as const,
+      OR: [
+        { title: { contains: searchTerm, mode: "insensitive" as const } },
+        {
+          excerpt: { contains: searchTerm, mode: "insensitive" as const },
+        },
+        {
+          content: { contains: searchTerm, mode: "insensitive" as const },
+        },
+      ],
+    };
 
     const articles = await db.article.findMany({
       where: searchWhere,
@@ -69,7 +146,6 @@ export async function GET(request: Request) {
       take: limit,
     });
 
-    // Get total count for pagination
     const totalCount = await db.article.count({
       where: searchWhere,
     });
@@ -88,7 +164,7 @@ export async function GET(request: Request) {
     console.error("Search API error:", error);
     return NextResponse.json(
       { error: "Arama sırasında bir hata oluştu" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

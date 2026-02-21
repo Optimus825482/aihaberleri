@@ -5,6 +5,7 @@ import { TrendingSidebar } from "@/components/TrendingSidebar";
 import { CategoryFilters } from "@/components/CategoryFilters";
 import { TodayTrending } from "@/components/TodayTrending";
 import Link from "next/link";
+import Image from "next/image";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { getArticleInsightDisplaySettings } from "@/lib/article-insights";
 
@@ -19,6 +20,48 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function HomePage() {
+  const companyBadgeMap: Record<
+    string,
+    { monogram: string; bgClass: string; ringClass: string; logoPath?: string }
+  > = {
+    OpenAI: {
+      monogram: "OA",
+      bgClass: "bg-emerald-500/20 text-emerald-300",
+      ringClass: "ring-emerald-500/30",
+      logoPath: "/logos/companies/openai.svg",
+    },
+    Google: {
+      monogram: "G",
+      bgClass: "bg-blue-500/20 text-blue-300",
+      ringClass: "ring-blue-500/30",
+      logoPath: "/logos/companies/google.svg",
+    },
+    Anthropic: {
+      monogram: "AN",
+      bgClass: "bg-amber-500/20 text-amber-300",
+      ringClass: "ring-amber-500/30",
+      logoPath: "/logos/companies/anthropic.svg",
+    },
+    Meta: {
+      monogram: "M",
+      bgClass: "bg-sky-500/20 text-sky-300",
+      ringClass: "ring-sky-500/30",
+      logoPath: "/logos/companies/meta.svg",
+    },
+    Microsoft: {
+      monogram: "MS",
+      bgClass: "bg-indigo-500/20 text-indigo-300",
+      ringClass: "ring-indigo-500/30",
+      logoPath: "/logos/companies/microsoft.svg",
+    },
+    NVIDIA: {
+      monogram: "NV",
+      bgClass: "bg-lime-500/20 text-lime-300",
+      ringClass: "ring-lime-500/30",
+      logoPath: "/logos/companies/nvidia.svg",
+    },
+  };
+
   // Structured Data
   const organizationSchema = generateOrganizationSchema();
   const websiteSchema = generateWebSiteSchema();
@@ -352,19 +395,46 @@ export default async function HomePage() {
 
           {featureSettings.showModelCards && (
             <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {modelTagCards.map((item) => (
-                <Link
-                  key={item.label}
-                  href={`/search?q=${encodeURIComponent(item.label)}&mode=company`}
-                  className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-4 hover:border-ai-primary/40 transition-colors"
-                >
-                  <p className="text-xs text-ai-text-muted">Model/Şirket Kartı</p>
-                  <p className="text-base font-bold text-white mt-1">{item.label}</p>
-                  <p className="text-xs text-ai-text-secondary mt-1">
-                    {item.count} ilgili haber kümesi
-                  </p>
-                </Link>
-              ))}
+              {modelTagCards.map((item) => {
+                const badge = companyBadgeMap[item.label] || {
+                  monogram: item.label.slice(0, 2).toUpperCase(),
+                  bgClass: "bg-zinc-500/20 text-zinc-200",
+                  ringClass: "ring-zinc-500/30",
+                };
+
+                return (
+                  <Link
+                    key={item.label}
+                    href={`/search?q=${encodeURIComponent(item.label)}&mode=company`}
+                    className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-4 hover:border-ai-primary/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-xs font-black ring-1 ${badge.bgClass} ${badge.ringClass}`}
+                      >
+                        {badge.logoPath ? (
+                          <Image
+                            src={badge.logoPath}
+                            alt={`${item.label} logo`}
+                            width={24}
+                            height={24}
+                            className="h-6 w-6"
+                          />
+                        ) : (
+                          badge.monogram
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-ai-text-muted">Model/Şirket Kartı</p>
+                        <p className="text-base font-bold text-white truncate">{item.label}</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-ai-text-secondary mt-3">
+                      {item.count} ilgili haber kümesi
+                    </p>
+                  </Link>
+                );
+              })}
             </section>
           )}
 
