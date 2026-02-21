@@ -19,16 +19,37 @@ type CheckItem = {
     url: string;
     ok: boolean;
     detail: string;
+    debug?: {
+        status?: number;
+        path?: string;
+        hasScript?: boolean;
+        hasSlot?: boolean;
+        hasFormat?: boolean;
+        hasLayout?: boolean;
+        missing?: string[];
+        snippet?: string;
+    };
+};
+
+type GlobalCheckItem = {
+    key: string;
+    label: string;
+    ok: boolean;
+    detail: string;
 };
 
 type LiveCheckResponse = {
     generatedAt: string;
     score: number;
     summary: {
+        globalOkCount: number;
+        globalTotal: number;
         okCount: number;
         total: number;
     };
+    globalChecks: GlobalCheckItem[];
     checks: CheckItem[];
+    recommendations: string[];
 };
 
 export default function AdsenseReadinessPublicPage() {
@@ -104,7 +125,7 @@ export default function AdsenseReadinessPublicPage() {
                         <CardContent>
                             <p className="text-xs text-ai-text-secondary">
                                 {data
-                                    ? `${data.summary.okCount}/${data.summary.total} rota doğrulandı`
+                                    ? `${data.summary.globalOkCount + data.summary.okCount}/${data.summary.globalTotal + data.summary.total} kontrol doğrulandı`
                                     : "Veri bekleniyor"}
                             </p>
                         </CardContent>
@@ -121,7 +142,7 @@ export default function AdsenseReadinessPublicPage() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-xs text-ai-text-secondary">
-                                Kontrol edilen alanlar: TR ana, EN ana, TR detay, EN detay
+                                Global + rota bazlı kontrol: env, ads.txt, TR/EN ana ve detay
                             </p>
                         </CardContent>
                     </Card>
@@ -132,6 +153,38 @@ export default function AdsenseReadinessPublicPage() {
                         <CardContent className="pt-6 text-red-200">{error}</CardContent>
                     </Card>
                 ) : null}
+
+                <Card className="mt-6">
+                    <CardHeader>
+                        <CardTitle>Global Kontroller</CardTitle>
+                        <CardDescription>
+                            Ortam değişkenleri ve ads.txt doğrulaması.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        {data?.globalChecks.map((item) => (
+                            <div
+                                key={item.key}
+                                className="rounded-lg border border-ai-surface-border bg-ai-surface-card p-3"
+                            >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        {item.ok ? (
+                                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                        ) : (
+                                            <CircleX className="h-4 w-4 text-red-500" />
+                                        )}
+                                        <p className="font-semibold text-white">{item.label}</p>
+                                    </div>
+                                    <Badge variant={item.ok ? "default" : "destructive"}>
+                                        {item.ok ? "Doğrulandı" : "Eksik"}
+                                    </Badge>
+                                </div>
+                                <p className="mt-2 text-sm text-ai-text-secondary">{item.detail}</p>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
 
                 <Card className="mt-6">
                     <CardHeader>
@@ -167,6 +220,21 @@ export default function AdsenseReadinessPublicPage() {
 
                                 <p className="mt-2 text-sm text-ai-text-secondary">{item.detail}</p>
 
+                                {item.debug ? (
+                                    <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-ai-text-muted sm:grid-cols-4">
+                                        <p>script: {item.debug.hasScript ? "ok" : "-"}</p>
+                                        <p>slot: {item.debug.hasSlot ? "ok" : "-"}</p>
+                                        <p>format: {item.debug.hasFormat ? "ok" : "-"}</p>
+                                        <p>layout: {item.debug.hasLayout ? "ok" : "-"}</p>
+                                    </div>
+                                ) : null}
+
+                                {item.debug?.snippet ? (
+                                    <p className="mt-2 break-all rounded bg-ai-surface-dark px-2 py-1 text-[11px] text-ai-text-muted">
+                                        snippet: {item.debug.snippet}
+                                    </p>
+                                ) : null}
+
                                 {item.url !== "-" ? (
                                     <Link
                                         href={item.url}
@@ -181,6 +249,24 @@ export default function AdsenseReadinessPublicPage() {
                         ))}
                     </CardContent>
                 </Card>
+
+                {data?.recommendations?.length ? (
+                    <Card className="mt-6">
+                        <CardHeader>
+                            <CardTitle>Aksiyon Önerileri</CardTitle>
+                            <CardDescription>
+                                Eksik kalan maddeler için otomatik öneriler.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                            {data.recommendations.map((item) => (
+                                <p key={item} className="text-sm text-ai-text-secondary">
+                                    • {item}
+                                </p>
+                            ))}
+                        </CardContent>
+                    </Card>
+                ) : null}
             </div>
         </main>
     );

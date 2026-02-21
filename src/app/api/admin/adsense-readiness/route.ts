@@ -57,16 +57,27 @@ export async function GET() {
     const adsTxtPath = path.join(process.cwd(), "public", "ads.txt");
     let adsTxtExists = false;
     let adsTxtConfigured = false;
+    let adsTxtContent = "";
 
     try {
       await access(adsTxtPath);
       adsTxtExists = true;
-      const adsTxt = await readFile(adsTxtPath, "utf-8");
-      adsTxtConfigured = !adsTxt.includes("pub-XXXXXXXXXXXXXXXX");
+      adsTxtContent = await readFile(adsTxtPath, "utf-8");
     } catch {
       adsTxtExists = false;
-      adsTxtConfigured = false;
+      adsTxtContent = "";
     }
+
+    const normalizedAdsLines = adsTxtContent
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => Boolean(line) && !line.startsWith("#"));
+
+    adsTxtConfigured = normalizedAdsLines.some((line) =>
+      /google\.com\s*,\s*pub-\d{10,}\s*,\s*DIRECT\s*,\s*f08c47fec0942fa0/i.test(
+        line,
+      ),
+    );
 
     const privacyPath = path.join(
       process.cwd(),
@@ -97,6 +108,30 @@ export async function GET() {
       legalPagesReady = true;
     } catch {
       legalPagesReady = false;
+    }
+
+    const legalRouteChecks: Array<Promise<boolean>> = [];
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (siteUrl) {
+      const baseUrl = siteUrl.replace(/\/$/, "");
+      const checkRoute = async (routePath: string) => {
+        try {
+          const response = await fetch(`${baseUrl}${routePath}`, {
+            cache: "no-store",
+          });
+          return response.ok;
+        } catch {
+          return false;
+        }
+      };
+
+      legalRouteChecks.push(checkRoute("/privacy"));
+      legalRouteChecks.push(checkRoute("/cookies"));
+    }
+
+    if (!legalPagesReady && legalRouteChecks.length > 0) {
+      const [privacyOk, cookiesOk] = await Promise.all(legalRouteChecks);
+      legalPagesReady = privacyOk && cookiesOk;
     }
 
     try {
