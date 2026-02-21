@@ -15,8 +15,38 @@ import { Errors, handleApiError } from "@/lib/errors";
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const CACHE_PREFIX = "tts:cache:";
 
-function normalizeTTSInput(text: string): string {
+function expandCommonAcronyms(text: string, voice?: string): string {
+  const isTurkishVoice = voice?.toLowerCase().startsWith("tr-") ?? false;
+
+  if (isTurkishVoice) {
+    return text
+      .replace(/\bAI\b/gi, " yapay zeka ")
+      .replace(/\bLLM\b/gi, " büyük dil modeli ")
+      .replace(/\bRAG\b/gi, " retrieval augmented generation ")
+      .replace(/\bAPI\b/gi, " api ")
+      .replace(/\bGPU\b/gi, " ekran kartı işlemcisi ")
+      .replace(/\bCPU\b/gi, " işlemci ")
+      .replace(/\bUI\b/gi, " kullanıcı arayüzü ")
+      .replace(/\bUX\b/gi, " kullanıcı deneyimi ")
+      .replace(/\bML\b/gi, " makine öğrenmesi ")
+      .replace(/\bNLP\b/gi, " doğal dil işleme ");
+  }
+
   return text
+    .replace(/\bAI\b/gi, " artificial intelligence ")
+    .replace(/\bLLM\b/gi, " large language model ")
+    .replace(/\bRAG\b/gi, " retrieval augmented generation ")
+    .replace(/\bAPI\b/gi, " API ")
+    .replace(/\bGPU\b/gi, " graphics processing unit ")
+    .replace(/\bCPU\b/gi, " central processing unit ")
+    .replace(/\bUI\b/gi, " user interface ")
+    .replace(/\bUX\b/gi, " user experience ")
+    .replace(/\bML\b/gi, " machine learning ")
+    .replace(/\bNLP\b/gi, " natural language processing ");
+}
+
+function normalizeTTSInput(text: string, voice?: string): string {
+  return expandCommonAcronyms(text, voice)
     .replace(/<[^>]*>/g, " ")
     .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
     .replace(/https?:\/\/\S+/g, "")
@@ -86,7 +116,7 @@ export async function POST(req: NextRequest) {
     }
 
     // High limit for POST
-    const cleanText = normalizeTTSInput(text).slice(0, 4000);
+    const cleanText = normalizeTTSInput(text, voice).slice(0, 4000);
     console.log(
       `[TTS POST] Processing ${cleanText.length} chars, voice=${voice}, IP=${clientIP}`,
     );
@@ -213,7 +243,8 @@ export async function GET(req: NextRequest) {
     // REDIS CACHE CHECK
     // ============================================
     const redis = getRedis();
-    const cacheKey = generateCacheKey(text, voice);
+    const cleanText = normalizeTTSInput(text, voice).slice(0, 300);
+    const cacheKey = generateCacheKey(cleanText, voice);
 
     if (redis) {
       try {
@@ -237,7 +268,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const { audio } = await generateSpeech({ text, voice });
+    const { audio } = await generateSpeech({ text: cleanText, voice });
 
     // ============================================
     // CACHE RESULT
