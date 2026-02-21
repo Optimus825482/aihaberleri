@@ -72,22 +72,12 @@ const PipelineChart = dynamic<{
   ),
 });
 
-const DashboardPipelineWidget = dynamic(
-  () => import("@/components/admin/DashboardPipelineWidget"),
+const LiveVisitorWidget = dynamic(
+  () => import("@/components/admin/LiveVisitorWidget"),
   {
     ssr: false,
     loading: () => (
-      <div className="h-[160px] animate-pulse bg-muted/30 rounded-xl" />
-    ),
-  },
-);
-
-const RealtimeVisitorChart = dynamic(
-  () => import("@/components/admin/RealtimeVisitorChart"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[350px] animate-pulse bg-muted/30 rounded-xl" />
+      <div className="h-[300px] animate-pulse bg-muted/30 rounded-xl" />
     ),
   },
 );
@@ -896,11 +886,14 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Realtime Visitor Chart — GA4 Canlı Ziyaretçiler */}
-        <RealtimeVisitorChart />
+        {/* Canlı Ziyaretçiler + Pipeline Stepper — Responsive grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Canlı Ziyaretçiler — Kendi takip sistemi */}
+          <LiveVisitorWidget />
 
-        {/* Pipeline Stepper */}
-        <AgentPipelineStepper />
+          {/* Pipeline Stepper */}
+          <AgentPipelineStepper />
+        </div>
 
         {/* System Resources — Compact Ring Gauges */}
         <Card className="border-indigo-500/20 bg-card/80 backdrop-blur-sm">
@@ -1011,8 +1004,6 @@ export default function AdminDashboard() {
             </Card>
           )}
 
-        {/* Pipeline Realtime Monitor */}
-        <DashboardPipelineWidget />
       </div>
     </AdminLayout>
   );
