@@ -5,6 +5,8 @@ import { TrendingSidebar } from "@/components/TrendingSidebar";
 import { CategoryFilters } from "@/components/CategoryFilters";
 import { TodayTrending } from "@/components/TodayTrending";
 import Link from "next/link";
+import { AudioPlayer } from "@/components/AudioPlayer";
+import { getArticleInsightDisplaySettings } from "@/lib/article-insights";
 
 import {
   generateOrganizationSchema,
@@ -52,15 +54,47 @@ export default async function HomePage() {
   let articles: any[] = [];
   let featuredArticles: any[] = [];
   let categories: any[] = [];
+  let briefingArticles: Array<{
+    id: string;
+    slug: string;
+    title: string;
+    excerpt: string;
+    trendScore: number | null;
+    category: { name: string; slug: string };
+  }> = [];
+  let topicHeatMap: Array<{ topic: string; score: number; rise: number }> = [];
+  let modelTagCards: Array<{ label: string; count: number }> = [];
+  let featureSettings = {
+    showDailyBriefing: true,
+    showModelCards: true,
+    showHeatMap: true,
+  };
 
   try {
-    const [settingsFromDb, articlesFromDb, featuredFromDb, categoriesFromDb] =
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const [
+      settingsFromDb,
+      articlesFromDb,
+      featuredFromDb,
+      categoriesFromDb,
+      briefingFromDb,
+      topicFromDb,
+      modelTagSource,
+    ] =
       await Promise.all([
         // Query 1: Settings
         db.setting.findMany({
           where: {
             key: {
-              in: ["heroCarouselCount", "heroCarouselInterval"],
+              in: [
+                "heroCarouselCount",
+                "heroCarouselInterval",
+                "site_feature_daily_briefing",
+                "site_feature_model_cards",
+                "site_feature_heat_map",
+              ],
             },
           },
           select: {
@@ -126,7 +160,56 @@ export default async function HomePage() {
           orderBy: { order: "asc" },
           take: 8,
         }),
+        // Query 5: Daily briefing set
+        db.article.findMany({
+          where: {
+            status: "PUBLISHED",
+            publishedAt: { gte: todayStart },
+          },
+          select: {
+            id: true,
+            slug: true,
+            title: true,
+            excerpt: true,
+            trendScore: true,
+            category: { select: { name: true, slug: true } },
+          },
+          orderBy: [{ trendScore: "desc" }, { publishedAt: "desc" }],
+          take: 8,
+        }),
+        // Query 6: Topic heat map source (today)
+        db.article.findMany({
+          where: {
+            status: "PUBLISHED",
+            publishedAt: { gte: todayStart },
+            topic: { not: null },
+          },
+          select: {
+            topic: true,
+            trendScore: true,
+            publishedAt: true,
+          },
+          orderBy: { publishedAt: "asc" },
+          take: 120,
+        }),
+        // Query 7: Model/company cards source
+        db.article.findMany({
+          where: {
+            status: "PUBLISHED",
+            publishedAt: { not: null },
+          },
+          select: {
+            title: true,
+            excerpt: true,
+          },
+          orderBy: { publishedAt: "desc" },
+          take: 120,
+        }),
       ]);
+
+    featureSettings = await getArticleInsightDisplaySettings(
+      async () => settingsFromDb,
+    );
 
     // Process settings
     const settingsMap = settingsFromDb.reduce(
@@ -145,9 +228,53 @@ export default async function HomePage() {
     articles = articlesFromDb;
     featuredArticles = featuredFromDb;
     categories = categoriesFromDb;
+    briefingArticles = briefingFromDb;
+
+    const topicMap = new Map<string, { first: number; last: number; max: number }>();
+    topicFromDb.forEach((item) => {
+      if (!item.topic) return;
+      const score = item.trendScore ?? 0;
+      const existing = topicMap.get(item.topic);
+
+      if (!existing) {
+        topicMap.set(item.topic, { first: score, last: score, max: score });
+        return;
+      }
+
+      existing.last = score;
+      existing.max = Math.max(existing.max, score);
+      topicMap.set(item.topic, existing);
+    });
+
+    topicHeatMap = Array.from(topicMap.entries())
+      .map(([topic, values]) => ({
+        topic,
+        score: values.max,
+        rise: Math.max(0, values.last - values.first),
+      }))
+      .sort((a, b) => b.rise - a.rise || b.score - a.score)
+      .slice(0, 5);
+
+    const modelLabels = ["OpenAI", "Google", "Anthropic", "Meta", "Microsoft", "NVIDIA"];
+    modelTagCards = modelLabels.map((label) => {
+      const count = modelTagSource.filter((item) => {
+        const haystack = `${item.title} ${item.excerpt ?? ""}`.toLowerCase();
+        return haystack.includes(label.toLowerCase());
+      }).length;
+
+      return { label, count };
+    });
   } catch (error) {
     console.error("Failed to fetch data:", error);
   }
+
+  const briefingTop5 = briefingArticles.slice(0, 5);
+  const briefingText = briefingTop5
+    .map(
+      (article, index) =>
+        `${index + 1}. ${article.title}. ${article.excerpt || "Kısa özet mevcut değil."}`,
+    )
+    .join(" ");
 
   return (
     <div className="min-h-screen flex flex-col bg-ai-background-dark">
@@ -167,8 +294,107 @@ export default async function HomePage() {
         />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {featureSettings.showDailyBriefing && (
+            <section className="mb-8 rounded-2xl border border-ai-surface-border bg-ai-surface-card p-5 sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px] text-ai-primary">
+                    overview
+                  </span>
+                  Günlük Brifing Modu · 5 dakikada özet
+                </h2>
+                <Link
+                  href="/trending"
+                  className="text-xs font-semibold text-ai-primary hover:text-ai-primary-hover"
+                >
+                  Trendleri Aç
+                </Link>
+              </div>
+
+              {briefingTop5.length > 0 ? (
+                <>
+                  <ul className="space-y-2 mb-4">
+                    {briefingTop5.map((article, idx) => (
+                      <li key={article.id} className="text-sm text-ai-text-secondary flex items-start gap-2">
+                        <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-ai-primary/20 text-[11px] font-bold text-ai-primary">
+                          {idx + 1}
+                        </span>
+                        <Link
+                          href={`/news/${article.slug}`}
+                          className="hover:text-white transition-colors"
+                        >
+                          {article.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <details className="group">
+                    <summary className="cursor-pointer list-none text-sm font-semibold text-ai-primary">
+                      İsteğe bağlı sesli brifingi aç
+                    </summary>
+                    <div className="mt-3">
+                      <AudioPlayer
+                        title="Günlük Brifing"
+                        text={briefingText || "Bugün için öne çıkan haber bulunamadı."}
+                      />
+                    </div>
+                  </details>
+                </>
+              ) : (
+                <p className="text-sm text-ai-text-secondary">Bugün için brifing verisi henüz oluşmadı.</p>
+              )}
+            </section>
+          )}
+
           {/* Today's Trending — Top 5 by trend score (VURGULU - önce göster) */}
           <TodayTrending locale="tr" />
+
+          {featureSettings.showModelCards && (
+            <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {modelTagCards.map((item) => (
+                <Link
+                  key={item.label}
+                  href={`/search?q=${encodeURIComponent(item.label)}`}
+                  className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-4 hover:border-ai-primary/40 transition-colors"
+                >
+                  <p className="text-xs text-ai-text-muted">Model/Şirket Kartı</p>
+                  <p className="text-base font-bold text-white mt-1">{item.label}</p>
+                  <p className="text-xs text-ai-text-secondary mt-1">
+                    {item.count} ilgili haber kümesi
+                  </p>
+                </Link>
+              ))}
+            </section>
+          )}
+
+          {featureSettings.showHeatMap && (
+            <section className="mt-8 rounded-2xl border border-ai-surface-border bg-ai-surface-card p-5 sm:p-6">
+              <h2 className="text-lg font-black text-white flex items-center gap-2 mb-4">
+                <span className="material-symbols-outlined text-[20px] text-ai-primary">
+                  grid_view
+                </span>
+                Gündem Isı Haritası
+              </h2>
+              <p className="text-xs text-ai-text-muted mb-4">
+                Bugün en hızlı yükselen 5 konu (trendScore farkı bazlı)
+              </p>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                {topicHeatMap.map((item, idx) => (
+                  <Link
+                    key={item.topic}
+                    href={`/search?q=${encodeURIComponent(item.topic)}`}
+                    className="rounded-xl border border-ai-surface-border bg-ai-surface-dark p-3 hover:border-ai-primary/40 transition-colors"
+                  >
+                    <p className="text-[11px] text-ai-text-muted">#{idx + 1} yükselen konu</p>
+                    <p className="mt-1 text-sm font-semibold text-white line-clamp-2">{item.topic}</p>
+                    <p className="mt-2 text-xs text-ai-text-secondary">Artış +{item.rise} · Skor {item.score}</p>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Category Filter Chips (kompakt) */}
           <CategoryFilters categories={categories} locale="tr" />

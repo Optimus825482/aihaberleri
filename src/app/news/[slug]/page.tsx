@@ -23,6 +23,8 @@ import { StarRating } from "@/components/interactions/StarRating";
 import { ViewTracker } from "@/components/ViewTracker";
 import { ReadCount } from "@/components/ReadCount";
 import { ReadingProgressBar } from "@/components/ReadingProgressBar";
+import { AITermsGlossary } from "@/components/article/AITermsGlossary";
+import { MobileArticleActionBar } from "@/components/article/MobileArticleActionBar";
 import {
   ArticleInsightTopSections,
   ArticleTimelineSection,
@@ -58,6 +60,9 @@ const getInsightSettings = cache(async () =>
             "site_insight_summary",
             "site_insight_importance",
             "site_insight_timeline",
+            "site_feature_glossary",
+            "site_feature_mobile_action_bar",
+            "site_feature_verification_panel",
           ],
         },
       },
@@ -117,7 +122,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   // article is already resolved, so we can fire relatedArticles immediately
   const relatedArticles = await db.article.findMany({
     where: {
-      categoryId: article.categoryId,
+      ...(article.topic
+        ? { topic: article.topic }
+        : { categoryId: article.categoryId }),
       id: { not: article.id },
       status: "PUBLISHED",
     },
@@ -285,9 +292,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
 
               {/* Audio Player Integration */}
-              <div className="mb-8">
+              <div id="article-audio-player" className="mb-8">
                 <AudioPlayer title={article.title} text={article.content} />
               </div>
+
+              {insightSettings.showGlossary && <AITermsGlossary />}
 
               <ArticleInsightTopSections
                 locale="tr"
@@ -352,6 +361,28 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   items={timelineItems}
                   currentArticleId={article.id}
                 />
+              )}
+
+              {insightSettings.showVerificationPanel && (
+                <section className="mt-8 rounded-xl border border-ai-surface-border bg-ai-surface-card p-4">
+                  <h3 className="mb-2 text-sm font-semibold text-white">Doğrulama Paneli</h3>
+                  <div className="grid grid-cols-1 gap-2 text-xs text-ai-text-secondary sm:grid-cols-3">
+                    <div className="rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 py-2">
+                      <p className="text-ai-text-muted">Kaynak Sayısı</p>
+                      <p className="font-semibold text-white">{article.sourceUrl ? 1 : 0}</p>
+                    </div>
+                    <div className="rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 py-2">
+                      <p className="text-ai-text-muted">İlk Yayın</p>
+                      <p className="font-semibold text-white">
+                        {article.publishedAt ? formatDate(article.publishedAt) : "-"}
+                      </p>
+                    </div>
+                    <div className="rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 py-2">
+                      <p className="text-ai-text-muted">Son Güncelleme</p>
+                      <p className="font-semibold text-white">{formatDate(article.updatedAt)}</p>
+                    </div>
+                  </div>
+                </section>
               )}
             </article>
 
@@ -501,6 +532,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       </main>
 
       <AudioPromo />
+      {insightSettings.showMobileActionBar && (
+        <MobileArticleActionBar
+          articleId={article.id}
+          title={article.title}
+          url={articleUrl}
+        />
+      )}
     </div>
   );
 }

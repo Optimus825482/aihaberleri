@@ -325,6 +325,76 @@ export default function SettingsPage() {
                   );
                 })}
               </div>
+
+              <div className="pt-2 border-t border-ai-surface-border space-y-3">
+                <h3 className="text-sm font-bold">Yeni Deneyim Blokları</h3>
+
+                {[
+                  {
+                    key: "site_feature_glossary",
+                    label: "AI Terimler Mini Sözlük",
+                    description: "Haber detayda tooltip sözlük bloğunu göster",
+                    defaultValue: "true",
+                  },
+                  {
+                    key: "site_feature_mobile_action_bar",
+                    label: "Mobil Alt Aksiyon Barı",
+                    description: "Mobilde paylaş/kaydet/dinle barını göster",
+                    defaultValue: "true",
+                  },
+                  {
+                    key: "site_feature_verification_panel",
+                    label: "Doğrulama Paneli",
+                    description: "Haber sonunda küçük doğrulama panelini göster",
+                    defaultValue: "true",
+                  },
+                  {
+                    key: "site_feature_daily_briefing",
+                    label: "Günlük Brifing Modu",
+                    description: "Ana sayfada 5 dakikalık özet ve opsiyonel sesli blok",
+                    defaultValue: "true",
+                  },
+                  {
+                    key: "site_feature_model_cards",
+                    label: "Model/Şirket Kartları",
+                    description: "Ana sayfada OpenAI/Google/Anthropic kartlarını göster",
+                    defaultValue: "true",
+                  },
+                  {
+                    key: "site_feature_heat_map",
+                    label: "Gündem Isı Haritası",
+                    description: "Ana sayfada trendScore tabanlı yükselen konuları göster",
+                    defaultValue: "true",
+                  },
+                ].map((item) => {
+                  const setting = data?.settings.general.find((s) => s.key === item.key);
+                  const isChecked = (setting?.value ?? item.defaultValue) === "true";
+
+                  return (
+                    <label
+                      key={item.key}
+                      className="flex items-start justify-between gap-4 rounded-lg border border-ai-surface-border p-3 cursor-pointer"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">{item.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {item.description}
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const value = e.target.checked ? "true" : "false";
+                          updateLocalSetting(item.key, value);
+                          saveSetting(item.key, value);
+                        }}
+                        className="mt-1 h-4 w-4"
+                      />
+                    </label>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
         )}

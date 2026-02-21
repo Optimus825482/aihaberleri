@@ -13,6 +13,7 @@ import { formatDate, calculateReadingMinutes } from "@/lib/utils";
 import { ArticleImage } from "@/components/ResponsiveImage";
 import { ViewTracker } from "@/components/ViewTracker";
 import { ReadingProgressBar } from "@/components/ReadingProgressBar";
+import { MobileArticleActionBar } from "@/components/article/MobileArticleActionBar";
 import {
   ArticleInsightTopSections,
   ArticleTimelineSection,
@@ -28,6 +29,7 @@ import {
   generateJsonLd,
   combineSchemas,
 } from "@/lib/seo";
+import { AudioPlayer } from "@/components/AudioPlayer";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -65,7 +67,10 @@ const getArticle = cache(async (slug: string) => {
     imageUrlMedium: translation.article.imageUrlMedium,
     imageUrlSmall: translation.article.imageUrlSmall,
     imageUrlThumb: translation.article.imageUrlThumb,
+    sourceUrl: translation.article.sourceUrl,
+    topic: translation.article.topic,
     publishedAt: translation.article.publishedAt,
+    updatedAt: translation.article.updatedAt,
     views: translation.article.views,
     category: translation.article.category,
     author: translation.article.author,
@@ -82,6 +87,8 @@ const getInsightSettings = cache(async () =>
             "site_insight_summary",
             "site_insight_importance",
             "site_insight_timeline",
+            "site_feature_mobile_action_bar",
+            "site_feature_verification_panel",
           ],
         },
       },
@@ -90,13 +97,17 @@ const getInsightSettings = cache(async () =>
   ),
 );
 
-async function getRelatedArticles(categoryId: string, excludeId: string) {
+async function getRelatedArticles(
+  categoryId: string,
+  excludeId: string,
+  topic?: string | null,
+) {
   const translations = await db.articleTranslation.findMany({
     where: {
       locale: "en",
       article: {
         status: "PUBLISHED",
-        categoryId,
+        ...(topic ? { topic } : { categoryId }),
         id: { not: excludeId },
       },
     },
@@ -175,6 +186,7 @@ export default async function EnglishArticlePage({ params }: Props) {
   const relatedArticles = await getRelatedArticles(
     article.category.id,
     article.id,
+    article.topic,
   );
   const insightSettings = await getInsightSettings();
   const readingTime = calculateReadingMinutes(article.content);
@@ -244,6 +256,7 @@ export default async function EnglishArticlePage({ params }: Props) {
   const combinedSchema = combineSchemas(newsArticleSchema, breadcrumbSchema);
 
   return (
+    <>
     <main className="min-h-screen bg-ai-background-dark">
       <ReadingProgressBar />
 
@@ -354,6 +367,10 @@ export default async function EnglishArticlePage({ params }: Props) {
             </div>
           )}
 
+            <div id="article-audio-player" className="mb-8">
+              <AudioPlayer title={article.title} text={article.content} />
+            </div>
+
           <ArticleInsightTopSections
             locale="en"
             summaryPoints={insightSettings.showSummary ? summaryPoints : []}
@@ -375,6 +392,28 @@ export default async function EnglishArticlePage({ params }: Props) {
               currentArticleId={article.id}
             />
           )}
+
+            {insightSettings.showVerificationPanel && (
+              <section className="mt-8 rounded-xl border border-ai-surface-border bg-ai-surface-card p-4">
+                <h3 className="mb-2 text-sm font-semibold text-white">Verification Panel</h3>
+                <div className="grid grid-cols-1 gap-2 text-xs text-ai-text-secondary sm:grid-cols-3">
+                  <div className="rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 py-2">
+                    <p className="text-ai-text-muted">Source Count</p>
+                    <p className="font-semibold text-white">{article.sourceUrl ? 1 : 0}</p>
+                  </div>
+                  <div className="rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 py-2">
+                    <p className="text-ai-text-muted">First Published</p>
+                    <p className="font-semibold text-white">
+                      {article.publishedAt ? formatDate(article.publishedAt) : "-"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 py-2">
+                    <p className="text-ai-text-muted">Last Updated</p>
+                    <p className="font-semibold text-white">{formatDate(article.updatedAt)}</p>
+                  </div>
+                </div>
+              </section>
+            )}
 
           {/* Share */}
           <div className="border-t border-b border-ai-surface-border py-6 mb-12">
@@ -456,5 +495,13 @@ export default async function EnglishArticlePage({ params }: Props) {
         )}
       </article>
     </main>
+      {insightSettings.showMobileActionBar && (
+        <MobileArticleActionBar
+          articleId={article.id}
+          title={article.title}
+          url={`https://aihaberleri.org/en/news/${article.slug}`}
+        />
+      )}
+    </>
   );
 }

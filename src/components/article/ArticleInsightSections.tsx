@@ -92,7 +92,11 @@ export function ArticleTimelineSection({
     items,
     currentArticleId,
 }: TimelineSectionProps) {
-    if (items.length <= 1) return null;
+    const similarItems = items
+        .filter((item) => item.id !== currentArticleId)
+        .slice(0, 3);
+
+    if (similarItems.length === 0) return null;
 
     const t = labels[locale];
     const newsBase = locale === "en" ? "/en/news" : "/news";
@@ -106,22 +110,18 @@ export function ArticleTimelineSection({
                 {t.timelineTitle}
             </h2>
             <ol className="space-y-4 border-l border-ai-surface-border pl-4">
-                {items.map((item) => (
+                {similarItems.map((item) => (
                     <li key={`timeline-${locale}-${item.id}`} className="relative">
                         <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-ai-primary" />
                         <div className="text-xs text-ai-text-muted">
                             {item.publishedAt ? formatDate(item.publishedAt) : ""}
                         </div>
-                        {item.id === currentArticleId ? (
-                            <div className="text-sm font-semibold text-white">{item.title}</div>
-                        ) : (
-                            <Link
-                                href={`${newsBase}/${item.slug}`}
-                                className="text-sm font-semibold text-white hover:text-ai-primary transition-colors"
-                            >
-                                {item.title}
-                            </Link>
-                        )}
+                        <Link
+                            href={`${newsBase}/${item.slug}`}
+                            className="text-sm font-semibold text-white hover:text-ai-primary transition-colors"
+                        >
+                            {item.title}
+                        </Link>
                     </li>
                 ))}
             </ol>

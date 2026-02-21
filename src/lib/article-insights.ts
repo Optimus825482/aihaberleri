@@ -11,12 +11,24 @@ export interface ArticleInsightDisplaySettings {
   showSummary: boolean;
   showImportance: boolean;
   showTimeline: boolean;
+  showGlossary: boolean;
+  showMobileActionBar: boolean;
+  showVerificationPanel: boolean;
+  showDailyBriefing: boolean;
+  showModelCards: boolean;
+  showHeatMap: boolean;
 }
 
 const DEFAULT_DISPLAY_SETTINGS: ArticleInsightDisplaySettings = {
   showSummary: true,
   showImportance: true,
   showTimeline: true,
+  showGlossary: true,
+  showMobileActionBar: true,
+  showVerificationPanel: true,
+  showDailyBriefing: true,
+  showModelCards: true,
+  showHeatMap: true,
 };
 
 function parseBooleanSetting(
@@ -52,6 +64,30 @@ export async function getArticleInsightDisplaySettings(
       showTimeline: parseBooleanSetting(
         settingsMap["site_insight_timeline"],
         DEFAULT_DISPLAY_SETTINGS.showTimeline,
+      ),
+      showGlossary: parseBooleanSetting(
+        settingsMap["site_feature_glossary"],
+        DEFAULT_DISPLAY_SETTINGS.showGlossary,
+      ),
+      showMobileActionBar: parseBooleanSetting(
+        settingsMap["site_feature_mobile_action_bar"],
+        DEFAULT_DISPLAY_SETTINGS.showMobileActionBar,
+      ),
+      showVerificationPanel: parseBooleanSetting(
+        settingsMap["site_feature_verification_panel"],
+        DEFAULT_DISPLAY_SETTINGS.showVerificationPanel,
+      ),
+      showDailyBriefing: parseBooleanSetting(
+        settingsMap["site_feature_daily_briefing"],
+        DEFAULT_DISPLAY_SETTINGS.showDailyBriefing,
+      ),
+      showModelCards: parseBooleanSetting(
+        settingsMap["site_feature_model_cards"],
+        DEFAULT_DISPLAY_SETTINGS.showModelCards,
+      ),
+      showHeatMap: parseBooleanSetting(
+        settingsMap["site_feature_heat_map"],
+        DEFAULT_DISPLAY_SETTINGS.showHeatMap,
       ),
     };
   } catch {
