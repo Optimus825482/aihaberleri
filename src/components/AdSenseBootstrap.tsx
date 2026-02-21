@@ -27,7 +27,8 @@ export const AdSenseBootstrap = () => {
     const pathname = usePathname();
     const [canLoad, setCanLoad] = useState(false);
 
-    const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
+    const clientId =
+        process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || "ca-pub-2444093901783574";
     const isEnabled = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "true";
 
     useEffect(() => {
