@@ -528,7 +528,7 @@ export default async function HomePage() {
                   return (
                     <Link
                       key={item.topic}
-                      href={`/search?q=${encodeURIComponent(item.topic)}`}
+                      href={`/search?q=${encodeURIComponent(item.label || formatTopicLabel(item.topic))}&mode=topic&topic=${encodeURIComponent(item.topic)}`}
                       className="group rounded-xl border border-ai-surface-border bg-ai-surface-dark/90 p-3.5 hover:border-ai-primary/40 hover:bg-ai-surface-card transition-all duration-200"
                     >
                       <div className="flex items-start justify-between gap-2">

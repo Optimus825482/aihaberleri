@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
     const mode = searchParams.get("mode");
+    const topicParam = searchParams.get("topic");
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const page = parseInt(searchParams.get("page") || "1", 10);
 
@@ -97,6 +98,54 @@ export async function GET(request: Request) {
       const articles = strictResults
         .slice(skip, skip + limit)
         .map(({ keywords, ...article }) => article);
+
+      return NextResponse.json({
+        articles,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          hasMore: skip + articles.length < totalCount,
+        },
+      });
+    }
+
+    if (mode === "topic" && topicParam?.trim()) {
+      const topicKey = topicParam.trim();
+      const topicWhere = {
+        status: "PUBLISHED" as const,
+        topic: {
+          equals: topicKey,
+          mode: "insensitive" as const,
+        },
+      };
+
+      const [articles, totalCount] = await Promise.all([
+        db.article.findMany({
+          where: topicWhere,
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            excerpt: true,
+            imageUrl: true,
+            publishedAt: true,
+            views: true,
+            trendScore: true,
+            category: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+          },
+          orderBy: [{ trendScore: "desc" }, { publishedAt: "desc" }],
+          skip,
+          take: limit,
+        }),
+        db.article.count({ where: topicWhere }),
+      ]);
 
       return NextResponse.json({
         articles,

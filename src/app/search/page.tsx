@@ -25,6 +25,7 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams?.get("q") || "";
   const mode = searchParams?.get("mode") || "";
+  const topic = searchParams?.get("topic") || "";
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +40,7 @@ function SearchContent() {
 
     try {
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(searchQuery.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}`,
+        `/api/search?q=${encodeURIComponent(searchQuery.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}${mode === "topic" && topic ? `&topic=${encodeURIComponent(topic)}` : ""}`,
       );
       const data = await response.json();
 
@@ -66,7 +67,7 @@ function SearchContent() {
     } else {
       setResults([]);
     }
-  }, [query, mode]);
+  }, [query, mode, topic]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +76,7 @@ function SearchContent() {
       window.history.pushState(
         {},
         "",
-        `/search?q=${encodeURIComponent(searchInput.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}`,
+        `/search?q=${encodeURIComponent(searchInput.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}${mode === "topic" && topic ? `&topic=${encodeURIComponent(topic)}` : ""}`,
       );
       performSearch(searchInput.trim());
     }
