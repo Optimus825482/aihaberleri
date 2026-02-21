@@ -381,7 +381,8 @@ export default async function EnglishArticlePage({ params }: Props) {
           />
 
             <AdSlot
-              slot="1000000102"
+              slot="3183333271"
+              format="autorelaxed"
               minHeight={140}
               label="Sponsored"
               className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"

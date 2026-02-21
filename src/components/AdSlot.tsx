@@ -6,7 +6,9 @@ import { usePathname } from "next/navigation";
 type AdSlotProps = {
     slot: string;
     className?: string;
-    format?: "auto" | "horizontal" | "vertical" | "rectangle";
+    format?: "auto" | "horizontal" | "vertical" | "rectangle" | "fluid" | "autorelaxed";
+    layout?: string;
+    layoutKey?: string;
     responsive?: boolean;
     minHeight?: number;
     label?: string;
@@ -40,6 +42,8 @@ export const AdSlot = ({
     slot,
     className,
     format = "auto",
+    layout,
+    layoutKey,
     responsive = true,
     minHeight = 120,
     label,
@@ -121,7 +125,9 @@ export const AdSlot = ({
                 className={`adsbygoogle block ${minHeightClass}`}
                 data-ad-client={clientId}
                 data-ad-slot={slot}
+                data-ad-layout={layout}
                 data-ad-format={format}
+                data-ad-layout-key={layoutKey}
                 data-full-width-responsive={responsive ? "true" : "false"}
             />
         </div>

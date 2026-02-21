@@ -317,10 +317,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 />
 
                 <AdSlot
-                  slot="1000000101"
+                  slot="6220560152"
+                  format="fluid"
+                  layout="in-article"
                   minHeight={140}
                   label="Sponsorlu İçerik"
-                  className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3 not-prose"
+                  className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3 not-prose text-center"
                 />
 
                 <HighlightedText

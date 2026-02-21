@@ -561,7 +561,7 @@ export default async function HomePage() {
           )}
 
           <AdSlot
-            slot="1000000001"
+            slot="3977540197"
             minHeight={120}
             label="Sponsorlu"
             className="mt-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"

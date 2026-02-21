@@ -203,7 +203,9 @@ export default async function EnglishHomePage() {
           </section>
 
           <AdSlot
-            slot="1000000002"
+            slot="6653849624"
+            format="fluid"
+            layoutKey="-5t+c9-b-4l+mn"
             minHeight={120}
             label="Sponsored"
             className="mt-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
