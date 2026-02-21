@@ -7,6 +7,32 @@ networks:
     name: pwcsc8ow08oks0ggokwoo8ww
 
 services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: aihaberleri-postgres
+    hostname: aihaberleri-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 518518Erkan
+      POSTGRES_DB: postgresainewsdb
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          memory: 256M
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgresainewsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
   # Redis (Local container)
   redis:
     image: redis:7-alpine
@@ -48,7 +74,7 @@ services:
         reservations:
           memory: 512M
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgres://postgres:518518Erkan@aihaberleri-postgres:5432/postgresainewsdb?schema=public&connection_limit=10&pool_timeout=20&connect_timeout=10
       REDIS_URL: redis://aihaberleri-redis:6379
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
       GOOGLE_API_KEY: ${GOOGLE_API_KEY}
@@ -81,6 +107,8 @@ services:
       - default
       - searxng-network
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
@@ -110,7 +138,7 @@ services:
         reservations:
           memory: 1G
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgres://postgres:518518Erkan@aihaberleri-postgres:5432/postgresainewsdb?schema=public&connection_limit=10&pool_timeout=20&connect_timeout=10
       REDIS_URL: redis://aihaberleri-redis:6379
       NEXTAUTH_URL: https://aihaberleri.org
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
@@ -147,6 +175,8 @@ services:
       - default
       - searxng-network
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
@@ -159,4 +189,6 @@ services:
 
 volumes:
   redis_data:
+    driver: local
+  postgres_data:
     driver: local
