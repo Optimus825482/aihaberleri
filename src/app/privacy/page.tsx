@@ -188,7 +188,7 @@ export default function PrivacyPage() {
                     {
                       title: "Pazarlama Çerezler",
                       icon: "ads_click",
-                      desc: "Reklam ortaklarımız tarafından ilgi alanlarınıza göre profil oluşturmak ve diğer sitelerde alakalı reklamlar göstermek için kullanılabilir.",
+                      desc: "Reklam ortaklarımız tarafından ilgi alanlarınıza göre profil oluşturmak ve alakalı reklamlar göstermek için kullanılabilir. Bu kapsamda Google AdSense benzeri reklam sağlayıcıları devreye girebilir.",
                       open: false,
                     },
                   ].map((item, index) => (
@@ -208,6 +208,10 @@ export default function PrivacyPage() {
                     </details>
                   ))}
                 </div>
+                <p className="text-sm text-ai-text-secondary mt-4">
+                  Reklam ve analitik çerezleri için onay tercihinizi çerez banner'ı üzerinden yönetebilirsiniz.
+                  Zorunlu çerezler güvenlik ve temel işlevler için her zaman aktiftir.
+                </p>
               </section>
 
               {/* Section 5: User Rights */}

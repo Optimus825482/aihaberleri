@@ -7,6 +7,7 @@ import { TodayTrending } from "@/components/TodayTrending";
 import Link from "next/link";
 import Image from "next/image";
 import { AudioPlayer } from "@/components/AudioPlayer";
+import { AdSlot } from "@/components/AdSlot";
 import { getArticleInsightDisplaySettings } from "@/lib/article-insights";
 
 import {
@@ -558,6 +559,13 @@ export default async function HomePage() {
               </div>
             </section>
           )}
+
+          <AdSlot
+            slot="1000000001"
+            minHeight={120}
+            label="Sponsorlu"
+            className="mt-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+          />
 
           {/* Category Filter Chips (kompakt) */}
           <CategoryFilters categories={categories} locale="tr" />

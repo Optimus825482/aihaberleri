@@ -30,6 +30,7 @@ import {
   combineSchemas,
 } from "@/lib/seo";
 import { AudioPlayer } from "@/components/AudioPlayer";
+import { AdSlot } from "@/components/AdSlot";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -378,6 +379,13 @@ export default async function EnglishArticlePage({ params }: Props) {
               insightSettings.showImportance ? whyImportantPoints : []
             }
           />
+
+            <AdSlot
+              slot="1000000102"
+              minHeight={140}
+              label="Sponsored"
+              className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+            />
 
           {/* Content */}
           <div

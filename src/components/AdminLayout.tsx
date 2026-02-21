@@ -31,6 +31,7 @@ import {
   Activity,
   Gauge,
   RotateCcw,
+  DollarSign,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -130,6 +131,12 @@ const menuGroups = [
         title: "SEO Dashboard",
         href: "/admin/seo",
         icon: Search,
+        requiredResource: null,
+      },
+      {
+        title: "AdSense Hazırlık",
+        href: "/admin/adsense-readiness",
+        icon: DollarSign,
         requiredResource: null,
       },
     ],

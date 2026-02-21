@@ -57,7 +57,9 @@ export default async function middleware(request: NextRequest) {
 
     if (!token) {
       console.log("[MIDDLEWARE] No token, redirecting to login");
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      const loginUrl = new URL("/admin/login", request.url);
+      loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(loginUrl);
     }
 
     try {
@@ -65,7 +67,9 @@ export default async function middleware(request: NextRequest) {
       console.log("[MIDDLEWARE] Token valid, allowing access to:", pathname);
     } catch (error) {
       console.log("[MIDDLEWARE] Invalid token, redirecting to login");
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      const loginUrl = new URL("/admin/login", request.url);
+      loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+      return NextResponse.redirect(loginUrl);
     }
   }
 

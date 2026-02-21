@@ -13,6 +13,7 @@ import { HeroCarousel } from "@/components/HeroCarousel";
 import { TrendingSidebar } from "@/components/TrendingSidebar";
 import { CategoryFilters } from "@/components/CategoryFilters";
 import { TodayTrending } from "@/components/TodayTrending";
+import { AdSlot } from "@/components/AdSlot";
 import {
   generateOrganizationSchema,
   generateWebSiteSchema,
@@ -200,6 +201,13 @@ export default async function EnglishHomePage() {
               ))}
             </div>
           </section>
+
+          <AdSlot
+            slot="1000000002"
+            minHeight={120}
+            label="Sponsored"
+            className="mt-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+          />
 
           {/* Category Filter Chips */}
           <CategoryFilters categories={categories} locale="en" />

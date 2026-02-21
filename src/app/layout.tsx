@@ -19,6 +19,7 @@ import { AudioProvider } from "@/context/AudioContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { HydrationErrorBoundary } from "@/components/HydrationErrorBoundary";
 import { VisitorTracker } from "@/components/VisitorTracker";
+import { AdSenseBootstrap } from "@/components/AdSenseBootstrap";
 import { Suspense } from "react";
 import { PageLoadingIndicator } from "@/components/PageLoadingIndicator";
 
@@ -172,6 +173,7 @@ export default function RootLayout({
                 <GoogleTagManagerNoScript />
                 <GoogleAnalytics />
                 <GoogleTagManager />
+                <AdSenseBootstrap />
                 <YandexMetrika />
                 <VisitorTracker />
                 <LayoutWrapper

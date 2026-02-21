@@ -15,6 +15,7 @@ import {
 } from "@/lib/seo";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { AudioPromo } from "@/components/AudioPromo";
+import { AdSlot } from "@/components/AdSlot";
 import { HighlightedText } from "@/components/audio/HighlightedText";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ArticleImage } from "@/components/ResponsiveImage";
@@ -313,6 +314,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <HighlightedText
                   htmlContent={firstPart}
                   articleTitle={article.title}
+                />
+
+                <AdSlot
+                  slot="1000000101"
+                  minHeight={140}
+                  label="Sponsorlu İçerik"
+                  className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3 not-prose"
                 />
 
                 <HighlightedText

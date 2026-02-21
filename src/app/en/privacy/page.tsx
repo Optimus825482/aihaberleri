@@ -87,9 +87,9 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-bold mb-4 text-white">3. Cookies</h2>
             <p className="text-ai-text-secondary">
-              We use cookies to enhance your browsing experience. You can instruct
-              your browser to refuse all cookies or to indicate when a cookie is
-              being sent.
+              We use cookie categories for essential functionality, analytics, and advertising.
+              Advertising cookies may be used by providers such as Google AdSense when enabled.
+              You can manage your preferences from our cookie consent banner.
             </p>
           </section>
 

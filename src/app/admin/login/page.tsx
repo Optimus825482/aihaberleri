@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,11 +13,14 @@ import {
 } from "@/components/ui/card";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const rawNext = searchParams?.get("next") || "/admin";
+  const nextTarget = rawNext.startsWith("/admin") ? rawNext : "/admin";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +50,7 @@ export default function LoginPage() {
       if (data.success) {
         console.log("[SIMPLE_LOGIN_PAGE] Success! Redirecting...");
         // Hard redirect to clear any cached state
-        window.location.href = "/admin";
+        window.location.href = nextTarget;
       }
     } catch (error) {
       console.error("[SIMPLE_LOGIN_PAGE] Exception:", error);
@@ -117,6 +121,14 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-4 text-center text-sm text-muted-foreground">
+            <div className="mb-2">
+              <Link
+                href="/admin/login?next=%2Fadmin%2Fadsense-readiness"
+                className="hover:text-primary transition-colors"
+              >
+                AdSense Hazırlık sayfasına giriş sonrası git
+              </Link>
+            </div>
             <a href="/" className="hover:text-primary transition-colors">
               ← Web sitesine dön
             </a>
