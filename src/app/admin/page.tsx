@@ -72,16 +72,6 @@ const PipelineChart = dynamic<{
   ),
 });
 
-const LiveVisitorWidget = dynamic(
-  () => import("@/components/admin/LiveVisitorWidget"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[300px] animate-pulse bg-muted/30 rounded-xl" />
-    ),
-  },
-);
-
 const NOOP = () => {};
 
 // === Animated Number Component ===
@@ -886,14 +876,8 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Canlı Ziyaretçiler + Pipeline Stepper — Responsive grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Canlı Ziyaretçiler — Kendi takip sistemi */}
-          <LiveVisitorWidget />
-
-          {/* Pipeline Stepper */}
-          <AgentPipelineStepper />
-        </div>
+        {/* Pipeline Stepper */}
+        <AgentPipelineStepper />
 
         {/* System Resources — Compact Ring Gauges */}
         <Card className="border-indigo-500/20 bg-card/80 backdrop-blur-sm">
