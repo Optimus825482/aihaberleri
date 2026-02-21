@@ -32,6 +32,8 @@ interface PollinationsOptions {
 const POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY;
 const POLLINATIONS_IMAGE_URL = "https://image.pollinations.ai/prompt"; // Legacy anonymous endpoint
 const POLLINATIONS_GEN_URL = "https://gen.pollinations.ai/image"; // New authenticated endpoint
+const UNSPLASH_SOURCE_URL = "https://source.unsplash.com";
+const PICSUM_URL = "https://picsum.photos";
 
 // Cache Configuration
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
@@ -42,6 +44,59 @@ const CACHE_KEY_PREFIX = "pollinations:image:";
  */
 function generateCacheKey(prompt: string): string {
   return `${CACHE_KEY_PREFIX}${createHash("sha256").update(prompt).digest("hex")}`;
+}
+
+function buildQueryFromPrompt(prompt: string): string {
+  const words = prompt
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word.length > 2)
+    .slice(0, 6);
+
+  if (words.length === 0) {
+    return "artificial,intelligence,technology";
+  }
+
+  return words.join(",");
+}
+
+async function canFetchImage(url: string, timeoutMs = 8000): Promise<boolean> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      signal: controller.signal,
+    });
+    return response.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+export async function fetchFreeBackupImage(
+  prompt: string,
+  options: PollinationsOptions = {},
+): Promise<string> {
+  const { width = 1200, height = 630 } = options;
+  const query = buildQueryFromPrompt(prompt);
+
+  const unsplashUrl = `${UNSPLASH_SOURCE_URL}/${width}x${height}/?${encodeURIComponent(query)}`;
+  if (await canFetchImage(unsplashUrl)) {
+    console.warn(
+      "⚠️ Pollinations başarısız, Unsplash Source fallback kullanılıyor",
+    );
+    return unsplashUrl;
+  }
+
+  const seed = createHash("md5").update(prompt).digest("hex").slice(0, 12);
+  const picsumUrl = `${PICSUM_URL}/seed/${seed}/${width}/${height}`;
+  console.warn("⚠️ Unsplash başarısız, Picsum fallback kullanılıyor");
+  return picsumUrl;
 }
 
 /**
@@ -362,7 +417,7 @@ export async function fetchPollinationsImage(
           `❌ Pollinations.ai failed after ${maxRetries} attempts:`,
           error,
         );
-        return getFallbackImage();
+        return await fetchFreeBackupImage(sanitizedPrompt, options);
       }
 
       // OPTIMIZED: Faster exponential backoff (start at 1s instead of 2s)
@@ -375,7 +430,7 @@ export async function fetchPollinationsImage(
     }
   }
 
-  return getFallbackImage();
+  return await fetchFreeBackupImage(sanitizedPrompt, options);
 }
 
 /**
@@ -417,21 +472,6 @@ async function fetchPollinationsImageAnonymous(
     console.error("❌ Anonymous endpoint error:", error);
     throw error;
   }
-}
-
-/**
- * Get fallback image when Pollinations.ai fails
- * Uses static placeholder to ensure images always display
- */
-function getFallbackImage(): string {
-  // CRITICAL FIX: Use direct path to avoid Next.js image optimization loop
-  // Don't use full URL with domain - causes 400 error when Next.js tries to optimize
-  const fallbackUrl = "/logos/og-image.png";
-  console.warn(
-    "⚠️ Pollinations.ai başarısız, fallback görsel kullanılıyor:",
-    fallbackUrl,
-  );
-  return fallbackUrl;
 }
 
 /**

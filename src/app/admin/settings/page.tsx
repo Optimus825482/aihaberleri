@@ -19,6 +19,7 @@ import {
   Mail,
   Bot,
   Save,
+  Image as ImageIcon,
   Facebook,
   Twitter,
   Instagram,
@@ -68,6 +69,17 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+  const [backfillLoading, setBackfillLoading] = useState(false);
+  const [backfillLimit, setBackfillLimit] = useState(20);
+  const [backfillDryRun, setBackfillDryRun] = useState(true);
+  const [backfillResult, setBackfillResult] = useState<{
+    dryRun: boolean;
+    requestedLimit: number;
+    candidates: number;
+    updated: number;
+    failed: number;
+    backupProviderUsed: number;
+  } | null>(null);
   const [activeTab, setActiveTab] = useState<
     "general" | "seo" | "email" | "social" | "agent"
   >("general");
@@ -165,6 +177,39 @@ export default function SettingsPage() {
         },
       };
     });
+  };
+
+  const runImageBackfill = async () => {
+    try {
+      setBackfillLoading(true);
+      setBackfillResult(null);
+
+      const response = await fetch("/api/admin/images/backfill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          limit: backfillLimit,
+          dryRun: backfillDryRun,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || "Backfill işlemi başarısız oldu");
+      }
+
+      setBackfillResult(result.data);
+    } catch (error) {
+      console.error("Image backfill trigger error:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Backfill çalıştırılırken hata oluştu",
+      );
+    } finally {
+      setBackfillLoading(false);
+    }
   };
 
   if (loading) {
@@ -697,6 +742,78 @@ export default function SettingsPage() {
                   için bir sonraki çalışmayı bekleyin veya "Manuel Tetikle" ile
                   hemen çalıştırın.
                 </p>
+              </div>
+
+              <div className="p-4 border border-ai-surface-border rounded-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  <h4 className="font-bold text-sm">Eksik Görselleri Tamamla</h4>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Yayındaki görselsiz haberler için ücretsiz yedek provider zinciri ile
+                  otomatik görsel tamamlar.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                  <div>
+                    <label className="text-xs font-semibold mb-1 block">Limit</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={200}
+                      value={backfillLimit}
+                      onChange={(e) =>
+                        setBackfillLimit(
+                          Math.max(1, Math.min(200, Number(e.target.value) || 20)),
+                        )
+                      }
+                    />
+                  </div>
+
+                  <label className="flex items-center gap-2 text-xs font-semibold h-10">
+                    <input
+                      type="checkbox"
+                      checked={backfillDryRun}
+                      onChange={(e) => setBackfillDryRun(e.target.checked)}
+                    />
+                    Dry-run
+                  </label>
+
+                  <Button
+                    onClick={runImageBackfill}
+                    disabled={backfillLoading}
+                    className="font-bold"
+                  >
+                    {backfillLoading
+                      ? "Çalıştırılıyor..."
+                      : backfillDryRun
+                        ? "Dry-run Çalıştır"
+                        : "Backfill Başlat"}
+                  </Button>
+                </div>
+
+                {backfillResult && (
+                  <div className="text-xs rounded-md bg-muted/40 border border-ai-surface-border p-3 space-y-1">
+                    <p>
+                      <span className="font-semibold">Mod:</span>{" "}
+                      {backfillResult.dryRun ? "Dry-run" : "Gerçek update"}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Aday:</span> {backfillResult.candidates}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Güncellenen:</span> {backfillResult.updated}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Hata:</span> {backfillResult.failed}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Yedek provider kullanımı:</span>{" "}
+                      {backfillResult.backupProviderUsed}
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

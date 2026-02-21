@@ -16,7 +16,10 @@ import { braveSearch, type BraveSearchResult } from "@/lib/brave";
 import { callDeepSeek, generateImagePrompt } from "@/lib/deepseek";
 import { isDuplicateNews, type NewsArticle } from "./news.service";
 import { generateSlug } from "@/lib/utils";
-import { fetchPollinationsImage } from "@/lib/pollinations";
+import {
+  fetchPollinationsImage,
+  fetchFreeBackupImage,
+} from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 import axios from "axios";
@@ -233,11 +236,18 @@ async function generateAndUploadImageInternal(
     };
   } catch (error: any) {
     console.error("❌ Görsel oluşturma hatası:", error.message);
+    const backupImage = await fetchFreeBackupImage(`${title} ${category}`, {
+      width: 1200,
+      height: 630,
+      model: "flux",
+      enhance: true,
+      nologo: true,
+    });
     return {
-      imageUrl: null,
-      imageUrlMedium: null,
-      imageUrlSmall: null,
-      imageUrlThumb: null,
+      imageUrl: backupImage,
+      imageUrlMedium: backupImage,
+      imageUrlSmall: backupImage,
+      imageUrlThumb: backupImage,
     };
   }
 }

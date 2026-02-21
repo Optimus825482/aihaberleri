@@ -25,6 +25,7 @@
     "test:sample-ai-feeds": "tsx scripts/test-sample-ai-feeds.ts",
     "test:pipeline": "tsx scripts/test-multi-agent-pipeline.ts",
     "test:hybrid": "tsx scripts/test-hybrid-models.ts",
+    "backfill:images": "tsx scripts/backfill-missing-images.ts",
     "worker:orchestrator": "tsx src/workers/orchestrator.worker.ts",
     "worker:seo-calculator": "tsx src/workers/seo-calculator.worker.ts",
     "worker:seo-optimizer": "tsx src/workers/seo-optimizer.worker.ts",
@@ -123,7 +124,6 @@
     "swr": "^2.4.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-
     "twitter-api-v2": "^1.19.0",
     "web-push": "^3.6.7",
     "winston": "^3.17.0",
