@@ -133,9 +133,6 @@ export default function RootLayout({
   return (
     <html lang="tr" className="dark" suppressHydrationWarning>
       <head>
-        {/* Bidvertiser Ad Verification - renders as HTML comment */}
-        <meta name="bidvertiser-verification" content="Bidvertiser2103678" />
-
         {/* iOS auto-linking prevention (hydration fix) */}
         <meta
           name="format-detection"
@@ -159,11 +156,6 @@ export default function RootLayout({
         )}
         suppressHydrationWarning
       >
-        {/* Bidvertiser Ad Network Verification */}
-        <div
-          dangerouslySetInnerHTML={{ __html: "<!-- Bidvertiser2103678 -->" }}
-          className="hidden"
-        />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

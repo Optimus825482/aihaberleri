@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { BidvertiserNative } from "@/components/ads/BidvertiserAd";
 import { useTrendingArticles } from "@/hooks/use-trending";
 
 interface TrendingSidebarProps {
@@ -190,16 +189,6 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
         </div>
       </div>
 
-      {/* Bidvertiser Sidebar Ad */}
-      <div className="rounded-xl lg:rounded-2xl bg-white dark:bg-ai-surface-card border border-gray-100 dark:border-ai-surface-border p-4 flex justify-center shadow-md dark:shadow-none">
-        <BidvertiserNative
-          slot="sidebar-trending"
-          cols={1}
-          rows={2}
-          mobileCols={1}
-          imageWidth={120}
-        />
-      </div>
     </aside>
   );
 }

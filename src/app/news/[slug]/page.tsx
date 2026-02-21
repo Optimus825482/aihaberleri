@@ -22,10 +22,6 @@ import { LikeButton } from "@/components/interactions/LikeButton";
 import { StarRating } from "@/components/interactions/StarRating";
 import { ViewTracker } from "@/components/ViewTracker";
 import { ReadCount } from "@/components/ReadCount";
-import {
-  BidvertiserBanner,
-  BidvertiserNative,
-} from "@/components/ads/BidvertiserAd";
 // AI Disclaimer is now embedded in article content footer (see content.service.ts)
 
 interface ArticlePageProps {
@@ -259,22 +255,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   articleTitle={article.title}
                 />
 
-                {/* Bidvertiser In-Content Ad */}
-                <div className="my-6 flex justify-center not-prose">
-                  <BidvertiserBanner slot="article-mid-tr" />
-                </div>
-
-                {/* Bidvertiser Native Widget */}
-                <div className="my-4 flex justify-center not-prose">
-                  <BidvertiserNative
-                    slot="article-native-tr"
-                    cols={2}
-                    rows={1}
-                    mobileCols={1}
-                    imageWidth={150}
-                  />
-                </div>
-
                 <HighlightedText
                   htmlContent={secondPart}
                   articleTitle={article.title}
@@ -332,22 +312,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     url={articleUrl}
                     description={article.excerpt}
                   />
-                </div>
-
-                {/* Bidvertiser Sidebar Ad - Native */}
-                <div className="bg-ai-surface-card rounded-xl p-4 border border-ai-surface-border flex justify-center">
-                  <BidvertiserNative
-                    slot="article-sidebar-tr"
-                    cols={1}
-                    rows={2}
-                    mobileCols={1}
-                    imageWidth={120}
-                  />
-                </div>
-
-                {/* Bidvertiser Sidebar Ad - Banner (fid) */}
-                <div className="bg-ai-surface-card rounded-xl p-4 border border-ai-surface-border flex justify-center">
-                  <BidvertiserBanner slot="article-sidebar-banner-tr" withFid />
                 </div>
 
                 {/* Trending / Related */}

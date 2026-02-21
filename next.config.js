@@ -76,7 +76,6 @@ const nextConfig = {
     ];
   },
 
-  // Redirects removed (Ezoic ads.txt redirect removed)
   async redirects() {
     return [];
   },

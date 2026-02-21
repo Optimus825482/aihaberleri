@@ -17,10 +17,6 @@ import {
   generateJsonLd,
   combineSchemas,
 } from "@/lib/seo";
-import {
-  BidvertiserBanner,
-  BidvertiserNative,
-} from "@/components/ads/BidvertiserAd";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -316,42 +312,11 @@ export default async function EnglishArticlePage({ params }: Props) {
             </div>
           )}
 
-          {/* Bidvertiser In-Content Ad */}
-          <div className="my-6 flex justify-center">
-            <BidvertiserBanner slot="article-mid-en" />
-          </div>
-
-          {/* Bidvertiser In-Content Ad (fid) */}
-          <div className="my-6 flex justify-center">
-            <BidvertiserBanner slot="article-mid-en-fid" withFid />
-          </div>
-
-          {/* Bidvertiser Native Widget */}
-          <div className="my-4 flex justify-center">
-            <BidvertiserNative
-              slot="article-native-en"
-              cols={2}
-              rows={1}
-              mobileCols={1}
-              imageWidth={150}
-            />
-          </div>
-
           {/* Content */}
           <div
             className="prose prose-lg prose-invert max-w-none mb-12 prose-headings:text-white prose-p:text-ai-text-secondary prose-a:text-ai-primary prose-strong:text-white"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
-
-          {/* Bidvertiser After-Content Ad */}
-          <div className="my-6 flex justify-center">
-            <BidvertiserBanner slot="article-bottom-en" />
-          </div>
-
-          {/* Bidvertiser After-Content Ad (fid) */}
-          <div className="my-6 flex justify-center">
-            <BidvertiserBanner slot="article-bottom-en-fid" withFid />
-          </div>
 
           {/* Share */}
           <div className="border-t border-b border-ai-surface-border py-6 mb-12">
