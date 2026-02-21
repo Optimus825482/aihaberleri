@@ -23,7 +23,6 @@ import {
   Play,
   Newspaper,
   RefreshCw,
-  Cpu,
   HardDrive,
   MemoryStick,
   ArrowUpRight,
@@ -71,16 +70,6 @@ const PipelineChart = dynamic<{
     <div className="h-[200px] animate-pulse bg-muted/30 rounded-xl" />
   ),
 });
-
-const RealtimeVisitorChart = dynamic(
-  () => import("@/components/admin/RealtimeVisitorChart"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-[300px] animate-pulse bg-muted/30 rounded-xl" />
-    ),
-  },
-);
 
 const NOOP = () => {};
 
@@ -752,10 +741,10 @@ export default function AdminDashboard() {
     isLoading: agentLoading,
   } = useAgentStats(8000); // 8s refresh for realtime agent status
 
-  const { data: systemData } = useSystemStats(10000); // 10s refresh for realtime
-
   const dashboardStats = dashboardData?.success ? dashboardData.data : null;
   const agentStats = agentData?.success ? agentData.data : null;
+
+  const { data: systemData } = useSystemStats(10000); // 10s refresh for realtime
   const systemStats = systemData?.success ? systemData.data : null;
   const isAgentEnabled = agentStats?.agent?.enabled ?? false;
   const isLoading = dashLoading && agentLoading && !dashboardStats;
@@ -889,38 +878,25 @@ export default function AdminDashboard() {
         {/* Pipeline Stepper */}
         <AgentPipelineStepper />
 
-        {/* System Resources — Compact Ring Gauges */}
+        {/* Sunucu Kaynakları — RAM & Disk */}
         <Card className="border-indigo-500/20 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-0 px-4">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-indigo-500/10 rounded-xl">
-                <Cpu className="h-4 w-4 text-indigo-500" />
+                <MemoryStick className="h-4 w-4 text-indigo-500" />
               </div>
               <div>
                 <CardTitle className="text-sm font-black uppercase tracking-tight">
                   Sunucu Kaynakları
                 </CardTitle>
                 <CardDescription className="text-[10px]">
-                  CPU • RAM • Disk — 10s güncelleme
+                  RAM • Disk — 10s güncelleme
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <div className="flex items-center justify-center gap-4 sm:gap-8">
-              <ResourceRing
-                label="CPU"
-                percent={systemStats?.cpu?.percent || 0}
-                used={`${systemStats?.cpu?.cores || 0} çekirdek`}
-                total={
-                  systemStats?.cpu?.loadAvg?.["1m"]
-                    ? `Yük: ${systemStats.cpu.loadAvg["1m"]}`
-                    : undefined
-                }
-                icon={Cpu}
-                color="cyan"
-              />
-              <div className="h-16 w-px bg-border/50" />
               <ResourceRing
                 label="RAM"
                 percent={systemStats?.memory?.percent || 0}
@@ -942,7 +918,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Charts + Agent Status + GA4 Realtime — Responsive grid */}
+        {/* Charts + Agent Status — Responsive grid */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* Pipeline Chart — Takes more space */}
           <div className="lg:col-span-3">
@@ -961,9 +937,6 @@ export default function AdminDashboard() {
             />
           </div>
         </div>
-
-        {/* GA4 Realtime Visitors */}
-        <RealtimeVisitorChart />
 
         {/* Recent Articles */}
         {dashboardStats?.recentArticles &&

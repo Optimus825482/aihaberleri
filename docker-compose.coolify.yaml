@@ -38,14 +38,14 @@ services:
     image: redis:7-alpine
     container_name: aihaberleri-redis
     hostname: aihaberleri-redis
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
     deploy:
       resources:
         limits:
           cpus: "0.5"
-          memory: 512M
+          memory: 1G
         reservations:
-          memory: 128M
+          memory: 256M
     volumes:
       - redis_data:/data
     healthcheck:
@@ -70,7 +70,7 @@ services:
       resources:
         limits:
           cpus: "1.0"
-          memory: 1G
+          memory: 1.5G
         reservations:
           memory: 512M
     environment:
