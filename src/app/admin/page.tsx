@@ -52,7 +52,7 @@ import {
 const AgentPipelineStepper = dynamic(
   () =>
     import("@/components/admin/AgentPipelineStepper").then(
-      (m) => m.AgentPipelineStepper,
+      (m) => m.AgentPipelineStepper ?? m.default ?? (() => null),
     ),
   {
     ssr: false,
@@ -64,12 +64,18 @@ const AgentPipelineStepper = dynamic(
 
 const PipelineChart = dynamic<{
   data: Array<{ time: string; articles: number; views: number }>;
-}>(() => import("@/components/admin/PipelineChart"), {
+}>(
+  () =>
+    import("@/components/admin/PipelineChart").then(
+      (m) => m.default ?? m.PipelineChart ?? (() => null),
+    ),
+  {
   ssr: false,
   loading: () => (
     <div className="h-[200px] animate-pulse bg-muted/30 rounded-xl" />
   ),
-});
+  },
+);
 
 const NOOP = () => {};
 
@@ -260,6 +266,7 @@ const HeroMetric = memo(function HeroMetric({
   sub: string;
 }) {
   const c = COLOR_MAP[color] || COLOR_MAP.primary;
+  const SafeIcon = Icon ?? Activity;
   return (
     <div className="relative group">
       <div
@@ -274,7 +281,7 @@ const HeroMetric = memo(function HeroMetric({
             <div
               className={`shrink-0 p-2.5 ${c.bg} rounded-xl ring-1 ${c.ring}`}
             >
-              <Icon className={`h-5 w-5 ${c.text}`} />
+              <SafeIcon className={`h-5 w-5 ${c.text}`} />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
@@ -409,6 +416,7 @@ const ResourceRing = memo(function ResourceRing({
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
+  const SafeIcon = Icon ?? Activity;
   const statusColor =
     percent > 90
       ? "text-red-500"
@@ -444,7 +452,7 @@ const ResourceRing = memo(function ResourceRing({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <Icon className={`h-4 w-4 ${statusColor} mb-0.5`} />
+          <SafeIcon className={`h-4 w-4 ${statusColor} mb-0.5`} />
           <span className={`text-lg font-black ${statusColor}`}>
             {percent}%
           </span>
@@ -475,6 +483,7 @@ const QuickAction = memo(function QuickAction({
   color?: string;
 }) {
   const c = COLOR_MAP[color] || COLOR_MAP.primary;
+  const SafeIcon = Icon ?? Activity;
   return (
     <Link href={href}>
       <Button
@@ -482,7 +491,7 @@ const QuickAction = memo(function QuickAction({
         size="sm"
         className={`rounded-full text-xs gap-1.5 ${c.border} hover:${c.bg} ${c.borderHover} transition-all`}
       >
-        <Icon className={`h-3.5 w-3.5 ${c.text}`} />
+        <SafeIcon className={`h-3.5 w-3.5 ${c.text}`} />
         <span className="hidden sm:inline">{label}</span>
         <span className="sm:hidden">{label.split(" ")[0]}</span>
       </Button>

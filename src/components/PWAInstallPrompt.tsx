@@ -1,41 +1,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePWA } from "@/context/PWAContext";
 
 export function PWAInstallPrompt() {
+  const { isInstallable, installApp } = usePWA();
   const [show, setShow] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [neverShowAgain, setNeverShowAgain] = useState(false);
 
   useEffect(() => {
-    // Check if already asked or user selected never ask
-    const asked = localStorage.getItem("pwa-install-asked");
     const neverAsk = localStorage.getItem("pwa-install-never-ask");
 
-    if (neverAsk === "true") return;
+    if (neverAsk === "true" || !isInstallable) {
+      setShow(false);
+      return;
+    }
 
-    // Listen for beforeinstallprompt event
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    const asked = localStorage.getItem("pwa-install-asked");
 
-      // Show prompt after 10 seconds only if not asked before
-      if (!asked) {
-        setTimeout(() => {
-          setShow(true);
-        }, 10000);
-      }
-    };
+    if (!asked) {
+      const timer = window.setTimeout(() => {
+        setShow(true);
+      }, 10000);
 
-    window.addEventListener("beforeinstallprompt", handler);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handler);
-    };
-  }, []);
+      return () => {
+        window.clearTimeout(timer);
+      };
+    }
+  }, [isInstallable]);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
+    if (!isInstallable) return;
 
     if (neverShowAgain) {
       localStorage.setItem("pwa-install-never-ask", "true");
@@ -43,12 +38,7 @@ export function PWAInstallPrompt() {
       localStorage.setItem("pwa-install-asked", "true");
     }
 
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-
-    console.log(`User response to install prompt: ${outcome}`);
-
-    setDeferredPrompt(null);
+    await installApp();
     setShow(false);
   };
 
@@ -61,7 +51,7 @@ export function PWAInstallPrompt() {
     setShow(false);
   };
 
-  if (!show || !deferredPrompt) return null;
+  if (!show || !isInstallable) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

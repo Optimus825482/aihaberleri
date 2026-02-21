@@ -24,7 +24,7 @@ interface AgentStep {
     id: string;
     name: string;
     displayName: string;
-    icon: React.ElementType;
+    icon?: React.ElementType;
     status: "pending" | "running" | "completed" | "error" | "skipped";
     duration?: number;
     itemsProcessed?: number;
@@ -50,6 +50,35 @@ const DEFAULT_STEPS: AgentStep[] = [
     { id: "database-publisher", name: "database-publisher", displayName: "Yayınlama", icon: Database, status: "pending" },
 ];
 
+const STEP_META_BY_ID = DEFAULT_STEPS.reduce<Record<string, Pick<AgentStep, "displayName" | "icon" | "name">>>((acc, step) => {
+    acc[step.id] = {
+        displayName: step.displayName,
+        icon: step.icon,
+        name: step.name,
+    };
+    return acc;
+}, {});
+
+const normalizeSteps = (steps: unknown): AgentStep[] => {
+    if (!Array.isArray(steps) || steps.length === 0) {
+        return DEFAULT_STEPS;
+    }
+
+    return steps.map((rawStep: any) => {
+        const meta = STEP_META_BY_ID[rawStep?.id] ?? {};
+        return {
+            id: rawStep?.id ?? "unknown-step",
+            name: rawStep?.name ?? meta.name ?? rawStep?.id ?? "unknown-step",
+            displayName: rawStep?.displayName ?? meta.displayName ?? rawStep?.name ?? rawStep?.id ?? "Bilinmeyen Adım",
+            icon: meta.icon ?? Circle,
+            status: rawStep?.status ?? "pending",
+            duration: rawStep?.duration,
+            itemsProcessed: rawStep?.itemsProcessed,
+            error: rawStep?.error,
+        } as AgentStep;
+    });
+};
+
 export function AgentPipelineStepper() {
     const [pipelineState, setPipelineState] = useState<PipelineState>({
         isRunning: false,
@@ -65,7 +94,10 @@ export function AgentPipelineStepper() {
             if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.pipeline) {
-                    setPipelineState(data.pipeline);
+                    setPipelineState({
+                        ...data.pipeline,
+                        steps: normalizeSteps(data.pipeline.steps),
+                    });
                     setLastUpdate(new Date());
                 }
             }
@@ -85,7 +117,7 @@ export function AgentPipelineStepper() {
     }, [fetchPipelineStatus, pipelineState.isRunning]);
 
     const getStepIcon = (step: AgentStep) => {
-        const Icon = step.icon;
+        const Icon = step.icon ?? Circle;
 
         switch (step.status) {
             case "completed":
