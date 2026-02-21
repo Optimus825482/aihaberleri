@@ -28,6 +28,7 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
     volume,
     isMuted,
     play,
+    prefetch,
     pause,
     togglePlay,
     setRate,
@@ -40,6 +41,16 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
   } = useAudio();
 
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      prefetch({ title, text }).catch(() => {
+        // no-op
+      });
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+  }, [prefetch, text, title]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -122,16 +133,13 @@ export function AudioPlayer({ text, title }: AudioPlayerProps) {
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 <div
-                  className="w-1 h-3 bg-amber-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "0ms" }}
+                  className="w-1 h-3 bg-amber-500 rounded-full animate-bounce [animation-delay:0ms]"
                 />
                 <div
-                  className="w-1 h-3 bg-amber-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "150ms" }}
+                  className="w-1 h-3 bg-amber-500 rounded-full animate-bounce [animation-delay:150ms]"
                 />
                 <div
-                  className="w-1 h-3 bg-amber-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "300ms" }}
+                  className="w-1 h-3 bg-amber-500 rounded-full animate-bounce [animation-delay:300ms]"
                 />
               </div>
               <span className="text-sm text-amber-600 dark:text-amber-400 font-medium">

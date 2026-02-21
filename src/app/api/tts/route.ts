@@ -15,6 +15,19 @@ import { Errors, handleApiError } from "@/lib/errors";
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const CACHE_PREFIX = "tts:cache:";
 
+function normalizeTTSInput(text: string): string {
+  return text
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/\*\*|__|`|#+/g, " ")
+    .replace(/\s*[-•]\s+/g, ". ")
+    .replace(/\s*\n+\s*/g, ". ")
+    .replace(/\.{2,}/g, ".")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /**
  * Generate cache key from text and voice using MD5 hash
  */
@@ -73,7 +86,7 @@ export async function POST(req: NextRequest) {
     }
 
     // High limit for POST
-    const cleanText = text.replace(/<[^>]*>/g, "").slice(0, 4000);
+    const cleanText = normalizeTTSInput(text).slice(0, 4000);
     console.log(
       `[TTS POST] Processing ${cleanText.length} chars, voice=${voice}, IP=${clientIP}`,
     );

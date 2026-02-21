@@ -36,6 +36,7 @@ type AudioState = {
 
 type AudioContextType = AudioState & {
   play: (article?: { title: string; text: string }) => void;
+  prefetch: (article: { title: string; text: string }) => Promise<void>;
   pause: () => void;
   togglePlay: () => void;
   stop: () => void;
@@ -69,6 +70,13 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   // Ref to track current audio URL for proper cleanup (prevents stale closure)
   const currentAudioUrlRef = useRef<string | null>(null);
+  const audioCacheRef = useRef(
+    new Map<string, { url: string; metadata: WordBoundary[]; createdAt: number }>(),
+  );
+  const pendingFetchRef = useRef(
+    new Map<string, Promise<{ url: string; metadata: WordBoundary[] } | null>>(),
+  );
+  const MAX_CLIENT_AUDIO_CACHE = 8;
 
   // Load settings from LocalStorage
   useEffect(() => {
@@ -103,8 +111,23 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
   /**
    * Revokes the current audio URL to prevent memory leaks
    */
+  const revokeUrl = useCallback((url: string) => {
+    try {
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.warn("Failed to revoke audio URL:", e);
+    }
+  }, []);
+
+  const isUrlInCache = useCallback((url: string) => {
+    for (const item of audioCacheRef.current.values()) {
+      if (item.url === url) return true;
+    }
+    return false;
+  }, []);
+
   const revokeCurrentAudioUrl = useCallback(() => {
-    if (currentAudioUrlRef.current) {
+    if (currentAudioUrlRef.current && !isUrlInCache(currentAudioUrlRef.current)) {
       try {
         URL.revokeObjectURL(currentAudioUrlRef.current);
       } catch (e) {
@@ -112,24 +135,75 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
       }
       currentAudioUrlRef.current = null;
     }
+  }, [isUrlInCache]);
+
+  const toCacheKey = useCallback((title: string, text: string, voice: string) => {
+    const source = `${voice}|${title}|${text.slice(0, 400)}`;
+    let hash = 0;
+    for (let i = 0; i < source.length; i++) {
+      hash = (hash << 5) - hash + source.charCodeAt(i);
+      hash |= 0;
+    }
+    return `tts:${Math.abs(hash)}`;
   }, []);
+
+  const setCacheEntry = useCallback(
+    (key: string, value: { url: string; metadata: WordBoundary[] }) => {
+      audioCacheRef.current.set(key, {
+        ...value,
+        createdAt: Date.now(),
+      });
+
+      if (audioCacheRef.current.size > MAX_CLIENT_AUDIO_CACHE) {
+        let oldestKey: string | null = null;
+        let oldestTime = Infinity;
+
+        for (const [cacheKey, cacheValue] of audioCacheRef.current.entries()) {
+          if (cacheValue.createdAt < oldestTime && cacheValue.url !== currentAudioUrlRef.current) {
+            oldestTime = cacheValue.createdAt;
+            oldestKey = cacheKey;
+          }
+        }
+
+        if (oldestKey) {
+          const victim = audioCacheRef.current.get(oldestKey);
+          if (victim) revokeUrl(victim.url);
+          audioCacheRef.current.delete(oldestKey);
+        }
+      }
+    },
+    [revokeUrl],
+  );
 
   const cleanText = (html: string) => {
     return html
       .replace(/<[^>]*>/g, " ")
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+      .replace(/https?:\/\/\S+/g, "")
+      .replace(/\*\*|__|`|#+/g, " ")
+      .replace(/\s*[-•]\s+/g, ". ")
+      .replace(/\s*\n+\s*/g, ". ")
+      .replace(/\.{2,}/g, ".")
       .replace(/\s+/g, " ")
       .trim();
   };
 
-  const fetchAudio = async (text: string, title: string) => {
+  const fetchAudio = async (
+    text: string,
+    title: string,
+    options?: { silent?: boolean; voiceOverride?: string },
+  ) => {
+    const activeVoice = options?.voiceOverride ?? state.voice;
     try {
-      setState((s) => ({ ...s, isLoading: true }));
+      if (!options?.silent) {
+        setState((s) => ({ ...s, isLoading: true }));
+      }
       const fullText = `${title}. ${cleanText(text)}`;
 
       const response = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: fullText, voice: state.voice }),
+        body: JSON.stringify({ text: fullText, voice: activeVoice }),
       });
 
       if (!response.ok) {
@@ -142,9 +216,6 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
       if (!data.audio) {
         throw new Error("TTS response missing audio data");
       }
-
-      // Revoke previous URL before creating new one
-      revokeCurrentAudioUrl();
 
       // Optimized base64 decode using Uint8Array.from
       const byteArray = Uint8Array.from(atob(data.audio), (c) => c.charCodeAt(0));
@@ -161,14 +232,49 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
       revokeCurrentAudioUrl();
       return null;
     } finally {
-      setState((s) => ({ ...s, isLoading: false }));
+      if (!options?.silent) {
+        setState((s) => ({ ...s, isLoading: false }));
+      }
     }
   };
 
+  const getOrFetchAudio = useCallback(
+    async (
+      article: { title: string; text: string },
+      options?: { silent?: boolean },
+    ) => {
+      const key = toCacheKey(article.title, article.text, state.voice);
+      const cached = audioCacheRef.current.get(key);
+      if (cached) {
+        return { key, ...cached };
+      }
+
+      const pending = pendingFetchRef.current.get(key);
+      if (pending) {
+        const reused = await pending;
+        if (!reused) return null;
+        return { key, ...reused, createdAt: Date.now() };
+      }
+
+      const request = fetchAudio(article.text, article.title, {
+        silent: options?.silent,
+        voiceOverride: state.voice,
+      });
+      pendingFetchRef.current.set(key, request);
+
+      const result = await request;
+      pendingFetchRef.current.delete(key);
+
+      if (!result) return null;
+      setCacheEntry(key, result);
+      return { key, ...result, createdAt: Date.now() };
+    },
+    [fetchAudio, setCacheEntry, state.voice, toCacheKey],
+  );
+
   const play = async (article?: { title: string; text: string }) => {
     if (article) {
-      // Note: revokeCurrentAudioUrl is called inside fetchAudio before creating new URL
-      const result = await fetchAudio(article.text, article.title);
+      const result = await getOrFetchAudio(article, { silent: false });
       if (result) {
         setState((s) => ({
           ...s,
@@ -196,6 +302,13 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
       setState((s) => ({ ...s, isPlaying: true }));
     }
   };
+
+  const prefetch = useCallback(
+    async (article: { title: string; text: string }) => {
+      await getOrFetchAudio(article, { silent: true });
+    },
+    [getOrFetchAudio],
+  );
 
   const pause = () => {
     if (audioRef.current) {
@@ -329,21 +442,30 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
       audio.src = "";
       // Use ref for cleanup to avoid stale closure issue
       if (currentAudioUrlRef.current) {
-        try {
-          URL.revokeObjectURL(currentAudioUrlRef.current);
-        } catch (e) {
-          console.warn("Failed to revoke audio URL on cleanup:", e);
+        if (!isUrlInCache(currentAudioUrlRef.current)) {
+          try {
+            URL.revokeObjectURL(currentAudioUrlRef.current);
+          } catch (e) {
+            console.warn("Failed to revoke audio URL on cleanup:", e);
+          }
         }
         currentAudioUrlRef.current = null;
       }
+
+      for (const item of audioCacheRef.current.values()) {
+        revokeUrl(item.url);
+      }
+      audioCacheRef.current.clear();
+      pendingFetchRef.current.clear();
     };
-  }, []);
+  }, [isUrlInCache, revokeUrl]);
 
   return (
     <AudioContext.Provider
       value={{
         ...state,
         play,
+        prefetch,
         pause,
         togglePlay,
         stop,
