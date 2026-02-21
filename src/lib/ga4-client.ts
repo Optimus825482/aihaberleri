@@ -5,8 +5,8 @@
  * In-memory cache ile rate limit koruması sağlar.
  *
  * Desteklenen auth yöntemleri (öncelik sırasıyla):
- * 1. GOOGLE_SERVICE_ACCOUNT_KEY: Tam JSON service account key (önerilen, Docker uyumlu)
- * 2. GA_CLIENT_EMAIL + GA_PRIVATE_KEY: Ayrı env variables (newline sorunlarına dikkat)
+ * 1. GA_CLIENT_EMAIL + GA_PRIVATE_KEY: GA4-spesifik service account (analyticsnewaccount)
+ * 2. GOOGLE_SERVICE_ACCOUNT_KEY: Tam JSON service account key (fallback)
  *
  * Gerekli:
  * - GA4_PROPERTY_ID: GA4 property numarası (numeric, ör: 123456789)
@@ -36,36 +36,40 @@ function getClient() {
 
   const propertyId = process.env.GA4_PROPERTY_ID;
   if (!propertyId) {
-    throw new Error("GA4 Data API yapılandırması eksik. GA4_PROPERTY_ID gerekli.");
+    throw new Error(
+      "GA4 Data API yapılandırması eksik. GA4_PROPERTY_ID gerekli.",
+    );
   }
 
   let credentials: { client_email: string; private_key: string };
 
-  // Yöntem 1: Tam JSON service account key (Docker-friendly, newline sorunu yok)
-  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+  // Yöntem 1: GA4-spesifik env variables (analyticsnewaccount service account)
+  // GA4 erişimi olan service account bu env'lerde tanımlı
+  const clientEmail = process.env.GA_CLIENT_EMAIL;
+  const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+  if (clientEmail && privateKey) {
+    credentials = { client_email: clientEmail, private_key: privateKey };
+    console.log(`[GA4] Using GA_CLIENT_EMAIL (${clientEmail}) for auth`);
+  }
+  // Yöntem 2: Tam JSON service account key (fallback)
+  else if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
     try {
       const parsed = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
       credentials = {
         client_email: parsed.client_email,
         private_key: parsed.private_key,
       };
-      console.log("[GA4] Using GOOGLE_SERVICE_ACCOUNT_KEY (JSON) for auth");
+      console.log(
+        `[GA4] Using GOOGLE_SERVICE_ACCOUNT_KEY (${parsed.client_email}) for auth`,
+      );
     } catch (e) {
       throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY geçerli bir JSON değil.");
     }
-  }
-  // Yöntem 2: Ayrı env variables (fallback)
-  else {
-    const clientEmail = process.env.GA_CLIENT_EMAIL;
-    const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, "\n");
-
-    if (!clientEmail || !privateKey) {
-      throw new Error(
-        "GA4 Data API yapılandırması eksik. GOOGLE_SERVICE_ACCOUNT_KEY veya GA_CLIENT_EMAIL + GA_PRIVATE_KEY gerekli.",
-      );
-    }
-
-    credentials = { client_email: clientEmail, private_key: privateKey };
+  } else {
+    throw new Error(
+      "GA4 Data API yapılandırması eksik. GA_CLIENT_EMAIL + GA_PRIVATE_KEY veya GOOGLE_SERVICE_ACCOUNT_KEY gerekli.",
+    );
   }
 
   const auth = new google.auth.GoogleAuth({
