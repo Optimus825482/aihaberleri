@@ -32,6 +32,7 @@ import {
   Gauge,
   RotateCcw,
   DollarSign,
+  Sparkles,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -131,6 +132,12 @@ const menuGroups = [
         title: "SEO Dashboard",
         href: "/admin/seo",
         icon: Search,
+        requiredResource: null,
+      },
+      {
+        title: "İçerik Kalitesi",
+        href: "/admin/content-quality",
+        icon: Sparkles,
         requiredResource: null,
       },
       {

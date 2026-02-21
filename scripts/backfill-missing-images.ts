@@ -8,7 +8,7 @@
  *   npx tsx scripts/backfill-missing-images.ts --dry-run
  */
 
-import { db } from "@/lib/db";
+import { db } from "../src/lib/db";
 import { createHash } from "crypto";
 
 type Args = {
