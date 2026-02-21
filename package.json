@@ -26,6 +26,7 @@
     "test:pipeline": "tsx scripts/test-multi-agent-pipeline.ts",
     "test:hybrid": "tsx scripts/test-hybrid-models.ts",
     "backfill:images": "tsx scripts/backfill-missing-images.ts",
+    "report:content-quality": "tsx scripts/report-content-quality.ts",
     "worker:orchestrator": "tsx src/workers/orchestrator.worker.ts",
     "worker:seo-calculator": "tsx src/workers/seo-calculator.worker.ts",
     "worker:seo-optimizer": "tsx src/workers/seo-optimizer.worker.ts",

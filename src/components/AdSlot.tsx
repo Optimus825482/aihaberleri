@@ -63,8 +63,19 @@ export const AdSlot = ({
     }, [isEnabled, clientId, pathname, canLoad]);
 
     useEffect(() => {
-        setCanLoad(hasAdvertisingConsent());
-    }, []);
+        const syncConsent = () => {
+            setCanLoad(hasAdvertisingConsent());
+        };
+
+        syncConsent();
+        window.addEventListener("cookie-consent-updated", syncConsent);
+        window.addEventListener("storage", syncConsent);
+
+        return () => {
+            window.removeEventListener("cookie-consent-updated", syncConsent);
+            window.removeEventListener("storage", syncConsent);
+        };
+    }, [pathname]);
 
     useEffect(() => {
         if (!shouldRender || !adElement) return;

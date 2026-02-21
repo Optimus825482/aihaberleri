@@ -34,101 +34,115 @@ export const metadata: Metadata = {
 };
 
 async function getEnglishArticles() {
-  // Get articles with English translations (12 for grid + hero uses first 10)
-  const translations = await db.articleTranslation.findMany({
-    where: {
-      locale: "en",
-      article: {
-        status: "PUBLISHED",
-      },
-    },
-    include: {
-      article: {
-        include: {
-          category: true,
+  try {
+    const translations = await db.articleTranslation.findMany({
+      where: {
+        locale: "en",
+        article: {
+          status: "PUBLISHED",
         },
       },
-    },
-    orderBy: {
-      article: {
-        publishedAt: "desc",
+      include: {
+        article: {
+          include: {
+            category: true,
+          },
+        },
       },
-    },
-    take: 12,
-  });
+      orderBy: {
+        article: {
+          publishedAt: "desc",
+        },
+      },
+      take: 12,
+    });
 
-  return translations.map((t: any) => ({
-    id: t.article.id,
-    title: t.title,
-    slug: t.slug,
-    excerpt: t.excerpt || "",
-    imageUrl: t.article.imageUrl,
-    publishedAt: t.article.publishedAt,
-    category: t.article.category,
-    views: t.article.views,
-  }));
+    return translations.map((t: any) => ({
+      id: t.article.id,
+      title: t.title,
+      slug: t.slug,
+      excerpt: t.excerpt || "",
+      imageUrl: t.article.imageUrl,
+      publishedAt: t.article.publishedAt,
+      category: t.article.category,
+      views: t.article.views,
+    }));
+  } catch (error) {
+    console.error("[EN_HOME] getEnglishArticles error:", error);
+    return [];
+  }
 }
 
 async function getCategories() {
-  return db.category.findMany({
-    orderBy: { order: "asc" },
-  });
+  try {
+    return await db.category.findMany({
+      orderBy: { order: "asc" },
+    });
+  } catch (error) {
+    console.error("[EN_HOME] getCategories error:", error);
+    return [];
+  }
 }
 
 async function getEnglishTopicHeatMap() {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  try {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
 
-  const topicFromDb = await db.article.findMany({
-    where: {
-      status: "PUBLISHED",
-      publishedAt: { gte: todayStart },
-      topic: { not: null },
-    },
-    select: {
-      topic: true,
-      trendScore: true,
-      publishedAt: true,
-      title: true,
-      titleEn: true,
-      translations: {
-        where: { locale: "en" },
-        select: { title: true },
-        take: 1,
+    const topicFromDb = await db.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        publishedAt: { gte: todayStart },
+        topic: { not: null },
       },
-    },
-    orderBy: { publishedAt: "asc" },
-    take: 120,
-  });
+      select: {
+        topic: true,
+        trendScore: true,
+        publishedAt: true,
+        title: true,
+        titleEn: true,
+        translations: {
+          where: { locale: "en" },
+          select: { title: true },
+          take: 1,
+        },
+      },
+      orderBy: { publishedAt: "asc" },
+      take: 120,
+    });
 
-  const topicMap = new Map<string, { first: number; last: number; max: number; label: string }>();
+    const topicMap = new Map<string, { first: number; last: number; max: number; label: string }>();
 
-  topicFromDb.forEach((item) => {
-    if (!item.topic) return;
-    const score = item.trendScore ?? 0;
-    const label = item.translations[0]?.title || item.titleEn || item.title;
-    const existing = topicMap.get(item.topic);
+    topicFromDb.forEach((item) => {
+      if (!item.topic) return;
+      const score = item.trendScore ?? 0;
+      const label = item.translations[0]?.title || item.titleEn || item.title;
+      const existing = topicMap.get(item.topic);
 
-    if (!existing) {
-      topicMap.set(item.topic, { first: score, last: score, max: score, label });
-      return;
-    }
+      if (!existing) {
+        topicMap.set(item.topic, { first: score, last: score, max: score, label });
+        return;
+      }
 
-    existing.last = score;
-    existing.max = Math.max(existing.max, score);
-    existing.label = label;
-    topicMap.set(item.topic, existing);
-  });
+      existing.last = score;
+      existing.max = Math.max(existing.max, score);
+      existing.label = label;
+      topicMap.set(item.topic, existing);
+    });
 
-  return Array.from(topicMap.entries())
-    .map(([topic, values]) => ({
-      topic,
-      score: values.max,
-      rise: Math.max(0, values.last - values.first),
-      label: values.label,
-    }))
-    .sort((a, b) => b.rise - a.rise || b.score - a.score)
-    .slice(0, 5);
+    return Array.from(topicMap.entries())
+      .map(([topic, values]) => ({
+        topic,
+        score: values.max,
+        rise: Math.max(0, values.last - values.first),
+        label: values.label,
+      }))
+      .sort((a, b) => b.rise - a.rise || b.score - a.score)
+      .slice(0, 5);
+  } catch (error) {
+    console.error("[EN_HOME] getEnglishTopicHeatMap error:", error);
+    return [];
+  }
 }
 
 export default async function EnglishHomePage() {

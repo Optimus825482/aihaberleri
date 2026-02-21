@@ -32,17 +32,29 @@ export const AdSenseBootstrap = () => {
     const isEnabled = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "true";
 
     useEffect(() => {
-        if (!isEnabled || !clientId) {
-            setCanLoad(false);
-            return;
-        }
+        const syncConsent = () => {
+            if (!isEnabled || !clientId) {
+                setCanLoad(false);
+                return;
+            }
 
-        if (pathname?.startsWith("/admin")) {
-            setCanLoad(false);
-            return;
-        }
+            if (pathname?.startsWith("/admin")) {
+                setCanLoad(false);
+                return;
+            }
 
-        setCanLoad(hasAdvertisingConsent());
+            setCanLoad(hasAdvertisingConsent());
+        };
+
+        syncConsent();
+
+        window.addEventListener("cookie-consent-updated", syncConsent);
+        window.addEventListener("storage", syncConsent);
+
+        return () => {
+            window.removeEventListener("cookie-consent-updated", syncConsent);
+            window.removeEventListener("storage", syncConsent);
+        };
     }, [pathname, isEnabled, clientId]);
 
     if (!canLoad || !clientId) return null;

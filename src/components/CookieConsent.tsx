@@ -23,6 +23,11 @@ const buildPreferences = (
 
 const savePreferences = (preferences: CookiePreferences) => {
   localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(preferences));
+  window.dispatchEvent(
+    new CustomEvent("cookie-consent-updated", {
+      detail: preferences,
+    }),
+  );
 };
 
 export function CookieConsent() {
