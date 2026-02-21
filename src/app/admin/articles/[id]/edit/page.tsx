@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
@@ -52,10 +52,10 @@ interface Article {
 export default function EditArticlePage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+    params: { id: string };
 }) {
   const router = useRouter();
-  const { id } = use(params); // Unwrap the Promise using React's use() hook
+  const { id } = params;
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
