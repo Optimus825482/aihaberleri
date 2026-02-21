@@ -24,6 +24,7 @@ interface SearchResult {
 function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams?.get("q") || "";
+  const mode = searchParams?.get("mode") || "";
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +39,7 @@ function SearchContent() {
 
     try {
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(searchQuery.trim())}`,
+        `/api/search?q=${encodeURIComponent(searchQuery.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}`,
       );
       const data = await response.json();
 
@@ -65,7 +66,7 @@ function SearchContent() {
     } else {
       setResults([]);
     }
-  }, [query]);
+  }, [query, mode]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +75,7 @@ function SearchContent() {
       window.history.pushState(
         {},
         "",
-        `/search?q=${encodeURIComponent(searchInput.trim())}`,
+        `/search?q=${encodeURIComponent(searchInput.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}`,
       );
       performSearch(searchInput.trim());
     }
@@ -144,6 +145,11 @@ function SearchContent() {
               <span className="text-white font-medium">"{query}"</span> için{" "}
               {loading ? "aranıyor..." : `${results.length} sonuç bulundu`}
             </p>
+            {mode === "company" && (
+              <p className="text-xs text-ai-primary mt-1">
+                Şirket modu aktif: sonuçlar başlık/özet/etiket odaklı filtrelenir
+              </p>
+            )}
           </div>
         )}
 

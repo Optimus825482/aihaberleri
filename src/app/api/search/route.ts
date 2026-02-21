@@ -7,29 +7,47 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get("q");
+    const mode = searchParams.get("mode");
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const page = parseInt(searchParams.get("page") || "1", 10);
 
     if (!query || query.trim().length < 2) {
       return NextResponse.json(
         { error: "Arama sorgusu en az 2 karakter olmalıdır" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const searchTerm = query.trim();
     const skip = (page - 1) * limit;
 
-    // Search in title, excerpt, and content
+    const searchWhere =
+      mode === "company"
+        ? {
+            status: "PUBLISHED" as const,
+            OR: [
+              { title: { contains: searchTerm, mode: "insensitive" as const } },
+              {
+                excerpt: { contains: searchTerm, mode: "insensitive" as const },
+              },
+              { keywords: { has: searchTerm } },
+            ],
+          }
+        : {
+            status: "PUBLISHED" as const,
+            OR: [
+              { title: { contains: searchTerm, mode: "insensitive" as const } },
+              {
+                excerpt: { contains: searchTerm, mode: "insensitive" as const },
+              },
+              {
+                content: { contains: searchTerm, mode: "insensitive" as const },
+              },
+            ],
+          };
+
     const articles = await db.article.findMany({
-      where: {
-        status: "PUBLISHED",
-        OR: [
-          { title: { contains: searchTerm, mode: "insensitive" } },
-          { excerpt: { contains: searchTerm, mode: "insensitive" } },
-          { content: { contains: searchTerm, mode: "insensitive" } },
-        ],
-      },
+      where: searchWhere,
       select: {
         id: true,
         title: true,
@@ -46,24 +64,14 @@ export async function GET(request: Request) {
           },
         },
       },
-      orderBy: [
-        { trendScore: "desc" },
-        { publishedAt: "desc" },
-      ],
+      orderBy: [{ trendScore: "desc" }, { publishedAt: "desc" }],
       skip,
       take: limit,
     });
 
     // Get total count for pagination
     const totalCount = await db.article.count({
-      where: {
-        status: "PUBLISHED",
-        OR: [
-          { title: { contains: searchTerm, mode: "insensitive" } },
-          { excerpt: { contains: searchTerm, mode: "insensitive" } },
-          { content: { contains: searchTerm, mode: "insensitive" } },
-        ],
-      },
+      where: searchWhere,
     });
 
     return NextResponse.json({

@@ -355,7 +355,7 @@ export default async function HomePage() {
               {modelTagCards.map((item) => (
                 <Link
                   key={item.label}
-                  href={`/search?q=${encodeURIComponent(item.label)}`}
+                  href={`/search?q=${encodeURIComponent(item.label)}&mode=company`}
                   className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-4 hover:border-ai-primary/40 transition-colors"
                 >
                   <p className="text-xs text-ai-text-muted">Model/Şirket Kartı</p>
