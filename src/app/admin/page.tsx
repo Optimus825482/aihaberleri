@@ -72,6 +72,16 @@ const PipelineChart = dynamic<{
   ),
 });
 
+const RealtimeVisitorChart = dynamic(
+  () => import("@/components/admin/RealtimeVisitorChart"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[300px] animate-pulse bg-muted/30 rounded-xl" />
+    ),
+  },
+);
+
 const NOOP = () => {};
 
 // === Animated Number Component ===
@@ -902,7 +912,11 @@ export default function AdminDashboard() {
                 label="CPU"
                 percent={systemStats?.cpu?.percent || 0}
                 used={`${systemStats?.cpu?.cores || 0} çekirdek`}
-                total={systemStats?.cpu?.loadAvg?.["1m"] ? `Yük: ${systemStats.cpu.loadAvg["1m"]}` : undefined}
+                total={
+                  systemStats?.cpu?.loadAvg?.["1m"]
+                    ? `Yük: ${systemStats.cpu.loadAvg["1m"]}`
+                    : undefined
+                }
                 icon={Cpu}
                 color="cyan"
               />
@@ -928,7 +942,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        {/* Charts + Agent Status — Responsive grid */}
+        {/* Charts + Agent Status + GA4 Realtime — Responsive grid */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* Pipeline Chart — Takes more space */}
           <div className="lg:col-span-3">
@@ -947,6 +961,9 @@ export default function AdminDashboard() {
             />
           </div>
         </div>
+
+        {/* GA4 Realtime Visitors */}
+        <RealtimeVisitorChart />
 
         {/* Recent Articles */}
         {dashboardStats?.recentArticles &&
@@ -987,7 +1004,6 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           )}
-
       </div>
     </AdminLayout>
   );
