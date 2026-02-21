@@ -53,19 +53,20 @@ export function CategoryFilters({ categories, locale = "tr", selectedCategory }:
   return (
     <div className="mb-6 sm:mb-8">
       {/* Section Label */}
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-3 px-1">
         <span className="material-symbols-outlined text-[18px] text-ai-primary">category</span>
-        <span className="text-xs font-semibold text-ai-text-secondary uppercase tracking-wider">{t.categories}</span>
+        <span className="text-xs font-semibold text-ai-text-secondary uppercase tracking-[0.14em]">{t.categories}</span>
       </div>
 
       {/* Horizontal Scroll Container - mobile-optimized */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory -mx-1 px-1">
+      <div className="rounded-2xl border border-ai-surface-border/80 bg-ai-surface-card/30 p-2.5">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory -mx-1 px-1">
         {/* All Categories Button */}
         <Link
           href={getCategoryLink("")}
-          className={`group flex-shrink-0 snap-start flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-300 whitespace-nowrap ${selectedCategory === "" || !selectedCategory
-              ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-md shadow-ai-primary/20"
-              : "bg-ai-surface-card/80 border border-ai-surface-border text-gray-300 hover:border-ai-primary/50 hover:text-ai-primary"
+            className={`group flex-shrink-0 snap-start flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold transition-all duration-300 whitespace-nowrap ${selectedCategory === "" || !selectedCategory
+              ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-md shadow-ai-primary/25 ring-1 ring-ai-primary/40"
+              : "bg-ai-surface-dark/60 border border-ai-surface-border text-gray-300 hover:border-ai-primary/50 hover:text-ai-primary hover:bg-ai-surface-dark"
             }`}
         >
           <span className="material-symbols-outlined text-[16px]">apps</span>
@@ -77,15 +78,16 @@ export function CategoryFilters({ categories, locale = "tr", selectedCategory }:
           <Link
             key={category.id}
             href={getCategoryLink(category.slug)}
-            className={`group flex-shrink-0 snap-start flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-300 whitespace-nowrap ${selectedCategory === category.slug
-                ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-md shadow-ai-primary/20"
-                : "bg-ai-surface-card/80 border border-ai-surface-border text-gray-300 hover:border-ai-primary/50 hover:text-ai-primary"
+            className={`group flex-shrink-0 snap-start flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold transition-all duration-300 whitespace-nowrap ${selectedCategory === category.slug
+              ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-md shadow-ai-primary/25 ring-1 ring-ai-primary/40"
+              : "bg-ai-surface-dark/60 border border-ai-surface-border text-gray-300 hover:border-ai-primary/50 hover:text-ai-primary hover:bg-ai-surface-dark"
               }`}
           >
             <span className="material-symbols-outlined text-[16px]">{getIcon(category.slug)}</span>
             <span>{category.name}</span>
           </Link>
         ))}
+        </div>
       </div>
     </div>
   );

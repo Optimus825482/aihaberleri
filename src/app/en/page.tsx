@@ -74,15 +74,72 @@ async function getCategories() {
   });
 }
 
+async function getEnglishTopicHeatMap() {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const topicFromDb = await db.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      publishedAt: { gte: todayStart },
+      topic: { not: null },
+    },
+    select: {
+      topic: true,
+      trendScore: true,
+      publishedAt: true,
+      title: true,
+      titleEn: true,
+      translations: {
+        where: { locale: "en" },
+        select: { title: true },
+        take: 1,
+      },
+    },
+    orderBy: { publishedAt: "asc" },
+    take: 120,
+  });
+
+  const topicMap = new Map<string, { first: number; last: number; max: number; label: string }>();
+
+  topicFromDb.forEach((item) => {
+    if (!item.topic) return;
+    const score = item.trendScore ?? 0;
+    const label = item.translations[0]?.title || item.titleEn || item.title;
+    const existing = topicMap.get(item.topic);
+
+    if (!existing) {
+      topicMap.set(item.topic, { first: score, last: score, max: score, label });
+      return;
+    }
+
+    existing.last = score;
+    existing.max = Math.max(existing.max, score);
+    existing.label = label;
+    topicMap.set(item.topic, existing);
+  });
+
+  return Array.from(topicMap.entries())
+    .map(([topic, values]) => ({
+      topic,
+      score: values.max,
+      rise: Math.max(0, values.last - values.first),
+      label: values.label,
+    }))
+    .sort((a, b) => b.rise - a.rise || b.score - a.score)
+    .slice(0, 5);
+}
+
 export default async function EnglishHomePage() {
   // Structured Data
   const organizationSchema = generateOrganizationSchema();
   const websiteSchema = generateWebSiteSchema();
 
   // Single query for articles — hero uses first 10, grid uses all 12
-  const [articles, categories] = await Promise.all([
+  const [articles, categories, topicHeatMap] = await Promise.all([
     getEnglishArticles(),
     getCategories(),
+    getEnglishTopicHeatMap(),
   ]);
 
   const heroArticles = articles.slice(0, 10);
@@ -105,6 +162,45 @@ export default async function EnglishHomePage() {
         />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <section className="mt-8 rounded-2xl border border-ai-surface-border bg-gradient-to-br from-ai-surface-card via-ai-surface-card to-ai-surface-dark p-5 sm:p-6">
+            <h2 className="text-lg font-black text-white flex items-center gap-2 mb-4">
+              <span className="material-symbols-outlined text-[20px] text-orange-300">
+                grid_view
+              </span>
+              <span className="bg-gradient-to-r from-orange-300 via-rose-300 to-violet-300 bg-clip-text text-transparent">
+                Topic Heat Map
+              </span>
+            </h2>
+            <p className="text-xs text-ai-text-muted mb-4">
+              Top 5 fastest-rising topics today (by trend score delta)
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {topicHeatMap.map((item, idx) => (
+                <Link
+                  key={item.topic}
+                  href={`/search?q=${encodeURIComponent(item.topic)}`}
+                  className="group rounded-xl border border-ai-surface-border bg-ai-surface-dark/90 p-3.5 hover:border-ai-primary/40 hover:bg-ai-surface-card transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-[11px] text-ai-text-muted">#{idx + 1} rising topic</p>
+                    <span className="rounded-full border border-ai-primary/30 bg-ai-primary/10 px-2 py-0.5 text-[10px] font-semibold text-ai-primary">
+                      {item.rise > 0 ? "Rising" : "Stable"}
+                    </span>
+                  </div>
+
+                  <p className="mt-2 text-sm font-semibold text-white line-clamp-2 group-hover:text-ai-primary transition-colors">
+                    {item.label}
+                  </p>
+
+                  <p className="mt-2 text-xs text-ai-text-secondary">
+                    {item.rise > 0 ? `Rise +${item.rise}` : "No rise"} · Score {item.score}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+
           {/* Category Filter Chips */}
           <CategoryFilters categories={categories} locale="en" />
 

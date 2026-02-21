@@ -166,7 +166,7 @@ export default async function HomePage() {
     trendScore: number | null;
     category: { name: string; slug: string };
   }> = [];
-  let topicHeatMap: Array<{ topic: string; score: number; rise: number }> = [];
+  let topicHeatMap: Array<{ topic: string; score: number; rise: number; label: string }> = [];
   let modelTagCards: Array<{ label: string; count: number }> = [];
   let featureSettings = {
     showDailyBriefing: true,
@@ -292,6 +292,7 @@ export default async function HomePage() {
             topic: true,
             trendScore: true,
             publishedAt: true,
+            title: true,
           },
           orderBy: { publishedAt: "asc" },
           take: 120,
@@ -334,19 +335,25 @@ export default async function HomePage() {
     categories = categoriesFromDb;
     briefingArticles = briefingFromDb;
 
-    const topicMap = new Map<string, { first: number; last: number; max: number }>();
+    const topicMap = new Map<string, { first: number; last: number; max: number; label: string }>();
     topicFromDb.forEach((item) => {
       if (!item.topic) return;
       const score = item.trendScore ?? 0;
       const existing = topicMap.get(item.topic);
 
       if (!existing) {
-        topicMap.set(item.topic, { first: score, last: score, max: score });
+        topicMap.set(item.topic, {
+          first: score,
+          last: score,
+          max: score,
+          label: item.title,
+        });
         return;
       }
 
       existing.last = score;
       existing.max = Math.max(existing.max, score);
+      existing.label = item.title;
       topicMap.set(item.topic, existing);
     });
 
@@ -355,6 +362,7 @@ export default async function HomePage() {
         topic,
         score: values.max,
         rise: Math.max(0, values.last - values.first),
+        label: values.label,
       }))
       .sort((a, b) => b.rise - a.rise || b.score - a.score)
       .slice(0, 5);
@@ -531,7 +539,7 @@ export default async function HomePage() {
                       </div>
 
                       <p className="mt-2 text-sm font-semibold text-white line-clamp-2 group-hover:text-ai-primary transition-colors">
-                        {formatTopicLabel(item.topic)}
+                        {item.label || formatTopicLabel(item.topic)}
                       </p>
 
                       <div className="mt-3 space-y-2">
