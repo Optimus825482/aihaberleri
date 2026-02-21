@@ -28,9 +28,11 @@ const categoryIcons: Record<string, string> = {
 const texts = {
   tr: {
     all: "Tümü",
+    categories: "Kategoriler",
   },
   en: {
     all: "All",
+    categories: "Categories",
   },
 };
 
@@ -49,35 +51,42 @@ export function CategoryFilters({ categories, locale = "tr", selectedCategory }:
   };
 
   return (
-    <div className="mb-6 sm:mb-8 flex flex-wrap gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide">
-      {/* All Categories Button */}
-      <Link
-        href={getCategoryLink("")}
-        className={`group flex items-center gap-2 rounded-full px-4 py-2 text-xs sm:text-sm font-semibold transition-all duration-300 ${
-          selectedCategory === "" || !selectedCategory
-            ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-lg shadow-ai-primary/30 scale-105"
-            : "bg-white dark:bg-ai-surface-card border-2 border-gray-200 dark:border-ai-surface-border text-slate-700 dark:text-gray-300 hover:border-ai-primary hover:text-ai-primary dark:hover:border-ai-primary dark:hover:text-ai-primary hover:shadow-md"
-        }`}
-      >
-        <span className="material-symbols-outlined text-[18px] sm:text-[20px]">apps</span>
-        <span>{t.all}</span>
-      </Link>
+    <div className="mb-6 sm:mb-8">
+      {/* Section Label */}
+      <div className="flex items-center gap-2 mb-3">
+        <span className="material-symbols-outlined text-[18px] text-ai-primary">category</span>
+        <span className="text-xs font-semibold text-ai-text-secondary uppercase tracking-wider">{t.categories}</span>
+      </div>
 
-      {/* Category Buttons */}
-      {categories.map((category) => (
+      {/* Horizontal Scroll Container - mobile-optimized */}
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory -mx-1 px-1">
+        {/* All Categories Button */}
         <Link
-          key={category.id}
-          href={getCategoryLink(category.slug)}
-          className={`group flex items-center gap-2 rounded-full px-4 py-2 text-xs sm:text-sm font-semibold transition-all duration-300 ${
-            selectedCategory === category.slug
-              ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-lg shadow-ai-primary/30 scale-105"
-              : "bg-white dark:bg-ai-surface-card border-2 border-gray-200 dark:border-ai-surface-border text-slate-700 dark:text-gray-300 hover:border-ai-primary hover:text-ai-primary dark:hover:border-ai-primary dark:hover:text-ai-primary hover:shadow-md"
-          }`}
+          href={getCategoryLink("")}
+          className={`group flex-shrink-0 snap-start flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-300 whitespace-nowrap ${selectedCategory === "" || !selectedCategory
+              ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-md shadow-ai-primary/20"
+              : "bg-ai-surface-card/80 border border-ai-surface-border text-gray-300 hover:border-ai-primary/50 hover:text-ai-primary"
+            }`}
         >
-          <span className="material-symbols-outlined text-[18px] sm:text-[20px]">{getIcon(category.slug)}</span>
-          <span>{category.name}</span>
+          <span className="material-symbols-outlined text-[16px]">apps</span>
+          <span>{t.all}</span>
         </Link>
-      ))}
+
+        {/* Category Buttons */}
+        {categories.map((category) => (
+          <Link
+            key={category.id}
+            href={getCategoryLink(category.slug)}
+            className={`group flex-shrink-0 snap-start flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-300 whitespace-nowrap ${selectedCategory === category.slug
+                ? "bg-gradient-to-r from-ai-primary to-ai-primary-hover text-white shadow-md shadow-ai-primary/20"
+                : "bg-ai-surface-card/80 border border-ai-surface-border text-gray-300 hover:border-ai-primary/50 hover:text-ai-primary"
+              }`}
+          >
+            <span className="material-symbols-outlined text-[16px]">{getIcon(category.slug)}</span>
+            <span>{category.name}</span>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }

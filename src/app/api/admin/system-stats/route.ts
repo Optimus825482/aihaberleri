@@ -1,7 +1,7 @@
 /**
  * System Stats API
- * Returns server RAM and Disk usage for admin dashboard
- * 🚀 OPTIMIZED: Added 30-second in-memory cache to prevent blocking execSync calls
+ * Returns server RAM, Disk, and CPU usage for admin dashboard
+ * 🚀 OPTIMIZED: Added 15-second in-memory cache to prevent blocking execSync calls
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -15,9 +15,46 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
 );
 
-// 🚀 PERFORMANCE: In-memory cache for system stats (30 seconds TTL)
+// 🚀 PERFORMANCE: In-memory cache for system stats (15 seconds TTL)
 let cachedStats: { data: any; timestamp: number } | null = null;
-const CACHE_TTL_MS = 30000; // 30 seconds
+const CACHE_TTL_MS = 15000; // 15 seconds
+
+// CPU usage tracking - we need two snapshots to calculate usage
+let previousCpuInfo: { idle: number; total: number } | null = null;
+let lastCpuPercent = 0;
+
+function getCpuUsage(): number {
+  try {
+    const cpus = os.cpus();
+    let totalIdle = 0;
+    let totalTick = 0;
+
+    for (const cpu of cpus) {
+      totalIdle += cpu.times.idle;
+      totalTick += cpu.times.user + cpu.times.nice + cpu.times.sys + cpu.times.irq + cpu.times.idle;
+    }
+
+    if (previousCpuInfo) {
+      const idleDiff = totalIdle - previousCpuInfo.idle;
+      const totalDiff = totalTick - previousCpuInfo.total;
+      if (totalDiff > 0) {
+        lastCpuPercent = Math.round(100 - (idleDiff / totalDiff) * 100);
+      }
+    }
+
+    previousCpuInfo = { idle: totalIdle, total: totalTick };
+    return Math.max(0, Math.min(100, lastCpuPercent));
+  } catch {
+    // Fallback: use load average on Linux/Mac
+    try {
+      const loadAvg = os.loadavg()[0]; // 1-minute average
+      const cpuCount = os.cpus().length;
+      return Math.round(Math.min((loadAvg / cpuCount) * 100, 100));
+    } catch {
+      return 0;
+    }
+  }
+}
 
 interface DiskInfo {
   total: number;
@@ -122,6 +159,12 @@ export async function GET(request: NextRequest) {
     // Disk Info
     const diskInfo = getDiskUsage();
 
+    // CPU Info
+    const cpuPercent = getCpuUsage();
+    const cpuCores = os.cpus().length;
+    const cpuModel = os.cpus()[0]?.model || "Unknown";
+    const loadAvg = os.loadavg();
+
     // Format bytes to human readable
     const formatBytes = (bytes: number): string => {
       if (bytes === 0) return "0 B";
@@ -152,10 +195,20 @@ export async function GET(request: NextRequest) {
           usedFormatted: formatBytes(diskInfo.used),
           freeFormatted: formatBytes(diskInfo.free),
         },
+        cpu: {
+          percent: cpuPercent,
+          cores: cpuCores,
+          model: cpuModel,
+          loadAvg: {
+            "1m": loadAvg[0]?.toFixed(2) || "0",
+            "5m": loadAvg[1]?.toFixed(2) || "0",
+            "15m": loadAvg[2]?.toFixed(2) || "0",
+          },
+        },
         uptime: os.uptime(),
         platform: os.platform(),
         hostname: os.hostname(),
-        cpuCores: os.cpus().length,
+        cpuCores: cpuCores,
       },
     };
 

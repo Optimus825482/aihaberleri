@@ -1,7 +1,8 @@
 "use client";
 
 import { useAudio } from "@/context/AudioContext";
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
+import { sanitizeArticleContent } from "@/lib/content-sanitizer";
 
 interface HighlightedTextProps {
   htmlContent: string;
@@ -14,13 +15,12 @@ export function HighlightedText({ htmlContent, articleTitle }: HighlightedTextPr
   // Only highlight if this article is the one being played
   const isActive = isPlaying && activeTitle === articleTitle;
 
-  // This is a complex task: mapping word indices to HTML content.
-  // For Phase 3 MVP, we will implement a simplified sentence-level or 
-  // word-level highlighting by stripping HTML for the "reading mode".
-  
+  // Sanitize content: strip raw markdown, metadata leaks, source artifacts
+  const cleanContent = useMemo(() => sanitizeArticleContent(htmlContent), [htmlContent]);
+
   // If not active, just show original HTML
   if (!isActive || metadata.length === 0) {
-    return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
+    return <div dangerouslySetInnerHTML={{ __html: cleanContent }} />;
   }
 
   // Reading mode: We render the words as spans

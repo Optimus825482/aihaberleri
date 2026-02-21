@@ -246,6 +246,14 @@ const COLOR_MAP: Record<
     text: "text-violet-500",
     glow: "from-violet-500/20 to-violet-500/5",
   },
+  cyan: {
+    border: "border-cyan-500/20",
+    borderHover: "hover:border-cyan-500/40",
+    bg: "bg-cyan-500/10",
+    ring: "ring-cyan-500/20",
+    text: "text-cyan-500",
+    glow: "from-cyan-500/20 to-cyan-500/5",
+  },
   primary: {
     border: "border-primary/20",
     borderHover: "hover:border-primary/40",
@@ -752,9 +760,9 @@ export default function AdminDashboard() {
     data: agentData,
     error: agentError,
     isLoading: agentLoading,
-  } = useAgentStats(15000);
+  } = useAgentStats(8000); // 8s refresh for realtime agent status
 
-  const { data: systemData } = useSystemStats(20000);
+  const { data: systemData } = useSystemStats(10000); // 10s refresh for realtime
 
   const dashboardStats = dashboardData?.success ? dashboardData.data : null;
   const agentStats = agentData?.success ? agentData.data : null;
@@ -906,13 +914,22 @@ export default function AdminDashboard() {
                   Sunucu Kaynakları
                 </CardTitle>
                 <CardDescription className="text-[10px]">
-                  Realtime sistem durumu
+                  CPU • RAM • Disk — 10s güncelleme
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="px-4 pb-4">
-            <div className="flex items-center justify-center gap-6 sm:gap-12">
+            <div className="flex items-center justify-center gap-4 sm:gap-8">
+              <ResourceRing
+                label="CPU"
+                percent={systemStats?.cpu?.percent || 0}
+                used={`${systemStats?.cpu?.cores || 0} çekirdek`}
+                total={systemStats?.cpu?.loadAvg?.["1m"] ? `Yük: ${systemStats.cpu.loadAvg["1m"]}` : undefined}
+                icon={Cpu}
+                color="cyan"
+              />
+              <div className="h-16 w-px bg-border/50" />
               <ResourceRing
                 label="RAM"
                 percent={systemStats?.memory?.percent || 0}

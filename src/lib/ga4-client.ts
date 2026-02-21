@@ -182,7 +182,7 @@ let realtimeCache: {
   data: RealtimeData;
   expiresAt: number;
 } | null = null;
-const REALTIME_CACHE_TTL_MS = 30 * 1000; // 30 saniye
+const REALTIME_CACHE_TTL_MS = 15 * 1000; // 15 saniye - daha hızlı güncelleme
 
 export interface RealtimeData {
   activeUsers: number;

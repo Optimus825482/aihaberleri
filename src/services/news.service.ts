@@ -1114,8 +1114,42 @@ export async function fetchArticleContent(url: string): Promise<string> {
 
         let jinaContent = jinaResponse.data;
 
-        // Clean up Jina output (markdown links etc)
-        jinaContent = jinaContent.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1"); // Remove links
+        // Clean up Jina output: strip markdown syntax and raw artifacts
+        // Markdown links: [text](url) -> text
+        jinaContent = jinaContent.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1");
+        // Markdown images: ![alt](url) -> remove entirely
+        jinaContent = jinaContent.replace(
+          /!\[(?:Image\s*\d*[:\s]*)?[^\]]*\]\([^)]+\)/gi,
+          "",
+        );
+        // Published Time metadata leaks
+        jinaContent = jinaContent.replace(
+          /Published\s*Time:\s*\d{4}-\d{2}-\d{2}T[\d:+\-.Z]+/gi,
+          "",
+        );
+        jinaContent = jinaContent.replace(
+          /Published\s*Time:\s*[^\n]{5,80}/gi,
+          "",
+        );
+        // Navigation/menu list items: * [Menu](url)
+        jinaContent = jinaContent.replace(
+          /^\s*\*\s*\[[^\]]+\]\([^)]+\)\s*$/gm,
+          "",
+        );
+        // Breadcrumb trails
+        jinaContent = jinaContent.replace(
+          /^(?:Home|Ana\s*Sayfa)\s*[>›»].*$/gm,
+          "",
+        );
+        // Metadata field lines
+        jinaContent = jinaContent.replace(
+          /^(?:Title|Author|Date|Source|Category|Tags|Keywords):\s*[^\n]+$/gm,
+          "",
+        );
+        // Markdown horizontal rules
+        jinaContent = jinaContent.replace(/^[=\-]{3,}\s*$/gm, "");
+        // Multiple blank lines
+        jinaContent = jinaContent.replace(/\n{4,}/g, "\n\n");
 
         // 🛡️ VALIDATE CONTENT QUALITY - Detect Jina Reader errors
         const validation = isValidContent(jinaContent);

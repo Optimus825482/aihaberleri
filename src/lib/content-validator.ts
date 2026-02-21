@@ -219,9 +219,32 @@ export class ContentValidator {
     fixed = fixed.replace(/\[Image\s*\d+[:\]][^\]]*\]?/gi, '');
     fixed = fixed.replace(/\!\[Image\s*\d+\][^\)]*\)/gi, '');
     
+    // === NEW: Strip raw markdown syntax that LLM sometimes leaves ===
+    // Markdown images: ![alt text](url) -> remove entirely (images should be HTML <img>)
+    fixed = fixed.replace(/!\[(?:Image\s*\d*[:\s]*)?[^\]]*\]\([^)]+\)/gi, '');
+    // Markdown links: [text](url) -> keep text only
+    fixed = fixed.replace(/\[([^\]]+)\]\(https?:\/\/[^)]+\)/gi, '$1');
+    fixed = fixed.replace(/\[([^\]]+)\]\(\/[^)]+\)/gi, '$1');
+    
+    // === NEW: Strip raw metadata leaks ===
+    // "Published Time: 2026-02-20T11:55:32+00:00"
+    fixed = fixed.replace(/Published\s*Time:\s*\d{4}-\d{2}-\d{2}T[\d:+\-.Z]+/gi, '');
+    fixed = fixed.replace(/Published\s*Time:\s*[^\n<]{5,80}/gi, '');
+    // Generic metadata fields
+    fixed = fixed.replace(/(?:^|\n)(?:Title|Author|Date|Source|Category|Tags|Keywords):\s*[^\n<]+/gi, '');
+    
+    // === NEW: Strip navigation/breadcrumb artifacts ===
+    fixed = fixed.replace(/^\s*\*\s*\[([^\]]+)\]\([^)]+\)\s*$/gm, '');
+    fixed = fixed.replace(/^(?:Home|Ana\s*Sayfa)\s*[>›»]\s*(?:[^<\n]+[>›»]\s*){1,5}[^<\n]+$/gm, '');
+    
+    // === NEW: Strip markdown horizontal rules ===
+    fixed = fixed.replace(/^={3,}\s*$/gm, '');
+    fixed = fixed.replace(/^-{3,}\s*$/gm, '');
+    
     // Remove empty paragraphs
     fixed = fixed.replace(/<p>\s*<\/p>/gi, '');
     fixed = fixed.replace(/<p>[\s;,]+<\/p>/gi, '');
+    fixed = fixed.replace(/<p>\s*<br\s*\/?>\s*<\/p>/gi, "");
     
     // Clean up excessive whitespace
     fixed = fixed.replace(/\n{3,}/g, '\n\n');

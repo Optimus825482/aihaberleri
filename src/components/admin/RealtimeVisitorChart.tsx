@@ -86,10 +86,10 @@ function RealtimeVisitorChart() {
         }
     }, []);
 
-    // İlk yükleme + 30 saniyede bir
+    // İlk yükleme + 15 saniyede bir güncelleme
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 30000);
+        const interval = setInterval(fetchData, 15000);
         return () => clearInterval(interval);
     }, [fetchData]);
 

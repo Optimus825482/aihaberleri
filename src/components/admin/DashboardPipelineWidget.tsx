@@ -143,9 +143,11 @@ function DashboardPipelineWidget() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 5000);
+    // Poll every 3 seconds when pipeline is running, 5 seconds otherwise
+    const pollInterval = data?.pipelineStatus === "running" ? 3000 : 5000;
+    const interval = setInterval(fetchData, pollInterval);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [fetchData, data?.pipelineStatus]);
 
   const pipelineLabel =
     data?.pipelineStatus === "running"
@@ -191,7 +193,7 @@ function DashboardPipelineWidget() {
                 )}
               </CardTitle>
               <CardDescription className="text-[10px]">
-                Canlı pipeline durumu • 5s güncelleme
+                Canlı pipeline durumu • Realtime güncelleme
               </CardDescription>
             </div>
           </div>

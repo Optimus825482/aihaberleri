@@ -77,8 +77,8 @@ export function AgentPipelineStepper() {
     useEffect(() => {
         fetchPipelineStatus();
 
-        // Poll every 3 seconds when running, 10 seconds otherwise
-        const pollInterval = pipelineState.isRunning ? 3000 : 10000;
+        // Poll every 3 seconds when running, 5 seconds otherwise
+        const pollInterval = pipelineState.isRunning ? 3000 : 5000;
         const interval = setInterval(fetchPipelineStatus, pollInterval);
 
         return () => clearInterval(interval);
@@ -134,10 +134,8 @@ export function AgentPipelineStepper() {
         ? (completedSteps / pipelineState.steps.length) * 100
         : 0;
 
-    // Don't show if not running and no recent activity
-    if (!pipelineState.isRunning && completedSteps === 0) {
-        return null;
-    }
+    // Always show the pipeline stepper - show last run state or idle state
+    const isIdle = !pipelineState.isRunning && completedSteps === 0;
 
     return (
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent overflow-hidden">
@@ -178,6 +176,12 @@ export function AgentPipelineStepper() {
                                     <Badge className="bg-green-500/20 text-green-600 border-green-500/30">
                                         <CheckCircle2 className="h-3 w-3 mr-1" />
                                         Tamamlandı
+                                    </Badge>
+                                )}
+                                {isIdle && (
+                                    <Badge className="bg-muted text-muted-foreground border-border/50">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        Bekliyor
                                     </Badge>
                                 )}
                             </CardTitle>
