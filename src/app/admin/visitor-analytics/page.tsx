@@ -339,6 +339,7 @@ export default function VisitorAnalyticsPage() {
             <button
               onClick={fetchData}
               disabled={refreshing}
+              aria-label="Verileri yenile"
               className="rounded-lg border border-border/50 bg-background/50 p-2 text-muted-foreground hover:text-foreground transition-all"
             >
               <RefreshCw

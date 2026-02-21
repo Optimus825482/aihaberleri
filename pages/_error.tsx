@@ -13,7 +13,7 @@ interface ErrorProps {
 
 function ErrorPage({ statusCode }: ErrorProps) {
     return (
-        <div style={{ textAlign: "center", padding: "50px" }}>
+        <div className="text-center p-12">
             <h1>{statusCode}</h1>
             <p>
                 {statusCode === 404

@@ -4,10 +4,12 @@
  * Makale bazlı sayfa görüntülenmelerini (page views) çeker.
  * In-memory cache ile rate limit koruması sağlar.
  *
- * Gerekli env variables:
+ * Desteklenen auth yöntemleri (öncelik sırasıyla):
+ * 1. GOOGLE_SERVICE_ACCOUNT_KEY: Tam JSON service account key (önerilen, Docker uyumlu)
+ * 2. GA_CLIENT_EMAIL + GA_PRIVATE_KEY: Ayrı env variables (newline sorunlarına dikkat)
+ *
+ * Gerekli:
  * - GA4_PROPERTY_ID: GA4 property numarası (numeric, ör: 123456789)
- * - GA_CLIENT_EMAIL: Service account email
- * - GA_PRIVATE_KEY: Service account private key (PEM format)
  */
 
 import { google } from "googleapis";
@@ -32,21 +34,42 @@ let analyticsClient: ReturnType<typeof google.analyticsdata> | null = null;
 function getClient() {
   if (analyticsClient) return analyticsClient;
 
-  const clientEmail = process.env.GA_CLIENT_EMAIL;
-  const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, "\n");
   const propertyId = process.env.GA4_PROPERTY_ID;
+  if (!propertyId) {
+    throw new Error("GA4 Data API yapılandırması eksik. GA4_PROPERTY_ID gerekli.");
+  }
 
-  if (!clientEmail || !privateKey || !propertyId) {
-    throw new Error(
-      "GA4 Data API yapılandırması eksik. GA4_PROPERTY_ID, GA_CLIENT_EMAIL ve GA_PRIVATE_KEY gerekli.",
-    );
+  let credentials: { client_email: string; private_key: string };
+
+  // Yöntem 1: Tam JSON service account key (Docker-friendly, newline sorunu yok)
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+    try {
+      const parsed = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+      credentials = {
+        client_email: parsed.client_email,
+        private_key: parsed.private_key,
+      };
+      console.log("[GA4] Using GOOGLE_SERVICE_ACCOUNT_KEY (JSON) for auth");
+    } catch (e) {
+      throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY geçerli bir JSON değil.");
+    }
+  }
+  // Yöntem 2: Ayrı env variables (fallback)
+  else {
+    const clientEmail = process.env.GA_CLIENT_EMAIL;
+    const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+    if (!clientEmail || !privateKey) {
+      throw new Error(
+        "GA4 Data API yapılandırması eksik. GOOGLE_SERVICE_ACCOUNT_KEY veya GA_CLIENT_EMAIL + GA_PRIVATE_KEY gerekli.",
+      );
+    }
+
+    credentials = { client_email: clientEmail, private_key: privateKey };
   }
 
   const auth = new google.auth.GoogleAuth({
-    credentials: {
-      client_email: clientEmail,
-      private_key: privateKey,
-    },
+    credentials,
     scopes: ["https://www.googleapis.com/auth/analytics.readonly"],
   });
 
@@ -297,8 +320,14 @@ export async function getRealtimeVisitors(): Promise<RealtimeData> {
 
     realtimeCache = { data: result, expiresAt: Date.now() + REALTIME_CACHE_TTL_MS };
     return result;
-  } catch (error) {
-    console.error("[GA4 Realtime] Error:", error);
+  } catch (error: any) {
+    // Auth hatalarında client'ı sıfırla — sonraki denemede yeniden oluşturulur
+    if (error?.code === 400 || error?.message?.includes('invalid_grant')) {
+      analyticsClient = null;
+      console.error("[GA4 Realtime] Auth error (client reset):", error?.message || error);
+    } else {
+      console.error("[GA4 Realtime] Error:", error);
+    }
     return emptyResult;
   }
 }
@@ -457,8 +486,13 @@ export async function getGA4TrafficOverview(
     };
 
     return result;
-  } catch (error) {
-    console.error("[GA4 Traffic] Error:", error);
+  } catch (error: any) {
+    if (error?.code === 400 || error?.message?.includes('invalid_grant')) {
+      analyticsClient = null;
+      console.error("[GA4 Traffic] Auth error (client reset):", error?.message || error);
+    } else {
+      console.error("[GA4 Traffic] Error:", error);
+    }
     return emptyResult;
   }
 }
@@ -467,7 +501,7 @@ export async function getGA4TrafficOverview(
 export function isGA4Configured(): boolean {
   return !!(
     process.env.GA4_PROPERTY_ID &&
-    process.env.GA_CLIENT_EMAIL &&
-    process.env.GA_PRIVATE_KEY
+    (process.env.GOOGLE_SERVICE_ACCOUNT_KEY ||
+      (process.env.GA_CLIENT_EMAIL && process.env.GA_PRIVATE_KEY))
   );
 }

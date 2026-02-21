@@ -180,6 +180,7 @@ export default function PipelineMetricsPage() {
               <select
                 value={days}
                 onChange={(e) => setDays(Number(e.target.value))}
+                aria-label="Zaman aralığı seçin"
                 className="bg-gray-800 text-white border border-gray-700 rounded-lg px-3 py-1.5 text-sm"
               >
                 <option value={1}>Son 24 saat</option>
