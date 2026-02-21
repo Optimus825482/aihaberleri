@@ -11,6 +11,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { getRedis } from "@/lib/redis";
+import { getQueueStats, QUEUE_NAMES } from "@/lib/queue-manager";
 
 // Redis keys for pipeline state
 const PIPELINE_STATE_KEY = "pipeline:current-state";
@@ -41,9 +42,9 @@ export interface PipelineState {
 
 const DEFAULT_STEPS: Omit<PipelineStep, "status">[] = [
   {
-    id: "content-collector",
-    name: "content-collector",
-    displayName: "İçerik Toplama",
+    id: "duplicate-detector",
+    name: "duplicate-detector",
+    displayName: "Duplikat Tespiti",
   },
   {
     id: "relevance-filter",
@@ -51,9 +52,9 @@ const DEFAULT_STEPS: Omit<PipelineStep, "status">[] = [
     displayName: "Alakalılık Filtresi",
   },
   {
-    id: "duplicate-detector",
-    name: "duplicate-detector",
-    displayName: "Duplikat Tespiti",
+    id: "trend-enrichment",
+    name: "trend-enrichment",
+    displayName: "Trend Zenginleştirme",
   },
   {
     id: "content-enricher",
@@ -71,6 +72,59 @@ const DEFAULT_STEPS: Omit<PipelineStep, "status">[] = [
     displayName: "Yayınlama",
   },
 ];
+
+const STEP_QUEUE_MAP: Record<string, string> = {
+  "duplicate-detector": QUEUE_NAMES.UNIQUE_ARTICLES,
+  "relevance-filter": QUEUE_NAMES.RELEVANT_ARTICLES,
+  "trend-enrichment": QUEUE_NAMES.TREND_ENRICHMENT,
+  "content-enricher": QUEUE_NAMES.ENRICHED_ARTICLES,
+  "visual-generator": QUEUE_NAMES.ARTICLES_WITH_VISUALS,
+  "database-publisher": QUEUE_NAMES.DATABASE_PUBLISHER,
+};
+
+async function buildLivePipelineState(): Promise<PipelineState> {
+  const liveSteps: PipelineStep[] = await Promise.all(
+    DEFAULT_STEPS.map(async (step) => {
+      const queueName = STEP_QUEUE_MAP[step.id];
+      const stats = await getQueueStats(queueName);
+
+      if (!stats) {
+        return { ...step, status: "pending" as const };
+      }
+
+      let status: PipelineStep["status"] = "pending";
+      if (stats.active > 0) {
+        status = "running";
+      } else if (stats.waiting > 0 || stats.delayed > 0) {
+        status = "pending";
+      } else if (stats.completed > 0) {
+        status = "completed";
+      } else if (stats.failed > 0) {
+        status = "error";
+      }
+
+      return {
+        ...step,
+        status,
+        itemsProcessed: stats.completed,
+      };
+    }),
+  );
+
+  const currentStep = liveSteps.findIndex((s) => s.status === "running");
+  const hasQueuedOrRunning = liveSteps.some(
+    (s) => s.status === "running" || s.status === "pending",
+  );
+  const articlesCreated =
+    liveSteps.find((s) => s.id === "database-publisher")?.itemsProcessed ?? 0;
+
+  return {
+    isRunning: hasQueuedOrRunning,
+    currentStep,
+    steps: liveSteps,
+    articlesCreated,
+  };
+}
 
 export async function GET() {
   const session = await requireAdminAuth();
@@ -95,31 +149,50 @@ export async function GET() {
       }
     }
 
-    // If no state in Redis, return default state
-    if (!pipelineState) {
-      // Check if there's a recent run in history
-      let lastRun: PipelineState | null = null;
-      if (redis) {
+    const liveState = await buildLivePipelineState();
+
+    // If Redis state exists and indicates active run, prefer Redis metadata but sync statuses from live queues.
+    if (pipelineState?.isRunning) {
+      const mergedSteps = pipelineState.steps.map((step) => {
+        const liveStep = liveState.steps.find((ls) => ls.id === step.id);
+        return liveStep
+          ? {
+              ...step,
+              status: liveStep.status,
+              itemsProcessed: liveStep.itemsProcessed ?? step.itemsProcessed,
+            }
+          : step;
+      });
+
+      pipelineState = {
+        ...pipelineState,
+        isRunning: liveState.isRunning,
+        currentStep: liveState.currentStep,
+        steps: mergedSteps,
+        articlesCreated: Math.max(
+          pipelineState.articlesCreated || 0,
+          liveState.articlesCreated || 0,
+        ),
+      };
+    } else {
+      // Redis state yoksa veya stale/idle ise canlı kuyruk durumunu döndür.
+      pipelineState = liveState;
+
+      // If everything looks idle, still try to show last run snapshot from history.
+      const allPending = pipelineState.steps.every(
+        (s) => s.status === "pending",
+      );
+      if (allPending && !pipelineState.isRunning && redis) {
         try {
           const historyJson = await redis.get(PIPELINE_HISTORY_KEY);
           if (historyJson) {
-            lastRun = JSON.parse(historyJson);
+            const lastRun = JSON.parse(historyJson) as PipelineState;
+            pipelineState = lastRun;
           }
         } catch (e) {
           console.warn("Failed to parse pipeline history:", e);
         }
       }
-
-      // Return last run if exists, otherwise default
-      pipelineState = lastRun || {
-        isRunning: false,
-        currentStep: -1,
-        steps: DEFAULT_STEPS.map((step) => ({
-          ...step,
-          status: "pending" as const,
-        })),
-        articlesCreated: 0,
-      };
     }
 
     return NextResponse.json({

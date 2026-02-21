@@ -25,6 +25,7 @@ import {
   RefreshCw,
   HardDrive,
   MemoryStick,
+  Cpu,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
@@ -52,7 +53,7 @@ import {
 const AgentPipelineStepper = dynamic(
   () =>
     import("@/components/admin/AgentPipelineStepper").then(
-      (m) => m.AgentPipelineStepper ?? m.default ?? (() => null),
+      (m: any) => m.AgentPipelineStepper ?? m.default ?? (() => null),
     ),
   {
     ssr: false,
@@ -67,7 +68,7 @@ const PipelineChart = dynamic<{
 }>(
   () =>
     import("@/components/admin/PipelineChart").then(
-      (m) => m.default ?? m.PipelineChart ?? (() => null),
+      (m: any) => m.default ?? m.PipelineChart ?? (() => null),
     ),
   {
   ssr: false,
@@ -887,7 +888,7 @@ export default function AdminDashboard() {
         {/* Pipeline Stepper */}
         <AgentPipelineStepper />
 
-        {/* Sunucu Kaynakları — RAM & Disk */}
+        {/* Sunucu Kaynakları — RAM, CPU & Disk */}
         <Card className="border-indigo-500/20 bg-card/80 backdrop-blur-sm">
           <CardHeader className="pb-0 px-4">
             <div className="flex items-center gap-2">
@@ -899,7 +900,7 @@ export default function AdminDashboard() {
                   Sunucu Kaynakları
                 </CardTitle>
                 <CardDescription className="text-[10px]">
-                  RAM • Disk — 10s güncelleme
+                  RAM • CPU • Disk — 10s güncelleme
                 </CardDescription>
               </div>
             </div>
@@ -913,6 +914,15 @@ export default function AdminDashboard() {
                 total={systemStats?.memory?.totalFormatted}
                 icon={MemoryStick}
                 color="indigo"
+              />
+              <div className="h-16 w-px bg-border/50" />
+              <ResourceRing
+                label="CPU"
+                percent={systemStats?.cpu?.percent || 0}
+                used={`${systemStats?.cpu?.percent || 0}%`}
+                total={`${systemStats?.cpu?.cores || 0} core`}
+                icon={Cpu}
+                color="cyan"
               />
               <div className="h-16 w-px bg-border/50" />
               <ResourceRing

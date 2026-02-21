@@ -42,9 +42,9 @@ interface PipelineState {
 }
 
 const DEFAULT_STEPS: AgentStep[] = [
-    { id: "content-collector", name: "content-collector", displayName: "İçerik Toplama", icon: Globe, status: "pending" },
-    { id: "relevance-filter", name: "relevance-filter", displayName: "Alakalılık Filtresi", icon: Filter, status: "pending" },
     { id: "duplicate-detector", name: "duplicate-detector", displayName: "Duplikat Tespiti", icon: Copy, status: "pending" },
+    { id: "relevance-filter", name: "relevance-filter", displayName: "Alakalılık Filtresi", icon: Filter, status: "pending" },
+    { id: "trend-enrichment", name: "trend-enrichment", displayName: "Trend Zenginleştirme", icon: Globe, status: "pending" },
     { id: "content-enricher", name: "content-enricher", displayName: "İçerik Zenginleştirme", icon: Search, status: "pending" },
     { id: "visual-generator", name: "visual-generator", displayName: "Görsel Oluşturma", icon: ImageIcon, status: "pending" },
     { id: "database-publisher", name: "database-publisher", displayName: "Yayınlama", icon: Database, status: "pending" },
