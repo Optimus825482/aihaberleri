@@ -15,10 +15,14 @@ export function formatDate(input: string | number | Date): string {
 }
 
 export function calculateReadingTime(text: string): string {
+  const minutes = calculateReadingMinutes(text);
+  return `${minutes} dk okuma süresi`;
+}
+
+export function calculateReadingMinutes(text: string): number {
   const wordsPerMinute = 200;
   const words = text.trim().split(/\s+/).length;
-  const minutes = Math.ceil(words / wordsPerMinute);
-  return `${minutes} dk okuma süresi`;
+  return Math.ceil(words / wordsPerMinute);
 }
 
 export function formatRelativeTime(date: string | Date): string {

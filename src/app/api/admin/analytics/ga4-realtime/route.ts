@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import {
   isGA4Configured,
+  getRealtimeActiveUsers,
   getRealtimeVisitors,
   getGA4TrafficOverview,
 } from "@/lib/ga4-client";
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const period = searchParams.get("period");
+  const isLite = searchParams.get("lite") === "1";
 
   try {
     // Dönem bazlı trafik özeti
@@ -72,6 +74,18 @@ export async function GET(request: NextRequest) {
         success: true,
         type: "traffic",
         data: traffic,
+      });
+    }
+
+    // Lite mode: yalnızca aktif kullanıcı sayısı (minimum GA yükü)
+    if (isLite) {
+      const activeUsers = await getRealtimeActiveUsers();
+      return NextResponse.json({
+        success: true,
+        type: "realtime-lite",
+        data: {
+          activeUsers,
+        },
       });
     }
 

@@ -9,9 +9,20 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
-import { formatDate } from "@/lib/utils";
+import { formatDate, calculateReadingMinutes } from "@/lib/utils";
 import { ArticleImage } from "@/components/ResponsiveImage";
 import { ViewTracker } from "@/components/ViewTracker";
+import { ReadingProgressBar } from "@/components/ReadingProgressBar";
+import {
+  ArticleInsightTopSections,
+  ArticleTimelineSection,
+} from "@/components/article/ArticleInsightSections";
+import {
+  buildSummaryPoints,
+  buildTimelineItems,
+  buildWhyImportantPoints,
+  getArticleInsightDisplaySettings,
+} from "@/lib/article-insights";
 import {
   generateBreadcrumbSchema,
   generateJsonLd,
@@ -61,6 +72,23 @@ const getArticle = cache(async (slug: string) => {
     originalSlug: translation.article.slug,
   };
 });
+
+const getInsightSettings = cache(async () =>
+  getArticleInsightDisplaySettings(() =>
+    db.setting.findMany({
+      where: {
+        key: {
+          in: [
+            "site_insight_summary",
+            "site_insight_importance",
+            "site_insight_timeline",
+          ],
+        },
+      },
+      select: { key: true, value: true },
+    }),
+  ),
+);
 
 async function getRelatedArticles(categoryId: string, excludeId: string) {
   const translations = await db.articleTranslation.findMany({
@@ -148,6 +176,18 @@ export default async function EnglishArticlePage({ params }: Props) {
     article.category.id,
     article.id,
   );
+  const insightSettings = await getInsightSettings();
+  const readingTime = calculateReadingMinutes(article.content);
+  const summaryPoints = buildSummaryPoints(article.excerpt || "", article.content);
+
+  const whyImportantPoints = buildWhyImportantPoints({
+    locale: "en",
+    categoryName: article.category.name,
+    trendScore: null,
+    readingTime,
+  });
+
+  const timelineItems = buildTimelineItems([article, ...relatedArticles]);
 
   const baseUrl = "https://aihaberleri.org";
   const articleUrl = `${baseUrl}/en/news/${article.slug}`;
@@ -205,6 +245,8 @@ export default async function EnglishArticlePage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-ai-background-dark">
+      <ReadingProgressBar />
+
       {/* View Tracking - Client-side with session control */}
       <ViewTracker articleId={article.id} />
 
@@ -312,11 +354,27 @@ export default async function EnglishArticlePage({ params }: Props) {
             </div>
           )}
 
+          <ArticleInsightTopSections
+            locale="en"
+            summaryPoints={insightSettings.showSummary ? summaryPoints : []}
+            whyImportantPoints={
+              insightSettings.showImportance ? whyImportantPoints : []
+            }
+          />
+
           {/* Content */}
           <div
             className="prose prose-lg prose-invert max-w-none mb-12 prose-headings:text-white prose-p:text-ai-text-secondary prose-a:text-ai-primary prose-strong:text-white"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
+
+          {insightSettings.showTimeline && (
+            <ArticleTimelineSection
+              locale="en"
+              items={timelineItems}
+              currentArticleId={article.id}
+            />
+          )}
 
           {/* Share */}
           <div className="border-t border-b border-ai-surface-border py-6 mb-12">

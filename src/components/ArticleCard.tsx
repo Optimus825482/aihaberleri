@@ -136,7 +136,7 @@ export const ArticleCard = memo(function ArticleCard({
         </span>
 
         {/* Reading Time (Bottom Right) */}
-        <div className="absolute right-3 bottom-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute right-3 bottom-3 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300">
           <span className="flex items-center gap-1 rounded-lg bg-black/70 backdrop-blur-md px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold text-white border border-white/10 shadow-lg">
             <span className="material-symbols-outlined text-[12px]">
               schedule
@@ -222,6 +222,7 @@ export const ArticleCard = memo(function ArticleCard({
               onClick={handleShare}
               className="h-8 w-8 rounded-lg flex items-center justify-center text-ai-text-secondary hover:text-ai-primary hover:bg-ai-primary/10 transition-all duration-300"
               title={t.share}
+              aria-label={`${t.share}: ${article.title}`}
             >
               <span className="material-symbols-outlined text-[18px]">
                 share

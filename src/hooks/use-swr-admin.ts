@@ -102,6 +102,17 @@ export function useGA4Realtime(refreshInterval = 30000) {
 }
 
 /**
+ * GA4 Realtime Lite Hook (only active users)
+ */
+export function useGA4RealtimeLite(refreshInterval = 60000) {
+  return useSWR("/api/admin/analytics/ga4-realtime?lite=1", fetcher, {
+    ...defaultConfig,
+    refreshInterval,
+    dedupingInterval: 30000,
+  });
+}
+
+/**
  * GA4 Traffic Overview Hook (period-based)
  */
 export function useGA4Traffic(period: string = "7d") {

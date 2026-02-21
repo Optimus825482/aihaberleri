@@ -211,6 +211,12 @@ let realtimeCache: {
 } | null = null;
 const REALTIME_CACHE_TTL_MS = 15 * 1000; // 15 saniye - daha hızlı güncelleme
 
+let realtimeActiveUsersCache: {
+  value: number;
+  expiresAt: number;
+} | null = null;
+const REALTIME_ACTIVE_USERS_CACHE_TTL_MS = 30 * 1000; // 30 saniye - düşük maliyetli lite metrik
+
 export interface RealtimeData {
   activeUsers: number;
   minuteData: Array<{ minutesAgo: number; users: number }>;
@@ -322,17 +328,66 @@ export async function getRealtimeVisitors(): Promise<RealtimeData> {
       countries,
     };
 
-    realtimeCache = { data: result, expiresAt: Date.now() + REALTIME_CACHE_TTL_MS };
+    realtimeCache = {
+      data: result,
+      expiresAt: Date.now() + REALTIME_CACHE_TTL_MS,
+    };
     return result;
   } catch (error: any) {
     // Auth hatalarında client'ı sıfırla — sonraki denemede yeniden oluşturulur
-    if (error?.code === 400 || error?.message?.includes('invalid_grant')) {
+    if (error?.code === 400 || error?.message?.includes("invalid_grant")) {
       analyticsClient = null;
-      console.error("[GA4 Realtime] Auth error (client reset):", error?.message || error);
+      console.error(
+        "[GA4 Realtime] Auth error (client reset):",
+        error?.message || error,
+      );
     } else {
       console.error("[GA4 Realtime] Error:", error);
     }
     return emptyResult;
+  }
+}
+
+// ─── GA4 Realtime Active Users (Lite) ──────────────────
+export async function getRealtimeActiveUsers(): Promise<number> {
+  if (
+    realtimeActiveUsersCache &&
+    realtimeActiveUsersCache.expiresAt > Date.now()
+  ) {
+    return realtimeActiveUsersCache.value;
+  }
+
+  try {
+    const client = getClient();
+    const response = await client.properties.runRealtimeReport({
+      property: getPropertyId(),
+      requestBody: {
+        metrics: [{ name: "activeUsers" }],
+      },
+    });
+
+    const rows = (response as any).data?.rows || [];
+    const activeUsers = rows.length
+      ? parseInt(rows[0]?.metricValues?.[0]?.value || "0", 10)
+      : 0;
+
+    realtimeActiveUsersCache = {
+      value: Number.isFinite(activeUsers) ? activeUsers : 0,
+      expiresAt: Date.now() + REALTIME_ACTIVE_USERS_CACHE_TTL_MS,
+    };
+
+    return realtimeActiveUsersCache.value;
+  } catch (error: any) {
+    if (error?.code === 400 || error?.message?.includes("invalid_grant")) {
+      analyticsClient = null;
+      console.error(
+        "[GA4 Realtime Active Users] Auth error (client reset):",
+        error?.message || error,
+      );
+    } else {
+      console.error("[GA4 Realtime Active Users] Error:", error);
+    }
+    return 0;
   }
 }
 

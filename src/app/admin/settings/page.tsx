@@ -134,6 +134,39 @@ export default function SettingsPage() {
     }
   };
 
+  const updateLocalSetting = (key: string, value: string) => {
+    setData((prev) => {
+      if (!prev) return prev;
+
+      const existingIndex = prev.settings.general.findIndex((s) => s.key === key);
+      const updatedGeneral = [...prev.settings.general];
+
+      if (existingIndex >= 0) {
+        updatedGeneral[existingIndex] = {
+          ...updatedGeneral[existingIndex],
+          value,
+        };
+      } else {
+        updatedGeneral.push({
+          id: `local-${key}`,
+          key,
+          value,
+          encrypted: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      return {
+        ...prev,
+        settings: {
+          ...prev.settings,
+          general: updatedGeneral,
+        },
+      };
+    });
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -240,6 +273,58 @@ export default function SettingsPage() {
                   </div>
                 );
               })}
+
+              <div className="pt-2 border-t border-ai-surface-border space-y-3">
+                <h3 className="text-sm font-bold">Haber İçgörü Blokları</h3>
+
+                {[
+                  {
+                    key: "site_insight_summary",
+                    label: "3 Maddede Özet",
+                    description: "Haber detay sayfasında özet kartını göster",
+                    defaultValue: "true",
+                  },
+                  {
+                    key: "site_insight_importance",
+                    label: "Bu Haber Neden Önemli?",
+                    description: "Haber detay sayfasında önem kartını göster",
+                    defaultValue: "true",
+                  },
+                  {
+                    key: "site_insight_timeline",
+                    label: "Aynı Konuda Zaman Çizgisi",
+                    description: "Haber detay sayfasında zaman çizgisi bloğunu göster",
+                    defaultValue: "true",
+                  },
+                ].map((item) => {
+                  const setting = data?.settings.general.find((s) => s.key === item.key);
+                  const isChecked = (setting?.value ?? item.defaultValue) === "true";
+
+                  return (
+                    <label
+                      key={item.key}
+                      className="flex items-start justify-between gap-4 rounded-lg border border-ai-surface-border p-3 cursor-pointer"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">{item.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {item.description}
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={(e) => {
+                          const value = e.target.checked ? "true" : "false";
+                          updateLocalSetting(item.key, value);
+                          saveSetting(item.key, value);
+                        }}
+                        className="mt-1 h-4 w-4"
+                      />
+                    </label>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
         )}

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { ShareButtons } from "@/components/ShareButtons";
-import { formatDate, calculateReadingTime } from "@/lib/utils";
+import { formatDate, calculateReadingMinutes } from "@/lib/utils";
 import type { Metadata } from "next";
 import {
   generateNewsArticleSchema,
@@ -22,6 +22,17 @@ import { LikeButton } from "@/components/interactions/LikeButton";
 import { StarRating } from "@/components/interactions/StarRating";
 import { ViewTracker } from "@/components/ViewTracker";
 import { ReadCount } from "@/components/ReadCount";
+import { ReadingProgressBar } from "@/components/ReadingProgressBar";
+import {
+  ArticleInsightTopSections,
+  ArticleTimelineSection,
+} from "@/components/article/ArticleInsightSections";
+import {
+  buildSummaryPoints,
+  buildTimelineItems,
+  buildWhyImportantPoints,
+  getArticleInsightDisplaySettings,
+} from "@/lib/article-insights";
 // AI Disclaimer is now embedded in article content footer (see content.service.ts)
 
 interface ArticlePageProps {
@@ -37,6 +48,23 @@ const getArticle = cache(async (slug: string) => {
     include: { category: true },
   });
 });
+
+const getInsightSettings = cache(async () =>
+  getArticleInsightDisplaySettings(() =>
+    db.setting.findMany({
+      where: {
+        key: {
+          in: [
+            "site_insight_summary",
+            "site_insight_importance",
+            "site_insight_timeline",
+          ],
+        },
+      },
+      select: { key: true, value: true },
+    }),
+  ),
+);
 
 export async function generateMetadata({
   params,
@@ -102,9 +130,20 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const sidebarArticles = relatedArticles.slice(0, 3);
   const bottomArticles = relatedArticles.slice(3, 6);
 
-  const readingTime = calculateReadingTime(article.content);
+  const readingTime = calculateReadingMinutes(article.content);
+  const insightSettings = await getInsightSettings();
   const articleUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/news/${article.slug}`;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const summaryPoints = buildSummaryPoints(article.excerpt || "", article.content);
+
+  const whyImportantPoints = buildWhyImportantPoints({
+    locale: "tr",
+    categoryName: article.category.name,
+    trendScore: article.trendScore,
+    readingTime,
+  });
+
+  const timelineItems = buildTimelineItems([article, ...relatedArticles.slice(0, 4)]);
 
   // Structured Data (JSON-LD)
   const newsArticleSchema = generateNewsArticleSchema(article);
@@ -126,6 +165,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <ReadingProgressBar />
+
       {/* View Tracking - Client-side with session control */}
       <ViewTracker articleId={article.id} />
 
@@ -248,6 +289,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <AudioPlayer title={article.title} text={article.content} />
               </div>
 
+              <ArticleInsightTopSections
+                locale="tr"
+                summaryPoints={
+                  insightSettings.showSummary ? summaryPoints : []
+                }
+                whyImportantPoints={
+                  insightSettings.showImportance ? whyImportantPoints : []
+                }
+              />
+
               {/* Content Implementation */}
               <div className="prose prose-lg dark:prose-invert max-w-none">
                 <HighlightedText
@@ -293,6 +344,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     ))}
                   </div>
                 </div>
+              )}
+
+              {insightSettings.showTimeline && (
+                <ArticleTimelineSection
+                  locale="tr"
+                  items={timelineItems}
+                  currentArticleId={article.id}
+                />
               )}
             </article>
 

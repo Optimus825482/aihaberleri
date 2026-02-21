@@ -46,6 +46,7 @@ import { DashboardSkeleton } from "@/components/admin/SkeletonLoaders";
 import {
   useDashboardStats,
   useAgentStats,
+  useGA4RealtimeLite,
   useSystemStats,
 } from "@/hooks/use-swr-admin";
 
@@ -79,6 +80,14 @@ const PipelineChart = dynamic<{
 );
 
 const NOOP = () => {};
+
+type GaLoadLevel = "normal" | "high" | "critical";
+
+function getGaLoadLevel(activeUsers: number): GaLoadLevel {
+  if (activeUsers >= 100) return "critical";
+  if (activeUsers >= 30) return "high";
+  return "normal";
+}
 
 // === Animated Number Component ===
 const AnimatedNumber = memo(function AnimatedNumber({
@@ -311,6 +320,8 @@ const RealtimeStatusBar = memo(function RealtimeStatusBar({
   nextRun,
   queueStats,
   isConnected,
+  gaActiveUsers,
+  gaLoadLevel,
 }: {
   isAgentEnabled: boolean;
   nextRun?: string;
@@ -321,7 +332,19 @@ const RealtimeStatusBar = memo(function RealtimeStatusBar({
     failed: number;
   };
   isConnected: boolean;
+    gaActiveUsers?: number;
+    gaLoadLevel?: GaLoadLevel;
 }) {
+  const gaBadgeClassByLevel: Record<GaLoadLevel, string> = {
+    normal: "text-emerald-500 border-emerald-500/30",
+    high: "text-amber-500 border-amber-500/30",
+    critical: "text-red-500 border-red-500/30",
+  };
+
+  const gaBadgeClass = gaLoadLevel
+    ? gaBadgeClassByLevel[gaLoadLevel]
+    : gaBadgeClassByLevel.normal;
+
   return (
     <div className="sticky top-0 z-40 -mx-4 sm:-mx-6 px-4 sm:px-6 py-2 bg-background/80 backdrop-blur-xl border-b border-border/50">
       <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
@@ -365,6 +388,19 @@ const RealtimeStatusBar = memo(function RealtimeStatusBar({
                 {queueStats.failed}
               </Badge>
             </div>
+            {typeof gaActiveUsers === "number" && (
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground">
+                  GA Canlı
+                </span>
+                <Badge
+                  variant="outline"
+                  className={`h-5 px-1.5 text-[10px] font-black ${gaBadgeClass}`}
+                >
+                  {gaActiveUsers}
+                </Badge>
+              </div>
+            )}
           </div>
         )}
 
@@ -448,8 +484,7 @@ const ResourceRing = memo(function ResourceRing({
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={offset}
-            className={statusColor}
-            style={{ transition: "stroke-dashoffset 1s ease-out" }}
+            className={`${statusColor} transition-[stroke-dashoffset] duration-1000 ease-out`}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -755,7 +790,36 @@ export default function AdminDashboard() {
   const agentStats = agentData?.success ? agentData.data : null;
 
   const { data: systemData } = useSystemStats(10000); // 10s refresh for realtime
+  const { data: gaRealtimeLiteData } = useGA4RealtimeLite(60000); // 60s refresh, düşük yük
   const systemStats = systemData?.success ? systemData.data : null;
+  const gaActiveUsers =
+    gaRealtimeLiteData?.success && gaRealtimeLiteData?.data
+      ? gaRealtimeLiteData.data.activeUsers || 0
+      : 0;
+  const [gaDisplay, setGaDisplay] = useState<{
+    users: number;
+    level: GaLoadLevel;
+  }>({ users: 0, level: "normal" });
+  const gaDisplayInitializedRef = useRef(false);
+
+  useEffect(() => {
+    const level = getGaLoadLevel(gaActiveUsers);
+
+    setGaDisplay((prev) => {
+      if (!gaDisplayInitializedRef.current) {
+        gaDisplayInitializedRef.current = true;
+        return { users: gaActiveUsers, level };
+      }
+
+      // Performans: eşik (load level) değişmedikçe UI değeri sabit kalır.
+      if (prev.level === level) {
+        return prev;
+      }
+
+      return { users: gaActiveUsers, level };
+    });
+  }, [gaActiveUsers]);
+
   const isAgentEnabled = agentStats?.agent?.enabled ?? false;
   const isLoading = dashLoading && agentLoading && !dashboardStats;
   const hasError = dashError && agentError;
@@ -777,6 +841,8 @@ export default function AdminDashboard() {
           nextRun={agentStats?.agent?.nextRun}
           queueStats={agentStats?.queue}
           isConnected={true}
+          gaActiveUsers={gaDisplay.users}
+          gaLoadLevel={gaDisplay.level}
         />
 
         {/* Error Banner */}

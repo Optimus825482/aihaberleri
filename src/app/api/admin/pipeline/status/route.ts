@@ -83,43 +83,63 @@ const STEP_QUEUE_MAP: Record<string, string> = {
 };
 
 async function buildLivePipelineState(): Promise<PipelineState> {
-  const liveSteps: PipelineStep[] = await Promise.all(
+  const stepStats = await Promise.all(
     DEFAULT_STEPS.map(async (step) => {
       const queueName = STEP_QUEUE_MAP[step.id];
       const stats = await getQueueStats(queueName);
 
-      if (!stats) {
-        return { ...step, status: "pending" as const };
-      }
-
-      let status: PipelineStep["status"] = "pending";
-      if (stats.active > 0) {
-        status = "running";
-      } else if (stats.waiting > 0 || stats.delayed > 0) {
-        status = "pending";
-      } else if (stats.completed > 0) {
-        status = "completed";
-      } else if (stats.failed > 0) {
-        status = "error";
-      }
-
       return {
-        ...step,
-        status,
-        itemsProcessed: stats.completed,
+        step,
+        stats,
       };
     }),
   );
 
-  const currentStep = liveSteps.findIndex((s) => s.status === "running");
-  const hasQueuedOrRunning = liveSteps.some(
-    (s) => s.status === "running" || s.status === "pending",
+  const firstActiveIndex = stepStats.findIndex(
+    (s) => (s.stats?.active || 0) > 0,
   );
-  const articlesCreated =
-    liveSteps.find((s) => s.id === "database-publisher")?.itemsProcessed ?? 0;
+  const firstQueuedIndex = stepStats.findIndex(
+    (s) => (s.stats?.waiting || 0) + (s.stats?.delayed || 0) > 0,
+  );
+  const hasWorkInQueues = stepStats.some(
+    (s) =>
+      (s.stats?.active || 0) > 0 ||
+      (s.stats?.waiting || 0) > 0 ||
+      (s.stats?.delayed || 0) > 0,
+  );
+
+  const currentStep =
+    firstActiveIndex !== -1 ? firstActiveIndex : firstQueuedIndex;
+
+  const liveSteps: PipelineStep[] = stepStats.map(({ step, stats }, index) => {
+    let status: PipelineStep["status"] = "pending";
+
+    if (!hasWorkInQueues) {
+      status = "pending";
+    } else if ((stats?.active || 0) > 0) {
+      status = "running";
+    } else if ((stats?.waiting || 0) > 0 || (stats?.delayed || 0) > 0) {
+      status = "pending";
+    } else if (currentStep !== -1 && index < currentStep) {
+      status = "completed";
+    } else {
+      status = "pending";
+    }
+
+    return {
+      ...step,
+      status,
+      itemsProcessed: stats?.completed ?? 0,
+    };
+  });
+
+  const publisherStats = stepStats.find(
+    ({ step }) => step.id === "database-publisher",
+  )?.stats;
+  const articlesCreated = publisherStats?.completed ?? 0;
 
   return {
-    isRunning: hasQueuedOrRunning,
+    isRunning: hasWorkInQueues,
     currentStep,
     steps: liveSteps,
     articlesCreated,
@@ -151,8 +171,15 @@ export async function GET() {
 
     const liveState = await buildLivePipelineState();
 
-    // If Redis state exists and indicates active run, prefer Redis metadata but sync statuses from live queues.
-    if (pipelineState?.isRunning) {
+    // Redis state varsa sadece metadata için kullan; gerçek step durumunu canlı kuyruk belirlesin.
+    // Stale "running" state'lerin dashboard'ı kilitlemesini engelle.
+    const isRedisRunningFresh =
+      pipelineState?.isRunning &&
+      !!pipelineState?.startedAt &&
+      Date.now() - new Date(pipelineState.startedAt).getTime() <
+        2 * 60 * 60 * 1000;
+
+    if (isRedisRunningFresh && liveState.isRunning && pipelineState) {
       const mergedSteps = pipelineState.steps.map((step) => {
         const liveStep = liveState.steps.find((ls) => ls.id === step.id);
         return liveStep
@@ -175,14 +202,14 @@ export async function GET() {
         ),
       };
     } else {
-      // Redis state yoksa veya stale/idle ise canlı kuyruk durumunu döndür.
+      // Redis state yoksa/stale ise canlı kuyruk durumunu döndür.
       pipelineState = liveState;
 
-      // If everything looks idle, still try to show last run snapshot from history.
+      // Kuyruklar idle ise son çalışmanın snapshot'unu göster.
       const allPending = pipelineState.steps.every(
         (s) => s.status === "pending",
       );
-      if (allPending && !pipelineState.isRunning && redis) {
+      if (!pipelineState.isRunning && allPending && redis) {
         try {
           const historyJson = await redis.get(PIPELINE_HISTORY_KEY);
           if (historyJson) {

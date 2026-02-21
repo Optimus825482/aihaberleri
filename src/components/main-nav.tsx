@@ -77,6 +77,8 @@ export function MainNav({
         <button
           className="flex items-center space-x-2 md:hidden"
           onClick={() => setShowMobileMenu(!showMobileMenu)}
+          aria-label={t.menu}
+          aria-controls="mobile-nav-menu"
         >
           {showMobileMenu ? (
             <Icons.close className="h-6 w-6" />
@@ -88,7 +90,10 @@ export function MainNav({
       </div>
 
       {showMobileMenu && items && (
-        <div className="fixed inset-0 top-16 z-50 grid h-[calc(100vh-4rem)] grid-flow-row auto-rows-max overflow-auto p-6 pb-32 shadow-md animate-in slide-in-from-bottom-80 md:hidden bg-background">
+        <div
+          id="mobile-nav-menu"
+          className="fixed inset-0 top-16 z-50 grid h-[calc(100vh-4rem)] grid-flow-row auto-rows-max overflow-auto p-6 pb-32 shadow-md animate-in slide-in-from-bottom-80 md:hidden bg-background"
+        >
           <div className="relative z-20 grid gap-6 rounded-md bg-popover p-4 text-popover-foreground shadow-md border">
             <nav className="grid grid-flow-row auto-rows-max text-sm">
               {items.map((item, index) => (
