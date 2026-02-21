@@ -20,6 +20,67 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function HomePage() {
+  const formatTopicLabel = (topic: string) => {
+    return topic
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .split(" ")
+      .map((word) =>
+        word.length <= 2
+          ? word.toUpperCase()
+          : word.charAt(0).toUpperCase() + word.slice(1),
+      )
+      .join(" ");
+  };
+
+  const getHeatLabel = (rise: number) => {
+    if (rise >= 15) return "Sıcak";
+    if (rise >= 6) return "Yükselişte";
+    if (rise >= 1) return "Hareketli";
+    return "Stabil";
+  };
+
+  const getHeatBarWidthClass = (score: number) => {
+    if (score >= 50) return "w-full";
+    if (score >= 45) return "w-11/12";
+    if (score >= 40) return "w-5/6";
+    if (score >= 35) return "w-2/3";
+    if (score >= 30) return "w-1/2";
+    return "w-1/3";
+  };
+
+  const getHeatTone = (idx: number) => {
+    if (idx === 0) {
+      return {
+        badge: "border-rose-400/40 bg-rose-500/15 text-rose-300",
+        bar: "bg-rose-400",
+      };
+    }
+    if (idx === 1) {
+      return {
+        badge: "border-orange-400/40 bg-orange-500/15 text-orange-300",
+        bar: "bg-orange-400",
+      };
+    }
+    if (idx === 2) {
+      return {
+        badge: "border-amber-400/40 bg-amber-500/15 text-amber-300",
+        bar: "bg-amber-400",
+      };
+    }
+    if (idx === 3) {
+      return {
+        badge: "border-cyan-400/40 bg-cyan-500/15 text-cyan-300",
+        bar: "bg-cyan-400",
+      };
+    }
+    return {
+      badge: "border-violet-400/40 bg-violet-500/15 text-violet-300",
+      bar: "bg-violet-400",
+    };
+  };
+
   const companyBadgeMap: Record<
     string,
     { monogram: string; bgClass: string; ringClass: string; logoPath?: string }
@@ -439,29 +500,53 @@ export default async function HomePage() {
           )}
 
           {featureSettings.showHeatMap && (
-            <section className="mt-8 rounded-2xl border border-ai-surface-border bg-ai-surface-card p-5 sm:p-6">
+            <section className="mt-8 rounded-2xl border border-ai-surface-border bg-gradient-to-br from-ai-surface-card via-ai-surface-card to-ai-surface-dark p-5 sm:p-6">
               <h2 className="text-lg font-black text-white flex items-center gap-2 mb-4">
-                <span className="material-symbols-outlined text-[20px] text-ai-primary">
+                <span className="material-symbols-outlined text-[20px] text-orange-300">
                   grid_view
                 </span>
-                Gündem Isı Haritası
+                <span className="bg-gradient-to-r from-orange-300 via-rose-300 to-violet-300 bg-clip-text text-transparent">
+                  Gündem Isı Haritası
+                </span>
               </h2>
               <p className="text-xs text-ai-text-muted mb-4">
                 Bugün en hızlı yükselen 5 konu (trendScore farkı bazlı)
               </p>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                {topicHeatMap.map((item, idx) => (
-                  <Link
-                    key={item.topic}
-                    href={`/search?q=${encodeURIComponent(item.topic)}`}
-                    className="rounded-xl border border-ai-surface-border bg-ai-surface-dark p-3 hover:border-ai-primary/40 transition-colors"
-                  >
-                    <p className="text-[11px] text-ai-text-muted">#{idx + 1} yükselen konu</p>
-                    <p className="mt-1 text-sm font-semibold text-white line-clamp-2">{item.topic}</p>
-                    <p className="mt-2 text-xs text-ai-text-secondary">Artış +{item.rise} · Skor {item.score}</p>
-                  </Link>
-                ))}
+                {topicHeatMap.map((item, idx) => {
+                  const tone = getHeatTone(idx);
+
+                  return (
+                    <Link
+                      key={item.topic}
+                      href={`/search?q=${encodeURIComponent(item.topic)}`}
+                      className="group rounded-xl border border-ai-surface-border bg-ai-surface-dark/90 p-3.5 hover:border-ai-primary/40 hover:bg-ai-surface-card transition-all duration-200"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-[11px] text-ai-text-muted">#{idx + 1} yükselen konu</p>
+                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tone.badge}`}>
+                          {getHeatLabel(item.rise)}
+                        </span>
+                      </div>
+
+                      <p className="mt-2 text-sm font-semibold text-white line-clamp-2 group-hover:text-ai-primary transition-colors">
+                        {formatTopicLabel(item.topic)}
+                      </p>
+
+                      <div className="mt-3 space-y-2">
+                        <div className="h-1.5 w-full rounded-full bg-ai-surface-border overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${tone.bar} ${getHeatBarWidthClass(item.score)}`}
+                          />
+                        </div>
+                        <p className="text-xs text-ai-text-secondary">
+                          {item.rise > 0 ? `Artış +${item.rise}` : "Artış yok"} · Skor {item.score}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </section>
           )}
