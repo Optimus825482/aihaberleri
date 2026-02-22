@@ -16,6 +16,7 @@
  */
 
 import { BskyAgent, RichText } from "@atproto/api";
+import { buildSocialArticleUrl } from "./url";
 
 // Configuration from environment
 const BLUESKY_ENABLED = process.env.BLUESKY_ENABLED === "true";
@@ -150,9 +151,7 @@ export async function postToBluesky(article: {
       return null;
     }
 
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-    const articleUrl = `${siteUrl}/news/${article.slug}`;
+    const articleUrl = buildSocialArticleUrl(article.slug, "tr");
 
     // Create hashtags - include trend hashtags if available
     const categoryTag = article.categoryName
@@ -239,8 +238,7 @@ export function generateBlueskyIntentUrl(article: {
   title: string;
   slug: string;
 }): string {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-  const articleUrl = `${siteUrl}/news/${article.slug}`;
+  const articleUrl = buildSocialArticleUrl(article.slug, "tr");
   const text = encodeURIComponent(`📰 ${article.title}\n\n${articleUrl}`);
 
   return `https://bsky.app/intent/compose?text=${text}`;
@@ -299,12 +297,7 @@ export async function postToBlueskyEN(article: {
       return null;
     }
 
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-    // EN articles use /en/news/ path
-    const articleUrl = article.slug.startsWith("en/")
-      ? `${siteUrl}/${article.slug}`
-      : `${siteUrl}/en/news/${article.slug}`;
+    const articleUrl = buildSocialArticleUrl(article.slug, "en");
 
     // Create English hashtags
     const categoryTag = article.categoryName

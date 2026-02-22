@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
+import { buildSocialArticleUrl } from "@/lib/social/url";
 
 /**
  * POST /api/admin/articles/[id]/share-facebook
@@ -75,7 +76,7 @@ export async function POST(
     }
 
     // Haber URL'i
-    const articleUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/news/${article.slug}`;
+    const articleUrl = buildSocialArticleUrl(article.slug, "tr");
 
     // Facebook'ta paylaş
     const facebookResponse = await fetch(

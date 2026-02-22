@@ -13,6 +13,7 @@
  */
 
 import axios from "axios";
+import { buildSocialArticleUrl } from "./url";
 
 const FACEBOOK_ENABLED = process.env.FACEBOOK_ENABLED === "true";
 const FACEBOOK_PAGE_ID = process.env.FACEBOOK_PAGE_ID;
@@ -47,9 +48,7 @@ export async function postToFacebook(article: {
   }
 
   try {
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-    const articleUrl = `${siteUrl}/news/${article.slug}`;
+    const articleUrl = buildSocialArticleUrl(article.slug, "tr");
 
     // Create post message
     const hashtags = article.categoryName
@@ -118,9 +117,7 @@ export async function postImageToFacebook(article: {
   }
 
   try {
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-    const articleUrl = `${siteUrl}/news/${article.slug}`;
+    const articleUrl = buildSocialArticleUrl(article.slug, "tr");
 
     const hashtags = article.categoryName
       ? `#${article.categoryName.replace(/\s+/g, "")} #YapayZeka`
@@ -200,12 +197,7 @@ export async function postToFacebookEN(article: {
   }
 
   try {
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-    // Fix: slug already contains 'en/news/' prefix, so just use it directly
-    const articleUrl = article.slug.startsWith("en/")
-      ? `${siteUrl}/${article.slug}`
-      : `${siteUrl}/en/news/${article.slug}`;
+    const articleUrl = buildSocialArticleUrl(article.slug, "en");
 
     // Create post message (English)
     const hashtags = article.categoryName

@@ -17,6 +17,7 @@
  */
 
 import { createRestAPIClient, mastodon } from "masto";
+import { buildSocialArticleUrl } from "./url";
 
 // Configuration from environment
 const MASTODON_ENABLED = process.env.MASTODON_ENABLED === "true";
@@ -117,9 +118,7 @@ export async function postToMastodon(article: {
       return null;
     }
 
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-    const articleUrl = `${siteUrl}/news/${article.slug}`;
+    const articleUrl = buildSocialArticleUrl(article.slug, "tr");
 
     // Create hashtags (Mastodon hashtags are important for discovery)
     const categoryTag = article.categoryName
@@ -196,8 +195,7 @@ export function generateMastodonShareUrl(article: {
   title: string;
   slug: string;
 }): string {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-  const articleUrl = `${siteUrl}/news/${article.slug}`;
+  const articleUrl = buildSocialArticleUrl(article.slug, "tr");
   const text = encodeURIComponent(`📰 ${article.title}\n\n${articleUrl}`);
 
   // Generic Mastodon share URL (works with any instance)
@@ -257,12 +255,7 @@ export async function postToMastodonEN(article: {
       return null;
     }
 
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-    // EN articles use /en/news/ path
-    const articleUrl = article.slug.startsWith("en/")
-      ? `${siteUrl}/${article.slug}`
-      : `${siteUrl}/en/news/${article.slug}`;
+    const articleUrl = buildSocialArticleUrl(article.slug, "en");
 
     // Create English hashtags (Mastodon hashtags are important for discovery)
     const categoryTag = article.categoryName

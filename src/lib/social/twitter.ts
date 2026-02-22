@@ -11,6 +11,8 @@
  * 3. Manual sharing via Twitter Intent URL
  */
 
+import { buildSocialArticleUrl } from "./url";
+
 // Environment variable to enable/disable Twitter posting
 const TWITTER_ENABLED = process.env.TWITTER_ENABLED === "true";
 
@@ -55,9 +57,7 @@ export async function postTweet(article: {
 
     const rwClient = client.readWrite;
 
-    const siteUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-    const articleUrl = `${siteUrl}/news/${article.slug}`;
+    const articleUrl = buildSocialArticleUrl(article.slug, "tr");
 
     // Create hashtags with trend support
     const categoryTag = article.categoryName
@@ -112,8 +112,7 @@ export function generateTwitterIntentUrl(article: {
   categoryName?: string;
   trendHashtags?: string[];
 }): string {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
-  const articleUrl = `${siteUrl}/news/${article.slug}`;
+  const articleUrl = buildSocialArticleUrl(article.slug, "tr");
 
   const categoryTag = article.categoryName
     ? `#${article.categoryName.replace(/\s+/g, "")}`
