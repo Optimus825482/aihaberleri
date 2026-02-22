@@ -48,8 +48,10 @@ export default function AdminContentQualityPage() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [runningBackfill, setRunningBackfill] = useState(false);
+    const [runningRewrite, setRunningRewrite] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [backfillMessage, setBackfillMessage] = useState<string | null>(null);
+    const [rewriteMessage, setRewriteMessage] = useState<string | null>(null);
 
     const fetchData = async (isRefresh = false) => {
         if (isRefresh) setRefreshing(true);
@@ -113,6 +115,41 @@ export default function AdminContentQualityPage() {
         }
     };
 
+    const runLowContentRewrite = async () => {
+        if (!data) return;
+
+        setRunningRewrite(true);
+        setRewriteMessage(null);
+        try {
+            const response = await fetch("/api/admin/content-quality/rewrite-low-content", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    limit: Math.min(20, Math.max(1, data.summary.lowContentTotal)),
+                    minContentLength: data.params.minContentLength,
+                    dryRun: false,
+                }),
+            });
+
+            const payload = await response.json();
+            if (!response.ok || !payload.success) {
+                throw new Error(payload.error || "AI rewrite işlemi başarısız");
+            }
+
+            const result = payload.data;
+            setRewriteMessage(
+                `AI derleme tamamlandı: ${result.updated} güncellendi, ${result.failed} hata (limit ${result.requestedLimit}).`,
+            );
+            await fetchData(true);
+        } catch (runError) {
+            setRewriteMessage(
+                runError instanceof Error ? runError.message : "AI rewrite çalıştırılamadı",
+            );
+        } finally {
+            setRunningRewrite(false);
+        }
+    };
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -162,6 +199,12 @@ export default function AdminContentQualityPage() {
                 {backfillMessage ? (
                     <Card className="border-cyan-500/30 bg-cyan-500/10">
                         <CardContent className="pt-6 text-cyan-100">{backfillMessage}</CardContent>
+                    </Card>
+                ) : null}
+
+                {rewriteMessage ? (
+                    <Card className="border-violet-500/30 bg-violet-500/10">
+                        <CardContent className="pt-6 text-violet-100">{rewriteMessage}</CardContent>
                     </Card>
                 ) : null}
 
@@ -264,6 +307,18 @@ export default function AdminContentQualityPage() {
                                 <CardDescription>
                                     İçerik uzunluğu {data.params.minContentLength} karakter altındaki kayıtlar.
                                 </CardDescription>
+                                <div className="pt-2">
+                                    <Button
+                                        onClick={runLowContentRewrite}
+                                        disabled={runningRewrite || data.summary.lowContentTotal === 0}
+                                        className="inline-flex items-center gap-2"
+                                    >
+                                        <Sparkles className={`h-4 w-4 ${runningRewrite ? "animate-spin" : ""}`} />
+                                        {runningRewrite
+                                            ? "AI Derleme Çalışıyor..."
+                                            : "Düşük İçeriği AI ile Derle"}
+                                    </Button>
+                                </div>
                             </CardHeader>
                             <CardContent className="space-y-2">
                                 {data.lists.lowContent.length === 0 ? (
