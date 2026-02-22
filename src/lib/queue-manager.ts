@@ -28,7 +28,6 @@ export const QUEUE_NAMES = {
   UNIQUE_ARTICLES: "unique-articles",
   TREND_ENRICHMENT: "trend-enrichment", // NEW: Trend matching & enrichment
   ENRICHED_ARTICLES: "enriched-articles",
-  CONTENT_ENRICHER: "enriched-articles", // Alias for backward compatibility
   ARTICLES_WITH_VISUALS: "articles-with-visuals",
   DATABASE_PUBLISHER: "database-publisher", // Final publishing step
   SOCIAL_SHARE: "social-share", // NEW: Social media sharing (split from publisher) (2026-02-12)

@@ -87,12 +87,14 @@ export class DatabasePublisherAgent extends BaseAgent<
 
     try {
       const publishedArticles: PublishedArticle[] = [];
+      const socialShareQueueData: SocialShareInput[] = [];
 
-      for (const article of articles) {
+      for (let index = 0; index < articles.length; index++) {
+        const article = articles[index];
         // Enforce targetCount limit — stop publishing after reaching max
         if (publishedArticles.length >= maxPublish) {
           this.logger.info(
-            `Target reached (${maxPublish}) — skipping remaining ${articles.length - articles.indexOf(article)} articles`,
+            `Target reached (${maxPublish}) — skipping remaining ${articles.length - index} articles`,
           );
           break;
         }
@@ -356,9 +358,7 @@ export class DatabasePublisherAgent extends BaseAgent<
           };
 
           // Will be batched and sent to SOCIAL_SHARE queue after all articles are published
-          (publishedArticles as any).__socialShareQueue =
-            (publishedArticles as any).__socialShareQueue || [];
-          (publishedArticles as any).__socialShareQueue.push(socialShareData);
+          socialShareQueueData.push(socialShareData);
 
           // Invalidate cache (async - don't block)
           try {
@@ -433,8 +433,7 @@ export class DatabasePublisherAgent extends BaseAgent<
 
         // 🔗 Send social share data to SocialShareAgent queue (2026-02-12)
         const socialShareQueue = getQueue(QUEUE_NAMES.SOCIAL_SHARE);
-        const socialShareData: SocialShareInput[] =
-          (publishedArticles as any).__socialShareQueue || [];
+        const socialShareData = socialShareQueueData;
 
         if (socialShareQueue && socialShareData.length > 0) {
           try {
@@ -453,9 +452,6 @@ export class DatabasePublisherAgent extends BaseAgent<
           }
         }
       }
-
-      // Clean up internal property
-      delete (publishedArticles as any).__socialShareQueue;
 
       return {
         success: true,

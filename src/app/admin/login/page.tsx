@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,32 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [csrfToken, setCsrfToken] = useState("");
 
   const rawNext = searchParams?.get("next") || "/admin";
   const nextTarget = rawNext.startsWith("/admin") ? rawNext : "/admin";
+
+  const ensureCsrfToken = async (): Promise<string | null> => {
+    if (csrfToken) {
+      return csrfToken;
+    }
+
+    const response = await fetch("/api/auth/csrf", { method: "GET" });
+    const data = await response.json();
+
+    if (!response.ok || !data?.csrfToken) {
+      return null;
+    }
+
+    setCsrfToken(data.csrfToken);
+    return data.csrfToken;
+  };
+
+  useEffect(() => {
+    ensureCsrfToken().catch(() => {
+      setError("Güvenlik doğrulaması başlatılamadı. Sayfayı yenileyin.");
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,10 +53,17 @@ export default function LoginPage() {
     console.log("[SIMPLE_LOGIN_PAGE] Attempting login for:", email);
 
     try {
+      const token = await ensureCsrfToken();
+      if (!token) {
+        setError("Güvenlik doğrulaması alınamadı. Lütfen sayfayı yenileyin.");
+        return;
+      }
+
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-csrf-token": token,
         },
         body: JSON.stringify({ email, password }),
       });

@@ -317,11 +317,7 @@ export class CircuitBreaker {
         return true;
 
       case CircuitState.OPEN:
-        // Check if timeout has elapsed
-        if (this.shouldAttemptRecovery()) {
-          this.transitionTo(CircuitState.HALF_OPEN, "Reset timeout elapsed");
-          return true;
-        }
+        // Recovery transition is managed by scheduleRecoveryAttempt
         return false;
 
       case CircuitState.HALF_OPEN:

@@ -127,6 +127,15 @@ export class RateLimiter {
   }
 }
 
+let rateLimiterInstance: RateLimiter | null = null;
+
+function getRateLimiter(): RateLimiter {
+  if (!rateLimiterInstance) {
+    rateLimiterInstance = new RateLimiter();
+  }
+  return rateLimiterInstance;
+}
+
 /**
  * Endpoint-specific rate limit configurations
  *
@@ -205,7 +214,7 @@ export async function checkRateLimit(
   request: Request,
   config: RateLimitConfig,
 ): Promise<RateLimitResult> {
-  const limiter = new RateLimiter();
+  const limiter = getRateLimiter();
   const identifier = getClientIdentifier(request);
   return limiter.check(identifier, config);
 }

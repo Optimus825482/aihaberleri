@@ -173,7 +173,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
     }
 
     const normalizedUrl = this.normalizeUrl(url);
-    const lockKey = `pipeline:lock:${normalizedUrl}`;
+    const lockKey = `pipeline:lock:${encodeURIComponent(normalizedUrl)}`;
     const LOCK_TTL_SECONDS = 300; // 5 minutes (was 10min — too long, blocks next cycle)
 
     try {

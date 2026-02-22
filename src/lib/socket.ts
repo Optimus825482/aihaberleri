@@ -121,8 +121,11 @@ export function emitTypedEvent<T = unknown>(
   return emitToAdmin(event, data);
 }
 
-// Extend global type for TypeScript
-declare global {
-  // eslint-disable-next-line no-var
-  var io: SocketIOServer | undefined;
+/**
+ * Set Socket.io server instance globally
+ * Resets warning state to allow fresh warning after re-initialization cycles.
+ */
+export function setSocketIO(instance: SocketIOServer): void {
+  global.io = instance;
+  _socketWarningLogged = false;
 }

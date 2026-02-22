@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { getCache } from "@/lib/cache";
-import { redis } from "@/lib/redis";
+import { getRedis } from "@/lib/redis";
 import logger from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +37,7 @@ export async function GET() {
     const memoryCacheSize = stats.l1Hits + stats.l2Hits; // Approximate size from hits
 
     // Get Redis cache info
+    const redis = getRedis();
     let redisCacheInfo = {
       available: false,
       keys: 0,

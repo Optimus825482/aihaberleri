@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkDatabaseHealth } from "@/lib/db";
-import { redis } from "@/lib/redis";
+import { getRedis } from "@/lib/redis";
 import logger from "@/lib/logger";
 import os from "os";
 import { exec } from "child_process";
@@ -38,6 +38,8 @@ export async function GET() {
       message: "Health checks skipped during build",
     });
   }
+
+  const redis = getRedis();
 
   const checks = {
     timestamp: new Date().toISOString(),

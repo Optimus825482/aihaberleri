@@ -40,9 +40,6 @@ const nextConfig = {
     ],
   },
 
-  // Use SWC for faster, more memory-efficient minification
-  swcMinify: true,
-
   // Webpack configuration to ignore OpenTelemetry and optimize memory
   webpack: (config, { isServer }) => {
     if (isServer) {
@@ -118,11 +115,11 @@ const nextConfig = {
   },
 
   eslint: {
-    // ESLint hataları CI'da kontrol edilir, build'de atla (~30s kazanç)
+    // ESLint hataları CI pipeline'da ZORUNLU olarak kontrol edilir; Docker/production build hız için burada atlanır.
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // TS hataları dev'de ve CI'da kontrol edilir, Docker build'de atla (~20s kazanç)
+    // TypeScript hataları CI pipeline'da ZORUNLU olarak kontrol edilir; Docker/production build hız için burada atlanır.
     // Not: Runtime crash riski minimal çünkü dev'de zaten kontrol ediliyor
     ignoreBuildErrors: true,
   },

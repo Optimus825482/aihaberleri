@@ -20,6 +20,10 @@ const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME || '0.0.0.0';
 const port = parseInt(process.env.PORT || '3000', 10);
 
+if (!dev && !process.env.NEXTAUTH_URL) {
+  throw new Error('NEXTAUTH_URL must be set in production environment');
+}
+
 // Initialize Next.js
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
@@ -45,7 +49,7 @@ app.prepare().then(() => {
       // In development, allow localhost for testing
       origin: dev
         ? ['http://localhost:3000', 'http://127.0.0.1:3000']
-        : (process.env.NEXTAUTH_URL || 'https://aihaberleri.org'),
+        : process.env.NEXTAUTH_URL,
       methods: ['GET', 'POST'],
       credentials: true
     },
@@ -53,6 +57,7 @@ app.prepare().then(() => {
   });
 
   // Store io instance globally for access from API routes
+  /** @type {import('socket.io').Server} */
   global.io = io;
 
   // Socket connection handling
@@ -109,12 +114,12 @@ app.prepare().then(() => {
     // Close Socket.io connections
     io.close(() => {
       console.log('[Socket.io] All connections closed');
-    });
 
-    // Close HTTP server
-    server.close(() => {
-      console.log('[HTTP] Server closed');
-      process.exit(0);
+      // Close HTTP server after Socket.io fully drains
+      server.close(() => {
+        console.log('[HTTP] Server closed');
+        process.exit(0);
+      });
     });
 
     // Force shutdown after 10 seconds

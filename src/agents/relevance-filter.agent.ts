@@ -120,17 +120,6 @@ export class RelevanceFilterAgent extends BaseAgent<
           );
         });
 
-      // 🛡️ SAFETY NET: If ALL articles rejected but we have scored articles, take the best one
-      if (relevantArticles.length === 0 && scoredArticles.length > 0) {
-        const bestArticle = scoredArticles.sort(
-          (a, b) => b.relevanceScore - a.relevanceScore,
-        )[0];
-        this.logger.warn(
-          `⚠️ All ${scoredArticles.length} articles rejected! Taking best scorer: [${bestArticle.relevanceScore}] ${bestArticle.title.substring(0, 50)}`,
-        );
-        relevantArticles.push(bestArticle);
-      }
-
       return {
         success: true,
         data: relevantArticles,
@@ -255,11 +244,4 @@ export class RelevanceFilterAgent extends BaseAgent<
     });
   }
 
-  /**
-   * Build prompt for batch scoring (REMOVED - now using Gemini directly)
-   */
-  private buildBatchPrompt(articles: CollectedArticle[]): string {
-    // This method is no longer used but kept for reference
-    return "";
-  }
 }

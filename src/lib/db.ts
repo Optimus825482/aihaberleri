@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
+  __dbSignalHandlersRegistered?: boolean;
 };
 
 // Create a mock PrismaClient for build time
@@ -75,19 +76,23 @@ if (process.env.NODE_ENV === "production") {
     await (db as PrismaClient).$disconnect();
   });
 
-  // Handle SIGTERM (Docker/Kubernetes shutdown)
-  process.on("SIGTERM", async () => {
-    console.log("📛 SIGTERM received, closing database connection...");
-    await (db as PrismaClient).$disconnect();
-    process.exit(0);
-  });
+  if (!globalForPrisma.__dbSignalHandlersRegistered) {
+    // Handle SIGTERM (Docker/Kubernetes shutdown)
+    process.once("SIGTERM", async () => {
+      console.log("📛 SIGTERM received, closing database connection...");
+      await (db as PrismaClient).$disconnect();
+      process.exit(0);
+    });
 
-  // Handle SIGINT (Ctrl+C)
-  process.on("SIGINT", async () => {
-    console.log("📛 SIGINT received, closing database connection...");
-    await (db as PrismaClient).$disconnect();
-    process.exit(0);
-  });
+    // Handle SIGINT (Ctrl+C)
+    process.once("SIGINT", async () => {
+      console.log("📛 SIGINT received, closing database connection...");
+      await (db as PrismaClient).$disconnect();
+      process.exit(0);
+    });
+
+    globalForPrisma.__dbSignalHandlersRegistered = true;
+  }
 }
 
 if (

@@ -84,7 +84,4 @@ export const getRedis = () => {
   return redisInstance;
 };
 
-// For backward compatibility
-export const redis = getRedis();
-
-export default redis;
+export default getRedis;

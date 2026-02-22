@@ -7,9 +7,21 @@ import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-);
+export const getJwtSecret = (): Uint8Array => {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("NEXTAUTH_SECRET must be set in production environment");
+    }
+    console.warn(
+      "⚠️ WARNING: Using dev-only JWT secret. Set NEXTAUTH_SECRET in production!",
+    );
+    return new TextEncoder().encode("dev-only-secret-change-in-production");
+  }
+  return new TextEncoder().encode(secret);
+};
+
+const JWT_SECRET = getJwtSecret();
 
 export interface AdminSession {
   id: string;
@@ -24,7 +36,8 @@ export interface AdminSession {
  */
 export async function getAdminSession(): Promise<AdminSession | null> {
   try {
-    const token = cookies().get("admin-session")?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get("admin-session")?.value;
 
     if (!token) {
       return null;

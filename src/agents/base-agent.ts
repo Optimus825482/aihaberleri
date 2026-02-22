@@ -85,20 +85,28 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
   ): Promise<AgentResult<TOutput>> {
     const agentTimeout = timeoutMs || getAgentTimeout(this.config.name);
 
-    return Promise.race([
-      this.process(job),
-      new Promise<AgentResult<TOutput>>((_, reject) =>
-        setTimeout(
-          () =>
-            reject(
-              new Error(
-                `Agent ${this.config.name} timed out after ${Math.round(agentTimeout / 1000)}s`,
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+
+    try {
+      return await Promise.race([
+        this.process(job),
+        new Promise<AgentResult<TOutput>>((_, reject) => {
+          timeoutHandle = setTimeout(
+            () =>
+              reject(
+                new Error(
+                  `Agent ${this.config.name} timed out after ${Math.round(agentTimeout / 1000)}s`,
+                ),
               ),
-            ),
-          agentTimeout,
-        ),
-      ),
-    ]);
+            agentTimeout,
+          );
+        }),
+      ]);
+    } finally {
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
+    }
   }
 
   /**

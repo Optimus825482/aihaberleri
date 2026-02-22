@@ -22,6 +22,7 @@
     "test:smart-filtering": "tsx scripts/test-smart-filtering.ts",
     "test:new-rss-feeds": "tsx scripts/test-new-rss-feeds.ts",
     "test:all-ai-feeds": "tsx scripts/test-all-ai-feeds.ts",
+    "audit:social-links": "tsx scripts/audit-social-links.ts",
     "test:sample-ai-feeds": "tsx scripts/test-sample-ai-feeds.ts",
     "test:pipeline": "tsx scripts/test-multi-agent-pipeline.ts",
     "test:hybrid": "tsx scripts/test-hybrid-models.ts",
