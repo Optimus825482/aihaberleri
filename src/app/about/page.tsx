@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Hakkımızda | AI Haberleri - Yapay Zeka Haber Platformu",
   description:
-    "AI Haberleri, Erkan ERDEM tarafından kurulan, yapay zeka dünyasındaki gelişmeleri Türkçe olarak sunan özgün ve güncel haber platformudur.",
+    "aihaberleri.org, yapay zeka dünyasındaki en güncel gelişmeleri, derinlemesine analizleri ve teknik incelemeleri anlaşılır bir dille sunan bağımsız haber platformudur.",
   keywords: ["yapay zeka", "AI haberleri", "hakkımızda", "Erkan ERDEM", "teknoloji haberleri"],
   alternates: {
     canonical: "https://aihaberleri.org/about",
@@ -45,7 +45,7 @@ const organizationSchema = {
   name: "AI Haberleri",
   url: "https://aihaberleri.org",
   logo: "https://aihaberleri.org/logos/brand/ai-logo-dark.png",
-  description: "Yapay zeka dünyasındaki gelişmeleri Türkçe olarak sunan özgün ve güncel haber platformu.",
+  description: "Yapay zeka dünyasındaki güncel gelişmeleri, analizleri ve teknik incelemeleri erişilebilir biçimde sunan bağımsız haber platformu.",
   sameAs: [
     "https://twitter.com/AiHaberleri",
     "https://facebook.com/aihaberleri",
@@ -59,7 +59,7 @@ const organizationSchema = {
   foundingDate: "2024",
   contactPoint: {
     "@type": "ContactPoint",
-    email: "iletisim@aihaberleri.org",
+    email: "info@aihaberleri.org",
     contactType: "customer service",
     availableLanguage: ["Turkish", "English"],
   },
@@ -88,13 +88,13 @@ export default function AboutPage() {
               <div className="max-w-4xl mx-auto text-center">
                 <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-white mb-6">
                   <span className="material-symbols-outlined text-[18px]">verified</span>
-                  2024'ten Beri Hizmetinizdeyiz
+                  2026 Teknoloji Ekosistemine Odaklı Bağımsız Platform
                 </div>
                 <h1 className="text-4xl md:text-6xl font-black mb-6 text-white leading-tight tracking-tight">
-                  Yapay Zeka Dünyasına Açılan Pencereniz
+                  Yapay Zeka Dünyasının Nabzını Tutuyoruz
                 </h1>
                 <p className="text-xl text-white/90 leading-relaxed max-w-2xl mx-auto">
-                  Teknolojinin en heyecan verici alanındaki gelişmeleri, sizin için özenle seçiyor ve Türkçe'ye kazandırıyoruz.
+                  aihaberleri.org, hızla değişen AI ekosistemindeki gelişmeleri, analizleri ve teknik incelemeleri okuyucularıyla buluşturur.
                 </p>
               </div>
             </div>
@@ -114,15 +114,15 @@ export default function AboutPage() {
                     <div className="w-12 h-12 rounded-xl bg-ai-primary/10 flex items-center justify-center">
                       <span className="material-symbols-outlined text-ai-primary text-[24px]">auto_stories</span>
                     </div>
-                    <h2 className="text-3xl font-bold text-white">Hikayemiz</h2>
+                    <h2 className="text-3xl font-bold text-white">Misyonumuz</h2>
                   </div>
 
                   <p className="text-lg text-ai-text-secondary leading-relaxed mb-6">
-                    Yapay zeka, artık sadece bilim kurgu filmlerinin konusu değil. Her gün yeni bir gelişme, her hafta yeni bir atılım... Peki bunları takip etmek için onlarca farklı kaynağı mı kontrol etmeniz gerekiyor?
+                    Sadece yüzeysel haberler sunmuyoruz. Büyük dil modellerinden robotik sistemlere, etik regülasyonlardan geliştirici araçlarına kadar geniş bir yelpazede, karmaşık teknolojileri anlaşılır ve erişilebilir kılmayı hedefliyoruz.
                   </p>
 
                   <p className="text-lg text-ai-text-secondary leading-relaxed mb-8">
-                    İşte tam bu noktada devreye giriyoruz. <strong className="text-white">
+                    Veriye dayalı habercilik yaklaşımımızla, okuyucularımızın AI devrimini yalnızca takip etmesini değil, gerçekten anlamasını sağlıyoruz. Bu yaklaşım, <strong className="text-white">
                       <a
                         href="https://erkanerdem.net"
                         target="_blank"
@@ -131,7 +131,7 @@ export default function AboutPage() {
                       >
                         Erkan ERDEM
                       </a>
-                    </strong> tarafından kurulan AI Haberleri, yapay zekanın ilk gündeme geldiği günlerden bu yana bu alandaki gelişmeleri yakından takip eden bir meraklının, "keşke böyle bir platform olsa" hayalinden doğdu.
+                    </strong> tarafından kurulan AI Haberleri'nin yayın çizgisinin temelini oluşturur.
                   </p>
 
                   {/* Quote Card */}
@@ -140,11 +140,11 @@ export default function AboutPage() {
                       <span className="material-symbols-outlined text-[100px] text-ai-primary">format_quote</span>
                     </div>
                     <p className="text-xl italic text-white relative z-10 mb-4">
-                      "Yapay zeka haberlerini takip etmek, bazen bir labirentte yol bulmaya benziyor. Bizim amacımız, bu labirenti sizin için aydınlatmak."
+                      "Yapay zeka artık bir trend değil; geleceği belirleyen temel güç. Biz bu dönüşümü anlaşılır, şeffaf ve tarafsız bir dille aktarıyoruz."
                     </p>
                     <p className="text-sm text-ai-text-secondary flex items-center gap-2 relative z-10">
                       <span className="w-8 h-px bg-ai-primary"></span>
-                      Erkan ERDEM, Kurucu
+                      AI Haberleri Editoryal Yaklaşımı
                     </p>
                   </div>
                 </div>
@@ -155,11 +155,11 @@ export default function AboutPage() {
                     <div className="w-12 h-12 rounded-xl bg-ai-primary/10 flex items-center justify-center">
                       <span className="material-symbols-outlined text-ai-primary text-[24px]">star</span>
                     </div>
-                    <h2 className="text-3xl font-bold text-white">Neden AI Haberleri?</h2>
+                    <h2 className="text-3xl font-bold text-white">Neden Biz?</h2>
                   </div>
 
                   <p className="text-lg text-ai-text-secondary leading-relaxed mb-10">
-                    Açıkçası, yapay zeka haberleri sunan onlarca site var. Ama çoğu ya tamamen İngilizce, ya çok teknik, ya da güncelliği tartışılır. Biz farklı bir yaklaşım benimsedik:
+                    Türkiye merkezli bir platform olmamıza rağmen bugün Amerika Birleşik Devletleri'nden Hindistan'a, İngiltere'den Avustralya'ya kadar dünyanın dört bir yanından teknoloji meraklıları, yazılımcılar ve araştırmacılar tarafından takip ediliyoruz.
                   </p>
 
                   {/* Feature Cards Grid */}
@@ -170,7 +170,7 @@ export default function AboutPage() {
                       </div>
                       <h3 className="text-xl font-bold mb-2 text-white">Küresel Bakış Açısı</h3>
                       <p className="text-ai-text-secondary text-sm">
-                        MIT Technology Review'dan TechCrunch'a, OpenAI Blog'undan DeepMind'a kadar dünya çapında 10'dan fazla prestijli kaynağı takip ediyoruz.
+                        Yerel bir bakış açısını küresel veriyle birleştiriyor; içeriklerimizi evrensel standartlarda ve tarafsız bir editoryal çizgide hazırlıyoruz.
                       </p>
                     </div>
 
@@ -178,9 +178,9 @@ export default function AboutPage() {
                       <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center mb-4 group-hover:bg-purple-500/20 transition-colors">
                         <span className="material-symbols-outlined text-purple-400 text-[24px]">verified</span>
                       </div>
-                      <h3 className="text-xl font-bold mb-2 text-white">Özenli Seçim</h3>
+                      <h3 className="text-xl font-bold mb-2 text-white">Teknik Derinlik</h3>
                       <p className="text-ai-text-secondary text-sm">
-                        Yüzlerce haber arasından, gerçekten önemli ve dünya tarafından takip edilenleri derliyoruz. Spam yok, clickbait yok, sadece kaliteli içerik.
+                        LLM ekosisteminden robotik sistemlere, yeni model karşılaştırmalarından geliştirici araçlarına kadar karmaşık konuları uzman bakış açısıyla inceliyoruz.
                       </p>
                     </div>
 
@@ -188,9 +188,9 @@ export default function AboutPage() {
                       <div className="w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center mb-4 group-hover:bg-red-500/20 transition-colors">
                         <span className="material-symbols-outlined text-red-400 text-[24px]">translate</span>
                       </div>
-                      <h3 className="text-xl font-bold mb-2 text-white">Türkçe ve Anlaşılır</h3>
+                      <h3 className="text-xl font-bold mb-2 text-white">Güncellik</h3>
                       <p className="text-ai-text-secondary text-sm">
-                        Teknik terimleri, herkesin anlayabileceği bir dile çeviriyoruz. Çünkü yapay zeka, sadece mühendislerin değil, herkesin konusu.
+                        AI dünyasında dakikaların bile değerli olduğunun farkındayız; kritik model duyurularını, stratejik iş birliklerini ve sektörü dönüştüren gelişmeleri hızlıca aktarıyoruz.
                       </p>
                     </div>
 
@@ -198,9 +198,9 @@ export default function AboutPage() {
                       <div className="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center mb-4 group-hover:bg-yellow-500/20 transition-colors">
                         <span className="material-symbols-outlined text-yellow-400 text-[24px]">bolt</span>
                       </div>
-                      <h3 className="text-xl font-bold mb-2 text-white">Hızlı ve Güncel</h3>
+                      <h3 className="text-xl font-bold mb-2 text-white">Bağımsızlık</h3>
                       <p className="text-ai-text-secondary text-sm">
-                        Yapay zeka dünyasındaki gelişmeleri en hızlı şekilde sizlere ulaştırıyoruz. Hiçbir önemli haberi kaçırmayın.
+                        Herhangi bir teknoloji devine bağlı kalmadan, araçların ve modellerin performansını şeffaf biçimde değerlendiriyor; övgü ve eleştiriyi aynı editoryal disiplinle sunuyoruz.
                       </p>
                     </div>
                   </div>
@@ -217,14 +217,14 @@ export default function AboutPage() {
 
                   <div className="bg-ai-surface-card border border-ai-surface-border rounded-xl p-8">
                     <p className="text-lg text-ai-text-secondary leading-relaxed mb-6">
-                      Her gün onlarca farklı ve prestijli kaynağı takip ediyoruz. MIT Technology Review, TechCrunch, The Verge, OpenAI Blog, DeepMind gibi dünya çapında tanınan platformlardan gelen yüzlerce haber arasından, gerçekten önemli olanları ve dünya tarafından takip edilenleri özenle derliyoruz.
+                      Editoryal süreçlerimizi hız, doğruluk ve bağlam ilkeleri üzerine kuruyoruz. Küresel kaynaklardan gelen gelişmeleri yalnızca aktarmıyor; teknik arka planı, sektörel etkileri ve uzun vadeli sonuçlarıyla birlikte değerlendiriyoruz.
                     </p>
                     <p className="text-lg text-ai-text-secondary leading-relaxed mb-6">
-                      Seçtiğimiz haberleri, teknik terimlerden bağımsız, herkesin anlayabileceği bir dille yeniden yazıyoruz. Amacımız sadece çeviri yapmak değil, içeriği Türk okuyucular için anlaşılır ve akıcı hale getirmek.
+                      İçeriklerimiz, teknolojiye uzak okurların da anlayabileceği kadar sade; uzmanların da değer bulacağı kadar derin bir dengede hazırlanır. Böylece haber değil, gerçek içgörü sunarız.
                     </p>
                     <div className="bg-ai-surface-dark rounded-lg p-4 mt-6">
                       <p className="text-sm text-ai-text-secondary">
-                        <span className="text-ai-primary font-semibold">Not:</span> Bu sürecin tamamı, kurucumuz <strong className="text-white">Erkan ERDEM</strong> ve AIHaberleri.org gönüllüleri tarafından titizlikle yürütülüyor.
+                        <span className="text-ai-primary font-semibold">Editoryal Not:</span> İçeriklerimizde temel öncelik; şeffaflık, kaynak güvenilirliği ve teknik doğruluktur.
                       </p>
                     </div>
                   </div>
@@ -240,15 +240,15 @@ export default function AboutPage() {
                   </div>
 
                   <p className="text-lg text-ai-text-secondary leading-relaxed mb-8">
-                    Aslında bu sorunun cevabı oldukça geniş. Eğer siz de:
+                    Eğer siz de yapay zekanın iş, teknoloji ve toplum üzerindeki etkilerini daha iyi anlamak istiyorsanız, doğru yerdesiniz.
                   </p>
 
                   <div className="space-y-4">
                     {[
-                      "Yapay zekanın geleceğini merak eden bir teknoloji meraklısıysanız,",
-                      "İşinizde AI'ı kullanmayı düşünen bir profesyonelseniz,",
-                      "Sektördeki gelişmeleri takip etmesi gereken bir girişimciyseniz,",
-                      "Ya da sadece 'bu AI işi nereye gidiyor?' diye merak eden biriyseniz,",
+                      "AI gündemini düzenli takip eden bir teknoloji meraklısıysanız,",
+                      "Ürün veya iş süreçlerinde yapay zekayı konumlandıran bir profesyonelseniz,",
+                      "Model, araç ve regülasyon değişimlerini yakından izleyen bir geliştirici ya da araştırmacıysanız,",
+                      "Küresel AI dönüşümünü doğru bağlamla anlamak isteyen bir karar vericiyseniz,",
                     ].map((item, index) => (
                       <div key={index} className="flex items-start gap-4 p-4 bg-ai-surface-card rounded-xl border border-ai-surface-border">
                         <div className="w-8 h-8 rounded-full bg-ai-primary/20 flex items-center justify-center flex-shrink-0 mt-1">
@@ -261,7 +261,7 @@ export default function AboutPage() {
 
                   <div className="mt-8 p-6 bg-gradient-to-r from-ai-primary/10 to-transparent rounded-xl border border-ai-primary/20">
                     <p className="text-xl font-semibold text-white">
-                      Doğru yerdesiniz. Burada herkes için bir şeyler var.
+                      Burada sadece gündemi değil, geleceği de birlikte okuyoruz.
                     </p>
                   </div>
                 </div>
@@ -272,11 +272,11 @@ export default function AboutPage() {
                     <div className="w-12 h-12 rounded-xl bg-ai-primary/10 flex items-center justify-center">
                       <span className="material-symbols-outlined text-ai-primary text-[24px]">rocket_launch</span>
                     </div>
-                    <h2 className="text-3xl font-bold text-white">Geleceğe Dair Planlarımız</h2>
+                    <h2 className="text-3xl font-bold text-white">Geleceği Birlikte İnşa Ediyoruz</h2>
                   </div>
 
                   <p className="text-lg text-ai-text-secondary leading-relaxed mb-8">
-                    AI Haberleri, sürekli gelişen bir platform. Şu anda üzerinde çalıştığımız bazı özellikler:
+                    Yapay zeka sadece bir teknoloji değil, insanlığın yeni bir evresi. AI Haberleri olarak bu yolculukta güvenilir bir bilgi ortağı olmaya ve topluluğumuzla birlikte büyümeye devam ediyoruz.
                   </p>
 
                   <div className="grid md:grid-cols-2 gap-6">
@@ -285,8 +285,8 @@ export default function AboutPage() {
                         <span className="material-symbols-outlined text-blue-400 text-[24px]">phone_iphone</span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-white mb-1">Mobil Uygulama</h3>
-                        <p className="text-sm text-ai-text-secondary">Haberleri her yerden takip edebilmeniz için</p>
+                        <h3 className="font-bold text-white mb-1">Daha Derin Teknik İçerikler</h3>
+                        <p className="text-sm text-ai-text-secondary">Model kıyaslamaları, mühendislik analizleri ve pratik rehberler</p>
                       </div>
                     </div>
 
@@ -295,8 +295,8 @@ export default function AboutPage() {
                         <span className="material-symbols-outlined text-purple-400 text-[24px]">notifications</span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-white mb-1">Kişiselleştirilmiş Bildirimler</h3>
-                        <p className="text-sm text-ai-text-secondary">Sadece ilgilendiğiniz konularda haberdar olun</p>
+                        <h3 className="font-bold text-white mb-1">Küresel İçerik Kapsamı</h3>
+                        <p className="text-sm text-ai-text-secondary">Farklı pazarlardan gelişmeleri daha geniş bir perspektifle sunma</p>
                       </div>
                     </div>
 
@@ -305,8 +305,8 @@ export default function AboutPage() {
                         <span className="material-symbols-outlined text-green-400 text-[24px]">podcasts</span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-white mb-1">Podcast Serisi</h3>
-                        <p className="text-sm text-ai-text-secondary">Haftanın öne çıkan haberlerini dinleyin</p>
+                        <h3 className="font-bold text-white mb-1">Editoryal Kalite İyileştirmeleri</h3>
+                        <p className="text-sm text-ai-text-secondary">Daha güçlü kaynak doğrulama ve içerik standardizasyonu</p>
                       </div>
                     </div>
 
@@ -315,8 +315,8 @@ export default function AboutPage() {
                         <span className="material-symbols-outlined text-yellow-400 text-[24px]">forum</span>
                       </div>
                       <div>
-                        <h3 className="font-bold text-white mb-1">Topluluk Forumu</h3>
-                        <p className="text-sm text-ai-text-secondary">Diğer AI meraklılarıyla tartışın</p>
+                        <h3 className="font-bold text-white mb-1">Topluluk Etkileşimi</h3>
+                        <p className="text-sm text-ai-text-secondary">Geri bildirim ve katkılarla birlikte gelişen bağımsız yayıncılık</p>
                       </div>
                     </div>
                   </div>
@@ -329,7 +329,7 @@ export default function AboutPage() {
                   <div className="relative z-10">
                     <h2 className="text-3xl font-bold text-white mb-4">İletişime Geçin</h2>
                     <p className="text-lg text-white/90 mb-8 max-w-xl mx-auto">
-                      Geri bildirimleriniz bizim için çok değerli. Bir öneriniz, eleştiriniz veya sadece merhaba demek istiyorsanız, kapımız her zaman açık.
+                      Görüş, öneri ve iş birlikleri için bize ulaşabilirsiniz. Topluluğumuzun her katkısı yayın kalitemizi güçlendiriyor.
                     </p>
                     <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 max-w-md mx-auto">
                       <p className="text-white mb-4">Bizimle iletişime geçmek için:</p>
@@ -339,7 +339,7 @@ export default function AboutPage() {
                       >
                         info@aihaberleri.org
                       </a>
-                      <p className="text-sm text-white/70 mt-4">Genellikle 24 saat içinde yanıt veriyoruz.</p>
+                      <p className="text-sm text-white/70 mt-4">Sosyal medya kanallarımızdan da topluluğumuza katılabilirsiniz.</p>
                     </div>
                   </div>
                 </div>
@@ -351,16 +351,16 @@ export default function AboutPage() {
           <section className="bg-gradient-to-r from-ai-primary via-blue-700 to-purple-700 text-white py-16">
             <div className="container mx-auto px-4 text-center">
               <h2 className="text-3xl font-bold mb-4">
-                Yapay Zeka Yolculuğuna Başlayın
+                Geleceği Birlikte Takip Edelim
               </h2>
               <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-                Her gün yeni haberler, her hafta yeni keşifler. Geleceği birlikte takip edelim.
+                Her gün güncel gelişmeler, her hafta daha derin analizler. AI dünyasını birlikte anlamlandıralım.
               </p>
               <Link
                 href="/"
                 className="inline-flex items-center gap-2 bg-white text-ai-primary px-8 py-4 rounded-full font-semibold text-lg hover:bg-white/90 transition-all hover:scale-105 shadow-xl"
               >
-                Haberleri Keşfet
+                Son Haberleri Keşfet
                 <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
               </Link>
             </div>
