@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "About Us | AI News - Artificial Intelligence News Platform",
   description:
-    "AI News is an AI news platform founded by Erkan ERDEM, providing the latest artificial intelligence developments and insights from global sources.",
+    "aihaberleri.org is an independent AI news platform delivering timely developments, in-depth analysis, and technical insights from across the global AI ecosystem.",
   keywords: ["artificial intelligence", "AI news", "about us", "Erkan ERDEM", "tech news"],
   alternates: {
     canonical: "https://aihaberleri.org/en/about",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "About Us | AI News",
-    description: "Your trusted source for the latest artificial intelligence developments and insights.",
+    description: "Timely AI developments, in-depth analysis, and technical insights from a global perspective.",
     url: "https://aihaberleri.org/en/about",
     siteName: "AI News",
     locale: "en_US",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "About Us | AI News",
-    description: "Your trusted source for the latest artificial intelligence developments and insights.",
+    description: "Timely AI developments, in-depth analysis, and technical insights from a global perspective.",
     site: "@AiHaberleri",
     images: ["https://aihaberleri.org/logos/brand/ai-logo-dark.png"],
   },
@@ -47,7 +47,7 @@ const organizationSchema = {
   alternateName: "AI Haberleri",
   url: "https://aihaberleri.org",
   logo: "https://aihaberleri.org/logos/brand/ai-logo-dark.png",
-  description: "Your trusted source for the latest artificial intelligence developments and insights.",
+  description: "Independent AI news platform delivering timely developments, in-depth analysis, and technical insights.",
   sameAs: [
     "https://twitter.com/AiHaberleri",
     "https://facebook.com/aihaberleri",
@@ -61,7 +61,7 @@ const organizationSchema = {
   foundingDate: "2024",
   contactPoint: {
     "@type": "ContactPoint",
-    email: "contact@aihaberleri.org",
+    email: "info@aihaberleri.org",
     contactType: "customer service",
     availableLanguage: ["Turkish", "English"],
   },
@@ -80,66 +80,98 @@ export default function AboutPage() {
 
           <div className="space-y-8">
             <p className="text-xl text-ai-text-secondary">
-              Welcome to AI News, your premier destination for the latest updates,
-              analysis, and insights in the world of Artificial Intelligence.
+              aihaberleri.org is an independent news platform built to help readers
+              follow and understand the fast-moving AI ecosystem in 2026 and beyond.
             </p>
 
             <section>
               <h2 className="text-2xl font-bold mb-4 text-white">Our Mission</h2>
               <p className="text-ai-text-secondary">
-                Our mission is to democratize access to artificial intelligence
-                knowledge. We believe that understanding AI is crucial for the future,
-                and we strive to make complex technological developments accessible to
-                everyone, from industry experts to curious enthusiasts.
+                We do more than summarize headlines. From large language models and
+                robotics to policy, ethics, and developer tooling, our mission is to
+                make complex AI developments accessible without sacrificing technical
+                depth.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mb-4 text-white">What We Cover</h2>
+              <h2 className="text-2xl font-bold mb-4 text-white">A Global Perspective</h2>
+              <p className="text-ai-text-secondary">
+                While we are based in Türkiye, our audience spans the United States,
+                India, the United Kingdom, Australia, and beyond. This global reach
+                reinforces our commitment to editorial neutrality and universal quality
+                standards.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4 text-white">Why Us</h2>
               <ul className="list-disc pl-6 space-y-2 text-ai-text-secondary">
                 <li>
-                  <strong className="text-white">Machine Learning:</strong> Deep dives into algorithms and
-                  models.
+                  <strong className="text-white">Technical Depth:</strong> We cover high-signal topics
+                  ranging from frontier model releases to practical engineering
+                  implications.
                 </li>
                 <li>
-                  <strong className="text-white">Generative AI:</strong> The latest in LLMs, image
-                  generation, and creative AI.
+                  <strong className="text-white">Timeliness:</strong> In AI, timing matters. We publish
+                  critical updates quickly, with context.
                 </li>
                 <li>
-                  <strong className="text-white">Robotics:</strong> Advances in autonomous systems and
-                  physical AI.
+                  <strong className="text-white">Independence:</strong> We are not tied to any single tech
+                  giant, and we evaluate tools and models transparently.
                 </li>
                 <li>
-                  <strong className="text-white">Ethics & Policy:</strong> Critical discussions about the
-                  impact of AI on society.
-                </li>
-                <li>
-                  <strong className="text-white">Industry News:</strong> Mergers, acquisitions, and startup
-                  highlights.
+                  <strong className="text-white">Clarity:</strong> We translate complexity into clear,
+                  useful insight for both practitioners and curious readers.
                 </li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold mb-4 text-white">Our Approach</h2>
+              <h2 className="text-2xl font-bold mb-4 text-white">How We Work</h2>
+              <p className="text-ai-text-secondary mb-4">
+                Our editorial process is built on speed, context, and technical
+                accuracy. We monitor major global sources, then evaluate each update
+                for real-world impact instead of repeating headlines.
+              </p>
               <p className="text-ai-text-secondary">
-                We leverage cutting-edge technology to curate and summarize the most
-                important news from around the globe. Our dedicated system monitors
-                thousands of sources to bring you real-time updates without the noise.
+                Every article is crafted to be readable for non-specialists while
+                remaining useful for developers, researchers, and decision-makers.
+                The goal is not just news delivery, but meaningful understanding.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4 text-white">Who We Serve</h2>
+              <ul className="list-disc pl-6 space-y-2 text-ai-text-secondary">
+                <li>Technology enthusiasts tracking AI in real time.</li>
+                <li>Professionals integrating AI into products and workflows.</li>
+                <li>Developers and researchers following model and tooling shifts.</li>
+                <li>Decision-makers seeking clear AI context without hype.</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-bold mb-4 text-white">Building the Future Together</h2>
+              <p className="text-ai-text-secondary">
+                Artificial intelligence is not just another technology cycle; it is a
+                foundational shift. At AI News, we are excited to guide this journey
+                with trustworthy reporting, deep analysis, and an open community
+                mindset.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-bold mb-4 text-white">Contact Us</h2>
               <p className="text-ai-text-secondary">
-                Have a tip or want to get in touch? Email us at{" "}
+                For feedback, partnerships, or community inquiries, contact us at{" "}
                 <a
-                  href="mailto:contact@ainews.com"
+                  href="mailto:info@aihaberleri.org"
                   className="text-ai-primary hover:underline"
                 >
-                  contact@ainews.com
+                  info@aihaberleri.org
                 </a>
-                .
+                , or join us through our social media channels.
               </p>
             </section>
           </div>
