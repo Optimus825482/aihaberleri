@@ -362,35 +362,48 @@ export async function saveTrendMatches(
   articleId: string,
   matches: TrendMatch[],
 ): Promise<number> {
+  if (matches.length === 0) return 0;
+
+  const BATCH_SIZE = 25;
   let savedCount = 0;
 
-  for (const match of matches) {
-    try {
-      await db.trendArticleMatch.upsert({
-        where: {
-          articleId_trendId: {
+  for (let i = 0; i < matches.length; i += BATCH_SIZE) {
+    const batch = matches.slice(i, i + BATCH_SIZE);
+
+    const results = await Promise.allSettled(
+      batch.map((match) =>
+        db.trendArticleMatch.upsert({
+          where: {
+            articleId_trendId: {
+              articleId,
+              trendId: match.trendId,
+            },
+          },
+          create: {
             articleId,
             trendId: match.trendId,
+            matchScore: match.matchScore,
+            matchType: match.matchType,
+            matchedKeywords: match.matchedKeywords,
           },
-        },
-        create: {
-          articleId,
-          trendId: match.trendId,
-          matchScore: match.matchScore,
-          matchType: match.matchType,
-          matchedKeywords: match.matchedKeywords,
-        },
-        update: {
-          matchScore: match.matchScore,
-          matchType: match.matchType,
-          matchedKeywords: match.matchedKeywords,
-        },
-      });
-      savedCount++;
-    } catch (error) {
-      logger.error(
-        `Failed to save trend match: ${articleId} -> ${match.trendId}: ${error instanceof Error ? error.message : String(error)}`,
-      );
+          update: {
+            matchScore: match.matchScore,
+            matchType: match.matchType,
+            matchedKeywords: match.matchedKeywords,
+          },
+        }),
+      ),
+    );
+
+    for (const [index, result] of results.entries()) {
+      if (result.status === "fulfilled") {
+        savedCount++;
+      } else {
+        const match = batch[index];
+        logger.error(
+          `Failed to save trend match: ${articleId} -> ${match.trendId}: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`,
+        );
+      }
     }
   }
 

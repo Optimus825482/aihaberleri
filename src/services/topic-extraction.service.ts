@@ -259,6 +259,70 @@ export async function selectUniqueTopicArticles(
     (a, b) => (b.trendScore || 0) - (a.trendScore || 0),
   );
 
+  const normalizeSourceUrl = (url: string) =>
+    url.split("?")[0].replace(/\/$/, "");
+
+  // 🚀 PRELOAD: Topic ve URL duplicate verilerini tek seferde çek (N+1 önleme)
+  const candidateTopics = Array.from(
+    new Set(sortedArticles.map((article) => article.topic || "unknown")),
+  );
+  const candidateUrls = sortedArticles
+    .map((article) => (typeof article.url === "string" ? article.url : ""))
+    .filter((url): url is string => Boolean(url));
+  const candidateBaseUrls = Array.from(
+    new Set(candidateUrls.map((url) => normalizeSourceUrl(url))),
+  );
+
+  const publishedAfter = new Date(
+    Date.now() - timeWindowDays * 24 * 60 * 60 * 1000,
+  );
+
+  const [existingTopicRows, existingUrlRows] = await Promise.all([
+    candidateTopics.length > 0
+      ? db.article.findMany({
+          where: {
+            status: "PUBLISHED",
+            publishedAt: { gte: publishedAfter },
+            topic: { in: candidateTopics },
+          },
+          select: {
+            topic: true,
+          },
+        })
+      : Promise.resolve([]),
+    candidateUrls.length > 0 || candidateBaseUrls.length > 0
+      ? db.article.findMany({
+          where: {
+            OR: [
+              ...(candidateUrls.length > 0
+                ? [{ sourceUrl: { in: candidateUrls } }]
+                : []),
+              ...candidateBaseUrls.map((baseUrl) => ({
+                sourceUrl: { startsWith: baseUrl },
+              })),
+            ],
+          },
+          select: {
+            sourceUrl: true,
+          },
+        })
+      : Promise.resolve([]),
+  ]);
+
+  const duplicateTopics = new Set(
+    existingTopicRows
+      .map((row) => row.topic)
+      .filter((topic): topic is string => Boolean(topic)),
+  );
+  const existingExactUrls = new Set(
+    existingUrlRows
+      .map((row) => row.sourceUrl)
+      .filter((url): url is string => Boolean(url)),
+  );
+  const existingBaseUrls = new Set(
+    Array.from(existingExactUrls).map((url) => normalizeSourceUrl(url)),
+  );
+
   const selected: ArticleWithTopic[] = [];
   const seenTopics = new Set<string>();
   let skippedSameTopic = 0;
@@ -284,32 +348,20 @@ export async function selectUniqueTopicArticles(
       continue;
     }
 
-    // Veritabanında bu topic var mı?
-    const duplicateCheck = await checkTopicDuplicate(topic, timeWindowDays);
-    if (duplicateCheck.isDuplicate) {
+    // Veritabanında bu topic var mı? (preloaded set)
+    if (duplicateTopics.has(topic)) {
       skippedDuplicate++;
       continue;
     }
 
     // NEW: URL-based duplicate check (prevents URL duplicates even with different topics)
     if (article.url) {
-      const urlWithoutParams = article.url.split("?")[0]; // Ignore query parameters
-      const existingByUrl = await db.article.findFirst({
-        where: {
-          OR: [
-            { sourceUrl: article.url },
-            { sourceUrl: { startsWith: urlWithoutParams } },
-          ],
-        },
-        select: {
-          id: true,
-          title: true,
-          publishedAt: true,
-          sourceUrl: true,
-        },
-      });
+      const urlWithoutParams = normalizeSourceUrl(article.url);
+      const isUrlDuplicate =
+        existingExactUrls.has(article.url) ||
+        existingBaseUrls.has(urlWithoutParams);
 
-      if (existingByUrl) {
+      if (isUrlDuplicate) {
         skippedDuplicate++;
         continue;
       }
@@ -339,18 +391,12 @@ export async function selectUniqueTopicArticles(
 
       // Sadece URL duplicate kontrolü
       if (article.url) {
-        const urlWithoutParams = article.url.split("?")[0];
-        const existingByUrl = await db.article.findFirst({
-          where: {
-            OR: [
-              { sourceUrl: article.url },
-              { sourceUrl: { startsWith: urlWithoutParams } },
-            ],
-          },
-          select: { id: true },
-        });
+        const urlWithoutParams = normalizeSourceUrl(article.url);
+        const isUrlDuplicate =
+          existingExactUrls.has(article.url) ||
+          existingBaseUrls.has(urlWithoutParams);
 
-        if (existingByUrl) continue;
+        if (isUrlDuplicate) continue;
       }
 
       // Topic batch içinde daha önce seçildi mi?

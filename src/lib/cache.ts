@@ -58,6 +58,29 @@ class CacheManager {
     this.initRedis();
   }
 
+  private async scanKeys(pattern: string, count = 200): Promise<string[]> {
+    if (!this.redis) return [];
+
+    const foundKeys: string[] = [];
+    let cursor = "0";
+
+    do {
+      const [nextCursor, keys] = await this.redis.scan(
+        cursor,
+        "MATCH",
+        pattern,
+        "COUNT",
+        count,
+      );
+      cursor = nextCursor;
+      if (keys.length > 0) {
+        foundKeys.push(...keys);
+      }
+    } while (cursor !== "0");
+
+    return foundKeys;
+  }
+
   private initRedis() {
     try {
       this.redis = getRedis();
@@ -236,7 +259,7 @@ class CacheManager {
     // Invalidate L2 (Redis)
     if (this.redisAvailable && this.redis) {
       try {
-        const keys = await this.redis.keys(`cache:${pattern}`);
+        const keys = await this.scanKeys(`cache:${pattern}`);
         if (keys.length > 0) {
           await this.redis.del(...keys);
           console.log(
@@ -265,7 +288,7 @@ class CacheManager {
     // Clear L2 (only cache keys)
     if (this.redisAvailable && this.redis) {
       try {
-        const keys = await this.redis.keys("cache:*");
+        const keys = await this.scanKeys("cache:*");
         if (keys.length > 0) {
           await this.redis.del(...keys);
           console.log(`🗑️  Cleared ${keys.length} Redis cache entries`);

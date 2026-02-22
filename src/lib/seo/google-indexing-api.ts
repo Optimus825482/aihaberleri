@@ -7,10 +7,48 @@
 
 import { google } from "googleapis";
 import path from "path";
-import fs from "fs";
+import { readFile } from "fs/promises";
 
 // Service Account bilgileri
 const SCOPES = ["https://www.googleapis.com/auth/indexing"];
+let cachedServiceAccountCredentials: Record<string, unknown> | null = null;
+
+async function getServiceAccountCredentials(): Promise<
+  Record<string, unknown>
+> {
+  if (cachedServiceAccountCredentials) {
+    return cachedServiceAccountCredentials;
+  }
+
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+    console.log(
+      "🔐 Using GOOGLE_SERVICE_ACCOUNT_KEY from environment variable",
+    );
+    cachedServiceAccountCredentials = JSON.parse(
+      process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
+    ) as Record<string, unknown>;
+    return cachedServiceAccountCredentials;
+  }
+
+  console.log("🔐 Using JSON key file from disk (development mode)");
+  const keyPath = path.join(
+    process.cwd(),
+    "aihaberleri-46042-861df20fa232.json",
+  );
+
+  try {
+    const fileContents = await readFile(keyPath, "utf8");
+    cachedServiceAccountCredentials = JSON.parse(fileContents) as Record<
+      string,
+      unknown
+    >;
+    return cachedServiceAccountCredentials;
+  } catch (error) {
+    throw new Error(
+      `JSON key file not found or invalid at: ${keyPath}\nPlease ensure the file exists or set GOOGLE_SERVICE_ACCOUNT_KEY environment variable`,
+    );
+  }
+}
 
 /**
  * Google Indexing API istemcisini oluşturur
@@ -20,32 +58,7 @@ const SCOPES = ["https://www.googleapis.com/auth/indexing"];
  */
 async function getIndexingClient() {
   try {
-    let credentials;
-
-    // Production'da environment variable kullan
-    if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
-      console.log(
-        "🔐 Using GOOGLE_SERVICE_ACCOUNT_KEY from environment variable",
-      );
-      credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
-    }
-    // Development'ta dosyadan oku
-    else {
-      console.log("🔐 Using JSON key file from disk (development mode)");
-      const keyPath = path.join(
-        process.cwd(),
-        "aihaberleri-46042-861df20fa232.json",
-      );
-
-      if (!fs.existsSync(keyPath)) {
-        throw new Error(
-          `JSON key file not found at: ${keyPath}\n` +
-            "Please ensure the file exists or set GOOGLE_SERVICE_ACCOUNT_KEY environment variable",
-        );
-      }
-
-      credentials = JSON.parse(fs.readFileSync(keyPath, "utf8"));
-    }
+    const credentials = await getServiceAccountCredentials();
 
     const auth = new google.auth.GoogleAuth({
       credentials,

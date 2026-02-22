@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, memo } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
   Card,
@@ -210,39 +210,63 @@ export default function VisitorAnalyticsPage() {
   } | null>(null);
   const [ga4Loading, setGa4Loading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const visitorFetchAbortRef = useRef<AbortController | null>(null);
+  const ga4FetchAbortRef = useRef<AbortController | null>(null);
 
   const fetchData = useCallback(async () => {
+    visitorFetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    visitorFetchAbortRef.current = controller;
+
     try {
       setRefreshing(true);
       const res = await fetch(
         `/api/admin/analytics/visitor-stats?period=${period}`,
+        { signal: controller.signal },
       );
       const result = await res.json();
-      if (result.success) {
+      if (!controller.signal.aborted && result.success) {
         setData(result.data);
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       console.error("Failed to fetch visitor stats:", error);
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (visitorFetchAbortRef.current === controller) {
+        visitorFetchAbortRef.current = null;
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, [period]);
 
   const fetchGA4 = useCallback(async () => {
+    ga4FetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    ga4FetchAbortRef.current = controller;
+
     try {
       setGa4Loading(true);
       const res = await fetch(
         `/api/admin/analytics/ga4-realtime?period=${period}`,
+        { signal: controller.signal },
       );
       const result = await res.json();
-      if (result.success && result.data) {
+      if (!controller.signal.aborted && result.success && result.data) {
         setGa4Data(result.data);
       }
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        return;
+      }
       console.error("Failed to fetch GA4 data:", error);
     } finally {
-      setGa4Loading(false);
+      if (ga4FetchAbortRef.current === controller) {
+        ga4FetchAbortRef.current = null;
+        setGa4Loading(false);
+      }
     }
   }, [period]);
 
@@ -263,11 +287,83 @@ export default function VisitorAnalyticsPage() {
   }, [fetchData]);
 
   useEffect(() => {
-    fetchData();
-    fetchGA4();
-    const interval = setInterval(fetchData, 60000);
-    return () => clearInterval(interval);
+    const refreshAll = () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
+      fetchData();
+      fetchGA4();
+    };
+
+    refreshAll();
+
+    const visitorInterval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchData();
+      }
+    }, 60000);
+
+    const ga4Interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchGA4();
+      }
+    }, 180000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        fetchData();
+        fetchGA4();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(visitorInterval);
+      clearInterval(ga4Interval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [fetchData, fetchGA4]);
+
+  useEffect(() => {
+    return () => {
+      visitorFetchAbortRef.current?.abort();
+      ga4FetchAbortRef.current?.abort();
+    };
+  }, []);
+
+  const deviceTotal = useMemo(
+    () => data?.deviceBreakdown.reduce((sum, item) => sum + item.count, 0) ?? 0,
+    [data?.deviceBreakdown],
+  );
+
+  const countryTotal = useMemo(
+    () => data?.topCountries.reduce((sum, item) => sum + item.count, 0) ?? 0,
+    [data?.topCountries],
+  );
+
+  const referrerRows = useMemo(() => {
+    const referrers = data?.topReferrers ?? [];
+    const total = referrers.reduce((sum, item) => sum + item.count, 0);
+
+    return referrers.map((ref) => {
+      const pct = total > 0 ? Math.round((ref.count / total) * 100) : 0;
+      let displayName = ref.referrer;
+
+      try {
+        if (ref.referrer.startsWith("http")) {
+          displayName = new URL(ref.referrer).hostname;
+        }
+      } catch { }
+
+      return {
+        ...ref,
+        pct,
+        displayName,
+      };
+    });
+  }, [data?.topReferrers]);
 
   if (loading && !data) {
     return (
@@ -599,12 +695,10 @@ export default function VisitorAnalyticsPage() {
               </div>
               <div className="mt-2 space-y-1.5">
                 {data.deviceBreakdown.map((item, i) => {
-                  const total = data.deviceBreakdown.reduce(
-                    (s, d) => s + d.count,
-                    0,
-                  );
                   const pct =
-                    total > 0 ? Math.round((item.count / total) * 100) : 0;
+                    deviceTotal > 0
+                      ? Math.round((item.count / deviceTotal) * 100)
+                      : 0;
                   const DeviceIcon = DEVICE_ICONS[item.device] || Monitor;
                   return (
                     <div
@@ -737,12 +831,10 @@ export default function VisitorAnalyticsPage() {
             <CardContent>
               <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
                 {data.topCountries.map((item, i) => {
-                  const total = data.topCountries.reduce(
-                    (s, c) => s + c.count,
-                    0,
-                  );
                   const pct =
-                    total > 0 ? Math.round((item.count / total) * 100) : 0;
+                    countryTotal > 0
+                      ? Math.round((item.count / countryTotal) * 100)
+                      : 0;
                   return (
                     <div key={item.country} className="group">
                       <div className="flex items-center justify-between text-xs mb-1">
@@ -826,19 +918,7 @@ export default function VisitorAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-                {data.topReferrers.map((ref, i) => {
-                  const total = data.topReferrers.reduce(
-                    (s, r) => s + r.count,
-                    0,
-                  );
-                  const pct =
-                    total > 0 ? Math.round((ref.count / total) * 100) : 0;
-                  let displayName = ref.referrer;
-                  try {
-                    if (ref.referrer.startsWith("http")) {
-                      displayName = new URL(ref.referrer).hostname;
-                    }
-                  } catch {}
+                {referrerRows.map((ref) => {
                   return (
                     <div key={ref.referrer} className="group">
                       <div className="flex items-center justify-between text-xs mb-1">
@@ -846,16 +926,16 @@ export default function VisitorAnalyticsPage() {
                           className="truncate max-w-[180px]"
                           title={ref.referrer}
                         >
-                          {displayName}
+                          {ref.displayName}
                         </span>
                         <span className="text-muted-foreground">
-                          {ref.count} ({pct}%)
+                          {ref.count} ({ref.pct}%)
                         </span>
                       </div>
                       <div className="h-1.5 rounded-full bg-muted/30 overflow-hidden">
                         <div
                           className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all"
-                          style={{ width: `${pct}%` }}
+                          style={{ width: `${ref.pct}%` }}
                         />
                       </div>
                     </div>

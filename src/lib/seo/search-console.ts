@@ -8,9 +8,43 @@
 
 import { google } from "googleapis";
 import path from "path";
-import fs from "fs";
+import { readFile } from "fs/promises";
 
 const SCOPES = ["https://www.googleapis.com/auth/webmasters.readonly"];
+let cachedServiceAccountCredentials: Record<string, unknown> | null = null;
+
+async function getServiceAccountCredentials(): Promise<
+  Record<string, unknown>
+> {
+  if (cachedServiceAccountCredentials) {
+    return cachedServiceAccountCredentials;
+  }
+
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+    cachedServiceAccountCredentials = JSON.parse(
+      process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
+    ) as Record<string, unknown>;
+    return cachedServiceAccountCredentials;
+  }
+
+  const keyPath = path.join(
+    process.cwd(),
+    "aihaberleri-46042-861df20fa232.json",
+  );
+
+  try {
+    const fileContents = await readFile(keyPath, "utf8");
+    cachedServiceAccountCredentials = JSON.parse(fileContents) as Record<
+      string,
+      unknown
+    >;
+    return cachedServiceAccountCredentials;
+  } catch {
+    throw new Error(
+      `Service account key file not found or invalid: ${keyPath}`,
+    );
+  }
+}
 
 interface SearchAnalyticsRow {
   keys: string[];
@@ -51,25 +85,7 @@ interface TopPage {
  */
 async function getSearchConsoleClient() {
   try {
-    let credentials;
-
-    // Production'da environment variable kullan
-    if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
-      credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
-    }
-    // Development'ta dosyadan oku
-    else {
-      const keyPath = path.join(
-        process.cwd(),
-        "aihaberleri-46042-861df20fa232.json",
-      );
-
-      if (!fs.existsSync(keyPath)) {
-        throw new Error(`Service account key file not found: ${keyPath}`);
-      }
-
-      credentials = JSON.parse(fs.readFileSync(keyPath, "utf8"));
-    }
+    const credentials = await getServiceAccountCredentials();
 
     const auth = new google.auth.GoogleAuth({
       credentials,

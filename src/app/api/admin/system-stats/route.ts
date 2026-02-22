@@ -1,19 +1,22 @@
 /**
  * System Stats API
  * Returns server RAM, Disk, and CPU usage for admin dashboard
- * 🚀 OPTIMIZED: Added 15-second in-memory cache to prevent blocking execSync calls
+ * 🚀 OPTIMIZED: Added 15-second in-memory cache and non-blocking disk usage collection
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import os from "os";
-import { execSync } from "child_process";
+import { execFile } from "child_process";
+import { promisify } from "util";
 
 export const dynamic = "force-dynamic";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
 );
+
+const execFileAsync = promisify(execFile);
 
 // 🚀 PERFORMANCE: In-memory cache for system stats (15 seconds TTL)
 let cachedStats: { data: any; timestamp: number } | null = null;
@@ -63,22 +66,24 @@ interface DiskInfo {
   percent: number;
 }
 
-function getDiskUsage(): DiskInfo {
+async function getDiskUsage(): Promise<DiskInfo> {
   try {
     // Check if running on Windows or Linux
     const platform = os.platform();
 
     if (platform === "win32") {
       // Windows: Use wmic command
-      const output = execSync(
-        "wmic logicaldisk where drivetype=3 get size,freespace /format:csv",
+      const { stdout } = await execFileAsync(
+        "wmic",
+        ["logicaldisk", "where", "drivetype=3", "get", "size,freespace", "/format:csv"],
         {
           encoding: "utf8",
           timeout: 5000,
+          windowsHide: true,
         },
       );
 
-      const lines = output
+      const lines = stdout
         .trim()
         .split("\n")
         .filter((line) => line.includes(","));
@@ -104,12 +109,15 @@ function getDiskUsage(): DiskInfo {
       };
     } else {
       // Linux/Unix: Use df command
-      const output = execSync("df -B1 / | tail -1", {
+      const { stdout } = await execFileAsync("df", ["-B1", "/"], {
         encoding: "utf8",
         timeout: 5000,
+        windowsHide: true,
       });
 
-      const parts = output.trim().split(/\s+/);
+      const lines = stdout.trim().split("\n");
+      const lastLine = lines[lines.length - 1] || "";
+      const parts = lastLine.trim().split(/\s+/);
       const total = parseInt(parts[1]) || 0;
       const used = parseInt(parts[2]) || 0;
       const free = parseInt(parts[3]) || 0;
@@ -157,7 +165,7 @@ export async function GET(request: NextRequest) {
     const memoryPercent = Math.round((usedMemory / totalMemory) * 100);
 
     // Disk Info
-    const diskInfo = getDiskUsage();
+    const diskInfo = await getDiskUsage();
 
     // CPU Info
     const cpuPercent = getCpuUsage();

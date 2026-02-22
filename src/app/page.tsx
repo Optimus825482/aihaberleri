@@ -16,9 +16,8 @@ import {
   generateJsonLd,
 } from "@/lib/seo";
 
-// Force dynamic rendering - database queries require runtime
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// ISR: public homepage verisini kısa aralıklarla yenileyerek DB yükünü azalt
+export const revalidate = 120;
 
 export default async function HomePage() {
   const formatTopicLabel = (topic: string) => {

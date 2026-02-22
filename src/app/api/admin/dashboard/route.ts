@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { getRedis } from "@/lib/redis";
 import { getCachedGeoIPBatch } from "@/lib/geoip-cache";
 import { getCache } from "@/lib/cache";
 import { jwtVerify } from "jose";
@@ -11,11 +10,6 @@ export const dynamic = "force-dynamic";
 const JWT_SECRET = new TextEncoder().encode(
   process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
 );
-
-interface VisitorRecord {
-  createdAt?: Date;
-  ipAddress: string | null;
-}
 
 interface AnalyticsRecord {
   ipAddress: string | null;
@@ -285,30 +279,34 @@ export async function GET(request: NextRequest) {
     const realtimeData: { time: string; visitors: number; label: string }[] =
       [];
     const now = Date.now();
+    const realtimeStartMs =
+      range === "today"
+        ? startTime.getTime()
+        : now - intervalCount * intervalDurationMs;
+    const bucketCounts = new Array<number>(intervalCount).fill(0);
 
-    for (let i = intervalCount - 1; i >= 0; i--) {
-      const intervalEnd =
-        range === "today"
-          ? new Date(
-              startTime.getTime() + (intervalCount - i) * intervalDurationMs,
-            )
-          : new Date(now - i * intervalDurationMs);
-
-      const intervalStart = new Date(
-        intervalEnd.getTime() - intervalDurationMs,
+    for (const visitor of realtimeVisitors) {
+      const visitorDate = visitor.createdAt
+        ? new Date(visitor.createdAt)
+        : null;
+      if (!visitorDate) continue;
+      const visitorMs = visitorDate.getTime();
+      const bucketIndex = Math.floor(
+        (visitorMs - realtimeStartMs) / intervalDurationMs,
       );
+      if (bucketIndex >= 0 && bucketIndex < intervalCount) {
+        bucketCounts[bucketIndex]++;
+      }
+    }
 
-      const count = realtimeVisitors.filter((v: VisitorRecord) => {
-        if (!v.createdAt) return false;
-        const vTime = new Date(v.createdAt).getTime();
-        return (
-          vTime >= intervalStart.getTime() && vTime < intervalEnd.getTime()
-        );
-      }).length;
+    for (let bucketIndex = 0; bucketIndex < intervalCount; bucketIndex++) {
+      const intervalEnd = new Date(
+        realtimeStartMs + (bucketIndex + 1) * intervalDurationMs,
+      );
 
       realtimeData.push({
         time: intervalEnd.toISOString(),
-        visitors: count,
+        visitors: bucketCounts[bucketIndex],
         label: intervalEnd.toLocaleTimeString("tr-TR", {
           hour: "2-digit",
           minute: timeLabelFormat === "minute" ? "2-digit" : undefined,
@@ -318,7 +316,7 @@ export async function GET(request: NextRequest) {
 
     // Get unique visitors in current range
     const uniqueVisitorsInRange = new Set(
-      realtimeVisitors.map((v: VisitorRecord) => v.ipAddress),
+      realtimeVisitors.map((v) => v.ipAddress),
     ).size;
 
     // Get country distribution from analytics (last 24 hours)
@@ -403,17 +401,17 @@ export async function GET(request: NextRequest) {
 
     // Process last 7 days data for chart
     const chartData = [];
+    const articleCountByDate = last7DaysArticles.reduce((map, article) => {
+      const dateKey = new Date(article.createdAt).toISOString().split("T")[0];
+      map.set(dateKey, (map.get(dateKey) || 0) + 1);
+      return map;
+    }, new Map<string, number>());
+
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split("T")[0];
-
-      const count = last7DaysArticles.filter((article: any) => {
-        const articleDate = new Date(article.createdAt)
-          .toISOString()
-          .split("T")[0];
-        return articleDate === dateStr;
-      }).length;
+      const count = articleCountByDate.get(dateStr) || 0;
 
       chartData.push({
         date: dateStr,
@@ -428,31 +426,39 @@ export async function GET(request: NextRequest) {
     // Process pipeline activity data (hourly breakdown for last 24 hours)
     const pipelineActivityData = [];
     const nowMs = Date.now();
+
+    const getHourBucketKey = (value: Date | string) => {
+      const date = new Date(value);
+      date.setMinutes(0, 0, 0);
+      return date.getTime();
+    };
+
+    const articleCountByHour = last24HoursArticles.reduce((map, article) => {
+      const key = getHourBucketKey(article.createdAt);
+      map.set(key, (map.get(key) || 0) + 1);
+      return map;
+    }, new Map<number, number>());
+
+    const viewCountByHour = last24HoursAnalytics.reduce((map, analytics) => {
+      const key = getHourBucketKey(analytics.createdAt);
+      map.set(key, (map.get(key) || 0) + 1);
+      return map;
+    }, new Map<number, number>());
+
     for (let i = 23; i >= 0; i--) {
       const hourStart = new Date(nowMs - (i + 1) * 60 * 60 * 1000);
       const hourEnd = new Date(nowMs - i * 60 * 60 * 1000);
 
-      const articlesInHour = last24HoursArticles.filter((article: any) => {
-        const articleTime = new Date(article.createdAt).getTime();
-        return (
-          articleTime >= hourStart.getTime() && articleTime < hourEnd.getTime()
-        );
-      });
-
-      const viewsInHour = last24HoursAnalytics.filter((analytics: any) => {
-        const analyticsTime = new Date(analytics.createdAt).getTime();
-        return (
-          analyticsTime >= hourStart.getTime() &&
-          analyticsTime < hourEnd.getTime()
-        );
-      }).length;
+      const hourKey = getHourBucketKey(hourStart);
+      const articlesInHour = articleCountByHour.get(hourKey) || 0;
+      const viewsInHour = viewCountByHour.get(hourKey) || 0;
 
       pipelineActivityData.push({
         time: hourEnd.toLocaleTimeString("tr-TR", {
           hour: "2-digit",
           minute: "2-digit",
         }),
-        articles: articlesInHour.length,
+        articles: articlesInHour,
         views: viewsInHour,
       });
     }

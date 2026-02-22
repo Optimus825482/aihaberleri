@@ -8,10 +8,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { useAdminSocket } from "@/hooks/useSocket";
 
 interface ProgressData {
   step: string;
@@ -25,7 +25,7 @@ interface AgentProgressBarProps {
 }
 
 export function AgentProgressBar({ className }: AgentProgressBarProps) {
-  const [isConnected, setIsConnected] = useState(false);
+  const { socket, isConnected } = useAdminSocket();
   const [agentStatus, setAgentStatus] = useState<
     "idle" | "running" | "completed" | "failed"
   >("idle");
@@ -34,33 +34,10 @@ export function AgentProgressBar({ className }: AgentProgressBarProps) {
   const [articlesCreated, setArticlesCreated] = useState(0);
 
   useEffect(() => {
-    // Initialize Socket.io connection
-    const socketInstance = io({
-      path: "/api/socket",
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-
-    // Connection events
-    socketInstance.on("connect", () => {
-      console.log("[AgentProgressBar] Socket connected");
-      setIsConnected(true);
-      socketInstance.emit("join-admin");
-    });
-
-    socketInstance.on("disconnect", () => {
-      console.log("[AgentProgressBar] Socket disconnected");
-      setIsConnected(false);
-    });
-
-    socketInstance.on("joined-admin", () => {
-      console.log("[AgentProgressBar] Joined admin room");
-    });
+    if (!socket) return;
 
     // Agent events
-    socketInstance.on(
+    socket.on(
       "agent:started",
       (data: { timestamp: string; logId: string }) => {
         console.log("[AgentProgressBar] Agent started:", data);
@@ -71,13 +48,13 @@ export function AgentProgressBar({ className }: AgentProgressBarProps) {
       },
     );
 
-    socketInstance.on("agent:progress", (data: ProgressData) => {
+    socket.on("agent:progress", (data: ProgressData) => {
       console.log("[AgentProgressBar] Progress update:", data);
       setProgress(data.progress);
       setCurrentStep(data.message);
     });
 
-    socketInstance.on(
+    socket.on(
       "agent:completed",
       (data: { articlesCreated: number; duration: number }) => {
         console.log("[AgentProgressBar] Agent completed:", data);
@@ -88,13 +65,13 @@ export function AgentProgressBar({ className }: AgentProgressBarProps) {
       },
     );
 
-    socketInstance.on("agent:failed", (data: { error: string }) => {
+    socket.on("agent:failed", (data: { error: string }) => {
       console.log("[AgentProgressBar] Agent failed:", data);
       setAgentStatus("failed");
       setCurrentStep(`Hata: ${data.error}`);
     });
 
-    socketInstance.on(
+    socket.on(
       "article:published",
       (data: { id: string; title: string }) => {
         console.log("[AgentProgressBar] Article published:", data);
@@ -104,10 +81,13 @@ export function AgentProgressBar({ className }: AgentProgressBarProps) {
 
     // Cleanup
     return () => {
-      socketInstance.emit("leave-admin");
-      socketInstance.disconnect();
+      socket.off("agent:started");
+      socket.off("agent:progress");
+      socket.off("agent:completed");
+      socket.off("agent:failed");
+      socket.off("article:published");
     };
-  }, []);
+  }, [socket]);
 
   // Don't render if idle
   if (agentStatus === "idle") {

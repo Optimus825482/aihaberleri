@@ -531,44 +531,76 @@ async function saveTrendsToDatabase(
     Date.now() + TREND_CONFIG.trendExpiryHours * 60 * 60 * 1000,
   );
 
+  const trendKey = (
+    trend: Pick<NormalizedTrend, "platform" | "topic" | "region">,
+  ) => `${trend.platform}::${trend.topic}::${trend.region}`;
+
+  const deduplicatedTrends = Array.from(
+    trends
+      .reduce((map, trend) => {
+        map.set(trendKey(trend), trend);
+        return map;
+      }, new Map<string, NormalizedTrend>())
+      .values(),
+  );
+
+  const existingTrends = await db.socialTrend.findMany({
+    where: {
+      OR: deduplicatedTrends.map((trend) => ({
+        platform: trend.platform,
+        topic: trend.topic,
+        region: trend.region,
+      })),
+    },
+    select: {
+      id: true,
+      platform: true,
+      topic: true,
+      region: true,
+    },
+  });
+
+  const existingTrendMap = new Map(
+    existingTrends.map((trend) => [
+      `${trend.platform}::${trend.topic}::${trend.region}`,
+      trend,
+    ]),
+  );
+
+  const BATCH_SIZE = 10;
   let savedCount = 0;
 
-  for (const trend of trends) {
-    try {
-      // Upsert trend (update if exists, create if not)
-      const existingTrend = await db.socialTrend.findFirst({
-        where: {
-          platform: trend.platform,
-          topic: trend.topic,
-          region: trend.region,
-        },
-      });
+  for (let i = 0; i < deduplicatedTrends.length; i += BATCH_SIZE) {
+    const batch = deduplicatedTrends.slice(i, i + BATCH_SIZE);
 
-      if (existingTrend) {
-        // Update existing trend
-        await db.socialTrend.update({
-          where: { id: existingTrend.id },
-          data: {
-            volume: trend.volume,
-            score: trend.score,
-            sentiment: trend.sentiment,
-            rank: trend.rank,
-            expiresAt,
-            fetchedAt: new Date(),
-          },
-        });
+    const results = await Promise.allSettled(
+      batch.map(async (trend) => {
+        const existingTrend = existingTrendMap.get(trendKey(trend));
 
-        // Create snapshot for history
-        await db.trendSnapshot.create({
-          data: {
-            trendId: existingTrend.id,
-            volume: trend.volume,
-            score: trend.score,
-            rank: trend.rank || 0,
-          },
-        });
-      } else {
-        // Create new trend
+        if (existingTrend) {
+          await db.socialTrend.update({
+            where: { id: existingTrend.id },
+            data: {
+              volume: trend.volume,
+              score: trend.score,
+              sentiment: trend.sentiment,
+              rank: trend.rank,
+              expiresAt,
+              fetchedAt: new Date(),
+            },
+          });
+
+          await db.trendSnapshot.create({
+            data: {
+              trendId: existingTrend.id,
+              volume: trend.volume,
+              score: trend.score,
+              rank: trend.rank || 0,
+            },
+          });
+          return;
+        }
+
         await db.socialTrend.create({
           data: {
             platform: trend.platform,
@@ -586,13 +618,18 @@ async function saveTrendsToDatabase(
             expiresAt,
           },
         });
-      }
+      }),
+    );
 
-      savedCount++;
-    } catch (error) {
-      logger.error(
-        `Failed to save trend: ${trend.topic} - ${error instanceof Error ? error.message : String(error)}`,
-      );
+    for (const [index, result] of results.entries()) {
+      if (result.status === "fulfilled") {
+        savedCount++;
+      } else {
+        const trend = batch[index];
+        logger.error(
+          `Failed to save trend: ${trend.topic} - ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`,
+        );
+      }
     }
   }
 
