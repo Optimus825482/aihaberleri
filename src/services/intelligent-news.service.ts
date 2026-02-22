@@ -22,6 +22,7 @@ import {
 } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import { createModuleLogger } from "@/lib/agent-log-stream";
+import { upsertGlossaryWithArticleTerms } from "@/lib/ai-glossary";
 import axios from "axios";
 
 // Create module-specific loggers for live streaming
@@ -1072,6 +1073,18 @@ export async function processIntelligentNews(
         language: "tr",
       });
       console.log(`   ✅ Türkçe yayınlandı: ${trSlug}`);
+
+      upsertGlossaryWithArticleTerms({
+        title: trArticle.title,
+        excerpt: trArticle.excerpt,
+        content: trArticle.content,
+        keywords: trArticle.keywords,
+      }).catch((error) => {
+        console.error(
+          "AI glossary enrichment failed (intelligent pipeline):",
+          error,
+        );
+      });
 
       // STEP 6: İngilizce versiyonu ArticleTranslation tablosuna kaydet
       console.log(`🇬🇧 İngilizce çeviri kaydediliyor...`);

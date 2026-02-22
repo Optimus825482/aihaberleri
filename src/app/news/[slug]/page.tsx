@@ -44,6 +44,33 @@ interface ArticlePageProps {
   }>;
 }
 
+function extractSourceCountFromContent(content: string, sourceUrl?: string | null): number {
+  const uniqueSources = new Set<string>();
+
+  if (sourceUrl) {
+    uniqueSources.add(sourceUrl.trim());
+  }
+
+  const sourceLinkMatches = content.match(/<a[^>]+class=["'][^"']*source-link[^"']*["'][^>]*href=["']([^"']+)["']/gi) || [];
+  for (const linkTag of sourceLinkMatches) {
+    const hrefMatch = linkTag.match(/href=["']([^"']+)["']/i);
+    if (hrefMatch?.[1]) {
+      uniqueSources.add(hrefMatch[1].trim());
+    }
+  }
+
+  const plainTextSourceMatch = content.match(/Kaynaklar:\s*([^<\n]+)/i);
+  if (plainTextSourceMatch?.[1]) {
+    plainTextSourceMatch[1]
+      .split(/•|,|\||;/)
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0)
+      .forEach((item) => uniqueSources.add(item));
+  }
+
+  return uniqueSources.size;
+}
+
 // React.cache() — per-request dedup: generateMetadata + page share same DB query
 const getArticle = cache(async (slug: string) => {
   return db.article.findUnique({
@@ -119,20 +146,47 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  // Parallel: relatedArticles doesn't need to wait for article render
-  // article is already resolved, so we can fire relatedArticles immediately
-  const relatedArticles = await db.article.findMany({
+  const relatedCandidateArticles = await db.article.findMany({
     where: {
-      ...(article.topic
-        ? { topic: article.topic }
-        : { categoryId: article.categoryId }),
+      OR: [
+        ...(article.topic ? [{ topic: article.topic }] : []),
+        { categoryId: article.categoryId },
+        ...(article.keywords.length > 0
+          ? [{ keywords: { hasSome: article.keywords.slice(0, 8) } }]
+          : []),
+      ],
       id: { not: article.id },
       status: "PUBLISHED",
     },
     include: { category: true },
-    take: 6,
+    take: 18,
     orderBy: { publishedAt: "desc" },
   });
+
+  const dedupedRelated = new Map<string, (typeof relatedCandidateArticles)[0]>();
+  for (const item of relatedCandidateArticles) {
+    if (!dedupedRelated.has(item.id)) {
+      dedupedRelated.set(item.id, item);
+    }
+  }
+
+  let relatedArticles = Array.from(dedupedRelated.values()).slice(0, 6);
+
+  if (relatedArticles.length < 6) {
+    const fallbackArticles = await db.article.findMany({
+      where: {
+        id: {
+          notIn: [article.id, ...relatedArticles.map((item) => item.id)],
+        },
+        status: "PUBLISHED",
+      },
+      include: { category: true },
+      take: 6 - relatedArticles.length,
+      orderBy: { publishedAt: "desc" },
+    });
+
+    relatedArticles = [...relatedArticles, ...fallbackArticles];
+  }
 
   type RelatedArticle = (typeof relatedArticles)[0];
   const sidebarArticles = relatedArticles.slice(0, 3);
@@ -152,6 +206,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   });
 
   const timelineItems = buildTimelineItems([article, ...relatedArticles.slice(0, 4)]);
+  const sourceCount = extractSourceCountFromContent(article.content, article.sourceUrl);
 
   // Structured Data (JSON-LD)
   const newsArticleSchema = generateNewsArticleSchema(article);
@@ -297,7 +352,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <AudioPlayer title={article.title} text={article.content} />
               </div>
 
-              {insightSettings.showGlossary && <AITermsGlossary />}
+              {insightSettings.showGlossary && <AITermsGlossary maxTerms={6} />}
 
               <ArticleInsightTopSections
                 locale="tr"
@@ -379,7 +434,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   <div className="grid grid-cols-1 gap-2 text-xs text-ai-text-secondary sm:grid-cols-3">
                     <div className="rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 py-2">
                       <p className="text-ai-text-muted">Kaynak Sayısı</p>
-                      <p className="font-semibold text-white">{article.sourceUrl ? 1 : 0}</p>
+                      <p className="font-semibold text-white">{sourceCount}</p>
                     </div>
                     <div className="rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 py-2">
                       <p className="text-ai-text-muted">İlk Yayın</p>
@@ -458,8 +513,23 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                         </div>
                       </Link>
                     ))}
+                    {sidebarArticles.length === 0 && (
+                      <p className="text-sm text-ai-text-secondary">
+                        Henüz öneri bulunamadı.
+                      </p>
+                    )}
                   </div>
                 </div>
+
+                {insightSettings.showGlossary && (
+                  <AITermsGlossary
+                    title="Bu Haberde Geçen Terimler"
+                    articleText={`${article.title} ${article.excerpt} ${article.content}`}
+                    maxTerms={10}
+                    compact
+                    className="mb-0"
+                  />
+                )}
               </div>
             </aside>
           </div>

@@ -8,6 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { AdSlot } from "@/components/AdSlot";
+import { AITermsGlossary } from "@/components/article/AITermsGlossary";
 import { getArticleInsightDisplaySettings } from "@/lib/article-insights";
 
 import {
@@ -170,6 +171,7 @@ export default async function HomePage() {
   let modelTagCards: Array<{ label: string; count: number }> = [];
   let featureSettings = {
     showDailyBriefing: true,
+    showGlossary: true,
     showModelCards: true,
     showHeatMap: true,
   };
@@ -196,6 +198,7 @@ export default async function HomePage() {
                 "heroCarouselCount",
                 "heroCarouselInterval",
                 "site_feature_daily_briefing",
+                "site_feature_glossary",
                 "site_feature_model_cards",
                 "site_feature_heat_map",
               ],
@@ -461,6 +464,10 @@ export default async function HomePage() {
 
           {/* Today's Trending — Top 5 by trend score (VURGULU - önce göster) */}
           <TodayTrending locale="tr" />
+
+          {featureSettings.showGlossary && (
+            <AITermsGlossary maxTerms={10} />
+          )}
 
           {featureSettings.showModelCards && (
             <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

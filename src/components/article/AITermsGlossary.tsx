@@ -1,74 +1,70 @@
-"use client";
-
+import Link from "next/link";
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from "@/components/ui/tooltip";
+    getAITermAnchor,
+    getAITermsGlossary,
+    getRelevantAITermsForText,
+} from "@/lib/ai-glossary";
+import { cn } from "@/lib/utils";
 
-type TermItem = {
-    term: string;
-    description: string;
-};
+interface AITermsGlossaryProps {
+    articleText?: string;
+    title?: string;
+    maxTerms?: number;
+    compact?: boolean;
+    className?: string;
+}
 
-const TERMS: TermItem[] = [
-    {
-        term: "RAG",
-        description:
-            "Retrieval-Augmented Generation: Modelin yanıt üretmeden önce dış kaynaktan bilgi çekmesi.",
-    },
-    {
-        term: "Fine-tuning",
-        description:
-            "Modelin belirli bir görev/veri için ek eğitimle özelleştirilmesi.",
-    },
-    {
-        term: "Latency",
-        description:
-            "Kullanıcı isteği ile model yanıtı arasındaki gecikme süresi.",
-    },
-    {
-        term: "Token",
-        description:
-            "Modelin metni işlemek için kullandığı en küçük metin parçaları.",
-    },
-    {
-        term: "Hallucination",
-        description:
-            "Modelin gerçekte olmayan veya doğrulanmamış bilgi üretmesi.",
-    },
-];
+export async function AITermsGlossary({
+    articleText,
+    title = "AI Terimler Mini Sözlük",
+    maxTerms = 8,
+    compact = false,
+    className,
+}: AITermsGlossaryProps) {
+    const terms = articleText
+        ? await getRelevantAITermsForText(articleText, maxTerms)
+        : (await getAITermsGlossary(maxTerms)).slice(0, maxTerms);
 
-export function AITermsGlossary() {
+    if (terms.length === 0) {
+        return null;
+    }
+
     return (
-        <section className="mb-8 rounded-xl border border-ai-surface-border bg-ai-surface-card p-4">
+        <section
+            className={cn(
+                "mb-8 rounded-xl border border-ai-surface-border bg-ai-surface-card p-4",
+                className,
+            )}
+        >
             <div className="mb-3 flex items-center gap-2">
                 <span className="material-symbols-outlined text-[18px] text-ai-primary">
                     auto_awesome
                 </span>
-                <h2 className="text-sm font-semibold text-white">AI Terimler Mini Sözlük</h2>
+                <h2 className="text-sm font-semibold text-white">{title}</h2>
             </div>
 
-            <TooltipProvider delayDuration={120}>
-                <div className="flex flex-wrap gap-2">
-                    {TERMS.map((item) => (
-                        <Tooltip key={item.term}>
-                            <TooltipTrigger asChild>
-                                <button
-                                    type="button"
-                                    className="rounded-full border border-ai-surface-border bg-ai-surface-dark px-3 py-1 text-xs font-semibold text-ai-text-secondary hover:text-white hover:border-ai-primary/40 transition-colors"
-                                >
-                                    {item.term}
-                                </button>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-[260px] text-xs leading-relaxed">
-                                {item.description}
-                            </TooltipContent>
-                        </Tooltip>
+            <div className="flex flex-wrap gap-2">
+                {terms.map((item) => (
+                    <Link
+                        key={item.term}
+                        href={`/ai-terimler#${getAITermAnchor(item.term)}`}
+                        title={item.description}
+                        className="rounded-full border border-ai-surface-border bg-ai-surface-dark px-3 py-1 text-xs font-semibold text-ai-text-secondary hover:text-white hover:border-ai-primary/40 transition-colors"
+                    >
+                        {item.term}
+                    </Link>
+                ))}
+            </div>
+
+            {!compact && (
+                <div className="mt-4 space-y-2">
+                    {terms.slice(0, 3).map((item) => (
+                        <p key={item.term} className="text-xs text-ai-text-secondary leading-relaxed">
+                            <span className="font-semibold text-white">{item.term}:</span> {item.description}
+                        </p>
                     ))}
                 </div>
-            </TooltipProvider>
+            )}
         </section>
     );
 }

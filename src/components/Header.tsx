@@ -48,6 +48,7 @@ export function Header({ categories }: HeaderProps) {
   const navLinks = [
     { href: "/", label: "Ana Sayfa", icon: "home" },
     { href: "/news", label: "Haberler", icon: "newspaper" },
+    { href: "/ai-terimler", label: "AI Sözlük", icon: "menu_book" },
     { href: "/categories", label: "Kategoriler", icon: "category" },
     { href: "/about", label: "Hakkımızda", icon: "info" },
     { href: "/contact", label: "İletişim", icon: "mail" },

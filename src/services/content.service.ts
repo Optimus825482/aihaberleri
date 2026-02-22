@@ -33,6 +33,7 @@ import {
   validateAndFixContent,
 } from "@/lib/content-validator";
 import { isAIRelatedContent, calculateAIRelevanceScore } from "@/lib/rss";
+import { upsertGlossaryWithArticleTerms } from "@/lib/ai-glossary";
 
 // ============================================================================
 // CONTENT CONSTANTS - Magic numbers extracted for maintainability
@@ -1147,6 +1148,15 @@ export async function publishArticle(
     await liveLog.publish.success(
       `✅ Yayınlandı: ${article.title.substring(0, 50)}... (Skor: ${score})`,
     );
+
+    upsertGlossaryWithArticleTerms({
+      title: article.title,
+      excerpt: article.excerpt,
+      content: article.content,
+      keywords: article.keywords,
+    }).catch((error) => {
+      console.error("AI glossary enrichment failed:", error);
+    });
 
     // 🚀 CACHE: Invalidate articles cache when new article published
     try {
