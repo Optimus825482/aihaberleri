@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import {
   Search,
   TrendingUp,
@@ -13,6 +14,11 @@ import {
   ExternalLink,
   RefreshCw,
   Lightbulb,
+  Zap,
+  CheckCircle2,
+  XCircle,
+  SkipForward,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { SEOPanel } from "@/components/admin/SEOPanel";
@@ -37,6 +43,27 @@ interface ArticleSEO {
   seoRecommendations?: SEORecommendation[];
 }
 
+interface BulkProgressItem {
+  index: number;
+  total: number;
+  articleId: string;
+  title: string;
+  status: "success" | "failed" | "skipped" | "error";
+  beforeScore: number;
+  afterScore: number;
+  scoreDelta: number;
+  message: string;
+}
+
+interface BulkResult {
+  processed: number;
+  succeeded: number;
+  failed: number;
+  skipped: number;
+  avgImprovement: number;
+  message?: string;
+}
+
 export default function SEOPage() {
   const [articles, setArticles] = useState<ArticleSEO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,11 +77,15 @@ export default function SEOPage() {
     total: 0,
   });
 
-  useEffect(() => {
-    fetchArticles();
-  }, []);
+  // Bulk optimize state
+  const [bulkOptimizing, setBulkOptimizing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<BulkProgressItem[]>([]);
+  const [bulkTotal, setBulkTotal] = useState(0);
+  const [bulkCurrent, setBulkCurrent] = useState(0);
+  const [bulkResult, setBulkResult] = useState<BulkResult | null>(null);
+  const bulkLogRef = useRef<HTMLDivElement>(null);
 
-  const fetchArticles = async () => {
+  const fetchArticles = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch("/api/admin/articles?include=seo");
@@ -63,7 +94,6 @@ export default function SEOPage() {
         const articlesData = data.articles || [];
         setArticles(articlesData);
 
-        // Calculate stats
         const total = articlesData.length;
         const avgScore =
           total > 0
@@ -83,7 +113,6 @@ export default function SEOPage() {
 
         setStats({ avgScore, optimized, needsWork, total });
 
-        // Auto-select first article with low score
         if (articlesData.length > 0 && !selectedArticle) {
           const lowScoreArticle = articlesData
             .sort(
@@ -101,7 +130,98 @@ export default function SEOPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedArticle]);
+
+  useEffect(() => {
+    fetchArticles();
+  }, [fetchArticles]);
+
+  // ─── Bulk Auto-Optimize ───
+  const startBulkOptimize = useCallback(async () => {
+    setBulkOptimizing(true);
+    setBulkProgress([]);
+    setBulkResult(null);
+    setBulkTotal(0);
+    setBulkCurrent(0);
+
+    try {
+      const response = await fetch("/api/admin/seo/auto-optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ maxScore: 80, limit: 50 }),
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error("Bağlantı hatası");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        let eventType = "";
+        for (const line of lines) {
+          if (line.startsWith("event: ")) {
+            eventType = line.slice(7).trim();
+          } else if (line.startsWith("data: ") && eventType) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              if (eventType === "start") {
+                setBulkTotal(data.total);
+              } else if (eventType === "progress") {
+                setBulkCurrent(data.index);
+                setBulkProgress((prev) => [...prev, data as BulkProgressItem]);
+                // Auto-scroll log
+                setTimeout(() => {
+                  bulkLogRef.current?.scrollTo({
+                    top: bulkLogRef.current.scrollHeight,
+                    behavior: "smooth",
+                  });
+                }, 50);
+              } else if (eventType === "complete") {
+                setBulkResult(data as BulkResult);
+              } else if (eventType === "error") {
+                setBulkResult({
+                  processed: 0,
+                  succeeded: 0,
+                  failed: 1,
+                  skipped: 0,
+                  avgImprovement: 0,
+                  message: data.message,
+                });
+              }
+            } catch {
+              // skip malformed JSON
+            }
+            eventType = "";
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Bulk optimize error:", err);
+      setBulkResult({
+        processed: 0,
+        succeeded: 0,
+        failed: 1,
+        skipped: 0,
+        avgImprovement: 0,
+        message: err instanceof Error ? err.message : "Bağlantı hatası",
+      });
+    } finally {
+      setBulkOptimizing(false);
+      // Bitince listeyi yenile
+      fetchArticles();
+    }
+  }, [fetchArticles]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600 bg-green-50 border-green-200";
@@ -119,12 +239,28 @@ export default function SEOPage() {
               Makale SEO performansını izleyin ve optimize edin
             </p>
           </div>
-          <Button onClick={fetchArticles} disabled={loading}>
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
-            />
-            Yenile
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={startBulkOptimize}
+              disabled={bulkOptimizing || loading || stats.needsWork === 0}
+              variant="default"
+            >
+              {bulkOptimizing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Zap className="h-4 w-4 mr-2" />
+              )}
+              {bulkOptimizing
+                ? `${bulkCurrent}/${bulkTotal} İşleniyor...`
+                : "Toplu Optimize"}
+            </Button>
+            <Button onClick={fetchArticles} disabled={loading || bulkOptimizing} variant="outline">
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+              />
+              Yenile
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -191,6 +327,123 @@ export default function SEOPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Bulk Optimize Progress */}
+        {(bulkOptimizing || bulkResult) && (
+          <Card className="border-2 border-primary/20">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Zap className="h-5 w-5" />
+                  Toplu Optimizasyon
+                </CardTitle>
+                {bulkResult && !bulkOptimizing && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setBulkResult(null);
+                      setBulkProgress([]);
+                    }}
+                  >
+                    Kapat
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Progress Bar */}
+              {bulkOptimizing && bulkTotal > 0 && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    <span>
+                      {bulkCurrent} / {bulkTotal} makale işlendi
+                    </span>
+                    <span>
+                      {Math.round((bulkCurrent / bulkTotal) * 100)}%
+                    </span>
+                  </div>
+                  <Progress
+                    value={(bulkCurrent / bulkTotal) * 100}
+                    className="h-2"
+                  />
+                </div>
+              )}
+
+              {/* Summary */}
+              {bulkResult && (
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="text-center p-2 rounded-lg bg-green-50 border border-green-200">
+                    <div className="text-lg font-bold text-green-700">
+                      {bulkResult.succeeded}
+                    </div>
+                    <div className="text-xs text-green-600">Başarılı</div>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-red-50 border border-red-200">
+                    <div className="text-lg font-bold text-red-700">
+                      {bulkResult.failed}
+                    </div>
+                    <div className="text-xs text-red-600">Başarısız</div>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-gray-50 border border-gray-200">
+                    <div className="text-lg font-bold text-gray-700">
+                      {bulkResult.skipped}
+                    </div>
+                    <div className="text-xs text-gray-600">Atlandı</div>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-blue-50 border border-blue-200">
+                    <div className="text-lg font-bold text-blue-700">
+                      +{bulkResult.avgImprovement}
+                    </div>
+                    <div className="text-xs text-blue-600">Ort. Artış</div>
+                  </div>
+                </div>
+              )}
+
+              {/* Log */}
+              {bulkProgress.length > 0 && (
+                <div
+                  ref={bulkLogRef}
+                  className="max-h-[250px] overflow-y-auto space-y-1 text-sm border rounded-lg p-2 bg-muted/30"
+                >
+                  {bulkProgress.map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 py-1 px-2 rounded hover:bg-muted/50"
+                    >
+                      {item.status === "success" ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      ) : item.status === "skipped" ? (
+                        <SkipForward className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                      )}
+                      <span className="truncate flex-1 min-w-0">
+                        {item.title}
+                      </span>
+                      {item.status === "success" && (
+                        <span className="text-green-600 font-medium flex-shrink-0">
+                          {item.message}
+                        </span>
+                      )}
+                      {item.status === "skipped" && (
+                        <span className="text-gray-400 flex-shrink-0 text-xs">
+                          atlandı
+                        </span>
+                      )}
+                      {(item.status === "failed" ||
+                        item.status === "error") && (
+                          <span className="text-red-500 flex-shrink-0 text-xs truncate max-w-[200px]">
+                            {item.message}
+                          </span>
+                        )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Article List */}
