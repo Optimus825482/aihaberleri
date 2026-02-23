@@ -33,6 +33,9 @@ export interface BulkJob {
   startedAt: number;
   completedAt: number | null;
   error: string | null;
+  /** Şu an işlenen makalenin bilgisi (pipeline.run devam ederken) */
+  processingTitle: string | null;
+  processingIndex: number | null;
 }
 
 // Singleton store — Node.js module cache sayesinde server boyunca persist eder
@@ -56,6 +59,8 @@ export const BulkJobStore = {
       startedAt: Date.now(),
       completedAt: null,
       error: null,
+      processingTitle: null,
+      processingIndex: null,
     };
     jobs.set(id, job);
     activeJobId = id;
@@ -76,6 +81,22 @@ export const BulkJobStore = {
 
   hasActiveJob(): boolean {
     return !!this.getActive();
+  },
+
+  /** Şu an işlenen makaleyi set et (pipeline.run başlamadan önce) */
+  setProcessing(id: string, index: number, title: string): void {
+    const job = jobs.get(id);
+    if (!job) return;
+    job.processingIndex = index;
+    job.processingTitle = title;
+  },
+
+  /** İşlem bitince temizle */
+  clearProcessing(id: string): void {
+    const job = jobs.get(id);
+    if (!job) return;
+    job.processingIndex = null;
+    job.processingTitle = null;
   },
 
   addProgress(id: string, item: BulkJobProgress): void {
@@ -100,6 +121,8 @@ export const BulkJobStore = {
     if (!job) return;
     job.status = "completed";
     job.completedAt = Date.now();
+    job.processingTitle = null;
+    job.processingIndex = null;
     if (activeJobId === id) activeJobId = null;
   },
 
@@ -109,6 +132,8 @@ export const BulkJobStore = {
     job.status = "failed";
     job.error = error;
     job.completedAt = Date.now();
+    job.processingTitle = null;
+    job.processingIndex = null;
     if (activeJobId === id) activeJobId = null;
   },
 

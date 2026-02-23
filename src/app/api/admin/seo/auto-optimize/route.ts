@@ -182,6 +182,8 @@ export async function GET(request: NextRequest) {
     error: job.error,
     startedAt: job.startedAt,
     completedAt: job.completedAt,
+    processingTitle: job.processingTitle,
+    processingIndex: job.processingIndex,
   });
 }
 
@@ -232,6 +234,9 @@ async function runBulkOptimize(
     }
 
     try {
+      // 🔄 İşlenmeye başlandığını kaydet (polling'de göstermek için)
+      BulkJobStore.setProcessing(jobId, i + 1, article.title);
+
       const result = await pipeline.run({
         title: article.title,
         content: article.content || "",

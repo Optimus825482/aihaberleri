@@ -83,6 +83,7 @@ export default function SEOPage() {
   const [bulkTotal, setBulkTotal] = useState(0);
   const [bulkCurrent, setBulkCurrent] = useState(0);
   const [bulkResult, setBulkResult] = useState<BulkResult | null>(null);
+  const [processingTitle, setProcessingTitle] = useState<string | null>(null);
   const bulkLogRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdRef = useRef<string | null>(null);
@@ -179,11 +180,13 @@ export default function SEOPage() {
 
       setBulkTotal(data.total);
       setBulkCurrent(data.current);
+      setProcessingTitle(data.processingTitle || null);
 
       // Job bitti mi?
       if (!data.active) {
         stopPolling();
         setBulkOptimizing(false);
+        setProcessingTitle(null);
         setBulkResult({
           processed: data.total,
           succeeded: data.succeeded,
@@ -257,6 +260,7 @@ export default function SEOPage() {
     setBulkResult(null);
     setBulkTotal(0);
     setBulkCurrent(0);
+    setProcessingTitle(null);
 
     try {
       const response = await fetch("/api/admin/seo/auto-optimize", {
@@ -437,6 +441,12 @@ export default function SEOPage() {
                     value={(bulkCurrent / bulkTotal) * 100}
                     className="h-2"
                   />
+                  {processingTitle && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span className="truncate">İşleniyor: {processingTitle}</span>
+                    </div>
+                  )}
                 </div>
               )}
 
