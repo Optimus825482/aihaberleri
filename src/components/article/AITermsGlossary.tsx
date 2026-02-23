@@ -3,7 +3,8 @@ import {
     getAITermAnchor,
     getAITermsGlossary,
     getRelevantAITermsForText,
-} from "@/lib/ai-glossary";
+    type AITermEntry,
+} from "../../lib/ai-glossary";
 import { cn } from "@/lib/utils";
 
 interface AITermsGlossaryProps {
@@ -12,6 +13,8 @@ interface AITermsGlossaryProps {
     maxTerms?: number;
     compact?: boolean;
     className?: string;
+    glossaryPagePath?: string;
+    viewAllLabel?: string;
 }
 
 export async function AITermsGlossary({
@@ -20,6 +23,8 @@ export async function AITermsGlossary({
     maxTerms = 8,
     compact = false,
     className,
+    glossaryPagePath = "/ai-terimler",
+    viewAllLabel = "Tümünü Gör",
 }: AITermsGlossaryProps) {
     const terms = articleText
         ? await getRelevantAITermsForText(articleText, maxTerms)
@@ -37,17 +42,21 @@ export async function AITermsGlossary({
             )}
         >
             <div className="mb-3 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px] text-ai-primary">
-                    auto_awesome
-                </span>
-                <h2 className="text-sm font-semibold text-white">{title}</h2>
+                <span className="material-symbols-outlined text-[18px] text-ai-primary">auto_awesome</span>
+                <h2 className="text-sm font-semibold text-white flex-1">{title}</h2>
+                <Link
+                    href={glossaryPagePath}
+                    className="inline-flex min-h-11 items-center rounded-lg px-3 text-xs font-semibold text-ai-primary hover:text-ai-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ai-primary/60 transition-colors"
+                >
+                    {viewAllLabel}
+                </Link>
             </div>
 
             <div className="flex flex-wrap gap-2">
-                {terms.map((item) => (
+                {terms.map((item: AITermEntry) => (
                     <Link
                         key={item.term}
-                        href={`/ai-terimler#${getAITermAnchor(item.term)}`}
+                        href={`${glossaryPagePath}#${getAITermAnchor(item.term)}`}
                         title={item.description}
                         className="rounded-full border border-ai-surface-border bg-ai-surface-dark px-3 py-1 text-xs font-semibold text-ai-text-secondary hover:text-white hover:border-ai-primary/40 transition-colors"
                     >
@@ -58,7 +67,7 @@ export async function AITermsGlossary({
 
             {!compact && (
                 <div className="mt-4 space-y-2">
-                    {terms.slice(0, 3).map((item) => (
+                    {terms.slice(0, 3).map((item: AITermEntry) => (
                         <p key={item.term} className="text-xs text-ai-text-secondary leading-relaxed">
                             <span className="font-semibold text-white">{item.term}:</span> {item.description}
                         </p>

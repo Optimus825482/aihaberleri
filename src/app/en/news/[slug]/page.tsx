@@ -31,6 +31,7 @@ import {
 } from "@/lib/seo";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { AdSlot } from "@/components/AdSlot";
+import { AITermsGlossary } from "@/components/article/AITermsGlossary";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -464,6 +465,15 @@ export default async function EnglishArticlePage({ params }: Props) {
         {/* Related Articles */}
         {relatedArticles.length > 0 && (
           <section className="max-w-4xl mx-auto">
+              <AITermsGlossary
+                title="AI Terms in This Article"
+                articleText={`${article.title} ${article.excerpt} ${article.content}`}
+                maxTerms={10}
+                compact
+                glossaryPagePath="/en/ai-terms"
+                viewAllLabel="View All"
+              />
+
             <h2 className="text-2xl font-bold mb-6 text-white flex items-center gap-2">
               <span className="material-symbols-outlined text-[24px] text-ai-primary">
                 recommend

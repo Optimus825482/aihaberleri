@@ -464,10 +464,6 @@ export default async function HomePage() {
           {/* Today's Trending — Top 5 by trend score (VURGULU - önce göster) */}
           <TodayTrending locale="tr" />
 
-          {featureSettings.showGlossary && (
-            <AITermsGlossary maxTerms={10} />
-          )}
-
           {featureSettings.showModelCards && (
             <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {modelTagCards.map((item) => {
@@ -646,6 +642,31 @@ export default async function HomePage() {
             {/* Right Column - Sidebar */}
             <TrendingSidebar locale="tr" />
           </div>
+
+          {featureSettings.showGlossary && (
+            <section className="mt-12 rounded-2xl border border-ai-surface-border bg-ai-surface-card p-5 sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-lg font-black text-white flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[20px] text-ai-primary">
+                    glossary
+                  </span>
+                  AI Terimler Sözlüğü
+                </h2>
+                <Link
+                  href="/ai-terimler"
+                  className="text-xs font-semibold text-ai-primary hover:text-ai-primary-hover"
+                >
+                  Tüm Sözlüğe Git
+                </Link>
+              </div>
+
+              <AITermsGlossary
+                title="Gündemdeki AI Terimleri"
+                maxTerms={12}
+                className="mb-0"
+              />
+            </section>
+          )}
         </div>
       </main>
     </div>

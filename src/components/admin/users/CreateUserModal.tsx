@@ -114,6 +114,9 @@ export default function CreateUserModal({
           </h2>
           <button
             onClick={onClose}
+            type="button"
+            title="Pencereyi kapat"
+            aria-label="Pencereyi kapat"
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-gray-500" />
@@ -124,11 +127,12 @@ export default function CreateUserModal({
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="create-user-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <User className="w-4 h-4 inline mr-2" />
               İsim
             </label>
             <input
+              id="create-user-name"
               type="text"
               name="name"
               value={formData.name}
@@ -147,11 +151,12 @@ export default function CreateUserModal({
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="create-user-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Mail className="w-4 h-4 inline mr-2" />
               Email
             </label>
             <input
+              id="create-user-email"
               type="email"
               name="email"
               value={formData.email}
@@ -170,11 +175,12 @@ export default function CreateUserModal({
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="create-user-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Lock className="w-4 h-4 inline mr-2" />
               Şifre
             </label>
             <input
+              id="create-user-password"
               type="password"
               name="password"
               value={formData.password}
@@ -193,11 +199,12 @@ export default function CreateUserModal({
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="create-user-confirm-password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Lock className="w-4 h-4 inline mr-2" />
               Şifre Tekrar
             </label>
             <input
+              id="create-user-confirm-password"
               type="password"
               name="confirmPassword"
               value={formData.confirmPassword}
@@ -218,11 +225,14 @@ export default function CreateUserModal({
 
           {/* Role */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="create-user-role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               <Shield className="w-4 h-4 inline mr-2" />
               Rol
             </label>
             <select
+              id="create-user-role"
+              title="Kullanıcı rolü seçin"
+              aria-label="Kullanıcı rolü seçin"
               name="role"
               value={formData.role}
               onChange={handleChange}

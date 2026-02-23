@@ -5,37 +5,47 @@ import {
     getAITermAnchor,
     getAITermsGlossary,
     type AITermEntry,
-} from "../../lib/ai-glossary";
+} from "../../../lib/ai-glossary";
 
 export const metadata: Metadata = {
-    title: "AI Terimler Mini Sözlük",
+    title: "AI Terms Glossary",
     description:
-        "AI haberlerinde geçen teknik terimlerin sade ve doğru açıklamaları.",
+        "Clear explanations of technical AI terms used in our news coverage.",
+    alternates: {
+        canonical: "https://aihaberleri.org/en/ai-terms",
+        languages: {
+            tr: "https://aihaberleri.org/ai-terimler",
+            en: "https://aihaberleri.org/en/ai-terms",
+        },
+    },
 };
 
 export const dynamic = "force-dynamic";
 
 function getGroupKey(term: string): string {
-    const first = term.trim().charAt(0).toLocaleUpperCase("tr-TR");
-    return /^[A-ZÇĞİIÖŞÜ0-9]$/u.test(first) ? first : "#";
+    const first = term.trim().charAt(0).toUpperCase();
+    return /^[A-Z0-9]$/.test(first) ? first : "#";
 }
 
-export default async function AITermsPage() {
+export default async function EnglishAITermsPage() {
     const terms = await getAITermsGlossary(500);
 
     const sortedTerms = [...terms].sort((a, b) =>
-        a.term.localeCompare(b.term, "tr", { sensitivity: "base" }),
+        a.term.localeCompare(b.term, "en", { sensitivity: "base" }),
     );
 
-    const groupedTerms = sortedTerms.reduce<Record<string, AITermEntry[]>>((acc, item) => {
-        const key = getGroupKey(item.term);
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(item);
-        return acc;
-    }, {});
+    const groupedTerms = sortedTerms.reduce<Record<string, AITermEntry[]>>(
+        (acc, item) => {
+            const key = getGroupKey(item.term);
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(item);
+            return acc;
+        },
+        {},
+    );
 
     const groupKeys = Object.keys(groupedTerms).sort((a, b) =>
-        a.localeCompare(b, "tr", { sensitivity: "base" }),
+        a.localeCompare(b, "en", { sensitivity: "base" }),
     );
 
     return (
@@ -44,46 +54,54 @@ export default async function AITermsPage() {
                 <header className="mb-8 rounded-2xl border border-ai-surface-border bg-ai-surface-card p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-black text-white sm:text-3xl">AI Terimler Sözlüğü</h1>
+                            <h1 className="text-2xl font-black text-white sm:text-3xl">
+                                AI Terms Glossary
+                            </h1>
                             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ai-text-secondary">
-                                Haberlerde geçen teknik kavramları kısa, net ve kullanıcı dostu açıklamalarla takip edin.
+                                Explore technical AI terms with short, practical explanations.
                             </p>
                         </div>
                         <span className="inline-flex min-h-11 items-center rounded-xl border border-ai-surface-border bg-ai-surface-dark px-4 text-sm font-semibold text-white">
-                            {sortedTerms.length} terim
+                            {sortedTerms.length} terms
                         </span>
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-2">
                         <Link
-                            href="/"
+                            href="/en"
                             className="inline-flex min-h-11 items-center rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 text-xs font-semibold text-ai-text-secondary hover:text-white transition-colors"
                         >
-                            Ana sayfaya dön
+                            Back to homepage
                         </Link>
                         <Link
-                            href="/en/ai-terms"
+                            href="/ai-terimler"
                             className="inline-flex min-h-11 items-center rounded-lg border border-ai-surface-border bg-ai-surface-dark px-3 text-xs font-semibold text-ai-text-secondary hover:text-white transition-colors"
                         >
-                            English version
+                            Türkçe version
                         </Link>
                     </div>
                 </header>
 
                 {sortedTerms.length === 0 ? (
                     <section className="rounded-2xl border border-ai-surface-border bg-ai-surface-card p-8 text-center">
-                        <p className="text-sm text-ai-text-secondary">Henüz sözlük terimi bulunamadı.</p>
+                        <p className="text-sm text-ai-text-secondary">
+                            No glossary terms available yet.
+                        </p>
                     </section>
                 ) : (
                     <>
                         <GlossaryAlphabetNav
                             keys={groupKeys}
-                            title="Alfabetik Hızlı Gezinme"
+                            title="Alphabetical Quick Jump"
                         />
 
                         <section className="space-y-6">
                             {groupKeys.map((key) => (
-                                <div key={key} id={`group-${key}`} className="rounded-2xl border border-ai-surface-border bg-ai-surface-card p-4 sm:p-5">
+                                <div
+                                    key={key}
+                                    id={`group-${key}`}
+                                    className="rounded-2xl border border-ai-surface-border bg-ai-surface-card p-4 sm:p-5"
+                                >
                                     <h2 className="mb-4 text-lg font-black text-white">{key}</h2>
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         {groupedTerms[key].map((item) => (
@@ -113,7 +131,7 @@ export default async function AITermsPage() {
                                     </div>
                                 </div>
                             ))}
-                            </section>
+                        </section>
                     </>
                 )}
             </div>

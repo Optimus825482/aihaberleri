@@ -352,8 +352,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 <AudioPlayer title={article.title} text={article.content} />
               </div>
 
-              {insightSettings.showGlossary && <AITermsGlossary maxTerms={6} />}
-
               <ArticleInsightTopSections
                 locale="tr"
                 summaryPoints={
@@ -469,6 +467,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   />
                 </div>
 
+                {insightSettings.showGlossary && (
+                  <AITermsGlossary
+                    title="Bu Haberde Geçen AI Terimleri"
+                    articleText={`${article.title} ${article.excerpt} ${article.content}`}
+                    maxTerms={10}
+                    compact
+                    className="mb-0"
+                  />
+                )}
+
                 {/* Trending / Related */}
                 <div className="bg-ai-surface-card rounded-xl p-6 border border-ai-surface-border">
                   <h3 className="font-bold text-lg mb-4 text-white flex items-center gap-2">
@@ -520,16 +528,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     )}
                   </div>
                 </div>
-
-                {insightSettings.showGlossary && (
-                  <AITermsGlossary
-                    title="Bu Haberde Geçen Terimler"
-                    articleText={`${article.title} ${article.excerpt} ${article.content}`}
-                    maxTerms={10}
-                    compact
-                    className="mb-0"
-                  />
-                )}
               </div>
             </aside>
           </div>

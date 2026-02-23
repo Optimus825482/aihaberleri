@@ -148,6 +148,9 @@ export function ServiceWorkerRegistration() {
             </Button>
             <button
               onClick={() => setShowInstall(false)}
+              type="button"
+              title="Yükleme bildirimini kapat"
+              aria-label="Yükleme bildirimini kapat"
               className="text-muted-foreground hover:text-foreground p-1"
             >
               <X className="w-4 h-4" />
@@ -176,6 +179,9 @@ export function ServiceWorkerRegistration() {
             </Button>
             <button
               onClick={dismissNotification}
+              type="button"
+              title="Bildirim kartını kapat"
+              aria-label="Bildirim kartını kapat"
               className="text-muted-foreground hover:text-foreground p-1"
             >
               <X className="w-4 h-4" />

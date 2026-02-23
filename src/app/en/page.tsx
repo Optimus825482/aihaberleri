@@ -14,6 +14,7 @@ import { TrendingSidebar } from "@/components/TrendingSidebar";
 import { CategoryFilters } from "@/components/CategoryFilters";
 import { TodayTrending } from "@/components/TodayTrending";
 import { AdSlot } from "@/components/AdSlot";
+import { AITermsGlossary } from "@/components/article/AITermsGlossary";
 import {
   generateOrganizationSchema,
   generateWebSiteSchema,
@@ -320,6 +321,31 @@ export default async function EnglishHomePage() {
             {/* Right Column - Sidebar */}
             <TrendingSidebar locale="en" />
           </div>
+
+          <section className="mt-12 rounded-2xl border border-ai-surface-border bg-ai-surface-card p-5 sm:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-lg font-black text-white flex items-center gap-2">
+                <span className="material-symbols-outlined text-[20px] text-ai-primary">
+                  glossary
+                </span>
+                AI Terms Glossary
+              </h2>
+              <Link
+                href="/en/ai-terms"
+                className="text-xs font-semibold text-ai-primary hover:text-ai-primary-hover"
+              >
+                Open Glossary
+              </Link>
+            </div>
+
+            <AITermsGlossary
+              title="Trending AI Terms"
+              maxTerms={12}
+              glossaryPagePath="/en/ai-terms"
+              viewAllLabel="View All"
+              className="mb-0"
+            />
+          </section>
         </div>
       </main>
     </div>
