@@ -49,8 +49,7 @@ services:
       - ./scripts/postgres-backup.sh:/scripts/postgres-backup.sh:ro
       - ./backups/postgres:/backups
     command: >
-      sh -c "chmod +x /scripts/postgres-backup.sh &&
-      echo '0 3 * * * /scripts/postgres-backup.sh >> /var/log/postgres-backup.log 2>&1' > /etc/crontabs/root &&
+      sh -c "echo '0 3 * * * sh /scripts/postgres-backup.sh >> /var/log/postgres-backup.log 2>&1' > /etc/crontabs/root &&
       crond -f -l 8"
     depends_on:
       postgres:
