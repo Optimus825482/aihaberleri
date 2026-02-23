@@ -1,31 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { callDeepSeek, DeepSeekMessage } from "@/lib/deepseek";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 /**
  * POST /api/admin/news/extract-topic
  * URL'den konu/topic çıkarma
- * 
+ *
  * Request: { url: string }
  * Response: { topic, summary, language, sourceTitle, sourceDescription }
  */
 export async function POST(request: NextRequest) {
   try {
-    // JWT Authentication
-    const token = request.cookies.get("admin-session")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const secret = new TextEncoder().encode(
-      process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-    );
-
-    try {
-      await jwtVerify(token, secret);
-    } catch {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
 
     // Parse request body
@@ -33,10 +21,7 @@ export async function POST(request: NextRequest) {
     const { url } = body;
 
     if (!url) {
-      return NextResponse.json(
-        { error: "URL is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "URL is required" }, { status: 400 });
     }
 
     // Validate URL
@@ -45,7 +30,7 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json(
         { error: "Invalid URL format" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -178,7 +163,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Detect language
-    const language = detectLanguage(sourceTitle + " " + sourceDescription + " " + pageContent);
+    const language = detectLanguage(
+      sourceTitle + " " + sourceDescription + " " + pageContent,
+    );
 
     // Step 2: Use DeepSeek to analyze topic
     let topic = "";
@@ -211,7 +198,7 @@ Return ONLY a JSON object with these exact fields:
 
       const messages: DeepSeekMessage[] = [
         { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
+        { role: "user", content: userPrompt },
       ];
 
       const response = await callDeepSeek(messages, {
@@ -247,12 +234,14 @@ Return ONLY a JSON object with these exact fields:
       sourceTitle: sourceTitle || "Başlık bulunamadı",
       sourceDescription: sourceDescription || "Açıklama bulunamadı",
     });
-
   } catch (error) {
     console.error("❌ Extract topic error:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Topic extraction failed" },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error ? error.message : "Topic extraction failed",
+      },
+      { status: 500 },
     );
   }
 }

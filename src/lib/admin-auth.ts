@@ -6,6 +6,7 @@
 import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { isJwtRevokedByTimestamp } from "@/lib/auth/session-revocation";
 
 export const getJwtSecret = (): Uint8Array => {
   const secret = process.env.NEXTAUTH_SECRET;
@@ -45,8 +46,15 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
 
+    const userId = payload.id as string;
+    const tokenIssuedAt = payload.iat as number | undefined;
+    const isRevoked = await isJwtRevokedByTimestamp(userId, tokenIssuedAt);
+    if (isRevoked) {
+      return null;
+    }
+
     return {
-      id: payload.id as string,
+      id: userId,
       email: payload.email as string,
       name: payload.name as string,
       role: payload.role as string,

@@ -177,33 +177,6 @@ export async function withSecurity(
 }
 
 /**
- * Authentication middleware (placeholder)
- *
- * TODO: Implement after authentication system is ready
- */
-export async function withAuth(
-  _request: NextRequest,
-): Promise<{ authenticated: boolean; userId?: string }> {
-  // TODO: Check session/JWT token
-  // For now, return unauthenticated
-  return { authenticated: false };
-}
-
-/**
- * Authorization middleware (placeholder)
- *
- * TODO: Implement after role-based access control is ready
- */
-export async function withAuthorization(
-  _request: NextRequest,
-  _requiredRole: "admin" | "editor" | "viewer",
-): Promise<boolean> {
-  // TODO: Check user role
-  // For now, return false
-  return false;
-}
-
-/**
  * Audit logging middleware
  *
  * Log all security-relevant events

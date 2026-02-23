@@ -9,6 +9,10 @@ import { Job, Worker } from "bullmq";
 import { getRedis } from "@/lib/redis";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 import { getQueue, getQueueConfig } from "@/lib/queue-manager";
+import {
+  updateAgentHealth,
+  exitRecoveryMode,
+} from "@/services/multi-agent-pipeline.service";
 
 // ============================================================================
 // AGENT TIMEOUT CONFIG (FAZ 3)
@@ -162,8 +166,6 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
           }
 
           // FAZ 3: Update agent health status on success
-          const { updateAgentHealth, exitRecoveryMode } =
-            await import("@/services/multi-agent-pipeline.service");
           await updateAgentHealth(this.config.name, true);
           if (result.success) {
             await exitRecoveryMode(this.config.name);
@@ -190,8 +192,6 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
 
           // FAZ 3: Update agent health status on failure
           if (error instanceof Error && error.message.includes("timed out")) {
-            const { updateAgentHealth } =
-              await import("@/services/multi-agent-pipeline.service");
             await updateAgentHealth(this.config.name, false);
             this.logger.error(
               `⏰ Agent ${this.config.name} timed out - health updated`,
@@ -423,9 +423,19 @@ export async function withTimeout<T>(
   timeoutMs: number,
   errorMessage: string = "Operation timed out",
 ): Promise<T> {
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
+    timeoutHandle = setTimeout(
+      () => reject(new Error(errorMessage)),
+      timeoutMs,
+    );
   });
 
-  return Promise.race([promise, timeoutPromise]);
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+  }
 }

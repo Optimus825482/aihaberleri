@@ -119,10 +119,7 @@ if (process.env.NODE_ENV === "production") {
   }
 }
 
-if (
-  process.env.NODE_ENV !== "production" &&
-  process.env.SKIP_ENV_VALIDATION !== "1"
-) {
+if (process.env.SKIP_ENV_VALIDATION !== "1") {
   globalForPrisma.prisma = db as PrismaClient;
 }
 

@@ -8,11 +8,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCachedGeolocation } from "@/lib/geolocation";
 import { parseUserAgent } from "@/lib/ua-parser";
+import { RateLimiter, createRateLimitHeaders } from "@/lib/rate-limiter";
 
-// Rate limit: 30 req/min per IP
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW = 60000;
-const RATE_LIMIT_MAX = 30;
+const pageViewRateLimiter = new RateLimiter();
+const PAGEVIEW_RATE_LIMIT = { maxRequests: 30, windowMs: 60000 };
 
 // In-memory geo cache
 const geoCache = new Map<string, { data: any; timestamp: number }>();
@@ -27,18 +26,6 @@ const memoryCache = {
     geoCache.set(key, { data: value, timestamp: Date.now() });
   },
 };
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT_MAX) return false;
-  entry.count++;
-  return true;
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -90,9 +77,19 @@ export async function POST(request: NextRequest) {
       request.headers.get("x-real-ip") ||
       "unknown";
 
-    if (!checkRateLimit(ip)) {
-      return NextResponse.json({ error: "Rate limited" }, { status: 429 });
+    const rateLimit = await pageViewRateLimiter.check(
+      `analytics:pageview:ip:${ip}`,
+      PAGEVIEW_RATE_LIMIT,
+    );
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Rate limited", retryAfter: rateLimit.retryAfter },
+        { status: 429, headers: createRateLimitHeaders(rateLimit) },
+      );
     }
+
+    const existingVisitorToken = request.cookies.get("visitor_token")?.value;
+    const visitorToken = existingVisitorToken || crypto.randomUUID();
 
     const userAgent = request.headers.get("user-agent") || "";
     const { device, browser, os } = parseUserAgent(userAgent);
@@ -107,8 +104,9 @@ export async function POST(request: NextRequest) {
 
     // Upsert visitor with full data
     const visitor = await db.visitor.upsert({
-      where: { ipAddress: ip },
+      where: { visitorToken },
       update: {
+        ipAddress: ip,
         userAgent,
         currentPage: path,
         lastActivity: new Date(),
@@ -130,6 +128,7 @@ export async function POST(request: NextRequest) {
         }),
       },
       create: {
+        visitorToken,
         ipAddress: ip,
         userAgent,
         currentPage: path,
@@ -171,10 +170,22 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       visitorId: visitor.id,
     });
+
+    if (!existingVisitorToken) {
+      response.cookies.set("visitor_token", visitorToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 365,
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (error) {
     console.error("[PageView] Error:", error);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

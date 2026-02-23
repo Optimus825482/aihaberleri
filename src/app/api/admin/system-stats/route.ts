@@ -5,16 +5,12 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import os from "os";
 import { execFile } from "child_process";
 import { promisify } from "util";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-);
 
 const execFileAsync = promisify(execFile);
 
@@ -34,7 +30,12 @@ function getCpuUsage(): number {
 
     for (const cpu of cpus) {
       totalIdle += cpu.times.idle;
-      totalTick += cpu.times.user + cpu.times.nice + cpu.times.sys + cpu.times.irq + cpu.times.idle;
+      totalTick +=
+        cpu.times.user +
+        cpu.times.nice +
+        cpu.times.sys +
+        cpu.times.irq +
+        cpu.times.idle;
     }
 
     if (previousCpuInfo) {
@@ -75,7 +76,14 @@ async function getDiskUsage(): Promise<DiskInfo> {
       // Windows: Use wmic command
       const { stdout } = await execFileAsync(
         "wmic",
-        ["logicaldisk", "where", "drivetype=3", "get", "size,freespace", "/format:csv"],
+        [
+          "logicaldisk",
+          "where",
+          "drivetype=3",
+          "get",
+          "size,freespace",
+          "/format:csv",
+        ],
         {
           encoding: "utf8",
           timeout: 5000,
@@ -137,17 +145,9 @@ async function getDiskUsage(): Promise<DiskInfo> {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check authentication
-    const token = request.cookies.get("admin-session")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
-    }
-
-    try {
-      await jwtVerify(token, JWT_SECRET);
-    } catch {
-      return NextResponse.json({ error: "Geçersiz oturum" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
 
     // 🚀 PERFORMANCE: Return cached data if still valid

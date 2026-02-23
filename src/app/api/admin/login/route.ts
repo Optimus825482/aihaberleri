@@ -10,6 +10,7 @@ import {
   createRateLimitResponse,
 } from "@/lib/rate-limiter";
 import { getJwtSecret } from "@/lib/admin-auth";
+import { apiLogger } from "@/lib/logger";
 
 const JWT_SECRET = getJwtSecret();
 const LOGIN_RATE_LIMIT = { maxRequests: 10, windowMs: 60_000 };
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const { email, password } = await req.json();
 
-    console.log("[SIMPLE_LOGIN] Attempting login for:", email);
+    apiLogger.request("POST", "/api/admin/login", { email });
 
     if (!email || !password) {
       return NextResponse.json(
@@ -64,7 +65,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("[SIMPLE_LOGIN] User found:", {
+    apiLogger.response("POST", "/api/admin/login:user-check", 200, 0);
+    apiLogger.request("POST", "/api/admin/login:user-check", {
       exists: !!user,
       hasPassword: !!user?.password,
     });
@@ -82,7 +84,9 @@ export async function POST(req: NextRequest) {
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    console.log("[SIMPLE_LOGIN] Password valid:", isPasswordValid);
+    apiLogger.request("POST", "/api/admin/login:password-check", {
+      isPasswordValid,
+    });
 
     if (!isPasswordValid) {
       return NextResponse.json(
@@ -106,7 +110,9 @@ export async function POST(req: NextRequest) {
       .setExpirationTime("30d")
       .sign(JWT_SECRET);
 
-    console.log("[SIMPLE_LOGIN] Token created, setting cookie");
+    apiLogger.request("POST", "/api/admin/login:token", {
+      tokenCreated: true,
+    });
 
     // Set cookie
     const cookieStore = await cookies();
@@ -118,7 +124,7 @@ export async function POST(req: NextRequest) {
       path: "/",
     });
 
-    console.log("[SIMPLE_LOGIN] Login successful for:", user.email);
+    apiLogger.response("POST", "/api/admin/login", 200, 0);
 
     return NextResponse.json(
       {
@@ -135,7 +141,11 @@ export async function POST(req: NextRequest) {
       },
     );
   } catch (error) {
-    console.error("[SIMPLE_LOGIN] Error:", error);
+    apiLogger.error(
+      "POST",
+      "/api/admin/login",
+      error instanceof Error ? error : new Error(String(error)),
+    );
     return NextResponse.json(
       { error: "Giriş yapılırken bir hata oluştu" },
       { status: 500 },

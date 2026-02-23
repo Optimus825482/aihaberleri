@@ -12,7 +12,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getCurrentSession,
   validateSession,
-  revokeAllSessions,
+  invalidateSessionCache,
 } from "@/lib/auth/session";
 import { signOut } from "@/lib/auth";
 
@@ -100,8 +100,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Revoke all sessions
-    await revokeAllSessions(session.user.id);
+    await invalidateSessionCache(session.user.id);
 
     // Sign out current session
     await signOut();

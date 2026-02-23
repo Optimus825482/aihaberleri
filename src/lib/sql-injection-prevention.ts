@@ -14,39 +14,22 @@
 /**
  * Sanitize input to prevent SQL injection
  *
- * OWASP A05 Injection prevention:
- * - Remove SQL keywords
- * - Escape special characters
- * - Remove comments
- * - Remove semicolons
+ * Prisma parametreli sorgular kullandığı için SQL anahtar kelime stripping yapılmaz.
+ * Bu fonksiyon yalnızca HTML/XSS risklerini azaltmaya odaklanır.
  */
 export function sanitizeInput(input: string | null | undefined): string {
   if (!input) return "";
 
   return (
     input
-      // Remove SQL comments
-      .replace(/--/g, "")
-      .replace(/\/\*/g, "")
-      .replace(/\*\//g, "")
+      // Remove script tags
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
 
-      // Remove semicolons (statement separator)
-      .replace(/;/g, "")
+      // Remove inline event handlers (onclick, onerror, ...)
+      .replace(/\son\w+\s*=\s*(["']).*?\1/gi, "")
 
-      // Escape single quotes
-      .replace(/'/g, "''")
-
-      // Remove SQL keywords (case-insensitive)
-      .replace(
-        /\b(DROP|DELETE|INSERT|UPDATE|UNION|SELECT|EXEC|EXECUTE|SCRIPT|JAVASCRIPT|ALERT|ONERROR|ONLOAD)\b/gi,
-        "",
-      )
-
-      // Remove SLEEP/BENCHMARK (blind injection)
-      .replace(/\b(SLEEP|BENCHMARK|WAITFOR)\b/gi, "")
-
-      // Remove hex encoding attempts
-      .replace(/0x[0-9a-f]+/gi, "")
+      // Remove javascript: pseudo-protocol
+      .replace(/javascript\s*:/gi, "")
 
       // Trim whitespace
       .trim()

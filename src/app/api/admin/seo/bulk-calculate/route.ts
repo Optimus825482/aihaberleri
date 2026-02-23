@@ -6,12 +6,15 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth/middleware";
-import { Role } from "@prisma/client";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { nanoid } from "nanoid";
+import { requireAdminAuth, type AdminSession } from "@/lib/admin-auth";
+
+function hasRequiredRole(session: AdminSession, roles: string[]) {
+  return roles.includes(session.role) || session.role === "SUPER_ADMIN";
+}
 
 // Request validation schema
 const BulkCalculateSchema = z.object({
@@ -22,13 +25,12 @@ const BulkCalculateSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  // Authentication & Authorization check - ADMIN only
-  const authResult = await withAuth(request, {
-    roles: [Role.ADMIN],
-  });
-
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  if (!hasRequiredRole(session, ["ADMIN"])) {
+    return NextResponse.json({ error: "Yetki yetersiz" }, { status: 403 });
   }
 
   try {
@@ -158,14 +160,12 @@ export async function POST(request: NextRequest) {
 
 // GET method to check queue status
 export async function GET(request: NextRequest) {
-  // Authentication & Authorization check - ADMIN only
-  const authResult = await withAuth(request, {
-    roles: [Role.ADMIN],
-    skipCSRF: true, // GET request
-  });
-
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  if (!hasRequiredRole(session, ["ADMIN"])) {
+    return NextResponse.json({ error: "Yetki yetersiz" }, { status: 403 });
   }
 
   try {

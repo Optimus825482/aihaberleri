@@ -2,14 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCachedGeoIPBatch } from "@/lib/geoip-cache";
 import { getCache } from "@/lib/cache";
-import { jwtVerify } from "jose";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-);
 
 interface AnalyticsRecord {
   ipAddress: string | null;
@@ -33,17 +29,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const range = searchParams.get("range") || "30m"; // Default 30 min
 
-    // Check authentication using custom JWT
-    const token = request.cookies.get("admin-session")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
-    }
-
-    try {
-      await jwtVerify(token, JWT_SECRET);
-    } catch (error) {
-      return NextResponse.json({ error: "Geçersiz oturum" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
 
     // 🚀 ADVANCED CACHE: Use CacheManager (2 min TTL)

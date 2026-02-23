@@ -50,80 +50,97 @@ function checkRateLimit(ip: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { userAgent, currentPage } = body;
+      const existingVisitorToken = request.cookies.get("visitor_token")?.value;
+      const visitorToken = existingVisitorToken || crypto.randomUUID();
 
-    // Get IP from request headers (server-side) — no need for client-side external API
-    const ipAddress =
-      body.ipAddress || // backward compat
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
+      const body = await request.json();
+      const { userAgent, currentPage } = body;
 
-    if (!ipAddress || ipAddress === "unknown") {
-      return NextResponse.json(
-        { success: false, error: "IP address required" },
-        { status: 400 },
-      );
-    }
+      // Get IP from request headers (server-side) — no need for client-side external API
+      const ipAddress =
+        body.ipAddress || // backward compat
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        request.headers.get("x-real-ip") ||
+        "unknown";
 
-    // Rate limit check
-    if (!checkRateLimit(ipAddress)) {
-      return NextResponse.json(
-        { success: false, error: "Rate limit exceeded" },
-        { status: 429 },
-      );
-    }
+      if (!ipAddress || ipAddress === "unknown") {
+        return NextResponse.json(
+          { success: false, error: "IP address required" },
+          { status: 400 },
+        );
+      }
 
-    // Get location from IP with caching
-    let location = null;
-    try {
-      location = await getCachedGeolocation(ipAddress, memoryCache, 86400);
-    } catch (error) {
-      console.warn("Failed to get geolocation for", ipAddress, error);
-    }
+      // Rate limit check
+      if (!checkRateLimit(ipAddress)) {
+        return NextResponse.json(
+          { success: false, error: "Rate limit exceeded" },
+          { status: 429 },
+        );
+      }
 
-    // Upsert visitor (update if exists, create if not)
-    const visitor = await db.visitor.upsert({
-      where: { ipAddress },
-      update: {
-        userAgent: userAgent || undefined,
-        currentPage: currentPage || "/",
-        lastActivity: new Date(),
-        ...(location && {
-          country: location.country,
-          countryCode: location.countryCode,
-          city: location.city,
-          region: location.region,
-          isp: location.isp,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          timezone: location.timezone,
-          provider: location.provider,
-        }),
-      },
-      create: {
-        ipAddress,
-        userAgent: userAgent || null,
-        currentPage: currentPage || "/",
-        ...(location && {
-          country: location.country,
-          countryCode: location.countryCode,
-          city: location.city,
-          region: location.region,
-          isp: location.isp,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          timezone: location.timezone,
-          provider: location.provider,
-        }),
-      },
-    });
+      // Get location from IP with caching
+      let location = null;
+      try {
+        location = await getCachedGeolocation(ipAddress, memoryCache, 86400);
+      } catch (error) {
+        console.warn("Failed to get geolocation for", ipAddress, error);
+      }
 
-    return NextResponse.json({
-      success: true,
-      data: { id: visitor.id },
-    });
+      // Upsert visitor (update if exists, create if not)
+      const visitor = await db.visitor.upsert({
+        where: { visitorToken },
+        update: {
+          ipAddress,
+          userAgent: userAgent || undefined,
+          currentPage: currentPage || "/",
+          lastActivity: new Date(),
+          ...(location && {
+            country: location.country,
+            countryCode: location.countryCode,
+            city: location.city,
+            region: location.region,
+            isp: location.isp,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            timezone: location.timezone,
+            provider: location.provider,
+          }),
+        },
+        create: {
+          visitorToken,
+          ipAddress,
+          userAgent: userAgent || null,
+          currentPage: currentPage || "/",
+          ...(location && {
+            country: location.country,
+            countryCode: location.countryCode,
+            city: location.city,
+            region: location.region,
+            isp: location.isp,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            timezone: location.timezone,
+            provider: location.provider,
+          }),
+        },
+      });
+
+      const response = NextResponse.json({
+        success: true,
+        data: { id: visitor.id },
+      });
+
+      if (!existingVisitorToken) {
+        response.cookies.set("visitor_token", visitorToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 60 * 60 * 24 * 365,
+          path: "/",
+        });
+      }
+
+      return response;
   } catch (error) {
     console.error("Visitor track error:", error);
     return NextResponse.json(

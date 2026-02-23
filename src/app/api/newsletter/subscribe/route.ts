@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { checkRateLimit, createRateLimitHeaders } from "@/lib/rate-limiter";
 
 const subscribeSchema = z.object({
   email: z.string().email("Geçerli bir e-posta adresi giriniz"),
@@ -10,6 +11,21 @@ const subscribeSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const ipRateLimit = await checkRateLimit(request, {
+      maxRequests: 20,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!ipRateLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Çok fazla abonelik isteği. Lütfen daha sonra tekrar deneyin.",
+          retryAfter: ipRateLimit.retryAfter,
+        },
+        { status: 429, headers: createRateLimitHeaders(ipRateLimit) },
+      );
+    }
+
     const body = await request.json();
     const { email, frequency, categories } = subscribeSchema.parse(body);
 

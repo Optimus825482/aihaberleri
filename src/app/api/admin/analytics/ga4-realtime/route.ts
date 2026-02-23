@@ -6,31 +6,20 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import {
   isGA4Configured,
   getRealtimeActiveUsers,
   getRealtimeVisitors,
   getGA4TrafficOverview,
 } from "@/lib/ga4-client";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-);
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  // Auth check
-  const token = request.cookies.get("admin-session")?.value;
-  if (!token) {
-    return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
-  }
-
-  try {
-    await jwtVerify(token, JWT_SECRET);
-  } catch {
-    return NextResponse.json({ error: "Geçersiz oturum" }, { status: 401 });
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
   }
 
   if (!isGA4Configured()) {

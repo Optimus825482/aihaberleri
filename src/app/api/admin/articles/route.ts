@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
+import { Prisma } from "@prisma/client";
+import { ArticleStatus } from "@prisma/client";
 
 /**
  * GET /api/admin/articles
@@ -8,21 +10,9 @@ import { prisma } from "@/lib/prisma";
  */
 export async function GET(request: NextRequest) {
   try {
-    // JWT Authentication
-    const token = request.cookies.get("admin-session")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const secret = new TextEncoder().encode(
-      process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-    );
-
-    try {
-      await jwtVerify(token, secret);
-    } catch (error) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
 
     // Parse query parameters
@@ -34,16 +24,19 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     // Build where clause
-    const where: any = {};
-    if (status) {
-      where.status = status;
+    const where: Prisma.ArticleWhereInput = {};
+    if (
+      status &&
+      Object.values(ArticleStatus).includes(status as ArticleStatus)
+    ) {
+      where.status = status as ArticleStatus;
     }
     if (categoryId) {
       where.categoryId = categoryId;
     }
 
     // Build include clause
-    const includeClause: any = {
+    const includeClause: Prisma.ArticleInclude = {
       category: true,
       socialShares: {
         select: {

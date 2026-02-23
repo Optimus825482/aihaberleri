@@ -1,24 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
 import { calculateSEOScore } from "@/lib/seo-calculator";
 import { SEOPipelineService } from "@/services/seo-pipeline.service";
 import { BulkJobStore } from "@/lib/bulk-job-store";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-);
-
-async function verifyAuth(request: NextRequest): Promise<boolean> {
-  const token = request.cookies.get("admin-session")?.value;
-  if (!token) return false;
-  try {
-    await jwtVerify(token, JWT_SECRET);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 /**
  * POST /api/admin/seo/auto-optimize
@@ -30,8 +15,9 @@ async function verifyAuth(request: NextRequest): Promise<boolean> {
  * Returns: { jobId: string } (202 Accepted)
  */
 export async function POST(request: NextRequest) {
-  if (!(await verifyAuth(request))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
   }
 
   // Zaten çalışan bir job var mı?
@@ -141,8 +127,9 @@ export async function POST(request: NextRequest) {
  * jobId yoksa aktif job varsa onu döner.
  */
 export async function GET(request: NextRequest) {
-  if (!(await verifyAuth(request))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
   }
 
   const { searchParams } = new URL(request.url);

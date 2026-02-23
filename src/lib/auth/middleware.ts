@@ -11,6 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { Role } from "@prisma/client";
+import { RateLimiter } from "@/lib/rate-limiter";
 
 /**
  * Permission matrix - Endpoint bazlı yetki kontrolü
@@ -171,31 +172,16 @@ export async function withAuth(
   return authResult;
 }
 
-/**
- * Rate limiting helper (session-based)
- */
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const authRateLimiter = new RateLimiter();
 
-export function checkRateLimit(
+export async function checkRateLimit(
   userId: string,
   limit: number = 100,
   windowMs: number = 60000, // 1 minute
-): boolean {
-  const now = Date.now();
-  const userLimit = rateLimitMap.get(userId);
-
-  if (!userLimit || now > userLimit.resetAt) {
-    rateLimitMap.set(userId, {
-      count: 1,
-      resetAt: now + windowMs,
-    });
-    return true;
-  }
-
-  if (userLimit.count >= limit) {
-    return false;
-  }
-
-  userLimit.count++;
-  return true;
+): Promise<boolean> {
+  const result = await authRateLimiter.check(`auth:${userId}`, {
+    maxRequests: limit,
+    windowMs,
+  });
+  return result.allowed;
 }

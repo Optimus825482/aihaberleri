@@ -11,15 +11,15 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/lib/auth/middleware";
-import { Role } from "@prisma/client";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import { nanoid } from "nanoid";
 import { withSecurity, auditLog } from "@/middleware/security";
-import {
-  bulkOptimizeSchema,
-  validateRequest,
-} from "@/lib/validation-schemas";
+import { bulkOptimizeSchema, validateRequest } from "@/lib/validation-schemas";
+import { requireAdminAuth, type AdminSession } from "@/lib/admin-auth";
+
+function hasRequiredRole(session: AdminSession, roles: string[]) {
+  return roles.includes(session.role) || session.role === "SUPER_ADMIN";
+}
 
 export async function POST(request: NextRequest) {
   // Apply security middleware (rate limiting + input sanitization)
@@ -27,16 +27,18 @@ export async function POST(request: NextRequest) {
     request,
     "bulkOptimize",
     async (req): Promise<NextResponse> => {
-      // Authentication & Authorization check - ADMIN only
-      const authResult = await withAuth(req, {
-        roles: [Role.ADMIN],
-      });
-
-      if (authResult instanceof NextResponse) {
+      const session = await requireAdminAuth();
+      if (session instanceof NextResponse) {
         await auditLog(req, "bulk-optimize", "failure", {
           reason: "unauthorized",
         });
-        return authResult;
+        return session;
+      }
+      if (!hasRequiredRole(session, ["ADMIN"])) {
+        await auditLog(req, "bulk-optimize", "failure", {
+          reason: "forbidden",
+        });
+        return NextResponse.json({ error: "Yetki yetersiz" }, { status: 403 });
       }
 
       try {
@@ -48,7 +50,10 @@ export async function POST(request: NextRequest) {
             reason: "validation-error",
             errors: validation.error.issues,
           });
-          return NextResponse.json({ error: "Validation error", issues: validation.error.issues }, { status: 400 });
+          return NextResponse.json(
+            { error: "Validation error", issues: validation.error.issues },
+            { status: 400 },
+          );
         }
 
         const { articleIds } = validation.data;
@@ -136,14 +141,12 @@ export async function POST(request: NextRequest) {
 
 // GET method to check queue status
 export async function GET(request: NextRequest) {
-  // Authentication & Authorization check - ADMIN only
-  const authResult = await withAuth(request, {
-    roles: [Role.ADMIN],
-    skipCSRF: true, // GET request
-  });
-
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  if (!hasRequiredRole(session, ["ADMIN"])) {
+    return NextResponse.json({ error: "Yetki yetersiz" }, { status: 403 });
   }
 
   try {

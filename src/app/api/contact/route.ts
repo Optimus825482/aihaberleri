@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { checkRateLimit, createRateLimitHeaders } from "@/lib/rate-limiter";
 
 const contactSchema = z.object({
   name: z.string().min(2, "Ad en az 2 karakter olmalı").max(100),
@@ -11,6 +12,21 @@ const contactSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const ipRateLimit = await checkRateLimit(request, {
+      maxRequests: 10,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!ipRateLimit.allowed) {
+      return NextResponse.json(
+        {
+          error:
+            "Çok fazla mesaj gönderdiniz. Lütfen daha sonra tekrar deneyin.",
+          retryAfter: ipRateLimit.retryAfter,
+        },
+        { status: 429, headers: createRateLimitHeaders(ipRateLimit) },
+      );
+    }
+
     const body = await request.json();
 
     // Validate input
@@ -25,7 +41,6 @@ export async function POST(request: NextRequest) {
     const { name, email, subject, message } = result.data;
 
     // Rate limiting check (simple IP-based)
-    const ip = request.headers.get("x-forwarded-for") || "unknown";
     const recentMessages = await db.contactMessage.count({
       where: {
         email,

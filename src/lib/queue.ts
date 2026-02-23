@@ -77,9 +77,7 @@ export const getNewsAgentQueueEvents = (): QueueEvents | null => {
   }
 };
 
-// Export getter function as default export for compatibility
-export const newsAgentQueue = getNewsAgentQueue();
-export const newsAgentQueueEvents = getNewsAgentQueueEvents();
+// Queue instances are intentionally lazy; use getter functions.
 
 // Helper to add news agent job
 // PHASE 2: Enhanced with immediate reschedule support

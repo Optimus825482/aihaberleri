@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
 import { calculateSEOScore } from "@/lib/seo-calculator";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-);
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 /**
  * POST /api/admin/articles/[id]/apply-seo
@@ -19,17 +15,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // Check authentication using custom JWT
-    const token = request.cookies.get("admin-session")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    try {
-      await jwtVerify(token, JWT_SECRET);
-    } catch (error) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
     const { id } = await params;
     const body = await request.json();

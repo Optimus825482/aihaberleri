@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuth } from "@/lib/auth/middleware";
-import { Role } from "@prisma/client";
+import { requireAdminAuth, type AdminSession } from "@/lib/admin-auth";
+
+function hasRequiredRole(session: AdminSession, roles: string[]) {
+  return roles.includes(session.role) || session.role === "SUPER_ADMIN";
+}
 
 export async function GET(request: NextRequest) {
-  // Authentication & Authorization check
-  const authResult = await withAuth(request, {
-    roles: [Role.VIEWER, Role.EDITOR, Role.ADMIN],
-    skipCSRF: true, // GET request, CSRF not needed
-  });
-
-  if (authResult instanceof NextResponse) {
-    return authResult; // Return error response
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  if (!hasRequiredRole(session, ["VIEWER", "EDITOR", "ADMIN"])) {
+    return NextResponse.json(
+      { success: false, error: "Yetki yetersiz" },
+      { status: 403 },
+    );
   }
 
   try {

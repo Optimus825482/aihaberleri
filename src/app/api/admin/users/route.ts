@@ -19,8 +19,8 @@ import { createAuditLog } from "@/lib/audit-logger";
 import {
   sensitiveRateLimit,
   userCreationRateLimit,
-  getClientIdentifier,
   checkRateLimit,
+  createRateLimitHeaders,
 } from "@/lib/rate-limiter";
 import { revalidateTag } from "next/cache";
 
@@ -44,8 +44,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 3. Rate limiting - skipped for now due to type issues
-    // const identifier = getClientIdentifier(request);
+    // 3. Rate limiting
+    const rateLimit = await checkRateLimit(request, sensitiveRateLimit);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Çok fazla istek gönderildi. Lütfen daha sonra tekrar deneyin.",
+          retryAfter: rateLimit.retryAfter,
+        },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(rateLimit),
+        },
+      );
+    }
 
     // 4. Parse and validate query parameters
     const searchParams = request.nextUrl.searchParams;
@@ -169,8 +183,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Rate limiting - skipped for now due to type issues
-    // const identifier = getClientIdentifier(request);
+    // 3. Rate limiting
+    const rateLimit = await checkRateLimit(request, userCreationRateLimit);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Çok fazla kullanıcı oluşturma isteği. Lütfen daha sonra tekrar deneyin.",
+          retryAfter: rateLimit.retryAfter,
+        },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(rateLimit),
+        },
+      );
+    }
 
     // 4. Parse and validate request body
     const body = await request.json();

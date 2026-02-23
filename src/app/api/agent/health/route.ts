@@ -36,7 +36,8 @@ export async function GET() {
     // Check if worker is available
     let workerStatus = "unknown";
     try {
-      const { newsAgentQueue } = await import("@/lib/queue");
+      const { getNewsAgentQueue } = await import("@/lib/queue");
+      const newsAgentQueue = getNewsAgentQueue();
       if (newsAgentQueue) {
         const workers = await newsAgentQueue.getWorkers();
         workerStatus = workers.length > 0 ? "connected" : "disconnected";

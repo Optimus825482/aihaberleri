@@ -343,7 +343,8 @@ model ContactMessage {
 
 model Visitor {
   id           String      @id @default(cuid())
-  ipAddress    String      @unique
+  visitorToken String      @unique
+  ipAddress    String
   userAgent    String?
   currentPage  String
   country      String?

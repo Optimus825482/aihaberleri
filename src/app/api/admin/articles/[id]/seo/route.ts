@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { hasPermission, Permission } from "@/lib/permissions";
 import {
   analyzeArticleSEO,
   saveSEORecommendations,
   getArticleSEORecommendations,
 } from "@/lib/seo-analyzer";
-
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-);
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 /**
  * GET /api/admin/articles/[id]/seo
@@ -20,20 +16,11 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
-    // Check authentication using custom JWT
-    const token = req.cookies.get("admin-session")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
-
-    let userRole = "VIEWER";
-    try {
-      const { payload } = await jwtVerify(token, JWT_SECRET);
-      userRole = (payload.role as string) || "VIEWER";
-    } catch (error) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userRole = session.role || "VIEWER";
 
     if (!hasPermission(userRole, Permission.VIEW_ARTICLES)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -60,20 +47,11 @@ export async function POST(
   { params }: { params: { id: string } },
 ) {
   try {
-    // Check authentication using custom JWT
-    const token = req.cookies.get("admin-session")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
-
-    let userRole = "VIEWER";
-    try {
-      const { payload } = await jwtVerify(token, JWT_SECRET);
-      userRole = (payload.role as string) || "VIEWER";
-    } catch (error) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const userRole = session.role || "VIEWER";
 
     if (!hasPermission(userRole, Permission.EDIT_ARTICLE)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

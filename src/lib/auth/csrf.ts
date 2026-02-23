@@ -25,7 +25,7 @@ export async function setCSRFToken(): Promise<string> {
   const token = generateCSRFToken();
 
   (await cookies()).set("csrf-token", token, {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 60 * 60 * 24, // 24 hours

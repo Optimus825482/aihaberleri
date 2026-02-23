@@ -5,9 +5,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withAuth } from "@/lib/auth/middleware";
-import { Role } from "@prisma/client";
 import { z } from "zod";
+import { requireAdminAuth, type AdminSession } from "@/lib/admin-auth";
+
+function hasRequiredRole(session: AdminSession, roles: string[]) {
+  return roles.includes(session.role) || session.role === "SUPER_ADMIN";
+}
 
 // Validation schemas
 const resolveSchema = z.object({
@@ -24,14 +27,12 @@ const deleteSchema = z.object({
  * Query params: articleId (required)
  */
 export async function GET(request: NextRequest) {
-  // Authentication & Authorization check
-  const authResult = await withAuth(request, {
-    roles: [Role.VIEWER, Role.EDITOR, Role.ADMIN],
-    skipCSRF: true, // GET request
-  });
-
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  if (!hasRequiredRole(session, ["VIEWER", "EDITOR", "ADMIN"])) {
+    return NextResponse.json({ error: "Yetki yetersiz" }, { status: 403 });
   }
 
   try {
@@ -119,13 +120,12 @@ export async function GET(request: NextRequest) {
  * Body: { id: string, resolved: boolean }
  */
 export async function POST(request: NextRequest) {
-  // Authentication & Authorization check - EDITOR or ADMIN only
-  const authResult = await withAuth(request, {
-    roles: [Role.EDITOR, Role.ADMIN],
-  });
-
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  if (!hasRequiredRole(session, ["EDITOR", "ADMIN"])) {
+    return NextResponse.json({ error: "Yetki yetersiz" }, { status: 403 });
   }
 
   try {
@@ -196,13 +196,12 @@ export async function POST(request: NextRequest) {
  * Body: { id: string }
  */
 export async function DELETE(request: NextRequest) {
-  // Authentication & Authorization check - EDITOR or ADMIN only
-  const authResult = await withAuth(request, {
-    roles: [Role.EDITOR, Role.ADMIN],
-  });
-
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  if (!hasRequiredRole(session, ["EDITOR", "ADMIN"])) {
+    return NextResponse.json({ error: "Yetki yetersiz" }, { status: 403 });
   }
 
   try {

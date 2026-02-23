@@ -22,17 +22,22 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { SEOOrchestratorService } from "@/services/seo-orchestrator.service";
-import { withAuth } from "@/lib/auth/middleware";
-import { Role } from "@prisma/client";
+import { requireAdminAuth, type AdminSession } from "@/lib/admin-auth";
+
+function hasRequiredRole(session: AdminSession, roles: string[]) {
+  return roles.includes(session.role) || session.role === "SUPER_ADMIN";
+}
 
 export async function POST(request: NextRequest) {
-  // Authentication & Authorization check - EDITOR or ADMIN
-  const authResult = await withAuth(request, {
-    roles: [Role.EDITOR, Role.ADMIN],
-  });
-
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  if (!hasRequiredRole(session, ["EDITOR", "ADMIN"])) {
+    return NextResponse.json(
+      { success: false, error: "Yetki yetersiz" },
+      { status: 403 },
+    );
   }
 
   try {
@@ -117,13 +122,15 @@ export async function POST(request: NextRequest) {
  * }
  */
 export async function PUT(request: NextRequest) {
-  // Authentication & Authorization check - ADMIN only for batch operations
-  const authResult = await withAuth(request, {
-    roles: [Role.ADMIN],
-  });
-
-  if (authResult instanceof NextResponse) {
-    return authResult;
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
+  }
+  if (!hasRequiredRole(session, ["ADMIN"])) {
+    return NextResponse.json(
+      { success: false, error: "Yetki yetersiz" },
+      { status: 403 },
+    );
   }
 
   try {

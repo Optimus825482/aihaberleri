@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { processArticle } from "@/services/content.service";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import {
   enrichArticleWithTrends,
   updateArticleTrendData,
@@ -17,21 +17,9 @@ import {
  */
 export async function POST(request: NextRequest) {
   try {
-    // JWT Authentication
-    const token = request.cookies.get("admin-session")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const secret = new TextEncoder().encode(
-      process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-    );
-
-    try {
-      await jwtVerify(token, secret);
-    } catch {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
 
     // Parse request body

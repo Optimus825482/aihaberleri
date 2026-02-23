@@ -132,7 +132,8 @@ async function scheduleNextRun() {
  */
 export async function isWorkerServiceAvailable(): Promise<boolean> {
   try {
-    const { newsAgentQueue } = await import("./queue");
+    const { getNewsAgentQueue } = await import("./queue");
+    const newsAgentQueue = getNewsAgentQueue();
     if (!newsAgentQueue) {
       return false;
     }

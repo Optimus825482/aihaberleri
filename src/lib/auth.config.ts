@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from "next-auth";
+import { getUserRevokedAfter } from "@/lib/auth/session-revocation";
 
 export const authConfig = {
   session: {
@@ -55,6 +56,19 @@ export const authConfig = {
         token.id = user.id;
         token.role = (user as any).role;
       }
+
+      if (token.id) {
+        const revokedAfterMs = await getUserRevokedAfter(token.id as string);
+        const issuedAtSeconds = (token.iat as number | undefined) ?? undefined;
+        if (
+          revokedAfterMs &&
+          issuedAtSeconds &&
+          issuedAtSeconds * 1000 <= revokedAfterMs
+        ) {
+          return {};
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {

@@ -172,32 +172,33 @@ export async function GET(request: Request) {
       ],
     };
 
-    const articles = await db.article.findMany({
-      where: searchWhere,
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        excerpt: true,
-        imageUrl: true,
-        publishedAt: true,
-        views: true,
-        trendScore: true,
-        category: {
-          select: {
-            name: true,
-            slug: true,
+    const [articles, totalCount] = await Promise.all([
+      db.article.findMany({
+        where: searchWhere,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          excerpt: true,
+          imageUrl: true,
+          publishedAt: true,
+          views: true,
+          trendScore: true,
+          category: {
+            select: {
+              name: true,
+              slug: true,
+            },
           },
         },
-      },
-      orderBy: [{ trendScore: "desc" }, { publishedAt: "desc" }],
-      skip,
-      take: limit,
-    });
-
-    const totalCount = await db.article.count({
-      where: searchWhere,
-    });
+        orderBy: [{ trendScore: "desc" }, { publishedAt: "desc" }],
+        skip,
+        take: limit,
+      }),
+      db.article.count({
+        where: searchWhere,
+      }),
+    ]);
 
     return NextResponse.json({
       articles,

@@ -1,31 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 /**
  * POST /api/admin/news/check-topic
  * Veritabanında benzer topic/konu kontrolü
- * 
+ *
  * Request: { topic: string, sourceUrl: string }
  * Response: { hasSimilar: boolean, similarArticles: ExistingArticle[] }
  */
 export async function POST(request: NextRequest) {
   try {
-    // JWT Authentication
-    const token = request.cookies.get("admin-session")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const secret = new TextEncoder().encode(
-      process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-    );
-
-    try {
-      await jwtVerify(token, secret);
-    } catch {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) {
+      return session;
     }
 
     // Parse request body
@@ -33,17 +21,16 @@ export async function POST(request: NextRequest) {
     const { topic, sourceUrl } = body;
 
     if (!topic) {
-      return NextResponse.json(
-        { error: "Topic is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Topic is required" }, { status: 400 });
     }
 
     console.log(`🔍 Checking for similar articles with topic: ${topic}`);
 
     // Time window: Last 7 days
     const timeWindowDays = 7;
-    const cutoffDate = new Date(Date.now() - timeWindowDays * 24 * 60 * 60 * 1000);
+    const cutoffDate = new Date(
+      Date.now() - timeWindowDays * 24 * 60 * 60 * 1000,
+    );
 
     // Search strategies:
     // 1. Exact topic match
@@ -67,17 +54,22 @@ export async function POST(request: NextRequest) {
           // Exact topic match
           { topic: topic },
           // Same source URL (normalized)
-          ...(sourceUrl ? [{
-            sourceUrl: {
-              contains: extractDomainAndPath(sourceUrl),
-              mode: "insensitive" as const,
-            },
-          }] : []),
+          ...(sourceUrl
+            ? [
+                {
+                  sourceUrl: {
+                    contains: extractDomainAndPath(sourceUrl),
+                    mode: "insensitive" as const,
+                  },
+                },
+              ]
+            : []),
           // Title contains topic keywords (at least 2 matches)
           {
-            AND: titleContainsConditions.length > 1 
-              ? titleContainsConditions.slice(0, 2) // At least 2 keyword matches
-              : titleContainsConditions,
+            AND:
+              titleContainsConditions.length > 1
+                ? titleContainsConditions.slice(0, 2) // At least 2 keyword matches
+                : titleContainsConditions,
           },
         ],
         publishedAt: {
@@ -101,16 +93,18 @@ export async function POST(request: NextRequest) {
     });
 
     // Get category names
-    const categoryIds = [...new Set(similarArticles.map(a => a.categoryId))];
+    const categoryIds = [...new Set(similarArticles.map((a) => a.categoryId))];
     const categories = await prisma.category.findMany({
       where: { id: { in: categoryIds } },
       select: { id: true, name: true },
     });
-    const categoryMap = new Map(categories.map(c => [c.id, c.name]));
+    const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
     const hasSimilar = similarArticles.length > 0;
 
-    console.log(`📊 Found ${similarArticles.length} similar articles for topic: ${topic}`);
+    console.log(
+      `📊 Found ${similarArticles.length} similar articles for topic: ${topic}`,
+    );
 
     // Transform response
     const formattedArticles = similarArticles.map((article) => ({
@@ -129,12 +123,11 @@ export async function POST(request: NextRequest) {
       topicAnalyzed: topic,
       timeWindow: `${timeWindowDays} days`,
     });
-
   } catch (error) {
     console.error("❌ Check topic error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Topic check failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

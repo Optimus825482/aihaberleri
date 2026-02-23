@@ -9,6 +9,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { setUserRevokedAfter } from "@/lib/auth/session-revocation";
 
 /**
  * Session configuration
@@ -100,19 +101,33 @@ export async function validateSession() {
 }
 
 /**
- * Revoke all user sessions (logout from all devices)
+ * Invalidate user session cache and revoke issued JWTs by timestamp
  */
-export async function revokeAllSessions(userId: string) {
-  // Update user's session version to invalidate all existing sessions
+export async function invalidateSessionCache(userId: string) {
+  const revokedAt = Date.now();
+
+  await setUserRevokedAfter(userId, revokedAt);
+
   await db.user.update({
     where: { id: userId },
     data: {
-      updatedAt: new Date(), // This will invalidate cached sessions
+      updatedAt: new Date(revokedAt),
+    },
+  });
+
+  await db.userSession.updateMany({
+    where: { userId, isActive: true },
+    data: {
+      isActive: false,
+      lastActivity: new Date(revokedAt),
     },
   });
 
   return { success: true };
 }
+
+// Backward compatibility
+export const revokeAllSessions = invalidateSessionCache;
 
 /**
  * Track session activity

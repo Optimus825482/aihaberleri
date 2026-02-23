@@ -719,7 +719,8 @@ async function startWorker() {
         : true;
 
       if (isEnabled) {
-        const { newsAgentQueue } = await import("@/lib/queue");
+        const { getNewsAgentQueue } = await import("@/lib/queue");
+        const newsAgentQueue = getNewsAgentQueue();
         if (newsAgentQueue) {
           const repeatableJobs = await newsAgentQueue.getRepeatableJobs();
           const hasRepeatable = repeatableJobs.some(

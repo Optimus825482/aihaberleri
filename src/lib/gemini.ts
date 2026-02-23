@@ -32,6 +32,8 @@ export interface GeminiMessage {
   parts: string;
 }
 
+const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash-lite";
+
 /**
  * Call Gemini API with Flash Lite model
  */
@@ -47,9 +49,7 @@ export async function callGemini(
   const ai = getGenAI();
 
   try {
-    // FIXED: Use gemini-2.5-flash-lite (available model)
-    // gemini-2.5-flash-lite doesn't exist, using stable 2.0 Flash model
-    const modelName = options.model || "gemini-2.5-flash-lite";
+    const modelName = options.model || DEFAULT_GEMINI_MODEL;
 
     const model = ai.getGenerativeModel({
       model: modelName,
@@ -68,7 +68,7 @@ export async function callGemini(
       message: error.message,
       status: error.status,
       details: error.details,
-      model: options.model || "gemini-2.5-flash-lite",
+      model: options.model || DEFAULT_GEMINI_MODEL,
     });
     throw new Error(`Gemini API error: ${error.message}`);
   }
@@ -89,8 +89,7 @@ export async function callGeminiChat(
   const ai = getGenAI();
 
   try {
-    // FIXED: Use gemini-2.5-flash-lite (available model)
-    const modelName = options.model || "gemini-2.5-flash-lite";
+    const modelName = options.model || DEFAULT_GEMINI_MODEL;
 
     const model = ai.getGenerativeModel({
       model: modelName,
@@ -120,7 +119,7 @@ export async function callGeminiChat(
       message: error.message,
       status: error.status,
       details: error.details,
-      model: options.model || "gemini-2.5-flash-lite",
+      model: options.model || DEFAULT_GEMINI_MODEL,
     });
     throw new Error(`Gemini Chat API error: ${error.message}`);
   }
@@ -185,7 +184,7 @@ JSON dizisi ile yanıt ver (makale başına bir nesne):
 Katı ama adil ol. Düşük kaliteli, eski veya alakasız içeriği reddet.`;
 
   const response = await callGemini(prompt, {
-    model: "gemini-2.5-flash-lite", // FIXED: Use available model
+    model: DEFAULT_GEMINI_MODEL,
     temperature: 0.3, // Lower for consistent scoring
     maxTokens: 4000,
     systemInstruction:

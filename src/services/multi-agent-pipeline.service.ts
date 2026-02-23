@@ -109,7 +109,22 @@ export async function getAllAgentHealthStatuses(): Promise<
     const redis = getRedis();
     if (!redis) return [];
 
-    const keys = await redis.keys(`${AGENT_HEALTH_STORE_KEY}:*`);
+    const keys: string[] = [];
+    let cursor = "0";
+    do {
+      const [nextCursor, scannedKeys] = await redis.scan(
+        cursor,
+        "MATCH",
+        `${AGENT_HEALTH_STORE_KEY}:*`,
+        "COUNT",
+        200,
+      );
+      cursor = nextCursor;
+      if (scannedKeys.length > 0) {
+        keys.push(...scannedKeys);
+      }
+    } while (cursor !== "0");
+
     const statuses: AgentHealthStatus[] = [];
 
     for (const key of keys) {
