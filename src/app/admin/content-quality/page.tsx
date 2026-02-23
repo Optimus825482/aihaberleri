@@ -21,6 +21,9 @@ type QualityItem = {
     publishedAt: string | null;
     imageUrl?: string | null;
     contentLength?: number;
+    qualityScore?: number | null;
+    qualityReason?: string | null;
+    rewriteAttempts?: number | null;
 };
 
 type ResponseShape = {
@@ -33,12 +36,15 @@ type ResponseShape = {
         publishedTotal: number;
         imagelessTotal: number;
         lowContentTotal: number;
+        lowValueTotal: number;
         imagelessRatio: number;
         lowContentRatio: number;
+        lowValueRatio: number;
     };
     lists: {
         imageless: QualityItem[];
         lowContent: QualityItem[];
+        lowValue: QualityItem[];
     };
     recommendations: string[];
 };
@@ -216,7 +222,7 @@ export default function AdminContentQualityPage() {
 
                 {data ? (
                     <>
-                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                             <Card>
                                 <CardHeader className="pb-2">
                                     <CardDescription>Toplam Yayın</CardDescription>
@@ -257,6 +263,18 @@ export default function AdminContentQualityPage() {
                                     <p className="text-xs text-ai-text-secondary">
                                         Son kontrol: {new Date(data.generatedAt).toLocaleString("tr-TR")}
                                     </p>
+                                </CardContent>
+                            </Card>
+
+                            <Card>
+                                <CardHeader className="pb-2">
+                                    <CardDescription>Düşük Değerli İçerik</CardDescription>
+                                    <CardTitle className="text-3xl text-rose-400">
+                                        {data.summary.lowValueTotal}
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-xs text-ai-text-secondary">Oran: %{data.summary.lowValueRatio}</p>
                                 </CardContent>
                             </Card>
                         </div>
@@ -336,6 +354,58 @@ export default function AdminContentQualityPage() {
                                                 </div>
                                                 <Badge variant="secondary">{item.contentLength} karakter</Badge>
                                             </div>
+                                            <div className="mt-2">
+                                                <Link
+                                                    href={`/news/${item.slug}`}
+                                                    target="_blank"
+                                                    className="text-xs font-semibold text-ai-primary hover:text-ai-primary-hover"
+                                                >
+                                                    Haberi aç
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <AlertCircle className="h-5 w-5 text-rose-400" /> Düşük Değerli İçerik (Kontroller Agent)
+                                </CardTitle>
+                                <CardDescription>
+                                    2 rewrite sonrası zorunlu geçiş alan haberler burada listelenir.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                {data.lists.lowValue.length === 0 ? (
+                                    <p className="text-emerald-400">Düşük değerli işaretlenen haber bulunmuyor.</p>
+                                ) : (
+                                    data.lists.lowValue.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className="rounded-lg border border-ai-surface-border bg-ai-surface-card p-3"
+                                        >
+                                            <div className="flex flex-wrap items-start justify-between gap-2">
+                                                <div>
+                                                    <p className="font-semibold text-white">{item.title}</p>
+                                                    <p className="text-xs text-ai-text-secondary mt-1">/{item.slug}</p>
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    <Badge variant="destructive">
+                                                        QC {item.qualityScore ?? "-"}/100
+                                                    </Badge>
+                                                    <Badge variant="secondary">
+                                                        Rewrite: {item.rewriteAttempts ?? "-"}
+                                                    </Badge>
+                                                </div>
+                                            </div>
+                                            {item.qualityReason ? (
+                                                <p className="mt-2 text-xs text-ai-text-secondary">
+                                                    {item.qualityReason}
+                                                </p>
+                                            ) : null}
                                             <div className="mt-2">
                                                 <Link
                                                     href={`/news/${item.slug}`}

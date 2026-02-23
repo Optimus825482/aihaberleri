@@ -59,7 +59,18 @@ function extractSourceCountFromContent(content: string, sourceUrl?: string | nul
     }
   }
 
-  const plainTextSourceMatch = content.match(/Kaynaklar:\s*([^<\n]+)/i);
+  const aiDisclosureBlocks = content.match(/<div[^>]+class=["'][^"']*ai-disclosure[^"']*["'][^>]*>[\s\S]*?<\/div>/gi) || [];
+  for (const block of aiDisclosureBlocks) {
+    const blockLinks = block.match(/<a[^>]*href=["']([^"']+)["'][^>]*>/gi) || [];
+    for (const linkTag of blockLinks) {
+      const hrefMatch = linkTag.match(/href=["']([^"']+)["']/i);
+      if (hrefMatch?.[1]) {
+        uniqueSources.add(hrefMatch[1].trim());
+      }
+    }
+  }
+
+  const plainTextSourceMatch = content.match(/(?:Kaynaklar|Sources):\s*([^<\n]+)/i);
   if (plainTextSourceMatch?.[1]) {
     plainTextSourceMatch[1]
       .split(/•|,|\||;/)

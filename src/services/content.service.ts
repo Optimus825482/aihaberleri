@@ -34,6 +34,7 @@ import {
 } from "@/lib/content-validator";
 import { isAIRelatedContent, calculateAIRelevanceScore } from "@/lib/rss";
 import { upsertGlossaryWithArticleTerms } from "../lib/ai-glossary";
+import { runContentQualityController } from "@/services/content-quality-controller.service";
 
 // ============================================================================
 // CONTENT CONSTANTS - Magic numbers extracted for maintainability
@@ -91,6 +92,12 @@ export interface ProcessedArticle {
   metaDescription: string;
   score: number | null;
   topic?: string; // NEW: Topic from smart filtering
+  qualityControl?: {
+    qualityScore: number;
+    attemptsUsed: number;
+    forcedPass: boolean;
+    issues: string[];
+  };
 }
 
 /**
@@ -864,15 +871,35 @@ export async function processArticle(
       recentArticles,
     )) as RewriteResult;
 
-    const score = rewritten.score || 0;
+    const qualityControl = await runContentQualityController({
+      rewritten: {
+        title: rewritten.title,
+        excerpt: rewritten.excerpt,
+        content: rewritten.content,
+        keywords: rewritten.keywords,
+        metaTitle: rewritten.title,
+        metaDescription: rewritten.metaDescription,
+        score: rewritten.score || 0,
+      },
+      categoryName: category,
+    });
+
+    const score = qualityControl.rewritten.score || 0;
     console.log(`📊 Haber Puanı: ${score}/1000`);
-    await rewriteSpan?.end({ score, durationMs: Date.now() - rewriteStart });
+    console.log(
+      `🛂 Kontrol Agent Skoru: ${qualityControl.qualityScore}/100 (attempt: ${qualityControl.attemptsUsed}, forcedPass: ${qualityControl.forcedPass})`,
+    );
+    await rewriteSpan?.end({
+      score,
+      qualityScore: qualityControl.qualityScore,
+      durationMs: Date.now() - rewriteStart,
+    });
 
     // Live log: Rewritten
     await liveLog.deepseek.success(`✅ Yeniden yazıldı (Puan: ${score}/1000)`);
 
     // 🆕 Add sources footer to content
-    let finalContent = rewritten.content;
+    let finalContent = qualityControl.rewritten.content;
 
     // Build sources list (original source only — Brave deep research removed)
     const allSources = [
@@ -907,8 +934,8 @@ export async function processArticle(
     const imageSpan = tracer?.span("image-generation");
     await imageSpan?.start();
     const imagePrompt = await generateImagePrompt(
-      rewritten.title,
-      rewritten.content,
+      qualityControl.rewritten.title,
+      qualityControl.rewritten.content,
       category,
     );
     console.log("📝 Görsel prompt:", imagePrompt);
@@ -925,7 +952,7 @@ export async function processArticle(
     console.log("✅ Görsel URL:", imageUrl);
 
     // Step 5.5: Generate slug (needed for image optimization)
-    const slug = generateSlug(rewritten.title);
+    const slug = generateSlug(qualityControl.rewritten.title);
 
     // Live log: Image generated
     await liveLog.image.success(`🖼️ Görsel oluşturuldu: ${slug}`);
@@ -961,9 +988,9 @@ export async function processArticle(
     await ensureCategory(category, categorySlug);
 
     return {
-      title: rewritten.title,
+      title: qualityControl.rewritten.title,
       slug,
-      excerpt: rewritten.excerpt,
+      excerpt: qualityControl.rewritten.excerpt,
       content: finalContent, // 🆕 Use content with AI disclosure footer
       imageUrl: imageSizes.large,
       imageUrlMedium: imageSizes.medium,
@@ -971,10 +998,16 @@ export async function processArticle(
       imageUrlThumb: imageSizes.thumb,
       sourceUrl: article.url,
       categorySlug,
-      keywords: rewritten.keywords,
-      metaTitle: rewritten.title,
-      metaDescription: rewritten.metaDescription,
+      keywords: qualityControl.rewritten.keywords,
+      metaTitle: qualityControl.rewritten.metaTitle,
+      metaDescription: qualityControl.rewritten.metaDescription,
       score,
+      qualityControl: {
+        qualityScore: qualityControl.qualityScore,
+        attemptsUsed: qualityControl.attemptsUsed,
+        forcedPass: qualityControl.forcedPass,
+        issues: qualityControl.issues,
+      },
     };
   } catch (error) {
     // Enhanced error handling with context
@@ -1143,10 +1176,30 @@ export async function publishArticle(
         metaTitle: processedArticle.metaTitle,
         metaDescription: processedArticle.metaDescription,
         keywords: processedArticle.keywords,
+        seoScore: processedArticle.qualityControl?.qualityScore,
         topic: processedArticle.topic, // NEW: Save topic from smart filtering
         agentLogId,
       },
     });
+
+    if (processedArticle.qualityControl?.forcedPass) {
+      const issueText = processedArticle.qualityControl.issues
+        .slice(0, 5)
+        .join(" | ");
+
+      await db.sEORecommendation.create({
+        data: {
+          articleId: article.id,
+          type: "CONTENT_QUALITY_LOW_VALUE",
+          severity: "MEDIUM",
+          message: `Kontroller Agent zorunlu geçiş verdi (max 2 rewrite sonrası). Attempts: ${processedArticle.qualityControl.attemptsUsed}`,
+          suggestion:
+            issueText ||
+            "İçeriği editöryal gözden geçirip haber değerini artırın.",
+          isResolved: false,
+        },
+      });
+    }
 
     console.log(`✅ Haber yayınlandı: ${article.slug} (Skor: ${score})`);
 
