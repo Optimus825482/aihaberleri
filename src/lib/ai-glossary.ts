@@ -10,6 +10,9 @@ type GlossaryDelegate = {
 const glossaryTable = (db as unknown as { aIGlossaryTerm?: GlossaryDelegate })
   .aIGlossaryTerm;
 
+let isGlossaryTableUnavailable = false;
+let glossaryUnavailableLogged = false;
+
 export interface AITermEntry {
   term: string;
   description: string;
@@ -17,6 +20,39 @@ export interface AITermEntry {
 }
 
 const shouldSkipDbAccess = () => process.env.SKIP_ENV_VALIDATION === "1";
+
+function isMissingGlossaryTableError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const maybeError = error as {
+    code?: string;
+    meta?: { modelName?: string; table?: string };
+    message?: string;
+  };
+
+  if (maybeError.code === "P2021") {
+    const modelName = maybeError.meta?.modelName || "";
+    const table = maybeError.meta?.table || "";
+    if (modelName === "AIGlossaryTerm" || table.includes("AIGlossaryTerm")) {
+      return true;
+    }
+  }
+
+  return typeof maybeError.message === "string"
+    ? maybeError.message.includes("AIGlossaryTerm") &&
+        maybeError.message.includes("does not exist")
+    : false;
+}
+
+function markGlossaryTableUnavailable(error: unknown): void {
+  isGlossaryTableUnavailable = true;
+  if (!glossaryUnavailableLogged) {
+    glossaryUnavailableLogged = true;
+    console.warn(
+      "AI glossary table unavailable (AIGlossaryTerm). Falling back to default glossary terms until migrations are applied.",
+    );
+    console.warn(error);
+  }
+}
 
 const DEFAULT_GLOSSARY_TERMS: AITermEntry[] = [
   {
@@ -208,7 +244,7 @@ function mergeEntries(entries: AITermEntry[]): AITermEntry[] {
 }
 
 async function ensureDefaultGlossaryTerms(): Promise<void> {
-  if (!glossaryTable) {
+  if (!glossaryTable || isGlossaryTableUnavailable) {
     return;
   }
 
@@ -217,23 +253,31 @@ async function ensureDefaultGlossaryTerms(): Promise<void> {
   for (const term of DEFAULT_GLOSSARY_TERMS) {
     const normalizedTerm = normalizeTerm(term.term);
 
-    await glossaryTable.upsert({
-      where: { normalizedTerm },
-      update: {
-        aliases: sanitizeAliases(term.aliases),
-        updatedAt: now,
-      },
-      create: {
-        term: term.term.trim(),
-        normalizedTerm,
-        description: term.description.trim(),
-        aliases: sanitizeAliases(term.aliases),
-        source: "SYSTEM",
-        confidence: 1,
-        isActive: true,
-        lastSeenAt: now,
-      },
-    });
+    try {
+      await glossaryTable.upsert({
+        where: { normalizedTerm },
+        update: {
+          aliases: sanitizeAliases(term.aliases),
+          updatedAt: now,
+        },
+        create: {
+          term: term.term.trim(),
+          normalizedTerm,
+          description: term.description.trim(),
+          aliases: sanitizeAliases(term.aliases),
+          source: "SYSTEM",
+          confidence: 1,
+          isActive: true,
+          lastSeenAt: now,
+        },
+      });
+    } catch (error) {
+      if (isMissingGlossaryTableError(error)) {
+        markGlossaryTableUnavailable(error);
+        return;
+      }
+      throw error;
+    }
   }
 }
 
@@ -332,7 +376,7 @@ function fallbackExtractFromKeywords(input: {
 }
 
 export async function getAITermsGlossary(limit = 80): Promise<AITermEntry[]> {
-  if (shouldSkipDbAccess()) {
+  if (shouldSkipDbAccess() || isGlossaryTableUnavailable) {
     return DEFAULT_GLOSSARY_TERMS.slice(0, Math.max(1, limit));
   }
 
@@ -356,6 +400,10 @@ export async function getAITermsGlossary(limit = 80): Promise<AITermEntry[]> {
 
     return mergeEntries(rows);
   } catch (error) {
+    if (isMissingGlossaryTableError(error)) {
+      markGlossaryTableUnavailable(error);
+      return DEFAULT_GLOSSARY_TERMS.slice(0, Math.max(1, limit));
+    }
     console.error("Failed to get glossary terms from table:", error);
     return DEFAULT_GLOSSARY_TERMS.slice(0, Math.max(1, limit));
   }
@@ -410,7 +458,7 @@ export async function upsertGlossaryWithArticleTerms(input: {
   keywords?: string[];
   source?: string;
 }): Promise<void> {
-  if (shouldSkipDbAccess()) {
+  if (shouldSkipDbAccess() || isGlossaryTableUnavailable) {
     return;
   }
 
@@ -507,6 +555,10 @@ export async function upsertGlossaryWithArticleTerms(input: {
       });
     }
   } catch (error) {
+    if (isMissingGlossaryTableError(error)) {
+      markGlossaryTableUnavailable(error);
+      return;
+    }
     console.error("AI glossary enrichment failed:", error);
   }
 }
