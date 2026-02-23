@@ -25,7 +25,13 @@ const PWAInstallPrompt = dynamic(
   { ssr: false },
 );
 
-import { Toaster } from "react-hot-toast";
+const Toaster = dynamic(
+  () =>
+    import("react-hot-toast").then((mod) => ({
+      default: mod.Toaster,
+    })),
+  { ssr: false },
+);
 
 import { PWAProvider } from "@/context/PWAContext";
 

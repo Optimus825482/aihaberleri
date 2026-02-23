@@ -17,8 +17,7 @@ import {
   generateJsonLd,
 } from "@/lib/seo";
 
-// ISR: public homepage verisini kısa aralıklarla yenileyerek DB yükünü azalt
-export const revalidate = 120;
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const formatTopicLabel = (topic: string) => {

@@ -7,6 +7,8 @@ export const metadata: Metadata = {
         "AI haberlerinde geçen teknik terimlerin sade ve doğru açıklamaları.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AITermsPage() {
     const terms = await getAITermsGlossary(200);
 

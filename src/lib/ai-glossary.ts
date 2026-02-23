@@ -8,6 +8,8 @@ export interface AITermEntry {
 
 const GLOSSARY_SETTING_KEY = "site_ai_terms_glossary";
 
+const shouldSkipDbAccess = () => process.env.SKIP_ENV_VALIDATION === "1";
+
 const DEFAULT_GLOSSARY_TERMS: AITermEntry[] = [
   {
     term: "RAG",
@@ -207,15 +209,23 @@ function escapeForRegex(input: string): string {
 }
 
 export async function getAITermsGlossary(limit = 80): Promise<AITermEntry[]> {
-  const setting = await db.setting.findUnique({
-    where: { key: GLOSSARY_SETTING_KEY },
-    select: { value: true },
-  });
+  if (shouldSkipDbAccess()) {
+    return DEFAULT_GLOSSARY_TERMS.slice(0, Math.max(1, limit));
+  }
 
-  const storedTerms = parseGlossary(setting?.value);
-  const merged = mergeGlossary(DEFAULT_GLOSSARY_TERMS, storedTerms);
+  try {
+    const setting = await db.setting.findUnique({
+      where: { key: GLOSSARY_SETTING_KEY },
+      select: { value: true },
+    });
 
-  return merged.slice(0, Math.max(1, limit));
+    const storedTerms = parseGlossary(setting?.value);
+    const merged = mergeGlossary(DEFAULT_GLOSSARY_TERMS, storedTerms);
+
+    return merged.slice(0, Math.max(1, limit));
+  } catch {
+    return DEFAULT_GLOSSARY_TERMS.slice(0, Math.max(1, limit));
+  }
 }
 
 export async function getRelevantAITermsForText(
@@ -266,6 +276,10 @@ export async function upsertGlossaryWithArticleTerms(input: {
   content: string;
   keywords?: string[];
 }): Promise<void> {
+  if (shouldSkipDbAccess()) {
+    return;
+  }
+
   const combinedText = [
     input.title,
     input.excerpt ?? "",
@@ -275,10 +289,16 @@ export async function upsertGlossaryWithArticleTerms(input: {
     .join(" ")
     .toLowerCase();
 
-  const existingSetting = await db.setting.findUnique({
-    where: { key: GLOSSARY_SETTING_KEY },
-    select: { value: true },
-  });
+  let existingSetting: { value: string } | null = null;
+
+  try {
+    existingSetting = await db.setting.findUnique({
+      where: { key: GLOSSARY_SETTING_KEY },
+      select: { value: true },
+    });
+  } catch {
+    return;
+  }
 
   const existingTerms = parseGlossary(existingSetting?.value);
   const existingKeys = new Set(
@@ -309,16 +329,20 @@ export async function upsertGlossaryWithArticleTerms(input: {
     ...newTerms,
   ]);
 
-  await db.setting.upsert({
-    where: { key: GLOSSARY_SETTING_KEY },
-    update: {
-      value: JSON.stringify(merged),
-    },
-    create: {
-      key: GLOSSARY_SETTING_KEY,
-      value: JSON.stringify(merged),
-    },
-  });
+  try {
+    await db.setting.upsert({
+      where: { key: GLOSSARY_SETTING_KEY },
+      update: {
+        value: JSON.stringify(merged),
+      },
+      create: {
+        key: GLOSSARY_SETTING_KEY,
+        value: JSON.stringify(merged),
+      },
+    });
+  } catch {
+    return;
+  }
 }
 
 export function getAITermAnchor(term: string): string {
