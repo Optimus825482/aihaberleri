@@ -1,46 +1,46 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
 import { calculateSEOScore } from "@/lib/seo-calculator";
 import { SEOPipelineService } from "@/services/seo-pipeline.service";
+import { BulkJobStore } from "@/lib/bulk-job-store";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
 );
 
+async function verifyAuth(request: NextRequest): Promise<boolean> {
+  const token = request.cookies.get("admin-session")?.value;
+  if (!token) return false;
+  try {
+    await jwtVerify(token, JWT_SECRET);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * POST /api/admin/seo/auto-optimize
  *
- * Düşük skorlu makaleleri sırayla pipeline'dan geçirip otomatik uygular.
- * SSE (Server-Sent Events) ile gerçek zamanlı progress döner.
+ * Arka planda toplu SEO optimizasyonu başlatır.
+ * Sayfa kapansa bile server'da çalışmaya devam eder.
  *
  * Body: { maxScore?: number, limit?: number }
- * - maxScore: Bu skorun altındaki makaleleri optimize et (default: 80)
- * - limit: Maksimum kaç makale işlensin (default: 50)
- *
- * SSE Events:
- * - start: { total }
- * - progress: { index, total, articleId, title, status, beforeScore, afterScore, scoreDelta, message }
- * - complete: { processed, succeeded, failed, skipped, avgImprovement }
- * - error: { message }
+ * Returns: { jobId: string } (202 Accepted)
  */
 export async function POST(request: NextRequest) {
-  // Auth check
-  const token = request.cookies.get("admin-session")?.value;
-  if (!token) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  if (!(await verifyAuth(request))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  try {
-    await jwtVerify(token, JWT_SECRET);
-  } catch {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  // Zaten çalışan bir job var mı?
+  if (BulkJobStore.hasActiveJob()) {
+    const active = BulkJobStore.getActive()!;
+    return NextResponse.json(
+      { error: "Zaten çalışan bir optimizasyon var", jobId: active.id },
+      { status: 409 },
+    );
   }
 
   // Parse body
@@ -54,216 +54,302 @@ export async function POST(request: NextRequest) {
     // defaults
   }
 
-  // SSE stream
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream({
-    async start(controller) {
-      const send = (event: string, data: unknown) => {
-        controller.enqueue(
-          encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`),
-        );
-      };
+  // Düşük skorlu (veya skoru hiç hesaplanmamış) makaleleri getir
+  const rawArticles = await db.article.findMany({
+    where: {
+      status: "PUBLISHED",
+      OR: [{ seoScore: { lt: maxScore } }, { seoScore: null }],
+    },
+    orderBy: { seoScore: "asc" },
+    take: limit * 2, // Fazla çek, ön-ölçümden sonra filtrele
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      excerpt: true,
+      metaDescription: true,
+      slug: true,
+      keywords: true,
+      imageUrl: true,
+      seoScore: true,
+    },
+  });
 
-      try {
-        // Düşük skorlu makaleleri getir
-        const articles = await db.article.findMany({
-          where: {
-            status: "PUBLISHED",
-            OR: [{ seoScore: { lt: maxScore } }, { seoScore: null }],
-          },
-          orderBy: { seoScore: "asc" },
-          take: limit,
-          select: {
-            id: true,
-            title: true,
-            content: true,
-            excerpt: true,
-            metaDescription: true,
-            slug: true,
-            keywords: true,
-            imageUrl: true,
-            seoScore: true,
-          },
+  // ÖN-ÖLÇÜM: seoScore null/0 olan makalelerin gerçek skorunu hesapla
+  // ve DB'ye yaz. Böylece "0 → 95" yerine gerçek beforeScore raporlanır.
+  const articles: typeof rawArticles = [];
+  for (const article of rawArticles) {
+    if (article.seoScore === null || article.seoScore === 0) {
+      const realScore = calculateSEOScore({
+        title: article.title,
+        content: article.content || "",
+        excerpt: article.excerpt || "",
+        metaDescription: article.metaDescription,
+        slug: article.slug,
+        keywords: article.keywords,
+        imageUrl: article.imageUrl,
+      });
+
+      // DB'ye gerçek skoru yaz
+      await db.article.update({
+        where: { id: article.id },
+        data: { seoScore: realScore.score },
+      });
+
+      article.seoScore = realScore.score;
+    }
+
+    // Gerçek skor hala maxScore altındaysa listeye ekle
+    if (article.seoScore < maxScore) {
+      articles.push(article);
+    }
+
+    // Limit'e ulaştıysa dur
+    if (articles.length >= limit) break;
+  }
+
+  if (articles.length === 0) {
+    return NextResponse.json(
+      {
+        error: `Ön-ölçüm sonrası ${maxScore} altında skorlu makale bulunamadı. Tüm skorlar güncellendi.`,
+      },
+      { status: 404 },
+    );
+  }
+
+  // Job oluştur
+  const jobId = `seo-bulk-${Date.now()}`;
+  BulkJobStore.create(jobId, articles.length);
+
+  // 🔥 Fire-and-forget: işlemi arka planda başlat, response'u bekleme
+  runBulkOptimize(jobId, articles).catch((err) => {
+    console.error("[Bulk Optimize] Unhandled error:", err);
+    BulkJobStore.fail(
+      jobId,
+      err instanceof Error ? err.message : "Bilinmeyen hata",
+    );
+  });
+
+  // Hemen jobId döndür
+  return NextResponse.json({ jobId }, { status: 202 });
+}
+
+/**
+ * GET /api/admin/seo/auto-optimize?jobId=xxx(&since=N)
+ *
+ * Job durumunu ve incremental progress döner.
+ * jobId yoksa aktif job varsa onu döner.
+ */
+export async function GET(request: NextRequest) {
+  if (!(await verifyAuth(request))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  let jobId = searchParams.get("jobId");
+  const sinceStr = searchParams.get("since");
+  const sinceIndex = sinceStr ? parseInt(sinceStr, 10) : 0;
+
+  // jobId yoksa aktif job'a bak
+  if (!jobId) {
+    const active = BulkJobStore.getActive();
+    if (active) {
+      jobId = active.id;
+    } else {
+      return NextResponse.json({ active: false }, { status: 200 });
+    }
+  }
+
+  const job = BulkJobStore.get(jobId);
+  if (!job) {
+    return NextResponse.json({ error: "Job bulunamadı" }, { status: 404 });
+  }
+
+  const newProgress = BulkJobStore.getProgressSince(jobId, sinceIndex);
+
+  return NextResponse.json({
+    active: job.status === "running",
+    jobId: job.id,
+    status: job.status,
+    total: job.total,
+    current: job.current,
+    succeeded: job.succeeded,
+    failed: job.failed,
+    skipped: job.skipped,
+    avgImprovement:
+      job.succeeded > 0 ? Math.round(job.totalImprovement / job.succeeded) : 0,
+    progress: newProgress,
+    error: job.error,
+    startedAt: job.startedAt,
+    completedAt: job.completedAt,
+  });
+}
+
+// ─── Background Worker ───────────────────────────────────────────────
+
+interface ArticleForOptimize {
+  id: string;
+  title: string;
+  content: string | null;
+  excerpt: string | null;
+  metaDescription: string | null;
+  slug: string;
+  keywords: string[];
+  imageUrl: string | null;
+  seoScore: number | null;
+}
+
+async function runBulkOptimize(
+  jobId: string,
+  articles: ArticleForOptimize[],
+): Promise<void> {
+  console.log(
+    `[Bulk Optimize] Job başlıyor: ${jobId} — ${articles.length} makale`,
+  );
+
+  const pipeline = new SEOPipelineService();
+
+  for (let i = 0; i < articles.length; i++) {
+    const article = articles[i];
+
+    // Gerçek beforeScore: DB'deki güncel skor (ön-ölçümde hesaplandı)
+    const beforeScore = article.seoScore || 0;
+
+    // Zaten maxScore üstündeyse atla (ön-ölçümde kaçmış olabilir)
+    if (beforeScore >= 80) {
+      BulkJobStore.addProgress(jobId, {
+        index: i + 1,
+        total: articles.length,
+        articleId: article.id,
+        title: article.title,
+        status: "skipped",
+        beforeScore,
+        afterScore: beforeScore,
+        scoreDelta: 0,
+        message: `Skor zaten yeterli: ${beforeScore}`,
+      });
+      continue;
+    }
+
+    try {
+      const result = await pipeline.run({
+        title: article.title,
+        content: article.content || "",
+        excerpt: article.excerpt,
+        metaDescription: article.metaDescription,
+        slug: article.slug,
+        keywords: article.keywords,
+        imageUrl: article.imageUrl,
+      });
+
+      if (!result.success || result.diffs.length === 0) {
+        const isSkip = result.diffs.length === 0 && result.success;
+        BulkJobStore.addProgress(jobId, {
+          index: i + 1,
+          total: articles.length,
+          articleId: article.id,
+          title: article.title,
+          status: isSkip ? "skipped" : "failed",
+          beforeScore,
+          afterScore: beforeScore,
+          scoreDelta: 0,
+          message: result.message,
         });
-
-        if (articles.length === 0) {
-          send("complete", {
-            processed: 0,
-            succeeded: 0,
-            failed: 0,
-            skipped: 0,
-            avgImprovement: 0,
-            message: `${maxScore} altında skorlu makale bulunamadı.`,
-          });
-          controller.close();
-          return;
-        }
-
-        send("start", { total: articles.length });
-
-        const pipeline = new SEOPipelineService();
-        let succeeded = 0;
-        let failed = 0;
-        let skipped = 0;
-        let totalImprovement = 0;
-
-        for (let i = 0; i < articles.length; i++) {
-          const article = articles[i];
-
-          try {
-            // Pipeline'ı çalıştır
-            const result = await pipeline.run({
-              title: article.title,
-              content: article.content || "",
-              excerpt: article.excerpt,
-              metaDescription: article.metaDescription,
-              slug: article.slug,
-              keywords: article.keywords,
-              imageUrl: article.imageUrl,
-            });
-
-            if (!result.success || result.diffs.length === 0) {
-              const isSkip = result.diffs.length === 0 && result.success;
-              if (isSkip) skipped++;
-              else failed++;
-
-              send("progress", {
-                index: i + 1,
-                total: articles.length,
-                articleId: article.id,
-                title: article.title,
-                status: isSkip ? "skipped" : "failed",
-                beforeScore: result.beforeScore,
-                afterScore: result.afterScore,
-                scoreDelta: 0,
-                message: result.message,
-              });
-              continue;
-            }
-
-            // Guardrail geçen tüm diff'leri otomatik uygula
-            const allFields = result.diffs
-              .filter(
-                (d) =>
-                  d.field !== "seoScore" &&
-                  d.guardrailPassed !== false &&
-                  d.before !== d.after,
-              )
-              .map((d) => d.field);
-
-            if (allFields.length === 0) {
-              skipped++;
-              send("progress", {
-                index: i + 1,
-                total: articles.length,
-                articleId: article.id,
-                title: article.title,
-                status: "skipped",
-                beforeScore: result.beforeScore,
-                afterScore: result.afterScore,
-                scoreDelta: 0,
-                message: "Uygulanacak değişiklik bulunamadı.",
-              });
-              continue;
-            }
-
-            // DB'ye uygula
-            const updateData = pipeline.buildUpdateData(
-              result.diffs,
-              allFields,
-            );
-
-            await db.article.update({
-              where: { id: article.id },
-              data: updateData,
-            });
-
-            // Deterministik skor yeniden hesapla
-            const updatedArticle = await db.article.findUnique({
-              where: { id: article.id },
-            });
-
-            let finalScore = result.afterScore;
-            if (updatedArticle) {
-              const seoResult = calculateSEOScore({
-                title: updatedArticle.title,
-                content: updatedArticle.content || "",
-                excerpt: updatedArticle.excerpt || "",
-                metaDescription: updatedArticle.metaDescription,
-                slug: updatedArticle.slug,
-                keywords: updatedArticle.keywords,
-                imageUrl: updatedArticle.imageUrl,
-              });
-              finalScore = seoResult.score;
-
-              await db.article.update({
-                where: { id: article.id },
-                data: { seoScore: seoResult.score },
-              });
-            }
-
-            const scoreDelta = finalScore - (article.seoScore || 0);
-            totalImprovement += scoreDelta;
-            succeeded++;
-
-            send("progress", {
-              index: i + 1,
-              total: articles.length,
-              articleId: article.id,
-              title: article.title,
-              status: "success",
-              beforeScore: article.seoScore || 0,
-              afterScore: finalScore,
-              scoreDelta,
-              message: `${article.seoScore || 0} → ${finalScore} (+${scoreDelta})`,
-            });
-          } catch (err) {
-            failed++;
-            console.error(
-              `[Bulk Optimize] Hata: ${article.id} - ${article.title}`,
-              err,
-            );
-            send("progress", {
-              index: i + 1,
-              total: articles.length,
-              articleId: article.id,
-              title: article.title,
-              status: "error",
-              beforeScore: article.seoScore || 0,
-              afterScore: article.seoScore || 0,
-              scoreDelta: 0,
-              message:
-                err instanceof Error ? err.message : "Bilinmeyen hata oluştu",
-            });
-          }
-        }
-
-        // Özet
-        send("complete", {
-          processed: articles.length,
-          succeeded,
-          failed,
-          skipped,
-          avgImprovement:
-            succeeded > 0 ? Math.round(totalImprovement / succeeded) : 0,
-        });
-      } catch (err) {
-        console.error("[Bulk Optimize] Kritik hata:", err);
-        send("error", {
-          message:
-            err instanceof Error ? err.message : "Bilinmeyen hata oluştu",
-        });
-      } finally {
-        controller.close();
+        continue;
       }
-    },
-  });
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  });
+      // Guardrail geçen tüm diff'leri otomatik uygula
+      const allFields = result.diffs
+        .filter(
+          (d) =>
+            d.field !== "seoScore" &&
+            d.guardrailPassed !== false &&
+            d.before !== d.after,
+        )
+        .map((d) => d.field);
+
+      if (allFields.length === 0) {
+        BulkJobStore.addProgress(jobId, {
+          index: i + 1,
+          total: articles.length,
+          articleId: article.id,
+          title: article.title,
+          status: "skipped",
+          beforeScore: result.beforeScore,
+          afterScore: result.afterScore,
+          scoreDelta: 0,
+          message: "Uygulanacak değişiklik bulunamadı.",
+        });
+        continue;
+      }
+
+      // DB'ye uygula
+      const updateData = pipeline.buildUpdateData(result.diffs, allFields);
+      await db.article.update({
+        where: { id: article.id },
+        data: updateData,
+      });
+
+      // Deterministik skor yeniden hesapla
+      const updatedArticle = await db.article.findUnique({
+        where: { id: article.id },
+      });
+
+      let finalScore = result.afterScore;
+      if (updatedArticle) {
+        const seoResult = calculateSEOScore({
+          title: updatedArticle.title,
+          content: updatedArticle.content || "",
+          excerpt: updatedArticle.excerpt || "",
+          metaDescription: updatedArticle.metaDescription,
+          slug: updatedArticle.slug,
+          keywords: updatedArticle.keywords,
+          imageUrl: updatedArticle.imageUrl,
+        });
+        finalScore = seoResult.score;
+        await db.article.update({
+          where: { id: article.id },
+          data: { seoScore: seoResult.score },
+        });
+      }
+
+      const scoreDelta = finalScore - beforeScore;
+      BulkJobStore.addProgress(jobId, {
+        index: i + 1,
+        total: articles.length,
+        articleId: article.id,
+        title: article.title,
+        status: "success",
+        beforeScore,
+        afterScore: finalScore,
+        scoreDelta,
+        message: `${beforeScore} → ${finalScore} (${scoreDelta >= 0 ? "+" : ""}${scoreDelta})`,
+      });
+    } catch (err) {
+      console.error(
+        `[Bulk Optimize] Hata: ${article.id} - ${article.title}`,
+        err,
+      );
+      BulkJobStore.addProgress(jobId, {
+        index: i + 1,
+        total: articles.length,
+        articleId: article.id,
+        title: article.title,
+        status: "error",
+        beforeScore,
+        afterScore: beforeScore,
+        scoreDelta: 0,
+        message: err instanceof Error ? err.message : "Bilinmeyen hata oluştu",
+      });
+    }
+  }
+
+  BulkJobStore.complete(jobId);
+  BulkJobStore.cleanup();
+
+  const job = BulkJobStore.get(jobId)!;
+  console.log(
+    `[Bulk Optimize] Job tamamlandı: ${jobId} — ` +
+      `${job.succeeded} başarılı, ${job.failed} hatalı, ${job.skipped} atlandı`,
+  );
 }

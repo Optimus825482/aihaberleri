@@ -84,6 +84,9 @@ export default function SEOPage() {
   const [bulkCurrent, setBulkCurrent] = useState(0);
   const [bulkResult, setBulkResult] = useState<BulkResult | null>(null);
   const bulkLogRef = useRef<HTMLDivElement>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const jobIdRef = useRef<string | null>(null);
+  const lastIndexRef = useRef(0);
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
@@ -136,6 +139,117 @@ export default function SEOPage() {
     fetchArticles();
   }, [fetchArticles]);
 
+  // ─── Polling: Job durumunu her 2 saniyede kontrol et ───
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  const pollJobStatus = useCallback(async () => {
+    const jobId = jobIdRef.current;
+    if (!jobId) return;
+
+    try {
+      const since = lastIndexRef.current;
+      const res = await fetch(
+        `/api/admin/seo/auto-optimize?jobId=${jobId}&since=${since}`,
+      );
+      if (!res.ok) return;
+
+      const data = await res.json();
+
+      // Yeni progress'leri ekle
+      if (data.progress && data.progress.length > 0) {
+        setBulkProgress((prev) => [...prev, ...data.progress]);
+        const maxIndex = Math.max(
+          ...data.progress.map((p: BulkProgressItem) => p.index),
+        );
+        lastIndexRef.current = maxIndex;
+
+        // Auto-scroll
+        setTimeout(() => {
+          bulkLogRef.current?.scrollTo({
+            top: bulkLogRef.current.scrollHeight,
+            behavior: "smooth",
+          });
+        }, 50);
+      }
+
+      setBulkTotal(data.total);
+      setBulkCurrent(data.current);
+
+      // Job bitti mi?
+      if (!data.active) {
+        stopPolling();
+        setBulkOptimizing(false);
+        setBulkResult({
+          processed: data.total,
+          succeeded: data.succeeded,
+          failed: data.failed,
+          skipped: data.skipped,
+          avgImprovement: data.avgImprovement,
+          message: data.error || undefined,
+        });
+        jobIdRef.current = null;
+        lastIndexRef.current = 0;
+        fetchArticles();
+      }
+    } catch (err) {
+      console.error("Polling error:", err);
+    }
+  }, [fetchArticles, stopPolling]);
+
+  const startPolling = useCallback(
+    (jobId: string) => {
+      stopPolling();
+      jobIdRef.current = jobId;
+      lastIndexRef.current = 0;
+      pollingRef.current = setInterval(pollJobStatus, 2000);
+    },
+    [pollJobStatus, stopPolling],
+  );
+
+  // ─── Sayfa yüklendiğinde aktif job var mı kontrol et ───
+  useEffect(() => {
+    const checkActiveJob = async () => {
+      try {
+        const res = await fetch("/api/admin/seo/auto-optimize");
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.active && data.jobId) {
+          // Devam eden job var — polling'i resume et
+          setBulkOptimizing(true);
+          setBulkTotal(data.total);
+          setBulkCurrent(data.current);
+
+          // Tüm mevcut progress'leri yükle
+          const fullRes = await fetch(
+            `/api/admin/seo/auto-optimize?jobId=${data.jobId}&since=0`,
+          );
+          if (fullRes.ok) {
+            const fullData = await fullRes.json();
+            if (fullData.progress?.length > 0) {
+              setBulkProgress(fullData.progress);
+              lastIndexRef.current = Math.max(
+                ...fullData.progress.map((p: BulkProgressItem) => p.index),
+              );
+            }
+          }
+
+          startPolling(data.jobId);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    checkActiveJob();
+    return () => stopPolling();
+  }, [startPolling, stopPolling]);
+
   // ─── Bulk Auto-Optimize ───
   const startBulkOptimize = useCallback(async () => {
     setBulkOptimizing(true);
@@ -151,63 +265,23 @@ export default function SEOPage() {
         body: JSON.stringify({ maxScore: 80, limit: 50 }),
       });
 
-      if (!response.ok || !response.body) {
-        throw new Error("Bağlantı hatası");
+      const data = await response.json();
+
+      if (response.status === 409 && data.jobId) {
+        // Zaten çalışan job var — polling başlat
+        startPolling(data.jobId);
+        return;
       }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        let eventType = "";
-        for (const line of lines) {
-          if (line.startsWith("event: ")) {
-            eventType = line.slice(7).trim();
-          } else if (line.startsWith("data: ") && eventType) {
-            try {
-              const data = JSON.parse(line.slice(6));
-
-              if (eventType === "start") {
-                setBulkTotal(data.total);
-              } else if (eventType === "progress") {
-                setBulkCurrent(data.index);
-                setBulkProgress((prev) => [...prev, data as BulkProgressItem]);
-                // Auto-scroll log
-                setTimeout(() => {
-                  bulkLogRef.current?.scrollTo({
-                    top: bulkLogRef.current.scrollHeight,
-                    behavior: "smooth",
-                  });
-                }, 50);
-              } else if (eventType === "complete") {
-                setBulkResult(data as BulkResult);
-              } else if (eventType === "error") {
-                setBulkResult({
-                  processed: 0,
-                  succeeded: 0,
-                  failed: 1,
-                  skipped: 0,
-                  avgImprovement: 0,
-                  message: data.message,
-                });
-              }
-            } catch {
-              // skip malformed JSON
-            }
-            eventType = "";
-          }
-        }
+      if (!response.ok) {
+        throw new Error(data.error || "İstek başarısız");
       }
+
+      // Job başarıyla oluşturuldu — polling başlat
+      startPolling(data.jobId);
     } catch (err) {
       console.error("Bulk optimize error:", err);
+      setBulkOptimizing(false);
       setBulkResult({
         processed: 0,
         succeeded: 0,
@@ -216,12 +290,8 @@ export default function SEOPage() {
         avgImprovement: 0,
         message: err instanceof Error ? err.message : "Bağlantı hatası",
       });
-    } finally {
-      setBulkOptimizing(false);
-      // Bitince listeyi yenile
-      fetchArticles();
     }
-  }, [fetchArticles]);
+  }, [startPolling]);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600 bg-green-50 border-green-200";
