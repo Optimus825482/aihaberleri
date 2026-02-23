@@ -1,12 +1,20 @@
 import { db } from "@/lib/db";
+import { callDeepSeek } from "@/lib/deepseek";
+
+type GlossaryDelegate = {
+  upsert: (...args: any[]) => Promise<any>;
+  findMany: (...args: any[]) => Promise<any[]>;
+  findUnique: (...args: any[]) => Promise<any | null>;
+};
+
+const glossaryTable = (db as unknown as { aIGlossaryTerm?: GlossaryDelegate })
+  .aIGlossaryTerm;
 
 export interface AITermEntry {
   term: string;
   description: string;
   aliases?: string[];
 }
-
-const GLOSSARY_SETTING_KEY = "site_ai_terms_glossary";
 
 const shouldSkipDbAccess = () => process.env.SKIP_ENV_VALIDATION === "1";
 
@@ -125,6 +133,13 @@ const DEFAULT_GLOSSARY_TERMS: AITermEntry[] = [
   },
 ];
 
+type ExtractedTerm = {
+  term: string;
+  description: string;
+  aliases?: string[];
+  confidence?: number;
+};
+
 function normalizeTerm(term: string): string {
   return term.normalize("NFKC").trim().toLowerCase();
 }
@@ -138,65 +153,53 @@ function toAnchor(term: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function parseGlossary(rawValue: string | undefined): AITermEntry[] {
-  if (!rawValue) return [];
-
-  try {
-    const parsed = JSON.parse(rawValue);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed
-      .filter((item): item is AITermEntry => {
-        return (
-          !!item &&
-          typeof item === "object" &&
-          typeof (item as AITermEntry).term === "string" &&
-          typeof (item as AITermEntry).description === "string"
-        );
-      })
-      .map((item) => ({
-        term: item.term.trim(),
-        description: item.description.trim(),
-        aliases: Array.isArray(item.aliases)
-          ? item.aliases.filter(
-              (alias): alias is string => typeof alias === "string",
-            )
-          : [],
-      }))
-      .filter((item) => item.term.length > 0 && item.description.length > 0);
-  } catch {
-    return [];
-  }
+function escapeForRegex(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function mergeGlossary(
-  base: AITermEntry[],
-  extras: AITermEntry[],
-): AITermEntry[] {
+function sanitizeAliases(aliases: string[] | undefined): string[] {
+  if (!aliases?.length) return [];
+  return Array.from(
+    new Set(
+      aliases
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0)
+        .slice(0, 8),
+    ),
+  );
+}
+
+function mergeEntries(entries: AITermEntry[]): AITermEntry[] {
   const map = new Map<string, AITermEntry>();
 
-  for (const term of [...base, ...extras]) {
-    const key = normalizeTerm(term.term);
+  for (const entry of entries) {
+    const key = normalizeTerm(entry.term);
+    const existing = map.get(key);
 
-    if (!map.has(key)) {
-      map.set(key, term);
+    if (!existing) {
+      map.set(key, {
+        term: entry.term.trim(),
+        description: entry.description.trim(),
+        aliases: sanitizeAliases(entry.aliases),
+      });
       continue;
     }
 
-    const existing = map.get(key)!;
-    if (!existing.description && term.description) {
-      existing.description = term.description;
-    }
+    const description =
+      existing.description.length >= entry.description.length
+        ? existing.description
+        : entry.description;
 
-    const mergedAliases = new Set([
+    const aliases = sanitizeAliases([
       ...(existing.aliases ?? []),
-      ...(term.aliases ?? []),
+      ...(entry.aliases ?? []),
     ]);
-    existing.aliases = Array.from(mergedAliases);
-    map.set(key, existing);
+
+    map.set(key, {
+      term: existing.term,
+      description,
+      aliases,
+    });
   }
 
   return Array.from(map.values()).sort((a, b) =>
@@ -204,8 +207,128 @@ function mergeGlossary(
   );
 }
 
-function escapeForRegex(input: string): string {
-  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+async function ensureDefaultGlossaryTerms(): Promise<void> {
+  if (!glossaryTable) {
+    return;
+  }
+
+  const now = new Date();
+
+  for (const term of DEFAULT_GLOSSARY_TERMS) {
+    const normalizedTerm = normalizeTerm(term.term);
+
+    await glossaryTable.upsert({
+      where: { normalizedTerm },
+      update: {
+        aliases: sanitizeAliases(term.aliases),
+        updatedAt: now,
+      },
+      create: {
+        term: term.term.trim(),
+        normalizedTerm,
+        description: term.description.trim(),
+        aliases: sanitizeAliases(term.aliases),
+        source: "SYSTEM",
+        confidence: 1,
+        isActive: true,
+        lastSeenAt: now,
+      },
+    });
+  }
+}
+
+async function detectTermsWithAI(input: {
+  title: string;
+  excerpt?: string | null;
+  content: string;
+  keywords?: string[];
+}): Promise<ExtractedTerm[]> {
+  const sourceText = [
+    `Başlık: ${input.title}`,
+    input.excerpt ? `Özet: ${input.excerpt}` : "",
+    `Anahtar kelimeler: ${(input.keywords ?? []).join(", ")}`,
+    `İçerik: ${input.content.slice(0, 7000)}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const messages = [
+    {
+      role: "system" as const,
+      content:
+        "Sen teknik terim tespit uzmanısın. Görev: Haber metnindeki, normal kullanıcının anlamakta zorlanabileceği AI/teknoloji terimlerini tespit edip kısa, doğru ve sade Türkçe açıklama üretmek. Sadece JSON döndür.",
+    },
+    {
+      role: "user" as const,
+      content: `Aşağıdaki metin için en fazla 8 terim çıkar.\n\nKurallar:\n- Sadece AI/teknoloji ile ilgili ve açıklanmaya değer terimler\n- Çok genel kelime (internet, yazılım vb.) üretme\n- Açıklama 1 cümle, sade Türkçe\n- Çıktı sadece JSON array olmalı\n- Her öğe şeması: {"term":"...","description":"...","aliases":["..."],"confidence":0.0-1.0}\n\nMetin:\n${sourceText}`,
+    },
+  ];
+
+  try {
+    const raw = await callDeepSeek(messages, {
+      temperature: 0.2,
+      maxTokens: 1200,
+    });
+
+    const firstBracket = raw.indexOf("[");
+    const lastBracket = raw.lastIndexOf("]");
+
+    if (
+      firstBracket === -1 ||
+      lastBracket === -1 ||
+      lastBracket <= firstBracket
+    ) {
+      return [];
+    }
+
+    const jsonStr = raw.slice(firstBracket, lastBracket + 1);
+    const parsed = JSON.parse(jsonStr);
+
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed
+      .filter((item): item is ExtractedTerm => {
+        return (
+          !!item &&
+          typeof item === "object" &&
+          typeof item.term === "string" &&
+          typeof item.description === "string"
+        );
+      })
+      .map((item) => ({
+        term: item.term.trim(),
+        description: item.description.trim(),
+        aliases: sanitizeAliases(item.aliases),
+        confidence:
+          typeof item.confidence === "number"
+            ? Math.max(0, Math.min(1, item.confidence))
+            : 0.7,
+      }))
+      .filter((item) => item.term.length >= 2 && item.description.length >= 8)
+      .slice(0, 8);
+  } catch (error) {
+    console.error("AI glossary term detection failed:", error);
+    return [];
+  }
+}
+
+function fallbackExtractFromKeywords(input: {
+  keywords?: string[];
+}): ExtractedTerm[] {
+  const keywords = input.keywords ?? [];
+  const candidates = keywords
+    .map((keyword) => keyword.trim())
+    .filter((keyword) => keyword.length >= 3)
+    .slice(0, 5);
+
+  return candidates.map((term) => ({
+    term,
+    description: `${term} terimi, yapay zeka ve teknoloji haberlerinde geçen teknik bir kavramdır.`,
+    aliases: [],
+    confidence: 0.4,
+  }));
 }
 
 export async function getAITermsGlossary(limit = 80): Promise<AITermEntry[]> {
@@ -214,16 +337,26 @@ export async function getAITermsGlossary(limit = 80): Promise<AITermEntry[]> {
   }
 
   try {
-    const setting = await db.setting.findUnique({
-      where: { key: GLOSSARY_SETTING_KEY },
-      select: { value: true },
+    await ensureDefaultGlossaryTerms();
+
+    if (!glossaryTable) {
+      return DEFAULT_GLOSSARY_TERMS.slice(0, Math.max(1, limit));
+    }
+
+    const rows = await glossaryTable.findMany({
+      where: { isActive: true },
+      orderBy: [{ usageCount: "desc" }, { term: "asc" }],
+      take: Math.max(1, limit),
+      select: {
+        term: true,
+        description: true,
+        aliases: true,
+      },
     });
 
-    const storedTerms = parseGlossary(setting?.value);
-    const merged = mergeGlossary(DEFAULT_GLOSSARY_TERMS, storedTerms);
-
-    return merged.slice(0, Math.max(1, limit));
-  } catch {
+    return mergeEntries(rows);
+  } catch (error) {
+    console.error("Failed to get glossary terms from table:", error);
     return DEFAULT_GLOSSARY_TERMS.slice(0, Math.max(1, limit));
   }
 }
@@ -275,73 +408,106 @@ export async function upsertGlossaryWithArticleTerms(input: {
   excerpt?: string | null;
   content: string;
   keywords?: string[];
+  source?: string;
 }): Promise<void> {
   if (shouldSkipDbAccess()) {
     return;
   }
 
-  const combinedText = [
-    input.title,
-    input.excerpt ?? "",
-    input.content,
-    ...(input.keywords ?? []),
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  let existingSetting: { value: string } | null = null;
-
   try {
-    existingSetting = await db.setting.findUnique({
-      where: { key: GLOSSARY_SETTING_KEY },
-      select: { value: true },
-    });
-  } catch {
-    return;
-  }
+    await ensureDefaultGlossaryTerms();
 
-  const existingTerms = parseGlossary(existingSetting?.value);
-  const existingKeys = new Set(
-    existingTerms.map((item) => normalizeTerm(item.term)),
-  );
-
-  const newTerms = DEFAULT_GLOSSARY_TERMS.filter((term) => {
-    if (existingKeys.has(normalizeTerm(term.term))) {
-      return false;
+    if (!glossaryTable) {
+      return;
     }
 
-    const candidates = [term.term, ...(term.aliases ?? [])];
-    return candidates.some((candidate) => {
-      const regex = new RegExp(
-        `\\b${escapeForRegex(candidate.toLowerCase())}\\b`,
-        "i",
-      );
-      return regex.test(combinedText);
-    });
-  });
+    const aiDetected = await detectTermsWithAI(input);
+    const fallbackDetected = fallbackExtractFromKeywords(input);
+    const candidates = mergeEntries([
+      ...aiDetected,
+      ...fallbackDetected,
+      ...DEFAULT_GLOSSARY_TERMS,
+    ]);
 
-  if (newTerms.length === 0) {
-    return;
-  }
+    const combinedText = [
+      input.title,
+      input.excerpt ?? "",
+      input.content,
+      ...(input.keywords ?? []),
+    ]
+      .join(" ")
+      .toLowerCase();
 
-  const merged = mergeGlossary(DEFAULT_GLOSSARY_TERMS, [
-    ...existingTerms,
-    ...newTerms,
-  ]);
+    const now = new Date();
 
-  try {
-    await db.setting.upsert({
-      where: { key: GLOSSARY_SETTING_KEY },
-      update: {
-        value: JSON.stringify(merged),
-      },
-      create: {
-        key: GLOSSARY_SETTING_KEY,
-        value: JSON.stringify(merged),
-      },
-    });
-  } catch {
-    return;
+    for (const candidate of candidates) {
+      const termsToMatch = [
+        candidate.term,
+        ...(candidate.aliases ?? []),
+      ].filter(Boolean);
+
+      const matched = termsToMatch.some((part) => {
+        const regex = new RegExp(
+          `\\b${escapeForRegex(part.toLowerCase())}\\b`,
+          "i",
+        );
+        return regex.test(combinedText);
+      });
+
+      if (!matched) continue;
+
+      const normalizedTerm = normalizeTerm(candidate.term);
+      const existing = await glossaryTable.findUnique({
+        where: { normalizedTerm },
+        select: {
+          usageCount: true,
+          aliases: true,
+          source: true,
+          description: true,
+        },
+      });
+
+      await glossaryTable.upsert({
+        where: { normalizedTerm },
+        update: {
+          description:
+            candidate.description.length > (existing?.description.length ?? 0)
+              ? candidate.description
+              : (existing?.description ?? candidate.description),
+          aliases: sanitizeAliases([
+            ...(existing?.aliases ?? []),
+            ...(candidate.aliases ?? []),
+          ]),
+          usageCount: (existing?.usageCount ?? 0) + 1,
+          confidence:
+            aiDetected.find(
+              (item) => normalizeTerm(item.term) === normalizedTerm,
+            )?.confidence ?? undefined,
+          source: existing?.source ?? input.source ?? "AGENT",
+          isActive: true,
+          lastSeenAt: now,
+          updatedAt: now,
+        },
+        create: {
+          term: candidate.term,
+          normalizedTerm,
+          description: candidate.description,
+          aliases: sanitizeAliases(candidate.aliases),
+          source: input.source ?? "AGENT",
+          confidence:
+            aiDetected.find(
+              (item) => normalizeTerm(item.term) === normalizedTerm,
+            )?.confidence ?? 0.65,
+          usageCount: 1,
+          isActive: true,
+          lastSeenAt: now,
+          createdAt: now,
+          updatedAt: now,
+        },
+      });
+    }
+  } catch (error) {
+    console.error("AI glossary enrichment failed:", error);
   }
 }
 

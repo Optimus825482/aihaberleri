@@ -20,6 +20,32 @@ services:
     networks:
       - aihaberleri-network
 
+  # PostgreSQL Daily Backup (retention: 2 files)
+  postgres-backup:
+    image: postgres:15-alpine
+    container_name: aihaberleri-postgres-backup
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-aipassword}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-ainewsdb}
+      DB_USER: ${POSTGRES_USER:-aiuser}
+      BACKUP_DIR: /backups
+      RETENTION_COUNT: 2
+    volumes:
+      - ./scripts/postgres-backup.sh:/scripts/postgres-backup.sh:ro
+      - ./backups/postgres:/backups
+    command: >
+      sh -c "chmod +x /scripts/postgres-backup.sh &&
+      echo '0 3 * * * /scripts/postgres-backup.sh >> /var/log/postgres-backup.log 2>&1' > /etc/crontabs/root &&
+      crond -f -l 8"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - aihaberleri-network
+
   # Redis
   redis:
     image: redis:7-alpine

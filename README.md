@@ -115,6 +115,9 @@ docker-compose up -d
 
 ```bash
 docker-compose exec app npx prisma migrate deploy
+
+# Sözlük için güvenli migration (DB sıfırlamaz)
+docker exec -i aihaberleri-postgres psql -U ${POSTGRES_USER:-aiuser} -d ${POSTGRES_DB:-ainewsdb} < migrations/add-ai-glossary-setting.sql
 ```
 
 6. **Admin kullanıcısı oluşturun**
@@ -253,6 +256,40 @@ Erişim: `http://localhost:3000/admin`
 - **Setting**: Sistem yapılandırması
 
 Tam şema için `prisma/schema.prisma` dosyasına bakın.
+
+## 💾 Otomatik Veritabanı Yedekleme (Günlük, 2 Yedek)
+
+Bu projede `postgres-backup` servisi otomatik yedek alır:
+
+- Her gün saat `03:00`'da PostgreSQL dump alır
+- Yedekler `backups/postgres` altında saklanır
+- En yeni **2** yedek tutulur, daha eski dosyalar otomatik silinir
+
+### Backup servisini başlatma
+
+```bash
+docker-compose up -d postgres-backup
+```
+
+### Manuel yedek alma (test)
+
+```bash
+docker-compose exec postgres-backup /scripts/postgres-backup.sh
+```
+
+### Retention ayarı
+
+`docker-compose.yaml` içinde:
+
+- `RETENTION_COUNT: 2` → en fazla 2 yedek tutulur
+
+## ⚠️ Güvenli Migration Notu
+
+Sözlük için eklenen migration `migrations/add-ai-glossary-setting.sql` dosyası:
+
+- sadece `Setting.key = site_ai_terms_glossary` kaydını yoksa ekler
+- `ON CONFLICT DO NOTHING` kullandığı için tekrar çalıştırılabilir
+- tablo drop/reset işlemi yapmaz, veri kaybına neden olmaz
 
 ## 🚀 Deployment
 

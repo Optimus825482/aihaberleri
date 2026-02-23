@@ -22,7 +22,7 @@ import {
 } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import { createModuleLogger } from "@/lib/agent-log-stream";
-import { upsertGlossaryWithArticleTerms } from "@/lib/ai-glossary";
+import { upsertGlossaryWithArticleTerms } from "../lib/ai-glossary";
 import axios from "axios";
 
 // Create module-specific loggers for live streaming
@@ -1021,6 +1021,19 @@ export async function processIntelligentNews(
       // STEP 3: İçerik sentezleme (Türkçe + İngilizce)
       const synthesized = await synthesizeContent(article, sources, category);
 
+      await upsertGlossaryWithArticleTerms({
+        title: synthesized.tr.title,
+        excerpt: synthesized.tr.excerpt,
+        content: synthesized.tr.content,
+        keywords: synthesized.tr.keywords,
+        source: "INTELLIGENT_PRE_PUBLISH_AGENT",
+      }).catch((error: unknown) => {
+        console.error(
+          "AI glossary enrichment failed (intelligent pre-publish):",
+          error,
+        );
+      });
+
       // Generate slug BEFORE image generation (needed for image naming)
       const trSlug = slugify(synthesized.tr.title);
 
@@ -1073,18 +1086,6 @@ export async function processIntelligentNews(
         language: "tr",
       });
       console.log(`   ✅ Türkçe yayınlandı: ${trSlug}`);
-
-      upsertGlossaryWithArticleTerms({
-        title: trArticle.title,
-        excerpt: trArticle.excerpt,
-        content: trArticle.content,
-        keywords: trArticle.keywords,
-      }).catch((error) => {
-        console.error(
-          "AI glossary enrichment failed (intelligent pipeline):",
-          error,
-        );
-      });
 
       // STEP 6: İngilizce versiyonu ArticleTranslation tablosuna kaydet
       console.log(`🇬🇧 İngilizce çeviri kaydediliyor...`);

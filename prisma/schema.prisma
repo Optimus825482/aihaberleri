@@ -262,6 +262,27 @@ model Setting {
   @@index([key])
 }
 
+model AIGlossaryTerm {
+  id             String   @id @default(cuid())
+  term           String
+  normalizedTerm String   @unique
+  description    String
+  aliases        String[] @default([])
+  source         String   @default("SYSTEM")
+  confidence     Float?
+  usageCount     Int      @default(0)
+  isActive       Boolean  @default(true)
+  lastSeenAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([term])
+  @@index([isActive])
+  @@index([usageCount])
+  @@index([lastSeenAt])
+  @@index([source])
+}
+
 model SocialMedia {
   id        String   @id @default(cuid())
   platform  String   @unique

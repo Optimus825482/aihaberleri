@@ -33,7 +33,7 @@ import {
   validateAndFixContent,
 } from "@/lib/content-validator";
 import { isAIRelatedContent, calculateAIRelevanceScore } from "@/lib/rss";
-import { upsertGlossaryWithArticleTerms } from "@/lib/ai-glossary";
+import { upsertGlossaryWithArticleTerms } from "../lib/ai-glossary";
 
 // ============================================================================
 // CONTENT CONSTANTS - Magic numbers extracted for maintainability
@@ -1114,6 +1114,16 @@ export async function publishArticle(
         ? "PUBLISHED"
         : "DRAFT";
 
+    await upsertGlossaryWithArticleTerms({
+      title: processedArticle.title,
+      excerpt: finalExcerpt,
+      content: finalContent,
+      keywords: processedArticle.keywords,
+      source: "CONTENT_PRE_PUBLISH_AGENT",
+    }).catch((error: unknown) => {
+      console.error("AI glossary enrichment failed (pre-publish):", error);
+    });
+
     // Create article
     const article = await db.article.create({
       data: {
@@ -1148,15 +1158,6 @@ export async function publishArticle(
     await liveLog.publish.success(
       `✅ Yayınlandı: ${article.title.substring(0, 50)}... (Skor: ${score})`,
     );
-
-    upsertGlossaryWithArticleTerms({
-      title: article.title,
-      excerpt: article.excerpt,
-      content: article.content,
-      keywords: article.keywords,
-    }).catch((error) => {
-      console.error("AI glossary enrichment failed:", error);
-    });
 
     // 🚀 CACHE: Invalidate articles cache when new article published
     try {

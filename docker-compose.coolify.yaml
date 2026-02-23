@@ -33,6 +33,30 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  # PostgreSQL Daily Backup (retention: 2 files)
+  postgres-backup:
+    image: postgres:17-alpine
+    container_name: aihaberleri-postgres-backup
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:-518518Erkan}
+      DB_HOST: ${POSTGRES_HOST:-aihaberleri-postgres}
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-postgresainewsdb}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      BACKUP_DIR: /backups
+      RETENTION_COUNT: 2
+    volumes:
+      - ./scripts/postgres-backup.sh:/scripts/postgres-backup.sh:ro
+      - ./backups/postgres:/backups
+    command: >
+      sh -c "chmod +x /scripts/postgres-backup.sh &&
+      echo '0 3 * * * /scripts/postgres-backup.sh >> /var/log/postgres-backup.log 2>&1' > /etc/crontabs/root &&
+      crond -f -l 8"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   # Redis (Local container)
   redis:
     image: redis:7-alpine
