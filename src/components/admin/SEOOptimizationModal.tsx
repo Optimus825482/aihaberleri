@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Dialog,
@@ -10,19 +10,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Sparkles,
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Brain,
-  FileText,
-  Code2,
+  TrendingUp,
+  TrendingDown,
+  Search,
+  Wand2,
+  ShieldCheck,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { SEODiff } from "./SEODiffView";
@@ -40,9 +38,6 @@ const SEODiffView = dynamic(
   },
 );
 
-export type SEOAgent = "analyzer" | "content" | "technical";
-export type SEOMode = "auto" | "review";
-
 interface SEOOptimizationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -51,36 +46,22 @@ interface SEOOptimizationModalProps {
   onSuccess?: () => void;
 }
 
-interface OptimizationStep {
+interface PipelineStep {
   id: string;
   label: string;
+  icon: React.ReactNode;
   status: "pending" | "running" | "completed" | "error";
 }
 
-const AGENT_CONFIG = {
-  analyzer: {
-    label: "SEO Analyzer",
-    description: "Temel SEO analizi ve skorlama",
-    icon: Brain,
-    color: "text-blue-500",
-  },
-  content: {
-    label: "Content Optimizer",
-    description: "İçerik optimizasyonu ve anahtar kelime",
-    icon: FileText,
-    color: "text-purple-500",
-  },
-  technical: {
-    label: "Technical SEO",
-    description: "Meta tags, yapılandırılmış veri",
-    icon: Code2,
-    color: "text-green-500",
-  },
-};
+const PIPELINE_STEPS: Omit<PipelineStep, "status">[] = [
+  { id: "evaluate", label: "SEO Değerlendirmesi", icon: <Search className="h-5 w-5" /> },
+  { id: "optimize", label: "Optimizasyon", icon: <Wand2 className="h-5 w-5" /> },
+  { id: "validate", label: "Doğrulama", icon: <ShieldCheck className="h-5 w-5" /> },
+];
 
 /**
  * SEO Optimization Modal
- * Multi-agent SEO optimization with progress tracking
+ * Pipeline: Evaluate → Optimize → Validate → User Approval
  */
 export function SEOOptimizationModal({
   open,
@@ -89,121 +70,100 @@ export function SEOOptimizationModal({
   articleTitle,
   onSuccess,
 }: SEOOptimizationModalProps) {
-  const [selectedAgents, setSelectedAgents] = useState<Set<SEOAgent>>(
-    new Set(["analyzer", "content", "technical"]),
-  );
-  const [mode, setMode] = useState<SEOMode>("review");
-  const [step, setStep] = useState<
-    "config" | "processing" | "review" | "completed"
-  >("config");
+  const [step, setStep] = useState<"config" | "processing" | "review" | "completed">("config");
   const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState<OptimizationStep[]>([]);
+  const [pipelineSteps, setPipelineSteps] = useState<PipelineStep[]>([]);
   const [diffs, setDiffs] = useState<SEODiff[]>([]);
+  const [beforeScore, setBeforeScore] = useState<number | null>(null);
+  const [afterScore, setAfterScore] = useState<number | null>(null);
+  const [scoreDelta, setScoreDelta] = useState<number | null>(null);
+  const [pipelineMessage, setPipelineMessage] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const toggleAgent = useCallback((agent: SEOAgent) => {
-    setSelectedAgents((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(agent)) {
-        newSet.delete(agent);
-      } else {
-        newSet.add(agent);
-      }
-      return newSet;
-    });
-  }, []);
-
   const startOptimization = async () => {
-    if (selectedAgents.size === 0) {
-      toast({
-        title: "Hata",
-        description: "Lütfen en az bir agent seçin",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setStep("processing");
     setProgress(0);
     setError(null);
+    setBeforeScore(null);
+    setAfterScore(null);
+    setScoreDelta(null);
 
-    // Initialize steps
-    const steps: OptimizationStep[] = Array.from(selectedAgents).map(
-      (agent) => ({
-        id: agent,
-        label: AGENT_CONFIG[agent].label,
-        status: "pending",
-      }),
-    );
-    setCurrentStep(steps);
+    // Initialize pipeline steps
+    const steps: PipelineStep[] = PIPELINE_STEPS.map((s) => ({
+      ...s,
+      status: "pending" as const,
+    }));
+    setPipelineSteps(steps);
+
+    // Start progress animation
+    const stepIds = ["evaluate", "optimize", "validate"];
+    let stepIndex = 0;
+
+    const progressInterval = setInterval(() => {
+      if (stepIndex < stepIds.length) {
+        setPipelineSteps((prev) =>
+          prev.map((s) =>
+            s.id === stepIds[stepIndex] ? { ...s, status: "running" } : s,
+          ),
+        );
+        setProgress(((stepIndex + 1) / stepIds.length) * 80);
+      }
+    }, 2000);
 
     try {
-      // Call optimization API
       const response = await fetch(
         `/api/admin/articles/${articleId}/optimize`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            agents: Array.from(selectedAgents),
-            mode,
-          }),
         },
       );
 
+      clearInterval(progressInterval);
+
       if (!response.ok) {
-        throw new Error("Optimizasyon başarısız oldu");
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Optimizasyon başarısız oldu");
       }
 
       const data = await response.json();
 
-      // Simulate progress for each agent
-      let currentProgress = 0;
-      const progressPerAgent = 100 / selectedAgents.size;
-
-      for (const agent of Array.from(selectedAgents)) {
-        // Update step status
-        setCurrentStep((prev) =>
-          prev.map((s) => (s.id === agent ? { ...s, status: "running" } : s)),
-        );
-
-        // Simulate processing time
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        currentProgress += progressPerAgent;
-        setProgress(currentProgress);
-
-        // Mark as completed
-        setCurrentStep((prev) =>
-          prev.map((s) => (s.id === agent ? { ...s, status: "completed" } : s)),
-        );
-      }
-
+      // Mark all steps completed
+      setPipelineSteps((prev) =>
+        prev.map((s) => ({ ...s, status: "completed" as const })),
+      );
       setProgress(100);
 
-      if (mode === "review" && data.diffs && data.diffs.length > 0) {
-        // Show diff view for review
+      // Set score data
+      setBeforeScore(data.beforeScore ?? null);
+      setAfterScore(data.afterScore ?? null);
+      setScoreDelta(data.scoreDelta ?? null);
+      setPipelineMessage(data.message || "");
+
+      if (data.diffs && data.diffs.length > 0) {
         setDiffs(data.diffs);
+        // Small delay so user sees completed steps
+        await new Promise((resolve) => setTimeout(resolve, 500));
         setStep("review");
       } else {
-        // Auto mode - directly applied
+        setPipelineMessage("Makale zaten optimize durumda, değişiklik gerekmiyor.");
         setStep("completed");
-        toast({
-          title: "Optimizasyon Tamamlandı ✅",
-          description: `${selectedAgents.size} agent başarıyla çalıştırıldı`,
-        });
-
-        if (onSuccess) {
-          onSuccess();
-        }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Bilinmeyen hata");
+      clearInterval(progressInterval);
+      const message = err instanceof Error ? err.message : "Bilinmeyen hata";
+      setError(message);
+
+      // Mark current running step as error
+      setPipelineSteps((prev) =>
+        prev.map((s) => (s.status === "running" ? { ...s, status: "error" } : s)),
+      );
+
       setStep("config");
       toast({
         title: "Hata ❌",
-        description: "Optimizasyon başarısız oldu",
+        description: message,
         variant: "destructive",
       });
     }
@@ -225,6 +185,11 @@ export function SEOOptimizationModal({
 
       if (!response.ok) {
         throw new Error("Değişiklikler uygulanamadı");
+      }
+
+      const data = await response.json();
+      if (data.newScore) {
+        setAfterScore(data.newScore);
       }
 
       setStep("completed");
@@ -253,10 +218,45 @@ export function SEOOptimizationModal({
   const handleClose = () => {
     setStep("config");
     setProgress(0);
-    setCurrentStep([]);
+    setPipelineSteps([]);
     setDiffs([]);
+    setBeforeScore(null);
+    setAfterScore(null);
+    setScoreDelta(null);
+    setPipelineMessage("");
     setError(null);
     onOpenChange(false);
+  };
+
+  const ScoreCard = () => {
+    if (beforeScore === null || afterScore === null) return null;
+    const delta = scoreDelta ?? (afterScore - beforeScore);
+    const isPositive = delta >= 0;
+
+    return (
+      <div className="flex items-center justify-center gap-6 p-4 bg-muted/30 rounded-lg border">
+        <div className="text-center">
+          <div className="text-xs text-muted-foreground mb-1">Mevcut Skor</div>
+          <div className="text-2xl font-bold">{beforeScore}</div>
+        </div>
+        <div className="text-2xl text-muted-foreground">→</div>
+        <div className="text-center">
+          <div className="text-xs text-muted-foreground mb-1">Yeni Skor</div>
+          <div className="text-2xl font-bold">{afterScore}</div>
+        </div>
+        <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold ${isPositive
+            ? "bg-green-500/10 text-green-600 dark:text-green-400"
+            : "bg-red-500/10 text-red-600 dark:text-red-400"
+          }`}>
+          {isPositive ? (
+            <TrendingUp className="h-4 w-4" />
+          ) : (
+            <TrendingDown className="h-4 w-4" />
+          )}
+          {isPositive ? "+" : ""}{delta}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -273,70 +273,32 @@ export function SEOOptimizationModal({
         {/* Configuration Step */}
         {step === "config" && (
           <div className="space-y-6 py-4">
-            {/* Agent Selection */}
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">
-                Agent Seçimi ({selectedAgents.size}/3)
-              </Label>
-              <div className="grid gap-3">
-                {(Object.keys(AGENT_CONFIG) as SEOAgent[]).map((agent) => {
-                  const config = AGENT_CONFIG[agent];
-                  const Icon = config.icon;
-                  const isSelected = selectedAgents.has(agent);
-
-                  return (
-                    <div
-                      key={agent}
-                      className={`flex items-start gap-3 p-4 border rounded-lg cursor-pointer transition-all ${
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                      onClick={() => toggleAgent(agent)}
-                    >
-                      <Checkbox checked={isSelected} />
-                      <Icon className={`h-5 w-5 mt-0.5 ${config.color}`} />
-                      <div className="flex-1">
-                        <div className="font-medium">{config.label}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {config.description}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+            <div className="p-4 bg-muted/30 rounded-lg border space-y-3">
+              <h4 className="font-semibold flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-green-500" />
+                Akıllı SEO Pipeline
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Makale deterministik SEO kurallarıyla değerlendirilir, sorunlu alanlar AI ile optimize edilir,
+                ardından tekrar değerlendirilerek skor düşüşü olmadığı doğrulanır. Sonuçlar onayına sunulur.
+              </p>
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Search className="h-3 w-3" /> Değerlendir
+                </span>
+                <span>→</span>
+                <span className="flex items-center gap-1">
+                  <Wand2 className="h-3 w-3" /> Optimize Et
+                </span>
+                <span>→</span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="h-3 w-3" /> Doğrula
+                </span>
+                <span>→</span>
+                <span className="flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> Onayla
+                </span>
               </div>
-            </div>
-
-            {/* Mode Selection */}
-            <div className="space-y-3">
-              <Label className="text-base font-semibold">
-                Optimizasyon Modu
-              </Label>
-              <RadioGroup
-                value={mode}
-                onValueChange={(v) => setMode(v as SEOMode)}
-              >
-                <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                  <RadioGroupItem value="review" id="review" />
-                  <Label htmlFor="review" className="flex-1 cursor-pointer">
-                    <div className="font-medium">İnceleme Modu</div>
-                    <div className="text-sm text-muted-foreground">
-                      Değişiklikleri önce incele, sonra uygula
-                    </div>
-                  </Label>
-                  <Badge variant="outline">Önerilen</Badge>
-                </div>
-                <div className="flex items-center space-x-2 p-3 border rounded-lg">
-                  <RadioGroupItem value="auto" id="auto" />
-                  <Label htmlFor="auto" className="flex-1 cursor-pointer">
-                    <div className="font-medium">Otomatik Mod</div>
-                    <div className="text-sm text-muted-foreground">
-                      Değişiklikleri otomatik uygula
-                    </div>
-                  </Label>
-                </div>
-              </RadioGroup>
             </div>
 
             {/* Error Display */}
@@ -347,14 +309,12 @@ export function SEOOptimizationModal({
               </div>
             )}
 
-            {/* Start Button */}
             <Button
               onClick={startOptimization}
-              disabled={selectedAgents.size === 0}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
             >
               <Sparkles className="h-4 w-4 mr-2" />
-              Optimizasyonu Başlat
+              SEO Optimizasyonunu Başlat
             </Button>
           </div>
         )}
@@ -365,17 +325,17 @@ export function SEOOptimizationModal({
             <div className="text-center">
               <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
               <h3 className="text-lg font-semibold mb-2">
-                SEO Optimizasyonu Yapılıyor...
+                SEO Pipeline Çalışıyor...
               </h3>
               <p className="text-sm text-muted-foreground">
-                Agent'lar makaleyi analiz ediyor ve optimize ediyor
+                Makale değerlendiriliyor, optimize ediliyor ve doğrulanıyor
               </p>
             </div>
 
             <Progress value={progress} className="h-2" />
 
             <div className="space-y-2">
-              {currentStep.map((s) => (
+              {pipelineSteps.map((s) => (
                 <div
                   key={s.id}
                   className="flex items-center gap-3 p-3 border rounded-lg"
@@ -401,7 +361,11 @@ export function SEOOptimizationModal({
 
         {/* Review Step */}
         {step === "review" && (
-          <div className="py-4">
+          <div className="py-4 space-y-4">
+            <ScoreCard />
+            {pipelineMessage && (
+              <p className="text-sm text-muted-foreground text-center">{pipelineMessage}</p>
+            )}
             <SEODiffView
               diffs={diffs}
               onApply={handleApplyDiffs}
@@ -418,9 +382,10 @@ export function SEOOptimizationModal({
               <h3 className="text-xl font-bold mb-2">
                 Optimizasyon Tamamlandı! 🎉
               </h3>
-              <p className="text-muted-foreground">
-                Makale başarıyla optimize edildi
-              </p>
+              {pipelineMessage && (
+                <p className="text-muted-foreground mb-3">{pipelineMessage}</p>
+              )}
+              <ScoreCard />
             </div>
             <Button onClick={handleClose} className="w-full">
               Kapat

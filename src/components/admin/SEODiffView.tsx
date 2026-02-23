@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Check, X, Eye, Code2 } from "lucide-react";
+import { Check, X, Eye, Code2, ShieldCheck, ShieldAlert, Tag } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
@@ -15,7 +15,10 @@ export interface SEODiff {
   label: string;
   before: string;
   after: string;
-  type: "text" | "html" | "meta";
+  type: "text" | "content" | "info" | "keywords" | "html" | "meta";
+  improvements?: string[];
+  guardrailPassed?: boolean;
+  guardrailNote?: string;
 }
 
 interface SEODiffViewProps {
@@ -24,6 +27,9 @@ interface SEODiffViewProps {
   onReject: () => void;
   loading?: boolean;
 }
+
+// Non-selectable diff types (info cards, not actual changes to apply)
+const NON_SELECTABLE_TYPES = new Set(["info"]);
 
 /**
  * SEO Diff View Component
@@ -35,8 +41,9 @@ export function SEODiffView({
   onReject,
   loading = false,
 }: SEODiffViewProps) {
+  const selectableDiffs = diffs.filter((d) => !NON_SELECTABLE_TYPES.has(d.type));
   const [selectedFields, setSelectedFields] = useState<Set<string>>(
-    new Set(diffs.map((d) => d.field)),
+    new Set(selectableDiffs.map((d) => d.field)),
   );
   const [previewMode, setPreviewMode] = useState<"split" | "unified">("split");
   const [applying, setApplying] = useState(false);
@@ -54,12 +61,12 @@ export function SEODiffView({
   }, []);
 
   const toggleAll = useCallback(() => {
-    if (selectedFields.size === diffs.length) {
+    if (selectedFields.size === selectableDiffs.length) {
       setSelectedFields(new Set());
     } else {
-      setSelectedFields(new Set(diffs.map((d) => d.field)));
+      setSelectedFields(new Set(selectableDiffs.map((d) => d.field)));
     }
-  }, [diffs, selectedFields.size]);
+  }, [selectableDiffs, selectedFields.size]);
 
   const handleApply = async () => {
     if (selectedFields.size === 0) {
@@ -76,7 +83,7 @@ export function SEODiffView({
   };
 
   const renderContent = (content: string, type: SEODiff["type"]) => {
-    if (type === "html" || type === "meta") {
+    if (type === "html" || type === "meta" || type === "content") {
       return (
         <SyntaxHighlighter
           language="html"
@@ -94,6 +101,20 @@ export function SEODiffView({
       );
     }
 
+    if (type === "keywords") {
+      const keywords = content.split(",").map((k) => k.trim()).filter(Boolean);
+      return (
+        <div className="flex flex-wrap gap-1.5 p-3 bg-muted/30 rounded-lg">
+          {keywords.map((kw, i) => (
+            <Badge key={i} variant="secondary" className="text-xs">
+              <Tag className="h-3 w-3 mr-1" />
+              {kw}
+            </Badge>
+          ))}
+        </div>
+      );
+    }
+
     return (
       <div className="p-3 bg-muted/30 rounded-lg text-sm font-mono whitespace-pre-wrap break-words">
         {content}
@@ -101,9 +122,20 @@ export function SEODiffView({
     );
   };
 
-  const allSelected = selectedFields.size === diffs.length;
+  const renderInfoCard = (diff: SEODiff) => (
+    <div className="border rounded-lg p-4 bg-blue-500/5 border-blue-500/20">
+      <h4 className="font-semibold text-sm mb-2">{diff.label}</h4>
+      <div className="flex items-center gap-4 text-sm">
+        <span className="text-muted-foreground">{diff.before}</span>
+        <span className="text-muted-foreground">→</span>
+        <span className="font-semibold">{diff.after}</span>
+      </div>
+    </div>
+  );
+
+  const allSelected = selectedFields.size === selectableDiffs.length;
   const someSelected =
-    selectedFields.size > 0 && selectedFields.size < diffs.length;
+    selectedFields.size > 0 && selectedFields.size < selectableDiffs.length;
 
   return (
     <Card className="border-2">
@@ -111,7 +143,7 @@ export function SEODiffView({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Code2 className="h-5 w-5" />
-            SEO Değişiklikleri ({diffs.length})
+            SEO Değişiklikleri ({selectableDiffs.length})
           </CardTitle>
           <div className="flex items-center gap-2">
             <Button
@@ -141,7 +173,13 @@ export function SEODiffView({
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-6">
             {diffs.map((diff) => {
+              // Info type: non-selectable display card
+              if (diff.type === "info") {
+                return <div key={diff.field}>{renderInfoCard(diff)}</div>;
+              }
+
               const isSelected = selectedFields.has(diff.field);
+              const isSelectable = !NON_SELECTABLE_TYPES.has(diff.type);
 
               return (
                 <div
@@ -153,23 +191,57 @@ export function SEODiffView({
                   }`}
                 >
                   {/* Header */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => toggleField(diff.field)}
-                    />
+                  <div className="flex items-center gap-3 mb-3">
+                    {isSelectable && (
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleField(diff.field)}
+                      />
+                    )}
                     <div className="flex-1">
-                      <h4 className="font-semibold text-sm">{diff.label}</h4>
-                      <Badge variant="outline" className="mt-1">
-                        {diff.type}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-sm">{diff.label}</h4>
+                        <Badge variant="outline" className="text-xs">
+                          {diff.type}
+                        </Badge>
+                        {/* Guardrail indicator */}
+                        {diff.guardrailPassed !== undefined && (
+                          diff.guardrailPassed ? (
+                            <Badge variant="outline" className="text-xs text-green-600 border-green-300 bg-green-50 dark:bg-green-950 dark:text-green-400">
+                              <ShieldCheck className="h-3 w-3 mr-1" />
+                              Geçti
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-xs text-amber-600 border-amber-300 bg-amber-50 dark:bg-amber-950 dark:text-amber-400">
+                              <ShieldAlert className="h-3 w-3 mr-1" />
+                              Uyarı
+                            </Badge>
+                          )
+                        )}
+                      </div>
+                      {diff.guardrailNote && (
+                        <p className="text-xs text-muted-foreground mt-1">{diff.guardrailNote}</p>
+                      )}
                     </div>
                   </div>
+
+                  {/* Improvements list */}
+                  {diff.improvements && diff.improvements.length > 0 && (
+                    <div className="mb-3 px-3 py-2 bg-green-500/5 border border-green-500/10 rounded-md">
+                      <ul className="text-xs text-green-700 dark:text-green-400 space-y-0.5">
+                        {diff.improvements.map((imp, i) => (
+                          <li key={i} className="flex items-start gap-1.5">
+                            <Check className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                            {imp}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Content Comparison */}
                   {previewMode === "split" ? (
                     <div className="grid grid-cols-2 gap-4">
-                      {/* Before */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400">
                           <X className="h-4 w-4" />
@@ -177,8 +249,6 @@ export function SEODiffView({
                         </div>
                         {renderContent(diff.before, diff.type)}
                       </div>
-
-                      {/* After */}
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
                           <Check className="h-4 w-4" />
@@ -188,17 +258,14 @@ export function SEODiffView({
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      {/* Before */}
+                      <div className="space-y-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400">
                           <X className="h-4 w-4" />
                           Önce
                         </div>
                         {renderContent(diff.before, diff.type)}
-                      </div>
-
-                      {/* After */}
+                        </div>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400">
                           <Check className="h-4 w-4" />
@@ -217,7 +284,7 @@ export function SEODiffView({
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="text-sm text-muted-foreground">
-            {selectedFields.size} / {diffs.length} değişiklik seçildi
+            {selectedFields.size} / {selectableDiffs.length} değişiklik seçildi
           </div>
           <div className="flex items-center gap-2">
             <Button

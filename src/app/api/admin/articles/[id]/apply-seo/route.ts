@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { db } from "@/lib/db";
-import { SEOAnalyzerAgent } from "@/agents/seo/analyzer.agent";
+import { calculateSEOScore } from "@/lib/seo-calculator";
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
@@ -10,6 +10,9 @@ const JWT_SECRET = new TextEncoder().encode(
 /**
  * POST /api/admin/articles/[id]/apply-seo
  * Apply selected SEO optimizations
+ *
+ * DEĞİŞİKLİK: LLM-based SEOAnalyzerAgent kaldırıldı.
+ * Skor artık %100 deterministik calculateSEOScore ile hesaplanıyor.
  */
 export async function POST(
   request: NextRequest,
@@ -73,26 +76,26 @@ export async function POST(
       data: updateData,
     });
 
-    // Recalculate SEO score
-    const analyzer = new SEOAnalyzerAgent();
+    // Deterministik SEO skoru hesapla (LLM kullanmıyoruz!)
     const updatedArticle = await db.article.findUnique({ where: { id } });
     let newScore: number | null = null;
 
     if (updatedArticle) {
-      const analysis = await analyzer.analyze({
+      const seoResult = calculateSEOScore({
         title: updatedArticle.title,
         content: updatedArticle.content || "",
-        metaDescription: updatedArticle.metaDescription || undefined,
+        excerpt: updatedArticle.excerpt || "",
+        metaDescription: updatedArticle.metaDescription,
         slug: updatedArticle.slug,
-        keywords: updatedArticle.keywords || undefined,
-        imageUrl: updatedArticle.imageUrl || undefined,
+        keywords: updatedArticle.keywords,
+        imageUrl: updatedArticle.imageUrl,
       });
 
-      newScore = analysis.score;
+      newScore = seoResult.score;
 
       await db.article.update({
         where: { id },
-        data: { seoScore: analysis.score },
+        data: { seoScore: seoResult.score },
       });
 
       // Clear resolved recommendations
