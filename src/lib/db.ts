@@ -5,15 +5,39 @@ const globalForPrisma = globalThis as unknown as {
   __dbSignalHandlersRegistered?: boolean;
 };
 
-// Create a mock PrismaClient for build time
+function throwBuildTimeDbError(methodPath: string): never {
+  throw new Error(
+    `PrismaClient is not available during build time. Attempted to call: ${methodPath}`,
+  );
+}
+
+function createBuildSafeMethodProxy(methodPath: string): any {
+  return new Proxy(function buildSafePrismaMethod() {}, {
+    apply: () => throwBuildTimeDbError(methodPath),
+    get: (_target, prop) => {
+      if (prop === "then") return undefined;
+      if (prop === "toString") {
+        return () => `[BuildSafePrismaMethod ${methodPath}]`;
+      }
+      return createBuildSafeMethodProxy(`${methodPath}.${String(prop)}`);
+    },
+  });
+}
+
+// Create a build-safe PrismaClient mock:
+// - property access is allowed (prevents module-eval crashes)
+// - actual method invocation throws explicit error
 const createMockPrismaClient = () => {
   return new Proxy(
     {},
     {
-      get: () => {
-        throw new Error(
-          "PrismaClient is not available during build time. This should not be called.",
-        );
+      get: (_target, prop) => {
+        if (prop === "then") return undefined;
+        if (prop === "$on") return () => undefined;
+        if (prop === "$connect") return async () => undefined;
+        if (prop === "$disconnect") return async () => undefined;
+
+        return createBuildSafeMethodProxy(String(prop));
       },
     },
   ) as PrismaClient;
