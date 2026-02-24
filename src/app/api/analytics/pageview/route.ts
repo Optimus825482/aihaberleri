@@ -102,53 +102,95 @@ export async function POST(request: NextRequest) {
       // Continue without geo
     }
 
-    // Upsert visitor with full data
-    const visitor = await db.visitor.upsert({
-      where: { visitorToken },
-      update: {
-        ipAddress: ip,
-        userAgent,
-        currentPage: path,
-        lastActivity: new Date(),
-        device,
-        browser,
-        os,
-        totalVisits: { increment: 1 },
-        lastReferrer: referrer || undefined,
-        ...(geo && {
-          country: geo.country,
-          countryCode: geo.countryCode,
-          city: geo.city,
-          region: geo.region,
-          isp: geo.isp,
-          latitude: geo.latitude,
-          longitude: geo.longitude,
-          timezone: geo.timezone,
-          provider: geo.provider,
-        }),
-      },
-      create: {
-        visitorToken,
-        ipAddress: ip,
-        userAgent,
-        currentPage: path,
-        device,
-        browser,
-        os,
-        lastReferrer: referrer || null,
-        ...(geo && {
-          country: geo.country,
-          countryCode: geo.countryCode,
-          city: geo.city,
-          region: geo.region,
-          isp: geo.isp,
-          latitude: geo.latitude,
-          longitude: geo.longitude,
-          timezone: geo.timezone,
-          provider: geo.provider,
-        }),
-      },
-    });
+    // Upsert visitor — handle ipAddress race condition (P2002)
+    let visitor;
+    try {
+      visitor = await db.visitor.upsert({
+        where: { visitorToken },
+        update: {
+          ipAddress: ip,
+          userAgent,
+          currentPage: path,
+          lastActivity: new Date(),
+          device,
+          browser,
+          os,
+          totalVisits: { increment: 1 },
+          lastReferrer: referrer || undefined,
+          ...(geo && {
+            country: geo.country,
+            countryCode: geo.countryCode,
+            city: geo.city,
+            region: geo.region,
+            isp: geo.isp,
+            latitude: geo.latitude,
+            longitude: geo.longitude,
+            timezone: geo.timezone,
+            provider: geo.provider,
+          }),
+        },
+        create: {
+          visitorToken,
+          ipAddress: ip,
+          userAgent,
+          currentPage: path,
+          device,
+          browser,
+          os,
+          lastReferrer: referrer || null,
+          ...(geo && {
+            country: geo.country,
+            countryCode: geo.countryCode,
+            city: geo.city,
+            region: geo.region,
+            isp: geo.isp,
+            latitude: geo.latitude,
+            longitude: geo.longitude,
+            timezone: geo.timezone,
+            provider: geo.provider,
+          }),
+        },
+      });
+    } catch (upsertError: any) {
+      // P2002 = unique constraint violation on ipAddress (concurrent requests, same IP)
+      if (upsertError?.code === "P2002") {
+        // Fallback: find existing visitor by IP and update
+        const existing = await db.visitor.findFirst({
+          where: { ipAddress: ip },
+        });
+        if (existing) {
+          visitor = await db.visitor.update({
+            where: { id: existing.id },
+            data: {
+              userAgent,
+              currentPage: path,
+              lastActivity: new Date(),
+              device,
+              browser,
+              os,
+              totalVisits: { increment: 1 },
+              lastReferrer: referrer || undefined,
+              ...(geo && {
+                country: geo.country,
+                countryCode: geo.countryCode,
+                city: geo.city,
+                region: geo.region,
+                isp: geo.isp,
+                latitude: geo.latitude,
+                longitude: geo.longitude,
+                timezone: geo.timezone,
+                provider: geo.provider,
+              }),
+            },
+          });
+        } else {
+          // Extremely rare: constraint error but can't find the record
+          throw upsertError;
+        }
+      } else {
+        throw upsertError;
+      }
+    }
 
     // Create PageView record
     await db.pageView.create({

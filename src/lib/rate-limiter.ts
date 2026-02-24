@@ -2,17 +2,18 @@
  * Rate Limiter Implementation
  *
  * Fix #14: Rate Limiting Eksik
- * Skill: api-patterns → Rate limiting + vulnerability-scanner → A02 Security Misconfiguration
+ * Uses local ioredis (same Redis as BullMQ) for rate limiting.
  *
  * Features:
- * - Upstash Redis-based rate limiting
+ * - Local Redis-based rate limiting (ioredis)
+ * - In-memory fallback when Redis unavailable
  * - Endpoint-specific limits
  * - Rate limit headers (X-RateLimit-*)
  * - 429 Too Many Requests response
  * - Sliding window algorithm
  */
 
-import { Redis } from "@upstash/redis";
+import { getRedis } from "@/lib/redis";
 
 export interface RateLimitConfig {
   maxRequests: number;
@@ -27,24 +28,15 @@ export interface RateLimitResult {
   retryAfter?: number;
 }
 
+// In-memory fallback when Redis is unavailable
+const memoryStore = new Map<string, { count: number; resetAt: number }>();
+
 export class RateLimiter {
-  private redis: Redis;
   private readonly prefix = "ratelimit:";
 
-  constructor() {
-    // Upstash Redis connection
-    this.redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL!,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-    });
-  }
-
   /**
-   * Check rate limit for identifier
-   *
-   * @param identifier - Unique identifier (user ID, IP, etc.)
-   * @param config - Rate limit configuration
-   * @returns Rate limit result
+   * Check rate limit for identifier using local Redis
+   * Falls back to in-memory store if Redis unavailable
    */
   async check(
     identifier: string,
@@ -52,26 +44,25 @@ export class RateLimiter {
   ): Promise<RateLimitResult> {
     const key = `${this.prefix}${identifier}`;
     const now = Date.now();
-    const windowStart = now - config.windowMs;
+
+    const redis = getRedis();
+    if (!redis) {
+      return this.checkInMemory(identifier, config);
+    }
 
     try {
-      // Sliding window algorithm using Redis sorted set
-      const pipeline = this.redis.pipeline();
+      const windowStart = now - config.windowMs;
 
-      // Remove old entries outside the window
+      // Sliding window with ioredis pipeline
+      const pipeline = redis.pipeline();
       pipeline.zremrangebyscore(key, 0, windowStart);
-
-      // Count requests in current window
       pipeline.zcard(key);
-
-      // Add current request
-      pipeline.zadd(key, { score: now, member: `${now}` });
-
-      // Set expiry
+      pipeline.zadd(key, now, `${now}:${Math.random().toString(36).slice(2, 8)}`);
       pipeline.expire(key, Math.ceil(config.windowMs / 1000));
 
       const results = await pipeline.exec();
-      const count = (results[1] as number) || 0;
+      // results: [[err, val], [err, val], ...]
+      const count = (results?.[1]?.[1] as number) || 0;
 
       const allowed = count < config.maxRequests;
       const remaining = Math.max(0, config.maxRequests - count - 1);
@@ -85,18 +76,9 @@ export class RateLimiter {
       };
 
       if (!allowed) {
-        // Calculate retry-after in seconds
-        const oldestRequest = await this.redis.zrange(key, 0, 0, {
-          withScores: true,
-        });
-
-        if (
-          oldestRequest.length > 0 &&
-          typeof oldestRequest[0] === "object" &&
-          oldestRequest[0] !== null
-        ) {
-          const entry = oldestRequest[0] as { score: number; value: string };
-          const oldestTimestamp = entry.score;
+        const oldest = await redis.zrange(key, 0, 0, "WITHSCORES");
+        if (oldest.length >= 2) {
+          const oldestTimestamp = parseFloat(oldest[1]);
           const retryAfterMs = oldestTimestamp + config.windowMs - now;
           result.retryAfter = Math.ceil(retryAfterMs / 1000);
         }
@@ -104,9 +86,23 @@ export class RateLimiter {
 
       return result;
     } catch (error) {
-      console.error("Rate limiter error:", error);
+      console.error("[Rate Limit] Redis error, falling back to memory:", (error as Error).message);
+      return this.checkInMemory(identifier, config);
+    }
+  }
 
-      // Fail open - allow request if Redis is down
+  /**
+   * In-memory fallback rate limiter (fixed window)
+   */
+  private checkInMemory(
+    identifier: string,
+    config: RateLimitConfig,
+  ): RateLimitResult {
+    const now = Date.now();
+    const entry = memoryStore.get(identifier);
+
+    if (!entry || now > entry.resetAt) {
+      memoryStore.set(identifier, { count: 1, resetAt: now + config.windowMs });
       return {
         allowed: true,
         limit: config.maxRequests,
@@ -114,16 +110,28 @@ export class RateLimiter {
         reset: now + config.windowMs,
       };
     }
+
+    entry.count++;
+    const allowed = entry.count <= config.maxRequests;
+    return {
+      allowed,
+      limit: config.maxRequests,
+      remaining: Math.max(0, config.maxRequests - entry.count),
+      reset: entry.resetAt,
+      ...(!allowed && { retryAfter: Math.ceil((entry.resetAt - now) / 1000) }),
+    };
   }
 
   /**
    * Reset rate limit for identifier
-   *
-   * @param identifier - Unique identifier
    */
   async reset(identifier: string): Promise<void> {
     const key = `${this.prefix}${identifier}`;
-    await this.redis.del(key);
+    const redis = getRedis();
+    if (redis) {
+      await redis.del(key);
+    }
+    memoryStore.delete(identifier);
   }
 }
 
