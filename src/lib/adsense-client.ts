@@ -229,6 +229,8 @@ function getClient(): adsense_v2.Adsense {
     );
   }
 
+  console.log("[AdSense] Auth identity:", credentials.client_email);
+
   console.log(
     "[AdSense] Account ID:",
     process.env.ADSENSE_ACCOUNT_ID || "TANIMLI DEĞİL!",
