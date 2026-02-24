@@ -650,14 +650,136 @@ function extractSearchKeywords(title: string, description: string): string {
     "da",
   ]);
 
-  // Extract words
+  // 🛡️ Ambiguous English words that cause dictionary/irrelevant results
+  const ambiguousWords = new Set([
+    "sick",
+    "hot",
+    "cool",
+    "fire",
+    "dead",
+    "wild",
+    "mad",
+    "bad",
+    "lit",
+    "cold",
+    "fresh",
+    "raw",
+    "live",
+    "sharp",
+    "flat",
+    "deep",
+    "fast",
+    "slow",
+    "hard",
+    "soft",
+    "big",
+    "small",
+    "large",
+    "long",
+    "short",
+    "high",
+    "low",
+    "open",
+    "close",
+    "right",
+    "wrong",
+    "free",
+    "lost",
+    "still",
+    "just",
+    "even",
+    "well",
+    "good",
+    "best",
+    "better",
+    "much",
+    "more",
+    "most",
+    "very",
+    "only",
+    "also",
+    "now",
+    "new",
+    "old",
+    "first",
+    "last",
+    "next",
+    "yet",
+    "way",
+    "out",
+    "off",
+    "put",
+    "get",
+    "got",
+    "set",
+    "run",
+    "let",
+    "say",
+    "make",
+    "take",
+    "come",
+    "see",
+    "look",
+    "find",
+    "give",
+    "tell",
+    "may",
+    "will",
+    "can",
+    "could",
+    "would",
+    "should",
+    "might",
+    "must",
+    "need",
+    "want",
+    "like",
+    "use",
+    "try",
+    "these",
+    "those",
+    "some",
+    "any",
+    "each",
+    "every",
+    "all",
+    "both",
+    "few",
+    "many",
+    "such",
+    "than",
+    "does",
+    "did",
+    "its",
+    "not",
+    "top",
+  ]);
+
+  // Extract words (filter stop words AND ambiguous words)
   const words = text
     .replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ\s]/g, " ")
     .split(/\s+/)
-    .filter((w) => w.length > 2 && !stopWords.has(w))
-    .slice(0, 8);
+    .filter((w) => w.length > 2 && !stopWords.has(w) && !ambiguousWords.has(w));
 
-  return words.join(" ");
+  // Prioritize proper nouns and longer words
+  const originalWords = `${title} ${description}`.split(/\s+/);
+  const properNouns = new Set(
+    originalWords
+      .filter((w) => /^[A-Z][a-zA-Z]{2,}/.test(w) || /^[A-Z]{2,}/.test(w))
+      .map((w) => w.toLowerCase().replace(/[^a-z0-9]/g, ""))
+      .filter(
+        (w) => w.length > 2 && !stopWords.has(w) && !ambiguousWords.has(w),
+      ),
+  );
+
+  const sortedWords = words.sort((a, b) => {
+    const aIsProper = properNouns.has(a) ? 1 : 0;
+    const bIsProper = properNouns.has(b) ? 1 : 0;
+    if (bIsProper !== aIsProper) return bIsProper - aIsProper;
+    return b.length - a.length;
+  });
+
+  return [...new Set(sortedWords)].slice(0, 8).join(" ");
 }
 
 /**
@@ -676,6 +798,23 @@ function shouldSkipUrl(url: string): boolean {
     /\.pdf$/i,
     /\.zip$/i,
     /\.mp4$/i,
+    // 🛡️ Dictionary, reference, and non-news sites
+    /merriam-webster\.com/i,
+    /dictionary\.com/i,
+    /wordreference\.com/i,
+    /thefreedictionary\.com/i,
+    /cambridge\.org\/dictionary/i,
+    /oxfordlearnersdictionaries\.com/i,
+    /collinsdictionary\.com/i,
+    /urbandictionary\.com/i,
+    /wiktionary\.org/i,
+    /thesaurus\.com/i,
+    /vocabulary\.com/i,
+    /definitions\.net/i,
+    /wikipedia\.org/i,
+    /wikihow\.com/i,
+    /quora\.com/i,
+    /amazon\.com/i,
   ];
 
   return skipPatterns.some((pattern) => pattern.test(url));

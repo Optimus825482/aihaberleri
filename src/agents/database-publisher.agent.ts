@@ -88,6 +88,12 @@ export class DatabasePublisherAgent extends BaseAgent<
     try {
       const publishedArticles: PublishedArticle[] = [];
       const socialShareQueueData: SocialShareInput[] = [];
+      // 🔄 Rejected articles to re-queue for content enrichment retry
+      const rejectedForRetry: {
+        article: ArticleWithVisuals;
+        reason: string;
+      }[] = [];
+      const MAX_PIPELINE_RETRIES = 1; // Max 1 re-queue (2 total chances per article)
 
       for (let index = 0; index < articles.length; index++) {
         const article = articles[index];
@@ -135,9 +141,110 @@ export class DatabasePublisherAgent extends BaseAgent<
           const enContent = article.synthesizedContent?.en;
 
           if (!trContent?.title || !trContent?.content || !trContent?.excerpt) {
-            this.logger.warn(
-              `⛔ CONTENT REJECTED at publisher: "${article.url.substring(0, 60)}" — missing TR fields: title=${!!trContent?.title}, content=${!!trContent?.content}, excerpt=${!!trContent?.excerpt}`,
-            );
+            const retryCount = (article as any)._retryCount || 0;
+            if (retryCount < MAX_PIPELINE_RETRIES) {
+              this.logger.warn(
+                `🔄 CONTENT MISSING → re-queue for retry (attempt ${retryCount + 1}): "${article.url.substring(0, 60)}"`,
+              );
+              rejectedForRetry.push({ article, reason: "missing_content" });
+            } else {
+              this.logger.error(
+                `🚫 PERMANENTLY REJECTED (max retries): "${article.url.substring(0, 60)}" — missing TR fields`,
+              );
+            }
+            continue;
+          }
+
+          // 🛡️ QUALITY GATE: Check synthesis quality score
+          const qualityScore = (trContent as any).score || 0;
+          if (qualityScore > 0 && qualityScore < 50) {
+            const retryCount = (article as any)._retryCount || 0;
+            if (retryCount < MAX_PIPELINE_RETRIES) {
+              this.logger.warn(
+                `🔄 LOW QUALITY → re-queue for retry (attempt ${retryCount + 1}, score: ${qualityScore}): "${trContent.title.substring(0, 60)}"`,
+              );
+              rejectedForRetry.push({ article, reason: "low_quality" });
+            } else {
+              this.logger.error(
+                `🚫 PERMANENTLY REJECTED (max retries, score: ${qualityScore}): "${trContent.title.substring(0, 60)}"`,
+              );
+            }
+            continue;
+          }
+
+          // 🛡️ LANGUAGE GATE: TR title must be in Turkish, not English
+          const isEnglishTitle = /^[a-zA-Z0-9\s\-:,.'""!?&@#$%()—–]+$/.test(
+            trContent.title.trim(),
+          );
+          // Check for Turkish characters as a positive signal
+          const hasTurkishChars = /[çğıöşüÇĞİÖŞÜ]/.test(trContent.title);
+          // Check if title ends with known emergency template suffix
+          const isEmergencyTitle = trContent.title.includes(
+            "— Gelişme Detayları",
+          );
+
+          if (isEnglishTitle && !hasTurkishChars) {
+            const retryCount = (article as any)._retryCount || 0;
+            if (retryCount < MAX_PIPELINE_RETRIES) {
+              this.logger.warn(
+                `🔄 ENGLISH TITLE → re-queue for retry (attempt ${retryCount + 1}): "${trContent.title.substring(0, 80)}"`,
+              );
+              rejectedForRetry.push({ article, reason: "english_title" });
+            } else {
+              this.logger.error(
+                `🚫 PERMANENTLY REJECTED (max retries): "${trContent.title.substring(0, 80)}" — English title`,
+              );
+            }
+            continue;
+          }
+
+          if (isEmergencyTitle) {
+            const retryCount = (article as any)._retryCount || 0;
+            if (retryCount < MAX_PIPELINE_RETRIES) {
+              this.logger.warn(
+                `🔄 EMERGENCY TEMPLATE → re-queue for retry (attempt ${retryCount + 1}): "${trContent.title.substring(0, 80)}"`,
+              );
+              rejectedForRetry.push({ article, reason: "emergency_template" });
+            } else {
+              this.logger.error(
+                `🚫 PERMANENTLY REJECTED (max retries): "${trContent.title.substring(0, 80)}" — emergency template`,
+              );
+            }
+            continue;
+          }
+
+          // 🛡️ CONTENT QUALITY: Check for dictionary/garbage content patterns
+          const contentLower = trContent.content.toLowerCase();
+          const dictionaryPatterns = [
+            "pronunciation",
+            "synonyms",
+            "antonyms",
+            "etymology",
+            "definition of",
+            "noun.",
+            "verb.",
+            "adjective.",
+            "merriam-webster",
+            "dictionary.com",
+            "see the full definition",
+            "word of the day",
+            "browse the dictionary",
+          ];
+          const dictionaryMatchCount = dictionaryPatterns.filter((p) =>
+            contentLower.includes(p),
+          ).length;
+          if (dictionaryMatchCount >= 2) {
+            const retryCount = (article as any)._retryCount || 0;
+            if (retryCount < MAX_PIPELINE_RETRIES) {
+              this.logger.warn(
+                `🔄 DICTIONARY CONTENT → re-queue for retry (attempt ${retryCount + 1}): "${trContent.title.substring(0, 60)}"`,
+              );
+              rejectedForRetry.push({ article, reason: "dictionary_content" });
+            } else {
+              this.logger.error(
+                `🚫 PERMANENTLY REJECTED (max retries): "${trContent.title.substring(0, 60)}" — dictionary content`,
+              );
+            }
             continue;
           }
 
@@ -416,6 +523,48 @@ export class DatabasePublisherAgent extends BaseAgent<
       this.logger.success(
         `Database publishing complete: ${publishedArticles.length}/${articles.length} articles published`,
       );
+
+      // 🔄 RE-QUEUE REJECTED ARTICLES for content enrichment retry
+      if (rejectedForRetry.length > 0) {
+        try {
+          const enricherQueue = getQueue(QUEUE_NAMES.ENRICHED_ARTICLES);
+          if (enricherQueue) {
+            const retryArticles = rejectedForRetry.map((r) => ({
+              title: r.article.title,
+              description: r.article.description || "",
+              url: r.article.url || (r.article as any).sourceUrl || "",
+              publishedDate: (r.article as any).publishedDate,
+              source: (r.article as any).source || "retry",
+              trendScore: r.article.trendScore || 50,
+              category: (r.article as any).category,
+              relevanceScore: (r.article as any).relevanceScore || 70,
+              reasoning:
+                (r.article as any).reasoning || "Retry after rejection",
+              suggestedCategory: r.article.suggestedCategory || "yapay-zeka",
+              suggestedTags: (r.article as any).suggestedTags || [],
+              topic: r.article.topic || "ai",
+              isDuplicate: false,
+              _retryCount: ((r.article as any)._retryCount || 0) + 1,
+              _rejectionReason: r.reason,
+            }));
+
+            await enricherQueue.add("retry-enrichment", retryArticles, {
+              removeOnComplete: 100,
+              removeOnFail: 50,
+              attempts: 1,
+              delay: 10000, // 10s delay before retry to avoid immediate re-processing
+            });
+
+            this.logger.success(
+              `🔄 ${retryArticles.length} rejected article(s) re-queued for content enrichment retry`,
+            );
+          }
+        } catch (retryError) {
+          this.logger.warn(
+            `⚠️ Failed to re-queue rejected articles: ${(retryError as Error).message}`,
+          );
+        }
+      }
 
       // After all articles published, trigger sitemap pings (once per batch)
       if (publishedArticles.length > 0) {

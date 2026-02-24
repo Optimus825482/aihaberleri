@@ -121,10 +121,21 @@ export class ContentValidator {
       score -= 10;
     }
     // Check for title in wrong language (English title on Turkish site)
-    // This is just a warning, not a reject
-    if (/^[A-Za-z\s\-\d'".,!?:]+$/.test(input.title) && input.title.length > 20) {
-      issues.push(`[WARNING] Title appears to be in English - check if translation needed`);
-      score -= 5;
+    // 🛡️ STRENGTHENED: English-only title on TR site is a CRITICAL issue, not just a warning
+    if (/^[A-Za-z\s\-\d'".,!?:;()&@#$%—–]+$/.test(input.title) && input.title.length > 20) {
+      // Check if it has Turkish characters (if yes, it's probably OK)
+      const hasTurkishChars = /[çğıöşüÇĞİÖŞÜ]/.test(input.title);
+      if (!hasTurkishChars) {
+        issues.push(`[CRITICAL] Title is entirely in English — TR articles MUST have Turkish titles`);
+        score -= 40; // Was -5, now -40 to prevent publishing
+        autoFixable = false;
+      }
+    }
+    // Check for emergency template title pattern
+    if (input.title.includes("— Gelişme Detayları")) {
+      issues.push(`[CRITICAL] Emergency template title detected — content not properly synthesized`);
+      score -= 40;
+      autoFixable = false;
     }
 
     // ========================================

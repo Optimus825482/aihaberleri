@@ -815,16 +815,75 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
     // Using LLM for BOTH TR and EN content synthesis (NVIDIA Qwen3 primary, DeepSeek fallback)
     this.logger.info(`🚀 Using LLM for BOTH TR + EN synthesis`);
 
-    // Turkish content (DeepSeek-chat)
-    const trPrompt = `Sen usta bir araştırmacı gazeteci ve baş editörsün.
+    // 🔄 RETRY LOOP: TR content synthesis with escalating prompts on failure
+    // Instead of rejecting on first failure, retry up to 2 more times with adjusted prompts
+    const MAX_TR_RETRIES = 2;
+    let trContent: any = null;
+    let trSynthesisSuccess = false;
+    let lastRejectionReason = "";
+    let activeSources = [...sources]; // May be filtered on dictionary retry
 
-Görevin: Aşağıdaki ${sources.length} FARKLI KAYNAKTAN toplanan ham verileri derinlemesine analiz ederek, SENTEZLEYEREK, KAPSAMLI ve %100 ORİJİNAL bir Türkçe haber makalesi oluşturmak.
+    for (let trAttempt = 0; trAttempt <= MAX_TR_RETRIES; trAttempt++) {
+      try {
+        // Build retry-aware prompt enhancements
+        let retryInstructions = "";
+        if (trAttempt > 0) {
+          this.logger.warn(
+            `🔄 TR synthesis RETRY ${trAttempt}/${MAX_TR_RETRIES}: reason="${lastRejectionReason}"`,
+          );
+
+          if (lastRejectionReason === "english_title") {
+            retryInstructions = `
+
+⚠️ KRİTİK UYARI: Önceki denemende İNGİLİZCE başlık ürettin! Bu KABUL EDİLEMEZ.
+BAŞLIK %100 TÜRKÇE OLMALI. İngilizce kelime ASLA kullanma. Türkçe karakter (ç, ğ, ı, ö, ş, ü) MUTLAKA içermeli.
+Örnek doğru başlık: "Google'ın Yeni Yapay Zekâ Modeli Rakiplerini Geride Bıraktı"`;
+          } else if (lastRejectionReason === "dictionary_content") {
+            retryInstructions = `
+
+⚠️ KRİTİK UYARI: Önceki denemende sözlük tanımları içeren içerik ürettin!
+ASLA sözlük tanımı, kelime anlamı, pronunciation, synonym, etymology KULLANMA.
+Sadece HABER içeriği yaz — ne oldu, neden önemli, sektöre etkisi ne.`;
+            // Filter out suspicious sources on dictionary retry
+            activeSources = activeSources.filter((s) =>
+              this.isSourceContentClean(s.content),
+            );
+            if (activeSources.length === 0) {
+              this.logger.error(
+                `🚫 All sources filtered as dictionary content — cannot retry`,
+              );
+              break;
+            }
+          } else if (lastRejectionReason === "parse_error") {
+            retryInstructions = `
+
+⚠️ ÖNEMLİ: Yanıtını MUTLAKA geçerli JSON formatında ver. Ekstra metin ekleme, sadece JSON objesi döndür.`;
+          }
+        }
+
+        // Rebuild sources text with potentially filtered sources
+        const retrySourcesText = activeSources
+          .slice(0, 6)
+          .map(
+            (s, i) => `
+--- SOURCE ${i + 1}: ${new URL(s.url).hostname} ---
+Title: ${sanitizeForPrompt(s.title)}
+URL: ${s.url}
+Content:
+${sanitizeForPrompt(s.content.substring(0, 1500))}
+`,
+          )
+          .join("\n");
+
+        const currentTrPrompt = `Sen usta bir araştırmacı gazeteci ve baş editörsün.
+
+Görevin: Aşağıdaki ${activeSources.length} FARKLI KAYNAKTAN toplanan ham verileri derinlemesine analiz ederek, SENTEZLEYEREK, KAPSAMLI ve %100 ORİJİNAL bir Türkçe haber makalesi oluşturmak.
 
 ### ORİJİNAL HABER BAŞLIĞI:
 ${article.title}
 
 ### TOPLANAN KAYNAKLAR:
-${sourcesText}
+${retrySourcesText}
 
 ### YAZIM KURALLARI:
 1. İNSANSI VE AKICI DİL: Robotik değil, doğal Türkçe
@@ -838,7 +897,7 @@ ${sourcesText}
 - Özet: 2-3 cümlelik giriş
 - İçerik: En az 600 kelime, HTML formatlı (<p>, <h2>, <ul>/<ol>)
 - SEO: 150-160 karakterlik meta açıklama ve 6-10 anahtar kelime
-
+${retryInstructions}
 JSON formatında yanıt ver:
 {
   "title": "Çarpıcı ve SEO Uyumlu Başlık",
@@ -849,28 +908,89 @@ JSON formatında yanıt ver:
   "score": 950
 }`;
 
-    let trContent: any;
-    try {
-      const trResponse = await callDeepSeek(
-        [{ role: "user", content: trPrompt }],
-        {
-          model: "deepseek-chat",
-          maxTokens: 6000,
-          temperature: 0.7,
-        },
-      );
+        const trResponse = await callDeepSeek(
+          [{ role: "user", content: currentTrPrompt }],
+          {
+            model: "deepseek-chat",
+            maxTokens: 6000,
+            temperature: trAttempt === 0 ? 0.7 : 0.5, // Lower temperature on retry for more predictable output
+          },
+        );
 
-      const trJsonMatch = trResponse.match(/\{[\s\S]*\}/);
-      if (!trJsonMatch) {
-        throw new Error("Failed to parse Turkish content from DeepSeek");
+        const trJsonMatch = trResponse.match(/\{[\s\S]*\}/);
+        if (!trJsonMatch) {
+          lastRejectionReason = "parse_error";
+          continue; // Retry
+        }
+        trContent = JSON.parse(trJsonMatch[0]);
+
+        // 🛡️ POST-SYNTHESIS VALIDATION: Verify TR content is actually Turkish
+        if (trContent.title) {
+          const isEnglishTitle = /^[a-zA-Z0-9\s\-:,.'""!?&@#$%()—–]+$/.test(
+            trContent.title.trim(),
+          );
+          const hasTurkishChars = /[çğıöşüÇĞİÖŞÜ]/.test(trContent.title);
+
+          if (isEnglishTitle && !hasTurkishChars) {
+            this.logger.warn(
+              `🔄 DeepSeek returned English title (attempt ${trAttempt + 1}): "${trContent.title.substring(0, 60)}"`,
+            );
+            lastRejectionReason = "english_title";
+            trContent = null;
+            continue; // Retry with stronger Turkish prompt
+          }
+        }
+
+        // 🛡️ Check for dictionary/garbage content
+        const contentLower = (trContent.content || "").toLowerCase();
+        const dictionaryRedFlags = [
+          "pronunciation",
+          "synonyms",
+          "antonyms",
+          "etymology",
+          "definition of",
+          "merriam-webster",
+          "dictionary.com",
+          "see the full definition",
+          "word of the day",
+        ];
+        const dictMatchCount = dictionaryRedFlags.filter((p) =>
+          contentLower.includes(p),
+        ).length;
+        if (dictMatchCount >= 2) {
+          this.logger.warn(
+            `🔄 DeepSeek generated dictionary content (attempt ${trAttempt + 1}): ${dictMatchCount} flags`,
+          );
+          lastRejectionReason = "dictionary_content";
+          trContent = null;
+          continue; // Retry with filtered sources
+        }
+
+        // ✅ Passed all validation
+        trSynthesisSuccess = true;
+        this.logger.success(
+          `✅ DeepSeek TR content generated successfully${trAttempt > 0 ? ` (retry ${trAttempt})` : ""}`,
+        );
+        break;
+      } catch (deepseekTrError: any) {
+        this.logger.error(
+          `❌ DeepSeek TR attempt ${trAttempt + 1} failed: ${deepseekTrError.message}`,
+        );
+        lastRejectionReason = "api_error";
+        // Wait before retry (exponential backoff)
+        if (trAttempt < MAX_TR_RETRIES) {
+          const waitMs = 2000 * (trAttempt + 1);
+          this.logger.info(`⏳ Waiting ${waitMs}ms before retry...`);
+          await new Promise((resolve) => setTimeout(resolve, waitMs));
+        }
       }
-      trContent = JSON.parse(trJsonMatch[0]);
-      this.logger.success(`✅ DeepSeek TR content generated successfully`);
-    } catch (deepseekTrError: any) {
+    }
+
+    // If all retries failed, return emergency template (empty content — won't be published)
+    if (!trSynthesisSuccess || !trContent) {
       this.logger.error(
-        `❌ DeepSeek TR failed: ${deepseekTrError.message}, using emergency template`,
+        `🚫 All ${MAX_TR_RETRIES + 1} TR synthesis attempts failed (reason: ${lastRejectionReason}) — article will NOT be published`,
       );
-      // Emergency template fallback
       return this.generateEmergencyTemplate(article, sources);
     }
 
@@ -1021,17 +1141,189 @@ Respond in JSON:
       "da",
     ]);
 
+    // 🛡️ Ambiguous English words that cause dictionary/irrelevant results when searched alone
+    // These are common English words with multiple meanings that pollute search results
+    const ambiguousWords = new Set([
+      "sick",
+      "hot",
+      "cool",
+      "fire",
+      "dead",
+      "wild",
+      "mad",
+      "bad",
+      "lit",
+      "cold",
+      "fresh",
+      "raw",
+      "live",
+      "sharp",
+      "flat",
+      "deep",
+      "fast",
+      "slow",
+      "hard",
+      "soft",
+      "big",
+      "small",
+      "large",
+      "long",
+      "short",
+      "high",
+      "low",
+      "open",
+      "close",
+      "right",
+      "wrong",
+      "free",
+      "lost",
+      "still",
+      "just",
+      "even",
+      "well",
+      "good",
+      "best",
+      "better",
+      "much",
+      "more",
+      "most",
+      "very",
+      "only",
+      "also",
+      "now",
+      "new",
+      "old",
+      "first",
+      "last",
+      "next",
+      "yet",
+      "way",
+      "out",
+      "off",
+      "put",
+      "get",
+      "got",
+      "set",
+      "run",
+      "let",
+      "say",
+      "make",
+      "take",
+      "come",
+      "see",
+      "look",
+      "find",
+      "give",
+      "tell",
+      "may",
+      "will",
+      "can",
+      "could",
+      "would",
+      "should",
+      "might",
+      "must",
+      "need",
+      "want",
+      "like",
+      "use",
+      "try",
+      "ask",
+      "work",
+      "call",
+      "keep",
+      "help",
+      "start",
+      "show",
+      "turn",
+      "play",
+      "move",
+      "end",
+      "stop",
+      "these",
+      "those",
+      "some",
+      "any",
+      "each",
+      "every",
+      "all",
+      "both",
+      "few",
+      "many",
+      "such",
+      "than",
+      "does",
+      "did",
+      "its",
+      "not",
+      "top",
+      "why",
+      "how",
+      "what",
+      "when",
+      "where",
+      "who",
+      "which",
+      "that",
+      "this",
+      "here",
+      "there",
+      "then",
+      "back",
+      "down",
+      "over",
+      "after",
+      "before",
+      "between",
+      "under",
+      "into",
+      "through",
+      "about",
+      "against",
+      "during",
+      "without",
+    ]);
+
     const words = text
       .replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ\s]/g, " ")
       .split(/\s+/)
-      .filter((w) => w.length > 2 && !stopWords.has(w))
-      .slice(0, 8);
+      .filter(
+        (w) => w.length > 2 && !stopWords.has(w) && !ambiguousWords.has(w),
+      );
 
-    return words.join(" ");
+    // 🎯 Prioritize: proper nouns/tech terms (3+ chars with capitals in original),
+    // then longer words (more specific), then shorter
+    const originalWords = `${title} ${description}`.split(/\s+/);
+    const properNouns = new Set(
+      originalWords
+        .filter((w) => /^[A-Z][a-zA-Z]{2,}/.test(w) || /^[A-Z]{2,}/.test(w))
+        .map((w) => w.toLowerCase().replace(/[^a-z0-9]/g, ""))
+        .filter(
+          (w) => w.length > 2 && !stopWords.has(w) && !ambiguousWords.has(w),
+        ),
+    );
+
+    // Sort: proper nouns first, then by word length (longer = more specific)
+    const sortedWords = words.sort((a, b) => {
+      const aIsProper = properNouns.has(a) ? 1 : 0;
+      const bIsProper = properNouns.has(b) ? 1 : 0;
+      if (bIsProper !== aIsProper) return bIsProper - aIsProper;
+      return b.length - a.length; // Longer words first
+    });
+
+    // Remove duplicates preserving order
+    const uniqueWords = [...new Set(sortedWords)].slice(0, 8);
+
+    this.logger.info(
+      `🔑 Keywords extracted: "${uniqueWords.join(" ")}" (from: "${title.substring(0, 60)}...")`,
+    );
+
+    return uniqueWords.join(" ");
   }
 
   /**
    * Calculate relevance score for SearXNG results
+   * 🛡️ UPDATED: Penalize dictionary/reference results and check for news relevance
    */
   private calculateRelevanceScoreSearXNG(
     result: SearXNGResult,
@@ -1042,6 +1334,64 @@ Respond in JSON:
     const titleLower = originalTitle.toLowerCase();
     const resultTitleLower = result.title.toLowerCase();
     const resultContentLower = (result.content || "").toLowerCase();
+
+    // 🛡️ EARLY REJECT: Penalize dictionary/reference results heavily
+    const dictionarySignals = [
+      "definition",
+      "meaning",
+      "synonym",
+      "antonym",
+      "pronunciation",
+      "dictionary",
+      "thesaurus",
+      "etymology",
+      "word origin",
+      "noun ",
+      "verb ",
+      "adjective ",
+      "adverb ",
+      "plural ",
+      "past tense",
+      "define ",
+      "what does",
+      "what is the meaning",
+    ];
+    const dictionaryMatchCount = dictionarySignals.filter(
+      (s) => resultTitleLower.includes(s) || resultContentLower.includes(s),
+    ).length;
+    if (dictionaryMatchCount >= 2) {
+      return -100; // Instant reject — this is a dictionary result
+    }
+
+    // 🛡️ CHECK: Result must be about tech/AI/news, not a random word definition
+    const techSignals = [
+      "ai",
+      "artificial intelligence",
+      "technology",
+      "tech",
+      "google",
+      "apple",
+      "microsoft",
+      "openai",
+      "startup",
+      "software",
+      "hardware",
+      "robot",
+      "machine learning",
+      "data",
+      "cloud",
+      "cyber",
+      "digital",
+      "innovation",
+      "launch",
+      "release",
+      "update",
+      "announce",
+      "report",
+    ];
+    const hasTechContext = techSignals.some(
+      (s) => resultTitleLower.includes(s) || resultContentLower.includes(s),
+    );
 
     const titleWords = titleLower.split(/\s+/).filter((w) => w.length > 3);
     for (const word of titleWords) {
@@ -1084,6 +1434,16 @@ Respond in JSON:
       score += result.score * 10; // Normalize SearXNG score
     }
 
+    // 🛡️ BONUS: Results with tech/news context are more likely relevant
+    if (hasTechContext) {
+      score += 10;
+    }
+
+    // 🛡️ PENALTY: If score is low and no tech context, likely irrelevant
+    if (!hasTechContext && score < 30) {
+      score = Math.max(0, score - 15);
+    }
+
     return score;
   }
 
@@ -1103,6 +1463,29 @@ Respond in JSON:
       /\.pdf$/i,
       /\.zip$/i,
       /\.mp4$/i,
+      // 🛡️ Dictionary, reference, and non-news sites that pollute search results
+      /merriam-webster\.com/i,
+      /dictionary\.com/i,
+      /wordreference\.com/i,
+      /thefreedictionary\.com/i,
+      /cambridge\.org\/dictionary/i,
+      /oxfordlearnersdictionaries\.com/i,
+      /collinsdictionary\.com/i,
+      /urbandictionary\.com/i,
+      /wiktionary\.org/i,
+      /thesaurus\.com/i,
+      /vocabulary\.com/i,
+      /definitions\.net/i,
+      /yourdictionary\.com/i,
+      /wikipedia\.org/i,
+      /wikihow\.com/i,
+      /quora\.com/i,
+      /stackexchange\.com/i,
+      /stackoverflow\.com/i,
+      /medium\.com\/@/i, // Medium user pages (not publications)
+      /amazon\.com/i,
+      /ebay\.com/i,
+      /aliexpress\.com/i,
     ];
 
     return skipPatterns.some((pattern) => pattern.test(url));
@@ -1158,6 +1541,29 @@ Respond in JSON:
       "cloudflare",
       "just a moment",
       "checking your browser",
+      // 🛡️ Dictionary/reference patterns — these indicate scraped dictionary content, not news
+      "pronunciation",
+      "synonyms",
+      "antonyms",
+      "word origin",
+      "etymology",
+      "thesaurus",
+      "definition of",
+      "definitions of",
+      "noun.",
+      "verb.",
+      "adjective.",
+      "adverb.",
+      "plural of",
+      "past tense",
+      "present tense",
+      "merriam-webster",
+      "dictionary.com",
+      "see the full definition",
+      "word of the day",
+      "browse the dictionary",
+      "example sentences",
+      "first known use",
     ];
 
     const matchCount = garbagePatterns.filter((p) =>
@@ -1195,127 +1601,28 @@ Respond in JSON:
       metaDescription: string;
     };
   } {
-    const category = article.suggestedCategory || "yapay-zeka";
-
-    // 🛡️ VALIDATE source content — never publish raw scraped garbage
-    const cleanSources = sources.filter((s) =>
-      this.isSourceContentClean(s.content),
+    // 🚫 REJECT ENTIRELY: Emergency template should NOT be published
+    // If DeepSeek synthesis failed, the content quality is unpredictable.
+    // Return empty content so DatabasePublisher rejects it.
+    this.logger.error(
+      `🚫 Emergency template REJECTED: DeepSeek synthesis failed for "${article.title.substring(0, 60)}" — article will NOT be published`,
     );
-    const bestSource = cleanSources[0]?.content || "";
-
-    // If NO clean source content available, use only description (safe)
-    const safeContent = bestSource
-      ? bestSource.substring(0, 500)
-      : article.description || "";
-
-    // If even description is garbage, REJECT this article entirely
-    if (!safeContent || safeContent.length < 30) {
-      this.logger.error(
-        `🚫 Emergency template REJECTED: No clean content for "${article.title.substring(0, 50)}"`,
-      );
-      // Return minimal content that will be caught by publisher's validation
-      return {
-        tr: {
-          title: "",
-          excerpt: "",
-          content: "",
-          keywords: [],
-          metaDescription: "",
-          score: 0,
-        },
-        en: {
-          title: "",
-          excerpt: "",
-          content: "",
-          keywords: [],
-          metaDescription: "",
-        },
-      };
-    }
-
-    // 🌍 TRANSLATE TITLE: Emergency template must still produce Turkish title
-    // Simple heuristic: if title is mostly ASCII (English), mark it
-    const isEnglishTitle = /^[a-zA-Z0-9\s\-:,.'""!?&@#$%()]+$/.test(
-      article.title.trim(),
-    );
-
-    // For emergency template, prefix with category context if English
-    const trTitle = isEnglishTitle
-      ? `${article.title} — Gelişme Detayları`
-      : article.title;
-
-    const trExcerpt =
-      safeContent.substring(0, 200).replace(/<[^>]+>/g, "") + "...";
-
-    const hostname = (() => {
-      try {
-        return new URL(article.url).hostname;
-      } catch {
-        return "kaynak";
-      }
-    })();
-
-    const trContent = `
-<p>${safeContent.replace(/<[^>]+>/g, "")}</p>
-
-<h2>Detaylar</h2>
-<p>Bu haber ${category} kategorisinde yayınlanmıştır. Daha fazla bilgi için orijinal kaynağı ziyaret edebilirsiniz.</p>
-
-<p><strong>Kaynak:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow">${hostname}</a></p>
-
-<div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
-  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8a4 4 0 0 1 0 8"/><path d="M12 8a4 4 0 0 0 0 8"/></svg>
-    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">Yapay Zeka Destekli İçerik</span>
-  </div>
-  <div style="font-size: 0.65rem; color: #94a3b8;">
-    <strong style="color: #64748b;">Kaynak:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${hostname}</a>
-  </div>
-</div>`;
-
-    // English content
-    const enTitle = article.title;
-    const enExcerpt =
-      safeContent.substring(0, 200).replace(/<[^>]+>/g, "") + "...";
-    const enContent = `
-<p>${safeContent.replace(/<[^>]+>/g, "")}</p>
-
-<h2>Details</h2>
-<p>This news was published in the ${category} category.</p>
-
-<p><strong>Source:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow">${hostname}</a></p>
-
-<div class="ai-disclosure" style="margin-top: 2.5rem; padding: 1rem 1.25rem; background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%); border-radius: 12px; border: 1px solid rgba(59,130,246,0.15);">
-  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: #3b82f6;"><path d="M12 8V4H8"/><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 8a4 4 0 0 1 0 8"/><path d="M12 8a4 4 0 0 0 0 8"/></svg>
-    <span style="font-size: 0.75rem; font-weight: 600; color: #3b82f6;">AI-Powered Content</span>
-  </div>
-  <div style="font-size: 0.65rem; color: #94a3b8;">
-    <strong style="color: #64748b;">Source:</strong> <a href="${article.url}" target="_blank" rel="noopener nofollow" style="color: #60a5fa; text-decoration: none;">${hostname}</a>
-  </div>
-</div>`;
-
-    const keywords = article.title
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((w) => w.length > 3)
-      .slice(0, 6);
 
     return {
       tr: {
-        title: trTitle,
-        excerpt: trExcerpt,
-        content: trContent,
-        keywords,
-        metaDescription: trExcerpt.substring(0, 160),
-        score: 30, // Emergency template = very low score (was 50)
+        title: "",
+        excerpt: "",
+        content: "",
+        keywords: [],
+        metaDescription: "",
+        score: 0,
       },
       en: {
-        title: enTitle,
-        excerpt: enExcerpt,
-        content: enContent,
-        keywords,
-        metaDescription: enExcerpt.substring(0, 160),
+        title: "",
+        excerpt: "",
+        content: "",
+        keywords: [],
+        metaDescription: "",
       },
     };
   }
