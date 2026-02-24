@@ -3,6 +3,8 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { seedDefaultChannels } from "@/lib/youtube-monitor";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/admin/youtube/channels
  * List all YouTube channels with stats

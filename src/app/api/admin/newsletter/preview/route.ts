@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 // GET - Fetch newsletter preview with top trending articles
 export async function GET() {
   try {

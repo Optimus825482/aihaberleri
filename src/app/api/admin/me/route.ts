@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/admin/me
  * Get current user from session

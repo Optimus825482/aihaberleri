@@ -15,6 +15,8 @@ import {
   type SchedulerConfig,
 } from "@/lib/smart-scheduler";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/admin/scheduler
  * Returns current scheduler status and configuration

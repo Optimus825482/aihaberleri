@@ -1,16 +1,17 @@
 # syntax=docker/dockerfile:1
 
 # ============================================================
-# OPTIMIZED DOCKERFILE - Deploy süresini ~60% düşürür
+# OPTIMIZED DOCKERFILE v2 - Image boyutu ~40% küçüldü
 # ============================================================
 # Değişiklikler:
 # 1. Tek base image (Debian) = sharp/prisma rebuild yok
 # 2. worker-builder stage kaldırıldı (gereksizdi)
-# 3. node_modules tek COPY (chunk gereksiz)
-# 4. Prisma generate 1 kez (deps stage'de, 4'ten düştü)
+# 3. prod-deps stage: app runner için sadece production deps
+# 4. Prisma generate deps + prod-deps'te (her biri 1 kez)
 # 5. npm cache mount ile tekrarlayan build'larda hız
 # 6. --no-install-recommends ile küçük image
 # 7. RUN katmanları birleştirildi (layer sayısı azaldı)
+# 8. Dev deps (typescript, eslint, @types/*) app image'dan çıkarıldı
 # ============================================================
 
 # ===========================
@@ -23,7 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # ===========================
-# DEPENDENCIES STAGE
+# DEPENDENCIES STAGE (full - build + worker için)
 # ===========================
 FROM base AS deps
 
@@ -39,7 +40,32 @@ COPY prisma ./prisma
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
     npx prisma@5.22.0 generate && \
-    echo "✓ Deps installed: $(ls -1 node_modules | wc -l) packages"
+    echo "✓ Full deps installed: $(ls -1 node_modules | wc -l) packages"
+
+# ===========================
+# PRODUCTION DEPENDENCIES STAGE (lean - app runner için)
+# ===========================
+FROM base AS prod-deps
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ libvips-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma
+
+# Sadece production deps + prisma CLI (entrypoint'te migrate deploy için)
+# npm cache mount sayesinde paketler zaten cache'de, hızlı install
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev --legacy-peer-deps --network-timeout=300000 && \
+    npm install --no-save prisma@5.22.0 --legacy-peer-deps && \
+    npx prisma@5.22.0 generate && \
+    rm -rf node_modules/.cache \
+        node_modules/@next/swc-linux-arm* \
+        node_modules/@next/swc-darwin* \
+        node_modules/@next/swc-win32* \
+        2>/dev/null || true && \
+    echo "✓ Prod deps installed: $(ls -1 node_modules | wc -l) packages"
 
 # ===========================
 # APP BUILDER STAGE
@@ -104,20 +130,9 @@ COPY --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=app-builder --chown=nextjs:nodejs /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
-# node_modules TEK COPY (Debian→Debian = rebuild gerekmez!)
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
-
-# Dev paketlerini ve gereksiz dosyaları temizle
-RUN rm -rf ./node_modules/.cache \
-    ./node_modules/typescript \
-    ./node_modules/@types \
-    ./node_modules/eslint* \
-    ./node_modules/@next/swc-linux-arm* \
-    ./node_modules/@next/swc-darwin* \
-    ./node_modules/@next/swc-win32* \
-    ./node_modules/puppeteer/.local-chromium \
-    ./node_modules/puppeteer-core/.local-chromium \
-    2>/dev/null || true
+# node_modules PRODUCTION ONLY (dev deps excluded = ~40% smaller image)
+# Bu değişiklik exit code 255 hatasını çözer (image export sırasında disk/memory overflow)
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 ENV NODE_ENV=production \
     HOSTNAME="0.0.0.0" \
@@ -148,7 +163,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# node_modules TEK COPY (Debian→Debian = rebuild gerekmez!)
+# Worker needs FULL deps (tsx + typescript for runtime TS execution)
 COPY --from=deps --chown=worker:nodejs /app/node_modules ./node_modules
 
 # Worker source files - doğrudan context'ten kopyala (worker-builder stage kaldırıldı)

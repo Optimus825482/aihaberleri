@@ -24,6 +24,8 @@ import {
 } from "@/lib/rate-limiter";
 import { revalidateTag } from "next/cache";
 
+export const dynamic = "force-dynamic";
+
 // ============================================================================
 // GET /api/admin/users - List Users
 // ============================================================================

@@ -4,6 +4,8 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 import { Prisma } from "@prisma/client";
 import { ArticleStatus } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/admin/articles
  * Get all articles with optional filters and includes

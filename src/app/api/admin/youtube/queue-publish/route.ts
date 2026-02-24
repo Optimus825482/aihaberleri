@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { getRedis } from "@/lib/redis";
 
+export const dynamic = "force-dynamic";
+
 const YOUTUBE_QUEUE_KEY = "youtube:publish-queue";
 const YOUTUBE_QUEUE_STATUS_KEY = "youtube:publish-status";
 

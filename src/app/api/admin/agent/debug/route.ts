@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { getRedis } from "@/lib/redis";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Debug endpoint to check agent job status and failed job reasons
  * GET /api/admin/agent/debug

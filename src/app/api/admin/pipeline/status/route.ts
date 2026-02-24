@@ -13,6 +13,8 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 import { getRedis } from "@/lib/redis";
 import { getQueueStats, QUEUE_NAMES } from "@/lib/queue-manager";
 
+export const dynamic = "force-dynamic";
+
 // Redis keys for pipeline state
 const PIPELINE_STATE_KEY = "pipeline:current-state";
 const PIPELINE_HISTORY_KEY = "pipeline:last-run";

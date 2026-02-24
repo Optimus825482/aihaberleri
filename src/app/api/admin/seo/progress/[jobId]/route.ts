@@ -10,6 +10,8 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 import { getRedis } from "@/lib/redis";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 
+export const dynamic = "force-dynamic";
+
 interface ProgressData {
   status: string;
   progress: number;

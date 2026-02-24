@@ -13,6 +13,8 @@ import {
   checkRateLimit,
 } from "@/lib/rate-limiter";
 
+export const dynamic = "force-dynamic";
+
 // ============================================================================
 // GET /api/admin/users/[id]/activity - User Activity Log
 // ============================================================================

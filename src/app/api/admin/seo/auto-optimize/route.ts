@@ -5,6 +5,8 @@ import { SEOPipelineService } from "@/services/seo-pipeline.service";
 import { BulkJobStore } from "@/lib/bulk-job-store";
 import { requireAdminAuth } from "@/lib/admin-auth";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/admin/seo/auto-optimize
  *

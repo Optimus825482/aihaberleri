@@ -3,6 +3,8 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 import { scanAllChannels } from "@/lib/youtube-monitor";
 import { db } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/admin/youtube/scan
  * Manually trigger YouTube channel scan

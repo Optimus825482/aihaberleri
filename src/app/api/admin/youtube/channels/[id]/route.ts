@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 /**
  * PATCH /api/admin/youtube/channels/[id]
  * Update a YouTube channel

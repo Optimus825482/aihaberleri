@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { callDeepSeek, DeepSeekMessage } from "@/lib/deepseek";
 import { requireAdminAuth } from "@/lib/admin-auth";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/admin/news/extract-topic
  * URL'den konu/topic çıkarma

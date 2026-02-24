@@ -17,6 +17,8 @@ import {
 } from "@/lib/rate-limiter";
 import { revalidateTag } from "next/cache";
 
+export const dynamic = "force-dynamic";
+
 // ============================================================================
 // POST /api/admin/users/bulk-role - Bulk Role Assignment
 // ============================================================================

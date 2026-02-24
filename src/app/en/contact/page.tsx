@@ -173,14 +173,6 @@ export default function ContactPage() {
                       Mastodon
                     </a>
                     <a
-                      href="https://aihaberleri-org.tumblr.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gray-600 hover:text-blue-800"
-                    >
-                      Tumblr
-                    </a>
-                    <a
                       href="https://linkedin.com/company/aihaberleri"
                       target="_blank"
                       rel="noopener noreferrer"

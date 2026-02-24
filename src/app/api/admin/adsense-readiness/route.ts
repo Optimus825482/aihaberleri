@@ -4,6 +4,8 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 
+export const dynamic = "force-dynamic";
+
 type CheckItem = {
   key: string;
   label: string;

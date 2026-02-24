@@ -10,6 +10,8 @@
 import { NextResponse } from "next/server";
 import { setCSRFToken } from "@/lib/auth/csrf";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const token = await setCSRFToken();

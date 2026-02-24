@@ -12,6 +12,8 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 import { requireAdminAuth, type AdminSession } from "@/lib/admin-auth";
 
+export const dynamic = "force-dynamic";
+
 function hasRequiredRole(session: AdminSession, roles: string[]) {
   return roles.includes(session.role) || session.role === "SUPER_ADMIN";
 }

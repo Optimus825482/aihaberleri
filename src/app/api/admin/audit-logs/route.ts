@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { getRecentAuditLogs, getAuditStats } from "@/lib/audit";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/admin/audit-logs
  * Get audit logs (admin only)

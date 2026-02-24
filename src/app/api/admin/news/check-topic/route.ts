@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdminAuth } from "@/lib/admin-auth";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/admin/news/check-topic
  * Veritabanında benzer topic/konu kontrolü

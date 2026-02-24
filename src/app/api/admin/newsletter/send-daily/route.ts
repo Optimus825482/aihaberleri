@@ -3,6 +3,8 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 import { sendDailyDigest } from "@/services/newsletter.service";
 import { triggerNewsletterNow } from "@/lib/queue";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/admin/newsletter/send-daily
  * Manually trigger daily newsletter digest

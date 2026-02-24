@@ -18,6 +18,8 @@ import {
 } from "@/lib/rate-limiter";
 import { revalidateTag } from "next/cache";
 
+export const dynamic = "force-dynamic";
+
 // ============================================================================
 // PATCH /api/admin/users/[id] - Update User
 // ============================================================================

@@ -8,6 +8,8 @@ import {
   type ArticleForMatching,
 } from "@/services/trend-matcher.service";
 
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/admin/news/deep-analysis
  * Deep analysis ile haber oluşturma - streaming response

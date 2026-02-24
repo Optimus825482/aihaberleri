@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { scheduleNewsAgentJob } from "@/lib/queue";
 import { checkRateLimit, getRateLimitHeaders } from "@/lib/rate-limit";
 
+export const dynamic = "force-dynamic";
+
 // Rate limit: 30 requests per minute for admin settings
 const SETTINGS_RATE_LIMIT = 30;
 const SETTINGS_WINDOW = 60; // seconds

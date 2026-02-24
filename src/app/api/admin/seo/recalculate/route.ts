@@ -9,6 +9,8 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 import { z } from "zod";
 import { analyzeArticleSEO, saveSEORecommendations } from "@/lib/seo-analyzer";
 
+export const dynamic = "force-dynamic";
+
 // Validation schema
 const recalculateSchema = z.object({
   articleIds: z.array(z.string().cuid()).optional(),
