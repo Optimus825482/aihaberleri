@@ -113,7 +113,7 @@ function isValidPrivateKey(key: string | undefined): boolean {
 function getClient(): adsense_v2.Adsense {
   if (adsenseClient) return adsenseClient;
 
-  let credentials!: { client_email: string; private_key: string };
+  let credentials: { client_email: string; private_key: string } | null = null;
 
   // 1. AdSense'e özel service account (öncelikli)
   const adsenseEmail = process.env.ADSENSE_CLIENT_EMAIL;
@@ -152,11 +152,15 @@ function getClient(): adsense_v2.Adsense {
       adsenseKey.length,
     );
     credentials = { client_email: adsenseEmail, private_key: adsenseKey };
-  } else if (adsenseEmail && adsenseKey) {
+  }
+
+  if (!credentials && adsenseEmail && adsenseKey) {
     console.warn(
       "[AdSense] ADSENSE_PRIVATE_KEY geçersiz/bozuk görünüyor. ADSENSE_SERVICE_ACCOUNT_KEY fallback denenecek.",
     );
-  } else if (adsenseJsonKey) {
+  }
+
+  if (!credentials && adsenseJsonKey) {
     console.log("[AdSense] Auth yöntemi: ADSENSE_SERVICE_ACCOUNT_KEY (JSON)");
     try {
       const parsed = JSON.parse(adsenseJsonKey);
@@ -177,18 +181,24 @@ function getClient(): adsense_v2.Adsense {
       }
       throw error;
     }
-  } else if (gaEmail && gaKey && isValidPrivateKey(gaKey)) {
+  }
+
+  if (!credentials && gaEmail && gaKey && isValidPrivateKey(gaKey)) {
     console.log(
       "[AdSense] Auth yöntemi: GA_CLIENT_EMAIL fallback (",
       gaEmail,
       ")",
     );
     credentials = { client_email: gaEmail, private_key: gaKey };
-  } else if (gaEmail && gaKey) {
+  }
+
+  if (!credentials && gaEmail && gaKey) {
     console.warn(
       "[AdSense] GA_PRIVATE_KEY geçersiz/bozuk görünüyor. GOOGLE_SERVICE_ACCOUNT_KEY fallback denenecek.",
     );
-  } else if (googleJsonKey) {
+  }
+
+  if (!credentials && googleJsonKey) {
     console.log(
       "[AdSense] Auth yöntemi: GOOGLE_SERVICE_ACCOUNT_KEY (JSON fallback)",
     );
@@ -211,7 +221,9 @@ function getClient(): adsense_v2.Adsense {
       }
       throw error;
     }
-  } else {
+  }
+
+  if (!credentials) {
     throw new Error(
       "AdSense API yapılandırması eksik. ADSENSE_CLIENT_EMAIL + ADSENSE_PRIVATE_KEY veya GA_CLIENT_EMAIL + GA_PRIVATE_KEY gerekli.",
     );
