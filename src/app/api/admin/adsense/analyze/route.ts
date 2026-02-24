@@ -80,7 +80,27 @@ export async function POST(request: NextRequest) {
       data: analysis,
     });
   } catch (error: any) {
-    console.error("[AdSense AI Analysis]", error);
+    console.error("[AdSense AI Analysis]", error?.message || error);
+
+    const isGoogleApiError =
+      error?.message?.includes("has not been used in project") ||
+      error?.message?.includes("disabled") ||
+      error?.code === 403 ||
+      error?.code === 401 ||
+      error?.message?.includes("Permission denied") ||
+      error?.message?.includes("PERMISSION_DENIED");
+
+    if (isGoogleApiError) {
+      return NextResponse.json({
+        success: false,
+        error: error.message?.includes("has not been used")
+          ? "AdSense API, Google Cloud projenizde henüz aktif değil. Google Cloud Console'dan enable edin ve birkaç dakika bekleyin."
+          : "AdSense API erişim izni yok. Service account'u AdSense panelinde Viewer olarak ekleyin.",
+        configured: true,
+        apiError: true,
+      });
+    }
+    
     return NextResponse.json(
       { success: false, error: error.message || "Analiz yapılamadı" },
       { status: 500 },

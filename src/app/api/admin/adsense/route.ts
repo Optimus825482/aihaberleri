@@ -45,7 +45,29 @@ export async function GET(request: NextRequest) {
       configured: true,
     });
   } catch (error: any) {
-    console.error("[AdSense Summary API]", error);
+    console.error("[AdSense Summary API]", error?.message || error);
+
+    // Google API hataları (not enabled, permission denied vb.) graceful handle et
+    const isGoogleApiError =
+      error?.message?.includes("has not been used in project") ||
+      error?.message?.includes("disabled") ||
+      error?.code === 403 ||
+      error?.code === 401 ||
+      error?.message?.includes("Permission denied") ||
+      error?.message?.includes("PERMISSION_DENIED");
+
+    if (isGoogleApiError) {
+      return NextResponse.json({
+        success: true,
+        data: null,
+        configured: true,
+        apiError: true,
+        apiErrorMessage: error.message?.includes("has not been used")
+          ? "AdSense API, Google Cloud projenizde henüz aktif değil. Google Cloud Console'dan enable edin ve birkaç dakika bekleyin."
+          : "AdSense API erişim izni yok. Service account'u AdSense panelinde Viewer olarak ekleyin.",
+      });
+    }
+    
     return NextResponse.json(
       {
         success: false,

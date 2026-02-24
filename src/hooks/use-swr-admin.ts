@@ -184,6 +184,8 @@ export function useAdSenseSummary(refreshInterval = 300000) {
     ...defaultConfig,
     refreshInterval, // 5 dakika
     dedupingInterval: 60000,
+    errorRetryCount: 2,
+    errorRetryInterval: 30000, // 30 saniye arayla
   });
 }
 
@@ -198,6 +200,8 @@ export function useAdSenseReport(days: number = 30, type: string = "detailed") {
       ...defaultConfig,
       refreshInterval: 600000, // 10 dakika
       dedupingInterval: 120000,
+      errorRetryCount: 2,
+      errorRetryInterval: 30000,
     },
   );
 }

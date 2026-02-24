@@ -33,8 +33,7 @@ yarn-error.log*
 *-gserviceaccount-*.json
 service_account_file.json
 client_secret_*.apps.googleusercontent.com.json
-aihaberleri-46042-6b0a7c0e4a93.json
-aihaberleri-46042-fa79b44b21a7.json
+aihaberleri-46042-*.json
 
 # Vercel
 .vercel

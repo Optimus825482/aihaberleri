@@ -2,11 +2,16 @@
  * Google AdSense Management API Client
  *
  * AdSense gelir verilerini çekmek için kullanılır.
- * GA4 client ile aynı service account veya ayrı credentials kullanabilir.
+ * AdSense'e özel service account VEYA GA4 ile ortak service account kullanabilir.
  *
  * Env Variables:
  * - ADSENSE_ACCOUNT_ID: AdSense publisher hesap ID (örn: pub-2444093901783574)
- * - GA_CLIENT_EMAIL + GA_PRIVATE_KEY veya GOOGLE_SERVICE_ACCOUNT_KEY
+ *
+ * Auth (öncelik sırasıyla):
+ * 1. ADSENSE_CLIENT_EMAIL + ADSENSE_PRIVATE_KEY  (AdSense'e özel service account)
+ * 2. ADSENSE_SERVICE_ACCOUNT_KEY                  (AdSense'e özel JSON key)
+ * 3. GA_CLIENT_EMAIL + GA_PRIVATE_KEY              (GA4 ile ortak - fallback)
+ * 4. GOOGLE_SERVICE_ACCOUNT_KEY                    (Genel JSON key - fallback)
  */
 
 import { google, adsense_v2 } from "googleapis";
@@ -29,14 +34,37 @@ function getClient(): adsense_v2.Adsense {
 
   let credentials: { client_email: string; private_key: string };
 
-  const clientEmail = process.env.GA_CLIENT_EMAIL;
-  const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  // 1. AdSense'e özel service account (öncelikli)
+  const adsenseEmail = process.env.ADSENSE_CLIENT_EMAIL;
+  const adsenseKey = process.env.ADSENSE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
-  if (clientEmail && privateKey) {
-    credentials = { client_email: clientEmail, private_key: privateKey };
-  } else if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY) {
+  // 2. AdSense'e özel JSON key
+  const adsenseJsonKey = process.env.ADSENSE_SERVICE_ACCOUNT_KEY;
+
+  // 3. GA4 ile ortak (fallback)
+  const gaEmail = process.env.GA_CLIENT_EMAIL;
+  const gaKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+  // 4. Genel JSON key (fallback)
+  const googleJsonKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+
+  if (adsenseEmail && adsenseKey) {
+    credentials = { client_email: adsenseEmail, private_key: adsenseKey };
+  } else if (adsenseJsonKey) {
     try {
-      const parsed = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY);
+      const parsed = JSON.parse(adsenseJsonKey);
+      credentials = {
+        client_email: parsed.client_email,
+        private_key: parsed.private_key,
+      };
+    } catch {
+      throw new Error("ADSENSE_SERVICE_ACCOUNT_KEY geçerli bir JSON değil.");
+    }
+  } else if (gaEmail && gaKey) {
+    credentials = { client_email: gaEmail, private_key: gaKey };
+  } else if (googleJsonKey) {
+    try {
+      const parsed = JSON.parse(googleJsonKey);
       credentials = {
         client_email: parsed.client_email,
         private_key: parsed.private_key,
@@ -46,7 +74,7 @@ function getClient(): adsense_v2.Adsense {
     }
   } else {
     throw new Error(
-      "AdSense API yapılandırması eksik. GA_CLIENT_EMAIL + GA_PRIVATE_KEY veya GOOGLE_SERVICE_ACCOUNT_KEY gerekli.",
+      "AdSense API yapılandırması eksik. ADSENSE_CLIENT_EMAIL + ADSENSE_PRIVATE_KEY veya GA_CLIENT_EMAIL + GA_PRIVATE_KEY gerekli.",
     );
   }
 
@@ -69,6 +97,8 @@ export function isAdSenseConfigured(): boolean {
   try {
     const hasAccount = !!process.env.ADSENSE_ACCOUNT_ID;
     const hasAuth =
+      (!!process.env.ADSENSE_CLIENT_EMAIL && !!process.env.ADSENSE_PRIVATE_KEY) ||
+      !!process.env.ADSENSE_SERVICE_ACCOUNT_KEY ||
       (!!process.env.GA_CLIENT_EMAIL && !!process.env.GA_PRIVATE_KEY) ||
       !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
     return hasAccount && hasAuth;
