@@ -32,6 +32,9 @@ function parsePemKey(raw: string | undefined): string | undefined {
   key = key.replace(/\\\\n/g, "\n");
   // Single-escaped newlines: \n (literal backslash-n) → real newline
   key = key.replace(/\\n/g, "\n");
+  // Windows-style \r\n → \n
+  key = key.replace(/\r\n/g, "\n");
+  key = key.replace(/\r/g, "\n");
 
   // Eğer hala BEGIN marker yoksa, base64 encoded olabilir
   if (!key.includes("-----BEGIN") && key.length > 100) {
@@ -42,6 +45,22 @@ function parsePemKey(raw: string | undefined): string | undefined {
       }
     } catch {
       // base64 değilse devam et
+    }
+  }
+
+  // PEM formatı düzeltme: header/footer arasını temizle ve standart 64-char satırlara böl
+  if (key.includes("-----BEGIN")) {
+    const lines = key.split("\n").map((l) => l.trim()).filter(Boolean);
+    const beginIdx = lines.findIndex((l) => l.startsWith("-----BEGIN"));
+    const endIdx = lines.findIndex((l) => l.startsWith("-----END"));
+
+    if (beginIdx >= 0 && endIdx > beginIdx) {
+      const header = lines[beginIdx];
+      const footer = lines[endIdx];
+      const body = lines.slice(beginIdx + 1, endIdx).join("");
+      // Standart PEM: 64 karakter satırlar
+      const formattedBody = body.match(/.{1,64}/g)?.join("\n") || body;
+      key = `${header}\n${formattedBody}\n${footer}\n`;
     }
   }
 
