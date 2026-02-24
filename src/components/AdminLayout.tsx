@@ -141,12 +141,6 @@ const menuGroups = [
         requiredResource: null,
       },
       {
-        title: "AdSense Hazırlık",
-        href: "/admin/adsense-readiness",
-        icon: DollarSign,
-        requiredResource: null,
-      },
-      {
         title: "AdSense Yönetimi",
         href: "/admin/adsense",
         icon: DollarSign,

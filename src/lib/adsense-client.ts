@@ -29,6 +29,44 @@ const reportCache = new Map<string, CacheEntry<any>>();
 // ─── Client ──────────────────────────────────────────────
 let adsenseClient: adsense_v2.Adsense | null = null;
 
+/**
+ * PEM key'i Docker/Coolify ortamlarında güvenilir şekilde parse eder.
+ * Coolify env'de key şu formatlarda gelebilir:
+ * - Literal \n text → replace gerekli
+ * - Gerçek newline → olduğu gibi
+ * - Double-escaped \\n → replace gerekli
+ * - Base64 encoded → decode gerekli
+ */
+function parsePemKey(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+
+  let key = raw.trim();
+
+  // Double-escaped newlines: \\n → \n
+  key = key.replace(/\\\\n/g, "\n");
+  // Single-escaped newlines: \n (literal backslash-n) → real newline
+  key = key.replace(/\\n/g, "\n");
+
+  // Eğer hala BEGIN marker yoksa, base64 encoded olabilir
+  if (!key.includes("-----BEGIN") && key.length > 100) {
+    try {
+      const decoded = Buffer.from(key, "base64").toString("utf-8");
+      if (decoded.includes("-----BEGIN")) {
+        key = decoded;
+      }
+    } catch {
+      // base64 değilse devam et
+    }
+  }
+
+  // Son kontrol: BEGIN marker var mı?
+  if (!key.includes("-----BEGIN")) {
+    console.warn("[AdSense] Private key BEGIN marker bulunamadı. Key format hatalı olabilir.");
+  }
+
+  return key;
+}
+
 function getClient(): adsense_v2.Adsense {
   if (adsenseClient) return adsenseClient;
 
@@ -36,14 +74,14 @@ function getClient(): adsense_v2.Adsense {
 
   // 1. AdSense'e özel service account (öncelikli)
   const adsenseEmail = process.env.ADSENSE_CLIENT_EMAIL;
-  const adsenseKey = process.env.ADSENSE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const adsenseKey = parsePemKey(process.env.ADSENSE_PRIVATE_KEY);
 
   // 2. AdSense'e özel JSON key
   const adsenseJsonKey = process.env.ADSENSE_SERVICE_ACCOUNT_KEY;
 
   // 3. GA4 ile ortak (fallback)
   const gaEmail = process.env.GA_CLIENT_EMAIL;
-  const gaKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const gaKey = parsePemKey(process.env.GA_PRIVATE_KEY);
 
   // 4. Genel JSON key (fallback)
   const googleJsonKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
