@@ -80,31 +80,66 @@ export async function POST(request: NextRequest) {
       data: analysis,
     });
   } catch (error: any) {
-    console.error("[AdSense AI Analysis]", error?.message || error);
-
-    const isGoogleApiError =
-      error?.message?.includes("has not been used in project") ||
-      error?.message?.includes("disabled") ||
-      error?.code === 403 ||
-      error?.code === 401 ||
-      error?.message?.includes("Permission denied") ||
-      error?.message?.includes("PERMISSION_DENIED");
-
-    if (isGoogleApiError) {
-      return NextResponse.json({
-        success: false,
-        error: error.message?.includes("has not been used")
-          ? "AdSense API, Google Cloud projenizde henüz aktif değil. Google Cloud Console'dan enable edin ve birkaç dakika bekleyin."
-          : "AdSense API erişim izni yok. Service account'u AdSense panelinde Viewer olarak ekleyin.",
-        configured: true,
-        apiError: true,
-      });
-    }
-    
-    return NextResponse.json(
-      { success: false, error: error.message || "Analiz yapılamadı" },
-      { status: 500 },
+    const errorMessage = error?.message || "Bilinmeyen hata";
+    console.error(
+      "[AdSense AI Analysis] Full error:",
+      JSON.stringify(
+        {
+          message: errorMessage,
+          code: error?.code,
+          status: error?.status,
+          name: error?.name,
+          stack: error?.stack?.split("\n").slice(0, 5).join("\n"),
+        },
+        null,
+        2,
+      ),
     );
+
+    let userMessage = "AdSense analizi yapılamadı.";
+
+    if (
+      errorMessage.includes("has not been used in project") ||
+      errorMessage.includes("disabled") ||
+      errorMessage.includes("is not enabled")
+    ) {
+      userMessage = "AdSense API, Google Cloud projenizde henüz aktif değil.";
+    } else if (
+      errorMessage.includes("Permission denied") ||
+      errorMessage.includes("PERMISSION_DENIED") ||
+      error?.code === 403
+    ) {
+      userMessage =
+        "AdSense API erişim izni yok. Service account'u AdSense panelinde Viewer olarak ekleyin.";
+    } else if (
+      error?.code === 401 ||
+      errorMessage.includes("invalid_grant") ||
+      errorMessage.includes("unauthorized") ||
+      errorMessage.includes("Invalid JWT")
+    ) {
+      userMessage = "Service account kimlik doğrulaması başarısız.";
+    } else if (
+      errorMessage.includes("DECODER") ||
+      errorMessage.includes("ERR_OSSL") ||
+      errorMessage.includes("unsupported") ||
+      errorMessage.includes("routines")
+    ) {
+      userMessage =
+        "Private key formatı hatalı. ADSENSE_PRIVATE_KEY değerini kontrol edin.";
+    } else if (
+      errorMessage.includes("ADSENSE_ACCOUNT_ID") ||
+      errorMessage.includes("yapılandırması eksik") ||
+      errorMessage.includes("gerekli")
+    ) {
+      userMessage = errorMessage;
+    }
+
+    return NextResponse.json({
+      success: false,
+      error: userMessage,
+      configured: isAdSenseConfigured(),
+      apiError: true,
+    });
   }
 }
 

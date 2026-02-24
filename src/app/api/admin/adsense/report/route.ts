@@ -52,31 +52,73 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, data });
   } catch (error: any) {
-    console.error("[AdSense Report API]", error?.message || error);
-
-    const isGoogleApiError =
-      error?.message?.includes("has not been used in project") ||
-      error?.message?.includes("disabled") ||
-      error?.code === 403 ||
-      error?.code === 401 ||
-      error?.message?.includes("Permission denied") ||
-      error?.message?.includes("PERMISSION_DENIED");
-
-    if (isGoogleApiError) {
-      return NextResponse.json({
-        success: true,
-        data: null,
-        configured: true,
-        apiError: true,
-        apiErrorMessage: error.message?.includes("has not been used")
-          ? "AdSense API, Google Cloud projenizde henüz aktif değil."
-          : "AdSense API erişim izni yok.",
-      });
-    }
-    
-    return NextResponse.json(
-      { success: false, error: error.message || "Rapor oluşturulamadı" },
-      { status: 500 },
+    const errorMessage = error?.message || "Bilinmeyen hata";
+    console.error(
+      "[AdSense Report API] Full error:",
+      JSON.stringify(
+        {
+          message: errorMessage,
+          code: error?.code,
+          status: error?.status,
+          name: error?.name,
+          stack: error?.stack?.split("\n").slice(0, 5).join("\n"),
+        },
+        null,
+        2,
+      ),
     );
+
+    let userMessage = "AdSense raporu oluşturulamadı.";
+
+    if (
+      errorMessage.includes("has not been used in project") ||
+      errorMessage.includes("disabled") ||
+      errorMessage.includes("is not enabled")
+    ) {
+      userMessage = "AdSense API, Google Cloud projenizde henüz aktif değil.";
+    } else if (
+      errorMessage.includes("Permission denied") ||
+      errorMessage.includes("PERMISSION_DENIED") ||
+      error?.code === 403
+    ) {
+      userMessage =
+        "AdSense API erişim izni yok. Service account'u AdSense panelinde Viewer olarak ekleyin.";
+    } else if (
+      error?.code === 401 ||
+      errorMessage.includes("invalid_grant") ||
+      errorMessage.includes("unauthorized") ||
+      errorMessage.includes("Invalid JWT")
+    ) {
+      userMessage = "Service account kimlik doğrulaması başarısız.";
+    } else if (
+      errorMessage.includes("DECODER") ||
+      errorMessage.includes("ERR_OSSL") ||
+      errorMessage.includes("unsupported") ||
+      errorMessage.includes("routines")
+    ) {
+      userMessage =
+        "Private key formatı hatalı. ADSENSE_PRIVATE_KEY değerini kontrol edin.";
+    } else if (errorMessage.includes("ADSENSE_ACCOUNT_ID")) {
+      userMessage = "ADSENSE_ACCOUNT_ID env variable tanımlı değil.";
+    } else if (
+      errorMessage.includes("yapılandırması eksik") ||
+      errorMessage.includes("gerekli")
+    ) {
+      userMessage = errorMessage;
+    } else if (
+      errorMessage.includes("account") &&
+      errorMessage.includes("not found")
+    ) {
+      userMessage =
+        "AdSense hesap ID bulunamadı. ADSENSE_ACCOUNT_ID değerini kontrol edin.";
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: null,
+      configured: isAdSenseConfigured(),
+      apiError: true,
+      apiErrorMessage: userMessage,
+    });
   }
 }

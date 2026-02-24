@@ -45,36 +45,76 @@ export async function GET(request: NextRequest) {
       configured: true,
     });
   } catch (error: any) {
-    console.error("[AdSense Summary API]", error?.message || error);
-
-    // Google API hataları (not enabled, permission denied vb.) graceful handle et
-    const isGoogleApiError =
-      error?.message?.includes("has not been used in project") ||
-      error?.message?.includes("disabled") ||
-      error?.code === 403 ||
-      error?.code === 401 ||
-      error?.message?.includes("Permission denied") ||
-      error?.message?.includes("PERMISSION_DENIED");
-
-    if (isGoogleApiError) {
-      return NextResponse.json({
-        success: true,
-        data: null,
-        configured: true,
-        apiError: true,
-        apiErrorMessage: error.message?.includes("has not been used")
-          ? "AdSense API, Google Cloud projenizde henüz aktif değil. Google Cloud Console'dan enable edin ve birkaç dakika bekleyin."
-          : "AdSense API erişim izni yok. Service account'u AdSense panelinde Viewer olarak ekleyin.",
-      });
-    }
-    
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message || "AdSense verisi alınamadı",
-        configured: isAdSenseConfigured(),
-      },
-      { status: 500 },
+    const errorMessage = error?.message || "Bilinmeyen hata";
+    console.error(
+      "[AdSense Summary API] Full error:",
+      JSON.stringify(
+        {
+          message: errorMessage,
+          code: error?.code,
+          status: error?.status,
+          name: error?.name,
+          stack: error?.stack?.split("\n").slice(0, 5).join("\n"),
+        },
+        null,
+        2,
+      ),
     );
+
+    // Hata tipine göre kullanıcı dostu mesaj
+    let userMessage = "AdSense verileri şu anda alınamıyor.";
+
+    if (
+      errorMessage.includes("has not been used in project") ||
+      errorMessage.includes("disabled") ||
+      errorMessage.includes("is not enabled")
+    ) {
+      userMessage =
+        "AdSense API, Google Cloud projenizde henüz aktif değil. Google Cloud Console'dan 'AdSense Management API' arayıp enable edin.";
+    } else if (
+      errorMessage.includes("Permission denied") ||
+      errorMessage.includes("PERMISSION_DENIED") ||
+      error?.code === 403
+    ) {
+      userMessage =
+        "AdSense API erişim izni yok. Service account'u AdSense panelinde Kullanıcılar > Viewer olarak ekleyin.";
+    } else if (
+      error?.code === 401 ||
+      errorMessage.includes("invalid_grant") ||
+      errorMessage.includes("unauthorized") ||
+      errorMessage.includes("Invalid JWT")
+    ) {
+      userMessage =
+        "Service account kimlik doğrulaması başarısız. Private key ve email bilgilerini kontrol edin.";
+    } else if (
+      errorMessage.includes("DECODER") ||
+      errorMessage.includes("ERR_OSSL") ||
+      errorMessage.includes("unsupported") ||
+      errorMessage.includes("routines")
+    ) {
+      userMessage =
+        "Private key formatı hatalı. Coolify'da ADSENSE_PRIVATE_KEY değerini kontrol edin (PEM formatı bozulmuş olabilir).";
+    } else if (errorMessage.includes("ADSENSE_ACCOUNT_ID")) {
+      userMessage = "ADSENSE_ACCOUNT_ID env variable tanımlı değil.";
+    } else if (
+      errorMessage.includes("yapılandırması eksik") ||
+      errorMessage.includes("gerekli")
+    ) {
+      userMessage = errorMessage;
+    } else if (
+      errorMessage.includes("account") &&
+      errorMessage.includes("not found")
+    ) {
+      userMessage =
+        "AdSense hesap ID bulunamadı. ADSENSE_ACCOUNT_ID değerini kontrol edin (pub-XXXXX formatı).";
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: null,
+      configured: isAdSenseConfigured(),
+      apiError: true,
+      apiErrorMessage: userMessage,
+    });
   }
 }

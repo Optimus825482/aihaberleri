@@ -87,8 +87,18 @@ function getClient(): adsense_v2.Adsense {
   const googleJsonKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
 
   if (adsenseEmail && adsenseKey) {
+    console.log(
+      "[AdSense] Auth yöntemi: ADSENSE_CLIENT_EMAIL (",
+      adsenseEmail,
+      ")",
+    );
+    console.log(
+      "[AdSense] Private key BEGIN marker:",
+      adsenseKey.includes("-----BEGIN") ? "OK" : "EKSIK!",
+    );
     credentials = { client_email: adsenseEmail, private_key: adsenseKey };
   } else if (adsenseJsonKey) {
+    console.log("[AdSense] Auth yöntemi: ADSENSE_SERVICE_ACCOUNT_KEY (JSON)");
     try {
       const parsed = JSON.parse(adsenseJsonKey);
       credentials = {
@@ -99,8 +109,16 @@ function getClient(): adsense_v2.Adsense {
       throw new Error("ADSENSE_SERVICE_ACCOUNT_KEY geçerli bir JSON değil.");
     }
   } else if (gaEmail && gaKey) {
+    console.log(
+      "[AdSense] Auth yöntemi: GA_CLIENT_EMAIL fallback (",
+      gaEmail,
+      ")",
+    );
     credentials = { client_email: gaEmail, private_key: gaKey };
   } else if (googleJsonKey) {
+    console.log(
+      "[AdSense] Auth yöntemi: GOOGLE_SERVICE_ACCOUNT_KEY (JSON fallback)",
+    );
     try {
       const parsed = JSON.parse(googleJsonKey);
       credentials = {
@@ -116,12 +134,18 @@ function getClient(): adsense_v2.Adsense {
     );
   }
 
+  console.log(
+    "[AdSense] Account ID:",
+    process.env.ADSENSE_ACCOUNT_ID || "TANIMLI DEĞİL!",
+  );
+
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: ["https://www.googleapis.com/auth/adsense.readonly"],
   });
 
   adsenseClient = google.adsense({ version: "v2", auth });
+  console.log("[AdSense] Client başarıyla oluşturuldu");
   return adsenseClient;
 }
 
@@ -135,7 +159,8 @@ export function isAdSenseConfigured(): boolean {
   try {
     const hasAccount = !!process.env.ADSENSE_ACCOUNT_ID;
     const hasAuth =
-      (!!process.env.ADSENSE_CLIENT_EMAIL && !!process.env.ADSENSE_PRIVATE_KEY) ||
+      (!!process.env.ADSENSE_CLIENT_EMAIL &&
+        !!process.env.ADSENSE_PRIVATE_KEY) ||
       !!process.env.ADSENSE_SERVICE_ACCOUNT_KEY ||
       (!!process.env.GA_CLIENT_EMAIL && !!process.env.GA_PRIVATE_KEY) ||
       !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
@@ -230,7 +255,6 @@ function parseMetricValue(
   fallback = 0,
 ): number {
   if (!val) return fallback;
-  // AdSense returns micros for earnings (value * 1_000_000)
   const num = parseFloat(val);
   return isNaN(num) ? fallback : num;
 }
@@ -238,7 +262,8 @@ function parseMetricValue(
 function parseMicros(val: string | undefined | null): number {
   if (!val) return 0;
   const num = parseFloat(val);
-  return isNaN(num) ? 0 : num / 1_000_000;
+  // AdSense API v2 değerleri doğrudan para birimi cinsinden döner (micros DEĞİL)
+  return isNaN(num) ? 0 : num;
 }
 
 // ─── Report Fetchers ────────────────────────────────────
