@@ -15,14 +15,11 @@ export async function GET(request: NextRequest) {
     if (session instanceof NextResponse) return session;
 
     if (!isAdSenseConfigured()) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "AdSense yapılandırması eksik.",
-          configured: false,
-        },
-        { status: 503 },
-      );
+      return NextResponse.json({
+        success: true,
+        data: null,
+        configured: false,
+      });
     }
 
     const { searchParams } = new URL(request.url);

@@ -18,10 +18,11 @@ export async function POST(request: NextRequest) {
     if (session instanceof NextResponse) return session;
 
     if (!isAdSenseConfigured()) {
-      return NextResponse.json(
-        { success: false, error: "AdSense yapılandırması eksik." },
-        { status: 503 },
-      );
+      return NextResponse.json({
+        success: false,
+        error: "AdSense yapılandırması eksik. ADSENSE_ACCOUNT_ID gerekli.",
+        configured: false,
+      });
     }
 
     // AdSense metriklerini topla
