@@ -51,6 +51,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# AdSense build args (NEXT_PUBLIC_* must be available at build time)
+ARG NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-2444093901783574
+ARG NEXT_PUBLIC_ADSENSE_ENABLED=true
+
 # Build with dummy env vars (tek ENV bloğu = tek layer)
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     REDIS_URL="redis://localhost:6379" \
@@ -60,7 +64,9 @@ ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     NODE_OPTIONS="--max-old-space-size=4096" \
     NEXT_BUILD_WORKERS=1 \
     NEXT_TELEMETRY_DISABLED=1 \
-    SKIP_ENV_VALIDATION=1
+    SKIP_ENV_VALIDATION=1 \
+    NEXT_PUBLIC_ADSENSE_CLIENT_ID=${NEXT_PUBLIC_ADSENSE_CLIENT_ID} \
+    NEXT_PUBLIC_ADSENSE_ENABLED=${NEXT_PUBLIC_ADSENSE_ENABLED}
 
 RUN npm run build
 

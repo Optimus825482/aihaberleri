@@ -20,24 +20,6 @@ declare global {
     }
 }
 
-const COOKIE_CONSENT_KEY = "cookie-consent";
-
-const hasAdvertisingConsent = () => {
-    if (typeof window === "undefined") return false;
-
-    const raw = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (!raw) return false;
-    if (raw === "accepted") return true;
-    if (raw === "rejected") return false;
-
-    try {
-        const parsed = JSON.parse(raw) as { advertising?: boolean };
-        return Boolean(parsed.advertising);
-    } catch {
-        return false;
-    }
-};
-
 export const AdSlot = ({
     slot,
     className,
@@ -51,7 +33,6 @@ export const AdSlot = ({
     const pathname = usePathname();
     const [adElement, setAdElement] = useState<HTMLModElement | null>(null);
     const [isInViewport, setIsInViewport] = useState(false);
-    const [canLoad, setCanLoad] = useState(false);
 
     const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
     const isEnabled = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "true";
@@ -59,23 +40,8 @@ export const AdSlot = ({
     const shouldRender = useMemo(() => {
         if (!isEnabled || !clientId) return false;
         if (pathname?.startsWith("/admin")) return false;
-        return canLoad;
-    }, [isEnabled, clientId, pathname, canLoad]);
-
-    useEffect(() => {
-        const syncConsent = () => {
-            setCanLoad(hasAdvertisingConsent());
-        };
-
-        syncConsent();
-        window.addEventListener("cookie-consent-updated", syncConsent);
-        window.addEventListener("storage", syncConsent);
-
-        return () => {
-            window.removeEventListener("cookie-consent-updated", syncConsent);
-            window.removeEventListener("storage", syncConsent);
-        };
-    }, [pathname]);
+        return true; // Always render — AdSenseBootstrap handles NPA for GDPR
+    }, [isEnabled, clientId, pathname]);
 
     useEffect(() => {
         if (!shouldRender || !adElement) return;
