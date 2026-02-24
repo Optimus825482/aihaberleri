@@ -12,8 +12,9 @@ import { Errors, handleApiError } from "@/lib/errors";
 // ============================================
 // CACHE CONFIGURATION
 // ============================================
-const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
+const CACHE_TTL_SECONDS = 3 * 24 * 60 * 60; // 3 days
 const CACHE_PREFIX = "tts:cache:";
+const MAX_CACHE_SIZE_BYTES = 512 * 1024; // 512KB - bundan büyük yanıtları cache'leme
 
 function expandCommonAcronyms(text: string, voice?: string): string {
   const isTurkishVoice = voice?.toLowerCase().startsWith("tr-") ?? false;
@@ -170,16 +171,22 @@ export async function POST(req: NextRequest) {
     // CACHE RESULT
     // ============================================
     if (redis) {
-      try {
-        await redis.setex(
-          cacheKey,
-          CACHE_TTL_SECONDS,
-          JSON.stringify(responseData),
+      const cachePayload = JSON.stringify(responseData);
+      const payloadSize = Buffer.byteLength(cachePayload);
+
+      if (payloadSize > MAX_CACHE_SIZE_BYTES) {
+        console.log(
+          `[TTS POST] Cache SKIP: payload too large (${(payloadSize / 1024).toFixed(0)}KB > ${MAX_CACHE_SIZE_BYTES / 1024}KB)`,
         );
-        console.log(`[TTS POST] Cached result with TTL ${CACHE_TTL_SECONDS}s`);
-      } catch (cacheError) {
-        console.error(`[TTS POST] Cache write error:`, cacheError);
-        // Continue without caching
+      } else {
+        try {
+          await redis.setex(cacheKey, CACHE_TTL_SECONDS, cachePayload);
+          console.log(
+            `[TTS POST] Cached ${(payloadSize / 1024).toFixed(0)}KB with TTL ${CACHE_TTL_SECONDS}s`,
+          );
+        } catch (cacheError) {
+          console.error(`[TTS POST] Cache write error:`, cacheError);
+        }
       }
     }
 
