@@ -100,6 +100,10 @@ COPY --from=app-builder --chown=nextjs:nodejs /app/server.js ./server.js
 COPY --from=app-builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
 
+# Entrypoint: auto-migrate on deploy
+COPY --from=app-builder --chown=nextjs:nodejs /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # node_modules TEK COPY (Debian→Debian = rebuild gerekmez!)
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
@@ -126,6 +130,7 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:3001/api/health || exit 1
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "server.js"]
 
 # ===========================

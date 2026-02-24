@@ -173,3 +173,82 @@ export function useDeleteSubscriber() {
     },
   );
 }
+
+// ─── AdSense Hooks ──────────────────────────────────────
+
+/**
+ * AdSense Özet Hook (today/month/total earnings)
+ */
+export function useAdSenseSummary(refreshInterval = 300000) {
+  return useSWR("/api/admin/adsense", fetcher, {
+    ...defaultConfig,
+    refreshInterval, // 5 dakika
+    dedupingInterval: 60000,
+  });
+}
+
+/**
+ * AdSense Detaylı Rapor Hook
+ */
+export function useAdSenseReport(days: number = 30, type: string = "detailed") {
+  return useSWR(
+    `/api/admin/adsense/report?days=${days}&type=${type}`,
+    fetcher,
+    {
+      ...defaultConfig,
+      refreshInterval: 600000, // 10 dakika
+      dedupingInterval: 120000,
+    },
+  );
+}
+
+/**
+ * AdSense AI Analiz Geçmişi Hook
+ */
+export function useAdSenseAnalyses(limit: number = 10) {
+  return useSWR(`/api/admin/adsense/analyses?limit=${limit}`, fetcher, {
+    ...defaultConfig,
+    revalidateOnFocus: true,
+  });
+}
+
+/**
+ * AdSense AI Analiz Tetikleyici Mutation
+ */
+export function useTriggerAdSenseAnalysis() {
+  return useSWRMutation(
+    "/api/admin/adsense/analyze",
+    async (url: string) => {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Analiz yapılamadı");
+      }
+      return res.json();
+    },
+  );
+}
+
+/**
+ * AdSense Analiz Güncelleme Mutation
+ */
+export function useUpdateAdSenseAnalysis() {
+  return useSWRMutation(
+    "/api/admin/adsense/analyses",
+    async (
+      url: string,
+      { arg }: { arg: { id: string; status?: string; reviewNotes?: string; actionsApplied?: any } },
+    ) => {
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(arg),
+      });
+      if (!res.ok) throw new Error("Güncelleme başarısız");
+      return res.json();
+    },
+  );
+}

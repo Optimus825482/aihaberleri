@@ -36,6 +36,9 @@ import {
   Timer,
   Bot,
   Share2,
+  DollarSign,
+  Banknote,
+  MousePointerClick,
 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -48,6 +51,7 @@ import {
   useAgentStats,
   useGA4RealtimeLite,
   useSystemStats,
+  useAdSenseSummary,
 } from "@/hooks/use-swr-admin";
 
 // === Lazy load heavy components ===
@@ -76,6 +80,19 @@ const PipelineChart = dynamic<{
   loading: () => (
     <div className="h-[200px] animate-pulse bg-muted/30 rounded-xl" />
   ),
+  },
+);
+
+const RealtimeVisitorChart = dynamic(
+  () =>
+    import("@/components/admin/RealtimeVisitorChart").then(
+      (m: any) => m.RealtimeVisitorChart ?? m.default ?? (() => null),
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[280px] animate-pulse bg-muted/30 rounded-xl" />
+    ),
   },
 );
 
@@ -256,6 +273,22 @@ const COLOR_MAP: Record<
     ring: "ring-primary/20",
     text: "text-primary",
     glow: "from-primary/20 to-primary/5",
+  },
+  yellow: {
+    border: "border-yellow-500/20",
+    borderHover: "hover:border-yellow-500/40",
+    bg: "bg-yellow-500/10",
+    ring: "ring-yellow-500/20",
+    text: "text-yellow-500",
+    glow: "from-yellow-500/20 to-yellow-500/5",
+  },
+  emerald: {
+    border: "border-emerald-500/20",
+    borderHover: "hover:border-emerald-500/40",
+    bg: "bg-emerald-500/10",
+    ring: "ring-emerald-500/20",
+    text: "text-emerald-500",
+    glow: "from-emerald-500/20 to-emerald-500/5",
   },
 };
 
@@ -791,7 +824,10 @@ export default function AdminDashboard() {
 
   const { data: systemData } = useSystemStats(10000); // 10s refresh for realtime
   const { data: gaRealtimeLiteData } = useGA4RealtimeLite(60000); // 60s refresh, düşük yük
+  const { data: adSenseData } = useAdSenseSummary(300000); // 5 dakika
   const systemStats = systemData?.success ? systemData.data : null;
+  const adSense = adSenseData?.success ? adSenseData.data : null;
+  const adSenseConfigured = adSenseData?.configured !== false;
   const gaActiveUsers =
     gaRealtimeLiteData?.success && gaRealtimeLiteData?.data
       ? gaRealtimeLiteData.data.activeUsers || 0
@@ -951,8 +987,114 @@ export default function AdminDashboard() {
           />
         </div>
 
+        {/* AdSense Earnings — 3 cols */}
+        {adSenseConfigured && adSense && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 bg-yellow-500/10 rounded-lg">
+                <DollarSign className="h-4 w-4 text-yellow-500" />
+              </div>
+              <h2 className="text-sm font-black uppercase tracking-tight text-yellow-500">
+                AdSense Gelir
+              </h2>
+              <Link href="/admin/adsense" className="ml-auto">
+                <Button variant="ghost" size="sm" className="text-[10px] rounded-full h-6 px-2">
+                  Detay <ChevronRight className="h-3 w-3 ml-0.5" />
+                </Button>
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 to-yellow-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Card className="relative overflow-hidden border-yellow-500/20 bg-card/80 backdrop-blur-sm hover:border-yellow-500/40 transition-all duration-300">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="shrink-0 p-2.5 bg-yellow-500/10 rounded-xl ring-1 ring-yellow-500/20">
+                        <DollarSign className="h-5 w-5 text-yellow-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Bugün</span>
+                        <div className="text-2xl sm:text-3xl font-black text-yellow-500 leading-tight">
+                          ${adSense.todayEarnings?.toFixed(2) || '0.00'}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {adSense.todayClicks || 0} tık • {adSense.todayImpressions || 0} gösterim
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Card className="relative overflow-hidden border-emerald-500/20 bg-card/80 backdrop-blur-sm hover:border-emerald-500/40 transition-all duration-300">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="shrink-0 p-2.5 bg-emerald-500/10 rounded-xl ring-1 ring-emerald-500/20">
+                        <Banknote className="h-5 w-5 text-emerald-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Bu Ay</span>
+                        <div className="text-2xl sm:text-3xl font-black text-emerald-500 leading-tight">
+                          ${adSense.monthEarnings?.toFixed(2) || '0.00'}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          {adSense.monthClicks || 0} tık • RPM: ${adSense.monthRpm?.toFixed(2) || '0.00'}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-blue-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Card className="relative overflow-hidden border-blue-500/20 bg-card/80 backdrop-blur-sm hover:border-blue-500/40 transition-all duration-300">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="shrink-0 p-2.5 bg-blue-500/10 rounded-xl ring-1 ring-blue-500/20">
+                        <DollarSign className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Toplam</span>
+                        <div className="text-2xl sm:text-3xl font-black text-blue-500 leading-tight">
+                          ${adSense.totalEarnings?.toFixed(2) || '0.00'}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">tüm zamanlar</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-orange-500/5 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Card className="relative overflow-hidden border-orange-500/20 bg-card/80 backdrop-blur-sm hover:border-orange-500/40 transition-all duration-300">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="shrink-0 p-2.5 bg-orange-500/10 rounded-xl ring-1 ring-orange-500/20">
+                        <MousePointerClick className="h-5 w-5 text-orange-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">CTR / CPC</span>
+                        <div className="text-2xl sm:text-3xl font-black text-orange-500 leading-tight">
+                          {adSense.todayCtr?.toFixed(2) || '0.00'}%
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          CPC: ${adSense.todayCpc?.toFixed(3) || '0.000'} • RPM: ${adSense.todayRpm?.toFixed(2) || '0.00'}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Pipeline Stepper */}
         <AgentPipelineStepper />
+
+        {/* GA4 Realtime Visitor Chart */}
+        <RealtimeVisitorChart />
 
         {/* Sunucu Kaynakları — RAM, CPU & Disk */}
         <Card className="border-indigo-500/20 bg-card/80 backdrop-blur-sm">

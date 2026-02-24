@@ -68,6 +68,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/src/lib/tts_engine.py ./src/lib/t
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
+# Entrypoint: auto-migrate on deploy
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 USER nextjs
 
 EXPOSE 3000
@@ -76,4 +80,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "server.js"]

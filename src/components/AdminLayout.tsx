@@ -146,6 +146,12 @@ const menuGroups = [
         icon: DollarSign,
         requiredResource: null,
       },
+      {
+        title: "AdSense Yönetimi",
+        href: "/admin/adsense",
+        icon: DollarSign,
+        requiredResource: null,
+      },
     ],
   },
   {

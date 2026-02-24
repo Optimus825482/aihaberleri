@@ -837,3 +837,53 @@ model PromptVersion {
   @@index([name, isActive])
   @@index([name])
 }
+
+// =============================================
+// AdSense Revenue Tracking & AI Analysis
+// =============================================
+
+// Günlük AdSense gelir snapshot'ları
+model AdSenseSnapshot {
+  id              String   @id @default(cuid())
+  date            DateTime @db.Date // Hangi gün
+  earnings        Float    // O günkü kazanç (USD cents → dolar olarak)
+  clicks          Int      @default(0)
+  impressions     Int      @default(0)
+  pageViews       Int      @default(0)
+  ctr             Float    @default(0) // Click-through rate
+  cpc             Float    @default(0) // Cost per click
+  rpm             Float    @default(0) // Revenue per mille (1000 impression)
+  pageRpm         Float    @default(0) // Page RPM
+  // Ek metrikler
+  adUnits         Json?    // Reklam birimi bazlı dağılım
+  countries       Json?    // Ülke bazlı gelir dağılımı
+  pages           Json?    // Sayfa bazlı gelir dağılımı
+  createdAt       DateTime @default(now())
+
+  @@unique([date])
+  @@index([date(sort: Desc)])
+  @@index([createdAt])
+}
+
+// AI destekli AdSense analiz sonuçları
+model AdSenseAnalysis {
+  id              String   @id @default(cuid())
+  // Analiz zamanındaki metrik snapshot'ı
+  metricsSnapshot Json     // { todayEarnings, monthEarnings, totalEarnings, rpm, ctr, cpc, ... }
+  // AI analiz sonucu
+  analysis        String   @db.Text // AI'ın ürettiği detaylı analiz
+  recommendations Json     // [{ type, priority, title, description, expectedImpact }]
+  warnings        Json?    // [{ type, severity, message, metric, value }]
+  // Durumu
+  status          String   @default("COMPLETED") // PENDING, COMPLETED, FAILED
+  aiModel         String   @default("deepseek") // Hangi model kullanıldı
+  aiDuration      Int?     // ms cinsinden AI yanıt süresi
+  // Kullanıcı aksiyonları
+  reviewedAt      DateTime? // Kullanıcı ne zaman inceledi
+  reviewNotes     String?   @db.Text // İnceleme notları
+  actionsApplied  Json?     // Hangi tavsiyeler uygulandı
+  createdAt       DateTime  @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([status])
+}
