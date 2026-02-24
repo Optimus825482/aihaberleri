@@ -49,7 +49,6 @@ import {
   Plus,
   Twitter,
   Globe,
-  Share2,
   TrendingUp,
   RotateCcw,
 } from "lucide-react";
@@ -58,10 +57,8 @@ import {
   BatchSelectionProvider,
   BatchCheckbox,
   BatchSelectAll,
-  FloatingActionBar,
   useBatchSelection,
 } from "@/components/admin/batch-operations";
-import { SocialShareBatchModal } from "@/components/admin/SocialShareBatchModal";
 import { Loader2, Facebook } from "lucide-react";
 
 // Icons for social platforms
@@ -269,26 +266,7 @@ export default function ArticlesPage() {
     regenerateImage: boolean;
   } | null>(null);
 
-  // Bulk Share State
-  const [showBatchModal, setShowBatchModal] = useState(false);
-  const [batchLoading, setBatchLoading] = useState(false);
-  // We'll use a ref to access selectedIds inside handlers without recompiling
-  // (though useBatchSelection exposes it, we need to access it from parent component context if possible,
-  // but since Provider is inside this component, we need to split it or use a wrapper.
-  // Actually, standard pattern is to wrap the content.
-  // Let's refactor: create a InnerArticlesPage component or just wrap the return.)
 
-  // Wait, if I wrap inside return, I can't access `selectedIds` here in `ArticlesPage` easily
-  // unless I move the state up or logic down.
-  // `FloatingActionBar` is inside the provider so it has access.
-  // I can pass a custom action component to `FloatingActionBar` that uses the context.
-
-  const handleBatchShare = async (selectedIds: string[]) => {
-    // This function will be called by FloatingActionBar's child with IDs
-    setShowBatchModal(true);
-    // We need to store selectedIds somewhere to use them in onConfirm
-    // But wait, the modal is outside.
-  };
 
   useEffect(() => {
     fetchData();
@@ -709,53 +687,7 @@ function ArticlesPageContent({
   confirmReEvaluate,
   router,
 }: ArticlesPageContentProps) {
-  const { selectedIds, clearSelection } = useBatchSelection();
-  const [showBatchModal, setShowBatchModal] = useState(false);
-  const [batchLoading, setBatchLoading] = useState(false);
   const { toast } = useToast();
-
-  const handleBulkShare = async (data: {
-    platforms: string[];
-    batchSize: number;
-    intervalSeconds: number;
-  }) => {
-    setBatchLoading(true);
-    try {
-      const ids = Array.from(selectedIds);
-      const res = await fetch("/api/admin/social-shares/batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...data,
-          articleIds: ids,
-        }),
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        toast({
-          title: "Başarılı",
-          description: `${ids.length} haber için toplu paylaşım başlatıldı`,
-        });
-        setShowBatchModal(false);
-        clearSelection();
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Hata",
-          description: result.error || "Batch başlatılamadı",
-        });
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Hata",
-        description: "Bir hata oluştu",
-      });
-    } finally {
-      setBatchLoading(false);
-    }
-  };
 
   const displayArticles = articles;
   const totalPages = Math.ceil(totalArticles / pageSize);
@@ -1449,26 +1381,7 @@ function ArticlesPageContent({
           </CardContent>
         </Card>
 
-        <FloatingActionBar>
-          <button
-            onClick={() => setShowBatchModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all hover:scale-105 active:scale-95 shadow-md"
-            title="Seçili öğeleri paylaş"
-          >
-            <Share2 className="w-4 h-4" />
-            <span className="text-sm font-medium">
-              Paylaş ({selectedIds.size})
-            </span>
-          </button>
-        </FloatingActionBar>
 
-        <SocialShareBatchModal
-          isOpen={showBatchModal}
-          onClose={() => setShowBatchModal(false)}
-          onConfirm={handleBulkShare}
-          loading={batchLoading}
-          articleCount={selectedIds.size}
-        />
       </div>
     </AdminLayout>
   );

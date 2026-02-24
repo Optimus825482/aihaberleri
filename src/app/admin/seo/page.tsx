@@ -88,6 +88,27 @@ export default function SEOPage() {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdRef = useRef<string | null>(null);
   const lastIndexRef = useRef(0);
+  const hasRecalculated = useRef(false);
+
+  const updateStats = useCallback((articlesData: ArticleSEO[]) => {
+    const total = articlesData.length;
+    const avgScore =
+      total > 0
+        ? Math.round(
+          articlesData.reduce(
+            (sum: number, a: ArticleSEO) => sum + (a.seoScore || 0),
+            0,
+          ) / total,
+        )
+        : 0;
+    const optimized = articlesData.filter(
+      (a: ArticleSEO) => (a.seoScore || 0) >= 80,
+    ).length;
+    const needsWork = articlesData.filter(
+      (a: ArticleSEO) => (a.seoScore || 0) < 60,
+    ).length;
+    setStats({ avgScore, optimized, needsWork, total });
+  }, []);
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
@@ -95,30 +116,36 @@ export default function SEOPage() {
       const response = await fetch("/api/admin/articles?include=seo");
       if (response.ok) {
         const data = await response.json();
-        const articlesData = data.articles || [];
+        let articlesData = data.articles || [];
+
+        // Null/0 skorlu makaleler varsa ve henüz recalculate yapılmadıysa
+        const hasNullScores = articlesData.some(
+          (a: ArticleSEO) => a.seoScore === null || a.seoScore === 0,
+        );
+        if (hasNullScores && !hasRecalculated.current) {
+          hasRecalculated.current = true;
+          try {
+            await fetch("/api/admin/seo/recalculate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ all: true, status: "PUBLISHED" }),
+            });
+            // Skorlar güncellendi, tekrar fetch et
+            const refreshed = await fetch("/api/admin/articles?include=seo");
+            if (refreshed.ok) {
+              const refreshedData = await refreshed.json();
+              articlesData = refreshedData.articles || [];
+            }
+          } catch (e) {
+            console.warn("SEO recalculate failed:", e);
+          }
+        }
+
         setArticles(articlesData);
-
-        const total = articlesData.length;
-        const avgScore =
-          total > 0
-            ? Math.round(
-                articlesData.reduce(
-                  (sum: number, a: ArticleSEO) => sum + (a.seoScore || 0),
-                  0,
-                ) / total,
-              )
-            : 0;
-        const optimized = articlesData.filter(
-          (a: ArticleSEO) => (a.seoScore || 0) >= 80,
-        ).length;
-        const needsWork = articlesData.filter(
-          (a: ArticleSEO) => (a.seoScore || 0) < 60,
-        ).length;
-
-        setStats({ avgScore, optimized, needsWork, total });
+        updateStats(articlesData);
 
         if (articlesData.length > 0 && !selectedArticle) {
-          const lowScoreArticle = articlesData
+          const lowScoreArticle = [...articlesData]
             .sort(
               (a: ArticleSEO, b: ArticleSEO) =>
                 (a.seoScore || 0) - (b.seoScore || 0),
@@ -134,7 +161,7 @@ export default function SEOPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedArticle]);
+  }, [selectedArticle, updateStats]);
 
   useEffect(() => {
     fetchArticles();

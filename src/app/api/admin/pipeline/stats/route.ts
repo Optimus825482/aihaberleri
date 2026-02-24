@@ -19,6 +19,15 @@ export async function GET() {
       "database-publisher",
     ];
 
+    const AGENT_DISPLAY_NAMES: Record<string, string> = {
+      "content-collector": "İçerik Toplayıcı",
+      "relevance-filter": "Uygunluk Filtresi",
+      "duplicate-detector": "Tekrar Dedektörü",
+      "content-enricher": "İçerik Zenginleştirici",
+      "visual-generator": "Görsel Üretici",
+      "database-publisher": "Veritabanı Yayıncısı",
+    };
+
     // Try to get queue stats (may fail if Redis not available)
     let queueStats: Array<{
       queueName: string;
@@ -132,6 +141,7 @@ export async function GET() {
 
       return {
         name,
+        displayName: AGENT_DISPLAY_NAMES[name] || name,
         status:
           (stat?.active ?? 0) > 0
             ? "running"
