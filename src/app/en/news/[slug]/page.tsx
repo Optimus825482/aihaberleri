@@ -393,12 +393,12 @@ export default async function EnglishArticlePage({ params }: Props) {
               <div dangerouslySetInnerHTML={{ __html: contentFirstPart }} />
 
             <AdSlot
-              slot="3183333271"
-                format="fluid"
-                layout="in-article"
+              slot="6220560152"
+              format="fluid"
+              layout="in-article"
               minHeight={140}
-                label="Sponsored Content"
-                className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3 not-prose text-center"
+              label="Sponsored Content"
+              className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3 not-prose text-center"
             />
 
               <div dangerouslySetInnerHTML={{ __html: contentSecondPart }} />
@@ -479,6 +479,17 @@ export default async function EnglishArticlePage({ params }: Props) {
               responsive
               minHeight={120}
               label="Sponsored"
+              className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+            />
+          </div>
+
+          {/* Multiplex Related Content Ad */}
+          <div className="max-w-4xl mx-auto mt-6">
+            <AdSlot
+              slot="3183333271"
+              format="autorelaxed"
+              minHeight={200}
+              label="You May Also Like"
               className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
             />
           </div>
