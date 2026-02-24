@@ -86,44 +86,80 @@ export async function POST(request: NextRequest) {
         console.warn("Failed to get geolocation for", ipAddress, error);
       }
 
-      // Upsert visitor (update if exists, create if not)
-      const visitor = await db.visitor.upsert({
-        where: { visitorToken },
-        update: {
-          ipAddress,
-          userAgent: userAgent || undefined,
-          currentPage: currentPage || "/",
-          lastActivity: new Date(),
-          ...(location && {
-            country: location.country,
-            countryCode: location.countryCode,
-            city: location.city,
-            region: location.region,
-            isp: location.isp,
-            latitude: location.latitude,
-            longitude: location.longitude,
-            timezone: location.timezone,
-            provider: location.provider,
-          }),
-        },
-        create: {
-          visitorToken,
-          ipAddress,
-          userAgent: userAgent || null,
-          currentPage: currentPage || "/",
-          ...(location && {
-            country: location.country,
-            countryCode: location.countryCode,
-            city: location.city,
-            region: location.region,
-            isp: location.isp,
-            latitude: location.latitude,
-            longitude: location.longitude,
-            timezone: location.timezone,
-            provider: location.provider,
-          }),
-        },
-      });
+      // Upsert visitor — handle ipAddress race condition (P2002)
+      let visitor;
+      try {
+        visitor = await db.visitor.upsert({
+          where: { visitorToken },
+          update: {
+            ipAddress,
+            userAgent: userAgent || undefined,
+            currentPage: currentPage || "/",
+            lastActivity: new Date(),
+            ...(location && {
+              country: location.country,
+              countryCode: location.countryCode,
+              city: location.city,
+              region: location.region,
+              isp: location.isp,
+              latitude: location.latitude,
+              longitude: location.longitude,
+              timezone: location.timezone,
+              provider: location.provider,
+            }),
+          },
+          create: {
+            visitorToken,
+            ipAddress,
+            userAgent: userAgent || null,
+            currentPage: currentPage || "/",
+            ...(location && {
+              country: location.country,
+              countryCode: location.countryCode,
+              city: location.city,
+              region: location.region,
+              isp: location.isp,
+              latitude: location.latitude,
+              longitude: location.longitude,
+              timezone: location.timezone,
+              provider: location.provider,
+            }),
+          },
+        });
+      } catch (upsertError: any) {
+        // P2002 = unique constraint violation (ipAddress race condition)
+        if (upsertError?.code === "P2002") {
+          const existing = await db.visitor.findFirst({
+            where: { ipAddress },
+          });
+          if (existing) {
+            visitor = await db.visitor.update({
+              where: { id: existing.id },
+              data: {
+                userAgent: userAgent || undefined,
+                currentPage: currentPage || "/",
+                lastActivity: new Date(),
+                totalVisits: { increment: 1 },
+                ...(location && {
+                  country: location.country,
+                  countryCode: location.countryCode,
+                  city: location.city,
+                  region: location.region,
+                  isp: location.isp,
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  timezone: location.timezone,
+                  provider: location.provider,
+                }),
+              },
+            });
+          } else {
+            throw upsertError;
+          }
+        } else {
+          throw upsertError;
+        }
+      }
 
       const response = NextResponse.json({
         success: true,
