@@ -14,6 +14,40 @@
 
 import { google } from "googleapis";
 
+// ─── PEM Key Parser ─────────────────────────────────────
+/**
+ * PEM key'i Docker/Coolify ortamlarında güvenilir şekilde parse eder.
+ * Coolify env'de key şu formatlarda gelebilir:
+ * - Literal \n text → replace gerekli
+ * - Gerçek newline → olduğu gibi
+ * - Double-escaped \\n → replace gerekli
+ * - Base64 encoded → decode gerekli
+ */
+function parsePemKey(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+
+  let key = raw.trim();
+
+  // Double-escaped newlines: \\n → \n
+  key = key.replace(/\\\\n/g, "\n");
+  // Single-escaped newlines: \n (literal backslash-n) → real newline
+  key = key.replace(/\\n/g, "\n");
+
+  // Eğer hala BEGIN marker yoksa, base64 encoded olabilir
+  if (!key.includes("-----BEGIN") && key.length > 100) {
+    try {
+      const decoded = Buffer.from(key, "base64").toString("utf-8");
+      if (decoded.includes("-----BEGIN")) {
+        key = decoded;
+      }
+    } catch {
+      // base64 değilse devam et
+    }
+  }
+
+  return key;
+}
+
 // ─── Cache ───────────────────────────────────────────────
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 dakika
 
@@ -46,7 +80,7 @@ function getClient() {
   // Yöntem 1: GA4-spesifik env variables (analyticsnewaccount service account)
   // GA4 erişimi olan service account bu env'lerde tanımlı
   const clientEmail = process.env.GA_CLIENT_EMAIL;
-  const privateKey = process.env.GA_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const privateKey = parsePemKey(process.env.GA_PRIVATE_KEY);
 
   if (clientEmail && privateKey) {
     credentials = { client_email: clientEmail, private_key: privateKey };
