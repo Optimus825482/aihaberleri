@@ -584,7 +584,8 @@ const RecentArticleRow = memo(function RecentArticleRow({
 }) {
   return (
     <Link
-      href={`/admin/articles/${article.id}`}
+      href={`/admin/articles/${article.id}/edit`}
+      prefetch={false}
       className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 active:scale-[0.98] transition-all group"
     >
       <div className="flex-1 min-w-0">

@@ -583,7 +583,10 @@ export default function CategoriesPage() {
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex items-center gap-1">
-                                    <Link href={`/admin/articles/${article.id}`}>
+                                    <Link
+                                      href={`/admin/articles/${article.id}/edit`}
+                                      prefetch={false}
+                                    >
                                       <Button variant="ghost" size="sm">
                                         <Edit className="h-4 w-4" />
                                       </Button>

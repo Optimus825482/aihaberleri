@@ -15,6 +15,7 @@
  */
 
 import { google, adsense_v2 } from "googleapis";
+import { createPrivateKey } from "crypto";
 
 // ─── Cache ───────────────────────────────────────────────
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 dakika
@@ -42,6 +43,14 @@ function parsePemKey(raw: string | undefined): string | undefined {
 
   let key = raw.trim();
 
+  // Env değeri tek/çift tırnak içine alınmış olabilir
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1).trim();
+  }
+
   // Double-escaped newlines: \\n → \n
   key = key.replace(/\\\\n/g, "\n");
   // Single-escaped newlines: \n (literal backslash-n) → real newline
@@ -64,7 +73,10 @@ function parsePemKey(raw: string | undefined): string | undefined {
 
   // PEM formatı düzeltme: header/footer arasını temizle ve standart 64-char satırlara böl
   if (key.includes("-----BEGIN")) {
-    const lines = key.split("\n").map((l) => l.trim()).filter(Boolean);
+    const lines = key
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
     const beginIdx = lines.findIndex((l) => l.startsWith("-----BEGIN"));
     const endIdx = lines.findIndex((l) => l.startsWith("-----END"));
 
@@ -80,16 +92,28 @@ function parsePemKey(raw: string | undefined): string | undefined {
 
   // Son kontrol: BEGIN marker var mı?
   if (!key.includes("-----BEGIN")) {
-    console.warn("[AdSense] Private key BEGIN marker bulunamadı. Key format hatalı olabilir.");
+    console.warn(
+      "[AdSense] Private key BEGIN marker bulunamadı. Key format hatalı olabilir.",
+    );
   }
 
   return key;
 }
 
+function isValidPrivateKey(key: string | undefined): boolean {
+  if (!key) return false;
+  try {
+    createPrivateKey({ key, format: "pem" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function getClient(): adsense_v2.Adsense {
   if (adsenseClient) return adsenseClient;
 
-  let credentials: { client_email: string; private_key: string };
+  let credentials!: { client_email: string; private_key: string };
 
   // 1. AdSense'e özel service account (öncelikli)
   const adsenseEmail = process.env.ADSENSE_CLIENT_EMAIL;
@@ -105,7 +129,7 @@ function getClient(): adsense_v2.Adsense {
   // 4. Genel JSON key (fallback)
   const googleJsonKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
 
-  if (adsenseEmail && adsenseKey) {
+  if (adsenseEmail && adsenseKey && isValidPrivateKey(adsenseKey)) {
     console.log(
       "[AdSense] Auth yöntemi: ADSENSE_CLIENT_EMAIL (",
       adsenseEmail,
@@ -117,42 +141,75 @@ function getClient(): adsense_v2.Adsense {
       adsenseKey.includes("-----BEGIN") ? "OK" : "EKSIK!",
     );
     console.log(
-      "[AdSense] Key diagnostik: lines=", keyLines.length,
-      "firstLine=", keyLines[0]?.substring(0, 40),
-      "lastLine=", keyLines[keyLines.length - 1]?.substring(0, 40) || keyLines[keyLines.length - 2]?.substring(0, 40),
-      "totalChars=", adsenseKey.length,
+      "[AdSense] Key diagnostik: lines=",
+      keyLines.length,
+      "firstLine=",
+      keyLines[0]?.substring(0, 40),
+      "lastLine=",
+      keyLines[keyLines.length - 1]?.substring(0, 40) ||
+        keyLines[keyLines.length - 2]?.substring(0, 40),
+      "totalChars=",
+      adsenseKey.length,
     );
     credentials = { client_email: adsenseEmail, private_key: adsenseKey };
+  } else if (adsenseEmail && adsenseKey) {
+    console.warn(
+      "[AdSense] ADSENSE_PRIVATE_KEY geçersiz/bozuk görünüyor. ADSENSE_SERVICE_ACCOUNT_KEY fallback denenecek.",
+    );
   } else if (adsenseJsonKey) {
     console.log("[AdSense] Auth yöntemi: ADSENSE_SERVICE_ACCOUNT_KEY (JSON)");
     try {
       const parsed = JSON.parse(adsenseJsonKey);
+      const parsedPrivateKey = parsePemKey(parsed.private_key);
+      if (!isValidPrivateKey(parsedPrivateKey)) {
+        throw new Error(
+          "ADSENSE_SERVICE_ACCOUNT_KEY içindeki private_key geçersiz veya PEM formatı bozuk.",
+        );
+      }
+      const normalizedPrivateKey = parsedPrivateKey as string;
       credentials = {
         client_email: parsed.client_email,
-        private_key: parsed.private_key,
+        private_key: normalizedPrivateKey,
       };
-    } catch {
-      throw new Error("ADSENSE_SERVICE_ACCOUNT_KEY geçerli bir JSON değil.");
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new Error("ADSENSE_SERVICE_ACCOUNT_KEY geçerli bir JSON değil.");
+      }
+      throw error;
     }
-  } else if (gaEmail && gaKey) {
+  } else if (gaEmail && gaKey && isValidPrivateKey(gaKey)) {
     console.log(
       "[AdSense] Auth yöntemi: GA_CLIENT_EMAIL fallback (",
       gaEmail,
       ")",
     );
     credentials = { client_email: gaEmail, private_key: gaKey };
+  } else if (gaEmail && gaKey) {
+    console.warn(
+      "[AdSense] GA_PRIVATE_KEY geçersiz/bozuk görünüyor. GOOGLE_SERVICE_ACCOUNT_KEY fallback denenecek.",
+    );
   } else if (googleJsonKey) {
     console.log(
       "[AdSense] Auth yöntemi: GOOGLE_SERVICE_ACCOUNT_KEY (JSON fallback)",
     );
     try {
       const parsed = JSON.parse(googleJsonKey);
+      const parsedPrivateKey = parsePemKey(parsed.private_key);
+      if (!isValidPrivateKey(parsedPrivateKey)) {
+        throw new Error(
+          "GOOGLE_SERVICE_ACCOUNT_KEY içindeki private_key geçersiz veya PEM formatı bozuk.",
+        );
+      }
+      const normalizedPrivateKey = parsedPrivateKey as string;
       credentials = {
         client_email: parsed.client_email,
-        private_key: parsed.private_key,
+        private_key: normalizedPrivateKey,
       };
-    } catch {
-      throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY geçerli bir JSON değil.");
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY geçerli bir JSON değil.");
+      }
+      throw error;
     }
   } else {
     throw new Error(
