@@ -5,6 +5,7 @@
 
 export const dynamic = "force-dynamic";
 
+import React from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
@@ -283,19 +284,33 @@ export default async function EnglishHomePage() {
               ) : (
                 <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2">
                   {articles.map((article: any, index: number) => (
-                    <ArticleCard
-                      key={article.id}
-                      article={{
-                        ...article,
-                        publishedAt: article.publishedAt || new Date(),
-                        category: {
-                          name: article.category.name,
-                          slug: article.category.slug,
-                        },
-                      }}
-                      locale="en"
-                      priority={index < 4}
-                    />
+                    <React.Fragment key={article.id}>
+                      <ArticleCard
+                        article={{
+                          ...article,
+                          publishedAt: article.publishedAt || new Date(),
+                          category: {
+                            name: article.category.name,
+                            slug: article.category.slug,
+                          },
+                        }}
+                        locale="en"
+                        priority={index < 4}
+                      />
+                      {/* In-feed ad after every 4th article */}
+                      {(index + 1) % 4 === 0 && index < articles.length - 1 && (
+                        <div className="col-span-1 sm:col-span-2">
+                          <AdSlot
+                            slot="8493771212"
+                            format="fluid"
+                            layoutKey="-6t+ed+2i-1n-4w"
+                            minHeight={100}
+                            label="Sponsored"
+                            className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+                          />
+                        </div>
+                      )}
+                    </React.Fragment>
                   ))}
                 </div>
               )}

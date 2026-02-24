@@ -1,3 +1,4 @@
+import React from "react";
 import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -597,11 +598,25 @@ export default async function HomePage() {
               {/* News Grid */}
               <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2">
                 {articles.map((article, index: number) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    priority={index < 4}
-                  />
+                  <React.Fragment key={article.id}>
+                    <ArticleCard
+                      article={article}
+                      priority={index < 4}
+                    />
+                    {/* In-feed ad after every 4th article */}
+                    {(index + 1) % 4 === 0 && index < articles.length - 1 && (
+                      <div className="col-span-1 sm:col-span-2">
+                        <AdSlot
+                          slot="2042719998"
+                          format="fluid"
+                          layoutKey="-6t+ed+2i-1n-4w"
+                          minHeight={100}
+                          label="Sponsorlu"
+                          className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+                        />
+                      </div>
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
 

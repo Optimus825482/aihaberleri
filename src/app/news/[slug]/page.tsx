@@ -488,6 +488,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   />
                 )}
 
+                {/* Sidebar Ad Slot */}
+                <AdSlot
+                  slot="6220560152"
+                  format="vertical"
+                  minHeight={250}
+                  label="Sponsorlu"
+                  className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+                />
+
                 {/* Trending / Related */}
                 <div className="bg-ai-surface-card rounded-xl p-6 border border-ai-surface-border">
                   <h3 className="font-bold text-lg mb-4 text-white flex items-center gap-2">
@@ -542,6 +551,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
             </aside>
           </div>
+        </div>
+
+        {/* Article Bottom Ad — High-value placement */}
+        <div className="container mx-auto px-4 mt-8">
+          <AdSlot
+            slot="2050458858"
+            format="auto"
+            responsive
+            minHeight={120}
+            label="Sponsorlu"
+            className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+          />
         </div>
 
         {/* Bottom Related Articles (Read Next) */}
@@ -618,6 +639,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
           </section>
         )}
+
+        {/* Multiplex Ad — Recommended content style */}
+        <div className="container mx-auto px-4 py-8">
+          <AdSlot
+            slot="3028498607"
+            format="autorelaxed"
+            minHeight={180}
+            label="Sponsorlu İçerikler"
+            className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+          />
+        </div>
       </main>
 
       <AudioPromo />

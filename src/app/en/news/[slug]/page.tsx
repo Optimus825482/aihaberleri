@@ -257,6 +257,11 @@ export default async function EnglishArticlePage({ params }: Props) {
 
   const combinedSchema = combineSchemas(newsArticleSchema, breadcrumbSchema);
 
+  // Split content for in-article ad injection (after 3rd paragraph)
+  const contentParts = article.content.split("</p>");
+  const contentFirstPart = contentParts.slice(0, 3).join("</p>") + "</p>";
+  const contentSecondPart = contentParts.slice(3).join("</p>");
+
   return (
     <>
     <main className="min-h-screen bg-ai-background-dark">
@@ -381,19 +386,23 @@ export default async function EnglishArticlePage({ params }: Props) {
             }
           />
 
+            {/* Content with in-article ad */}
+            <div
+              className="prose prose-lg prose-invert max-w-none prose-headings:text-white prose-p:text-ai-text-secondary prose-a:text-ai-primary prose-strong:text-white"
+            >
+              <div dangerouslySetInnerHTML={{ __html: contentFirstPart }} />
+
             <AdSlot
               slot="3183333271"
-              format="autorelaxed"
+                format="fluid"
+                layout="in-article"
               minHeight={140}
-              label="Sponsored"
-              className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+                label="Sponsored Content"
+                className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3 not-prose text-center"
             />
 
-          {/* Content */}
-          <div
-            className="prose prose-lg prose-invert max-w-none mb-12 prose-headings:text-white prose-p:text-ai-text-secondary prose-a:text-ai-primary prose-strong:text-white"
-            dangerouslySetInnerHTML={{ __html: article.content }}
-          />
+              <div dangerouslySetInnerHTML={{ __html: contentSecondPart }} />
+            </div>
 
           {insightSettings.showTimeline && (
             <ArticleTimelineSection
@@ -461,6 +470,18 @@ export default async function EnglishArticlePage({ params }: Props) {
             </div>
           </div>
         </div>
+
+          {/* Article Bottom Ad */}
+          <div className="max-w-4xl mx-auto mt-8">
+            <AdSlot
+              slot="2050458858"
+              format="auto"
+              responsive
+              minHeight={120}
+              label="Sponsored"
+              className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+            />
+          </div>
 
         {/* Related Articles */}
         {relatedArticles.length > 0 && (

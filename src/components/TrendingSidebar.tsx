@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTrendingArticles } from "@/hooks/use-trending";
+import { AdSlot } from "@/components/AdSlot";
 
 interface TrendingSidebarProps {
   locale?: "tr" | "en";
@@ -189,6 +190,14 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
         </div>
       </div>
 
+      {/* Sidebar Ad Slot — Sticky-friendly */}
+      <AdSlot
+        slot="3415511418"
+        format="vertical"
+        minHeight={250}
+        label={locale === "en" ? "Sponsored" : "Sponsorlu"}
+        className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+      />
     </aside>
   );
 }
