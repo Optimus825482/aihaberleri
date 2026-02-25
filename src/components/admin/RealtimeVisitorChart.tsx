@@ -90,10 +90,10 @@ function RealtimeVisitorChart() {
         }
     }, []);
 
-    // İlk yükleme + 15 saniyede bir güncelleme
+    // İlk yükleme + 60 saniyede bir güncelleme (GA4 quota koruması)
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 15000);
+        const interval = setInterval(fetchData, 60000);
         return () => clearInterval(interval);
     }, [fetchData]);
 

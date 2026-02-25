@@ -305,7 +305,7 @@ export async function Footer({ locale }: FooterProps) {
                 { href: t.newsPath, label: t.latestNews, icon: "newspaper" },
                 { href: `${basePath}/about`, label: t.about, icon: "info" },
                 { href: `${basePath}/contact`, label: t.contact, icon: "mail" },
-                { href: `${basePath}/sss`, label: t.faq, icon: "help" },
+                { href: detectedLocale === "en" ? "/en/faq" : "/sss", label: t.faq, icon: "help" },
               ].map((link) => (
                 <li key={link.href}>
                   <Link
@@ -350,7 +350,7 @@ export async function Footer({ locale }: FooterProps) {
                   icon: "cookie",
                 },
                 {
-                  href: `${basePath}/kvkk`,
+                  href: detectedLocale === "en" ? "/en/privacy" : "/kvkk",
                   label: t.kvkk,
                   icon: "verified_user",
                 },

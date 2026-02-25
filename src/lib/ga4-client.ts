@@ -10,6 +10,11 @@
  *
  * Gerekli:
  * - GA4_PROPERTY_ID: GA4 property numarası (numeric, ör: 123456789)
+ *
+ * Quota koruması:
+ * - Realtime cache: 2 dakika TTL (GA4 Realtime API yüksek token maliyetli)
+ * - Article views cache: 30 dakika TTL
+ * - Quota backoff: "Exhausted property tokens" hatasında 10 dakika GA4 devre dışı
  */
 
 import { google } from "googleapis";
@@ -71,7 +76,7 @@ function parsePemKey(raw: string | undefined): string | undefined {
 }
 
 // ─── Cache ───────────────────────────────────────────────
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 dakika
+const CACHE_TTL_MS = 30 * 60 * 1000; // 30 dakika (quota koruması)
 
 interface CacheEntry {
   value: number;
@@ -82,7 +87,30 @@ const viewsCache = new Map<string, CacheEntry>();
 
 // Batch cache — tüm makalelerin views'ı
 let batchCache: { data: Map<string, number>; expiresAt: number } | null = null;
-const BATCH_CACHE_TTL_MS = 15 * 60 * 1000; // 15 dakika
+const BATCH_CACHE_TTL_MS = 60 * 60 * 1000; // 60 dakika (quota koruması)
+
+// ─── Quota-Aware Backoff ─────────────────────────────────
+// "Exhausted property tokens" hatası alındığında tüm GA4 isteklerini durdurur
+let quotaBackoffUntil = 0;
+const QUOTA_BACKOFF_MS = 10 * 60 * 1000; // 10 dakika backoff
+
+function isQuotaExhausted(): boolean {
+  return Date.now() < quotaBackoffUntil;
+}
+
+function activateQuotaBackoff(errorMessage: string): void {
+  if (
+    errorMessage?.includes("Exhausted") ||
+    errorMessage?.includes("quota") ||
+    errorMessage?.includes("RESOURCE_EXHAUSTED")
+  ) {
+    quotaBackoffUntil = Date.now() + QUOTA_BACKOFF_MS;
+    const until = new Date(quotaBackoffUntil).toISOString();
+    console.warn(
+      `[GA4] Quota exhausted — all GA4 queries paused until ${until} (${QUOTA_BACKOFF_MS / 60000} min backoff)`,
+    );
+  }
+}
 
 // ─── Client ──────────────────────────────────────────────
 let analyticsClient: ReturnType<typeof google.analyticsdata> | null = null;
@@ -159,6 +187,11 @@ export async function getArticlePageViews(slug: string): Promise<number> {
     return views;
   }
 
+  // Quota backoff aktifse GA4'e istek atma
+  if (isQuotaExhausted()) {
+    return -1;
+  }
+
   try {
     const client = getClient();
     const response = await client.properties.runReport({
@@ -199,10 +232,13 @@ export async function getArticlePageViews(slug: string): Promise<number> {
       `[GA4] Error fetching views for /news/${slug}: ${status} - ${message}`,
     );
 
-    // Negative cache: GA4 hatalarında 5dk boyunca tekrar deneme (rate limit / 500 koruması)
+    // Quota exhausted → tüm GA4 isteklerini durdur
+    activateQuotaBackoff(message);
+
+    // Negative cache: GA4 hatalarında 30dk boyunca tekrar deneme
     viewsCache.set(slug, {
       value: -1,
-      expiresAt: Date.now() + 5 * 60 * 1000, // 5 min negative cache
+      expiresAt: Date.now() + 30 * 60 * 1000, // 30 min negative cache
     });
 
     return -1; // Hata durumunda -1 dön (fallback kullanılsın)
@@ -215,7 +251,10 @@ export async function getAllArticlePageViews(): Promise<Map<string, number>> {
   if (batchCache && batchCache.expiresAt > Date.now()) {
     return batchCache.data;
   }
-
+  // Quota backoff aktifse GA4'e istek atma
+  if (isQuotaExhausted()) {
+    return batchCache?.data ?? new Map();
+  }
   try {
     const client = getClient();
     const viewsMap = new Map<string, number>();
@@ -271,7 +310,8 @@ export async function getAllArticlePageViews(): Promise<Map<string, number>> {
     console.error(
       `[GA4] Error fetching all article views: ${status} - ${message}`,
     );
-    return new Map();
+    activateQuotaBackoff(message);
+    return batchCache?.data ?? new Map();
   }
 }
 
@@ -280,13 +320,13 @@ let realtimeCache: {
   data: RealtimeData;
   expiresAt: number;
 } | null = null;
-const REALTIME_CACHE_TTL_MS = 15 * 1000; // 15 saniye - daha hızlı güncelleme
+const REALTIME_CACHE_TTL_MS = 2 * 60 * 1000; // 2 dakika — quota koruma (5 paralel sorgu tüketiyor)
 
 let realtimeActiveUsersCache: {
   value: number;
   expiresAt: number;
 } | null = null;
-const REALTIME_ACTIVE_USERS_CACHE_TTL_MS = 30 * 1000; // 30 saniye - düşük maliyetli lite metrik
+const REALTIME_ACTIVE_USERS_CACHE_TTL_MS = 2 * 60 * 1000; // 2 dakika — lite metrik
 
 export interface RealtimeData {
   activeUsers: number;
@@ -310,6 +350,11 @@ export async function getRealtimeVisitors(): Promise<RealtimeData> {
     countries: [],
   };
 
+  // Quota backoff aktifse GA4'e istek atma, cache'deki son veriyi dön
+  if (isQuotaExhausted()) {
+    return realtimeCache?.data ?? emptyResult;
+  }
+
   try {
     const client = getClient();
     const property = getPropertyId();
@@ -322,10 +367,9 @@ export async function getRealtimeVisitors(): Promise<RealtimeData> {
           requestBody,
         });
       } catch (err: any) {
-        console.error(
-          "[GA4 Realtime] Single query failed:",
-          err?.message || err,
-        );
+        const errMsg = err?.message || String(err);
+        console.error("[GA4 Realtime] Single query failed:", errMsg);
+        activateQuotaBackoff(errMsg);
         return null;
       }
     };
@@ -433,8 +477,9 @@ export async function getRealtimeVisitors(): Promise<RealtimeData> {
       const message =
         error?.cause?.message || error?.message || "Unknown error";
       console.error(`[GA4 Realtime] Error: ${status} - ${message}`);
+      activateQuotaBackoff(message);
     }
-    return emptyResult;
+    return realtimeCache?.data ?? emptyResult;
   }
 }
 
@@ -445,6 +490,11 @@ export async function getRealtimeActiveUsers(): Promise<number> {
     realtimeActiveUsersCache.expiresAt > Date.now()
   ) {
     return realtimeActiveUsersCache.value;
+  }
+
+  // Quota backoff aktifse GA4'e istek atma
+  if (isQuotaExhausted()) {
+    return realtimeActiveUsersCache?.value ?? 0;
   }
 
   try {
@@ -481,8 +531,9 @@ export async function getRealtimeActiveUsers(): Promise<number> {
       console.error(
         `[GA4 Realtime Active Users] Error: ${status} - ${message}`,
       );
+      activateQuotaBackoff(message);
     }
-    return 0;
+    return realtimeActiveUsersCache?.value ?? 0;
   }
 }
 
@@ -529,6 +580,11 @@ export async function getGA4TrafficOverview(
     dailyData: [],
     topPages: [],
   };
+
+  // Quota backoff aktifse GA4'e istek atma
+  if (isQuotaExhausted()) {
+    return trafficCache?.data ?? emptyResult;
+  }
 
   try {
     const client = getClient();
@@ -643,8 +699,9 @@ export async function getGA4TrafficOverview(
       const message =
         error?.cause?.message || error?.message || "Unknown error";
       console.error(`[GA4 Traffic] Error: ${status} - ${message}`);
+      activateQuotaBackoff(message);
     }
-    return emptyResult;
+    return trafficCache?.data ?? emptyResult;
   }
 }
 

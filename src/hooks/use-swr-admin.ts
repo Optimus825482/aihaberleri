@@ -93,22 +93,22 @@ export function useNewsletterSubscribers() {
 /**
  * GA4 Realtime Visitors Hook
  */
-export function useGA4Realtime(refreshInterval = 30000) {
+export function useGA4Realtime(refreshInterval = 120000) {
   return useSWR("/api/admin/analytics/ga4-realtime", fetcher, {
     ...defaultConfig,
-    refreshInterval,
-    dedupingInterval: 15000,
+    refreshInterval, // 2 dakika (GA4 quota koruması)
+    dedupingInterval: 60000,
   });
 }
 
 /**
  * GA4 Realtime Lite Hook (only active users)
  */
-export function useGA4RealtimeLite(refreshInterval = 60000) {
+export function useGA4RealtimeLite(refreshInterval = 120000) {
   return useSWR("/api/admin/analytics/ga4-realtime?lite=1", fetcher, {
     ...defaultConfig,
-    refreshInterval,
-    dedupingInterval: 30000,
+    refreshInterval, // 2 dakika (GA4 quota koruması)
+    dedupingInterval: 60000,
   });
 }
 

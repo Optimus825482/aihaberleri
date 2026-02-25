@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname } from "next/navigation";
-import Script from "next/script";
 
 const COOKIE_CONSENT_KEY = "cookie-consent";
 
@@ -26,6 +25,7 @@ const hasAdvertisingConsent = () => {
 export const AdSenseBootstrap = () => {
     const pathname = usePathname();
     const [hasConsent, setHasConsent] = useState(false);
+    const scriptInjected = useRef(false);
 
     const clientId =
         process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || "ca-pub-2444093901783574";
@@ -50,31 +50,31 @@ export const AdSenseBootstrap = () => {
         };
     }, [pathname]);
 
-    if (!isEnabled || !clientId || isAdminPage) return null;
+    // NPA (Non-Personalized Ads) signal for GDPR compliance
+    useEffect(() => {
+        if (!isEnabled || !clientId || isAdminPage) return;
+        if (!hasConsent) {
+            (window as any).adsbygoogle = (window as any).adsbygoogle || [];
+            (window as any).adsbygoogle.requestNonPersonalizedAds = 1;
+        }
+    }, [isEnabled, clientId, isAdminPage, hasConsent]);
 
-    return (
-        <>
-            {/* Non-personalized ads signal for GDPR compliance */}
-            {!hasConsent && (
-                <Script
-                    id="adsense-npa"
-                    strategy="beforeInteractive"
-                    dangerouslySetInnerHTML={{
-                        __html: `(window.adsbygoogle=window.adsbygoogle||[]).requestNonPersonalizedAds=1;`,
-                    }}
-                />
-            )}
+    // Inject AdSense script without data-nscript attribute
+    useEffect(() => {
+        if (!isEnabled || !clientId || isAdminPage) return;
+        if (scriptInjected.current) return;
+        if (document.querySelector('script[src*="adsbygoogle.js"]')) {
+            scriptInjected.current = true;
+            return;
+        }
 
-            {/* AdSense bootstrap — always loads (non-personalized if no consent) */}
-            <Script
-                id="adsense-bootstrap"
-                async
-                strategy="afterInteractive"
-                src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(
-                    clientId,
-                )}`}
-                crossOrigin="anonymous"
-            />
-        </>
-    );
+        const script = document.createElement("script");
+        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(clientId)}`;
+        script.async = true;
+        script.crossOrigin = "anonymous";
+        document.head.appendChild(script);
+        scriptInjected.current = true;
+    }, [isEnabled, clientId, isAdminPage]);
+
+    return null;
 };
