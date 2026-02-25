@@ -33,6 +33,7 @@ import {
   RotateCcw,
   DollarSign,
   Sparkles,
+  Languages,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,12 @@ const menuGroups = [
         title: "Haberler",
         href: "/admin/articles",
         icon: FileText,
+        requiredResource: "articles" as const,
+      },
+      {
+        title: "TR-EN Senkron",
+        href: "/admin/articles/en-sync",
+        icon: Languages,
         requiredResource: "articles" as const,
       },
       {
