@@ -76,10 +76,10 @@ const PipelineChart = dynamic<{
       (m: any) => m.default ?? m.PipelineChart ?? (() => null),
     ),
   {
-  ssr: false,
-  loading: () => (
-    <div className="h-[200px] animate-pulse bg-muted/30 rounded-xl" />
-  ),
+    ssr: false,
+    loading: () => (
+      <div className="h-[200px] animate-pulse bg-muted/30 rounded-xl" />
+    ),
   },
 );
 
@@ -365,8 +365,8 @@ const RealtimeStatusBar = memo(function RealtimeStatusBar({
     failed: number;
   };
   isConnected: boolean;
-    gaActiveUsers?: number;
-    gaLoadLevel?: GaLoadLevel;
+  gaActiveUsers?: number;
+  gaLoadLevel?: GaLoadLevel;
 }) {
   const gaBadgeClassByLevel: Record<GaLoadLevel, string> = {
     normal: "text-emerald-500 border-emerald-500/30",
@@ -837,24 +837,10 @@ export default function AdminDashboard() {
     users: number;
     level: GaLoadLevel;
   }>({ users: 0, level: "normal" });
-  const gaDisplayInitializedRef = useRef(false);
 
   useEffect(() => {
     const level = getGaLoadLevel(gaActiveUsers);
-
-    setGaDisplay((prev) => {
-      if (!gaDisplayInitializedRef.current) {
-        gaDisplayInitializedRef.current = true;
-        return { users: gaActiveUsers, level };
-      }
-
-      // Performans: eşik (load level) değişmedikçe UI değeri sabit kalır.
-      if (prev.level === level) {
-        return prev;
-      }
-
-      return { users: gaActiveUsers, level };
-    });
+    setGaDisplay({ users: gaActiveUsers, level });
   }, [gaActiveUsers]);
 
   const isAgentEnabled = agentStats?.agent?.enabled ?? false;
@@ -999,7 +985,11 @@ export default function AdminDashboard() {
                 AdSense Gelir
               </h2>
               <Link href="/admin/adsense" className="ml-auto">
-                <Button variant="ghost" size="sm" className="text-[10px] rounded-full h-6 px-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-[10px] rounded-full h-6 px-2"
+                >
                   Detay <ChevronRight className="h-3 w-3 ml-0.5" />
                 </Button>
               </Link>
@@ -1014,12 +1004,15 @@ export default function AdminDashboard() {
                         <DollarSign className="h-5 w-5 text-yellow-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Bugün</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Bugün
+                        </span>
                         <div className="text-2xl sm:text-3xl font-black text-yellow-500 leading-tight">
-                          ${adSense.todayEarnings?.toFixed(2) || '0.00'}
+                          ${adSense.todayEarnings?.toFixed(2) || "0.00"}
                         </div>
                         <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {adSense.todayClicks || 0} tık • {adSense.todayImpressions || 0} gösterim
+                          {adSense.todayClicks || 0} tık •{" "}
+                          {adSense.todayImpressions || 0} gösterim
                         </p>
                       </div>
                     </div>
@@ -1035,12 +1028,15 @@ export default function AdminDashboard() {
                         <Banknote className="h-5 w-5 text-emerald-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Bu Ay</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Bu Ay
+                        </span>
                         <div className="text-2xl sm:text-3xl font-black text-emerald-500 leading-tight">
-                          ${adSense.monthEarnings?.toFixed(2) || '0.00'}
+                          ${adSense.monthEarnings?.toFixed(2) || "0.00"}
                         </div>
                         <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {adSense.monthClicks || 0} tık • RPM: ${adSense.monthRpm?.toFixed(2) || '0.00'}
+                          {adSense.monthClicks || 0} tık • RPM: $
+                          {adSense.monthRpm?.toFixed(2) || "0.00"}
                         </p>
                       </div>
                     </div>
@@ -1056,11 +1052,15 @@ export default function AdminDashboard() {
                         <DollarSign className="h-5 w-5 text-blue-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Toplam</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          Toplam
+                        </span>
                         <div className="text-2xl sm:text-3xl font-black text-blue-500 leading-tight">
-                          ${adSense.totalEarnings?.toFixed(2) || '0.00'}
+                          ${adSense.totalEarnings?.toFixed(2) || "0.00"}
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">tüm zamanlar</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          tüm zamanlar
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -1075,12 +1075,15 @@ export default function AdminDashboard() {
                         <MousePointerClick className="h-5 w-5 text-orange-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">CTR / CPC</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                          CTR / CPC
+                        </span>
                         <div className="text-2xl sm:text-3xl font-black text-orange-500 leading-tight">
-                          {adSense.todayCtr?.toFixed(2) || '0.00'}%
+                          {adSense.todayCtr?.toFixed(2) || "0.00"}%
                         </div>
                         <p className="text-[10px] text-muted-foreground mt-0.5">
-                          CPC: ${adSense.todayCpc?.toFixed(3) || '0.000'} • RPM: ${adSense.todayRpm?.toFixed(2) || '0.00'}
+                          CPC: ${adSense.todayCpc?.toFixed(3) || "0.000"} • RPM:
+                          ${adSense.todayRpm?.toFixed(2) || "0.00"}
                         </p>
                       </div>
                     </div>

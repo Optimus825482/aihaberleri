@@ -50,7 +50,10 @@ function parsePemKey(raw: string | undefined): string | undefined {
 
   // PEM formatı düzeltme: header/footer arasını temizle ve standart 64-char satırlara böl
   if (key.includes("-----BEGIN")) {
-    const lines = key.split("\n").map((l) => l.trim()).filter(Boolean);
+    const lines = key
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
     const beginIdx = lines.findIndex((l) => l.startsWith("-----BEGIN"));
     const endIdx = lines.findIndex((l) => l.startsWith("-----END"));
 
@@ -294,55 +297,67 @@ export async function getRealtimeVisitors(): Promise<RealtimeData> {
 
   try {
     const client = getClient();
+    const property = getPropertyId();
 
-    // Paralel 4 realtime sorgu
-    const [minuteRes, pageRes, deviceRes, countryRes] = await Promise.all([
-      // Dakika bazlı aktif kullanıcılar (son 30 dk)
-      client.properties.runRealtimeReport({
-        property: getPropertyId(),
-        requestBody: {
+    // Her sorguyu bağımsız try-catch ile çalıştır — biri fail olursa diğerleri etkilenmesin
+    const safeReport = async (requestBody: any) => {
+      try {
+        return await client.properties.runRealtimeReport({
+          property,
+          requestBody,
+        });
+      } catch (err: any) {
+        console.error(
+          "[GA4 Realtime] Single query failed:",
+          err?.message || err,
+        );
+        return null;
+      }
+    };
+
+    // Paralel 5 realtime sorgu (activeUsers ayrı — doğru toplam için)
+    const [activeRes, minuteRes, pageRes, deviceRes, countryRes] =
+      await Promise.all([
+        // Toplam aktif kullanıcı (dimension'sız — doğru unique sayı)
+        safeReport({ metrics: [{ name: "activeUsers" }] }),
+        // Dakika bazlı aktif kullanıcılar (son 30 dk — grafik için)
+        safeReport({
           dimensions: [{ name: "minutesAgo" }],
           metrics: [{ name: "activeUsers" }],
-        },
-      }),
-      // Top sayfalar
-      client.properties.runRealtimeReport({
-        property: getPropertyId(),
-        requestBody: {
+        }),
+        // Top sayfalar
+        safeReport({
           dimensions: [{ name: "unifiedScreenName" }],
           metrics: [{ name: "activeUsers" }],
           limit: "10",
-        },
-      }),
-      // Cihaz dağılımı
-      client.properties.runRealtimeReport({
-        property: getPropertyId(),
-        requestBody: {
+        }),
+        // Cihaz dağılımı
+        safeReport({
           dimensions: [{ name: "deviceCategory" }],
           metrics: [{ name: "activeUsers" }],
-        },
-      }),
-      // Ülke dağılımı
-      client.properties.runRealtimeReport({
-        property: getPropertyId(),
-        requestBody: {
+        }),
+        // Ülke dağılımı
+        safeReport({
           dimensions: [{ name: "country" }],
           metrics: [{ name: "activeUsers" }],
           limit: "10",
-        },
-      }),
-    ]);
+        }),
+      ]);
 
-    // Minute data parse
-    const minuteRows = (minuteRes as any).data?.rows || [];
+    // Active users — doğru toplam (dimension'sız sorgudan)
+    const activeRows = (activeRes as any)?.data?.rows || [];
+    const totalActive = activeRows.length
+      ? parseInt(activeRows[0]?.metricValues?.[0]?.value || "0", 10)
+      : 0;
+
+    // Minute data parse (grafik için)
+    const minuteRows = (minuteRes as any)?.data?.rows || [];
     const minuteData: Array<{ minutesAgo: number; users: number }> = [];
-    let totalActive = 0;
 
     for (const row of minuteRows) {
       const minutesAgo = parseInt(row.dimensionValues?.[0]?.value || "0", 10);
       const users = parseInt(row.metricValues?.[0]?.value || "0", 10);
       minuteData.push({ minutesAgo, users });
-      totalActive += users;
     }
 
     // 0-29 arası tüm dakikaları doldur (boş olanlar 0)
@@ -353,28 +368,28 @@ export async function getRealtimeVisitors(): Promise<RealtimeData> {
     }
 
     // Top pages parse
-    const pageRows = (pageRes as any).data?.rows || [];
+    const pageRows = (pageRes as any)?.data?.rows || [];
     const topPages = pageRows.map((row: any) => ({
       page: row.dimensionValues?.[0]?.value || "",
       users: parseInt(row.metricValues?.[0]?.value || "0", 10),
     }));
 
     // Device parse
-    const deviceRows = (deviceRes as any).data?.rows || [];
+    const deviceRows = (deviceRes as any)?.data?.rows || [];
     const devices = deviceRows.map((row: any) => ({
       device: row.dimensionValues?.[0]?.value || "",
       users: parseInt(row.metricValues?.[0]?.value || "0", 10),
     }));
 
     // Country parse
-    const countryRows = (countryRes as any).data?.rows || [];
+    const countryRows = (countryRes as any)?.data?.rows || [];
     const countries = countryRows.map((row: any) => ({
       country: row.dimensionValues?.[0]?.value || "",
       users: parseInt(row.metricValues?.[0]?.value || "0", 10),
     }));
 
     const result: RealtimeData = {
-      activeUsers: totalActive,
+      activeUsers: Number.isFinite(totalActive) ? totalActive : 0,
       minuteData: fullMinuteData,
       topPages,
       devices,
@@ -513,10 +528,7 @@ export async function getGA4TrafficOverview(
         requestBody: {
           dateRanges: [{ startDate, endDate }],
           dimensions: [{ name: "date" }],
-          metrics: [
-            { name: "screenPageViews" },
-            { name: "totalUsers" },
-          ],
+          metrics: [{ name: "screenPageViews" }, { name: "totalUsers" }],
           orderBys: [{ dimension: { dimensionName: "date" } }],
         },
       }),
@@ -526,10 +538,7 @@ export async function getGA4TrafficOverview(
         requestBody: {
           dateRanges: [{ startDate, endDate }],
           dimensions: [{ name: "pagePath" }],
-          metrics: [
-            { name: "screenPageViews" },
-            { name: "totalUsers" },
-          ],
+          metrics: [{ name: "screenPageViews" }, { name: "totalUsers" }],
           orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
           limit: "20",
         },
@@ -545,12 +554,8 @@ export async function getGA4TrafficOverview(
     const totalUsers = ov
       ? parseInt(ov.metricValues?.[1]?.value || "0", 10)
       : 0;
-    const newUsers = ov
-      ? parseInt(ov.metricValues?.[2]?.value || "0", 10)
-      : 0;
-    const sessions = ov
-      ? parseInt(ov.metricValues?.[3]?.value || "0", 10)
-      : 0;
+    const newUsers = ov ? parseInt(ov.metricValues?.[2]?.value || "0", 10) : 0;
+    const sessions = ov ? parseInt(ov.metricValues?.[3]?.value || "0", 10) : 0;
     const avgSessionDuration = ov
       ? Math.round(parseFloat(ov.metricValues?.[4]?.value || "0"))
       : 0;
@@ -562,9 +567,10 @@ export async function getGA4TrafficOverview(
     const dailyRows = (dailyRes as any).data?.rows || [];
     const dailyData = dailyRows.map((row: any) => {
       const rawDate = row.dimensionValues?.[0]?.value || "";
-      const formatted = rawDate.length === 8
-        ? `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
-        : rawDate;
+      const formatted =
+        rawDate.length === 8
+          ? `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`
+          : rawDate;
       return {
         date: formatted,
         pageViews: parseInt(row.metricValues?.[0]?.value || "0", 10),
@@ -599,9 +605,12 @@ export async function getGA4TrafficOverview(
 
     return result;
   } catch (error: any) {
-    if (error?.code === 400 || error?.message?.includes('invalid_grant')) {
+    if (error?.code === 400 || error?.message?.includes("invalid_grant")) {
       analyticsClient = null;
-      console.error("[GA4 Traffic] Auth error (client reset):", error?.message || error);
+      console.error(
+        "[GA4 Traffic] Auth error (client reset):",
+        error?.message || error,
+      );
     } else {
       console.error("[GA4 Traffic] Error:", error);
     }
