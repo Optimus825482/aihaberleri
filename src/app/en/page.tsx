@@ -23,6 +23,45 @@ import {
   generateJsonLd,
 } from "@/lib/seo";
 
+const EN_CATEGORY_SLUG_TRANSLATIONS: Record<string, string> = {
+  "yapay-zeka-haberleri": "AI News",
+  "yapay-zeka": "Artificial Intelligence",
+  "yapay-zeka-modelleri": "AI Models",
+  "makine-ogrenmesi": "Machine Learning",
+  "dogal-dil-isleme": "Natural Language Processing",
+  "bilgisayarli-goru": "Computer Vision",
+  robotik: "Robotics",
+  "robotik-ve-otonom-sistemler": "Robotics and Autonomous Systems",
+  "yapay-zeka-etigi": "AI Ethics",
+  "etik-guvenlik-ve-regulasyon": "Ethics, Security and Regulation",
+  "yapay-zeka-araclari": "AI Tools",
+  "yapay-zeka-araclari-ve-urunler": "AI Tools and Products",
+  "sektor-haberleri": "Industry News",
+  "sektor-ve-is-dunyasi": "Industry and Business",
+  arastirma: "Research",
+  "bilim-ve-arastirma": "Science and Research",
+  "yapay-zeka-ve-toplum": "AI and Society",
+};
+
+const EN_CATEGORY_NAME_TRANSLATIONS: Record<string, string> = {
+  "Yapay Zeka": "Artificial Intelligence",
+  "Yapay Zeka Modelleri": "AI Models",
+  "Sektör ve İş Dünyası": "Industry and Business",
+  "Yapay Zeka Araçları ve Ürünler": "AI Tools and Products",
+  "Robotik ve Otonom Sistemler": "Robotics and Autonomous Systems",
+  "Etik, Güvenlik ve Regülasyon": "Ethics, Security and Regulation",
+  "Bilim ve Araştırma": "Science and Research",
+  "Yapay Zeka ve Toplum": "AI and Society",
+};
+
+function getEnglishCategoryLabel(category: { name: string; slug: string }) {
+  return (
+    EN_CATEGORY_SLUG_TRANSLATIONS[category.slug] ||
+    EN_CATEGORY_NAME_TRANSLATIONS[category.name] ||
+    category.name
+  );
+}
+
 export const metadata: Metadata = {
   title: "AI News - Latest Artificial Intelligence News",
   description:
@@ -67,7 +106,10 @@ async function getEnglishArticles() {
       excerpt: t.excerpt || "",
       imageUrl: t.article.imageUrl,
       publishedAt: t.article.publishedAt,
-      category: t.article.category,
+      category: {
+        ...t.article.category,
+        name: getEnglishCategoryLabel(t.article.category),
+      },
       views: t.article.views,
     }));
   } catch (error) {
@@ -369,6 +411,7 @@ export default async function EnglishHomePage() {
             <AITermsGlossary
               title="Trending AI Terms"
               maxTerms={12}
+              compact
               glossaryPagePath="/en/ai-terms"
               viewAllLabel="View All"
               className="mb-0"

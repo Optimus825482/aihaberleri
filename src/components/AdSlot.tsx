@@ -39,6 +39,7 @@ export const AdSlot = ({
   const pathname = usePathname();
   const [adElement, setAdElement] = useState<HTMLModElement | null>(null);
   const [isInViewport, setIsInViewport] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
 
   const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
   const isEnabled = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "true";
@@ -73,10 +74,38 @@ export const AdSlot = ({
     if (adElement.getAttribute("data-adsbygoogle-status")) return;
 
     try {
+      setShowFallback(false);
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {
       // No-op: fail safe to avoid breaking page render
+      setShowFallback(true);
     }
+  }, [shouldRender, isInViewport, adElement]);
+
+  useEffect(() => {
+    if (!shouldRender || !isInViewport || !adElement) return;
+
+    const updateFallback = () => {
+      const status = adElement.getAttribute("data-adsbygoogle-status");
+      if (!status || status === "unfilled") {
+        setShowFallback(true);
+        return;
+      }
+      setShowFallback(false);
+    };
+
+    const observer = new MutationObserver(updateFallback);
+    observer.observe(adElement, {
+      attributes: true,
+      attributeFilter: ["data-adsbygoogle-status"],
+    });
+
+    const timeout = window.setTimeout(updateFallback, 4500);
+
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(timeout);
+    };
   }, [shouldRender, isInViewport, adElement]);
 
   if (!shouldRender || !clientId) return null;
@@ -115,6 +144,12 @@ export const AdSlot = ({
           ? { "data-full-width-responsive": responsive ? "true" : "false" }
           : {})}
       />
+
+      {showFallback ? (
+        <div className="mt-2 rounded-lg border border-ai-surface-border bg-ai-surface-dark/60 px-3 py-2 text-xs text-ai-text-secondary">
+          {label ? `${label} content is loading.` : "Advertisement is loading."}
+        </div>
+      ) : null}
     </div>
   );
 };

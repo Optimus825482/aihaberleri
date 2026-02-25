@@ -4,10 +4,52 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Bell, Download, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 import { usePWA } from "@/context/PWAContext";
 
 export function ServiceWorkerRegistration() {
+  const pathname = usePathname();
+  const locale: "tr" | "en" = pathname?.startsWith("/en") ? "en" : "tr";
+  const t = {
+    tr: {
+      grantedTitle: "Bildirimler aktif!",
+      grantedBody: "Sıcak gelişmeler cebinizde.",
+      enabledTitle: "Bildirimler açıldı!",
+      enabledBody: "Tarayıcı bildirimleri aktif.",
+      incognitoError:
+        "Gizli Sekme'de (Incognito) bildirimler çalışmaz! Lütfen normal sekmeye geçin.",
+      subscribeError: "Bildirim kaydı başarısız oldu.",
+      deniedError: "Bildirim izni reddedildi.",
+      installTitle: "Uygulamayı Yükle",
+      installDesc: "Hızlı erişim için ekle",
+      installAction: "Yükle",
+      closeInstall: "Yükleme bildirimini kapat",
+      notifyTitle: "Bildirimleri Aç",
+      notifyDesc: "Haberleri kaçırma",
+      notifyAction: "Aç",
+      closeNotify: "Bildirim kartını kapat",
+    },
+    en: {
+      grantedTitle: "Notifications enabled!",
+      grantedBody: "Breaking updates are now in your pocket.",
+      enabledTitle: "Notifications turned on!",
+      enabledBody: "Browser notifications are active.",
+      incognitoError:
+        "Notifications do not work in Incognito mode. Please switch to a normal tab.",
+      subscribeError: "Notification subscription failed.",
+      deniedError: "Notification permission denied.",
+      installTitle: "Install App",
+      installDesc: "Add it for quick access",
+      installAction: "Install",
+      closeInstall: "Close install prompt",
+      notifyTitle: "Enable Notifications",
+      notifyDesc: "Don't miss important news",
+      notifyAction: "Enable",
+      closeNotify: "Close notification prompt",
+    },
+  }[locale];
+
   const { isInstallable, installApp } = usePWA();
   const [showInstall, setShowInstall] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
@@ -88,8 +130,8 @@ export function ServiceWorkerRegistration() {
               body: JSON.stringify(subscription),
             });
 
-            new Notification("Bildirimler aktif!", {
-              body: "Sıcak gelişmeler cebinizde.",
+            new Notification(t.grantedTitle, {
+              body: t.grantedBody,
               icon: "/icons/icon-192x192.png",
             });
           } catch (err: any) {
@@ -98,25 +140,22 @@ export function ServiceWorkerRegistration() {
               err.name === "AbortError" ||
               (err.message && err.message.includes("denied"))
             ) {
-              toast.error(
-                "Gizli Sekme'de (Incognito) bildirimler çalışmaz! Lütfen normal sekmeye geçin.",
-                { duration: 5000 },
-              );
+              toast.error(t.incognitoError, { duration: 5000 });
             } else {
-              toast.error("Bildirim kaydı başarısız oldu.");
+              toast.error(t.subscribeError);
             }
           }
         } else {
           // Fallback if no VAPID key yet (just browser permission)
-          new Notification("Bildirimler açıldı!", {
-            body: "Tarayıcı bildirimleri aktif.",
+          new Notification(t.enabledTitle, {
+            body: t.enabledBody,
             icon: "/icons/icon-192x192.png",
           });
         }
       }
     } catch (error: any) {
       console.error("Notification permission error:", error);
-      toast.error("Bildirim izni reddedildi.");
+      toast.error(t.deniedError);
     }
   };
 
@@ -136,21 +175,19 @@ export function ServiceWorkerRegistration() {
               <Download className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <h4 className="font-semibold text-sm">Uygulamayı Yükle</h4>
-              <p className="text-xs text-muted-foreground">
-                Hızlı erişim için ekle
-              </p>
+              <h4 className="font-semibold text-sm">{t.installTitle}</h4>
+              <p className="text-xs text-muted-foreground">{t.installDesc}</p>
             </div>
           </div>
           <div className="flex gap-2 items-center">
             <Button onClick={handleInstall} className="h-8 px-3 text-xs">
-              Yükle
+              {t.installAction}
             </Button>
             <button
               onClick={() => setShowInstall(false)}
               type="button"
-              title="Yükleme bildirimini kapat"
-              aria-label="Yükleme bildirimini kapat"
+              title={t.closeInstall}
+              aria-label={t.closeInstall}
               className="text-muted-foreground hover:text-foreground p-1"
             >
               <X className="w-4 h-4" />
@@ -166,8 +203,8 @@ export function ServiceWorkerRegistration() {
               <Bell className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
-              <h4 className="font-semibold text-sm">Bildirimleri Aç</h4>
-              <p className="text-xs text-muted-foreground">Haberleri kaçırma</p>
+              <h4 className="font-semibold text-sm">{t.notifyTitle}</h4>
+              <p className="text-xs text-muted-foreground">{t.notifyDesc}</p>
             </div>
           </div>
           <div className="flex gap-2 items-center">
@@ -175,13 +212,13 @@ export function ServiceWorkerRegistration() {
               onClick={handleNotification}
               className="h-8 px-3 text-xs bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
             >
-              Aç
+              {t.notifyAction}
             </Button>
             <button
               onClick={dismissNotification}
               type="button"
-              title="Bildirim kartını kapat"
-              aria-label="Bildirim kartını kapat"
+              title={t.closeNotify}
+              aria-label={t.closeNotify}
               className="text-muted-foreground hover:text-foreground p-1"
             >
               <X className="w-4 h-4" />

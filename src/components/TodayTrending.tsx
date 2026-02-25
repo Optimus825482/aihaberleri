@@ -39,11 +39,8 @@ function getRankBg(index: number) {
 
 export function TodayTrending({ locale = "tr" }: TodayTrendingProps) {
   const t = texts[locale];
-  const { data, isLoading } = useTrendingArticles("today", 5, "trend");
+  const { data, isLoading } = useTrendingArticles("today", 5, "trend", locale);
   const articles = data?.articles ?? [];
-
-  // Don't render if no articles and not loading
-  if (!isLoading && articles.length === 0) return null;
 
   const getLink = (slug: string) =>
     locale === "en" ? `/en/news/${slug}` : `/news/${slug}`;
@@ -88,7 +85,7 @@ export function TodayTrending({ locale = "tr" }: TodayTrendingProps) {
             />
           ))}
         </div>
-      ) : (
+      ) : articles.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           {articles.map((article, index) => {
             const score = article.trendScore ?? 0;
@@ -178,6 +175,10 @@ export function TodayTrending({ locale = "tr" }: TodayTrendingProps) {
             );
           })}
         </div>
+        ) : (
+          <div className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-6 text-center text-ai-text-secondary text-sm">
+            {t.noNews}
+          </div>
       )}
     </section>
   );

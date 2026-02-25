@@ -1,12 +1,53 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
-export function PushNotificationButton() {
+interface PushNotificationButtonProps {
+  locale?: "tr" | "en";
+}
+
+const texts = {
+  tr: {
+    unsupported: "Push bildirimleri bu tarayıcıda desteklenmiyor",
+    denied: "Bildirim izni reddedildi",
+    subscribeSuccess: "✅ Bildirimler başarıyla aktif edildi!",
+    genericError: "Bir hata oluştu",
+    subscribeError: "Bildirim aboneliği sırasında bir hata oluştu",
+    unsubscribeSuccess: "✅ Bildirimler kapatıldı",
+    blocked:
+      "Bildirimler engellenmiş. Tarayıcı ayarlarından izin verebilirsiniz.",
+    title: "Push Bildirimleri",
+    turnOff: "🔕 Bildirimleri Kapat",
+    turnOn: "🔔 Bildirimleri Aç",
+    subscribedHint: "Yeni haberlerden anında haberdar oluyorsunuz",
+    unsubscribedHint: "Yeni haberlerden anında haberdar olun",
+  },
+  en: {
+    unsupported: "Push notifications are not supported in this browser",
+    denied: "Notification permission denied",
+    subscribeSuccess: "✅ Notifications enabled successfully!",
+    genericError: "An error occurred",
+    subscribeError: "An error occurred while subscribing to notifications",
+    unsubscribeSuccess: "✅ Notifications disabled",
+    blocked: "Notifications are blocked. You can allow them in browser settings.",
+    title: "Push Notifications",
+    turnOff: "🔕 Disable Notifications",
+    turnOn: "🔔 Enable Notifications",
+    subscribedHint: "You are receiving instant updates for new articles",
+    unsubscribedHint: "Get instant updates for new articles",
+  },
+};
+
+export function PushNotificationButton({ locale }: PushNotificationButtonProps) {
+  const pathname = usePathname();
   const [permission, setPermission] =
     useState<NotificationPermission>("default");
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const resolvedLocale: "tr" | "en" =
+    locale || (pathname?.startsWith("/en") ? "en" : "tr");
+  const t = texts[resolvedLocale];
 
   useEffect(() => {
     if ("Notification" in window) {
@@ -29,7 +70,7 @@ export function PushNotificationButton() {
 
   const subscribeToPush = async () => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      alert("Push bildirimleri bu tarayıcıda desteklenmiyor");
+      alert(t.unsupported);
       return;
     }
 
@@ -41,7 +82,7 @@ export function PushNotificationButton() {
       setPermission(permission);
 
       if (permission !== "granted") {
-        alert("Bildirim izni reddedildi");
+        alert(t.denied);
         return;
       }
 
@@ -71,13 +112,13 @@ export function PushNotificationButton() {
 
       if (data.success) {
         setSubscribed(true);
-        alert("✅ Bildirimler başarıyla aktif edildi!");
+        alert(t.subscribeSuccess);
       } else {
-        alert(`❌ ${data.error || "Bir hata oluştu"}`);
+        alert(`❌ ${data.error || t.genericError}`);
       }
     } catch (error) {
       console.error("Push subscription error:", error);
-      alert("Bildirim aboneliği sırasında bir hata oluştu");
+      alert(t.subscribeError);
     } finally {
       setLoading(false);
     }
@@ -93,11 +134,11 @@ export function PushNotificationButton() {
       if (subscription) {
         await subscription.unsubscribe();
         setSubscribed(false);
-        alert("✅ Bildirimler kapatıldı");
+        alert(t.unsubscribeSuccess);
       }
     } catch (error) {
       console.error("Push unsubscribe error:", error);
-      alert("Bir hata oluştu");
+      alert(t.genericError);
     } finally {
       setLoading(false);
     }
@@ -116,14 +157,14 @@ export function PushNotificationButton() {
   if (permission === "denied") {
     return (
       <div className="text-xs text-muted-foreground">
-        Bildirimler engellenmiş. Tarayıcı ayarlarından izin verebilirsiniz.
+        {t.blocked}
       </div>
     );
   }
 
   return (
     <div className="mt-4">
-      <h4 className="font-semibold text-sm mb-2">Push Bildirimleri</h4>
+      <h4 className="font-semibold text-sm mb-2">{t.title}</h4>
       <button
         onClick={subscribed ? unsubscribeFromPush : subscribeToPush}
         disabled={loading}
@@ -136,13 +177,13 @@ export function PushNotificationButton() {
         {loading
           ? "..."
           : subscribed
-            ? "🔕 Bildirimleri Kapat"
-            : "🔔 Bildirimleri Aç"}
+            ? t.turnOff
+            : t.turnOn}
       </button>
       <p className="text-xs text-muted-foreground mt-2">
         {subscribed
-          ? "Yeni haberlerden anında haberdar oluyorsunuz"
-          : "Yeni haberlerden anında haberdar olun"}
+          ? t.subscribedHint
+          : t.unsubscribedHint}
       </p>
     </div>
   );

@@ -25,6 +25,7 @@ const texts = {
       month: "Bu Ay",
       all: "Tüm Zamanlar",
     },
+    noNews: "Bu dönem için haber yok",
   },
   en: {
     trendingNews: "Trending News",
@@ -38,6 +39,7 @@ const texts = {
       month: "This Month",
       all: "All Time",
     },
+    noNews: "No news for this period",
   },
 };
 
@@ -186,7 +188,7 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
               <span className="material-symbols-outlined text-[32px] mb-2 block">
                 trending_up
               </span>
-              Bu dönem için haber yok
+                  {t.noNews}
             </div>
           )}
         </div>

@@ -24,6 +24,8 @@ const EN_CATEGORY_SLUG_TRANSLATIONS: Record<string, string> = {
   "sektor-haberleri": "Industry News",
   "sektor-ve-is-dunyasi": "Industry and Business",
   arastirma: "Research",
+  "bilim-ve-arastirma": "Science and Research",
+  "yapay-zeka-ve-toplum": "AI and Society",
   "derin-ogrenme": "Deep Learning",
   "otonom-sistemler": "Autonomous Systems",
   egitim: "Education",
@@ -38,6 +40,8 @@ const EN_CATEGORY_NAME_TRANSLATIONS: Record<string, string> = {
   "Yapay Zeka Araçları ve Ürünler": "AI Tools and Products",
   "Robotik ve Otonom Sistemler": "Robotics and Autonomous Systems",
   "Etik, Güvenlik ve Regülasyon": "Ethics, Security and Regulation",
+  "Bilim ve Araştırma": "Science and Research",
+  "Yapay Zeka ve Toplum": "AI and Society",
 };
 
 function getFooterCategoryLabel(
@@ -246,7 +250,7 @@ export async function Footer({ locale }: FooterProps) {
               {t.siteDesc}
             </p>
             <div className="flex items-center gap-3 mb-4">
-              <PushNotificationButton />
+              <PushNotificationButton locale={detectedLocale} />
             </div>
             {/* Social Icons Row */}
             <div className="flex items-center gap-2 flex-wrap">

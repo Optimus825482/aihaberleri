@@ -1,9 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export function NotificationPrompt() {
+  const pathname = usePathname();
   const [show, setShow] = useState(false);
+  const locale: "tr" | "en" = pathname?.startsWith("/en") ? "en" : "tr";
+  const t = {
+    tr: {
+      title: "Bildirimleri Açın",
+      description:
+        "Yeni haberlerden anında haberdar olmak ister misiniz? Önemli gelişmeleri kaçırmayın!",
+      enable: "Bildirimleri Aç",
+      later: "Daha Sonra",
+      dontShow: "Bir daha gösterme",
+    },
+    en: {
+      title: "Enable Notifications",
+      description:
+        "Would you like to get instant updates for new articles? Don't miss important developments!",
+      enable: "Enable Notifications",
+      later: "Later",
+      dontShow: "Don't show again",
+    },
+  }[locale];
 
   useEffect(() => {
     // Check if user has already been asked
@@ -67,11 +88,8 @@ export function NotificationPrompt() {
       <div className="bg-background border rounded-lg shadow-xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-300">
         <div className="text-center mb-4">
           <div className="text-5xl mb-3">🔔</div>
-          <h3 className="text-xl font-bold mb-2">Bildirimleri Açın</h3>
-          <p className="text-muted-foreground text-sm">
-            Yeni haberlerden anında haberdar olmak ister misiniz? Önemli
-            gelişmeleri kaçırmayın!
-          </p>
+          <h3 className="text-xl font-bold mb-2">{t.title}</h3>
+          <p className="text-muted-foreground text-sm">{t.description}</p>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -79,13 +97,13 @@ export function NotificationPrompt() {
             onClick={handleEnable}
             className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors font-semibold"
           >
-            Bildirimleri Aç
+            {t.enable}
           </button>
           <button
             onClick={handleLater}
             className="w-full px-4 py-3 border rounded-md hover:bg-muted transition-colors"
           >
-            Daha Sonra
+            {t.later}
           </button>
         </div>
 
@@ -104,7 +122,7 @@ export function NotificationPrompt() {
             htmlFor="dont-show-again"
             className="text-xs text-muted-foreground cursor-pointer"
           >
-            Bir daha gösterme
+            {t.dontShow}
           </label>
         </div>
       </div>

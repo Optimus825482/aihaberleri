@@ -12,6 +12,42 @@ interface CategoryFiltersProps {
   selectedCategory?: string;
 }
 
+const EN_CATEGORY_SLUG_TRANSLATIONS: Record<string, string> = {
+  "yapay-zeka-haberleri": "AI News",
+  "yapay-zeka": "Artificial Intelligence",
+  "yapay-zeka-modelleri": "AI Models",
+  "makine-ogrenmesi": "Machine Learning",
+  "dogal-dil-isleme": "Natural Language Processing",
+  "bilgisayarli-goru": "Computer Vision",
+  robotik: "Robotics",
+  "robotik-ve-otonom-sistemler": "Robotics and Autonomous Systems",
+  "yapay-zeka-etigi": "AI Ethics",
+  "etik-guvenlik-ve-regulasyon": "Ethics, Security and Regulation",
+  "yapay-zeka-araclari": "AI Tools",
+  "yapay-zeka-araclari-ve-urunler": "AI Tools and Products",
+  "sektor-haberleri": "Industry News",
+  "sektor-ve-is-dunyasi": "Industry and Business",
+  arastirma: "Research",
+  "bilim-ve-arastirma": "Science and Research",
+  "yapay-zeka-ve-toplum": "AI and Society",
+  "derin-ogrenme": "Deep Learning",
+  "otonom-sistemler": "Autonomous Systems",
+  egitim: "Education",
+  saglik: "Healthcare",
+  finans: "Finance",
+};
+
+const EN_CATEGORY_NAME_TRANSLATIONS: Record<string, string> = {
+  "Yapay Zeka": "Artificial Intelligence",
+  "Yapay Zeka Modelleri": "AI Models",
+  "Sektör ve İş Dünyası": "Industry and Business",
+  "Yapay Zeka Araçları ve Ürünler": "AI Tools and Products",
+  "Robotik ve Otonom Sistemler": "Robotics and Autonomous Systems",
+  "Etik, Güvenlik ve Regülasyon": "Ethics, Security and Regulation",
+  "Bilim ve Araştırma": "Science and Research",
+  "Yapay Zeka ve Toplum": "AI and Society",
+};
+
 const categoryIcons: Record<string, string> = {
   "openai": "smart_toy",
   "google-ai": "search",
@@ -50,6 +86,18 @@ export function CategoryFilters({ categories, locale = "tr", selectedCategory }:
     return categoryIcons[slug] || "category";
   };
 
+  const getCategoryLabel = (category: Category) => {
+    if (locale !== "en") {
+      return category.name;
+    }
+
+    return (
+      EN_CATEGORY_SLUG_TRANSLATIONS[category.slug] ||
+      EN_CATEGORY_NAME_TRANSLATIONS[category.name] ||
+      category.name
+    );
+  };
+
   return (
     <div className="mb-6 sm:mb-8">
       {/* Section Label */}
@@ -84,7 +132,7 @@ export function CategoryFilters({ categories, locale = "tr", selectedCategory }:
               }`}
           >
             <span className="material-symbols-outlined text-[16px]">{getIcon(category.slug)}</span>
-            <span>{category.name}</span>
+            <span>{getCategoryLabel(category)}</span>
           </Link>
         ))}
         </div>
