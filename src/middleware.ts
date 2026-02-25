@@ -37,11 +37,12 @@ export default async function middleware(request: NextRequest) {
 
   // IndexNow key verification: serve key file dynamically
   // This bypasses Cloudflare challenges/caching that block Bing's key verification bot
-  const uuidMatch = pathname.match(
-    /^\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.txt$/i,
+  // Supports both UUID format (with dashes) and plain hex (32 chars, no dashes)
+  const keyFileMatch = pathname.match(
+    /^\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}|[0-9a-f]{32})\.txt$/i,
   );
-  if (uuidMatch) {
-    const requestedKey = uuidMatch[1].toLowerCase();
+  if (keyFileMatch) {
+    const requestedKey = keyFileMatch[1].toLowerCase();
     return new NextResponse(requestedKey, {
       status: 200,
       headers: {
