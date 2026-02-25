@@ -311,7 +311,7 @@ export default function EnglishSyncAdminPage() {
                             TR → EN Senkron Kontrolü
                         </h1>
                         <p className="text-muted-foreground mt-1">
-                            Tutarsızlık, EN çeviri zamanı ile TR referans çeviri zamanı farkına göre hesaplanır.
+                            Tutarsızlık; zaman farkı, EN başlık/içerik eksikliği ve TR ile aynı görünen kalite sinyallerine göre hesaplanır.
                         </p>
                     </div>
 

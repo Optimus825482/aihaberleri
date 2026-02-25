@@ -15,8 +15,11 @@ type InconsistentArticleRow = {
   trUpdatedAt: Date;
   trReferenceId: string | null;
   trReferenceUpdatedAt: Date | null;
+  trReferenceTitle: string | null;
+  trReferenceContent: string | null;
   enTranslationId: string | null;
   enTitle: string | null;
+  enContent: string | null;
   enSlug: string | null;
   enUpdatedAt: Date | null;
   categoryName: string | null;
@@ -27,6 +30,57 @@ type InconsistencyScoreResult = {
   reason: string;
   staleMinutes: number | null;
 };
+
+function normalizeText(value: string | null | undefined) {
+  if (!value) {
+    return "";
+  }
+
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .replace(/\s+/g, " ")
+    .replace(/["'`’”“]/g, "")
+    .trim();
+}
+
+function getContentQualitySignals(row: InconsistentArticleRow) {
+  const trTitle = normalizeText(row.trReferenceTitle || row.title);
+  const enTitle = normalizeText(row.enTitle);
+  const trContent = normalizeText(row.trReferenceContent);
+  const enContent = normalizeText(row.enContent);
+
+  const hasMissingTitle = enTitle.length === 0;
+  const hasMissingContent = enContent.length === 0;
+
+  const hasIdenticalTitle =
+    trTitle.length >= 16 && enTitle.length > 0 && trTitle === enTitle;
+
+  const hasIdenticalContentPrefix =
+    trContent.length >= 180 &&
+    enContent.length >= 180 &&
+    trContent.slice(0, 500) === enContent.slice(0, 500);
+
+  const hasSuspiciouslyShortContent =
+    trContent.length >= 500 &&
+    enContent.length > 0 &&
+    enContent.length < trContent.length * 0.45;
+
+  const titleIssue = hasMissingTitle || hasIdenticalTitle;
+  const contentIssue =
+    hasMissingContent ||
+    hasIdenticalContentPrefix ||
+    hasSuspiciouslyShortContent;
+
+  return {
+    titleIssue,
+    contentIssue,
+    hasMissingTitle,
+    hasMissingContent,
+    hasIdenticalTitle,
+    hasIdenticalContentPrefix,
+    hasSuspiciouslyShortContent,
+  };
+}
 
 function getInconsistencyScore(
   row: InconsistentArticleRow,
@@ -39,7 +93,17 @@ function getInconsistencyScore(
     };
   }
 
+  const signals = getContentQualitySignals(row);
+
   if (!row.trReferenceUpdatedAt || !row.enUpdatedAt) {
+    if (signals.titleIssue || signals.contentIssue) {
+      return {
+        score: 70,
+        reason: "Başlık/içerik çeviri kalite sorunu",
+        staleMinutes: null,
+      };
+    }
+
     return {
       score: 20,
       reason: "TR referans zamanı bulunamadı",
@@ -50,7 +114,61 @@ function getInconsistencyScore(
   const diffMs = row.trReferenceUpdatedAt.getTime() - row.enUpdatedAt.getTime();
   const staleMinutes = Math.max(0, Math.floor(diffMs / 60000));
 
+  let timeScore = 20;
+  let timeReason = "EN çeviri yeni ama geride";
+
   if (staleMinutes <= 0) {
+    timeScore = 0;
+    timeReason = "Senkron";
+  } else if (staleMinutes >= 60 * 24 * 7) {
+    timeScore = 90;
+    timeReason = "EN çeviri 7 günden fazla geride";
+  } else if (staleMinutes >= 60 * 24 * 2) {
+    timeScore = 75;
+    timeReason = "EN çeviri 2 günden fazla geride";
+  } else if (staleMinutes >= 60 * 12) {
+    timeScore = 55;
+    timeReason = "EN çeviri 12 saatten fazla geride";
+  } else if (staleMinutes >= 60 * 2) {
+    timeScore = 35;
+    timeReason = "EN çeviri birkaç saat geride";
+  }
+
+  let contentScore = 0;
+  const contentReasons: string[] = [];
+
+  if (signals.hasMissingTitle) {
+    contentScore = Math.max(contentScore, 85);
+    contentReasons.push("EN başlık boş");
+  }
+
+  if (signals.hasIdenticalTitle) {
+    contentScore = Math.max(contentScore, 70);
+    contentReasons.push("EN başlık TR ile aynı");
+  }
+
+  if (signals.hasMissingContent) {
+    contentScore = Math.max(contentScore, 90);
+    contentReasons.push("EN içerik boş");
+  }
+
+  if (signals.hasIdenticalContentPrefix) {
+    contentScore = Math.max(contentScore, 85);
+    contentReasons.push("EN içerik TR ile aynı görünüyor");
+  }
+
+  if (signals.hasSuspiciouslyShortContent) {
+    contentScore = Math.max(contentScore, 65);
+    contentReasons.push("EN içerik anormal derecede kısa");
+  }
+
+  const finalScore = Math.max(timeScore, contentScore);
+  const finalReason =
+    contentScore > timeScore && contentReasons.length > 0
+      ? contentReasons.join(" • ")
+      : timeReason;
+
+  if (finalScore <= 0) {
     return {
       score: 0,
       reason: "Senkron",
@@ -58,41 +176,9 @@ function getInconsistencyScore(
     };
   }
 
-  if (staleMinutes >= 60 * 24 * 7) {
-    return {
-      score: 90,
-      reason: "EN çeviri 7 günden fazla geride",
-      staleMinutes,
-    };
-  }
-
-  if (staleMinutes >= 60 * 24 * 2) {
-    return {
-      score: 75,
-      reason: "EN çeviri 2 günden fazla geride",
-      staleMinutes,
-    };
-  }
-
-  if (staleMinutes >= 60 * 12) {
-    return {
-      score: 55,
-      reason: "EN çeviri 12 saatten fazla geride",
-      staleMinutes,
-    };
-  }
-
-  if (staleMinutes >= 60 * 2) {
-    return {
-      score: 35,
-      reason: "EN çeviri birkaç saat geride",
-      staleMinutes,
-    };
-  }
-
   return {
-    score: 20,
-    reason: "EN çeviri yeni ama geride",
+    score: finalScore,
+    reason: finalReason,
     staleMinutes,
   };
 }
@@ -107,7 +193,32 @@ function buildSearchFilter(search?: string) {
 }
 
 function buildInconsistencyFilter() {
-  return Prisma.sql`AND (at.id IS NULL OR (trt.id IS NOT NULL AND at."updatedAt" < trt."updatedAt"))`;
+  return Prisma.sql`
+    AND (
+      at.id IS NULL
+      OR (
+        trt.id IS NOT NULL
+        AND (
+          at."updatedAt" < trt."updatedAt"
+          OR LENGTH(TRIM(COALESCE(at.title, ''))) = 0
+          OR LENGTH(TRIM(COALESCE(at.content, ''))) = 0
+          OR (
+            LENGTH(TRIM(COALESCE(trt.title, ''))) >= 16
+            AND LOWER(TRIM(COALESCE(at.title, ''))) = LOWER(TRIM(COALESCE(trt.title, '')))
+          )
+          OR (
+            LENGTH(TRIM(COALESCE(trt.content, ''))) >= 180
+            AND LOWER(LEFT(TRIM(COALESCE(at.content, '')), 500)) = LOWER(LEFT(TRIM(COALESCE(trt.content, '')), 500))
+          )
+          OR (
+            LENGTH(TRIM(COALESCE(trt.content, ''))) >= 500
+            AND LENGTH(TRIM(COALESCE(at.content, ''))) > 0
+            AND LENGTH(TRIM(COALESCE(at.content, ''))) < LENGTH(TRIM(COALESCE(trt.content, ''))) * 0.45
+          )
+        )
+      )
+    )
+  `;
 }
 
 async function listInconsistentArticles(
@@ -128,8 +239,11 @@ async function listInconsistentArticles(
       a."updatedAt" as "trUpdatedAt",
       trt.id as "trReferenceId",
       trt."updatedAt" as "trReferenceUpdatedAt",
+      trt.title as "trReferenceTitle",
+      trt.content as "trReferenceContent",
       at.id as "enTranslationId",
       at.title as "enTitle",
+      at.content as "enContent",
       at.slug as "enSlug",
       at."updatedAt" as "enUpdatedAt",
       c.name as "categoryName"
