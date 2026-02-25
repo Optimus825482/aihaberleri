@@ -113,51 +113,41 @@ function isValidPrivateKey(key: string | undefined): boolean {
 function getClient(): adsense_v2.Adsense {
   if (adsenseClient) return adsenseClient;
 
+  // ─── 0. OAuth 2.0 Refresh Token (EN ÖNCELİKLİ) ───
+  const oauthClientId = process.env.ADSENSE_OAUTH_CLIENT_ID;
+  const oauthClientSecret = process.env.ADSENSE_OAUTH_CLIENT_SECRET;
+  const oauthRefreshToken = process.env.ADSENSE_OAUTH_REFRESH_TOKEN;
+
+  if (oauthClientId && oauthClientSecret && oauthRefreshToken) {
+    console.log("[AdSense] Auth yöntemi: OAuth 2.0 Refresh Token");
+    const oauth2Client = new google.auth.OAuth2(
+      oauthClientId,
+      oauthClientSecret,
+    );
+    oauth2Client.setCredentials({ refresh_token: oauthRefreshToken });
+
+    adsenseClient = google.adsense({ version: "v2", auth: oauth2Client });
+    console.log("[AdSense] OAuth client başarıyla oluşturuldu");
+    console.log(
+      "[AdSense] Account ID:",
+      process.env.ADSENSE_ACCOUNT_ID || "TANIMLI DEĞİL!",
+    );
+    return adsenseClient;
+  }
+
+  // ─── Service Account Fallback'ler ───
   let credentials: { client_email: string; private_key: string } | null = null;
 
-  // 1. AdSense'e özel service account (öncelikli)
   const adsenseEmail = process.env.ADSENSE_CLIENT_EMAIL;
   const adsenseKey = parsePemKey(process.env.ADSENSE_PRIVATE_KEY);
-
-  // 2. AdSense'e özel JSON key
   const adsenseJsonKey = process.env.ADSENSE_SERVICE_ACCOUNT_KEY;
-
-  // 3. GA4 ile ortak (fallback)
   const gaEmail = process.env.GA_CLIENT_EMAIL;
   const gaKey = parsePemKey(process.env.GA_PRIVATE_KEY);
-
-  // 4. Genel JSON key (fallback)
   const googleJsonKey = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
 
   if (adsenseEmail && adsenseKey && isValidPrivateKey(adsenseKey)) {
-    console.log(
-      "[AdSense] Auth yöntemi: ADSENSE_CLIENT_EMAIL (",
-      adsenseEmail,
-      ")",
-    );
-    const keyLines = adsenseKey.split("\n");
-    console.log(
-      "[AdSense] Private key BEGIN marker:",
-      adsenseKey.includes("-----BEGIN") ? "OK" : "EKSIK!",
-    );
-    console.log(
-      "[AdSense] Key diagnostik: lines=",
-      keyLines.length,
-      "firstLine=",
-      keyLines[0]?.substring(0, 40),
-      "lastLine=",
-      keyLines[keyLines.length - 1]?.substring(0, 40) ||
-        keyLines[keyLines.length - 2]?.substring(0, 40),
-      "totalChars=",
-      adsenseKey.length,
-    );
+    console.log("[AdSense] Auth yöntemi: ADSENSE_CLIENT_EMAIL");
     credentials = { client_email: adsenseEmail, private_key: adsenseKey };
-  }
-
-  if (!credentials && adsenseEmail && adsenseKey) {
-    console.warn(
-      "[AdSense] ADSENSE_PRIVATE_KEY geçersiz/bozuk görünüyor. ADSENSE_SERVICE_ACCOUNT_KEY fallback denenecek.",
-    );
   }
 
   if (!credentials && adsenseJsonKey) {
@@ -166,14 +156,11 @@ function getClient(): adsense_v2.Adsense {
       const parsed = JSON.parse(adsenseJsonKey);
       const parsedPrivateKey = parsePemKey(parsed.private_key);
       if (!isValidPrivateKey(parsedPrivateKey)) {
-        throw new Error(
-          "ADSENSE_SERVICE_ACCOUNT_KEY içindeki private_key geçersiz veya PEM formatı bozuk.",
-        );
+        throw new Error("ADSENSE_SERVICE_ACCOUNT_KEY private_key geçersiz.");
       }
-      const normalizedPrivateKey = parsedPrivateKey as string;
       credentials = {
         client_email: parsed.client_email,
-        private_key: normalizedPrivateKey,
+        private_key: parsedPrivateKey as string,
       };
     } catch (error) {
       if (error instanceof SyntaxError) {
@@ -184,36 +171,21 @@ function getClient(): adsense_v2.Adsense {
   }
 
   if (!credentials && gaEmail && gaKey && isValidPrivateKey(gaKey)) {
-    console.log(
-      "[AdSense] Auth yöntemi: GA_CLIENT_EMAIL fallback (",
-      gaEmail,
-      ")",
-    );
+    console.log("[AdSense] Auth yöntemi: GA_CLIENT_EMAIL fallback");
     credentials = { client_email: gaEmail, private_key: gaKey };
   }
 
-  if (!credentials && gaEmail && gaKey) {
-    console.warn(
-      "[AdSense] GA_PRIVATE_KEY geçersiz/bozuk görünüyor. GOOGLE_SERVICE_ACCOUNT_KEY fallback denenecek.",
-    );
-  }
-
   if (!credentials && googleJsonKey) {
-    console.log(
-      "[AdSense] Auth yöntemi: GOOGLE_SERVICE_ACCOUNT_KEY (JSON fallback)",
-    );
+    console.log("[AdSense] Auth yöntemi: GOOGLE_SERVICE_ACCOUNT_KEY fallback");
     try {
       const parsed = JSON.parse(googleJsonKey);
       const parsedPrivateKey = parsePemKey(parsed.private_key);
       if (!isValidPrivateKey(parsedPrivateKey)) {
-        throw new Error(
-          "GOOGLE_SERVICE_ACCOUNT_KEY içindeki private_key geçersiz veya PEM formatı bozuk.",
-        );
+        throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY private_key geçersiz.");
       }
-      const normalizedPrivateKey = parsedPrivateKey as string;
       credentials = {
         client_email: parsed.client_email,
-        private_key: normalizedPrivateKey,
+        private_key: parsedPrivateKey as string,
       };
     } catch (error) {
       if (error instanceof SyntaxError) {
@@ -225,12 +197,11 @@ function getClient(): adsense_v2.Adsense {
 
   if (!credentials) {
     throw new Error(
-      "AdSense API yapılandırması eksik. ADSENSE_CLIENT_EMAIL + ADSENSE_PRIVATE_KEY veya GA_CLIENT_EMAIL + GA_PRIVATE_KEY gerekli.",
+      "AdSense API yapılandırması eksik. ADSENSE_OAUTH_REFRESH_TOKEN veya service account bilgileri gerekli.",
     );
   }
 
   console.log("[AdSense] Auth identity:", credentials.client_email);
-
   console.log(
     "[AdSense] Account ID:",
     process.env.ADSENSE_ACCOUNT_ID || "TANIMLI DEĞİL!",
@@ -255,13 +226,17 @@ function getAccountId(): string {
 export function isAdSenseConfigured(): boolean {
   try {
     const hasAccount = !!process.env.ADSENSE_ACCOUNT_ID;
-    const hasAuth =
+    const hasOAuth =
+      !!process.env.ADSENSE_OAUTH_CLIENT_ID &&
+      !!process.env.ADSENSE_OAUTH_CLIENT_SECRET &&
+      !!process.env.ADSENSE_OAUTH_REFRESH_TOKEN;
+    const hasServiceAccount =
       (!!process.env.ADSENSE_CLIENT_EMAIL &&
         !!process.env.ADSENSE_PRIVATE_KEY) ||
       !!process.env.ADSENSE_SERVICE_ACCOUNT_KEY ||
       (!!process.env.GA_CLIENT_EMAIL && !!process.env.GA_PRIVATE_KEY) ||
       !!process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
-    return hasAccount && hasAuth;
+    return hasAccount && (hasOAuth || hasServiceAccount);
   } catch {
     return false;
   }
