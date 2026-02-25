@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback, memo } from "react";
+import { useEffect, useState, useRef, memo } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
   Card,
@@ -114,10 +114,16 @@ const AnimatedNumber = memo(function AnimatedNumber({
   value: number;
   className?: string;
 }) {
-  const [displayed, setDisplayed] = useState(0);
-  const prevRef = useRef(0);
+  const [mounted, setMounted] = useState(false);
+  const [displayed, setDisplayed] = useState(value);
+  const prevRef = useRef(value);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     const start = prevRef.current;
     const end = value;
     if (start === end) return;
@@ -133,10 +139,10 @@ const AnimatedNumber = memo(function AnimatedNumber({
       else prevRef.current = end;
     };
     requestAnimationFrame(animate);
-  }, [value]);
+  }, [value, mounted]);
 
   return (
-    <span className={`tabular-nums ${className}`}>
+    <span className={`tabular-nums ${className}`} suppressHydrationWarning>
       {displayed.toLocaleString("tr-TR")}
     </span>
   );
@@ -598,7 +604,10 @@ const RecentArticleRow = memo(function RecentArticleRow({
               {article.category.name}
             </Badge>
           )}
-          <span className="text-[10px] text-muted-foreground">
+          <span
+            className="text-[10px] text-muted-foreground"
+            suppressHydrationWarning
+          >
             {formatDistanceToNow(new Date(article.createdAt), {
               addSuffix: true,
               locale: tr,
@@ -723,7 +732,7 @@ const AgentStatusCard = memo(function AgentStatusCard({
             <Clock className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-xs">Son Çalışma</span>
           </div>
-          <span className="text-xs font-bold">
+          <span className="text-xs font-bold" suppressHydrationWarning>
             {lastExecution
               ? formatDistanceToNow(new Date(lastExecution), {
                   addSuffix: true,
