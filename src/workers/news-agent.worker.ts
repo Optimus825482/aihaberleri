@@ -1066,26 +1066,32 @@ async function startWorker() {
               const isEnglish = platform.endsWith("_EN");
               const language = isEnglish ? "en" : "tr";
 
-              // Prepare article data
-              const articleData =
+              const postPayload: {
+                title: string;
+                slug: string;
+                excerpt: string;
+                imageUrl?: string | null;
+                categoryName?: string;
+              } =
                 isEnglish && enTranslation
                   ? {
                       title: enTranslation.title,
                       slug: enTranslation.slug,
-                      excerpt: enTranslation.excerpt,
+                      excerpt: enTranslation.excerpt ?? "",
                       imageUrl: article.imageUrl,
-                      categoryName: article.category?.name,
+                      categoryName: article.category?.name ?? undefined,
                     }
                   : {
                       title: article.title,
                       slug: article.slug,
-                      excerpt: article.excerpt,
+                      excerpt: article.excerpt ?? "",
                       imageUrl: article.imageUrl,
-                      categoryName: article.category?.name,
+                      categoryName: article.category?.name ?? undefined,
                     };
 
+              // Prepare article data
               try {
-                const postResult = await poster(articleData);
+                const postResult = await poster(postPayload);
                 const postId =
                   typeof postResult === "string" || postResult === null
                     ? postResult

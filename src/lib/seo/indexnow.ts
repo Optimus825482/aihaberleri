@@ -236,7 +236,7 @@ export async function submitPendingArticlesToIndexNow(): Promise<{
     const pendingArticlesEn = await db.article.findMany({
       where: {
         status: "PUBLISHED",
-        indexNowStatusEn: { in: ["PENDING", "FAILED", null] },
+        indexNowStatusEn: { in: ["PENDING", "FAILED"] },
         publishedAt: { not: null },
         translations: {
           some: {
