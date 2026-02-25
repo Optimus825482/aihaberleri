@@ -192,8 +192,19 @@ export async function getArticlePageViews(slug: string): Promise<number> {
     });
 
     return views;
-  } catch (error) {
-    console.error(`[GA4] Error fetching views for /news/${slug}:`, error);
+  } catch (error: any) {
+    const status = error?.code || error?.status || "unknown";
+    const message = error?.cause?.message || error?.message || "Unknown error";
+    console.error(
+      `[GA4] Error fetching views for /news/${slug}: ${status} - ${message}`,
+    );
+
+    // Negative cache: GA4 hatalarında 5dk boyunca tekrar deneme (rate limit / 500 koruması)
+    viewsCache.set(slug, {
+      value: -1,
+      expiresAt: Date.now() + 5 * 60 * 1000, // 5 min negative cache
+    });
+
     return -1; // Hata durumunda -1 dön (fallback kullanılsın)
   }
 }
@@ -254,8 +265,12 @@ export async function getAllArticlePageViews(): Promise<Map<string, number>> {
 
     console.log(`[GA4] Fetched page views for ${viewsMap.size} articles`);
     return viewsMap;
-  } catch (error) {
-    console.error("[GA4] Error fetching all article views:", error);
+  } catch (error: any) {
+    const status = error?.code || error?.status || "unknown";
+    const message = error?.cause?.message || error?.message || "Unknown error";
+    console.error(
+      `[GA4] Error fetching all article views: ${status} - ${message}`,
+    );
     return new Map();
   }
 }
@@ -414,7 +429,10 @@ export async function getRealtimeVisitors(): Promise<RealtimeData> {
         error?.message || error,
       );
     } else {
-      console.error("[GA4 Realtime] Error:", error);
+      const status = error?.code || error?.status || "unknown";
+      const message =
+        error?.cause?.message || error?.message || "Unknown error";
+      console.error(`[GA4 Realtime] Error: ${status} - ${message}`);
     }
     return emptyResult;
   }
@@ -457,7 +475,12 @@ export async function getRealtimeActiveUsers(): Promise<number> {
         error?.message || error,
       );
     } else {
-      console.error("[GA4 Realtime Active Users] Error:", error);
+      const status = error?.code || error?.status || "unknown";
+      const message =
+        error?.cause?.message || error?.message || "Unknown error";
+      console.error(
+        `[GA4 Realtime Active Users] Error: ${status} - ${message}`,
+      );
     }
     return 0;
   }
@@ -616,7 +639,10 @@ export async function getGA4TrafficOverview(
         error?.message || error,
       );
     } else {
-      console.error("[GA4 Traffic] Error:", error);
+      const status = error?.code || error?.status || "unknown";
+      const message =
+        error?.cause?.message || error?.message || "Unknown error";
+      console.error(`[GA4 Traffic] Error: ${status} - ${message}`);
     }
     return emptyResult;
   }
