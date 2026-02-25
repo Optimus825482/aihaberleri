@@ -31,9 +31,9 @@ import "@/lib/init-scheduler";
 import "@/lib/init-cron";
 
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext"],
   display: "swap",
-  preload: true,
+  preload: false,
   fallback: ["system-ui", "arial"],
 });
 

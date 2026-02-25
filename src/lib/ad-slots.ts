@@ -33,8 +33,8 @@ export const AD_SLOTS = {
   // ─── Haber Detay ─────────────────────
   /** TR makale içi (paragraf arası) — yazı içi format */
   ARTICLE_INLINE_TR: "6220560152",
-  /** EN makale içi (paragraf arası) */
-  ARTICLE_INLINE_EN: "3183333271",
+  /** EN makale içi (paragraf arası) — yazı içi format (TR ile ortak slot) */
+  ARTICLE_INLINE_EN: "6220560152",
   /** Makale altı banner — TR & EN ortak */
   ARTICLE_BOTTOM: "2050458858",
   /** Sidebar reklam — desktop, dikey format */

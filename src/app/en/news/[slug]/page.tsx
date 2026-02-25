@@ -394,7 +394,7 @@ export default async function EnglishArticlePage({ params }: Props) {
               <div dangerouslySetInnerHTML={{ __html: contentFirstPart }} />
 
               <AdSlot
-                slot="3183333271"
+                slot="6220560152"
                 format="fluid"
                 layout="in-article"
                 minHeight={140}
