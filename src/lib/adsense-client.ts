@@ -506,8 +506,13 @@ export async function getAdSenseDailyReport(
  */
 export async function getAdSenseDetailedReport(
   days: number = 30,
+  endDateInput?: Date,
 ): Promise<AdSenseDetailedReport> {
-  const cacheKey = `adsense:detailed:${days}`;
+  const safeDays = Math.max(1, days);
+  const endDate = endDateInput ? new Date(endDateInput) : getToday();
+  endDate.setHours(0, 0, 0, 0);
+
+  const cacheKey = `adsense:detailed:${safeDays}:${endDate.toISOString().split("T")[0]}`;
   const cached = reportCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value;
@@ -515,11 +520,10 @@ export async function getAdSenseDetailedReport(
 
   const client = getClient();
   const account = getAccountId();
-  const today = getToday();
-  const startDate = new Date(today);
-  startDate.setDate(startDate.getDate() - days);
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - (safeDays - 1));
   const start = toAdSenseDate(startDate);
-  const end = toAdSenseDate(today);
+  const end = toAdSenseDate(endDate);
 
   const commonParams = {
     account,

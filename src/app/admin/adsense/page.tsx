@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState, useMemo, memo } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import {
     Card,
@@ -44,15 +44,93 @@ import { tr } from "date-fns/locale";
 import {
     AreaChart,
     Area,
+    LineChart,
+    Line,
     XAxis,
     YAxis,
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    Legend,
     BarChart,
     Bar,
     Cell,
 } from "recharts";
+
+type RangePreset =
+    | "today"
+    | "yesterday"
+    | "thisWeek"
+    | "thisMonth"
+    | "lastMonth"
+    | "thisYear"
+    | "allTime";
+
+const RANGE_OPTIONS: Array<{ key: RangePreset; label: string }> = [
+    { key: "today", label: "Bugün" },
+    { key: "yesterday", label: "Dün" },
+    { key: "thisWeek", label: "Bu Hafta" },
+    { key: "thisMonth", label: "Bu Ay" },
+    { key: "lastMonth", label: "Geçen Ay" },
+    { key: "thisYear", label: "Bu Yıl" },
+    { key: "allTime", label: "Tüm Zamanlar" },
+];
+
+function formatDateParam(date: Date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function getDateRangeForPreset(preset: RangePreset) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const start = new Date(today);
+    const end = new Date(today);
+
+    switch (preset) {
+        case "today":
+            break;
+        case "yesterday": {
+            start.setDate(start.getDate() - 1);
+            end.setDate(end.getDate() - 1);
+            break;
+        }
+        case "thisWeek": {
+            const dayOfWeek = start.getDay();
+            const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+            start.setDate(start.getDate() - diffToMonday);
+            break;
+        }
+        case "thisMonth":
+            start.setDate(1);
+            break;
+        case "lastMonth": {
+            start.setMonth(start.getMonth() - 1, 1);
+            end.setDate(0);
+            break;
+        }
+        case "thisYear":
+            start.setMonth(0, 1);
+            break;
+        case "allTime":
+            start.setFullYear(start.getFullYear() - 3, 0, 1);
+            break;
+    }
+
+    const dayCount = Math.max(
+        1,
+        Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+    );
+
+    return {
+        startDate: formatDateParam(start),
+        endDate: formatDateParam(end),
+        dayCount,
+    };
+}
 
 // ─── Color helpers ───
 const PRIORITY_COLORS = {
@@ -130,18 +208,27 @@ function ChartTooltip({ active, payload, label }: any) {
 // ─── Main Page ───
 export default function AdSensePage() {
     const { data: summaryData, isLoading: summaryLoading } = useAdSenseSummary(300000);
-    const { data: reportData, isLoading: reportLoading } = useAdSenseReport(30, "detailed");
     const { data: analysesData, mutate: refreshAnalyses } = useAdSenseAnalyses(10);
     const { trigger: triggerAnalysis, isMutating: isAnalyzing } = useTriggerAdSenseAnalysis();
     const { trigger: updateAnalysis } = useUpdateAdSenseAnalysis();
+
+    const [selectedRange, setSelectedRange] = useState<RangePreset>("thisMonth");
+    const range = useMemo(() => getDateRangeForPreset(selectedRange), [selectedRange]);
+
+    const { data: reportData, isLoading: reportLoading } = useAdSenseReport(
+        Math.max(range.dayCount, 30),
+        "detailed",
+        range.startDate,
+        range.endDate,
+    );
 
     const summary = summaryData?.success ? summaryData.data : null;
     const report = reportData?.success ? reportData.data : null;
     const analyses = analysesData?.success ? analysesData.data : [];
     const configured = summaryData?.configured !== false;
+    const chartData = report?.dailyData || [];
 
     const [expandedAnalysis, setExpandedAnalysis] = useState<string | null>(null);
-    const [days, setDays] = useState(30);
 
     const handleAnalyze = async () => {
         try {
@@ -251,11 +338,30 @@ export default function AdSensePage() {
                     </div>
                 )}
 
-                {/* Revenue Chart */}
-                {report?.dailyData && report.dailyData.length > 0 && (
-                    <Card className="border-yellow-500/20 bg-card/80 backdrop-blur-sm">
-                        <CardHeader className="pb-2 px-4">
-                            <div className="flex items-center justify-between">
+                {/* Date Range Selector */}
+                <Card className="border-border/40 bg-card/80 backdrop-blur-sm">
+                    <CardContent className="p-3">
+                        <div className="flex flex-wrap gap-2">
+                            {RANGE_OPTIONS.map((option) => (
+                                <Button
+                                    key={option.key}
+                                    variant={selectedRange === option.key ? "default" : "outline"}
+                                    size="sm"
+                                    className="h-7 px-3 text-[11px] rounded-full"
+                                    onClick={() => setSelectedRange(option.key)}
+                                >
+                                    {option.label}
+                                </Button>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Charts */}
+                {chartData.length > 0 && (
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        <Card className="border-yellow-500/20 bg-card/80 backdrop-blur-sm">
+                            <CardHeader className="pb-2 px-4">
                                 <div className="flex items-center gap-2">
                                     <div className="p-2 bg-yellow-500/10 rounded-xl">
                                         <TrendingUp className="h-4 w-4 text-yellow-500" />
@@ -265,64 +371,181 @@ export default function AdSensePage() {
                                             Gelir Trendi
                                         </CardTitle>
                                         <CardDescription className="text-[10px]">
-                                            Son {days} gün
+                                            {RANGE_OPTIONS.find((r) => r.key === selectedRange)?.label}
                                         </CardDescription>
                                     </div>
                                 </div>
-                                <div className="flex gap-1">
-                                    {[7, 14, 30].map((d) => (
-                                        <Button
-                                            key={d}
-                                            variant={days === d ? "default" : "outline"}
-                                            size="sm"
-                                            className="h-6 px-2 text-[10px] rounded-full"
-                                            onClick={() => setDays(d)}
-                                        >
-                                            {d}g
-                                        </Button>
-                                    ))}
+                            </CardHeader>
+                            <CardContent className="px-2 pb-4">
+                                <div className="h-[260px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={chartData}>
+                                            <defs>
+                                                <linearGradient id="earningsGrad" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#eab308" stopOpacity={0.3} />
+                                                    <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                                            <XAxis
+                                                dataKey="date"
+                                                tick={{ fontSize: 10 }}
+                                                stroke="hsl(var(--muted-foreground))"
+                                                tickFormatter={(v) => {
+                                                    const parts = v.split("-");
+                                                    return `${parts[2]}/${parts[1]}`;
+                                                }}
+                                            />
+                                            <YAxis
+                                                tick={{ fontSize: 10 }}
+                                                stroke="hsl(var(--muted-foreground))"
+                                                tickFormatter={(v) => `$${v}`}
+                                            />
+                                            <Tooltip content={<ChartTooltip />} />
+                                            <Area
+                                                type="monotone"
+                                                dataKey="earnings"
+                                                name="Gelir"
+                                                stroke="#eab308"
+                                                strokeWidth={2}
+                                                fill="url(#earningsGrad)"
+                                            />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
                                 </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="px-2 pb-4">
-                            <div className="h-[280px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={report.dailyData.slice(-days)}>
-                                        <defs>
-                                            <linearGradient id="earningsGrad" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#eab308" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                                        <XAxis
-                                            dataKey="date"
-                                            tick={{ fontSize: 10 }}
-                                            stroke="hsl(var(--muted-foreground))"
-                                            tickFormatter={(v) => {
-                                                const parts = v.split("-");
-                                                return `${parts[2]}/${parts[1]}`;
-                                            }}
-                                        />
-                                        <YAxis
-                                            tick={{ fontSize: 10 }}
-                                            stroke="hsl(var(--muted-foreground))"
-                                            tickFormatter={(v) => `$${v}`}
-                                        />
-                                        <Tooltip content={<ChartTooltip />} />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="earnings"
-                                            name="Gelir"
-                                            stroke="#eab308"
-                                            strokeWidth={2}
-                                            fill="url(#earningsGrad)"
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-cyan-500/20 bg-card/80 backdrop-blur-sm">
+                            <CardHeader className="pb-2 px-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-cyan-500/10 rounded-xl">
+                                        <Eye className="h-4 w-4 text-cyan-500" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-sm font-black uppercase tracking-tight">
+                                            Trafik Trendi
+                                        </CardTitle>
+                                        <CardDescription className="text-[10px]">
+                                            Tıklama ve gösterim dağılımı
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="px-2 pb-4">
+                                <div className="h-[260px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={chartData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                                            <XAxis
+                                                dataKey="date"
+                                                tick={{ fontSize: 10 }}
+                                                tickFormatter={(v) => {
+                                                    const parts = v.split("-");
+                                                    return `${parts[2]}/${parts[1]}`;
+                                                }}
+                                            />
+                                            <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                                            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                                            <Tooltip content={<ChartTooltip />} />
+                                            <Legend wrapperStyle={{ fontSize: "11px" }} />
+                                            <Line
+                                                yAxisId="left"
+                                                type="monotone"
+                                                dataKey="clicks"
+                                                stroke="#22c55e"
+                                                strokeWidth={2}
+                                                dot={false}
+                                                name="Tıklama"
+                                            />
+                                            <Line
+                                                yAxisId="right"
+                                                type="monotone"
+                                                dataKey="impressions"
+                                                stroke="#3b82f6"
+                                                strokeWidth={2}
+                                                dot={false}
+                                                name="Gösterim"
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-orange-500/20 bg-card/80 backdrop-blur-sm xl:col-span-2">
+                            <CardHeader className="pb-2 px-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-orange-500/10 rounded-xl">
+                                        <MousePointerClick className="h-4 w-4 text-orange-500" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-sm font-black uppercase tracking-tight">
+                                            Verimlilik (CTR / CPC / RPM)
+                                        </CardTitle>
+                                        <CardDescription className="text-[10px]">
+                                            Reklam kalitesi ve gelir verimliliği
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="px-2 pb-4">
+                                <div className="h-[260px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={chartData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                                            <XAxis
+                                                dataKey="date"
+                                                tick={{ fontSize: 10 }}
+                                                tickFormatter={(v) => {
+                                                    const parts = v.split("-");
+                                                    return `${parts[2]}/${parts[1]}`;
+                                                }}
+                                            />
+                                            <YAxis yAxisId="left" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                                            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} tickFormatter={(v) => `$${v}`} />
+                                            <Tooltip content={<ChartTooltip />} />
+                                            <Legend wrapperStyle={{ fontSize: "11px" }} />
+                                            <Line
+                                                yAxisId="left"
+                                                type="monotone"
+                                                dataKey="ctr"
+                                                stroke="#f97316"
+                                                strokeWidth={2}
+                                                dot={false}
+                                                name="CTR"
+                                            />
+                                            <Line
+                                                yAxisId="right"
+                                                type="monotone"
+                                                dataKey="cpc"
+                                                stroke="#a855f7"
+                                                strokeWidth={2}
+                                                dot={false}
+                                                name="CPC"
+                                            />
+                                            <Line
+                                                yAxisId="right"
+                                                type="monotone"
+                                                dataKey="rpm"
+                                                stroke="#ef4444"
+                                                strokeWidth={2}
+                                                dot={false}
+                                                name="RPM"
+                                            />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+
+                {reportLoading && chartData.length === 0 && (
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                        <div className="h-[320px] animate-pulse bg-muted/30 rounded-2xl" />
+                        <div className="h-[320px] animate-pulse bg-muted/30 rounded-2xl" />
+                    </div>
                 )}
 
                 {/* Breakdowns: Country + Ad Units */}
@@ -340,7 +563,7 @@ export default function AdSensePage() {
                                             Ülke Bazlı Gelir
                                         </CardTitle>
                                         <CardDescription className="text-[10px]">
-                                            Son {days} gün — Top 10
+                                            {RANGE_OPTIONS.find((r) => r.key === selectedRange)?.label} — Top 10
                                         </CardDescription>
                                     </div>
                                 </div>

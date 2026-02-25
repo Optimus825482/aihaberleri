@@ -188,18 +188,29 @@ export function useAdSenseSummary(refreshInterval = 30000) {
 /**
  * AdSense Detaylı Rapor Hook
  */
-export function useAdSenseReport(days: number = 30, type: string = "detailed") {
-  return useSWR(
-    `/api/admin/adsense/report?days=${days}&type=${type}`,
-    fetcher,
-    {
-      ...defaultConfig,
-      refreshInterval: 600000, // 10 dakika
-      dedupingInterval: 120000,
-      errorRetryCount: 2,
-      errorRetryInterval: 30000,
-    },
-  );
+export function useAdSenseReport(
+  days: number = 30,
+  type: string = "detailed",
+  startDate?: string,
+  endDate?: string,
+) {
+  const params = new URLSearchParams({
+    days: String(days),
+    type,
+  });
+
+  if (startDate && endDate) {
+    params.set("startDate", startDate);
+    params.set("endDate", endDate);
+  }
+
+  return useSWR(`/api/admin/adsense/report?${params.toString()}`, fetcher, {
+    ...defaultConfig,
+    refreshInterval: 600000, // 10 dakika
+    dedupingInterval: 120000,
+    errorRetryCount: 2,
+    errorRetryInterval: 30000,
+  });
 }
 
 /**
