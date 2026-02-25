@@ -27,10 +27,10 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d postgresainewsdb"]
-      interval: 10s
-      timeout: 5s
+      interval: 5s
+      timeout: 3s
       retries: 5
-      start_period: 30s
+      start_period: 10s
     restart: unless-stopped
 
   # PostgreSQL Daily Backup (retention: 2 files)
@@ -73,10 +73,10 @@ services:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
 
   # BullMQ Worker (Agent Automation)
@@ -179,9 +179,9 @@ services:
     healthcheck:
       test: ["CMD", "pgrep", "-f", "news-agent.worker"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
-      start_period: 60s
+      start_period: 30s
     restart: unless-stopped
 
   # Next.js App
@@ -291,9 +291,9 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 20s
     restart: unless-stopped
 
 volumes:

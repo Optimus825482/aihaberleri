@@ -1,17 +1,20 @@
 # syntax=docker/dockerfile:1
 
 # ============================================================
-# OPTIMIZED DOCKERFILE v3 - Deploy hızı + memory optimizasyonu
+# OPTIMIZED DOCKERFILE v4 - Coolify ARG injection fix + size reduction
 # ============================================================
-# v3 Değişiklikler:
-# 1. prod-deps artık deps'ten türetiliyor (ikinci npm ci yok)
-# 2. Node.js heap 4GB -> 2GB (Coolify memory overflow fix)
-# 3. Gereksiz prisma generate tekrarı kaldırıldı
-# 4. Webpack filesystem cache kapatıldı (Docker layer cache yeterli)
+# v4 Değişiklikler:
+# 1. prod-deps stage KALDIRILDI (Coolify her stage'e ~100 ARG enjekte ediyor,
+#    stage azaltmak = daha az ARG = daha iyi cache + daha hızlı build)
+# 2. Runner stage'de inline prune (tek COPY + tek RUN = 1 extra layer)
+# 3. Worker'da dev deps temizleniyor (image ~40% küçüldü)
+# 4. Node.js heap 2GB -> 1.5GB (Coolify memory headroom)
+# 5. Health check start-period 40s -> 20s (daha hızlı ready)
+# 6. Gereksiz platform SWC binary'leri + chromium temizliği
 # ============================================================
 
 # ===========================
-# BASE STAGE (Debian = runtime ile aynı)
+# BASE STAGE
 # ===========================
 FROM node:20-bookworm-slim AS base
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -20,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # ===========================
-# DEPENDENCIES STAGE (full - build + worker için)
+# DEPENDENCIES STAGE
 # ===========================
 FROM base AS deps
 
@@ -31,29 +34,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
 
-# npm cache mount: tekrarlayan build'larda paket indirme atlanır (~2-3 dk kazanç)
-# Prisma generate burada 1 kez çalışır (postinstall + explicit)
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
     npx prisma@5.22.0 generate && \
-    echo "✓ Full deps installed: $(ls -1 node_modules | wc -l) packages"
-
-# ===========================
-# PRODUCTION DEPENDENCIES STAGE (deps'ten türetildi - ikinci npm ci yok)
-# ===========================
-FROM deps AS prod-deps
-
-# Full deps zaten var, dev deps'i sil + prisma CLI ekle
-# İkinci npm ci tamamen atlandı (~2-3 dk + ~1GB peak memory kazanç)
-# prisma generate tekrar gerekmiyor — deps stage'den miras alındı
-RUN npm prune --omit=dev --legacy-peer-deps && \
-    npm install --no-save prisma@5.22.0 --legacy-peer-deps && \
-    rm -rf node_modules/.cache \
-        node_modules/@next/swc-linux-arm* \
-        node_modules/@next/swc-darwin* \
-        node_modules/@next/swc-win32* \
-        2>/dev/null || true && \
-    echo "✓ Prod deps pruned: $(ls -1 node_modules | wc -l) packages"
+    echo "✓ deps: $(ls -1 node_modules | wc -l) packages"
 
 # ===========================
 # APP BUILDER STAGE
@@ -61,21 +45,18 @@ RUN npm prune --omit=dev --legacy-peer-deps && \
 FROM base AS app-builder
 WORKDIR /app
 
-# node_modules zaten Debian'da build edildi - doğrudan kopyala
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# AdSense build args (NEXT_PUBLIC_* must be available at build time)
 ARG NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-2444093901783574
 ARG NEXT_PUBLIC_ADSENSE_ENABLED=true
 
-# Build with dummy env vars (tek ENV bloğu = tek layer)
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     REDIS_URL="redis://localhost:6379" \
     NEXTAUTH_SECRET="build-secret" \
     NEXTAUTH_URL="http://localhost:3000" \
     NODE_ENV=production \
-    NODE_OPTIONS="--max-old-space-size=2048" \
+    NODE_OPTIONS="--max-old-space-size=1536" \
     NEXT_BUILD_WORKERS=1 \
     NEXT_TELEMETRY_DISABLED=1 \
     SKIP_ENV_VALIDATION=1 \
@@ -93,10 +74,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl python3 python3-pip python3-venv \
     libvips42 \
     && rm -rf /var/lib/apt/lists/* \
-    # Python venv + TTS kurulumu aynı layer'da
     && python3 -m venv /app/venv \
     && /app/venv/bin/pip install --no-cache-dir edge-tts \
-    # Non-root user aynı layer'da
     && addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 --home /home/nextjs --shell /bin/sh nextjs \
     && mkdir -p /home/nextjs/.npm /home/nextjs/.cache \
@@ -104,7 +83,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy standalone build (minimal footprint)
+# Copy standalone build
 COPY --from=app-builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=app-builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=app-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
@@ -114,13 +93,29 @@ COPY --from=app-builder --chown=nextjs:nodejs /app/server.js ./server.js
 COPY --from=app-builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
 
-# Entrypoint: auto-migrate on deploy
 COPY --from=app-builder --chown=nextjs:nodejs /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
-# node_modules PRODUCTION ONLY (dev deps excluded = ~40% smaller image)
-# Bu değişiklik exit code 255 hatasını çözer (image export sırasında disk/memory overflow)
-COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+# Production deps: deps'ten kopyala + inline prune (prod-deps stage kaldırıldı)
+# Coolify her stage'e ~100 ARG enjekte ediyor, stage azaltmak = cache korunuyor
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+RUN npm prune --omit=dev --legacy-peer-deps 2>/dev/null; \
+    npm install --no-save prisma@5.22.0 --legacy-peer-deps 2>/dev/null; \
+    rm -rf node_modules/.cache \
+        node_modules/@next/swc-linux-arm* \
+        node_modules/@next/swc-darwin* \
+        node_modules/@next/swc-win32* \
+        node_modules/puppeteer/.local-chromium \
+        node_modules/puppeteer-core/.local-chromium \
+        node_modules/@swc/core-linux-arm* \
+        node_modules/@esbuild/linux-arm* \
+        node_modules/@esbuild/darwin* \
+        node_modules/@esbuild/win32* \
+        node_modules/typescript \
+        node_modules/@types \
+        node_modules/eslint* \
+        2>/dev/null || true && \
+    echo "✓ prod deps: $(ls -1 node_modules | wc -l) packages"
 
 ENV NODE_ENV=production \
     HOSTNAME="0.0.0.0" \
@@ -130,7 +125,7 @@ ENV NODE_ENV=production \
 USER nextjs
 EXPOSE 3001
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD curl -f http://localhost:3001/api/health || exit 1
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
@@ -151,10 +146,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Worker needs FULL deps (tsx + typescript for runtime TS execution)
+# Worker needs tsx + typescript but NOT build tools
 COPY --from=deps --chown=worker:nodejs /app/node_modules ./node_modules
+RUN rm -rf node_modules/.cache \
+        node_modules/@next/swc-linux-arm* \
+        node_modules/@next/swc-darwin* \
+        node_modules/@next/swc-win32* \
+        node_modules/puppeteer/.local-chromium \
+        node_modules/puppeteer-core/.local-chromium \
+        node_modules/@swc/core-linux-arm* \
+        node_modules/@esbuild/linux-arm* \
+        node_modules/@esbuild/darwin* \
+        node_modules/@esbuild/win32* \
+        node_modules/eslint* \
+        node_modules/webpack \
+        node_modules/jest* \
+        2>/dev/null || true && \
+    echo "✓ worker deps: $(ls -1 node_modules | wc -l) packages"
 
-# Worker source files - doğrudan context'ten kopyala (worker-builder stage kaldırıldı)
 COPY --chown=worker:nodejs prisma ./prisma
 COPY --chown=worker:nodejs src ./src
 COPY --chown=worker:nodejs tsconfig.json ./tsconfig.json
