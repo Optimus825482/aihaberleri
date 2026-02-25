@@ -212,8 +212,8 @@ export class ContentEnricherAgent extends BaseAgent<
               });
             }
 
-            // Step 2: Synthesize content (TR + EN) - DeepSeek ONLY
-            // TIMEOUT PROTECTION: Wrap in Promise.race with 120s timeout for DeepSeek
+            // Step 2: Synthesize content (TR + EN)
+            // TIMEOUT PROTECTION: 180s timeout — NVIDIA/Qwen can take 90-150s for large content
             const synthesized = await Promise.race([
               this.synthesizeContent(
                 article,
@@ -222,8 +222,8 @@ export class ContentEnricherAgent extends BaseAgent<
               ),
               new Promise<any>((_, reject) =>
                 setTimeout(
-                  () => reject(new Error("Content synthesis timeout (120s)")),
-                  120000, // DeepSeek may take 60-90s for large content
+                  () => reject(new Error("Content synthesis timeout (180s)")),
+                  180000, // NVIDIA/Qwen may take 90-150s, DeepSeek fallback 60-90s
                 ),
               ),
             ]);
@@ -1288,7 +1288,14 @@ Respond in JSON:
       .replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ\s]/g, " ")
       .split(/\s+/)
       .filter(
-        (w) => w.length > 2 && !stopWords.has(w) && !ambiguousWords.has(w),
+        (w) =>
+          w.length > 2 &&
+          w.length < 30 && // Filter out hash-like long strings
+          !stopWords.has(w) &&
+          !ambiguousWords.has(w) &&
+          !/^[0-9a-f]{8,}$/i.test(w) && // Filter hex hashes (e.g. commit SHAs)
+          !/^[a-z0-9]{20,}$/i.test(w) && // Filter long random alphanumeric tokens
+          !/^\d+$/.test(w), // Filter pure numbers
       );
 
     // 🎯 Prioritize: proper nouns/tech terms (3+ chars with capitals in original),

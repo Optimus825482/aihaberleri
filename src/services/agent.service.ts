@@ -355,7 +355,7 @@ export async function executeNewsAgent(
 
     await pipelineSpan.end({ articlesPublished: articlesCreated });
 
-    // Get published articles
+    // Get published articles — this is the SOURCE OF TRUTH (pipeline monitor can miscount)
     const publishedArticlesData = await db.article.findMany({
       where: {
         agentLogId: agentLog.id,
@@ -368,6 +368,11 @@ export async function executeNewsAgent(
     });
 
     publishedArticles.push(...publishedArticlesData);
+
+    // FIX: Use actual DB count as source of truth (pipeline monitor may report 0 due to race condition)
+    if (publishedArticlesData.length > articlesCreated) {
+      articlesCreated = publishedArticlesData.length;
+    }
 
     logPipelineBanner("complete", {
       published: articlesCreated,
