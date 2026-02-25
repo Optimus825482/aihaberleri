@@ -28,6 +28,9 @@ import { postToBluesky, postToBlueskyEN } from "@/lib/social/bluesky";
 import { postToMastodon, postToMastodonEN } from "@/lib/social/mastodon";
 import { db } from "@/lib/db";
 import { PrismaClient, Prisma } from "@prisma/client";
+
+// OOM log suppression — prevent thousands of identical error lines
+let isRedisOOMLogged = false;
 import { workerLogger } from "@/lib/logger";
 import { trackWorkerError } from "@/lib/sentry";
 
@@ -456,6 +459,13 @@ async function startWorker() {
   const worker = new Worker(
     "news-agent",
     async (job) => {
+      // OOM guard — don't start heavy processing if Redis is under memory pressure
+      const { isRedisMemoryFull } = await import("@/lib/redis");
+      if (isRedisMemoryFull()) {
+        log.warn("⏸️ News agent job deferred — Redis OOM");
+        throw new Error("Redis OOM — job will retry with backoff");
+      }
+
       workerLogger.jobStart(job.id!, job.name);
       log.job(job.id!, job.name, {
         priority: job.opts.priority || "default",
@@ -585,9 +595,27 @@ async function startWorker() {
   worker.on("ready", () => log.success("Worker ready"));
   worker.on("active", (job) => log.info(`Job ${job.id} active`));
   worker.on("completed", (job) => log.success(`Job ${job.id} completed`));
-  worker.on("failed", (job, err) => log.error(`Job ${job?.id} failed`, err));
+  worker.on("failed", (job, err) => {
+    // Suppress OOM retry noise — already logged once by OOM guard
+    if (err.message?.includes("Redis OOM")) return;
+    log.error(`Job ${job?.id} failed`, err);
+  });
   worker.on("error", (err) => {
-    if (!err.message?.includes("NOAUTH")) log.error("Worker error", err);
+    if (err.message?.includes("NOAUTH")) return;
+    // Suppress OOM error spam — handled by redis.ts memory monitor
+    if (err.message?.includes("OOM")) {
+      if (!isRedisOOMLogged) {
+        log.error(
+          "[ERROR] Worker error\n  └─ Redis OOM — suppressing further logs",
+        );
+        isRedisOOMLogged = true;
+        setTimeout(() => {
+          isRedisOOMLogged = false;
+        }, 60_000);
+      }
+      return;
+    }
+    log.error("Worker error", err);
   });
   worker.on("stalled", (jobId) => log.warn(`Job ${jobId} stalled`));
 
@@ -801,6 +829,13 @@ async function startWorker() {
     const newsletterWorker = new Worker(
       "newsletter",
       async (job) => {
+        // OOM guard — don't process if Redis is under memory pressure
+        const { isRedisMemoryFull } = await import("@/lib/redis");
+        if (isRedisMemoryFull()) {
+          console.warn("⏸️ Newsletter job deferred — Redis OOM");
+          throw new Error("Redis OOM — job will retry with backoff");
+        }
+
         log.job(job.id!, "newsletter", { manual: job.data?.manual || false });
 
         try {
@@ -832,6 +867,7 @@ async function startWorker() {
     });
 
     newsletterWorker.on("failed", (job, error) => {
+      if (error.message?.includes("Redis OOM")) return;
       log.error(`Newsletter ${job?.id} failed`, error);
     });
 
@@ -874,6 +910,13 @@ async function startWorker() {
     const socialBatchWorker = new Worker(
       "social-batch",
       async (job) => {
+        // OOM guard — don't process if Redis is under memory pressure
+        const { isRedisMemoryFull } = await import("@/lib/redis");
+        if (isRedisMemoryFull()) {
+          console.warn("⏸️ Social batch job deferred — Redis OOM");
+          throw new Error("Redis OOM — job will retry with backoff");
+        }
+
         const { batchId, platforms, intervalSeconds, batchSize } = job.data;
         const articleIds = job.data.articleIds;
 
@@ -1198,6 +1241,7 @@ async function startWorker() {
     });
 
     socialBatchWorker.on("failed", (job, error) => {
+      if (error.message?.includes("Redis OOM")) return;
       log.error(`Social batch ${job?.id} failed`, error);
     });
 

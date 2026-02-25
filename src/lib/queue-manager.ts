@@ -189,6 +189,9 @@ export function getQueue(queueName: string): Queue | null {
   try {
     const queue = new Queue(queueName, {
       connection,
+      streams: {
+        events: { maxLen: 100 }, // Prevent event stream bloat
+      },
       defaultJobOptions: {
         attempts: config.attempts,
         backoff: {
@@ -196,11 +199,11 @@ export function getQueue(queueName: string): Queue | null {
           delay: 5000, // Start with 5s, then 10s, 20s
         },
         removeOnComplete: {
-          count: 100, // Keep last 100 completed jobs
-          age: 24 * 3600, // 24 hours
+          count: 50, // Keep last 50 completed jobs (was 100)
+          age: 12 * 3600, // 12 hours (was 24h)
         },
         removeOnFail: {
-          count: 50, // Keep last 50 failed jobs
+          count: 20, // Keep last 20 failed jobs (was 50)
         },
         // Note: Job timeouts are handled at Worker level via lockDuration
         // The actual timeout is controlled by worker's job processing timeout

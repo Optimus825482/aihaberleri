@@ -136,6 +136,13 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
     this.worker = new Worker(
       this.config.queueName,
       async (job) => {
+        // OOM guard — skip processing if Redis is under memory pressure
+        const { isRedisMemoryFull } = await import("@/lib/redis");
+        if (isRedisMemoryFull()) {
+          this.logger.warn(`⏸️ ${this.config.name} job deferred — Redis OOM`);
+          throw new Error("Redis OOM — job will retry with backoff");
+        }
+
         const startTime = Date.now();
         const agentTimeout = getAgentTimeout(this.config.name);
         const itemCount = Array.isArray(job.data) ? job.data.length : 1;
@@ -288,6 +295,8 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
     // 'active' and 'completed' are already logged in the job handler — skip here
 
     this.worker.on("failed", (job, error) => {
+      // Suppress OOM retry noise — already logged once by OOM guard
+      if (error.message?.includes("Redis OOM")) return;
       this.logger.error(`Job ${job?.id} failed: ${error.message}`);
     });
 
@@ -297,6 +306,8 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
 
     this.worker.on("error", (error) => {
       if (error.message?.includes("NOAUTH")) return;
+      // Suppress OOM error spam — handled by redis.ts memory monitor
+      if (error.message?.includes("OOM")) return;
       this.logger.error(`Worker error: ${error.message}`);
     });
   }

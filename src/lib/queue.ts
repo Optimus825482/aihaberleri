@@ -21,6 +21,9 @@ export const getNewsAgentQueue = (): Queue | null => {
   try {
     newsAgentQueueInstance = new Queue("news-agent", {
       connection: redis,
+      streams: {
+        events: { maxLen: 200 }, // Prevent event stream bloat (was 10K+)
+      },
       defaultJobOptions: {
         attempts: 3,
         backoff: {
@@ -28,13 +31,12 @@ export const getNewsAgentQueue = (): Queue | null => {
           delay: 5000,
         },
         removeOnComplete: {
-          count: 100,
-          age: 24 * 3600, // 24 hours
+          count: 50,
+          age: 12 * 3600, // 12 hours (was 24h)
         },
         removeOnFail: {
-          count: 50,
+          count: 20, // was 50
         },
-        // Note: timeout is set per-job in worker, not in defaultJobOptions
       },
     });
     console.log("✅ News agent queue created");
@@ -199,6 +201,9 @@ export const getNewsletterQueue = (): Queue | null => {
   try {
     newsletterQueueInstance = new Queue("newsletter", {
       connection: redis,
+      streams: {
+        events: { maxLen: 100 }, // Prevent event stream bloat
+      },
       defaultJobOptions: {
         attempts: 3,
         backoff: {
@@ -206,13 +211,12 @@ export const getNewsletterQueue = (): Queue | null => {
           delay: 10000,
         },
         removeOnComplete: {
-          count: 50,
-          age: 24 * 3600,
+          count: 20,
+          age: 12 * 3600, // 12 hours (was 24h)
         },
         removeOnFail: {
-          count: 20,
+          count: 10, // was 20
         },
-        // Note: timeout is set per-job in worker, not in defaultJobOptions
       },
     });
     console.log("✅ Newsletter queue created");
@@ -370,14 +374,17 @@ export const getSocialBatchQueue = (): Queue | null => {
   try {
     socialBatchQueueInstance = new Queue("social-batch", {
       connection: redis,
+      streams: {
+        events: { maxLen: 100 }, // Prevent event stream bloat
+      },
       defaultJobOptions: {
         attempts: 1, // Don't retry - each article shares once
         removeOnComplete: {
-          count: 100,
-          age: 24 * 3600, // 24 hours
+          count: 30,
+          age: 6 * 3600, // 6 hours (was 24h)
         },
         removeOnFail: {
-          count: 50,
+          count: 20, // was 50
         },
       },
     });

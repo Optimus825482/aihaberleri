@@ -1,16 +1,15 @@
 # syntax=docker/dockerfile:1
 
 # ============================================================
-# OPTIMIZED DOCKERFILE v4 - Coolify ARG injection fix + size reduction
+# OPTIMIZED DOCKERFILE v5 - Deploy time optimization
 # ============================================================
-# v4 Değişiklikler:
-# 1. prod-deps stage KALDIRILDI (Coolify her stage'e ~100 ARG enjekte ediyor,
-#    stage azaltmak = daha az ARG = daha iyi cache + daha hızlı build)
-# 2. Runner stage'de inline prune (tek COPY + tek RUN = 1 extra layer)
-# 3. Worker'da dev deps temizleniyor (image ~40% küçüldü)
-# 4. Node.js heap 2GB -> 1.5GB (Coolify memory headroom)
-# 5. Health check start-period 40s -> 20s (daha hızlı ready)
-# 6. Gereksiz platform SWC binary'leri + chromium temizliği
+# v5 Değişiklikler:
+# 1. prod-deps stage GERİ EKLENDİ — npm ci --omit=dev ile direkt prod deps
+#    (copy+prune 66s → npm ci ~15s, net ~50s kazanç)
+# 2. COPY --link kullanımı — layer caching bağımsızlığı
+# 3. Runner'da npm prune KALDIRILDI — prod-deps zaten temiz
+# 4. Worker prod-deps + inline tsx install (tüm deps copy yerine)
+# 5. Multi-stage paralel build: deps + prod-deps aynı anda çalışır
 # ============================================================
 
 # ===========================
@@ -23,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # ===========================
-# DEPENDENCIES STAGE
+# DEPENDENCIES STAGE (dev + prod — for build & worker)
 # ===========================
 FROM base AS deps
 
@@ -40,12 +39,36 @@ RUN --mount=type=cache,target=/root/.npm \
     echo "✓ deps: $(ls -1 node_modules | wc -l) packages"
 
 # ===========================
+# PRODUCTION DEPS STAGE (prod only — deps ile PARALEL çalışır)
+# ===========================
+FROM base AS prod-deps
+
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma
+
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev --legacy-peer-deps --network-timeout=300000 && \
+    npx prisma@5.22.0 generate && \
+    rm -rf node_modules/.cache \
+        node_modules/@next/swc-linux-arm* \
+        node_modules/@next/swc-darwin* \
+        node_modules/@next/swc-win32* \
+        node_modules/puppeteer/.local-chromium \
+        node_modules/puppeteer-core/.local-chromium \
+        node_modules/@swc/core-linux-arm* \
+        node_modules/@esbuild/linux-arm* \
+        node_modules/@esbuild/darwin* \
+        node_modules/@esbuild/win32* \
+        2>/dev/null || true && \
+    echo "✓ prod deps: $(ls -1 node_modules | wc -l) packages"
+
+# ===========================
 # APP BUILDER STAGE
 # ===========================
 FROM base AS app-builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY --link --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ARG NEXT_PUBLIC_ADSENSE_CLIENT_ID=ca-pub-2444093901783574
@@ -83,39 +106,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Production deps — direkt prod-deps stage'den (prune yok, zaten temiz)
+COPY --link --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
 # Copy standalone build
-COPY --from=app-builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=app-builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=app-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=app-builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --from=app-builder --chown=nextjs:nodejs /app/src/lib/tts_engine.py ./src/lib/tts_engine.py
-COPY --from=app-builder --chown=nextjs:nodejs /app/server.js ./server.js
-COPY --from=app-builder --chown=nextjs:nodejs /app/package.json ./package.json
-COPY --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
+COPY --link --from=app-builder --chown=nextjs:nodejs /app/public ./public
+COPY --link --from=app-builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --link --from=app-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --link --from=app-builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --link --from=app-builder --chown=nextjs:nodejs /app/src/lib/tts_engine.py ./src/lib/tts_engine.py
+COPY --link --from=app-builder --chown=nextjs:nodejs /app/server.js ./server.js
+COPY --link --from=app-builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --link --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
 
 COPY --from=app-builder --chown=nextjs:nodejs /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
-
-# Production deps: deps'ten kopyala + inline prune (prod-deps stage kaldırıldı)
-# Coolify her stage'e ~100 ARG enjekte ediyor, stage azaltmak = cache korunuyor
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
-RUN npm prune --omit=dev --legacy-peer-deps 2>/dev/null; \
-    npm install --no-save prisma@5.22.0 --legacy-peer-deps 2>/dev/null; \
-    rm -rf node_modules/.cache \
-        node_modules/@next/swc-linux-arm* \
-        node_modules/@next/swc-darwin* \
-        node_modules/@next/swc-win32* \
-        node_modules/puppeteer/.local-chromium \
-        node_modules/puppeteer-core/.local-chromium \
-        node_modules/@swc/core-linux-arm* \
-        node_modules/@esbuild/linux-arm* \
-        node_modules/@esbuild/darwin* \
-        node_modules/@esbuild/win32* \
-        node_modules/typescript \
-        node_modules/@types \
-        node_modules/eslint* \
-        2>/dev/null || true && \
-    echo "✓ prod deps: $(ls -1 node_modules | wc -l) packages"
 
 ENV NODE_ENV=production \
     HOSTNAME="0.0.0.0" \
@@ -146,28 +151,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Worker needs tsx + typescript but NOT build tools
-COPY --from=deps --chown=worker:nodejs /app/node_modules ./node_modules
-RUN rm -rf node_modules/.cache \
-        node_modules/@next/swc-linux-arm* \
-        node_modules/@next/swc-darwin* \
-        node_modules/@next/swc-win32* \
-        node_modules/puppeteer/.local-chromium \
-        node_modules/puppeteer-core/.local-chromium \
-        node_modules/@swc/core-linux-arm* \
-        node_modules/@esbuild/linux-arm* \
-        node_modules/@esbuild/darwin* \
-        node_modules/@esbuild/win32* \
-        node_modules/eslint* \
-        node_modules/webpack \
-        node_modules/jest* \
-        2>/dev/null || true && \
+# Prod deps + tsx/typescript for running .ts files
+COPY --link --from=prod-deps --chown=worker:nodejs /app/node_modules ./node_modules
+RUN npm install --no-save tsx typescript --legacy-peer-deps 2>/dev/null && \
+    rm -rf node_modules/.cache 2>/dev/null || true && \
     echo "✓ worker deps: $(ls -1 node_modules | wc -l) packages"
 
-COPY --chown=worker:nodejs prisma ./prisma
-COPY --chown=worker:nodejs src ./src
-COPY --chown=worker:nodejs tsconfig.json ./tsconfig.json
-COPY --chown=worker:nodejs package.json ./package.json
+COPY --link --chown=worker:nodejs prisma ./prisma
+COPY --link --chown=worker:nodejs src ./src
+COPY --link --chown=worker:nodejs tsconfig.json ./tsconfig.json
+COPY --link --chown=worker:nodejs package.json ./package.json
 
 ENV NODE_ENV=production \
     TSX_TSCONFIG_PATH="/app/tsconfig.json" \
