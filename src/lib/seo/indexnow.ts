@@ -626,17 +626,27 @@ export async function pingSitemaps(): Promise<{
   // Verify IndexNow key file accessibility (ALWAYS run — even when Yandex succeeds, Bing may fail)
   try {
     const apiKey = await getOrCreateIndexNowKey();
-    const keyFileUrl = `${baseUrl}/${apiKey}.txt`;
+    const publicUrl = `${baseUrl}/${apiKey}.txt`;
+    // Self-check via localhost to bypass Cloudflare cache
+    const localPort = process.env.PORT || "3000";
+    const localUrl = `http://localhost:${localPort}/${apiKey}.txt`;
     console.log(`🔑 IndexNow key in use: ${apiKey}`);
-    console.log(`🔑 Key file URL: ${keyFileUrl}`);
-    const keyCheck = await fetch(keyFileUrl, {
+    console.log(`🔑 Key file URL (public): ${publicUrl}`);
+    console.log(`🔑 Key file URL (local check): ${localUrl}`);
+    const keyCheck = await fetch(localUrl, {
       method: "GET",
       signal: AbortSignal.timeout(5000),
-      headers: { "User-Agent": "IndexNow-KeyVerify/1.0" },
+      headers: {
+        "User-Agent": "IndexNow-KeyVerify/1.0",
+        Host: new URL(baseUrl).hostname,
+      },
     });
     if (!keyCheck.ok) {
       console.error(
-        `🔑 IndexNow key file NOT accessible at ${keyFileUrl} (HTTP ${keyCheck.status}) — Bing WILL reject submissions!`,
+        `🔑 IndexNow key file NOT accessible at ${localUrl} (HTTP ${keyCheck.status}) — Bing WILL reject submissions!`,
+      );
+      console.error(
+        `🔑 Response body: ${(await keyCheck.text()).slice(0, 200)}`,
       );
     } else {
       const keyContent = await keyCheck.text();
@@ -645,7 +655,21 @@ export async function pingSitemaps(): Promise<{
           `🔑 IndexNow key file content MISMATCH! Expected "${apiKey}", got "${keyContent.trim().slice(0, 80)}" — Bing WILL reject submissions!`,
         );
       } else {
-        console.log(`🔑 IndexNow key file verified OK at ${keyFileUrl}`);
+        console.log(`🔑 IndexNow key file verified OK (local: ✅)`);
+        // Also verify public URL (through Cloudflare) — non-blocking
+        fetch(publicUrl, { method: "GET", signal: AbortSignal.timeout(5000) })
+          .then(async (r) => {
+            if (!r.ok) {
+              console.warn(
+                `🔑 IndexNow key file public URL returned HTTP ${r.status} — Cloudflare may be caching old 404. Purge cache!`,
+              );
+            } else {
+              console.log(`🔑 IndexNow key file verified OK (public: ✅)`);
+            }
+          })
+          .catch(() =>
+            console.warn(`🔑 Public URL check failed (non-critical)`),
+          );
       }
     }
   } catch (e) {

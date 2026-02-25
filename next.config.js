@@ -59,6 +59,16 @@ const nextConfig = {
   // Turkish URL rewrites
   async rewrites() {
     return [
+      // IndexNow key verification: /{key}.txt → API route (bypasses Cloudflare cache)
+      {
+        source: "/:key([0-9a-f]{32}).txt",
+        destination: "/api/indexnow-key?key=:key",
+      },
+      {
+        source: "/:key([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).txt",
+        destination: "/api/indexnow-key?key=:key",
+      },
+      // Turkish URL rewrites
       {
         source: "/haberler/:slug",
         destination: "/news/:slug",
