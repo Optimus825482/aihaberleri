@@ -670,60 +670,47 @@ export async function pingSitemaps(): Promise<{
     }
   }
 
-  // Verify IndexNow key file accessibility (ALWAYS run — even when Yandex succeeds, Bing may fail)
+  // Verify IndexNow key file accessibility + auto-purge Cloudflare cache
+  // Skip Docker-internal self-check (unreliable due to HOSTNAME binding) — check public URL directly
   try {
     const apiKey = await getOrCreateIndexNowKey();
     const publicUrl = `${baseUrl}/${apiKey}.txt`;
-    // Self-check via 127.0.0.1 to bypass Cloudflare cache (localhost may fail DNS in Docker Alpine)
-    const localPort = process.env.PORT || "3000";
-    const localUrl = `http://127.0.0.1:${localPort}/${apiKey}.txt`;
     console.log(`🔑 IndexNow key in use: ${apiKey}`);
-    console.log(`🔑 Key file URL (public): ${publicUrl}`);
-    console.log(`🔑 Key file URL (local check): ${localUrl}`);
-    const keyCheck = await fetch(localUrl, {
-      method: "GET",
-      signal: AbortSignal.timeout(5000),
-      headers: {
-        "User-Agent": "IndexNow-KeyVerify/1.0",
-        Host: new URL(baseUrl).hostname,
-      },
-    });
-    if (!keyCheck.ok) {
-      console.error(
-        `🔑 IndexNow key file NOT accessible at ${localUrl} (HTTP ${keyCheck.status}) — Bing WILL reject submissions!`,
-      );
-      console.error(
-        `🔑 Response body: ${(await keyCheck.text()).slice(0, 200)}`,
-      );
-    } else {
-      const keyContent = await keyCheck.text();
-      if (keyContent.trim() !== apiKey) {
-        console.error(
-          `🔑 IndexNow key file content MISMATCH! Expected "${apiKey}", got "${keyContent.trim().slice(0, 80)}" — Bing WILL reject submissions!`,
+    console.log(`🔑 Key file URL: ${publicUrl}`);
+
+    try {
+      const publicCheck = await fetch(publicUrl, {
+        method: "GET",
+        signal: AbortSignal.timeout(8000),
+        headers: { "User-Agent": "IndexNow-KeyVerify/1.0" },
+      });
+
+      if (!publicCheck.ok) {
+        console.warn(
+          `🔑 Key file returned HTTP ${publicCheck.status} — Cloudflare likely caching old 404. Auto-purging...`,
         );
+        await purgeCloudflareCache(publicUrl);
       } else {
-        console.log(`🔑 IndexNow key file verified OK (local: ✅)`);
-        // Also verify public URL (through Cloudflare) — non-blocking
-        fetch(publicUrl, { method: "GET", signal: AbortSignal.timeout(5000) })
-          .then(async (r) => {
-            if (!r.ok) {
-              console.warn(
-                `🔑 IndexNow key file public URL returned HTTP ${r.status} — Cloudflare caching old 404. Auto-purging...`,
-              );
-              // Auto-purge Cloudflare cache for this URL
-              await purgeCloudflareCache(publicUrl);
-            } else {
-              console.log(`🔑 IndexNow key file verified OK (public: ✅)`);
-            }
-          })
-          .catch(() =>
-            console.warn(`🔑 Public URL check failed (non-critical)`),
+        const content = await publicCheck.text();
+        if (content.trim() === apiKey) {
+          console.log(`🔑 IndexNow key file verified OK ✅`);
+        } else {
+          console.error(
+            `🔑 Key file content MISMATCH! Expected "${apiKey}", got "${content.trim().slice(0, 80)}" — Bing WILL reject!`,
           );
+          // Content mismatch — purge Cloudflare cache in case stale response
+          await purgeCloudflareCache(publicUrl);
+        }
       }
+    } catch (fetchErr) {
+      console.warn(
+        `🔑 Public URL check failed: ${fetchErr instanceof Error ? fetchErr.message : "network error"} — purging cache as precaution`,
+      );
+      await purgeCloudflareCache(publicUrl);
     }
   } catch (e) {
     console.warn(
-      `🔑 IndexNow key file accessibility check failed: ${e instanceof Error ? e.message : "network error"}`,
+      `🔑 IndexNow key verification failed: ${e instanceof Error ? e.message : "error"}`,
     );
   }
 
