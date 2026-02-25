@@ -3,6 +3,14 @@ import { db } from "@/lib/db";
 import { calculateSEOScore } from "@/lib/seo-calculator";
 import { requireAdminAuth } from "@/lib/admin-auth";
 
+type SEORecommendationDelegate = {
+  updateMany: (...args: any[]) => Promise<any>;
+};
+
+const seoRecommendationTable = (db as any)["sEORecommendation"] as
+  | SEORecommendationDelegate
+  | undefined;
+
 /**
  * POST /api/admin/articles/[id]/apply-seo
  * Apply selected SEO optimizations
@@ -87,15 +95,17 @@ export async function POST(
       });
 
       // Clear resolved recommendations
-      await db.sEORecommendation.updateMany({
-        where: {
-          articleId: id,
-          isResolved: false,
-        },
-        data: {
-          isResolved: true,
-        },
-      });
+      if (seoRecommendationTable) {
+        await seoRecommendationTable.updateMany({
+          where: {
+            articleId: id,
+            isResolved: false,
+          },
+          data: {
+            isResolved: true,
+          },
+        });
+      }
     }
 
     return NextResponse.json({

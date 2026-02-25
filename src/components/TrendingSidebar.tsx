@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTrendingArticles } from "@/hooks/use-trending";
 import { AdSlot } from "@/components/AdSlot";
@@ -44,6 +44,11 @@ const texts = {
 };
 
 export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("week");
   const t = texts[locale];
 
@@ -109,7 +114,7 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
         </div>
 
         <div className="flex flex-col">
-          {loading ? (
+          {!mounted || loading ? (
             // Loading skeleton
             Array.from({ length: 5 }).map((_, i) => (
               <div

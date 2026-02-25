@@ -4,6 +4,14 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+type SEORecommendationDelegate = {
+  findMany: (...args: any[]) => Promise<any[]>;
+};
+
+const seoRecommendationTable = (db as any)["sEORecommendation"] as
+  | SEORecommendationDelegate
+  | undefined;
+
 type QualityItem = {
   id: string;
   slug: string;
@@ -92,32 +100,34 @@ export async function GET(request: NextRequest) {
         orderBy: { publishedAt: "desc" },
         take: 3000,
       }),
-      db.sEORecommendation.findMany({
-        where: {
-          type: "CONTENT_QUALITY_LOW_VALUE",
-          isResolved: false,
-          article: {
-            status: "PUBLISHED",
-          },
-        },
-        select: {
-          message: true,
-          suggestion: true,
-          article: {
-            select: {
-              id: true,
-              slug: true,
-              title: true,
-              publishedAt: true,
-              seoScore: true,
+      seoRecommendationTable
+        ? seoRecommendationTable.findMany({
+            where: {
+              type: "CONTENT_QUALITY_LOW_VALUE",
+              isResolved: false,
+              article: {
+                status: "PUBLISHED",
+              },
             },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: limit,
-      }),
+            select: {
+              message: true,
+              suggestion: true,
+              article: {
+                select: {
+                  id: true,
+                  slug: true,
+                  title: true,
+                  publishedAt: true,
+                  seoScore: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: limit,
+          })
+        : Promise.resolve([]),
     ]);
 
     const imagelessList: QualityItem[] = imagelessRows.map(

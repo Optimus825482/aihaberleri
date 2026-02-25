@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useTrendingArticles } from "@/hooks/use-trending";
 
 interface TodayTrendingProps {
@@ -38,6 +39,11 @@ function getRankBg(index: number) {
 }
 
 export function TodayTrending({ locale = "tr" }: TodayTrendingProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const t = texts[locale];
   const { data, isLoading } = useTrendingArticles("today", 5, "trend", locale);
   const articles = data?.articles ?? [];
@@ -75,7 +81,7 @@ export function TodayTrending({ locale = "tr" }: TodayTrendingProps) {
       </div>
 
       {/* Trending Grid - Mobile: vertical stack, Desktop: horizontal */}
-      {isLoading ? (
+      {!mounted || isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
