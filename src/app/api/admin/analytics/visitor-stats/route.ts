@@ -183,10 +183,11 @@ export async function GET(request: NextRequest) {
         startDate,
       ),
 
-      // Recent visitors
+      // Recent visitors (Local/localhost hariç)
       db.visitor.findMany({
         where: {
           lastActivity: { gte: new Date(now.getTime() - 30 * 60 * 1000) },
+          country: { not: "Local" },
         },
         orderBy: { lastActivity: "desc" },
         take: 20,

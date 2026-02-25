@@ -26,9 +26,12 @@ async function getDBRealtimeData() {
   const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
   const thirtyMinAgo = new Date(now.getTime() - 30 * 60 * 1000);
 
-  // Son 30 dk aktif ziyaretçiler (limit yüksek tutuyoruz)
+  // Son 30 dk aktif ziyaretçiler (Local/localhost hariç)
   const visitors = await db.visitor.findMany({
-    where: { lastActivity: { gte: thirtyMinAgo } },
+    where: {
+      lastActivity: { gte: thirtyMinAgo },
+      country: { not: "Local" },
+    },
     orderBy: { lastActivity: "desc" },
     take: 100,
     select: {
