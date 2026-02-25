@@ -20,6 +20,53 @@ const INDEXNOW_TIMEOUT = 15000;
 const INDEXNOW_MAX_RETRIES = 2;
 
 /**
+ * Cloudflare cache purge for specific URLs
+ * Uses Cloudflare API to clear cached responses (e.g., stale 404s for key files)
+ */
+async function purgeCloudflareCache(url: string): Promise<boolean> {
+  const zoneId = process.env.CLOUDFLARE_ZONE_ID;
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+
+  if (!zoneId || !apiToken) {
+    console.warn(
+      "🔑 Cannot purge Cloudflare cache — CLOUDFLARE_ZONE_ID or CLOUDFLARE_API_TOKEN not set",
+    );
+    return false;
+  }
+
+  try {
+    const resp = await fetch(
+      `https://api.cloudflare.com/client/v4/zones/${zoneId}/purge_cache`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ files: [url] }),
+        signal: AbortSignal.timeout(10000),
+      },
+    );
+
+    const data = await resp.json();
+    if (data.success) {
+      console.log(`🔑 ✅ Cloudflare cache purged for: ${url}`);
+      return true;
+    } else {
+      console.error(
+        `🔑 ❌ Cloudflare cache purge failed: ${JSON.stringify(data.errors)}`,
+      );
+      return false;
+    }
+  } catch (e) {
+    console.warn(
+      `🔑 Cloudflare cache purge error: ${e instanceof Error ? e.message : "unknown"}`,
+    );
+    return false;
+  }
+}
+
+/**
  * IndexNow fetch with timeout, retry, and diagnostic logging
  */
 async function fetchIndexNowWithRetry(
@@ -627,9 +674,9 @@ export async function pingSitemaps(): Promise<{
   try {
     const apiKey = await getOrCreateIndexNowKey();
     const publicUrl = `${baseUrl}/${apiKey}.txt`;
-    // Self-check via localhost to bypass Cloudflare cache
+    // Self-check via 127.0.0.1 to bypass Cloudflare cache (localhost may fail DNS in Docker Alpine)
     const localPort = process.env.PORT || "3000";
-    const localUrl = `http://localhost:${localPort}/${apiKey}.txt`;
+    const localUrl = `http://127.0.0.1:${localPort}/${apiKey}.txt`;
     console.log(`🔑 IndexNow key in use: ${apiKey}`);
     console.log(`🔑 Key file URL (public): ${publicUrl}`);
     console.log(`🔑 Key file URL (local check): ${localUrl}`);
@@ -661,8 +708,10 @@ export async function pingSitemaps(): Promise<{
           .then(async (r) => {
             if (!r.ok) {
               console.warn(
-                `🔑 IndexNow key file public URL returned HTTP ${r.status} — Cloudflare may be caching old 404. Purge cache!`,
+                `🔑 IndexNow key file public URL returned HTTP ${r.status} — Cloudflare caching old 404. Auto-purging...`,
               );
+              // Auto-purge Cloudflare cache for this URL
+              await purgeCloudflareCache(publicUrl);
             } else {
               console.log(`🔑 IndexNow key file verified OK (public: ✅)`);
             }
