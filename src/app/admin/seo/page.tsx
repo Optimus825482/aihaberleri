@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Search,
   TrendingUp,
@@ -19,9 +22,13 @@ import {
   XCircle,
   SkipForward,
   Loader2,
+  CalendarDays,
+  Target,
+  Layers,
 } from "lucide-react";
 import Link from "next/link";
 import { SEOPanel } from "@/components/admin/SEOPanel";
+import { useToast } from "@/hooks/use-toast";
 
 interface SEORecommendation {
   id: string;
@@ -37,6 +44,9 @@ interface ArticleSEO {
   title: string;
   slug: string;
   seoScore: number;
+  language?: string;
+  publishedAt?: string | null;
+  keywords?: string[];
   status: string;
   category: { name: string } | null;
   _count: { seoRecommendations: number };
@@ -64,7 +74,57 @@ interface BulkResult {
   message?: string;
 }
 
+interface ContentPlanArticle {
+  id: string;
+  title: string;
+  slug: string;
+  language: string;
+  category: string;
+  publishedAt: string | null;
+  seoScore: number;
+  targetScore: number;
+  projectedLift: number;
+  priorityScore: number;
+  intent: "informational" | "commercial" | "transactional";
+  primaryKeyword: string;
+  secondaryKeywords: string[];
+}
+
+interface ContentPlanWeek {
+  week: number;
+  focus: string;
+  targetKeyword: string;
+  contentType: string;
+  wordCountTarget: number;
+  internalLinkTargets: string[];
+  articleIds: string[];
+}
+
+interface ContentPlanData {
+  generatedAt: string;
+  summary: {
+    candidateCount: number;
+    plannedCount: number;
+    averageCurrentScore: number;
+    averageTargetScore: number;
+    averageLift: number;
+    totalProjectedLift: number;
+  };
+  priorityArticles: ContentPlanArticle[];
+  topicClusters: Array<{
+    category: string;
+    pillarTitle: string;
+    supportingArticles: string[];
+    targetKeywords: string[];
+  }>;
+  calendar: ContentPlanWeek[];
+}
+
+type OptimizationMode = "autonomous" | "manual" | "single";
+type LanguageFilter = "tr" | "en" | "all";
+
 export default function SEOPage() {
+  const { toast } = useToast();
   const [articles, setArticles] = useState<ArticleSEO[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedArticle, setSelectedArticle] = useState<ArticleSEO | null>(
@@ -84,11 +144,26 @@ export default function SEOPage() {
   const [bulkCurrent, setBulkCurrent] = useState(0);
   const [bulkResult, setBulkResult] = useState<BulkResult | null>(null);
   const [processingTitle, setProcessingTitle] = useState<string | null>(null);
+  const [optimizeThreshold, setOptimizeThreshold] = useState(80);
+  const [optimizeLimit, setOptimizeLimit] = useState(50);
+  const [optimizationMode, setOptimizationMode] =
+    useState<OptimizationMode>("autonomous");
+  const [languageFilter, setLanguageFilter] = useState<LanguageFilter>("tr");
+  const [selectedArticleIds, setSelectedArticleIds] = useState<string[]>([]);
+  const [planAgeDays, setPlanAgeDays] = useState(30);
+  const [planWeeks, setPlanWeeks] = useState(8);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [contentPlan, setContentPlan] = useState<ContentPlanData | null>(null);
   const bulkLogRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdRef = useRef<string | null>(null);
   const lastIndexRef = useRef(0);
   const hasRecalculated = useRef(false);
+
+  const formatDate = (value: string | null | undefined) => {
+    if (!value) return "-";
+    return new Date(value).toLocaleDateString("tr-TR");
+  };
 
   const updateStats = useCallback((articlesData: ArticleSEO[]) => {
     const total = articlesData.length;
@@ -113,7 +188,19 @@ export default function SEOPage() {
   const fetchArticles = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/articles?include=seo");
+      const query = new URLSearchParams({
+        include: "seo",
+        status: "PUBLISHED",
+        limit: "250",
+      });
+
+      if (languageFilter !== "all") {
+        query.set("language", languageFilter);
+      }
+
+      const response = await fetch(
+        `/api/admin/articles?${query.toString()}`,
+      );
       if (response.ok) {
         const data = await response.json();
         let articlesData = data.articles || [];
@@ -131,7 +218,9 @@ export default function SEOPage() {
               body: JSON.stringify({ all: true, status: "PUBLISHED" }),
             });
             // Skorlar güncellendi, tekrar fetch et
-            const refreshed = await fetch("/api/admin/articles?include=seo");
+            const refreshed = await fetch(
+              `/api/admin/articles?${query.toString()}`,
+            );
             if (refreshed.ok) {
               const refreshedData = await refreshed.json();
               articlesData = refreshedData.articles || [];
@@ -158,14 +247,64 @@ export default function SEOPage() {
       }
     } catch (error) {
       console.error("Failed to fetch articles:", error);
+      toast({
+        title: "Hata",
+        description: "Makaleler yüklenemedi",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  }, [selectedArticle, updateStats]);
+  }, [languageFilter, selectedArticle, toast, updateStats]);
+
+  const fetchContentPlan = useCallback(async () => {
+    setPlanLoading(true);
+    try {
+      const query = new URLSearchParams({
+        maxScore: String(optimizeThreshold),
+        ageDays: String(planAgeDays),
+        weeks: String(planWeeks),
+        limit: String(Math.max(optimizeLimit, 20)),
+        language: languageFilter,
+        mode: optimizationMode,
+      });
+
+      const response = await fetch(`/api/admin/seo/content-plan?${query}`);
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Plan üretilemedi");
+      }
+
+      setContentPlan(data as ContentPlanData);
+    } catch (error) {
+      console.error("Failed to fetch content plan:", error);
+      toast({
+        title: "Plan üretilemedi",
+        description:
+          error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setPlanLoading(false);
+    }
+  }, [
+    languageFilter,
+    optimizationMode,
+    optimizeLimit,
+    optimizeThreshold,
+    planAgeDays,
+    planWeeks,
+    toast,
+  ]);
 
   useEffect(() => {
     fetchArticles();
   }, [fetchArticles]);
+
+  useEffect(() => {
+    fetchContentPlan();
+  }, [fetchContentPlan]);
 
   // ─── Polling: Job durumunu her 2 saniyede kontrol et ───
   const stopPolling = useCallback(() => {
@@ -282,6 +421,96 @@ export default function SEOPage() {
 
   // ─── Bulk Auto-Optimize ───
   const startBulkOptimize = useCallback(async () => {
+    if (optimizationMode === "manual") {
+      if (selectedArticleIds.length === 0) {
+        toast({
+          title: "Seçim gerekli",
+          description: "Manuel modda en az bir makale seçmelisiniz.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/admin/seo/bulk-optimize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ articleIds: selectedArticleIds }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Manuel optimizasyon başlatılamadı");
+        }
+
+        toast({
+          title: "Kuyruğa alındı",
+          description: `${selectedArticleIds.length} makale manuel optimizasyon kuyruğuna eklendi.`,
+        });
+      } catch (error) {
+        toast({
+          title: "Hata",
+          description:
+            error instanceof Error ? error.message : "Manuel optimizasyon başarısız",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
+    if (optimizationMode === "single") {
+      const targetId = selectedArticle?.id || selectedArticleIds[0];
+      if (!targetId) {
+        toast({
+          title: "Seçim gerekli",
+          description: "Tekli mod için bir makale seçmelisiniz.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setBulkOptimizing(true);
+      try {
+        const response = await fetch(`/api/admin/articles/${targetId}/optimize`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || "Tekli optimizasyon başarısız");
+        }
+
+        setBulkResult({
+          processed: 1,
+          succeeded: 1,
+          failed: 0,
+          skipped: 0,
+          avgImprovement: Number(data.scoreDelta || 0),
+          message: data.message,
+        });
+
+        toast({
+          title: "Tekli analiz tamamlandı",
+          description: `Skor değişimi: ${data.beforeScore} → ${data.afterScore}`,
+        });
+        fetchArticles();
+      } catch (error) {
+        setBulkResult({
+          processed: 1,
+          succeeded: 0,
+          failed: 1,
+          skipped: 0,
+          avgImprovement: 0,
+          message:
+            error instanceof Error ? error.message : "Tekli optimizasyon başarısız",
+        });
+      } finally {
+        setBulkOptimizing(false);
+      }
+      return;
+    }
+
     setBulkOptimizing(true);
     setBulkProgress([]);
     setBulkResult(null);
@@ -293,7 +522,11 @@ export default function SEOPage() {
       const response = await fetch("/api/admin/seo/auto-optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ maxScore: 80, limit: 50 }),
+        body: JSON.stringify({
+          maxScore: optimizeThreshold,
+          limit: optimizeLimit,
+          language: languageFilter,
+        }),
       });
 
       const data = await response.json();
@@ -322,7 +555,33 @@ export default function SEOPage() {
         message: err instanceof Error ? err.message : "Bağlantı hatası",
       });
     }
-  }, [startPolling]);
+  }, [
+    fetchArticles,
+    languageFilter,
+    optimizationMode,
+    optimizeLimit,
+    optimizeThreshold,
+    selectedArticle?.id,
+    selectedArticleIds,
+    startPolling,
+    toast,
+  ]);
+
+  const actionLabel =
+    optimizationMode === "autonomous"
+      ? "Otonom Çalıştır"
+      : optimizationMode === "manual"
+        ? `Manuel Kuyruğa Ekle (${selectedArticleIds.length})`
+        : "Tekli Optimize Et";
+
+  const actionDisabled =
+    bulkOptimizing ||
+    loading ||
+    (optimizationMode === "autonomous" && stats.needsWork === 0) ||
+    (optimizationMode === "manual" && selectedArticleIds.length === 0) ||
+    (optimizationMode === "single" &&
+      selectedArticleIds.length === 0 &&
+      !selectedArticle);
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600 bg-green-50 border-green-200";
@@ -343,7 +602,7 @@ export default function SEOPage() {
           <div className="flex items-center gap-2">
             <Button
               onClick={startBulkOptimize}
-              disabled={bulkOptimizing || loading || stats.needsWork === 0}
+              disabled={actionDisabled}
               variant="default"
             >
               {bulkOptimizing ? (
@@ -353,7 +612,7 @@ export default function SEOPage() {
               )}
               {bulkOptimizing
                 ? `${bulkCurrent}/${bulkTotal} İşleniyor...`
-                : "Toplu Optimize"}
+                : actionLabel}
             </Button>
             <Button onClick={fetchArticles} disabled={loading || bulkOptimizing} variant="outline">
               <RefreshCw
@@ -428,6 +687,150 @@ export default function SEOPage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Geçmiş Yayın SEO İyileştirme Ayarları
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Toplu optimizasyon ve plan üretimi için eşik ve kapsam değerlerini güncelleyin.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2 mb-4">
+              <div className="space-y-2">
+                <Label>Çalışma Modu</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={optimizationMode === "autonomous" ? "default" : "outline"}
+                    onClick={() => setOptimizationMode("autonomous")}
+                  >
+                    Otonom
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={optimizationMode === "manual" ? "default" : "outline"}
+                    onClick={() => setOptimizationMode("manual")}
+                  >
+                    Manuel
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={optimizationMode === "single" ? "default" : "outline"}
+                    onClick={() => setOptimizationMode("single")}
+                  >
+                    Tekli Seçim
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Dil Kapsamı</Label>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={languageFilter === "tr" ? "default" : "outline"}
+                    onClick={() => setLanguageFilter("tr")}
+                  >
+                    TR
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={languageFilter === "en" ? "default" : "outline"}
+                    onClick={() => setLanguageFilter("en")}
+                  >
+                    EN
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={languageFilter === "all" ? "default" : "outline"}
+                    onClick={() => setLanguageFilter("all")}
+                  >
+                    TR + EN
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-4">
+              <div className="space-y-2">
+                <Label htmlFor="threshold">Hedef Skor Eşiği</Label>
+                <Input
+                  id="threshold"
+                  type="number"
+                  min={40}
+                  max={95}
+                  value={optimizeThreshold}
+                  onChange={(e) => setOptimizeThreshold(Number(e.target.value) || 80)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="limit">Toplu İşlem Limiti</Label>
+                <Input
+                  id="limit"
+                  type="number"
+                  min={10}
+                  max={100}
+                  value={optimizeLimit}
+                  onChange={(e) => setOptimizeLimit(Number(e.target.value) || 50)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ageDays">Minimum Yaş (Gün)</Label>
+                <Input
+                  id="ageDays"
+                  type="number"
+                  min={1}
+                  max={3650}
+                  value={planAgeDays}
+                  onChange={(e) => setPlanAgeDays(Number(e.target.value) || 30)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="weeks">Plan Süresi (Hafta)</Label>
+                <Input
+                  id="weeks"
+                  type="number"
+                  min={2}
+                  max={12}
+                  value={planWeeks}
+                  onChange={(e) => setPlanWeeks(Number(e.target.value) || 8)}
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={fetchContentPlan}
+                disabled={planLoading}
+              >
+                {planLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                )}
+                Planı Güncelle
+              </Button>
+              {contentPlan && (
+                <p className="text-xs text-muted-foreground">
+                  Son üretim: {formatDate(contentPlan.generatedAt)}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Aktif mod: {optimizationMode.toUpperCase()} • Dil: {languageFilter.toUpperCase()}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Bulk Optimize Progress */}
         {(bulkOptimizing || bulkResult) && (
@@ -552,6 +955,103 @@ export default function SEOPage() {
           </Card>
         )}
 
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5" />
+              Geçmiş İçerik SEO Yol Haritası
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Yayınlanmış düşük skorlu haberler için önceliklendirilmiş içerik planı, konu kümesi ve haftalık takvim.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!contentPlan ? (
+              <div className="text-sm text-muted-foreground">Plan verisi yüklenemedi.</div>
+            ) : (
+              <>
+                <div className="grid gap-3 md:grid-cols-4">
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs text-muted-foreground">Aday Makale</div>
+                    <div className="text-xl font-bold">{contentPlan.summary.candidateCount}</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs text-muted-foreground">Plana Giren</div>
+                    <div className="text-xl font-bold">{contentPlan.summary.plannedCount}</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs text-muted-foreground">Ort. Skor Artışı</div>
+                    <div className="text-xl font-bold">+{contentPlan.summary.averageLift}</div>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <div className="text-xs text-muted-foreground">Hedef Ortalama</div>
+                    <div className="text-xl font-bold">{contentPlan.summary.averageTargetScore}</div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">Öncelikli Makaleler</h3>
+                    <div className="max-h-[260px] overflow-y-auto space-y-2">
+                      {contentPlan.priorityArticles.slice(0, 12).map((item) => (
+                        <div key={item.id} className="rounded-lg border p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium truncate">{item.title}</p>
+                            <Badge variant="outline">{item.intent}</Badge>
+                          </div>
+                          <div className="mt-1 text-xs text-muted-foreground flex flex-wrap gap-2">
+                            <span>Skor: {item.seoScore} → {item.targetScore}</span>
+                            <span>+{item.projectedLift}</span>
+                            <span>Öncelik: {item.priorityScore}</span>
+                            <span>Dil: {item.language?.toUpperCase()}</span>
+                            <span>Yayın: {formatDate(item.publishedAt)}</span>
+                          </div>
+                          <div className="mt-2 text-xs">
+                            <span className="text-muted-foreground">Primary:</span> {item.primaryKeyword}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">Haftalık İçerik Takvimi</h3>
+                    <div className="max-h-[260px] overflow-y-auto space-y-2">
+                      {contentPlan.calendar.map((week) => (
+                        <div key={week.week} className="rounded-lg border p-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium">Hafta {week.week}</p>
+                            <Badge variant="secondary">{week.articleIds.length} içerik</Badge>
+                          </div>
+                          <p className="text-xs mt-1 text-muted-foreground">{week.focus}</p>
+                          <p className="text-xs mt-1">Ana keyword: {week.targetKeyword}</p>
+                          <p className="text-xs text-muted-foreground">Kelime hedefi: {week.wordCountTarget}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold">Topic Cluster Planı</h3>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {contentPlan.topicClusters.slice(0, 6).map((cluster) => (
+                      <div key={cluster.category} className="rounded-lg border p-3">
+                        <p className="text-sm font-medium">{cluster.category}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{cluster.pillarTitle}</p>
+                        <p className="text-xs mt-2">
+                          <span className="text-muted-foreground">Keyword hedefleri:</span>{" "}
+                          {cluster.targetKeywords.slice(0, 4).join(", ")}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Article List */}
           <Card>
@@ -594,9 +1094,35 @@ export default function SEOPage() {
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
+                              {(optimizationMode === "manual" ||
+                                optimizationMode === "single") && (
+                                  <Checkbox
+                                    checked={selectedArticleIds.includes(article.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (optimizationMode === "single") {
+                                        setSelectedArticleIds(checked ? [article.id] : []);
+                                        return;
+                                      }
+                                      setSelectedArticleIds((prev) => {
+                                        if (checked === true) {
+                                          return prev.includes(article.id)
+                                            ? prev
+                                            : [...prev, article.id];
+                                        }
+                                        return prev.filter((id) => id !== article.id);
+                                      });
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  />
+                                )}
                               <h3 className="font-medium text-sm truncate">
                                 {article.title}
                               </h3>
+                              {article.language && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {article.language.toUpperCase()}
+                                </Badge>
+                              )}
                               {article.category && (
                                 <Badge variant="outline" className="text-xs">
                                   {article.category.name}

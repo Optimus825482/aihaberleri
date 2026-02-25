@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
  * Arka planda toplu SEO optimizasyonu başlatır.
  * Sayfa kapansa bile server'da çalışmaya devam eder.
  *
- * Body: { maxScore?: number, limit?: number }
+ * Body: { maxScore?: number, limit?: number, language?: "tr" | "en" | "all" | "enb" }
  * Returns: { jobId: string } (202 Accepted)
  */
 export async function POST(request: NextRequest) {
@@ -34,20 +34,35 @@ export async function POST(request: NextRequest) {
   // Parse body
   let maxScore = 80;
   let limit = 50;
+  let language: "tr" | "en" | "all" = "tr";
   try {
     const body = await request.json();
     if (body.maxScore) maxScore = body.maxScore;
     if (body.limit) limit = body.limit;
+    if (body.language) {
+      const normalized = String(body.language).toLowerCase();
+      if (normalized === "tr" || normalized === "en" || normalized === "all") {
+        language = normalized;
+      } else if (normalized === "enb") {
+        language = "en";
+      }
+    }
   } catch {
     // defaults
   }
 
+  const whereClause: any = {
+    status: "PUBLISHED",
+    OR: [{ seoScore: { lt: maxScore } }, { seoScore: null }],
+  };
+
+  if (language !== "all") {
+    whereClause.language = language;
+  }
+
   // Düşük skorlu (veya skoru hiç hesaplanmamış) makaleleri getir
   const rawArticles = await db.article.findMany({
-    where: {
-      status: "PUBLISHED",
-      OR: [{ seoScore: { lt: maxScore } }, { seoScore: null }],
-    },
+    where: whereClause,
     orderBy: { seoScore: "asc" },
     take: limit * 2, // Fazla çek, ön-ölçümden sonra filtrele
     select: {
@@ -110,7 +125,7 @@ export async function POST(request: NextRequest) {
   BulkJobStore.create(jobId, articles.length);
 
   // 🔥 Fire-and-forget: işlemi arka planda başlat, response'u bekleme
-  runBulkOptimize(jobId, articles).catch((err) => {
+  runBulkOptimize(jobId, articles, maxScore).catch((err) => {
     console.error("[Bulk Optimize] Unhandled error:", err);
     BulkJobStore.fail(
       jobId,
@@ -119,7 +134,7 @@ export async function POST(request: NextRequest) {
   });
 
   // Hemen jobId döndür
-  return NextResponse.json({ jobId }, { status: 202 });
+  return NextResponse.json({ jobId, language, maxScore }, { status: 202 });
 }
 
 /**
@@ -193,6 +208,7 @@ interface ArticleForOptimize {
 async function runBulkOptimize(
   jobId: string,
   articles: ArticleForOptimize[],
+  maxScore = 80,
 ): Promise<void> {
   console.log(
     `[Bulk Optimize] Job başlıyor: ${jobId} — ${articles.length} makale`,
@@ -207,7 +223,7 @@ async function runBulkOptimize(
     const beforeScore = article.seoScore || 0;
 
     // Zaten maxScore üstündeyse atla (ön-ölçümde kaçmış olabilir)
-    if (beforeScore >= 80) {
+    if (beforeScore >= maxScore) {
       BulkJobStore.addProgress(jobId, {
         index: i + 1,
         total: articles.length,

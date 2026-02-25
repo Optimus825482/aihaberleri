@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const include = searchParams.get("include");
     const status = searchParams.get("status");
     const categoryId = searchParams.get("categoryId");
+    const language = searchParams.get("language")?.toLowerCase();
     const limit = parseInt(searchParams.get("limit") || "100");
     const offset = parseInt(searchParams.get("offset") || "0");
 
@@ -35,6 +36,9 @@ export async function GET(request: NextRequest) {
     }
     if (categoryId) {
       where.categoryId = categoryId;
+    }
+    if (language && ["tr", "en"].includes(language)) {
+      where.language = language;
     }
 
     // Build include clause
