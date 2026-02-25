@@ -10,6 +10,7 @@ import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
 import { AdSlot } from "@/components/AdSlot";
 import { CategoryHero } from "@/components/CategoryHero";
+import { AD_SLOTS } from "@/lib/ad-slots";
 import type { Metadata } from "next";
 
 interface CategoryPageProps {
@@ -91,7 +92,7 @@ export default async function EnCategoryPage({ params }: CategoryPageProps) {
                 <section className="container mx-auto px-4 py-12">
                     {/* Top Ad */}
                     <AdSlot
-                        slot="5382266994"
+                        slot={AD_SLOTS.BANNER_TOP}
                         format="auto"
                         responsive
                         minHeight={120}
@@ -107,7 +108,7 @@ export default async function EnCategoryPage({ params }: CategoryPageProps) {
                                     {(index + 1) % 6 === 0 && index < articles.length - 1 && (
                                         <div className="col-span-1 md:col-span-2 lg:col-span-3">
                                             <AdSlot
-                                                slot="8493771212"
+                                                slot={AD_SLOTS.INFEED_NEWSLIST}
                                                 format="fluid"
                                                 layout="in-feed"
                                                 layoutKey="-6t+ed+2i-1n-4w"

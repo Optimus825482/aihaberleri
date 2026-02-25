@@ -16,6 +16,7 @@ import {
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { AudioPromo } from "@/components/AudioPromo";
 import { AdSlot } from "@/components/AdSlot";
+import { AD_SLOTS } from "@/lib/ad-slots";
 import { HighlightedText } from "@/components/audio/HighlightedText";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ArticleImage } from "@/components/ResponsiveImage";
@@ -381,7 +382,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                 />
 
                 <AdSlot
-                  slot="6220560152"
+                  slot={AD_SLOTS.ARTICLE_INLINE_TR}
                   format="fluid"
                   layout="in-article"
                   minHeight={140}
@@ -490,7 +491,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
                 {/* Sidebar Ad Slot — dedicated sidebar-display unit */}
                 <AdSlot
-                  slot="3415511418"
+                  slot={AD_SLOTS.SIDEBAR_DISPLAY}
                   format="vertical"
                   minHeight={250}
                   label="Sponsorlu"
@@ -556,7 +557,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         {/* Article Bottom Ad — High-value placement */}
         <div className="container mx-auto px-4 mt-8">
           <AdSlot
-            slot="2050458858"
+            slot={AD_SLOTS.ARTICLE_BOTTOM}
             format="auto"
             responsive
             minHeight={120}
@@ -643,7 +644,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         {/* Multiplex Ad — Recommended content style */}
         <div className="container mx-auto px-4 py-8">
           <AdSlot
-            slot="3028498607"
+            slot={AD_SLOTS.MULTIPLEX_RELATED}
             format="autorelaxed"
             minHeight={180}
             label="Sponsorlu İçerikler"

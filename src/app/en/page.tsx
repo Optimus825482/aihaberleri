@@ -16,6 +16,7 @@ import { CategoryFilters } from "@/components/CategoryFilters";
 import { TodayTrending } from "@/components/TodayTrending";
 import { AdSlot } from "@/components/AdSlot";
 import { AITermsGlossary } from "@/components/article/AITermsGlossary";
+import { AD_SLOTS } from "@/lib/ad-slots";
 import {
   generateOrganizationSchema,
   generateWebSiteSchema,
@@ -230,7 +231,7 @@ export default async function EnglishHomePage() {
           </section>
 
           <AdSlot
-            slot="5382266994"
+            slot={AD_SLOTS.HOME_BANNER_EN}
             format="auto"
             responsive
             minHeight={120}
@@ -312,7 +313,7 @@ export default async function EnglishHomePage() {
                       {(index + 1) % 4 === 0 && index < articles.length - 1 && (
                         <div className="col-span-1 sm:col-span-2">
                           <AdSlot
-                            slot="8493771212"
+                            slot={AD_SLOTS.HOME_INFEED_EN}
                             format="fluid"
                             layout="in-feed"
                             layoutKey="-6t+ed+2i-1n-4w"
@@ -377,7 +378,7 @@ export default async function EnglishHomePage() {
           {/* Multiplex — end-of-page recommendations */}
           <div className="mt-10">
             <AdSlot
-              slot="3028498607"
+              slot={AD_SLOTS.MULTIPLEX_RELATED}
               format="autorelaxed"
               minHeight={200}
               label="You May Also Like"

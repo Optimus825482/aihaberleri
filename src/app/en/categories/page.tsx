@@ -11,17 +11,21 @@ interface Category {
   order: number;
 }
 
-// Category slug to English name mapping
-const CATEGORY_TRANSLATIONS: Record<string, string> = {
+const CATEGORY_SLUG_TRANSLATIONS: Record<string, string> = {
   "yapay-zeka-haberleri": "AI News",
   "yapay-zeka": "Artificial Intelligence",
+  "yapay-zeka-modelleri": "AI Models",
   "makine-ogrenmesi": "Machine Learning",
   "dogal-dil-isleme": "Natural Language Processing",
   "bilgisayarli-goru": "Computer Vision",
   robotik: "Robotics",
+  "robotik-ve-otonom-sistemler": "Robotics and Autonomous Systems",
   "yapay-zeka-etigi": "AI Ethics",
+  "etik-guvenlik-ve-regulasyon": "Ethics, Security and Regulation",
   "yapay-zeka-araclari": "AI Tools",
+  "yapay-zeka-araclari-ve-urunler": "AI Tools and Products",
   "sektor-haberleri": "Industry News",
+  "sektor-ve-is-dunyasi": "Industry and Business",
   arastirma: "Research",
   "derin-ogrenme": "Deep Learning",
   "otonom-sistemler": "Autonomous Systems",
@@ -29,6 +33,23 @@ const CATEGORY_TRANSLATIONS: Record<string, string> = {
   saglik: "Healthcare",
   finans: "Finance",
 };
+
+const CATEGORY_NAME_TRANSLATIONS: Record<string, string> = {
+  "Yapay Zeka": "Artificial Intelligence",
+  "Yapay Zeka Modelleri": "AI Models",
+  "Sektör ve İş Dünyası": "Industry and Business",
+  "Yapay Zeka Araçları ve Ürünler": "AI Tools and Products",
+  "Robotik ve Otonom Sistemler": "Robotics and Autonomous Systems",
+  "Etik, Güvenlik ve Regülasyon": "Ethics, Security and Regulation",
+};
+
+function getCategoryLabel(category: Category): string {
+  return (
+    CATEGORY_SLUG_TRANSLATIONS[category.slug] ||
+    CATEGORY_NAME_TRANSLATIONS[category.name] ||
+    category.name
+  );
+}
 
 export const metadata: Metadata = {
   title: "Categories - AI News",
@@ -54,13 +75,12 @@ export default async function CategoriesPage() {
             >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold text-white group-hover:text-ai-primary transition-colors">
-                  {CATEGORY_TRANSLATIONS[category.slug] || category.name}
+                  {getCategoryLabel(category)}
                 </h2>
                 <span className="material-symbols-outlined text-[20px] text-ai-text-muted group-hover:text-ai-primary transition-all">arrow_forward</span>
               </div>
               <p className="text-ai-text-secondary">
-                Latest news and updates about{" "}
-                {CATEGORY_TRANSLATIONS[category.slug] || category.name}
+                Latest news and updates about {getCategoryLabel(category)}
               </p>
             </Link>
           ))}

@@ -32,6 +32,7 @@ import {
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { AdSlot } from "@/components/AdSlot";
 import { AITermsGlossary } from "@/components/article/AITermsGlossary";
+import { AD_SLOTS } from "@/lib/ad-slots";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -308,7 +309,8 @@ export default async function EnglishArticlePage({ params }: Props) {
         </div>
 
         <article className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
+            <div className="lg:col-span-8 max-w-4xl lg:max-w-none mx-auto w-full">
             {/* Header */}
             <header className="mb-8">
               <div className="flex items-center gap-3 mb-4">
@@ -394,7 +396,7 @@ export default async function EnglishArticlePage({ params }: Props) {
               <div dangerouslySetInnerHTML={{ __html: contentFirstPart }} />
 
               <AdSlot
-                slot="6220560152"
+                  slot={AD_SLOTS.ARTICLE_INLINE_EN}
                 format="fluid"
                 layout="in-article"
                 minHeight={140}
@@ -480,10 +482,23 @@ export default async function EnglishArticlePage({ params }: Props) {
             </div>
           </div>
 
+            <aside className="hidden lg:block lg:col-span-4">
+              <div className="sticky top-24 space-y-6">
+                <AdSlot
+                  slot={AD_SLOTS.SIDEBAR_DISPLAY}
+                  format="vertical"
+                  minHeight={250}
+                  label="Sponsored"
+                  className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+                />
+              </div>
+            </aside>
+          </div>
+
           {/* Article Bottom Ad */}
           <div className="max-w-4xl mx-auto mt-8">
             <AdSlot
-              slot="2050458858"
+              slot={AD_SLOTS.ARTICLE_BOTTOM}
               format="auto"
               responsive
               minHeight={120}
@@ -495,7 +510,7 @@ export default async function EnglishArticlePage({ params }: Props) {
           {/* Multiplex Related Content Ad */}
           <div className="max-w-4xl mx-auto mt-6">
             <AdSlot
-              slot="3028498607"
+              slot={AD_SLOTS.MULTIPLEX_RELATED}
               format="autorelaxed"
               minHeight={200}
               label="You May Also Like"

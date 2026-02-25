@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/utils";
 import { Calendar, Tag, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Icons } from "@/components/icons";
+import { AD_SLOTS } from "@/lib/ad-slots";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ export default async function NewsPage() {
 
       {/* Top Ad */}
       <AdSlot
-        slot="1563878275"
+        slot={AD_SLOTS.BANNER_TOP}
         format="auto"
         responsive
         minHeight={120}
@@ -66,7 +67,7 @@ export default async function NewsPage() {
             {(index + 1) % 6 === 0 && index < articles.length - 1 && (
               <div className="col-span-1 md:col-span-2 lg:col-span-3">
                 <AdSlot
-                  slot="1906988626"
+                  slot={AD_SLOTS.INFEED_NEWSLIST}
                   format="fluid"
                   layout="in-feed"
                   layoutKey="-6t+ed+2i-1n-4w"
@@ -103,7 +104,7 @@ export default async function NewsPage() {
       {articles.length > 0 && (
         <div className="mt-10">
           <AdSlot
-            slot="3028498607"
+            slot={AD_SLOTS.MULTIPLEX_RELATED}
             format="autorelaxed"
             minHeight={200}
             label="Bunları da Okuyun"

@@ -11,6 +11,7 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { AdSlot } from "@/components/AdSlot";
 import { AITermsGlossary } from "@/components/article/AITermsGlossary";
 import { getArticleInsightDisplaySettings } from "@/lib/article-insights";
+import { AD_SLOTS } from "@/lib/ad-slots";
 
 import {
   generateOrganizationSchema,
@@ -594,7 +595,7 @@ export default async function HomePage() {
           )}
 
           <AdSlot
-            slot="3977540197"
+            slot={AD_SLOTS.HOME_BANNER_TR}
             minHeight={120}
             label="Sponsorlu"
             className="mt-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
@@ -635,7 +636,7 @@ export default async function HomePage() {
                     {(index + 1) % 4 === 0 && index < articles.length - 1 && (
                       <div className="col-span-1 sm:col-span-2">
                         <AdSlot
-                          slot="2042719998"
+                          slot={AD_SLOTS.HOME_INFEED_TR}
                           format="fluid"
                           layout="in-feed"
                           layoutKey="-6t+ed+2i-1n-4w"
@@ -715,7 +716,7 @@ export default async function HomePage() {
           {/* Multiplex — sayfa sonu öneriler */}
           <div className="mt-10">
             <AdSlot
-              slot="3028498607"
+              slot={AD_SLOTS.MULTIPLEX_RELATED}
               format="autorelaxed"
               minHeight={200}
               label="Bunları da Okuyun"
