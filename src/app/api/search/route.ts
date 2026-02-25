@@ -35,6 +35,8 @@ export async function GET(request: Request) {
     const query = searchParams.get("q");
     const mode = searchParams.get("mode");
     const topicParam = searchParams.get("topic");
+    const localeParam = searchParams.get("locale");
+    const locale = localeParam === "en" ? "en" : "tr";
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const page = parseInt(searchParams.get("page") || "1", 10);
 
@@ -50,6 +52,95 @@ export async function GET(request: Request) {
 
     if (mode === "company") {
       const companyTerms = resolveCompanyTerms(searchTerm);
+
+      if (locale === "en") {
+        const candidates = await db.articleTranslation.findMany({
+          where: {
+            locale: "en",
+            article: { status: "PUBLISHED" },
+            OR: companyTerms.flatMap((term) => [
+              { title: { contains: term, mode: "insensitive" as const } },
+              { excerpt: { contains: term, mode: "insensitive" as const } },
+              {
+                article: {
+                  OR: [
+                    { keywordsEn: { has: term } },
+                    { keywords: { has: term } },
+                  ],
+                },
+              },
+            ]),
+          },
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            excerpt: true,
+            article: {
+              select: {
+                id: true,
+                imageUrl: true,
+                publishedAt: true,
+                views: true,
+                trendScore: true,
+                keywords: true,
+                keywordsEn: true,
+                category: {
+                  select: {
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: [
+            { article: { trendScore: "desc" } },
+            { article: { publishedAt: "desc" } },
+          ],
+          take: 300,
+        });
+
+        const strictResults = candidates.filter((item) =>
+          companyTerms.some((term) => {
+            const titleMatch = hasWholeWordMatch(
+              item.title.toLowerCase(),
+              term,
+            );
+            const keywordMatch = [
+              ...item.article.keywordsEn,
+              ...item.article.keywords,
+            ].some((keyword) => keyword.toLowerCase() === term);
+            return titleMatch || keywordMatch;
+          }),
+        );
+
+        const totalCount = strictResults.length;
+        const articles = strictResults
+          .slice(skip, skip + limit)
+          .map((item) => ({
+            id: item.article.id,
+            title: item.title,
+            slug: item.slug,
+            excerpt: item.excerpt,
+            imageUrl: item.article.imageUrl,
+            publishedAt: item.article.publishedAt,
+            views: item.article.views,
+            category: item.article.category,
+          }));
+
+        return NextResponse.json({
+          articles,
+          pagination: {
+            page,
+            limit,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit),
+            hasMore: skip + articles.length < totalCount,
+          },
+        });
+      }
+
       const companyWhere = {
         status: "PUBLISHED" as const,
         OR: companyTerms.flatMap((term) => [
@@ -113,6 +204,74 @@ export async function GET(request: Request) {
 
     if (mode === "topic" && topicParam?.trim()) {
       const topicKey = topicParam.trim();
+
+      if (locale === "en") {
+        const topicWhere = {
+          locale: "en" as const,
+          article: {
+            status: "PUBLISHED" as const,
+            topic: {
+              equals: topicKey,
+              mode: "insensitive" as const,
+            },
+          },
+        };
+
+        const [articles, totalCount] = await Promise.all([
+          db.articleTranslation.findMany({
+            where: topicWhere,
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              excerpt: true,
+              article: {
+                select: {
+                  id: true,
+                  imageUrl: true,
+                  publishedAt: true,
+                  views: true,
+                  trendScore: true,
+                  category: {
+                    select: {
+                      name: true,
+                      slug: true,
+                    },
+                  },
+                },
+              },
+            },
+            orderBy: [
+              { article: { trendScore: "desc" } },
+              { article: { publishedAt: "desc" } },
+            ],
+            skip,
+            take: limit,
+          }),
+          db.articleTranslation.count({ where: topicWhere }),
+        ]);
+
+        return NextResponse.json({
+          articles: articles.map((item) => ({
+            id: item.article.id,
+            title: item.title,
+            slug: item.slug,
+            excerpt: item.excerpt,
+            imageUrl: item.article.imageUrl,
+            publishedAt: item.article.publishedAt,
+            views: item.article.views,
+            category: item.article.category,
+          })),
+          pagination: {
+            page,
+            limit,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit),
+            hasMore: skip + articles.length < totalCount,
+          },
+        });
+      }
+
       const topicWhere = {
         status: "PUBLISHED" as const,
         topic: {
@@ -149,6 +308,78 @@ export async function GET(request: Request) {
 
       return NextResponse.json({
         articles,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          hasMore: skip + articles.length < totalCount,
+        },
+      });
+    }
+
+    if (locale === "en") {
+      const searchWhere = {
+        locale: "en" as const,
+        article: {
+          status: "PUBLISHED" as const,
+        },
+        OR: [
+          { title: { contains: searchTerm, mode: "insensitive" as const } },
+          {
+            excerpt: { contains: searchTerm, mode: "insensitive" as const },
+          },
+          {
+            content: { contains: searchTerm, mode: "insensitive" as const },
+          },
+        ],
+      };
+
+      const [articles, totalCount] = await Promise.all([
+        db.articleTranslation.findMany({
+          where: searchWhere,
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            excerpt: true,
+            article: {
+              select: {
+                id: true,
+                imageUrl: true,
+                publishedAt: true,
+                views: true,
+                trendScore: true,
+                category: {
+                  select: {
+                    name: true,
+                    slug: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: [
+            { article: { trendScore: "desc" } },
+            { article: { publishedAt: "desc" } },
+          ],
+          skip,
+          take: limit,
+        }),
+        db.articleTranslation.count({ where: searchWhere }),
+      ]);
+
+      return NextResponse.json({
+        articles: articles.map((item) => ({
+          id: item.article.id,
+          title: item.title,
+          slug: item.slug,
+          excerpt: item.excerpt,
+          imageUrl: item.article.imageUrl,
+          publishedAt: item.article.publishedAt,
+          views: item.article.views,
+          category: item.article.category,
+        })),
         pagination: {
           page,
           limit,

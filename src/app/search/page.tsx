@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -22,7 +22,40 @@ interface SearchResult {
 }
 
 function SearchContent() {
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isEnglish = pathname?.startsWith("/en");
+  const locale = isEnglish ? "en" : "tr";
+  const searchPath = isEnglish ? "/en/search" : "/search";
+  const newsPath = isEnglish ? "/en/news" : "/news";
+
+  const ui = isEnglish
+    ? {
+      title: "Search News",
+      inputPlaceholder: "Search keyword, title or topic...",
+      buttonSearch: "Search",
+      buttonSearching: "Searching...",
+      searchError: "An error occurred during search",
+      resultText: (q: string, n: number, loadingState: boolean) =>
+        `For \"${q}\" ${loadingState ? "searching..." : `${n} results found`}`,
+      noResultTitle: "No Results",
+      noResultDesc: (q: string) =>
+        `No news found for \"${q}\". Try different keywords.`,
+      companyMode: "Company mode active: results prioritize title/excerpt/keyword relevance",
+    }
+    : {
+      title: "Haber Ara",
+      inputPlaceholder: "Anahtar kelime, başlık veya konu ara...",
+      buttonSearch: "Ara",
+      buttonSearching: "Aranıyor...",
+      searchError: "Arama sırasında bir hata oluştu",
+      resultText: (q: string, n: number, loadingState: boolean) =>
+        `\"${q}\" için ${loadingState ? "aranıyor..." : `${n} sonuç bulundu`}`,
+      noResultTitle: "Sonuç Bulunamadı",
+      noResultDesc: (q: string) =>
+        `\"${q}\" için herhangi bir haber bulunamadı. Farklı anahtar kelimeler deneyin.`,
+      companyMode: "Şirket modu aktif: sonuçlar başlık/özet/etiket odaklı filtrelenir",
+    };
   const query = searchParams?.get("q") || "";
   const mode = searchParams?.get("mode") || "";
   const topic = searchParams?.get("topic") || "";
@@ -40,7 +73,7 @@ function SearchContent() {
 
     try {
       const response = await fetch(
-        `/api/search?q=${encodeURIComponent(searchQuery.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}${mode === "topic" && topic ? `&topic=${encodeURIComponent(topic)}` : ""}`,
+        `/api/search?q=${encodeURIComponent(searchQuery.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}${mode === "topic" && topic ? `&topic=${encodeURIComponent(topic)}` : ""}&locale=${locale}`,
       );
       const data = await response.json();
 
@@ -52,7 +85,7 @@ function SearchContent() {
       }
     } catch (err) {
       console.error("Search error:", err);
-      setError("Arama sırasında bir hata oluştu");
+      setError(ui.searchError);
       setResults([]);
     } finally {
       setLoading(false);
@@ -76,7 +109,7 @@ function SearchContent() {
       window.history.pushState(
         {},
         "",
-        `/search?q=${encodeURIComponent(searchInput.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}${mode === "topic" && topic ? `&topic=${encodeURIComponent(topic)}` : ""}`,
+        `${searchPath}?q=${encodeURIComponent(searchInput.trim())}${mode ? `&mode=${encodeURIComponent(mode)}` : ""}${mode === "topic" && topic ? `&topic=${encodeURIComponent(topic)}` : ""}`,
       );
       performSearch(searchInput.trim());
     }
@@ -84,11 +117,14 @@ function SearchContent() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("tr-TR", {
+    return new Date(dateString).toLocaleDateString(
+      isEnglish ? "en-US" : "tr-TR",
+      {
       day: "numeric",
       month: "long",
       year: "numeric",
-    });
+      },
+    );
   };
 
   return (
@@ -96,7 +132,7 @@ function SearchContent() {
       <main className="flex-1 container mx-auto px-4 py-8 max-w-7xl">
         {/* Search Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-4">Haber Ara</h1>
+          <h1 className="text-3xl font-bold text-white mb-4">{ui.title}</h1>
 
           {/* Search Form */}
           <form onSubmit={handleSubmit} className="max-w-2xl">
@@ -109,7 +145,7 @@ function SearchContent() {
                   type="text"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Anahtar kelime, başlık veya konu ara..."
+                  placeholder={ui.inputPlaceholder}
                   className="w-full h-14 pl-12 pr-4 rounded-xl bg-ai-surface-card border border-ai-surface-border text-white placeholder:text-ai-text-muted focus:border-ai-primary focus:ring-2 focus:ring-ai-primary/20 transition-all text-lg"
                   autoFocus
                 />
@@ -124,14 +160,14 @@ function SearchContent() {
                     <span className="material-symbols-outlined animate-spin text-[20px]">
                       progress_activity
                     </span>
-                    Aranıyor...
+                    {ui.buttonSearching}
                   </>
                 ) : (
                   <>
                     <span className="material-symbols-outlined text-[20px]">
                       search
                     </span>
-                    Ara
+                      {ui.buttonSearch}
                   </>
                 )}
               </button>
@@ -142,13 +178,10 @@ function SearchContent() {
         {/* Search Results */}
         {query && (
           <div className="mb-4">
-            <p className="text-ai-text-secondary">
-              <span className="text-white font-medium">"{query}"</span> için{" "}
-              {loading ? "aranıyor..." : `${results.length} sonuç bulundu`}
-            </p>
+            <p className="text-ai-text-secondary">{ui.resultText(query, results.length, loading)}</p>
             {mode === "company" && (
               <p className="text-xs text-ai-primary mt-1">
-                Şirket modu aktif: sonuçlar başlık/özet/etiket odaklı filtrelenir
+                {ui.companyMode}
               </p>
             )}
           </div>
@@ -188,7 +221,7 @@ function SearchContent() {
             {results.map((article) => (
               <Link
                 key={article.id}
-                href={`/news/${article.slug}`}
+                href={`${newsPath}/${article.slug}`}
                 className="group bg-ai-surface-card rounded-xl overflow-hidden border border-ai-surface-border hover:border-ai-primary/50 transition-all hover:shadow-xl hover:shadow-ai-primary/10 hover:-translate-y-1"
               >
                 {/* Image */}
@@ -251,14 +284,8 @@ function SearchContent() {
             <span className="material-symbols-outlined text-ai-text-muted text-6xl mb-4">
               search_off
             </span>
-            <h3 className="text-xl font-bold text-white mb-2">
-              Sonuç Bulunamadı
-            </h3>
-            <p className="text-ai-text-secondary mb-6">
-              "{query}" için herhangi bir haber bulunamadı.
-              <br />
-              Farklı anahtar kelimeler deneyin.
-            </p>
+            <h3 className="text-xl font-bold text-white mb-2">{ui.noResultTitle}</h3>
+            <p className="text-ai-text-secondary mb-6">{ui.noResultDesc(query)}</p>
             <div className="flex flex-wrap gap-2 justify-center">
               {["ChatGPT", "Yapay Zeka", "OpenAI", "Google AI", "Gemini"].map(
                 (suggestion) => (
