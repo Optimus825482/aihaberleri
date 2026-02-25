@@ -8,6 +8,53 @@ interface FooterProps {
   locale?: "tr" | "en";
 }
 
+const EN_CATEGORY_SLUG_TRANSLATIONS: Record<string, string> = {
+  "yapay-zeka-haberleri": "AI News",
+  "yapay-zeka": "Artificial Intelligence",
+  "yapay-zeka-modelleri": "AI Models",
+  "makine-ogrenmesi": "Machine Learning",
+  "dogal-dil-isleme": "Natural Language Processing",
+  "bilgisayarli-goru": "Computer Vision",
+  robotik: "Robotics",
+  "robotik-ve-otonom-sistemler": "Robotics and Autonomous Systems",
+  "yapay-zeka-etigi": "AI Ethics",
+  "etik-guvenlik-ve-regulasyon": "Ethics, Security and Regulation",
+  "yapay-zeka-araclari": "AI Tools",
+  "yapay-zeka-araclari-ve-urunler": "AI Tools and Products",
+  "sektor-haberleri": "Industry News",
+  "sektor-ve-is-dunyasi": "Industry and Business",
+  arastirma: "Research",
+  "derin-ogrenme": "Deep Learning",
+  "otonom-sistemler": "Autonomous Systems",
+  egitim: "Education",
+  saglik: "Healthcare",
+  finans: "Finance",
+};
+
+const EN_CATEGORY_NAME_TRANSLATIONS: Record<string, string> = {
+  "Yapay Zeka": "Artificial Intelligence",
+  "Yapay Zeka Modelleri": "AI Models",
+  "Sektör ve İş Dünyası": "Industry and Business",
+  "Yapay Zeka Araçları ve Ürünler": "AI Tools and Products",
+  "Robotik ve Otonom Sistemler": "Robotics and Autonomous Systems",
+  "Etik, Güvenlik ve Regülasyon": "Ethics, Security and Regulation",
+};
+
+function getFooterCategoryLabel(
+  category: { name: string; slug: string },
+  locale: "tr" | "en",
+): string {
+  if (locale !== "en") {
+    return category.name;
+  }
+
+  return (
+    EN_CATEGORY_SLUG_TRANSLATIONS[category.slug] ||
+    EN_CATEGORY_NAME_TRANSLATIONS[category.name] ||
+    category.name
+  );
+}
+
 const translations = {
   tr: {
     subscribe: "Bültenimize Abone Olun",
@@ -283,7 +330,7 @@ export async function Footer({ locale }: FooterProps) {
                       chevron_right
                     </span>
                     <span className="group-hover:translate-x-1 transition-transform">
-                      {category.name}
+                      {getFooterCategoryLabel(category, detectedLocale)}
                     </span>
                   </Link>
                 </li>

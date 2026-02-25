@@ -72,6 +72,7 @@ const getArticle = cache(async (slug: string) => {
     imageUrlThumb: translation.article.imageUrlThumb,
     sourceUrl: translation.article.sourceUrl,
     topic: translation.article.topic,
+    keywords: translation.article.keywords,
     publishedAt: translation.article.publishedAt,
     updatedAt: translation.article.updatedAt,
     views: translation.article.views,
@@ -101,17 +102,25 @@ const getInsightSettings = cache(async () =>
 );
 
 async function getRelatedArticles(
+  articleId: string,
   categoryId: string,
-  excludeId: string,
   topic?: string | null,
+  keywords: string[] = [],
 ) {
-  const translations = await db.articleTranslation.findMany({
+  const relatedCandidates = await db.articleTranslation.findMany({
     where: {
       locale: "en",
       article: {
         status: "PUBLISHED",
-        ...(topic ? { topic } : { categoryId }),
-        id: { not: excludeId },
+        publishedAt: { not: null },
+        id: { not: articleId },
+        OR: [
+          ...(topic ? [{ topic }] : []),
+          { categoryId },
+          ...(keywords.length > 0
+            ? [{ keywords: { hasSome: keywords.slice(0, 8) } }]
+            : []),
+        ],
       },
     },
     include: {
@@ -121,7 +130,7 @@ async function getRelatedArticles(
         },
       },
     },
-    take: 3,
+    take: 18,
     orderBy: {
       article: {
         publishedAt: "desc",
@@ -129,7 +138,46 @@ async function getRelatedArticles(
     },
   });
 
-  return translations.map((t) => ({
+  const deduped = new Map<string, (typeof relatedCandidates)[0]>();
+  for (const item of relatedCandidates) {
+    if (!deduped.has(item.article.id)) {
+      deduped.set(item.article.id, item);
+    }
+  }
+
+  let related = Array.from(deduped.values()).slice(0, 3);
+
+  if (related.length < 3) {
+    const fallback = await db.articleTranslation.findMany({
+      where: {
+        locale: "en",
+        article: {
+          status: "PUBLISHED",
+          publishedAt: { not: null },
+          id: {
+            notIn: [articleId, ...related.map((item) => item.article.id)],
+          },
+        },
+      },
+      include: {
+        article: {
+          include: {
+            category: true,
+          },
+        },
+      },
+      take: 3 - related.length,
+      orderBy: {
+        article: {
+          publishedAt: "desc",
+        },
+      },
+    });
+
+    related = [...related, ...fallback];
+  }
+
+  return related.map((t) => ({
     id: t.article.id,
     title: t.title,
     slug: t.slug,
@@ -187,9 +235,10 @@ export default async function EnglishArticlePage({ params }: Props) {
   }
 
   const relatedArticles = await getRelatedArticles(
-    article.category.id,
     article.id,
+    article.category.id,
     article.topic,
+    article.keywords,
   );
   const insightSettings = await getInsightSettings();
   const readingTime = calculateReadingMinutes(article.content);
