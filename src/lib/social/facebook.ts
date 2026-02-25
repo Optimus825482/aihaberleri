@@ -15,6 +15,17 @@
 import axios from "axios";
 import { buildSocialArticleUrl } from "./url";
 
+export interface FacebookRateLimitHeaders {
+  xAppUsage?: string;
+  xBusinessUseCaseUsage?: string;
+  retryAfter?: string;
+}
+
+export interface FacebookPostResult {
+  postId: string | null;
+  rateLimitHeaders?: FacebookRateLimitHeaders;
+}
+
 const FACEBOOK_ENABLED = process.env.FACEBOOK_ENABLED === "true";
 const FACEBOOK_PAGE_ID = process.env.FACEBOOK_PAGE_ID;
 const FACEBOOK_PAGE_ACCESS_TOKEN = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
@@ -26,6 +37,18 @@ const FACEBOOK_EN_PAGE_ACCESS_TOKEN = process.env.FACEBOOK_EN_PAGE_ACCESS_TOKEN;
 
 const GRAPH_API_URL = "https://graph.facebook.com/v21.0";
 
+function extractFacebookRateLimitHeaders(
+  headers: any,
+): FacebookRateLimitHeaders {
+  if (!headers) return {};
+
+  return {
+    xAppUsage: headers["x-app-usage"],
+    xBusinessUseCaseUsage: headers["x-business-use-case-usage"],
+    retryAfter: headers["retry-after"],
+  };
+}
+
 /**
  * Post to Facebook Page
  */
@@ -36,15 +59,26 @@ export async function postToFacebook(article: {
   imageUrl?: string | null;
   categoryName?: string;
 }): Promise<string | null> {
+  const result = await postToFacebookWithMetadata(article);
+  return result.postId;
+}
+
+export async function postToFacebookWithMetadata(article: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  imageUrl?: string | null;
+  categoryName?: string;
+}): Promise<FacebookPostResult> {
   // Check if Facebook is enabled
   if (!FACEBOOK_ENABLED) {
-    return null; // Silent skip
+    return { postId: null }; // Silent skip
   }
 
   // Check credentials
   if (!FACEBOOK_PAGE_ID || !FACEBOOK_PAGE_ACCESS_TOKEN) {
     console.warn("⚠️ Facebook credentials missing. Skipping post.");
-    return null;
+    return { postId: null };
   }
 
   try {
@@ -75,7 +109,10 @@ export async function postToFacebook(article: {
     postId = response.data.id;
 
     console.log(`✅ Facebook post successful! ID: ${postId}`);
-    return postId;
+    return {
+      postId,
+      rateLimitHeaders: extractFacebookRateLimitHeaders(response.headers),
+    };
   } catch (error: any) {
     const errorData = error?.response?.data?.error;
 
@@ -185,15 +222,26 @@ export async function postToFacebookEN(article: {
   imageUrl?: string | null;
   categoryName?: string;
 }): Promise<string | null> {
+  const result = await postToFacebookENWithMetadata(article);
+  return result.postId;
+}
+
+export async function postToFacebookENWithMetadata(article: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  imageUrl?: string | null;
+  categoryName?: string;
+}): Promise<FacebookPostResult> {
   // Check if Facebook EN is enabled
   if (!FACEBOOK_EN_ENABLED) {
-    return null; // Silent skip
+    return { postId: null }; // Silent skip
   }
 
   // Check credentials
   if (!FACEBOOK_EN_PAGE_ID || !FACEBOOK_EN_PAGE_ACCESS_TOKEN) {
     console.warn("⚠️ Facebook EN credentials missing. Skipping post.");
-    return null;
+    return { postId: null };
   }
 
   try {
@@ -223,7 +271,10 @@ export async function postToFacebookEN(article: {
     postId = response.data.id;
 
     console.log(`✅ Facebook EN post successful! ID: ${postId}`);
-    return postId;
+    return {
+      postId,
+      rateLimitHeaders: extractFacebookRateLimitHeaders(response.headers),
+    };
   } catch (error: any) {
     const errorData = error?.response?.data?.error;
 
@@ -252,8 +303,10 @@ export function isFacebookENConfigured(): boolean {
 
 export default {
   postToFacebook,
+  postToFacebookWithMetadata,
   postImageToFacebook,
   verifyFacebookCredentials,
   postToFacebookEN,
+  postToFacebookENWithMetadata,
   isFacebookENConfigured,
 };

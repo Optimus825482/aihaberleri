@@ -223,7 +223,7 @@ export async function submitPendingArticlesToIndexNow(): Promise<{
   count: number;
 }> {
   try {
-    const pendingArticles = await db.article.findMany({
+    const pendingArticlesTr = await db.article.findMany({
       where: {
         status: "PUBLISHED",
         indexNowStatus: { in: ["PENDING", "FAILED"] },
@@ -233,25 +233,86 @@ export async function submitPendingArticlesToIndexNow(): Promise<{
       take: 100, // Reasonable batch size
     });
 
-    if (pendingArticles.length === 0) {
+    const pendingArticlesEn = await db.article.findMany({
+      where: {
+        status: "PUBLISHED",
+        indexNowStatusEn: { in: ["PENDING", "FAILED", null] },
+        publishedAt: { not: null },
+        translations: {
+          some: {
+            locale: "en",
+          },
+        },
+      },
+      select: {
+        id: true,
+        translations: {
+          where: { locale: "en" },
+          select: { slug: true },
+          take: 1,
+        },
+      },
+      take: 100,
+    });
+
+    const pendingArticles = pendingArticlesTr.length + pendingArticlesEn.length;
+
+    if (pendingArticles === 0) {
       return { success: true, count: 0 };
     }
 
     console.log(
-      `📤 Gönderilmemiş ${pendingArticles.length} haber IndexNow'a bildiriliyor...`,
+      `📤 Gönderilmemiş ${pendingArticles} haber/çeviri IndexNow'a bildiriliyor...`,
     );
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
-    const urls = pendingArticles.map(
+    const trUrls = pendingArticlesTr.map(
       (article) => `${baseUrl}/news/${article.slug}`,
     );
-    const ids = pendingArticles.map((a) => a.id);
+    const trIds = pendingArticlesTr.map((a) => a.id);
 
-    const success = await submitUrlsToIndexNow(urls, ids);
+    const enPairs = pendingArticlesEn
+      .map((article) => ({
+        id: article.id,
+        slug: article.translations[0]?.slug,
+      }))
+      .filter((item): item is { id: string; slug: string } =>
+        Boolean(item.slug),
+      );
+
+    const enUrls = enPairs.map((item) => `${baseUrl}/en/news/${item.slug}`);
+    const enIds = enPairs.map((item) => item.id);
+
+    let trSuccess = true;
+    let enSuccess = true;
+
+    if (trUrls.length > 0) {
+      trSuccess = await submitUrlsToIndexNow(trUrls);
+      await db.article.updateMany({
+        where: { id: { in: trIds } },
+        data: {
+          indexNowStatus: trSuccess ? "SUBMITTED" : "FAILED",
+          indexedAt: trSuccess ? new Date() : undefined,
+        },
+      });
+    }
+
+    if (enUrls.length > 0) {
+      enSuccess = await submitUrlsToIndexNow(enUrls);
+      await db.article.updateMany({
+        where: { id: { in: enIds } },
+        data: {
+          indexNowStatusEn: enSuccess ? "SUBMITTED" : "FAILED",
+          indexedAtEn: enSuccess ? new Date() : undefined,
+        },
+      });
+    }
+
+    const success = trSuccess && enSuccess;
 
     return {
       success,
-      count: pendingArticles.length,
+      count: pendingArticles,
     };
   } catch (error) {
     console.error("❌ submitPendingArticlesToIndexNow error:", error);
@@ -276,11 +337,53 @@ export async function submitAllArticlesToIndexNow(): Promise<{
       select: { id: true, slug: true },
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
-    const urls = articles.map((article) => `${baseUrl}/news/${article.slug}`);
-    const ids = articles.map((a) => a.id);
+    const englishTranslations = await db.articleTranslation.findMany({
+      where: {
+        locale: "en",
+        article: {
+          status: "PUBLISHED",
+          publishedAt: { not: null },
+        },
+      },
+      select: {
+        articleId: true,
+        slug: true,
+      },
+    });
 
-    const success = await submitUrlsToIndexNow(urls, ids);
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
+    const trUrls = articles.map((article) => `${baseUrl}/news/${article.slug}`);
+    const enUrls = englishTranslations.map(
+      (translation) => `${baseUrl}/en/news/${translation.slug}`,
+    );
+    const urls = [...trUrls, ...enUrls];
+
+    const trSuccess =
+      trUrls.length > 0 ? await submitUrlsToIndexNow(trUrls) : true;
+    const enSuccess =
+      enUrls.length > 0 ? await submitUrlsToIndexNow(enUrls) : true;
+
+    if (articles.length > 0) {
+      await db.article.updateMany({
+        where: { id: { in: articles.map((a) => a.id) } },
+        data: {
+          indexNowStatus: trSuccess ? "SUBMITTED" : "FAILED",
+          indexedAt: trSuccess ? new Date() : undefined,
+        },
+      });
+    }
+
+    if (englishTranslations.length > 0) {
+      await db.article.updateMany({
+        where: { id: { in: englishTranslations.map((t) => t.articleId) } },
+        data: {
+          indexNowStatusEn: enSuccess ? "SUBMITTED" : "FAILED",
+          indexedAtEn: enSuccess ? new Date() : undefined,
+        },
+      });
+    }
+
+    const success = trSuccess && enSuccess;
 
     return {
       success,

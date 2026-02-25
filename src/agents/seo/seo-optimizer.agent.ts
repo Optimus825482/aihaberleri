@@ -42,11 +42,24 @@ const GUARDRAILS = {
   keywords: { min: 3, max: 8 },
 } as const;
 
+const SEO_REFRESH_SKILL_RULES = `
+SEO /seo FRESHNESS KURALLARI:
+- 2 yıldan eski istatistik/tarih ifadelerini güncel ve doğrulanabilir şekilde yenile.
+- 3+ yıl eski örnekleri daha güncel karşılıklarla değiştir.
+- "en yeni" gibi iddialarda tarihsel tutarlılığı koru.
+- Eski trend terimlerini güncel terminolojiyle iyileştir.
+- Anlamlı değer katmayan kozmetik değişiklik yapma.
+`.trim();
+
 // ─── Optimizer ───────────────────────────────────────────
 
 export class SEOOptimizerAgent {
   private temperature = 0.3; // Düşük: kontrollü, tutarlı çıktı
   private maxRetries = 2;
+
+  private withFreshnessRules(basePrompt: string): string {
+    return `${basePrompt}\n\n${SEO_REFRESH_SKILL_RULES}`;
+  }
 
   /**
    * Evaluator'ın sorun listesine göre makaleyi optimize et
@@ -133,7 +146,8 @@ export class SEOOptimizerAgent {
     const messages: DeepSeekMessage[] = [
       {
         role: "system",
-        content: `Sen bir SEO başlık uzmanısın. Makale başlıklarını optimize edersin.
+        content: this
+          .withFreshnessRules(`Sen bir SEO başlık uzmanısın. Makale başlıklarını optimize edersin.
 
 KATIL KURALLAR:
 - Çıktı SADECE optimize edilmiş başlık olacak (tırnak işareti, açıklama, başka hiçbir şey yok)
@@ -141,7 +155,7 @@ KATIL KURALLAR:
 - Orijinal başlığın dilini, tonunu ve ana mesajını koru
 - Clickbait yapma, doğal ol
 - "(2026)" veya gereksiz yıl/tarih ekleme
-- Keyword stuffing yapma`,
+    - Keyword stuffing yapma`),
       },
       {
         role: "user",
@@ -182,14 +196,15 @@ Sadece optimize edilmiş başlığı yaz, başka hiçbir şey yazma:`,
     const messages: DeepSeekMessage[] = [
       {
         role: "system",
-        content: `Sen bir SEO meta description uzmanısın.
+        content: this
+          .withFreshnessRules(`Sen bir SEO meta description uzmanısın.
 
 KATIL KURALLAR:
 - Çıktı SADECE optimize edilmiş meta açıklama olacak
 - Meta açıklama ${GUARDRAILS.metaDescription.min}-${GUARDRAILS.metaDescription.max} karakter arasında OLMALI
 - Orijinal içeriğin dilini koru (Türkçe makale = Türkçe meta, İngilizce = İngilizce)
 - Makaleyi doğru özetle, CTA ekle
-- Keyword stuffing yapma, doğal ol`,
+    - Keyword stuffing yapma, doğal ol`),
       },
       {
         role: "user",
@@ -228,7 +243,7 @@ Sadece optimize edilmiş meta açıklamayı yaz:`,
     const messages: DeepSeekMessage[] = [
       {
         role: "system",
-        content: `Sen bir SEO slug uzmanısın.
+        content: this.withFreshnessRules(`Sen bir SEO slug uzmanısın.
 
 KATIL KURALLAR:
 - Çıktı SADECE optimize edilmiş slug olacak
@@ -236,7 +251,7 @@ KATIL KURALLAR:
 - Sadece küçük harf a-z, rakam 0-9 ve tire (-) kullan
 - Türkçe karakterleri çevir: ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u
 - Ana anahtar kelimeleri koru
-- Gereksiz kelimeleri (ve, ile, bir, bu, da, de) çıkar`,
+    - Gereksiz kelimeleri (ve, ile, bir, bu, da, de) çıkar`),
       },
       {
         role: "user",
@@ -283,7 +298,8 @@ Sadece optimize edilmiş slug'ı yaz:`,
     const messages: DeepSeekMessage[] = [
       {
         role: "system",
-        content: `Sen bir SEO içerik yapı uzmanısın. İçeriğin yapısını iyileştirirsin.
+        content: this
+          .withFreshnessRules(`Sen bir SEO içerik yapı uzmanısın. İçeriğin yapısını iyileştirirsin.
 
 KRİTİK KURALLAR:
 - Mevcut içeriğin METNİNİ, TONUNU, STİLİNİ DEĞİŞTİRME
@@ -292,7 +308,7 @@ KRİTİK KURALLAR:
 - İçeriğe yeni paragraf ekleyeceksen orijinal stilde yaz
 - Keyword stuffing yapma
 - Çıktı olarak SADECE düzeltilmiş HTML içerik ver, açıklama yazma
-- Fazladan H1 varsa H2'ye çevir, H1 sayısını 1'de tut`,
+- Fazladan H1 varsa H2'ye çevir, H1 sayısını 1'de tut`),
       },
       {
         role: "user",
@@ -340,14 +356,14 @@ Yapısal düzeltmeleri uygulayarak içeriği ver. Sadece HTML içerik, başka a�
     const messages: DeepSeekMessage[] = [
       {
         role: "system",
-        content: `Sen bir SEO anahtar kelime uzmanısın.
+        content: this.withFreshnessRules(`Sen bir SEO anahtar kelime uzmanısın.
 
 KURALLAR:
 - ${GUARDRAILS.keywords.min}-${GUARDRAILS.keywords.max} adet anahtar kelime üret
 - Makale içeriğinden türet
 - Her kelimeyi yeni satıra yaz
 - Sadece anahtar kelimeleri yaz, açıklama ekleme
-- Anahtar kelimeler makalenin dilinde olsun`,
+    - Anahtar kelimeler makalenin dilinde olsun`),
       },
       {
         role: "user",
@@ -388,13 +404,13 @@ Anahtar kelimeleri listele (her satıra 1 tane):`,
     const messages: DeepSeekMessage[] = [
       {
         role: "system",
-        content: `Sen bir SEO makale özeti uzmanısın.
+        content: this.withFreshnessRules(`Sen bir SEO makale özeti uzmanısın.
 
 KURALLAR:
 - ${GUARDRAILS.excerpt.min}-${GUARDRAILS.excerpt.max} karakter arası özet yaz
 - Makaleyi kısaca özetle
 - Makalenin dilinde yaz
-- Sadece özeti yaz, başka hiçbir şey yazma`,
+    - Sadece özeti yaz, başka hiçbir şey yazma`),
       },
       {
         role: "user",

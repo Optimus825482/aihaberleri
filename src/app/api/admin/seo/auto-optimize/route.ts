@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { calculateSEOScore } from "@/lib/seo-calculator";
-import { SEOPipelineService } from "@/services/seo-pipeline.service";
-import { BulkJobStore } from "@/lib/bulk-job-store";
 import { requireAdminAuth } from "@/lib/admin-auth";
+import {
+  getSEOAutoOptimizeState,
+  startSEOAutoOptimizeJob,
+  updateSEOAutopilotSettings,
+} from "@/services/seo-auto-optimize.service";
 
 export const dynamic = "force-dynamic";
 
@@ -22,23 +23,16 @@ export async function POST(request: NextRequest) {
     return session;
   }
 
-  // Zaten çalışan bir job var mı?
-  if (BulkJobStore.hasActiveJob()) {
-    const active = BulkJobStore.getActive()!;
-    return NextResponse.json(
-      { error: "Zaten çalışan bir optimizasyon var", jobId: active.id },
-      { status: 409 },
-    );
-  }
-
-  // Parse body
   let maxScore = 80;
   let limit = 50;
   let language: "tr" | "en" | "all" = "tr";
+
   try {
     const body = await request.json();
     if (body.maxScore) maxScore = body.maxScore;
-    if (body.limit) limit = body.limit;
+    if (body.limit) {
+      limit = Math.min(Number(body.limit), 50);
+    }
     if (body.language) {
       const normalized = String(body.language).toLowerCase();
       if (normalized === "tr" || normalized === "en" || normalized === "all") {
@@ -51,90 +45,38 @@ export async function POST(request: NextRequest) {
     // defaults
   }
 
-  const whereClause: any = {
-    status: "PUBLISHED",
-    OR: [{ seoScore: { lt: maxScore } }, { seoScore: null }],
-  };
-
-  if (language !== "all") {
-    whereClause.language = language;
-  }
-
-  // Düşük skorlu (veya skoru hiç hesaplanmamış) makaleleri getir
-  const rawArticles = await db.article.findMany({
-    where: whereClause,
-    orderBy: { seoScore: "asc" },
-    take: limit * 2, // Fazla çek, ön-ölçümden sonra filtrele
-    select: {
-      id: true,
-      title: true,
-      content: true,
-      excerpt: true,
-      metaDescription: true,
-      slug: true,
-      keywords: true,
-      imageUrl: true,
-      seoScore: true,
-    },
+  const result = await startSEOAutoOptimizeJob({
+    maxScore,
+    limit,
+    language,
+    source: "manual",
   });
 
-  // ÖN-ÖLÇÜM: seoScore null/0 olan makalelerin gerçek skorunu hesapla
-  // ve DB'ye yaz. Böylece "0 → 95" yerine gerçek beforeScore raporlanır.
-  const articles: typeof rawArticles = [];
-  for (const article of rawArticles) {
-    if (article.seoScore === null || article.seoScore === 0) {
-      const realScore = calculateSEOScore({
-        title: article.title,
-        content: article.content || "",
-        excerpt: article.excerpt || "",
-        metaDescription: article.metaDescription,
-        slug: article.slug,
-        keywords: article.keywords,
-        imageUrl: article.imageUrl,
-      });
-
-      // DB'ye gerçek skoru yaz
-      await db.article.update({
-        where: { id: article.id },
-        data: { seoScore: realScore.score },
-      });
-
-      article.seoScore = realScore.score;
-    }
-
-    // Gerçek skor hala maxScore altındaysa listeye ekle
-    if (article.seoScore < maxScore) {
-      articles.push(article);
-    }
-
-    // Limit'e ulaştıysa dur
-    if (articles.length >= limit) break;
-  }
-
-  if (articles.length === 0) {
+  if (!result.started && result.reason === "active-job") {
     return NextResponse.json(
-      {
-        error: `Ön-ölçüm sonrası ${maxScore} altında skorlu makale bulunamadı. Tüm skorlar güncellendi.`,
-      },
-      { status: 404 },
+      { error: result.message, jobId: result.jobId },
+      { status: 409 },
     );
   }
 
-  // Job oluştur
-  const jobId = `seo-bulk-${Date.now()}`;
-  BulkJobStore.create(jobId, articles.length);
+  if (!result.started && result.reason === "no-candidate") {
+    return NextResponse.json({ error: result.message }, { status: 404 });
+  }
 
-  // 🔥 Fire-and-forget: işlemi arka planda başlat, response'u bekleme
-  runBulkOptimize(jobId, articles, maxScore).catch((err) => {
-    console.error("[Bulk Optimize] Unhandled error:", err);
-    BulkJobStore.fail(
-      jobId,
-      err instanceof Error ? err.message : "Bilinmeyen hata",
-    );
-  });
+  if (!result.started) {
+    return NextResponse.json({ error: result.message }, { status: 400 });
+  }
 
-  // Hemen jobId döndür
-  return NextResponse.json({ jobId, language, maxScore }, { status: 202 });
+  return NextResponse.json(
+    {
+      jobId: result.jobId,
+      language: result.language,
+      maxScore: result.maxScore,
+      limit: result.limit,
+      total: result.total,
+    },
+    { status: 202 },
+  );
 }
 
 /**
@@ -150,216 +92,51 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  let jobId = searchParams.get("jobId");
+  const jobId = searchParams.get("jobId") || undefined;
   const sinceStr = searchParams.get("since");
   const sinceIndex = sinceStr ? parseInt(sinceStr, 10) : 0;
 
-  // jobId yoksa aktif job'a bak
-  if (!jobId) {
-    const active = BulkJobStore.getActive();
-    if (active) {
-      jobId = active.id;
-    } else {
-      return NextResponse.json({ active: false }, { status: 200 });
-    }
+  const state = await getSEOAutoOptimizeState(jobId, sinceIndex);
+
+  if (state.error === "Job bulunamadı") {
+    return NextResponse.json(state, { status: 404 });
   }
 
-  const job = BulkJobStore.get(jobId);
-  if (!job) {
-    return NextResponse.json({ error: "Job bulunamadı" }, { status: 404 });
-  }
-
-  const newProgress = BulkJobStore.getProgressSince(jobId, sinceIndex);
-
-  return NextResponse.json({
-    active: job.status === "running",
-    jobId: job.id,
-    status: job.status,
-    total: job.total,
-    current: job.current,
-    succeeded: job.succeeded,
-    failed: job.failed,
-    skipped: job.skipped,
-    avgImprovement:
-      job.succeeded > 0 ? Math.round(job.totalImprovement / job.succeeded) : 0,
-    progress: newProgress,
-    error: job.error,
-    startedAt: job.startedAt,
-    completedAt: job.completedAt,
-    processingTitle: job.processingTitle,
-    processingIndex: job.processingIndex,
-  });
+  return NextResponse.json(state, { status: 200 });
 }
 
-// ─── Background Worker ───────────────────────────────────────────────
-
-interface ArticleForOptimize {
-  id: string;
-  title: string;
-  content: string | null;
-  excerpt: string | null;
-  metaDescription: string | null;
-  slug: string;
-  keywords: string[];
-  imageUrl: string | null;
-  seoScore: number | null;
-}
-
-async function runBulkOptimize(
-  jobId: string,
-  articles: ArticleForOptimize[],
-  maxScore = 80,
-): Promise<void> {
-  console.log(
-    `[Bulk Optimize] Job başlıyor: ${jobId} — ${articles.length} makale`,
-  );
-
-  const pipeline = new SEOPipelineService();
-
-  for (let i = 0; i < articles.length; i++) {
-    const article = articles[i];
-
-    // Gerçek beforeScore: DB'deki güncel skor (ön-ölçümde hesaplandı)
-    const beforeScore = article.seoScore || 0;
-
-    // Zaten maxScore üstündeyse atla (ön-ölçümde kaçmış olabilir)
-    if (beforeScore >= maxScore) {
-      BulkJobStore.addProgress(jobId, {
-        index: i + 1,
-        total: articles.length,
-        articleId: article.id,
-        title: article.title,
-        status: "skipped",
-        beforeScore,
-        afterScore: beforeScore,
-        scoreDelta: 0,
-        message: `Skor zaten yeterli: ${beforeScore}`,
-      });
-      continue;
-    }
-
-    try {
-      // 🔄 İşlenmeye başlandığını kaydet (polling'de göstermek için)
-      BulkJobStore.setProcessing(jobId, i + 1, article.title);
-
-      const result = await pipeline.run({
-        title: article.title,
-        content: article.content || "",
-        excerpt: article.excerpt,
-        metaDescription: article.metaDescription,
-        slug: article.slug,
-        keywords: article.keywords,
-        imageUrl: article.imageUrl,
-      });
-
-      if (!result.success || result.diffs.length === 0) {
-        const isSkip = result.diffs.length === 0 && result.success;
-        BulkJobStore.addProgress(jobId, {
-          index: i + 1,
-          total: articles.length,
-          articleId: article.id,
-          title: article.title,
-          status: isSkip ? "skipped" : "failed",
-          beforeScore,
-          afterScore: beforeScore,
-          scoreDelta: 0,
-          message: result.message,
-        });
-        continue;
-      }
-
-      // Guardrail geçen tüm diff'leri otomatik uygula
-      const allFields = result.diffs
-        .filter(
-          (d) =>
-            d.field !== "seoScore" &&
-            d.guardrailPassed !== false &&
-            d.before !== d.after,
-        )
-        .map((d) => d.field);
-
-      if (allFields.length === 0) {
-        BulkJobStore.addProgress(jobId, {
-          index: i + 1,
-          total: articles.length,
-          articleId: article.id,
-          title: article.title,
-          status: "skipped",
-          beforeScore: result.beforeScore,
-          afterScore: result.afterScore,
-          scoreDelta: 0,
-          message: "Uygulanacak değişiklik bulunamadı.",
-        });
-        continue;
-      }
-
-      // DB'ye uygula
-      const updateData = pipeline.buildUpdateData(result.diffs, allFields);
-      await db.article.update({
-        where: { id: article.id },
-        data: updateData,
-      });
-
-      // Deterministik skor yeniden hesapla
-      const updatedArticle = await db.article.findUnique({
-        where: { id: article.id },
-      });
-
-      let finalScore = result.afterScore;
-      if (updatedArticle) {
-        const seoResult = calculateSEOScore({
-          title: updatedArticle.title,
-          content: updatedArticle.content || "",
-          excerpt: updatedArticle.excerpt || "",
-          metaDescription: updatedArticle.metaDescription,
-          slug: updatedArticle.slug,
-          keywords: updatedArticle.keywords,
-          imageUrl: updatedArticle.imageUrl,
-        });
-        finalScore = seoResult.score;
-        await db.article.update({
-          where: { id: article.id },
-          data: { seoScore: seoResult.score },
-        });
-      }
-
-      const scoreDelta = finalScore - beforeScore;
-      BulkJobStore.addProgress(jobId, {
-        index: i + 1,
-        total: articles.length,
-        articleId: article.id,
-        title: article.title,
-        status: "success",
-        beforeScore,
-        afterScore: finalScore,
-        scoreDelta,
-        message: `${beforeScore} → ${finalScore} (${scoreDelta >= 0 ? "+" : ""}${scoreDelta})`,
-      });
-    } catch (err) {
-      console.error(
-        `[Bulk Optimize] Hata: ${article.id} - ${article.title}`,
-        err,
-      );
-      BulkJobStore.addProgress(jobId, {
-        index: i + 1,
-        total: articles.length,
-        articleId: article.id,
-        title: article.title,
-        status: "error",
-        beforeScore,
-        afterScore: beforeScore,
-        scoreDelta: 0,
-        message: err instanceof Error ? err.message : "Bilinmeyen hata oluştu",
-      });
-    }
+export async function PATCH(request: NextRequest) {
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) {
+    return session;
   }
 
-  BulkJobStore.complete(jobId);
-  BulkJobStore.cleanup();
+  try {
+    const body = await request.json();
+    const merged = await updateSEOAutopilotSettings({
+      enabled: typeof body.enabled === "boolean" ? body.enabled : undefined,
+      intervalMinutes:
+        typeof body.intervalMinutes === "number"
+          ? body.intervalMinutes
+          : undefined,
+      maxScore: typeof body.maxScore === "number" ? body.maxScore : undefined,
+      language:
+        body.language === "tr" ||
+        body.language === "en" ||
+        body.language === "all"
+          ? body.language
+          : undefined,
+      delayMs: typeof body.delayMs === "number" ? body.delayMs : undefined,
+    });
 
-  const job = BulkJobStore.get(jobId)!;
-  console.log(
-    `[Bulk Optimize] Job tamamlandı: ${jobId} — ` +
-      `${job.succeeded} başarılı, ${job.failed} hatalı, ${job.skipped} atlandı`,
-  );
+    return NextResponse.json({ success: true, autopilot: merged });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "Ayar güncellenemedi",
+        message: error instanceof Error ? error.message : "Bilinmeyen hata",
+      },
+      { status: 400 },
+    );
+  }
 }

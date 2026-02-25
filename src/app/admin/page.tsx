@@ -944,9 +944,9 @@ export default function AdminDashboard() {
             color="amber"
           />
           <QuickAction
-            href="/admin/unshared-articles"
+            href="/admin/social-shares"
             icon={Share2}
-            label="Paylaşılmayan"
+            label="Sosyal"
             color="amber"
           />
         </div>

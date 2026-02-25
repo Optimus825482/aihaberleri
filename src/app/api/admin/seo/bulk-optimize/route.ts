@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
           {
             articleIds,
             jobId,
-            batchSize: 10, // Default batch size
+            batchSize: 50, // Default batch size
           },
           {
             jobId: `seo-optimize-${jobId}`,

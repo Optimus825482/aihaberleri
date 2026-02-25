@@ -23,7 +23,13 @@ import {
   getSocialBatchQueue,
 } from "@/lib/queue";
 import { sendDailyDigest } from "@/services/newsletter.service";
-import { postToFacebook, postToFacebookEN } from "@/lib/social/facebook";
+import {
+  postToFacebook,
+  postToFacebookEN,
+  postToFacebookWithMetadata,
+  postToFacebookENWithMetadata,
+  type FacebookRateLimitHeaders,
+} from "@/lib/social/facebook";
 import { postToBluesky, postToBlueskyEN } from "@/lib/social/bluesky";
 import { postToMastodon, postToMastodonEN } from "@/lib/social/mastodon";
 import { db } from "@/lib/db";
@@ -860,6 +866,58 @@ async function startWorker() {
       MASTODON_EN: "en",
     };
 
+    const safeParseJson = (value?: string) => {
+      if (!value) return null;
+      try {
+        return JSON.parse(value);
+      } catch {
+        return null;
+      }
+    };
+
+    const getAdaptiveFacebookInterval = (
+      headers?: FacebookRateLimitHeaders,
+    ): number | null => {
+      if (!headers) return null;
+
+      const xAppUsage = safeParseJson(headers.xAppUsage);
+      const xBusinessUsage = safeParseJson(headers.xBusinessUseCaseUsage);
+
+      const appUsageValues = [
+        Number(xAppUsage?.call_count || 0),
+        Number(xAppUsage?.total_time || 0),
+        Number(xAppUsage?.total_cputime || 0),
+      ];
+
+      const businessUsageEntries = xBusinessUsage
+        ? Object.values(xBusinessUsage).flatMap((entry: any) =>
+            Array.isArray(entry) ? entry : [entry],
+          )
+        : [];
+
+      const businessUsageValues = businessUsageEntries.flatMap((entry: any) => [
+        Number(entry?.call_count || 0),
+        Number(entry?.total_time || 0),
+        Number(entry?.total_cputime || 0),
+      ]);
+
+      const peakUsage = Math.max(...appUsageValues, ...businessUsageValues, 0);
+
+      let suggestedInterval = 30;
+      if (peakUsage >= 95) suggestedInterval = 180;
+      else if (peakUsage >= 90) suggestedInterval = 120;
+      else if (peakUsage >= 80) suggestedInterval = 90;
+      else if (peakUsage >= 70) suggestedInterval = 60;
+      else if (peakUsage >= 60) suggestedInterval = 45;
+
+      const retryAfter = Number(headers.retryAfter || 0);
+      if (Number.isFinite(retryAfter) && retryAfter > 0) {
+        suggestedInterval = Math.max(suggestedInterval, retryAfter);
+      }
+
+      return suggestedInterval;
+    };
+
     const socialBatchWorker = new Worker(
       "social-batch",
       async (job) => {
@@ -933,6 +991,7 @@ async function startWorker() {
           let failed = 0;
           let skipped = 0;
           let totalChecked = 0;
+          let adaptiveIntervalSeconds = Math.max(intervalSeconds, 5);
 
           for (let i = 0; i < allArticles.length; i++) {
             // Check if job was cancelled
@@ -993,7 +1052,14 @@ async function startWorker() {
 
             // Post to all platforms in PARALLEL
             const postPromises = platformsToPost.map(async (platform) => {
-              const poster = platformPosters[platform];
+              const isFacebookPlatform =
+                platform === "FACEBOOK" || platform === "FACEBOOK_EN";
+              const poster = isFacebookPlatform
+                ? platform === "FACEBOOK"
+                  ? postToFacebookWithMetadata
+                  : postToFacebookENWithMetadata
+                : platformPosters[platform];
+
               if (!poster)
                 return { platform, success: false, error: "No poster" };
 
@@ -1019,7 +1085,15 @@ async function startWorker() {
                     };
 
               try {
-                const postId = await poster(articleData);
+                const postResult = await poster(articleData);
+                const postId =
+                  typeof postResult === "string" || postResult === null
+                    ? postResult
+                    : postResult.postId;
+                const rateLimitHeaders =
+                  typeof postResult === "object" && postResult
+                    ? postResult.rateLimitHeaders
+                    : undefined;
 
                 if (postId) {
                   // Save successful share
@@ -1046,7 +1120,7 @@ async function startWorker() {
                       error: null,
                     },
                   });
-                  return { platform, success: true, postId };
+                  return { platform, success: true, postId, rateLimitHeaders };
                 } else {
                   // Save failed share
                   await db.socialShare.upsert({
@@ -1070,7 +1144,12 @@ async function startWorker() {
                       retryCount: { increment: 1 },
                     },
                   });
-                  return { platform, success: false, error: "No post ID" };
+                  return {
+                    platform,
+                    success: false,
+                    error: "No post ID",
+                    rateLimitHeaders,
+                  };
                 }
               } catch (error: any) {
                 await db.socialShare.upsert({
@@ -1111,6 +1190,27 @@ async function startWorker() {
               }
             }
 
+            const facebookIntervals = results
+              .filter(
+                (result) =>
+                  result.platform === "FACEBOOK" ||
+                  result.platform === "FACEBOOK_EN",
+              )
+              .map((result) =>
+                getAdaptiveFacebookInterval(result.rateLimitHeaders),
+              )
+              .filter((value): value is number => typeof value === "number");
+
+            if (facebookIntervals.length > 0) {
+              const nextAdaptiveInterval = Math.max(...facebookIntervals);
+              if (nextAdaptiveInterval > adaptiveIntervalSeconds) {
+                adaptiveIntervalSeconds = nextAdaptiveInterval;
+                log.info(
+                  `Facebook rate-limit adaptasyonu: interval ${adaptiveIntervalSeconds}s`,
+                );
+              }
+            }
+
             // Update progress
             const progress = {
               processed,
@@ -1119,6 +1219,7 @@ async function startWorker() {
               totalChecked,
               currentArticle: i + 1,
               totalArticles: allArticles.length,
+              adaptiveIntervalSeconds,
             };
             await job.updateProgress(progress);
 
@@ -1129,13 +1230,14 @@ async function startWorker() {
                 processedItems: processed,
                 failedItems: failed,
                 totalItems: totalChecked + skipped,
+                intervalMinutes: adaptiveIntervalSeconds / 60,
               },
             });
 
             // Wait before next article (except for last one)
             if (i < allArticles.length - 1 && platformsToPost.length > 0) {
               await new Promise((resolve) =>
-                setTimeout(resolve, intervalSeconds * 1000),
+                setTimeout(resolve, adaptiveIntervalSeconds * 1000),
               );
             }
           }

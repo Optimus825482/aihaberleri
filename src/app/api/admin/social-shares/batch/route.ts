@@ -26,6 +26,25 @@ const validPlatforms = [
   "MASTODON_EN",
 ];
 
+const platformRateProfiles: Record<string, { minIntervalSeconds: number }> = {
+  FACEBOOK: { minIntervalSeconds: 30 },
+  BLUESKY: { minIntervalSeconds: 5 },
+  MASTODON: { minIntervalSeconds: 5 },
+};
+
+const normalizePlatformKey = (platform: string) => platform.replace("_EN", "");
+
+const getRecommendedMinInterval = (platforms: string[]) => {
+  if (platforms.length === 0) return 10;
+
+  return Math.max(
+    ...platforms.map((platform) => {
+      const key = normalizePlatformKey(platform);
+      return platformRateProfiles[key]?.minIntervalSeconds ?? 10;
+    }),
+  );
+};
+
 // GET: List batches with progress
 export async function GET(req: NextRequest) {
   try {
@@ -155,8 +174,34 @@ export async function POST(req: NextRequest) {
       articleIds, // Optional selected article IDs
     } = body;
 
+    const requestedBatchSize = Number(batchSize);
+    const requestedIntervalSeconds = Number(intervalSeconds);
+    const safeBatchSize = Number.isFinite(requestedBatchSize)
+      ? Math.min(Math.max(Math.floor(requestedBatchSize), 1), 100)
+      : 50;
+
+    const safePlatforms = Array.isArray(platforms)
+      ? platforms.filter((p: string) => typeof p === "string")
+      : [];
+
+    if (safePlatforms.length === 0) {
+      return NextResponse.json(
+        { error: "En az bir platform seçmelisiniz" },
+        { status: 400 },
+      );
+    }
+
+    const recommendedMinIntervalSeconds =
+      getRecommendedMinInterval(safePlatforms);
+    const safeIntervalSeconds = Number.isFinite(requestedIntervalSeconds)
+      ? Math.max(
+          Math.floor(requestedIntervalSeconds),
+          recommendedMinIntervalSeconds,
+        )
+      : recommendedMinIntervalSeconds;
+
     // Validate platforms
-    const invalidPlatforms = platforms.filter(
+    const invalidPlatforms = safePlatforms.filter(
       (p: string) => !validPlatforms.includes(p),
     );
     if (invalidPlatforms.length > 0) {
@@ -178,7 +223,7 @@ export async function POST(req: NextRequest) {
         batch.platform.split(",").forEach((p) => activePlatforms.add(p.trim()));
       });
 
-      const overlappingPlatforms = platforms.filter((p: string) =>
+      const overlappingPlatforms = safePlatforms.filter((p: string) =>
         activePlatforms.has(p),
       );
 
@@ -193,11 +238,11 @@ export async function POST(req: NextRequest) {
       }
       // Different platforms - allow parallel batch
       console.log(
-        `📤 Allowing parallel batch. Active: ${activeBatches.length}, New platforms: ${platforms.join(", ")}`,
+        `📤 Allowing parallel batch. Active: ${activeBatches.length}, New platforms: ${safePlatforms.join(", ")}`,
       );
     }
 
-    let actualBatchSize = batchSize;
+    let actualBatchSize = safeBatchSize;
     let totalItems = 0;
     let unsharedCount = 0;
 
@@ -205,7 +250,7 @@ export async function POST(req: NextRequest) {
     if (articleIds && Array.isArray(articleIds) && articleIds.length > 0) {
       // Selective Mode (Manual Selection)
       actualBatchSize = articleIds.length;
-      totalItems = articleIds.length * platforms.length;
+      totalItems = articleIds.length * safePlatforms.length;
 
       // Verify articles exist (optional, but good practice)
       const existingCount = await db.article.count({
@@ -227,7 +272,7 @@ export async function POST(req: NextRequest) {
       // Count unshared articles (based on TR platform - base check)
       const sharedArticleIds = await db.socialShare.findMany({
         where: {
-          platform: { in: platforms },
+          platform: { in: safePlatforms },
           language: "tr",
           status: "SHARED",
         },
@@ -251,17 +296,18 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      totalItems = Math.min(unsharedCount, batchSize) * platforms.length;
-      actualBatchSize = batchSize;
+      totalItems =
+        Math.min(unsharedCount, safeBatchSize) * safePlatforms.length;
+      actualBatchSize = safeBatchSize;
     }
 
     // Create batch record
     const batch = await db.socialShareBatch.create({
       data: {
-        platform: platforms.join(","), // Store all platforms
+        platform: safePlatforms.join(","), // Store all platforms
         language: "tr,en", // Both languages
         batchSize: actualBatchSize,
-        intervalMinutes: intervalSeconds / 60, // Convert to minutes for storage
+        intervalMinutes: safeIntervalSeconds / 60, // Convert to minutes for storage
         totalItems: totalItems,
         status: "PROCESSING",
         startedAt: new Date(),
@@ -271,8 +317,8 @@ export async function POST(req: NextRequest) {
     // Add job to BullMQ queue - runs in background even if page is closed
     const jobResult = await addSocialBatchJob({
       batchId: batch.id,
-      platforms,
-      intervalSeconds,
+      platforms: safePlatforms,
+      intervalSeconds: safeIntervalSeconds,
       batchSize: actualBatchSize,
       articleIds: articleIds && articleIds.length > 0 ? articleIds : undefined,
     });
@@ -297,10 +343,12 @@ export async function POST(req: NextRequest) {
       success: true,
       batchId: batch.id,
       jobId: jobResult.jobId,
-      totalArticles: Math.min(unsharedCount, batchSize),
-      platforms,
-      intervalSeconds,
-      message: `Batch başlatıldı! ${Math.min(unsharedCount, actualBatchSize)} haber, ${platforms.length} platform. Her ${intervalSeconds} saniyede bir paylaşılacak. Sayfa kapatılsa bile arka planda çalışmaya devam edecek.`,
+      totalArticles: Math.min(unsharedCount, actualBatchSize),
+      platforms: safePlatforms,
+      requestedIntervalSeconds,
+      appliedIntervalSeconds: safeIntervalSeconds,
+      recommendedMinIntervalSeconds,
+      message: `Batch başlatıldı! ${Math.min(unsharedCount, actualBatchSize)} haber, ${safePlatforms.length} platform. Her ${safeIntervalSeconds} saniyede bir paylaşılacak. Sayfa kapatılsa bile arka planda çalışmaya devam edecek.`,
     });
   } catch (error) {
     console.error("Batch create error:", error);

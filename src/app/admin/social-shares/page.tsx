@@ -21,6 +21,7 @@ import {
   XCircle,
   Clock,
   AlertCircle,
+  RotateCcw,
   Settings,
   Loader2,
 } from "lucide-react";
@@ -46,6 +47,25 @@ const platformConfig: Record<
   BLUESKY_EN: { icon: "🦋", color: "bg-sky-400", label: "Bluesky EN" },
   MASTODON: { icon: "🐘", color: "bg-purple-600", label: "Mastodon TR" },
   MASTODON_EN: { icon: "🐘", color: "bg-purple-500", label: "Mastodon EN" },
+};
+
+const platformRateProfiles: Record<string, { minIntervalSeconds: number }> = {
+  FACEBOOK: { minIntervalSeconds: 30 },
+  BLUESKY: { minIntervalSeconds: 5 },
+  MASTODON: { minIntervalSeconds: 5 },
+};
+
+const normalizePlatformKey = (platform: string) => platform.replace("_EN", "");
+
+const getRecommendedMinInterval = (platforms: string[]) => {
+  if (platforms.length === 0) return 10;
+
+  return Math.max(
+    ...platforms.map((platform) => {
+      const key = normalizePlatformKey(platform);
+      return platformRateProfiles[key]?.minIntervalSeconds ?? 10;
+    }),
+  );
 };
 
 // Status badge component
@@ -98,6 +118,25 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+interface RetryComboSummary {
+  key: string;
+  platform: string;
+  language: string;
+  label: string;
+  icon: string;
+  missingCount: number;
+  articleCount: number;
+}
+
+interface UnsharedSummary {
+  totalPublished: number;
+  totalUnshared: number;
+  byPlatform: Record<string, number>;
+}
+
+type VisibilityFilter = "all" | "shared" | "unshared" | "pending" | "failed";
+type BatchTargetMode = "auto-unshared" | "selected" | "filtered";
+
 export default function SocialSharesPage() {
   const { toast } = useToast();
   const [articles, setArticles] = useState<any[]>([]);
@@ -115,7 +154,9 @@ export default function SocialSharesPage() {
   // Filters
   const [search, setSearch] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  const [unsharedOnly, setUnsharedOnly] = useState(false);
+  const [languageFilter, setLanguageFilter] = useState<string>("all");
+  const [visibilityFilter, setVisibilityFilter] =
+    useState<VisibilityFilter>("all");
 
   // Selective sharing - NEW FEATURE
   const [selectedArticleIds, setSelectedArticleIds] = useState<string[]>([]);
@@ -133,25 +174,95 @@ export default function SocialSharesPage() {
   ]);
   const [batchSize, setBatchSize] = useState(50);
   const [intervalSeconds, setIntervalSeconds] = useState(10);
+  const [batchTargetMode, setBatchTargetMode] =
+    useState<BatchTargetMode>("auto-unshared");
 
   // Active batch tracking
   const [activeBatch, setActiveBatch] = useState<any>(null);
   const progressPollingRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Unified social insights (from old separate pages)
+  const [retryCombos, setRetryCombos] = useState<RetryComboSummary[]>([]);
+  const [selectedRetryCombos, setSelectedRetryCombos] = useState<string[]>([]);
+  const [unsharedSummary, setUnsharedSummary] =
+    useState<UnsharedSummary | null>(null);
+  const [retryLoading, setRetryLoading] = useState(false);
+
   // Cancel confirmation dialog
   const [cancelConfirm, setCancelConfirm] = useState(false);
 
   // Fetch articles
+  const isStatusMatch = useCallback(
+    (article: any) => {
+      if (visibilityFilter === "all") return true;
+
+      const statuses: string[] = selectedPlatform
+        ? [article.shares?.[selectedPlatform]?.status || "NOT_CREATED"]
+        : Object.keys(platformConfig).map(
+          (platform) => article.shares?.[platform]?.status || "NOT_CREATED",
+        );
+
+      if (visibilityFilter === "shared") {
+        return statuses.some((status) => status === "SHARED");
+      }
+
+      if (visibilityFilter === "unshared") {
+        return statuses.some((status) => status === "NOT_CREATED");
+      }
+
+      if (visibilityFilter === "pending") {
+        return statuses.some((status) =>
+          ["PENDING", "SCHEDULED", "PROCESSING"].includes(status),
+        );
+      }
+
+      if (visibilityFilter === "failed") {
+        return statuses.some((status) => status === "FAILED");
+      }
+
+      return true;
+    },
+    [selectedPlatform, visibilityFilter],
+  );
+
+  const buildArticleParams = useCallback(
+    (page: number, limit: number) => {
+      const params = new URLSearchParams({
+        page: String(page),
+        limit: String(limit),
+        ...(search && { search }),
+        ...(selectedPlatform && { platform: selectedPlatform }),
+      });
+
+      if (languageFilter !== "all") {
+        params.set("language", languageFilter);
+      }
+
+      if (visibilityFilter === "unshared") {
+        params.set("unsharedOnly", "true");
+      }
+
+      if (
+        selectedPlatform &&
+        ["shared", "failed", "pending"].includes(visibilityFilter)
+      ) {
+        const apiStatusMap: Record<string, string> = {
+          shared: "SHARED",
+          failed: "FAILED",
+          pending: "PENDING",
+        };
+        params.set("status", apiStatusMap[visibilityFilter]);
+      }
+
+      return params;
+    },
+    [languageFilter, search, selectedPlatform, visibilityFilter],
+  );
+
   const fetchArticles = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...(search && { search }),
-        ...(selectedPlatform && { platform: selectedPlatform }),
-        ...(unsharedOnly && { unsharedOnly: "true" }),
-      });
+      const params = buildArticleParams(pagination.page, pagination.limit);
 
       const res = await fetch(`/api/admin/social-shares?${params}`, {
         credentials: "include",
@@ -159,7 +270,7 @@ export default function SocialSharesPage() {
       const data = await res.json();
 
       if (data.articles) {
-        setArticles(data.articles);
+        setArticles(data.articles.filter(isStatusMatch));
         setPagination(data.pagination);
       }
     } catch (error) {
@@ -167,12 +278,38 @@ export default function SocialSharesPage() {
     }
     setLoading(false);
   }, [
+    buildArticleParams,
+    isStatusMatch,
     pagination.page,
     pagination.limit,
-    search,
-    selectedPlatform,
-    unsharedOnly,
   ]);
+
+  const fetchFilteredArticleIds = useCallback(async (maxItems = 500) => {
+    const selectedIds = new Set<string>();
+    let page = 1;
+    let totalPages = 1;
+
+    while (page <= totalPages && selectedIds.size < maxItems) {
+      const params = buildArticleParams(page, 100);
+      const res = await fetch(`/api/admin/social-shares?${params}`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+
+      if (!res.ok) break;
+
+      const filteredRows = (data.articles || []).filter(isStatusMatch);
+      for (const article of filteredRows) {
+        selectedIds.add(article.id);
+        if (selectedIds.size >= maxItems) break;
+      }
+
+      totalPages = data.pagination?.totalPages || page;
+      page += 1;
+    }
+
+    return Array.from(selectedIds);
+  }, [buildArticleParams, isStatusMatch]);
 
   // Fetch batch stats
   const fetchStats = useCallback(async () => {
@@ -216,6 +353,32 @@ export default function SocialSharesPage() {
     }
   }, [activeBatch, fetchArticles, toast]);
 
+  const fetchSocialInsights = useCallback(async () => {
+    try {
+      const [retryRes, unsharedRes] = await Promise.all([
+        fetch("/api/admin/retry-shares", { credentials: "include" }),
+        fetch("/api/admin/unshared-articles?page=1&limit=1", {
+          credentials: "include",
+        }),
+      ]);
+
+      const [retryData, unsharedData] = await Promise.all([
+        retryRes.json(),
+        unsharedRes.json(),
+      ]);
+
+      if (Array.isArray(retryData.summary)) {
+        setRetryCombos(retryData.summary);
+      }
+
+      if (unsharedData.summary) {
+        setUnsharedSummary(unsharedData.summary);
+      }
+    } catch (error) {
+      console.error("Social insights fetch error:", error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchArticles();
   }, [fetchArticles]);
@@ -224,8 +387,14 @@ export default function SocialSharesPage() {
     fetchStats();
   }, [fetchStats]);
 
+  useEffect(() => {
+    fetchSocialInsights();
+  }, [fetchSocialInsights]);
+
   // Start batch
-  const startBatch = async () => {
+  const startBatch = async (mode?: BatchTargetMode) => {
+    const effectiveMode = mode || batchTargetMode;
+
     if (selectedPlatforms.length === 0) {
       toast({
         variant: "destructive",
@@ -235,26 +404,67 @@ export default function SocialSharesPage() {
       return;
     }
 
+    if (effectiveMode === "selected" && selectedArticleIds.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Seçili mod için en az bir haber seçin",
+      });
+      return;
+    }
+
     setBatchLoading(true);
     try {
+      const safeIntervalSeconds = Math.max(
+        intervalSeconds,
+        getRecommendedMinInterval(selectedPlatforms),
+      );
+
+      let articleIds: string[] | undefined;
+
+      if (effectiveMode === "selected") {
+        articleIds = selectedArticleIds;
+      } else if (effectiveMode === "filtered") {
+        articleIds = await fetchFilteredArticleIds(500);
+        if (articleIds.length === 0) {
+          toast({
+            variant: "destructive",
+            title: "Hata",
+            description: "Filtreye uygun haber bulunamadı",
+          });
+          setBatchLoading(false);
+          return;
+        }
+      }
+
       const res = await fetch("/api/admin/social-shares/batch", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           platforms: selectedPlatforms,
-          batchSize,
-          intervalSeconds,
+          ...(articleIds ? { articleIds } : { batchSize }),
+          intervalSeconds: safeIntervalSeconds,
         }),
       });
 
       const data = await res.json();
 
       if (data.success) {
+        if (safeIntervalSeconds !== intervalSeconds) {
+          setIntervalSeconds(safeIntervalSeconds);
+          toast({
+            title: "Rate-limit koruması uygulandı",
+            description: `Aralık ${safeIntervalSeconds} saniye olarak güncellendi.`,
+          });
+        }
+
         toast({
           title: "Başarılı",
           description: data.message,
         });
+        setSelectedArticleIds([]);
+        setSelectAll(false);
         setShowBatchModal(false);
         fetchArticles();
         fetchStats();
@@ -324,48 +534,102 @@ export default function SocialSharesPage() {
       return;
     }
 
-    setBatchLoading(true);
+    await startBatch("selected");
+  };
+
+  const startRetryBatch = async () => {
+    if (selectedRetryCombos.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "En az bir retry kombinasyonu seçin",
+      });
+      return;
+    }
+
+    setRetryLoading(true);
     try {
-      const res = await fetch("/api/admin/social-shares/batch", {
+      const retryPlatforms = retryCombos
+        .filter((combo) => selectedRetryCombos.includes(combo.key))
+        .map((combo) => combo.platform);
+      const safeIntervalSeconds = Math.max(
+        intervalSeconds,
+        getRecommendedMinInterval(retryPlatforms),
+      );
+
+      const res = await fetch("/api/admin/retry-shares", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          platforms: selectedPlatforms,
-          intervalSeconds,
-          articleIds: selectedArticleIds, // Send selected article IDs
+          combos: selectedRetryCombos,
+          intervalSeconds: safeIntervalSeconds,
         }),
       });
 
       const data = await res.json();
 
       if (data.success) {
-        toast({
-          title: "Başarılı",
-          description: `${selectedArticleIds.length} haber ${selectedPlatforms.length} platformda paylaşılacak`,
-        });
-        setSelectedArticleIds([]);
-        setSelectAll(false);
-        setShowBatchModal(false);
-        fetchArticles();
+        if (safeIntervalSeconds !== intervalSeconds) {
+          setIntervalSeconds(safeIntervalSeconds);
+          toast({
+            title: "Rate-limit koruması uygulandı",
+            description: `Retry aralığı ${safeIntervalSeconds} saniyeye çıkarıldı.`,
+          });
+        }
+
+        toast({ title: "Başlatıldı", description: data.message });
+        setSelectedRetryCombos([]);
         fetchStats();
+        fetchArticles();
+        fetchSocialInsights();
       } else {
         toast({
           variant: "destructive",
           title: "Hata",
-          description: data.error || "Batch başlatılamadı",
+          description: data.error || "Retry başlatılamadı",
         });
       }
     } catch (error) {
-      console.error("Selective batch error:", error);
+      console.error("Retry start error:", error);
       toast({
         variant: "destructive",
         title: "Hata",
-        description: "Batch başlatılırken hata oluştu",
+        description: "Retry başlatılırken hata oluştu",
       });
     }
-    setBatchLoading(false);
+    setRetryLoading(false);
   };
+
+  const toggleRetryCombo = (comboKey: string) => {
+    setSelectedRetryCombos((prev) =>
+      prev.includes(comboKey)
+        ? prev.filter((item) => item !== comboKey)
+        : [...prev, comboKey],
+    );
+  };
+
+  const selectedRetryMissingTotal = retryCombos
+    .filter((combo) => selectedRetryCombos.includes(combo.key))
+    .reduce((sum, combo) => sum + combo.missingCount, 0);
+
+  const recommendedMinIntervalSeconds = getRecommendedMinInterval(
+    selectedPlatforms,
+  );
+
+  const rateLimitRiskLevel =
+    intervalSeconds < recommendedMinIntervalSeconds
+      ? "Yüksek"
+      : intervalSeconds < Math.ceil(recommendedMinIntervalSeconds * 1.5)
+        ? "Orta"
+        : "Düşük";
+
+  const rateLimitRiskClass =
+    rateLimitRiskLevel === "Yüksek"
+      ? "text-red-400"
+      : rateLimitRiskLevel === "Orta"
+        ? "text-yellow-400"
+        : "text-green-400";
 
   // Request cancel batch (show confirmation dialog)
   const requestCancelBatch = () => {
@@ -426,6 +690,16 @@ export default function SocialSharesPage() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (intervalSeconds < recommendedMinIntervalSeconds) {
+      setIntervalSeconds(recommendedMinIntervalSeconds);
+      toast({
+        title: "Rate-limit koruması",
+        description: `Seçili platformlara göre aralık ${recommendedMinIntervalSeconds} saniyeye yükseltildi.`,
+      });
+    }
+  }, [intervalSeconds, recommendedMinIntervalSeconds, toast]);
 
   return (
     <AdminLayout>
@@ -523,6 +797,107 @@ export default function SocialSharesPage() {
           })}
         </div>
 
+        {/* Unified Missing Share Summary */}
+        {unsharedSummary && (
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-400" />
+                Eksik Paylaşım Özeti
+              </h3>
+              <span className="text-sm text-gray-300">
+                {unsharedSummary.totalUnshared} / {unsharedSummary.totalPublished}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+              {Object.entries(platformConfig).map(([platformKey, config]) => (
+                <div
+                  key={platformKey}
+                  className="rounded-lg border border-white/10 bg-white/5 p-3"
+                >
+                  <div className="text-xs text-gray-400">{config.label}</div>
+                  <div className="text-lg font-semibold text-amber-400">
+                    {unsharedSummary.byPlatform[platformKey] || 0}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Retry Combo Manager (merged from retry-shares page) */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <RotateCcw className="w-5 h-5 text-cyan-400" />
+              Retry Kombinasyonları
+            </h3>
+            <span className="text-xs text-gray-400">
+              Platform + Dil bazlı eksik paylaşım
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+            {retryCombos.map((combo) => {
+              const selected = selectedRetryCombos.includes(combo.key);
+              const disabled = combo.missingCount === 0 || !!activeBatch;
+
+              return (
+                <button
+                  key={combo.key}
+                  onClick={() => !disabled && toggleRetryCombo(combo.key)}
+                  disabled={disabled}
+                  className={`text-left rounded-lg border p-3 transition-all ${selected
+                    ? "bg-cyan-500/20 border-cyan-500"
+                    : disabled
+                      ? "bg-white/[0.02] border-white/5 opacity-50 cursor-not-allowed"
+                      : "bg-white/5 border-white/10 hover:border-cyan-500/50"
+                    }`}
+                >
+                  <div className="text-sm text-white font-medium">
+                    {combo.icon} {combo.label}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    Eksik: {combo.missingCount}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              aria-label="Retry paylaşım aralığı"
+              value={intervalSeconds}
+              onChange={(e) => setIntervalSeconds(parseInt(e.target.value))}
+              className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
+            >
+              <option value={5}>5 saniye</option>
+              <option value={10}>10 saniye</option>
+              <option value={15}>15 saniye</option>
+              <option value={30}>30 saniye</option>
+              <option value={60}>60 saniye</option>
+            </select>
+
+            <button
+              onClick={startRetryBatch}
+              disabled={
+                retryLoading || selectedRetryCombos.length === 0 || !!activeBatch
+              }
+              className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-lg text-white disabled:opacity-50"
+            >
+              {retryLoading ? "Başlatılıyor..." : "Retry Batch Başlat"}
+            </button>
+
+            <span className="text-sm text-gray-300">
+              Seçili eksik toplam: {selectedRetryMissingTotal}
+            </span>
+            <span className={`text-sm font-medium ${rateLimitRiskClass}`}>
+              Rate-limit riski: {rateLimitRiskLevel}
+            </span>
+          </div>
+        </div>
+
         {/* Filters */}
         <div className="flex flex-wrap gap-4 items-center bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
           <div className="flex-1 min-w-[200px]">
@@ -552,15 +927,55 @@ export default function SocialSharesPage() {
             ))}
           </select>
 
-          <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={unsharedOnly}
-              onChange={(e) => setUnsharedOnly(e.target.checked)}
-              className="w-4 h-4 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500"
-            />
-            Sadece paylaşılmayanlar
-          </label>
+          <select
+            value={languageFilter}
+            onChange={(e) => setLanguageFilter(e.target.value)}
+            aria-label="Dil seçimi"
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
+          >
+            <option value="all">Tüm Diller</option>
+            <option value="tr">TR</option>
+            <option value="en">EN</option>
+          </select>
+
+          <select
+            value={visibilityFilter}
+            onChange={(e) => setVisibilityFilter(e.target.value as VisibilityFilter)}
+            aria-label="Paylaşım durumu seçimi"
+            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:ring-2 focus:ring-purple-500"
+          >
+            <option value="all">Tümü</option>
+            <option value="shared">Paylaşılan</option>
+            <option value="unshared">Paylaşılmayan</option>
+            <option value="pending">Bekleyen</option>
+            <option value="failed">Hatalı</option>
+          </select>
+
+          <button
+            onClick={async () => {
+              const ids = await fetchFilteredArticleIds(500);
+              setSelectedArticleIds(ids);
+              setSelectAll(false);
+              toast({
+                title: "Seçim güncellendi",
+                description: `${ids.length} haber filtreye göre seçildi (max 500)`,
+              });
+            }}
+            className="flex items-center gap-2 px-3 py-2 bg-cyan-600/20 border border-cyan-500/30 rounded-lg text-cyan-200 hover:bg-cyan-600/30 transition-colors"
+          >
+            <Filter className="w-4 h-4" />
+            Filtredekileri Seç
+          </button>
+
+          <button
+            onClick={() => {
+              setSelectedArticleIds([]);
+              setSelectAll(false);
+            }}
+            className="flex items-center gap-2 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-gray-300 hover:text-white hover:bg-white/20 transition-colors"
+          >
+            Seçimi Temizle
+          </button>
 
           <button
             onClick={() => {
@@ -632,6 +1047,8 @@ export default function SocialSharesPage() {
                       <td className="px-2 py-3 text-center">
                         <input
                           type="checkbox"
+                          aria-label="Haberi seç"
+                          title="Haberi seç"
                           checked={selectedArticleIds.includes(article.id)}
                           onChange={() => toggleArticleSelection(article.id)}
                           className="w-4 h-4 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500"
@@ -938,6 +1355,36 @@ export default function SocialSharesPage() {
 
                 <div>
                   <label
+                    htmlFor="batch-target-mode"
+                    className="block text-sm text-gray-400 mb-1"
+                  >
+                    Batch Hedefi
+                  </label>
+                  <select
+                    id="batch-target-mode"
+                    value={batchTargetMode}
+                    onChange={(e) =>
+                      setBatchTargetMode(e.target.value as BatchTargetMode)
+                    }
+                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                  >
+                    <option value="auto-unshared">
+                      Otomatik (Paylaşılmayanlardan)
+                    </option>
+                    <option value="selected">
+                      Sadece Seçtiklerim ({selectedArticleIds.length})
+                    </option>
+                    <option value="filtered">
+                      Filtreye Uyan Tümü (max 500)
+                    </option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    İstediğin moda göre tekli/çoklu/toplu batch kurarsın.
+                  </p>
+                </div>
+
+                <div>
+                  <label
                     htmlFor="batch-size"
                     className="block text-sm text-gray-400 mb-1"
                   >
@@ -952,10 +1399,13 @@ export default function SocialSharesPage() {
                     }
                     min={1}
                     max={100}
+                    disabled={batchTargetMode !== "auto-unshared"}
                     className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Kaç haber paylaşılacak
+                    {batchTargetMode === "auto-unshared"
+                      ? "Kaç haber paylaşılacak"
+                      : "Bu modda article listesi baz alınır"}
                   </p>
                 </div>
 
@@ -978,10 +1428,19 @@ export default function SocialSharesPage() {
                     <option value={10}>10 saniye</option>
                     <option value={15}>15 saniye</option>
                     <option value={30}>30 saniye</option>
+                    <option value={45}>45 saniye</option>
                     <option value={60}>1 dakika</option>
+                    <option value={90}>1.5 dakika</option>
+                    <option value={120}>2 dakika</option>
                   </select>
                   <p className="text-xs text-gray-500 mt-1">
                     Her haber arasında beklenecek süre
+                  </p>
+                  <p className="text-xs text-cyan-300 mt-1">
+                    Önerilen minimum: {recommendedMinIntervalSeconds} saniye
+                  </p>
+                  <p className={`text-xs mt-1 ${rateLimitRiskClass}`}>
+                    Rate-limit riski: {rateLimitRiskLevel}
                   </p>
                 </div>
 
@@ -1005,7 +1464,9 @@ export default function SocialSharesPage() {
                   İptal
                 </button>
                 <button
-                  onClick={startBatch}
+                  onClick={() => {
+                    void startBatch();
+                  }}
                   disabled={
                     batchLoading ||
                     selectedPlatforms.length === 0 ||

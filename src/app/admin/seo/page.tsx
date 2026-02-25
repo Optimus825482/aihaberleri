@@ -120,6 +120,18 @@ interface ContentPlanData {
   calendar: ContentPlanWeek[];
 }
 
+interface SEOAutopilotState {
+  enabled: boolean;
+  intervalMinutes: number;
+  maxScore: number;
+  language: "tr" | "en" | "all";
+  batchSize: number;
+  delayMs: number;
+  nextRunAt: number | null;
+  lastRunAt: number | null;
+  lastResult: string | null;
+}
+
 type OptimizationMode = "autonomous" | "manual" | "single";
 type LanguageFilter = "tr" | "en" | "all";
 
@@ -154,6 +166,8 @@ export default function SEOPage() {
   const [planWeeks, setPlanWeeks] = useState(8);
   const [planLoading, setPlanLoading] = useState(false);
   const [contentPlan, setContentPlan] = useState<ContentPlanData | null>(null);
+  const [autopilot, setAutopilot] = useState<SEOAutopilotState | null>(null);
+  const [autopilotUpdating, setAutopilotUpdating] = useState(false);
   const bulkLogRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const jobIdRef = useRef<string | null>(null);
@@ -163,6 +177,11 @@ export default function SEOPage() {
   const formatDate = (value: string | null | undefined) => {
     if (!value) return "-";
     return new Date(value).toLocaleDateString("tr-TR");
+  };
+
+  const formatTimestamp = (value: number | null | undefined) => {
+    if (!value) return "-";
+    return new Date(value).toLocaleString("tr-TR");
   };
 
   const updateStats = useCallback((articlesData: ArticleSEO[]) => {
@@ -327,6 +346,10 @@ export default function SEOPage() {
 
       const data = await res.json();
 
+      if (data.autopilot) {
+        setAutopilot(data.autopilot);
+      }
+
       // Yeni progress'leri ekle
       if (data.progress && data.progress.length > 0) {
         setBulkProgress((prev) => [...prev, ...data.progress]);
@@ -380,44 +403,96 @@ export default function SEOPage() {
     [pollJobStatus, stopPolling],
   );
 
+  const fetchAutoOptimizeStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/seo/auto-optimize");
+      if (!res.ok) return;
+      const data = await res.json();
+
+      if (data.autopilot) {
+        setAutopilot(data.autopilot);
+      }
+
+      if (data.active && data.jobId && !jobIdRef.current) {
+        setBulkOptimizing(true);
+        setBulkTotal(data.total || 0);
+        setBulkCurrent(data.current || 0);
+
+        const fullRes = await fetch(
+          `/api/admin/seo/auto-optimize?jobId=${data.jobId}&since=0`,
+        );
+        if (fullRes.ok) {
+          const fullData = await fullRes.json();
+          if (fullData.progress?.length > 0) {
+            setBulkProgress(fullData.progress);
+            lastIndexRef.current = Math.max(
+              ...fullData.progress.map((p: BulkProgressItem) => p.index),
+            );
+          }
+        }
+
+        startPolling(data.jobId);
+      }
+    } catch {
+      // ignore
+    }
+  }, [startPolling]);
+
   // ─── Sayfa yüklendiğinde aktif job var mı kontrol et ───
   useEffect(() => {
-    const checkActiveJob = async () => {
-      try {
-        const res = await fetch("/api/admin/seo/auto-optimize");
-        if (!res.ok) return;
-        const data = await res.json();
+    fetchAutoOptimizeStatus();
+    const statusInterval = setInterval(fetchAutoOptimizeStatus, 15000);
 
-        if (data.active && data.jobId) {
-          // Devam eden job var — polling'i resume et
-          setBulkOptimizing(true);
-          setBulkTotal(data.total);
-          setBulkCurrent(data.current);
-
-          // Tüm mevcut progress'leri yükle
-          const fullRes = await fetch(
-            `/api/admin/seo/auto-optimize?jobId=${data.jobId}&since=0`,
-          );
-          if (fullRes.ok) {
-            const fullData = await fullRes.json();
-            if (fullData.progress?.length > 0) {
-              setBulkProgress(fullData.progress);
-              lastIndexRef.current = Math.max(
-                ...fullData.progress.map((p: BulkProgressItem) => p.index),
-              );
-            }
-          }
-
-          startPolling(data.jobId);
-        }
-      } catch {
-        // ignore
-      }
+    return () => {
+      clearInterval(statusInterval);
+      stopPolling();
     };
+  }, [fetchAutoOptimizeStatus, stopPolling]);
 
-    checkActiveJob();
-    return () => stopPolling();
-  }, [startPolling, stopPolling]);
+  const updateAutopilotSettings = useCallback(
+    async (payload: Partial<SEOAutopilotState>) => {
+      setAutopilotUpdating(true);
+      try {
+        const response = await fetch("/api/admin/seo/auto-optimize", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Ayar güncellenemedi");
+        }
+
+        if (data.autopilot) {
+          setAutopilot((prev) => ({
+            ...(prev || {
+              enabled: true,
+              intervalMinutes: 30,
+              maxScore: 80,
+              language: "tr",
+              batchSize: 50,
+              delayMs: 2500,
+              nextRunAt: null,
+              lastRunAt: null,
+              lastResult: null,
+            }),
+            ...data.autopilot,
+          }));
+        }
+      } catch (error) {
+        toast({
+          title: "Otonom ayar güncellenemedi",
+          description:
+            error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu",
+          variant: "destructive",
+        });
+      } finally {
+        setAutopilotUpdating(false);
+      }
+    },
+    [toast],
+  );
 
   // ─── Bulk Auto-Optimize ───
   const startBulkOptimize = useCallback(async () => {
@@ -828,6 +903,140 @@ export default function SEOPage() {
               <p className="text-xs text-muted-foreground">
                 Aktif mod: {optimizationMode.toUpperCase()} • Dil: {languageFilter.toUpperCase()}
               </p>
+            </div>
+
+            <div className="mt-4 rounded-lg border p-3 bg-muted/30">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium">SEO Otonom Devriye</p>
+                  <p className="text-xs text-muted-foreground">
+                    Her turda 50 habere kadar işler, LLM çağrılarını sıra + bekleme ile korur.
+                  </p>
+                </div>
+                <Badge variant={autopilot?.enabled ? "default" : "outline"}>
+                  {autopilot?.enabled ? "Aktif" : "Pasif"}
+                </Badge>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-4 mt-3">
+                <div className="space-y-1">
+                  <Label htmlFor="autopilot-interval" className="text-xs">
+                    Devriye (dk)
+                  </Label>
+                  <Input
+                    id="autopilot-interval"
+                    type="number"
+                    min={5}
+                    max={240}
+                    value={autopilot?.intervalMinutes ?? 30}
+                    onChange={(e) =>
+                      setAutopilot((prev) =>
+                        prev
+                          ? {
+                            ...prev,
+                            intervalMinutes: Number(e.target.value) || 30,
+                          }
+                          : prev,
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="autopilot-score" className="text-xs">
+                    Maks SEO Skoru
+                  </Label>
+                  <Input
+                    id="autopilot-score"
+                    type="number"
+                    min={40}
+                    max={95}
+                    value={autopilot?.maxScore ?? 80}
+                    onChange={(e) =>
+                      setAutopilot((prev) =>
+                        prev
+                          ? {
+                            ...prev,
+                            maxScore: Number(e.target.value) || 80,
+                          }
+                          : prev,
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="autopilot-delay" className="text-xs">
+                    LLM Bekleme (ms)
+                  </Label>
+                  <Input
+                    id="autopilot-delay"
+                    type="number"
+                    min={1000}
+                    max={15000}
+                    value={autopilot?.delayMs ?? 2500}
+                    onChange={(e) =>
+                      setAutopilot((prev) =>
+                        prev
+                          ? {
+                            ...prev,
+                            delayMs: Number(e.target.value) || 2500,
+                          }
+                          : prev,
+                      )
+                    }
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs">Batch</Label>
+                  <div className="h-10 px-3 border rounded-md flex items-center text-sm">
+                    {autopilot?.batchSize ?? 50}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={autopilot?.enabled ? "outline" : "default"}
+                  disabled={autopilotUpdating}
+                  onClick={() =>
+                    updateAutopilotSettings({ enabled: !(autopilot?.enabled ?? true) })
+                  }
+                >
+                  {autopilot?.enabled ? "Devriyeyi Durdur" : "Devriyeyi Başlat"}
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={autopilotUpdating || !autopilot}
+                  onClick={() =>
+                    autopilot &&
+                    updateAutopilotSettings({
+                      intervalMinutes: autopilot.intervalMinutes,
+                      maxScore: autopilot.maxScore,
+                      delayMs: autopilot.delayMs,
+                    })
+                  }
+                >
+                  Ayarları Kaydet
+                </Button>
+
+                <p className="text-xs text-muted-foreground">
+                  Son devriye: {formatTimestamp(autopilot?.lastRunAt)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Sonraki devriye: {formatTimestamp(autopilot?.nextRunAt)}
+                </p>
+              </div>
+
+              {autopilot?.lastResult && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Son sonuç: {autopilot.lastResult}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

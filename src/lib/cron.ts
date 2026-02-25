@@ -9,9 +9,11 @@ let cleanupInterval: NodeJS.Timeout | null = null;
 let indexingInterval: NodeJS.Timeout | null = null;
 let trendInterval: NodeJS.Timeout | null = null;
 let youtubeQueueInterval: NodeJS.Timeout | null = null;
+let seoPatrolInterval: NodeJS.Timeout | null = null;
 let isCleanupRunning = false;
 let isIndexingRunning = false;
 let isTrendRunning = false;
+let isSEOPatrolRunning = false;
 
 /**
  * Start all cron jobs
@@ -21,7 +23,8 @@ export function startCronJobs() {
     cleanupInterval &&
     indexingInterval &&
     trendInterval &&
-    youtubeQueueInterval
+    youtubeQueueInterval &&
+    seoPatrolInterval
   ) {
     console.log("⏰ Cron jobs already running");
     return;
@@ -64,6 +67,14 @@ export function startCronJobs() {
     }
   }, 60 * 1000); // Every 1 minute
 
+  // SEO autopilot patrol check every 2 minutes (runs only when due)
+  seoPatrolInterval = setInterval(
+    async () => {
+      await triggerSEOPatrolIfDue();
+    },
+    2 * 60 * 1000,
+  );
+
   // Run immediately on startup (after 30 seconds)
   setTimeout(() => {
     cleanupOldVisitors();
@@ -74,6 +85,10 @@ export function startCronJobs() {
   setTimeout(() => {
     recalculateTrendScores();
   }, 120000);
+
+  setTimeout(() => {
+    triggerSEOPatrolIfDue();
+  }, 45000);
 
   console.log("✅ Cron jobs started");
 }
@@ -98,7 +113,32 @@ export function stopCronJobs() {
     clearInterval(youtubeQueueInterval);
     youtubeQueueInterval = null;
   }
+  if (seoPatrolInterval) {
+    clearInterval(seoPatrolInterval);
+    seoPatrolInterval = null;
+  }
   console.log("⏹️ Cron jobs stopped");
+}
+
+async function triggerSEOPatrolIfDue() {
+  if (isSEOPatrolRunning) {
+    return;
+  }
+
+  isSEOPatrolRunning = true;
+  try {
+    const { runScheduledSEOPatrol } =
+      await import("@/services/seo-auto-optimize.service");
+    const result = await runScheduledSEOPatrol();
+
+    if (result.triggered) {
+      console.log(`🛰️ SEO autopilot devriyesi başladı: ${result.jobId}`);
+    }
+  } catch (error) {
+    console.error("❌ SEO autopilot devriye hatası:", error);
+  } finally {
+    isSEOPatrolRunning = false;
+  }
 }
 
 /**

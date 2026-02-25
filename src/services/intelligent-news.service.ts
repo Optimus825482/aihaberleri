@@ -1274,6 +1274,17 @@ export async function processIntelligentNews(
 
       console.log(`   ✅ Çeviriler kaydedildi (TR + EN)`);
 
+      try {
+        const { notifyEnglishArticle } =
+          await import("@/lib/seo/indexing-tracker");
+        await notifyEnglishArticle(trArticle.id, enSlug);
+        console.log(`   ✅ EN IndexNow/Google bildirimi yapıldı: ${enSlug}`);
+      } catch (notifyError: any) {
+        console.warn(
+          `   ⚠️ EN indexing bildirimi başarısız: ${notifyError?.message || notifyError}`,
+        );
+      }
+
       await liveLog.publish.success(
         `✅ Haber yayınlandı: ${synthesized.tr.title.substring(0, 40)}... (TR + EN)`,
       );
