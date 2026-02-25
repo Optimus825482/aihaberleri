@@ -51,8 +51,8 @@ export const AD_SLOTS = {
   INFEED_GENERAL: "6653849624",
 
   // ─── Site Geneli ─────────────────────
-  /** Mobil yapışkan alt reklam */
-  STICKY_BOTTOM_MOBILE: "6653849624",
+  /** Mobil yapışkan alt reklam — Görüntülü (display) tip olmalı, feed slot sticky'de 400 verir */
+  STICKY_BOTTOM_MOBILE: "1563878275",
 } as const;
 
 export type AdSlotKey = keyof typeof AD_SLOTS;
