@@ -116,15 +116,11 @@ export function useGA4RealtimeLite(refreshInterval = 60000) {
  * GA4 Traffic Overview Hook (period-based)
  */
 export function useGA4Traffic(period: string = "7d") {
-  return useSWR(
-    `/api/admin/analytics/ga4-realtime?period=${period}`,
-    fetcher,
-    {
-      ...defaultConfig,
-      refreshInterval: 300000, // 5 dakika
-      dedupingInterval: 60000,
-    },
-  );
+  return useSWR(`/api/admin/analytics/ga4-realtime?period=${period}`, fetcher, {
+    ...defaultConfig,
+    refreshInterval: 300000, // 5 dakika
+    dedupingInterval: 60000,
+  });
 }
 
 /**
@@ -179,7 +175,7 @@ export function useDeleteSubscriber() {
 /**
  * AdSense Özet Hook (today/month/total earnings)
  */
-export function useAdSenseSummary(refreshInterval = 300000) {
+export function useAdSenseSummary(refreshInterval = 30000) {
   return useSWR("/api/admin/adsense", fetcher, {
     ...defaultConfig,
     refreshInterval, // 5 dakika
@@ -220,20 +216,17 @@ export function useAdSenseAnalyses(limit: number = 10) {
  * AdSense AI Analiz Tetikleyici Mutation
  */
 export function useTriggerAdSenseAnalysis() {
-  return useSWRMutation(
-    "/api/admin/adsense/analyze",
-    async (url: string) => {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Analiz yapılamadı");
-      }
-      return res.json();
-    },
-  );
+  return useSWRMutation("/api/admin/adsense/analyze", async (url: string) => {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Analiz yapılamadı");
+    }
+    return res.json();
+  });
 }
 
 /**
@@ -244,7 +237,16 @@ export function useUpdateAdSenseAnalysis() {
     "/api/admin/adsense/analyses",
     async (
       url: string,
-      { arg }: { arg: { id: string; status?: string; reviewNotes?: string; actionsApplied?: any } },
+      {
+        arg,
+      }: {
+        arg: {
+          id: string;
+          status?: string;
+          reviewNotes?: string;
+          actionsApplied?: any;
+        };
+      },
     ) => {
       const res = await fetch(url, {
         method: "PATCH",

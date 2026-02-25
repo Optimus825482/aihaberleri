@@ -825,7 +825,7 @@ export default function AdminDashboard() {
 
   const { data: systemData } = useSystemStats(10000); // 10s refresh for realtime
   const { data: gaRealtimeLiteData } = useGA4RealtimeLite(60000); // 60s refresh, düşük yük
-  const { data: adSenseData } = useAdSenseSummary(300000); // 5 dakika
+  const { data: adSenseData } = useAdSenseSummary(30000); // 5 dakika
   const systemStats = systemData?.success ? systemData.data : null;
   const adSense = adSenseData?.success ? adSenseData.data : null;
   const adSenseConfigured = adSenseData?.configured !== false;
