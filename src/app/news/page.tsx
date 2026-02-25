@@ -68,6 +68,7 @@ export default async function NewsPage() {
                 <AdSlot
                   slot="1906988626"
                   format="fluid"
+                  layout="in-feed"
                   layoutKey="-6t+ed+2i-1n-4w"
                   minHeight={100}
                   label="Sponsorlu"

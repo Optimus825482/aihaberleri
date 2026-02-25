@@ -113,7 +113,10 @@ async function getEnglishTopicHeatMap() {
       take: 120,
     });
 
-    const topicMap = new Map<string, { first: number; last: number; max: number; label: string }>();
+    const topicMap = new Map<
+      string,
+      { first: number; last: number; max: number; label: string }
+    >();
 
     topicFromDb.forEach((item) => {
       if (!item.topic) return;
@@ -122,7 +125,12 @@ async function getEnglishTopicHeatMap() {
       const existing = topicMap.get(item.topic);
 
       if (!existing) {
-        topicMap.set(item.topic, { first: score, last: score, max: score, label });
+        topicMap.set(item.topic, {
+          first: score,
+          last: score,
+          max: score,
+          label,
+        });
         return;
       }
 
@@ -200,7 +208,9 @@ export default async function EnglishHomePage() {
                   className="group rounded-xl border border-ai-surface-border bg-ai-surface-dark/90 p-3.5 hover:border-ai-primary/40 hover:bg-ai-surface-card transition-all duration-200"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-[11px] text-ai-text-muted">#{idx + 1} rising topic</p>
+                    <p className="text-[11px] text-ai-text-muted">
+                      #{idx + 1} rising topic
+                    </p>
                     <span className="rounded-full border border-ai-primary/30 bg-ai-primary/10 px-2 py-0.5 text-[10px] font-semibold text-ai-primary">
                       {item.rise > 0 ? "Rising" : "Stable"}
                     </span>
@@ -211,7 +221,8 @@ export default async function EnglishHomePage() {
                   </p>
 
                   <p className="mt-2 text-xs text-ai-text-secondary">
-                    {item.rise > 0 ? `Rise +${item.rise}` : "No rise"} · Score {item.score}
+                    {item.rise > 0 ? `Rise +${item.rise}` : "No rise"} · Score{" "}
+                    {item.score}
                   </p>
                 </Link>
               ))}
@@ -303,6 +314,7 @@ export default async function EnglishHomePage() {
                           <AdSlot
                             slot="8493771212"
                             format="fluid"
+                            layout="in-feed"
                             layoutKey="-6t+ed+2i-1n-4w"
                             minHeight={100}
                             label="Sponsored"

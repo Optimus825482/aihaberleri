@@ -167,7 +167,12 @@ export default async function HomePage() {
     trendScore: number | null;
     category: { name: string; slug: string };
   }> = [];
-  let topicHeatMap: Array<{ topic: string; score: number; rise: number; label: string }> = [];
+  let topicHeatMap: Array<{
+    topic: string;
+    score: number;
+    rise: number;
+    label: string;
+  }> = [];
   let modelTagCards: Array<{ label: string; count: number }> = [];
   let featureSettings = {
     showDailyBriefing: true,
@@ -188,132 +193,131 @@ export default async function HomePage() {
       briefingFromDb,
       topicFromDb,
       modelTagSource,
-    ] =
-      await Promise.all([
-        // Query 1: Settings
-        db.setting.findMany({
-          where: {
-            key: {
-              in: [
-                "heroCarouselCount",
-                "heroCarouselInterval",
-                "site_feature_daily_briefing",
-                "site_feature_glossary",
-                "site_feature_model_cards",
-                "site_feature_heat_map",
-              ],
+    ] = await Promise.all([
+      // Query 1: Settings
+      db.setting.findMany({
+        where: {
+          key: {
+            in: [
+              "heroCarouselCount",
+              "heroCarouselInterval",
+              "site_feature_daily_briefing",
+              "site_feature_glossary",
+              "site_feature_model_cards",
+              "site_feature_heat_map",
+            ],
+          },
+        },
+        select: {
+          key: true,
+          value: true,
+        },
+      }),
+      // Query 2: Latest articles (excluding featured)
+      db.article.findMany({
+        where: {
+          status: "PUBLISHED",
+          publishedAt: { not: null },
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          excerpt: true,
+          imageUrl: true,
+          publishedAt: true,
+          views: true,
+          trendScore: true,
+          category: {
+            select: {
+              name: true,
+              slug: true,
             },
           },
-          select: {
-            key: true,
-            value: true,
-          },
-        }),
-        // Query 2: Latest articles (excluding featured)
-        db.article.findMany({
-          where: {
-            status: "PUBLISHED",
-            publishedAt: { not: null },
-          },
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            excerpt: true,
-            imageUrl: true,
-            publishedAt: true,
-            views: true,
-            trendScore: true,
-            category: {
-              select: {
-                name: true,
-                slug: true,
-              },
+        },
+        orderBy: {
+          publishedAt: "desc",
+        },
+        take: 8,
+      }),
+      // Query 3: Hero Slider (Latest 10 news with images)
+      db.article.findMany({
+        where: {
+          status: "PUBLISHED",
+          publishedAt: { not: null },
+          imageUrl: { not: null }, // Hero must have images
+        },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          excerpt: true,
+          imageUrl: true,
+          publishedAt: true,
+          views: true,
+          trendScore: true,
+          category: {
+            select: {
+              name: true,
+              slug: true,
             },
           },
-          orderBy: {
-            publishedAt: "desc",
-          },
-          take: 8,
-        }),
-        // Query 3: Hero Slider (Latest 10 news with images)
-        db.article.findMany({
-          where: {
-            status: "PUBLISHED",
-            publishedAt: { not: null },
-            imageUrl: { not: null }, // Hero must have images
-          },
-          select: {
-            id: true,
-            title: true,
-            slug: true,
-            excerpt: true,
-            imageUrl: true,
-            publishedAt: true,
-            views: true,
-            trendScore: true,
-            category: {
-              select: {
-                name: true,
-                slug: true,
-              },
-            },
-          },
-          orderBy: { publishedAt: "desc" }, // Latest first
-          take: 10,
-        }),
-        // Query 4: Categories for filter chips
-        db.category.findMany({
-          orderBy: { order: "asc" },
-          take: 8,
-        }),
-        // Query 5: Daily briefing set
-        db.article.findMany({
-          where: {
-            status: "PUBLISHED",
-            publishedAt: { gte: todayStart },
-          },
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            excerpt: true,
-            trendScore: true,
-            category: { select: { name: true, slug: true } },
-          },
-          orderBy: [{ trendScore: "desc" }, { publishedAt: "desc" }],
-          take: 8,
-        }),
-        // Query 6: Topic heat map source (today)
-        db.article.findMany({
-          where: {
-            status: "PUBLISHED",
-            publishedAt: { gte: todayStart },
-            topic: { not: null },
-          },
-          select: {
-            topic: true,
-            trendScore: true,
-            publishedAt: true,
-            title: true,
-          },
-          orderBy: { publishedAt: "asc" },
-          take: 120,
-        }),
-        // Query 7: Model/company cards source
-        db.article.findMany({
-          where: {
-            status: "PUBLISHED",
-            publishedAt: { not: null },
-          },
-          select: {
-            title: true,
-            excerpt: true,
-          },
-          orderBy: { publishedAt: "desc" },
-          take: 120,
-        }),
-      ]);
+        },
+        orderBy: { publishedAt: "desc" }, // Latest first
+        take: 10,
+      }),
+      // Query 4: Categories for filter chips
+      db.category.findMany({
+        orderBy: { order: "asc" },
+        take: 8,
+      }),
+      // Query 5: Daily briefing set
+      db.article.findMany({
+        where: {
+          status: "PUBLISHED",
+          publishedAt: { gte: todayStart },
+        },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          excerpt: true,
+          trendScore: true,
+          category: { select: { name: true, slug: true } },
+        },
+        orderBy: [{ trendScore: "desc" }, { publishedAt: "desc" }],
+        take: 8,
+      }),
+      // Query 6: Topic heat map source (today)
+      db.article.findMany({
+        where: {
+          status: "PUBLISHED",
+          publishedAt: { gte: todayStart },
+          topic: { not: null },
+        },
+        select: {
+          topic: true,
+          trendScore: true,
+          publishedAt: true,
+          title: true,
+        },
+        orderBy: { publishedAt: "asc" },
+        take: 120,
+      }),
+      // Query 7: Model/company cards source
+      db.article.findMany({
+        where: {
+          status: "PUBLISHED",
+          publishedAt: { not: null },
+        },
+        select: {
+          title: true,
+          excerpt: true,
+        },
+        orderBy: { publishedAt: "desc" },
+        take: 120,
+      }),
+    ]);
 
     featureSettings = await getArticleInsightDisplaySettings(
       async () => settingsFromDb,
@@ -338,7 +342,10 @@ export default async function HomePage() {
     categories = categoriesFromDb;
     briefingArticles = briefingFromDb;
 
-    const topicMap = new Map<string, { first: number; last: number; max: number; label: string }>();
+    const topicMap = new Map<
+      string,
+      { first: number; last: number; max: number; label: string }
+    >();
     topicFromDb.forEach((item) => {
       if (!item.topic) return;
       const score = item.trendScore ?? 0;
@@ -370,7 +377,14 @@ export default async function HomePage() {
       .sort((a, b) => b.rise - a.rise || b.score - a.score)
       .slice(0, 5);
 
-    const modelLabels = ["OpenAI", "Google", "Anthropic", "Meta", "Microsoft", "NVIDIA"];
+    const modelLabels = [
+      "OpenAI",
+      "Google",
+      "Anthropic",
+      "Meta",
+      "Microsoft",
+      "NVIDIA",
+    ];
     modelTagCards = modelLabels.map((label) => {
       const count = modelTagSource.filter((item) => {
         const haystack = `${item.title} ${item.excerpt ?? ""}`.toLowerCase();
@@ -430,7 +444,10 @@ export default async function HomePage() {
                 <>
                   <ul className="space-y-2 mb-4">
                     {briefingTop5.map((article, idx) => (
-                      <li key={article.id} className="text-sm text-ai-text-secondary flex items-start gap-2">
+                      <li
+                        key={article.id}
+                        className="text-sm text-ai-text-secondary flex items-start gap-2"
+                      >
                         <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-ai-primary/20 text-[11px] font-bold text-ai-primary">
                           {idx + 1}
                         </span>
@@ -451,13 +468,18 @@ export default async function HomePage() {
                     <div className="mt-3">
                       <AudioPlayer
                         title="Günlük Brifing"
-                        text={briefingText || "Bugün için öne çıkan haber bulunamadı."}
+                        text={
+                          briefingText ||
+                          "Bugün için öne çıkan haber bulunamadı."
+                        }
                       />
                     </div>
                   </details>
                 </>
               ) : (
-                <p className="text-sm text-ai-text-secondary">Bugün için brifing verisi henüz oluşmadı.</p>
+                <p className="text-sm text-ai-text-secondary">
+                  Bugün için brifing verisi henüz oluşmadı.
+                </p>
               )}
             </section>
           )}
@@ -497,8 +519,12 @@ export default async function HomePage() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs text-ai-text-muted">Model/Şirket Kartı</p>
-                        <p className="text-base font-bold text-white truncate">{item.label}</p>
+                        <p className="text-xs text-ai-text-muted">
+                          Model/Şirket Kartı
+                        </p>
+                        <p className="text-base font-bold text-white truncate">
+                          {item.label}
+                        </p>
                       </div>
                     </div>
                     <p className="text-xs text-ai-text-secondary mt-3">
@@ -535,8 +561,12 @@ export default async function HomePage() {
                       className="group rounded-xl border border-ai-surface-border bg-ai-surface-dark/90 p-3.5 hover:border-ai-primary/40 hover:bg-ai-surface-card transition-all duration-200"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-[11px] text-ai-text-muted">#{idx + 1} yükselen konu</p>
-                        <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tone.badge}`}>
+                        <p className="text-[11px] text-ai-text-muted">
+                          #{idx + 1} yükselen konu
+                        </p>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tone.badge}`}
+                        >
                           {getHeatLabel(item.rise)}
                         </span>
                       </div>
@@ -552,7 +582,8 @@ export default async function HomePage() {
                           />
                         </div>
                         <p className="text-xs text-ai-text-secondary">
-                          {item.rise > 0 ? `Artış +${item.rise}` : "Artış yok"} · Skor {item.score}
+                          {item.rise > 0 ? `Artış +${item.rise}` : "Artış yok"}{" "}
+                          · Skor {item.score}
                         </p>
                       </div>
                     </Link>
@@ -599,16 +630,14 @@ export default async function HomePage() {
               <div className="grid gap-5 sm:gap-6 grid-cols-1 sm:grid-cols-2">
                 {articles.map((article, index: number) => (
                   <React.Fragment key={article.id}>
-                    <ArticleCard
-                      article={article}
-                      priority={index < 4}
-                    />
+                    <ArticleCard article={article} priority={index < 4} />
                     {/* In-feed ad after every 4th article */}
                     {(index + 1) % 4 === 0 && index < articles.length - 1 && (
                       <div className="col-span-1 sm:col-span-2">
                         <AdSlot
                           slot="2042719998"
                           format="fluid"
+                          layout="in-feed"
                           layoutKey="-6t+ed+2i-1n-4w"
                           minHeight={100}
                           label="Sponsorlu"
