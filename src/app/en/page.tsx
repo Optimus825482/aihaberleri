@@ -373,6 +373,17 @@ export default async function EnglishHomePage() {
               className="mb-0"
             />
           </section>
+
+          {/* Multiplex — end-of-page recommendations */}
+          <div className="mt-10">
+            <AdSlot
+              slot="3028498607"
+              format="autorelaxed"
+              minHeight={200}
+              label="You May Also Like"
+              className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+            />
+          </div>
         </div>
       </main>
     </div>

@@ -98,6 +98,19 @@ export default async function NewsPage() {
           </Link>
         </div>
       )}
+
+      {/* Multiplex — sayfa sonu öneriler */}
+      {articles.length > 0 && (
+        <div className="mt-10">
+          <AdSlot
+            slot="3028498607"
+            format="autorelaxed"
+            minHeight={200}
+            label="Bunları da Okuyun"
+            className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+          />
+        </div>
+      )}
     </div>
   );
 }

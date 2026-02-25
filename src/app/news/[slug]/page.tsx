@@ -488,9 +488,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   />
                 )}
 
-                {/* Sidebar Ad Slot */}
+                {/* Sidebar Ad Slot — dedicated sidebar-display unit */}
                 <AdSlot
-                  slot="6220560152"
+                  slot="3415511418"
                   format="vertical"
                   minHeight={250}
                   label="Sponsorlu"

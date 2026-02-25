@@ -495,7 +495,7 @@ export default async function EnglishArticlePage({ params }: Props) {
           {/* Multiplex Related Content Ad */}
           <div className="max-w-4xl mx-auto mt-6">
             <AdSlot
-              slot="3183333271"
+              slot="3028498607"
               format="autorelaxed"
               minHeight={200}
               label="You May Also Like"

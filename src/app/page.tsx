@@ -711,6 +711,17 @@ export default async function HomePage() {
               />
             </section>
           )}
+
+          {/* Multiplex — sayfa sonu öneriler */}
+          <div className="mt-10">
+            <AdSlot
+              slot="3028498607"
+              format="autorelaxed"
+              minHeight={200}
+              label="Bunları da Okuyun"
+              className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+            />
+          </div>
         </div>
       </main>
     </div>

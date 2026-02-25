@@ -91,7 +91,7 @@ export default async function EnCategoryPage({ params }: CategoryPageProps) {
                 <section className="container mx-auto px-4 py-12">
                     {/* Top Ad */}
                     <AdSlot
-                        slot="1563878275"
+                        slot="5382266994"
                         format="auto"
                         responsive
                         minHeight={120}
@@ -107,7 +107,7 @@ export default async function EnCategoryPage({ params }: CategoryPageProps) {
                                     {(index + 1) % 6 === 0 && index < articles.length - 1 && (
                                         <div className="col-span-1 md:col-span-2 lg:col-span-3">
                                             <AdSlot
-                                                slot="1906988626"
+                                                slot="8493771212"
                                                 format="fluid"
                                                 layout="in-feed"
                                                 layoutKey="-6t+ed+2i-1n-4w"
