@@ -595,7 +595,9 @@ export async function pingSitemaps(): Promise<{
           signal: AbortSignal.timeout(10000),
         });
       } catch (error) {
-        console.warn("⚠️ Bing legacy sitemap ping failed (deprecated endpoint)");
+        console.warn(
+          "⚠️ Bing legacy sitemap ping failed (deprecated endpoint)",
+        );
       }
     }
   }
@@ -621,30 +623,35 @@ export async function pingSitemaps(): Promise<{
     }
   }
 
-  // Verify IndexNow key file accessibility (diagnostic only, once per ping cycle)
-  if (!results.indexNow) {
-    try {
-      const apiKey = await getOrCreateIndexNowKey();
-      const keyFileUrl = `${baseUrl}/${apiKey}.txt`;
-      const keyCheck = await fetch(keyFileUrl, {
-        method: "GET",
-        signal: AbortSignal.timeout(5000),
-      });
-      if (!keyCheck.ok) {
-        console.warn(
-          `🔑 IndexNow key file NOT accessible at ${keyFileUrl} (HTTP ${keyCheck.status}) — this may be why IndexNow fails`,
+  // Verify IndexNow key file accessibility (ALWAYS run — even when Yandex succeeds, Bing may fail)
+  try {
+    const apiKey = await getOrCreateIndexNowKey();
+    const keyFileUrl = `${baseUrl}/${apiKey}.txt`;
+    console.log(`🔑 IndexNow key in use: ${apiKey}`);
+    console.log(`🔑 Key file URL: ${keyFileUrl}`);
+    const keyCheck = await fetch(keyFileUrl, {
+      method: "GET",
+      signal: AbortSignal.timeout(5000),
+      headers: { "User-Agent": "IndexNow-KeyVerify/1.0" },
+    });
+    if (!keyCheck.ok) {
+      console.error(
+        `🔑 IndexNow key file NOT accessible at ${keyFileUrl} (HTTP ${keyCheck.status}) — Bing WILL reject submissions!`,
+      );
+    } else {
+      const keyContent = await keyCheck.text();
+      if (keyContent.trim() !== apiKey) {
+        console.error(
+          `🔑 IndexNow key file content MISMATCH! Expected "${apiKey}", got "${keyContent.trim().slice(0, 80)}" — Bing WILL reject submissions!`,
         );
       } else {
-        const keyContent = await keyCheck.text();
-        if (keyContent.trim() !== apiKey) {
-          console.warn(
-            `🔑 IndexNow key file content mismatch! Expected "${apiKey}", got "${keyContent.trim().slice(0, 50)}"`,
-          );
-        }
+        console.log(`🔑 IndexNow key file verified OK at ${keyFileUrl}`);
       }
-    } catch {
-      console.warn("🔑 IndexNow key file accessibility check failed (network error)");
     }
+  } catch (e) {
+    console.warn(
+      `🔑 IndexNow key file accessibility check failed: ${e instanceof Error ? e.message : "network error"}`,
+    );
   }
 
   // Log summary
@@ -653,7 +660,7 @@ export async function pingSitemaps(): Promise<{
   console.log(`   - IndexNow: ${results.indexNow ? "✅" : "❌"}`);
   console.log(`   - WebSub: ${results.webSub ? "✅" : "❌"}`);
   console.log(`   - Google: ${results.google ? "✅" : "❌"}`);
-  console.log(`   - Bing: ${results.bing ? "✅" : "❌"}`)
+  console.log(`   - Bing: ${results.bing ? "✅" : "❌"}`);
 
   return results;
 }

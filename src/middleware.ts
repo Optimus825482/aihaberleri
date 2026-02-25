@@ -35,6 +35,24 @@ const JWT_SECRET = getJwtSecret();
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // IndexNow key verification: serve key file dynamically
+  // This bypasses Cloudflare challenges/caching that block Bing's key verification bot
+  const uuidMatch = pathname.match(
+    /^\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.txt$/i,
+  );
+  if (uuidMatch) {
+    const requestedKey = uuidMatch[1].toLowerCase();
+    return new NextResponse(requestedKey, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=86400",
+        "X-Robots-Tag": "noindex",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
+  }
+
   // Skip middleware for:
   // - Login page
   // - Auth API routes (NextAuth handles its own security)
