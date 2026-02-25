@@ -4,6 +4,15 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+type AdSenseAnalysisDelegate = {
+  findMany: (...args: any[]) => Promise<any[]>;
+  update: (...args: any[]) => Promise<any>;
+};
+
+const adSenseAnalysisTable = (db as any)["adSenseAnalysis"] as
+  | AdSenseAnalysisDelegate
+  | undefined;
+
 /**
  * GET: Analiz geçmişi
  */
@@ -19,7 +28,14 @@ export async function GET(request: NextRequest) {
     const where: any = {};
     if (status) where.status = status;
 
-    const analyses = await db.adSenseAnalysis.findMany({
+    if (!adSenseAnalysisTable) {
+      return NextResponse.json(
+        { success: false, error: "AdSenseAnalysis modeli bulunamadı" },
+        { status: 500 },
+      );
+    }
+
+    const analyses = await adSenseAnalysisTable.findMany({
       where,
       orderBy: { createdAt: "desc" },
       take: limit,
@@ -61,7 +77,14 @@ export async function PATCH(request: NextRequest) {
       updateData.reviewedAt = new Date();
     }
 
-    const updated = await db.adSenseAnalysis.update({
+    if (!adSenseAnalysisTable) {
+      return NextResponse.json(
+        { success: false, error: "AdSenseAnalysis modeli bulunamadı" },
+        { status: 500 },
+      );
+    }
+
+    const updated = await adSenseAnalysisTable.update({
       where: { id },
       data: updateData,
     });

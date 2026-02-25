@@ -9,6 +9,14 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+type AdSenseAnalysisDelegate = {
+  create: (...args: any[]) => Promise<any>;
+};
+
+const adSenseAnalysisTable = (db as any)["adSenseAnalysis"] as
+  | AdSenseAnalysisDelegate
+  | undefined;
+
 /**
  * POST: AI analiz yap + DB'ye kaydet
  */
@@ -54,7 +62,14 @@ export async function POST(request: NextRequest) {
     const parsed = parseAIResponse(aiResponse);
 
     // DB'ye kaydet
-    const analysis = await db.adSenseAnalysis.create({
+    if (!adSenseAnalysisTable) {
+      return NextResponse.json(
+        { success: false, error: "AdSenseAnalysis modeli bulunamadı" },
+        { status: 500 },
+      );
+    }
+
+    const analysis = await adSenseAnalysisTable.create({
       data: {
         metricsSnapshot: {
           summary: metrics.summary,
