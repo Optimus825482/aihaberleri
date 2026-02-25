@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 export function GoogleAnalytics() {
   const [isClient, setIsClient] = useState(false);
   const GA_MEASUREMENT_ID =
-    process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-VGSRP03RKW";
+    process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-LXSS4L3D1Y";
 
   useEffect(() => {
     setIsClient(true);
