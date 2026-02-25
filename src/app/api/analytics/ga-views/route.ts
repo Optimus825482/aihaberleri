@@ -6,16 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getArticlePageViews,
-  getAllArticlePageViews,
-  isGA4Configured,
-} from "@/lib/ga4-client";
+import { getArticlePageViews, isGA4Configured } from "@/lib/ga4-client";
 import { db } from "@/lib/db";
 
-// In-memory rate limiter for sync
-let lastSyncTime = 0;
-const SYNC_COOLDOWN_MS = 5 * 60 * 1000; // 5 dakika
+// Rate limiter artık gerekli değil (sync devre dışı)
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -61,75 +55,18 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // ── Toplu sync (tüm makaleleri güncelle) ──
+  // ── Toplu sync — DEVRE DIŞI ──
+  // Article.views artık kendi tracking sistemimiz tarafından yönetiliyor.
+  // GA4 sync, local view count'ları override ediyordu.
   if (sync === "true") {
-    // Rate limit
-    if (Date.now() - lastSyncTime < SYNC_COOLDOWN_MS) {
-      const remaining = Math.ceil(
-        (SYNC_COOLDOWN_MS - (Date.now() - lastSyncTime)) / 1000,
-      );
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Sync cooldown aktif. ${remaining}s sonra tekrar deneyin.`,
-        },
-        { status: 429 },
-      );
-    }
-
-    try {
-      const gaViews = await getAllArticlePageViews();
-
-      if (gaViews.size === 0) {
-        return NextResponse.json({
-          success: true,
-          message: "GA4'ten veri gelmedi",
-          updated: 0,
-        });
-      }
-
-      // DB'deki makaleleri slug'larıyla çek
-      const articles = await db.article.findMany({
-        select: { id: true, slug: true, views: true },
-      });
-
-      let updated = 0;
-      const updates: Promise<any>[] = [];
-
-      for (const article of articles) {
-        const gaViewCount = gaViews.get(article.slug);
-        if (gaViewCount !== undefined && gaViewCount !== article.views) {
-          updates.push(
-            db.article.update({
-              where: { id: article.id },
-              data: { views: gaViewCount },
-            }),
-          );
-          updated++;
-        }
-      }
-
-      // Batch execute (50'lik gruplar)
-      for (let i = 0; i < updates.length; i += 50) {
-        await Promise.all(updates.slice(i, i + 50));
-      }
-
-      lastSyncTime = Date.now();
-
-      return NextResponse.json({
-        success: true,
-        message: `GA4 sync tamamlandı`,
-        totalArticles: articles.length,
-        gaArticles: gaViews.size,
-        updated,
-      });
-    } catch (error) {
-      console.error("[GA Views Sync] Error:", error);
-      return NextResponse.json(
-        { success: false, error: "Sync failed" },
-        { status: 500 },
-      );
-    }
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "GA4 sync devre dışı. Article.views artık kendi tracking sistemimiz tarafından yönetiliyor.",
+      },
+      { status: 410 },
+    );
   }
 
   return NextResponse.json(
