@@ -1,17 +1,13 @@
 # syntax=docker/dockerfile:1
 
 # ============================================================
-# OPTIMIZED DOCKERFILE v2 - Image boyutu ~40% küçüldü
+# OPTIMIZED DOCKERFILE v3 - Deploy hızı + memory optimizasyonu
 # ============================================================
-# Değişiklikler:
-# 1. Tek base image (Debian) = sharp/prisma rebuild yok
-# 2. worker-builder stage kaldırıldı (gereksizdi)
-# 3. prod-deps stage: app runner için sadece production deps
-# 4. Prisma generate deps + prod-deps'te (her biri 1 kez)
-# 5. npm cache mount ile tekrarlayan build'larda hız
-# 6. --no-install-recommends ile küçük image
-# 7. RUN katmanları birleştirildi (layer sayısı azaldı)
-# 8. Dev deps (typescript, eslint, @types/*) app image'dan çıkarıldı
+# v3 Değişiklikler:
+# 1. prod-deps artık deps'ten türetiliyor (ikinci npm ci yok)
+# 2. Node.js heap 4GB -> 2GB (Coolify memory overflow fix)
+# 3. Gereksiz prisma generate tekrarı kaldırıldı
+# 4. Webpack filesystem cache kapatıldı (Docker layer cache yeterli)
 # ============================================================
 
 # ===========================
@@ -43,29 +39,21 @@ RUN --mount=type=cache,target=/root/.npm \
     echo "✓ Full deps installed: $(ls -1 node_modules | wc -l) packages"
 
 # ===========================
-# PRODUCTION DEPENDENCIES STAGE (lean - app runner için)
+# PRODUCTION DEPENDENCIES STAGE (deps'ten türetildi - ikinci npm ci yok)
 # ===========================
-FROM base AS prod-deps
+FROM deps AS prod-deps
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 make g++ libvips-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY package.json package-lock.json* ./
-COPY prisma ./prisma
-
-# Sadece production deps + prisma CLI (entrypoint'te migrate deploy için)
-# npm cache mount sayesinde paketler zaten cache'de, hızlı install
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev --legacy-peer-deps --network-timeout=300000 && \
+# Full deps zaten var, dev deps'i sil + prisma CLI ekle
+# İkinci npm ci tamamen atlandı (~2-3 dk + ~1GB peak memory kazanç)
+# prisma generate tekrar gerekmiyor — deps stage'den miras alındı
+RUN npm prune --omit=dev --legacy-peer-deps && \
     npm install --no-save prisma@5.22.0 --legacy-peer-deps && \
-    npx prisma@5.22.0 generate && \
     rm -rf node_modules/.cache \
         node_modules/@next/swc-linux-arm* \
         node_modules/@next/swc-darwin* \
         node_modules/@next/swc-win32* \
         2>/dev/null || true && \
-    echo "✓ Prod deps installed: $(ls -1 node_modules | wc -l) packages"
+    echo "✓ Prod deps pruned: $(ls -1 node_modules | wc -l) packages"
 
 # ===========================
 # APP BUILDER STAGE
@@ -87,7 +75,7 @@ ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     NEXTAUTH_SECRET="build-secret" \
     NEXTAUTH_URL="http://localhost:3000" \
     NODE_ENV=production \
-    NODE_OPTIONS="--max-old-space-size=4096" \
+    NODE_OPTIONS="--max-old-space-size=2048" \
     NEXT_BUILD_WORKERS=1 \
     NEXT_TELEMETRY_DISABLED=1 \
     SKIP_ENV_VALIDATION=1 \

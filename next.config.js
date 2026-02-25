@@ -49,12 +49,9 @@ const nextConfig = {
       ];
     }
 
-    // Filesystem cache: tekrarlayan build'lerde büyük hız kazancı
-    config.cache = {
-      type: "filesystem",
-      compression: "gzip",
-      maxAge: 604800000, // 7 gün (Docker layer cache ile uyumlu)
-    };
+    // Filesystem cache: Docker build'de layer cache yeterli
+    // Coolify ortamında filesystem cache gereksiz memory tüketir
+    config.cache = false;
 
     return config;
   },
