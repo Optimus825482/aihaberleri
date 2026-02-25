@@ -13,12 +13,89 @@ type InconsistentArticleRow = {
   slug: string;
   status: string;
   trUpdatedAt: Date;
+  trReferenceId: string | null;
+  trReferenceUpdatedAt: Date | null;
   enTranslationId: string | null;
   enTitle: string | null;
   enSlug: string | null;
   enUpdatedAt: Date | null;
   categoryName: string | null;
 };
+
+type InconsistencyScoreResult = {
+  score: number;
+  reason: string;
+  staleMinutes: number | null;
+};
+
+function getInconsistencyScore(
+  row: InconsistentArticleRow,
+): InconsistencyScoreResult {
+  if (!row.enTranslationId) {
+    return {
+      score: 100,
+      reason: "EN çeviri kaydı yok",
+      staleMinutes: null,
+    };
+  }
+
+  if (!row.trReferenceUpdatedAt || !row.enUpdatedAt) {
+    return {
+      score: 20,
+      reason: "TR referans zamanı bulunamadı",
+      staleMinutes: null,
+    };
+  }
+
+  const diffMs = row.trReferenceUpdatedAt.getTime() - row.enUpdatedAt.getTime();
+  const staleMinutes = Math.max(0, Math.floor(diffMs / 60000));
+
+  if (staleMinutes <= 0) {
+    return {
+      score: 0,
+      reason: "Senkron",
+      staleMinutes: 0,
+    };
+  }
+
+  if (staleMinutes >= 60 * 24 * 7) {
+    return {
+      score: 90,
+      reason: "EN çeviri 7 günden fazla geride",
+      staleMinutes,
+    };
+  }
+
+  if (staleMinutes >= 60 * 24 * 2) {
+    return {
+      score: 75,
+      reason: "EN çeviri 2 günden fazla geride",
+      staleMinutes,
+    };
+  }
+
+  if (staleMinutes >= 60 * 12) {
+    return {
+      score: 55,
+      reason: "EN çeviri 12 saatten fazla geride",
+      staleMinutes,
+    };
+  }
+
+  if (staleMinutes >= 60 * 2) {
+    return {
+      score: 35,
+      reason: "EN çeviri birkaç saat geride",
+      staleMinutes,
+    };
+  }
+
+  return {
+    score: 20,
+    reason: "EN çeviri yeni ama geride",
+    staleMinutes,
+  };
+}
 
 function buildSearchFilter(search?: string) {
   if (!search || !search.trim()) {
@@ -30,7 +107,7 @@ function buildSearchFilter(search?: string) {
 }
 
 function buildInconsistencyFilter() {
-  return Prisma.sql`AND (at.id IS NULL OR at."updatedAt" < a."updatedAt")`;
+  return Prisma.sql`AND (at.id IS NULL OR (trt.id IS NOT NULL AND at."updatedAt" < trt."updatedAt"))`;
 }
 
 async function listInconsistentArticles(
@@ -49,6 +126,8 @@ async function listInconsistentArticles(
       a.slug,
       a.status::text as status,
       a."updatedAt" as "trUpdatedAt",
+      trt.id as "trReferenceId",
+      trt."updatedAt" as "trReferenceUpdatedAt",
       at.id as "enTranslationId",
       at.title as "enTitle",
       at.slug as "enSlug",
@@ -58,6 +137,9 @@ async function listInconsistentArticles(
     LEFT JOIN "ArticleTranslation" at
       ON at."articleId" = a.id
       AND at.locale = 'en'
+    LEFT JOIN "ArticleTranslation" trt
+      ON trt."articleId" = a.id
+      AND trt.locale = 'tr'
     LEFT JOIN "Category" c
       ON c.id = a."categoryId"
     WHERE 1=1
@@ -74,6 +156,9 @@ async function listInconsistentArticles(
     LEFT JOIN "ArticleTranslation" at
       ON at."articleId" = a.id
       AND at.locale = 'en'
+    LEFT JOIN "ArticleTranslation" trt
+      ON trt."articleId" = a.id
+      AND trt.locale = 'tr'
     WHERE 1=1
     ${searchFilter}
     ${inconsistencyFilter}
@@ -103,6 +188,9 @@ async function getInconsistentIds(limit: number, search?: string) {
     LEFT JOIN "ArticleTranslation" at
       ON at."articleId" = a.id
       AND at.locale = 'en'
+    LEFT JOIN "ArticleTranslation" trt
+      ON trt."articleId" = a.id
+      AND trt.locale = 'tr'
     WHERE 1=1
     ${searchFilter}
     ${inconsistencyFilter}
@@ -121,6 +209,7 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
+    const idsOnly = searchParams.get("idsOnly") === "true";
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.min(
       100,
@@ -130,25 +219,44 @@ export async function GET(request: NextRequest) {
 
     const result = await listInconsistentArticles(page, limit, search);
 
+    if (idsOnly) {
+      return NextResponse.json({
+        success: true,
+        data: result.rows.map((row) => ({
+          id: row.id,
+          title: row.title,
+        })),
+      });
+    }
+
     return NextResponse.json({
       success: true,
-      data: result.rows.map((row) => ({
-        id: row.id,
-        title: row.title,
-        slug: row.slug,
-        status: row.status,
-        categoryName: row.categoryName,
-        trUpdatedAt: row.trUpdatedAt,
-        enTranslationId: row.enTranslationId,
-        enTitle: row.enTitle,
-        enSlug: row.enSlug,
-        enUpdatedAt: row.enUpdatedAt,
-        isMissingEnTranslation: !row.enTranslationId,
-        isOutdated:
-          !!row.enTranslationId &&
-          !!row.enUpdatedAt &&
-          row.enUpdatedAt < row.trUpdatedAt,
-      })),
+      data: result.rows.map((row) => {
+        const score = getInconsistencyScore(row);
+
+        return {
+          id: row.id,
+          title: row.title,
+          slug: row.slug,
+          status: row.status,
+          categoryName: row.categoryName,
+          trUpdatedAt: row.trUpdatedAt,
+          trReferenceUpdatedAt: row.trReferenceUpdatedAt,
+          enTranslationId: row.enTranslationId,
+          enTitle: row.enTitle,
+          enSlug: row.enSlug,
+          enUpdatedAt: row.enUpdatedAt,
+          isMissingEnTranslation: !row.enTranslationId,
+          isOutdated:
+            !!row.enTranslationId &&
+            !!row.enUpdatedAt &&
+            !!row.trReferenceUpdatedAt &&
+            row.enUpdatedAt < row.trReferenceUpdatedAt,
+          inconsistencyScore: score.score,
+          inconsistencyReason: score.reason,
+          staleMinutes: score.staleMinutes,
+        };
+      }),
       pagination: result.pagination,
     });
   } catch (error) {

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
 import {
     AlertTriangle,
     RefreshCw,
@@ -25,12 +26,16 @@ interface InconsistentArticle {
     status: string;
     categoryName: string | null;
     trUpdatedAt: string;
+    trReferenceUpdatedAt: string | null;
     enTranslationId: string | null;
     enTitle: string | null;
     enSlug: string | null;
     enUpdatedAt: string | null;
     isMissingEnTranslation: boolean;
     isOutdated: boolean;
+    inconsistencyScore: number;
+    inconsistencyReason: string;
+    staleMinutes: number | null;
 }
 
 interface Pagination {
@@ -38,6 +43,15 @@ interface Pagination {
     limit: number;
     total: number;
     totalPages: number;
+}
+
+interface SyncProgressState {
+    active: boolean;
+    total: number;
+    completed: number;
+    success: number;
+    failed: number;
+    currentTitle: string;
 }
 
 export default function EnglishSyncAdminPage() {
@@ -54,6 +68,14 @@ export default function EnglishSyncAdminPage() {
         total: 0,
         totalPages: 1,
     });
+    const [syncProgress, setSyncProgress] = useState<SyncProgressState>({
+        active: false,
+        total: 0,
+        completed: 0,
+        success: 0,
+        failed: 0,
+        currentTitle: "",
+    });
 
     const allSelectedOnPage = useMemo(() => {
         if (rows.length === 0) {
@@ -61,6 +83,14 @@ export default function EnglishSyncAdminPage() {
         }
         return rows.every((row) => selectedIds.includes(row.id));
     }, [rows, selectedIds]);
+
+    const progressPercent = useMemo(() => {
+        if (!syncProgress.total) {
+            return 0;
+        }
+
+        return Math.floor((syncProgress.completed / syncProgress.total) * 100);
+    }, [syncProgress.completed, syncProgress.total]);
 
     const fetchRows = useCallback(async () => {
         setLoading(true);
@@ -73,9 +103,12 @@ export default function EnglishSyncAdminPage() {
                 params.set("search", search.trim());
             }
 
-            const response = await fetch(`/api/admin/articles/en-sync?${params.toString()}`, {
-                credentials: "include",
-            });
+            const response = await fetch(
+                `/api/admin/articles/en-sync?${params.toString()}`,
+                {
+                    credentials: "include",
+                },
+            );
             const data = await response.json();
 
             if (!response.ok || !data.success) {
@@ -84,7 +117,11 @@ export default function EnglishSyncAdminPage() {
 
             setRows(data.data || []);
             setPagination(data.pagination);
-            setSelectedIds((prev) => prev.filter((id) => (data.data || []).some((row: InconsistentArticle) => row.id === id)));
+            setSelectedIds((prev) =>
+                prev.filter((id) =>
+                    (data.data || []).some((row: InconsistentArticle) => row.id === id),
+                ),
+            );
         } catch (error) {
             toast({
                 variant: "destructive",
@@ -121,41 +158,113 @@ export default function EnglishSyncAdminPage() {
         });
     };
 
-    const syncArticles = async (mode: "single" | "selected" | "all", articleId?: string) => {
-        setSyncing(true);
-        try {
-            let payload: Record<string, unknown> = {};
+    const getTargetsForSync = async (
+        mode: "single" | "selected" | "all",
+        articleId?: string,
+    ): Promise<Array<{ id: string; title: string }>> => {
+        if (mode === "single" && articleId) {
+            const found = rows.find((row) => row.id === articleId);
+            return [{ id: articleId, title: found?.title || "Makale" }];
+        }
 
-            if (mode === "single" && articleId) {
-                payload = { articleIds: [articleId] };
-            } else if (mode === "selected") {
-                payload = { articleIds: selectedIds };
-            } else {
-                payload = {
-                    syncAllInconsistent: true,
-                    search: search.trim() || undefined,
-                    limit: 500,
+        if (mode === "selected") {
+            return selectedIds.map((id) => {
+                const found = rows.find((row) => row.id === id);
+                return {
+                    id,
+                    title: found?.title || "Makale",
                 };
+            });
+        }
+
+        const params = new URLSearchParams({
+            idsOnly: "true",
+            limit: "1000",
+        });
+
+        if (search.trim()) {
+            params.set("search", search.trim());
+        }
+
+        const response = await fetch(`/api/admin/articles/en-sync?${params.toString()}`, {
+            credentials: "include",
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || "Toplu senkron listesi alınamadı");
+        }
+
+        return data.data || [];
+    };
+
+    const syncArticles = async (
+        mode: "single" | "selected" | "all",
+        articleId?: string,
+    ) => {
+        setSyncing(true);
+
+        try {
+            const targets = await getTargetsForSync(mode, articleId);
+
+            if (!targets.length) {
+                throw new Error("Senkronize edilecek makale bulunamadı");
             }
 
-            const response = await fetch("/api/admin/articles/en-sync", {
-                method: "POST",
-                credentials: "include",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(payload),
+            setSyncProgress({
+                active: true,
+                total: targets.length,
+                completed: 0,
+                success: 0,
+                failed: 0,
+                currentTitle: targets[0]?.title || "",
             });
 
-            const data = await response.json();
+            let success = 0;
+            let failed = 0;
 
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || "Senkron işlemi başarısız");
+            for (let i = 0; i < targets.length; i++) {
+                const target = targets[i];
+
+                setSyncProgress((prev) => ({
+                    ...prev,
+                    currentTitle: target.title,
+                }));
+
+                try {
+                    const response = await fetch("/api/admin/articles/en-sync", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ articleIds: [target.id] }),
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        failed++;
+                    } else if (data.successCount === 1) {
+                        success++;
+                    } else {
+                        failed++;
+                    }
+                } catch {
+                    failed++;
+                }
+
+                setSyncProgress((prev) => ({
+                    ...prev,
+                    completed: i + 1,
+                    success,
+                    failed,
+                }));
             }
 
             toast({
                 title: "Senkron tamamlandı",
-                description: data.message,
+                description: `${success} başarılı, ${failed} başarısız`,
             });
 
             if (mode !== "single") {
@@ -172,7 +281,24 @@ export default function EnglishSyncAdminPage() {
             });
         } finally {
             setSyncing(false);
+            setSyncProgress((prev) => ({
+                ...prev,
+                active: false,
+                currentTitle: "",
+            }));
         }
+    };
+
+    const getScoreVariant = (score: number): "default" | "secondary" | "destructive" => {
+        if (score >= 80) {
+            return "destructive";
+        }
+
+        if (score >= 40) {
+            return "secondary";
+        }
+
+        return "default";
     };
 
     return (
@@ -185,7 +311,7 @@ export default function EnglishSyncAdminPage() {
                             TR → EN Senkron Kontrolü
                         </h1>
                         <p className="text-muted-foreground mt-1">
-                            TR güncellemelerini EN çevirilere tek tek veya toplu olarak yansıtın.
+                            Tutarsızlık, EN çeviri zamanı ile TR referans çeviri zamanı farkına göre hesaplanır.
                         </p>
                     </div>
 
@@ -220,6 +346,30 @@ export default function EnglishSyncAdminPage() {
                         </Button>
                     </div>
                 </div>
+
+                {syncProgress.active && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">Senkron İlerlemesi</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <Progress value={progressPercent} max={100} />
+                            <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                <span>
+                                    {syncProgress.completed}/{syncProgress.total} tamamlandı (%{progressPercent})
+                                </span>
+                                <span>
+                                    ✅ {syncProgress.success} / ❌ {syncProgress.failed}
+                                </span>
+                            </div>
+                            {syncProgress.currentTitle && (
+                                <div className="text-xs text-muted-foreground">
+                                    İşlenen: {syncProgress.currentTitle}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card>
                     <CardHeader>
@@ -258,6 +408,19 @@ export default function EnglishSyncAdminPage() {
 
                 <Card>
                     <CardHeader>
+                        <CardTitle className="text-base">Tutarsızlık Kriteri</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-sm text-muted-foreground space-y-1">
+                        <p>• 100: EN çeviri kaydı yok</p>
+                        <p>• 90+: EN, TR referanstan 7+ gün geride</p>
+                        <p>• 75+: EN, TR referanstan 2+ gün geride</p>
+                        <p>• 55+: EN, TR referanstan 12+ saat geride</p>
+                        <p>• 35+: EN, TR referanstan 2+ saat geride</p>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
                         <CardTitle className="text-base flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-amber-500" />
                             Tutarsız Makaleler ({pagination.total})
@@ -287,9 +450,9 @@ export default function EnglishSyncAdminPage() {
                                                 </th>
                                                 <th className="text-left p-3">Makale</th>
                                                 <th className="text-left p-3">Durum</th>
-                                                <th className="text-left p-3">TR Güncelleme</th>
+                                                        <th className="text-left p-3">TR Referans</th>
                                                 <th className="text-left p-3">EN Güncelleme</th>
-                                                <th className="text-left p-3">Sorun</th>
+                                                        <th className="text-left p-3">Tutarsızlık</th>
                                                 <th className="text-right p-3">İşlem</th>
                                             </tr>
                                         </thead>
@@ -322,19 +485,30 @@ export default function EnglishSyncAdminPage() {
                                                         </Badge>
                                                     </td>
                                                     <td className="p-3 align-top text-xs text-muted-foreground">
-                                                        {new Date(row.trUpdatedAt).toLocaleString("tr-TR")}
+                                                        {row.trReferenceUpdatedAt
+                                                            ? new Date(row.trReferenceUpdatedAt).toLocaleString("tr-TR")
+                                                            : "TR referans yok"}
                                                     </td>
                                                     <td className="p-3 align-top text-xs text-muted-foreground">
                                                         {row.enUpdatedAt
                                                             ? new Date(row.enUpdatedAt).toLocaleString("tr-TR")
                                                             : "-"}
                                                     </td>
-                                                    <td className="p-3 align-top">
-                                                        {row.isMissingEnTranslation ? (
-                                                            <Badge variant="destructive">EN Çeviri Yok</Badge>
-                                                        ) : (
-                                                            <Badge variant="secondary">EN Eski</Badge>
-                                                        )}
+                                                    <td className="p-3 align-top min-w-56">
+                                                        <div className="space-y-2">
+                                                            <div className="flex items-center justify-between">
+                                                                <Badge variant={getScoreVariant(row.inconsistencyScore)}>
+                                                                    {row.inconsistencyScore}/100
+                                                                </Badge>
+                                                                {row.staleMinutes !== null && (
+                                                                    <span className="text-[11px] text-muted-foreground">
+                                                                        {row.staleMinutes} dk
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <Progress value={row.inconsistencyScore} max={100} className="h-1.5" />
+                                                            <p className="text-xs text-muted-foreground">{row.inconsistencyReason}</p>
+                                                        </div>
                                                     </td>
                                                     <td className="p-3 align-top text-right">
                                                         <Button

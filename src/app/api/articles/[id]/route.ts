@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import slugify from "slugify";
 import { submitArticleToIndexNow } from "@/lib/seo/indexnow";
 import { getCache } from "@/lib/cache";
+import { saveArticleTranslation } from "@/lib/translation";
 
 // GET - Get single article
 export async function GET(
@@ -144,6 +145,19 @@ export async function PUT(
         publishedAt: status === "PUBLISHED" ? new Date() : null,
       },
     });
+
+    try {
+      await saveArticleTranslation(id, "tr", {
+        title,
+        slug,
+        excerpt,
+        content,
+        metaTitle: metaTitle || undefined,
+        metaDescription: metaDescription || undefined,
+      });
+    } catch (translationError) {
+      console.warn("TR referans çeviri güncellenemedi:", translationError);
+    }
 
     // Auto-submit to IndexNow if published
     if (article.status === "PUBLISHED") {
