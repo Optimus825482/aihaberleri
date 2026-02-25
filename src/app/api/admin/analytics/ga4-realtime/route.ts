@@ -80,6 +80,11 @@ export async function GET(request: NextRequest) {
 
     // Realtime veriler
     const realtime = await getRealtimeVisitors();
+    if (realtime.activeUsers === 0 && realtime.minuteData.length === 0) {
+      console.warn(
+        "[GA4 Realtime API] Empty result returned — possible API issue or no active visitors",
+      );
+    }
     return NextResponse.json({
       success: true,
       type: "realtime",

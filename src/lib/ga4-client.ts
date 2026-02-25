@@ -396,6 +396,10 @@ export async function getRealtimeVisitors(): Promise<RealtimeData> {
       countries,
     };
 
+    console.log(
+      `[GA4 Realtime] OK: ${result.activeUsers} active users, ${topPages.length} pages, ${devices.length} devices, ${countries.length} countries`,
+    );
+
     realtimeCache = {
       data: result,
       expiresAt: Date.now() + REALTIME_CACHE_TTL_MS,
