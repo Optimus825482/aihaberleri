@@ -25,7 +25,9 @@ import {
   Instagram,
   Linkedin,
   Youtube,
+  Share2,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface Setting {
   id: string;
@@ -51,6 +53,7 @@ interface SettingsData {
     seo: Setting[];
     email: Setting[];
     agent: Setting[];
+    social_share: Setting[];
     other: Setting[];
   };
   socialMedia: SocialMedia[];
@@ -105,6 +108,31 @@ export default function SettingsPage() {
   };
 
   const saveSetting = async (key: string, value: string) => {
+    // Optimistic local update for social_share toggles
+    if (key.startsWith("social_share_")) {
+      setData((prev) => {
+        if (!prev) return prev;
+        const arr = [...(prev.settings.social_share || [])];
+        const idx = arr.findIndex((s) => s.key === key);
+        if (idx >= 0) {
+          arr[idx] = { ...arr[idx], value };
+        } else {
+          arr.push({
+            id: `local-${key}`,
+            key,
+            value,
+            encrypted: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+        }
+        return {
+          ...prev,
+          settings: { ...prev.settings, social_share: arr },
+        };
+      });
+    }
+
     try {
       setSaving(true);
       const response = await fetch("/api/admin/settings", {
@@ -821,6 +849,107 @@ export default function SettingsPage() {
 
         {/* Social Media Settings */}
         {activeTab === "social" && (
+          <>
+            {/* Auto-Sharing Toggles */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-black flex items-center gap-2">
+                  <Share2 className="h-5 w-5" />
+                  Otomatik Paylaşım Ayarları
+                </CardTitle>
+                <CardDescription>
+                  Haberlerin hangi sosyal medya platformlarına otomatik paylaşılacağını belirleyin
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {[
+                  {
+                    key: "social_share_twitter_tr",
+                    label: "Twitter (TR)",
+                    emoji: "🐦",
+                    description: "Türkçe tweet paylaşımı",
+                  },
+                  {
+                    key: "social_share_facebook_tr",
+                    label: "Facebook (TR)",
+                    emoji: "📘",
+                    description: "Türkçe Facebook sayfasına paylaşım",
+                  },
+                  {
+                    key: "social_share_facebook_en",
+                    label: "Facebook (EN)",
+                    emoji: "📘",
+                    description: "İngilizce Facebook sayfasına paylaşım",
+                  },
+                  {
+                    key: "social_share_bluesky_tr",
+                    label: "Bluesky (TR)",
+                    emoji: "🦋",
+                    description: "Türkçe Bluesky paylaşımı",
+                  },
+                  {
+                    key: "social_share_bluesky_en",
+                    label: "Bluesky (EN)",
+                    emoji: "🦋",
+                    description: "İngilizce Bluesky paylaşımı",
+                  },
+                  {
+                    key: "social_share_mastodon_tr",
+                    label: "Mastodon (TR)",
+                    emoji: "🐘",
+                    description: "Türkçe Mastodon paylaşımı",
+                  },
+                  {
+                    key: "social_share_mastodon_en",
+                    label: "Mastodon (EN)",
+                    emoji: "🐘",
+                    description: "İngilizce Mastodon paylaşımı",
+                  },
+                ].map((platform) => {
+                  const setting = data?.settings.social_share?.find(
+                    (s) => s.key === platform.key,
+                  );
+                  const isEnabled = setting ? setting.value === "true" : true;
+
+                  return (
+                    <div
+                      key={platform.key}
+                      className="flex items-center justify-between gap-4 rounded-lg border border-ai-surface-border p-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{platform.emoji}</span>
+                        <div>
+                          <p className="text-sm font-bold">{platform.label}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {platform.description}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-semibold ${isEnabled ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"}`}>
+                          {isEnabled ? "Açık" : "Kapalı"}
+                        </span>
+                        <Switch
+                          checked={isEnabled}
+                          onCheckedChange={(checked) => {
+                            saveSetting(platform.key, checked ? "true" : "false");
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div className="p-3 bg-muted/50 rounded-lg mt-2">
+                  <p className="text-xs text-muted-foreground">
+                    💡 Kapalı platformlara yeni haberler paylaşılmaz. Mevcut paylaşımlar etkilenmez.
+                    Değişiklikler anında devreye girer.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Social Media Links */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg font-black flex items-center gap-2">
@@ -883,6 +1012,7 @@ export default function SettingsPage() {
               })}
             </CardContent>
           </Card>
+          </>
         )}
 
         {/* Save Indicator */}

@@ -18,6 +18,7 @@ import {
   recordShareSuccess,
   recordShareFailure,
 } from "@/services/social-share.service";
+import { getAllPlatformSettings } from "@/lib/social-share-settings";
 
 export interface SocialShareInput {
   articleId: string;
@@ -73,6 +74,18 @@ export class SocialShareAgent extends BaseAgent<
 
     const results: SocialShareResult[] = [];
 
+    // Fetch platform enable/disable settings from DB (single query)
+    const platformSettings = await getAllPlatformSettings();
+    const disabledPlatforms = Object.entries(platformSettings)
+      .filter(([, enabled]) => !enabled)
+      .map(([key]) => key);
+
+    if (disabledPlatforms.length > 0) {
+      this.logger.info(
+        `⚙️ Disabled platforms: ${disabledPlatforms.join(", ")}`,
+      );
+    }
+
     for (const article of articles) {
       const platforms: Record<string, { success: boolean; error?: string }> =
         {};
@@ -82,29 +95,78 @@ export class SocialShareAgent extends BaseAgent<
       // ============================================
 
       // Twitter TR
-      platforms["twitter_tr"] = await this.shareToTwitter(article);
+      if (platformSettings["twitter_tr"]) {
+        platforms["twitter_tr"] = await this.shareToTwitter(article);
+      } else {
+        platforms["twitter_tr"] = {
+          success: false,
+          error: "Platform disabled",
+        };
+      }
 
       // Facebook TR
-      platforms["facebook_tr"] = await this.shareToFacebook(article, "tr");
+      if (platformSettings["facebook_tr"]) {
+        platforms["facebook_tr"] = await this.shareToFacebook(article, "tr");
+      } else {
+        platforms["facebook_tr"] = {
+          success: false,
+          error: "Platform disabled",
+        };
+      }
 
       // Bluesky TR
-      platforms["bluesky_tr"] = await this.shareToBluesky(article, "tr");
+      if (platformSettings["bluesky_tr"]) {
+        platforms["bluesky_tr"] = await this.shareToBluesky(article, "tr");
+      } else {
+        platforms["bluesky_tr"] = {
+          success: false,
+          error: "Platform disabled",
+        };
+      }
 
       // Mastodon TR
-      platforms["mastodon_tr"] = await this.shareToMastodon(article, "tr");
+      if (platformSettings["mastodon_tr"]) {
+        platforms["mastodon_tr"] = await this.shareToMastodon(article, "tr");
+      } else {
+        platforms["mastodon_tr"] = {
+          success: false,
+          error: "Platform disabled",
+        };
+      }
 
       // ============================================
       // ENGLISH SOCIAL MEDIA SHARES
       // ============================================
       if (article.enSlug && article.enTitle) {
         // Facebook EN
-        platforms["facebook_en"] = await this.shareToFacebook(article, "en");
+        if (platformSettings["facebook_en"]) {
+          platforms["facebook_en"] = await this.shareToFacebook(article, "en");
+        } else {
+          platforms["facebook_en"] = {
+            success: false,
+            error: "Platform disabled",
+          };
+        }
 
         // Bluesky EN
-        platforms["bluesky_en"] = await this.shareToBluesky(article, "en");
+        if (platformSettings["bluesky_en"]) {
+          platforms["bluesky_en"] = await this.shareToBluesky(article, "en");
+        } else {
+          platforms["bluesky_en"] = {
+            success: false,
+            error: "Platform disabled",
+          };
+        }
 
         // Mastodon EN
-        platforms["mastodon_en"] = await this.shareToMastodon(article, "en");
+        if (platformSettings["mastodon_en"]) {
+          platforms["mastodon_en"] = await this.shareToMastodon(article, "en");
+        } else {
+          platforms["mastodon_en"] = {
+            success: false,
+            error: "Platform disabled",
+          };
+        }
       }
 
       const successCount = Object.values(platforms).filter(
@@ -128,7 +190,14 @@ export class SocialShareAgent extends BaseAgent<
       skipNextQueue: true, // Final step
       metrics: {
         processingTime: Date.now() - startTime,
-        apiCalls: results.length * 7, // ~7 API calls per article
+        apiCalls: results.reduce(
+          (sum, r) =>
+            sum +
+            Object.values(r.platforms).filter(
+              (p) => p.success || (p.error && p.error !== "Platform disabled"),
+            ).length,
+          0,
+        ),
         itemsProcessed: results.length,
       },
     };

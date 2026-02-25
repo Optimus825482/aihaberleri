@@ -59,12 +59,14 @@ export async function GET(request: NextRequest) {
       seo: settings.filter((s) => s.key.startsWith("seo_")),
       email: settings.filter((s) => s.key.startsWith("email_")),
       agent: settings.filter((s) => s.key.startsWith("agent_")),
+      social_share: settings.filter((s) => s.key.startsWith("social_share_")),
       other: settings.filter(
         (s) =>
           !s.key.startsWith("site_") &&
           !s.key.startsWith("seo_") &&
           !s.key.startsWith("email_") &&
-          !s.key.startsWith("agent_"),
+          !s.key.startsWith("agent_") &&
+          !s.key.startsWith("social_share_"),
       ),
     };
 
