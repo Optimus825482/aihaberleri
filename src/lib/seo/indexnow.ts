@@ -13,6 +13,67 @@ const INDEXNOW_ENDPOINTS = [
   "https://yandex.com/indexnow", // Yandex
 ];
 
+// Timeout for IndexNow API calls (ms)
+const INDEXNOW_TIMEOUT = 15000;
+
+// Max retry attempts for transient failures
+const INDEXNOW_MAX_RETRIES = 2;
+
+/**
+ * IndexNow fetch with timeout, retry, and diagnostic logging
+ */
+async function fetchIndexNowWithRetry(
+  endpoint: string,
+  payload: IndexNowSubmission,
+  attempt = 1,
+): Promise<{ endpoint: string; status: number; ok: boolean; body?: string }> {
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(INDEXNOW_TIMEOUT),
+    });
+
+    const status = response.status;
+    const ok = status === 200 || status === 202;
+
+    if (!ok) {
+      const body = await response.text().catch(() => "(no body)");
+      console.warn(
+        `⚠️ IndexNow [${endpoint}] HTTP ${status}: ${body.slice(0, 200)}`,
+      );
+
+      // Retry on 429 (rate limit) or 5xx (server error)
+      if ((status === 429 || status >= 500) && attempt < INDEXNOW_MAX_RETRIES) {
+        const delay = attempt * 2000; // 2s, 4s backoff
+        console.log(`🔄 IndexNow retry ${attempt + 1}/${INDEXNOW_MAX_RETRIES} for ${endpoint} in ${delay}ms`);
+        await new Promise((r) => setTimeout(r, delay));
+        return fetchIndexNowWithRetry(endpoint, payload, attempt + 1);
+      }
+
+      return { endpoint, status, ok: false, body: body.slice(0, 200) };
+    }
+
+    return { endpoint, status, ok: true };
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(`⚠️ IndexNow [${endpoint}] network error: ${msg}`);
+
+    // Retry on network/timeout errors
+    if (attempt < INDEXNOW_MAX_RETRIES) {
+      const delay = attempt * 2000;
+      console.log(`🔄 IndexNow retry ${attempt + 1}/${INDEXNOW_MAX_RETRIES} for ${endpoint} in ${delay}ms`);
+      await new Promise((r) => setTimeout(r, delay));
+      return fetchIndexNowWithRetry(endpoint, payload, attempt + 1);
+    }
+
+    return { endpoint, status: 0, ok: false, body: msg };
+  }
+}
+
 interface IndexNowSubmission {
   host: string;
   key: string;
@@ -66,28 +127,19 @@ export async function submitUrlToIndexNow(
       urlList: [url],
     };
 
-    // Tüm endpoint'lere paralel gönder
-    const promises = INDEXNOW_ENDPOINTS.map((endpoint) =>
-      fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-        body: JSON.stringify(payload),
-      }),
+    // Tüm endpoint'lere paralel gönder (with timeout & retry)
+    const results = await Promise.all(
+      INDEXNOW_ENDPOINTS.map((endpoint) =>
+        fetchIndexNowWithRetry(endpoint, payload),
+      ),
     );
-
-    const results = await Promise.allSettled(promises);
 
     // En az bir başarılı response varsa true dön
-    const hasSuccess = results.some(
-      (result) =>
-        result.status === "fulfilled" &&
-        (result.value.status === 200 || result.value.status === 202),
-    );
+    const hasSuccess = results.some((r) => r.ok);
 
     if (hasSuccess) {
-      console.log(`✅ IndexNow: URL submitted successfully - ${url}`);
+      const successEndpoints = results.filter((r) => r.ok).map((r) => r.endpoint);
+      console.log(`✅ IndexNow: URL submitted successfully - ${url} (via ${successEndpoints.length} endpoint(s))`);
       // DB durumunu güncelle
       if (articleId) {
         await db.article.update({
@@ -99,7 +151,8 @@ export async function submitUrlToIndexNow(
         });
       }
     } else {
-      console.warn(`⚠️ IndexNow: Failed to submit URL - ${url}`);
+      const failDetails = results.map((r) => `${r.endpoint}→${r.status}`).join(", ");
+      console.warn(`⚠️ IndexNow: Failed to submit URL - ${url} | Details: ${failDetails}`);
       if (articleId) {
         await db.article.update({
           where: { id: articleId },
@@ -145,27 +198,19 @@ export async function submitUrlsToIndexNow(
       urlList: urlsToSubmit,
     };
 
-    const promises = INDEXNOW_ENDPOINTS.map((endpoint) =>
-      fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-        body: JSON.stringify(payload),
-      }),
+    // Tüm endpoint'lere paralel gönder (with timeout & retry)
+    const results = await Promise.all(
+      INDEXNOW_ENDPOINTS.map((endpoint) =>
+        fetchIndexNowWithRetry(endpoint, payload),
+      ),
     );
 
-    const results = await Promise.allSettled(promises);
-
-    const hasSuccess = results.some(
-      (result) =>
-        result.status === "fulfilled" &&
-        (result.value.status === 200 || result.value.status === 202),
-    );
+    const hasSuccess = results.some((r) => r.ok);
 
     if (hasSuccess) {
+      const successEndpoints = results.filter((r) => r.ok).map((r) => r.endpoint);
       console.log(
-        `✅ IndexNow: ${urlsToSubmit.length} URLs submitted successfully`,
+        `✅ IndexNow: ${urlsToSubmit.length} URLs submitted successfully (via ${successEndpoints.length} endpoint(s))`,
       );
       if (articleIds && articleIds.length > 0) {
         await db.article.updateMany({
@@ -177,7 +222,8 @@ export async function submitUrlsToIndexNow(
         });
       }
     } else {
-      console.warn(`⚠️ IndexNow: Failed to submit ${urlsToSubmit.length} URLs`);
+      const failDetails = results.map((r) => `${r.endpoint}→HTTP${r.status}${r.body ? ` (${r.body.slice(0, 80)})` : ""}`).join(" | ");
+      console.warn(`⚠️ IndexNow: Failed to submit ${urlsToSubmit.length} URLs | ${failDetails}`);
       if (articleIds && articleIds.length > 0) {
         await db.article.updateMany({
           where: { id: { in: articleIds } },
@@ -501,29 +547,56 @@ export async function pingSitemaps(): Promise<{
   const encodedSitemap = encodeURIComponent(sitemapUrl);
   const encodedNewsSitemap = encodeURIComponent(newsSitemapUrl);
 
-  // Bing legacy ping (if IndexNow failed)
+  // Bing fallback: IndexNow API (single URL mode) then legacy ping
   if (!results.bing) {
+    // Try Bing IndexNow directly with sitemap URL
     try {
-      const bingResponse = await fetch(
-        `https://www.bing.com/ping?sitemap=${encodedSitemap}`,
-        {
-          method: "GET",
-          signal: AbortSignal.timeout(10000), // 10s timeout
-        },
+      const apiKey = await getOrCreateIndexNowKey();
+      const host = new URL(baseUrl).hostname;
+      const bingIndexNowPayload: IndexNowSubmission = {
+        host,
+        key: apiKey,
+        keyLocation: `${baseUrl}/${apiKey}.txt`,
+        urlList: [sitemapUrl, newsSitemapUrl],
+      };
+      const bingResult = await fetchIndexNowWithRetry(
+        "https://www.bing.com/indexnow",
+        bingIndexNowPayload,
       );
-
-      if (bingResponse.ok) {
-        console.log("✅ Bing legacy sitemap ping successful");
+      if (bingResult.ok) {
+        console.log("✅ Bing IndexNow direct ping successful");
         results.bing = true;
+        results.indexNow = true;
       }
-
-      // Also ping news sitemap
-      await fetch(`https://www.bing.com/ping?sitemap=${encodedNewsSitemap}`, {
-        method: "GET",
-        signal: AbortSignal.timeout(10000),
-      });
     } catch (error) {
-      console.warn("⚠️ Bing legacy sitemap ping failed:", error);
+      console.warn("⚠️ Bing IndexNow direct ping failed:", error);
+    }
+
+    // Legacy ping as last resort (deprecated since 2023)
+    if (!results.bing) {
+      try {
+        const bingResponse = await fetch(
+          `https://www.bing.com/ping?sitemap=${encodedSitemap}`,
+          {
+            method: "GET",
+            signal: AbortSignal.timeout(10000),
+          },
+        );
+
+        if (bingResponse.ok) {
+          console.log("✅ Bing legacy sitemap ping successful");
+          results.bing = true;
+        } else {
+          console.warn(`⚠️ Bing legacy ping HTTP ${bingResponse.status}`);
+        }
+
+        await fetch(`https://www.bing.com/ping?sitemap=${encodedNewsSitemap}`, {
+          method: "GET",
+          signal: AbortSignal.timeout(10000),
+        });
+      } catch (error) {
+        console.warn("⚠️ Bing legacy sitemap ping failed (deprecated endpoint)");
+      }
     }
   }
 
@@ -548,13 +621,39 @@ export async function pingSitemaps(): Promise<{
     }
   }
 
+  // Verify IndexNow key file accessibility (diagnostic only, once per ping cycle)
+  if (!results.indexNow) {
+    try {
+      const apiKey = await getOrCreateIndexNowKey();
+      const keyFileUrl = `${baseUrl}/${apiKey}.txt`;
+      const keyCheck = await fetch(keyFileUrl, {
+        method: "GET",
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!keyCheck.ok) {
+        console.warn(
+          `🔑 IndexNow key file NOT accessible at ${keyFileUrl} (HTTP ${keyCheck.status}) — this may be why IndexNow fails`,
+        );
+      } else {
+        const keyContent = await keyCheck.text();
+        if (keyContent.trim() !== apiKey) {
+          console.warn(
+            `🔑 IndexNow key file content mismatch! Expected "${apiKey}", got "${keyContent.trim().slice(0, 50)}"`,
+          );
+        }
+      }
+    } catch {
+      console.warn("🔑 IndexNow key file accessibility check failed (network error)");
+    }
+  }
+
   // Log summary
   const successCount = Object.values(results).filter(Boolean).length;
   console.log(`📊 Sitemap ping summary: ${successCount}/4 methods successful`);
   console.log(`   - IndexNow: ${results.indexNow ? "✅" : "❌"}`);
   console.log(`   - WebSub: ${results.webSub ? "✅" : "❌"}`);
   console.log(`   - Google: ${results.google ? "✅" : "❌"}`);
-  console.log(`   - Bing: ${results.bing ? "✅" : "❌"}`);
+  console.log(`   - Bing: ${results.bing ? "✅" : "❌"}`)
 
   return results;
 }
