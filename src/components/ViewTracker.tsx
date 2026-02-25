@@ -12,23 +12,14 @@ export function ViewTracker({ articleId }: ViewTrackerProps) {
   useEffect(() => {
     // Only track once per component mount
     if (tracked.current) return;
+    tracked.current = true;
 
-    // Track after 3 seconds (user actually reading)
-    const timer = setTimeout(async () => {
-      try {
-        await fetch(`/api/articles/${articleId}/view`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        tracked.current = true;
-      } catch (error) {
-        console.error("View tracking failed:", error);
-      }
-    }, 3000); // 3 second delay
-
-    return () => clearTimeout(timer);
+    // Track immediately on page load — page view = read
+    fetch(`/api/articles/${articleId}/view`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      keepalive: true,
+    }).catch(() => { });
   }, [articleId]);
 
   return null; // This component doesn't render anything

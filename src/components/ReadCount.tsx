@@ -8,34 +8,35 @@ interface ReadCountProps {
 }
 
 /**
- * Google Analytics'ten gerçek okunma sayısını çeken client component.
- * GA4 bağlanamazsa DB'deki views alanını fallback olarak gösterir.
+ * Okunma sayısını gösteren client component.
+ * GA4 ve DB'den hangisi yüksekse onu gösterir.
  */
 export function ReadCount({ slug, fallbackViews }: ReadCountProps) {
     const [views, setViews] = useState<number>(fallbackViews);
-    const [source, setSource] = useState<"db" | "ga4">("db");
 
     useEffect(() => {
         let cancelled = false;
 
-        async function fetchGAViews() {
+        async function fetchBestViews() {
             try {
                 const res = await fetch(`/api/analytics/ga-views?slug=${encodeURIComponent(slug)}`);
                 if (!res.ok) return;
 
                 const data = await res.json();
                 if (!cancelled && data.success) {
-                    setViews(data.views);
-                    setSource(data.source);
+                    // GA4 ve DB'den hangisi yüksekse onu göster
+                    const gaViews = data.views || 0;
+                    const bestViews = Math.max(gaViews, fallbackViews);
+                    setViews(bestViews);
                 }
             } catch {
                 // GA ulaşılamazsa fallback kullan (zaten set)
             }
         }
 
-        fetchGAViews();
+        fetchBestViews();
         return () => { cancelled = true; };
-    }, [slug]);
+    }, [slug, fallbackViews]);
 
     return (
         <div className="flex items-center gap-1">

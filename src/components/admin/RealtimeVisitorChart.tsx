@@ -36,6 +36,8 @@ interface RealtimeData {
     countries: Array<{ country: string; users: number }>;
 }
 
+type DataSource = "hybrid" | "db" | "db-fallback" | "ga4" | null;
+
 // ─── Device Icon Helper ──────────────────────────────────
 const deviceIcons: Record<string, React.ElementType> = {
     desktop: Monitor,
@@ -68,6 +70,7 @@ function RealtimeVisitorChart() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+    const [source, setSource] = useState<DataSource>(null);
 
     const fetchData = useCallback(async () => {
         try {
@@ -76,6 +79,7 @@ function RealtimeVisitorChart() {
             const json = await res.json();
             if (json.success && json.data) {
                 setData(json.data);
+                setSource(json.source || null);
                 setError(false);
                 setLastUpdate(new Date());
             }
@@ -124,7 +128,12 @@ function RealtimeVisitorChart() {
                                 Canlı Ziyaretçiler
                             </CardTitle>
                             <CardDescription className="text-[10px]">
-                                GA4 Realtime • Son 30 dakika
+                                {source === "hybrid"
+                                    ? "GA4 + DB Realtime"
+                                    : source === "db" || source === "db-fallback"
+                                        ? "DB Realtime"
+                                        : "Realtime"}{" "}
+                                • Son 30 dakika
                             </CardDescription>
                         </div>
                     </div>

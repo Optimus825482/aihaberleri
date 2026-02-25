@@ -21,13 +21,13 @@ export async function POST(
     // Create a simple session identifier
     const sessionId = `${ip}-${userAgent}`;
 
-    // Check if this session has viewed this article recently (within 5 minutes)
+    // Check if this session has viewed this article recently (within 1 minute)
     const recentView = await db.articleView.findFirst({
       where: {
         articleId: id,
         sessionId: sessionId,
         viewedAt: {
-          gte: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
+          gte: new Date(Date.now() - 60 * 1000), // 1 minute ago
         },
       },
     });
