@@ -153,6 +153,8 @@ WORKDIR /app
 
 # Prod deps + tsx/typescript for running .ts files
 COPY --link --from=prod-deps --chown=worker:nodejs /app/node_modules ./node_modules
+COPY --link --chown=worker:nodejs package.json package-lock.json* ./
+
 RUN npm install --no-save tsx typescript --legacy-peer-deps 2>/dev/null && \
     rm -rf node_modules/.cache 2>/dev/null || true && \
     echo "✓ worker deps: $(ls -1 node_modules | wc -l) packages"
@@ -160,7 +162,6 @@ RUN npm install --no-save tsx typescript --legacy-peer-deps 2>/dev/null && \
 COPY --link --chown=worker:nodejs prisma ./prisma
 COPY --link --chown=worker:nodejs src ./src
 COPY --link --chown=worker:nodejs tsconfig.json ./tsconfig.json
-COPY --link --chown=worker:nodejs package.json ./package.json
 
 ENV NODE_ENV=production \
     TSX_TSCONFIG_PATH="/app/tsconfig.json" \
