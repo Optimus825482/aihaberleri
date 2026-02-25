@@ -24,9 +24,11 @@ export function useTrendingArticles(
   period: string,
   limit = 5,
   sort: "views" | "trend" = "trend",
+  locale?: "tr" | "en",
 ) {
+  const localeParam = locale ? `&locale=${locale}` : "";
   return useSWR<TrendingResponse>(
-    `/api/most-read?period=${period}&limit=${limit}&sort=${sort}`,
+    `/api/most-read?period=${period}&limit=${limit}&sort=${sort}${localeParam}`,
     fetcher,
     {
       revalidateOnFocus: false,

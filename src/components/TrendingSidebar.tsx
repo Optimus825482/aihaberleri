@@ -45,11 +45,12 @@ export function TrendingSidebar({ locale = "tr" }: TrendingSidebarProps) {
   const t = texts[locale];
 
   // SWR: auto-dedup, caching, background revalidation, keepPreviousData
-  // Sort by trend score instead of views
+  // Sort by trend score instead of views — locale ile dile göre filtrele
   const { data, isLoading: loading } = useTrendingArticles(
     timePeriod,
     5,
     "trend",
+    locale,
   );
   const articles = data?.articles ?? [];
 

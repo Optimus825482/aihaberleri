@@ -73,7 +73,7 @@ export function StickyBottomAd() {
             <div className="bg-ai-surface-card border-t border-ai-surface-border shadow-2xl">
                 <AdSlot
                     slot={AD_SLOTS.STICKY_BOTTOM_MOBILE}
-                    format="horizontal"
+                    format="auto"
                     responsive
                     minHeight={100}
                 />

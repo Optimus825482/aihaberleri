@@ -9,11 +9,13 @@ export async function GET(request: NextRequest) {
     const period = searchParams.get("period") || "week";
     const limit = parseInt(searchParams.get("limit") || "5");
     const sortBy = searchParams.get("sort") || "views"; // "views" | "trend"
+    const locale = searchParams.get("locale"); // "tr" | "en" — optional
 
     // Calculate date limit based on period
     const dateLimit = new Date();
     const whereClause: any = {
       status: "PUBLISHED",
+      ...(locale ? { language: locale } : {}),
     };
 
     if (period === "today") {
