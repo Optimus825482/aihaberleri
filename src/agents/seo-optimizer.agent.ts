@@ -63,7 +63,7 @@ export class SEOOptimizerAgent extends BaseAgent<
   // Minimum SEO score required to publish
   private readonly MIN_SEO_SCORE = 60;
   // Score threshold below which we attempt optimization
-  private readonly OPTIMIZE_THRESHOLD = 75;
+  private readonly OPTIMIZE_THRESHOLD = 99;
 
   constructor() {
     super(QUEUE_NAMES.SEO_OPTIMIZATION);
@@ -112,20 +112,23 @@ export class SEOOptimizerAgent extends BaseAgent<
           `📊 TR Analyzing: ${trContent.title.substring(0, 50)}...`,
         );
 
-        const trAnalysis: SEOAnalysis = await this.analyzer.analyze({
-          title: trContent.title,
-          content: trContent.content,
-          metaDescription: trContent.metaDescription,
-          slug,
-          keywords: trContent.keywords,
-          imageUrl,
-        }, 'tr');
+        const trAnalysis: SEOAnalysis = await this.analyzer.analyze(
+          {
+            title: trContent.title,
+            content: trContent.content,
+            metaDescription: trContent.metaDescription,
+            slug,
+            keywords: trContent.keywords,
+            imageUrl,
+          },
+          "tr",
+        );
         apiCalls++;
 
         const trOriginalScore = trAnalysis.score;
         let trFinalScore = trOriginalScore;
         let trOptimized = false;
-        let trSeoChanges: NonNullable<ArticleWithSEO['seoChanges']> = {
+        let trSeoChanges: NonNullable<ArticleWithSEO["seoChanges"]> = {
           titleOptimized: false,
           metaOptimized: false,
           contentOptimized: false,
@@ -151,7 +154,7 @@ export class SEOOptimizerAgent extends BaseAgent<
                 keywords: trContent.keywords,
               },
               trAnalysis,
-              'tr',
+              "tr",
             );
           apiCalls++;
 
@@ -161,16 +164,14 @@ export class SEOOptimizerAgent extends BaseAgent<
             title: trChanges.title.optimized || trContent.title,
             metaDescription:
               trChanges.metaDescription.optimized || trContent.metaDescription,
-            content:
-              trChanges.content.optimizedContent || trContent.content,
+            content: trChanges.content.optimizedContent || trContent.content,
             score: trChanges.estimatedScore,
           };
 
           trFinalScore = trChanges.estimatedScore;
           trOptimized = true;
           trSeoChanges = {
-            titleOptimized:
-              trChanges.title.optimized !== trContent.title,
+            titleOptimized: trChanges.title.optimized !== trContent.title,
             metaOptimized:
               trChanges.metaDescription.optimized !== trContent.metaDescription,
             contentOptimized:
@@ -190,7 +191,7 @@ export class SEOOptimizerAgent extends BaseAgent<
         // ═══════════════════════════════════════════════
         let enSeoScore: number | undefined;
         let enOptimized = false;
-        let enSeoChanges: ArticleWithSEO['seoChangesEn'] | undefined;
+        let enSeoChanges: ArticleWithSEO["seoChangesEn"] | undefined;
 
         const enContent = article.synthesizedContent?.en;
         if (enContent?.title && enContent?.content) {
@@ -198,14 +199,17 @@ export class SEOOptimizerAgent extends BaseAgent<
             `📊 EN Analyzing: ${enContent.title.substring(0, 50)}...`,
           );
 
-          const enAnalysis: SEOAnalysis = await this.analyzer.analyze({
-            title: enContent.title,
-            content: enContent.content,
-            metaDescription: enContent.metaDescription || '',
-            slug,
-            keywords: enContent.keywords || [],
-            imageUrl,
-          }, 'en');
+          const enAnalysis: SEOAnalysis = await this.analyzer.analyze(
+            {
+              title: enContent.title,
+              content: enContent.content,
+              metaDescription: enContent.metaDescription || "",
+              slug,
+              keywords: enContent.keywords || [],
+              imageUrl,
+            },
+            "en",
+          );
           apiCalls++;
 
           const enOriginalScore = enAnalysis.score;
@@ -232,11 +236,11 @@ export class SEOOptimizerAgent extends BaseAgent<
                 {
                   title: enContent.title,
                   content: enContent.content,
-                  metaDescription: enContent.metaDescription || '',
+                  metaDescription: enContent.metaDescription || "",
                   keywords: enContent.keywords || [],
                 },
                 enAnalysis,
-                'en',
+                "en",
               );
             apiCalls++;
 
@@ -247,15 +251,13 @@ export class SEOOptimizerAgent extends BaseAgent<
               metaDescription:
                 enChanges.metaDescription.optimized ||
                 enContent.metaDescription,
-              content:
-                enChanges.content.optimizedContent || enContent.content,
+              content: enChanges.content.optimizedContent || enContent.content,
             };
 
             enSeoScore = enChanges.estimatedScore;
             enOptimized = true;
             enSeoChanges = {
-              titleOptimized:
-                enChanges.title.optimized !== enContent.title,
+              titleOptimized: enChanges.title.optimized !== enContent.title,
               metaOptimized:
                 enChanges.metaDescription.optimized !==
                 enContent.metaDescription,
