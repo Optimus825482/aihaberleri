@@ -1,29 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSavedArticles } from "@/hooks/useSavedArticles";
 
 interface MobileArticleActionBarProps {
     title: string;
     url: string;
     articleId: string;
+    slug?: string;
+    imageUrl?: string | null;
+    excerpt?: string;
+    category?: string;
 }
-
-const getSavedMap = (): Record<string, boolean> => {
-    if (typeof window === "undefined") return {};
-    try {
-        const raw = localStorage.getItem("saved_articles_map");
-        return raw ? JSON.parse(raw) : {};
-    } catch {
-        return {};
-    }
-};
 
 export function MobileArticleActionBar({
     title,
     url,
     articleId,
+    slug = "",
+    imageUrl = null,
+    excerpt = "",
+    category = "",
 }: MobileArticleActionBarProps) {
-    const [isSaved, setIsSaved] = useState(() => Boolean(getSavedMap()[articleId]));
+    const { isSaved: checkSaved, toggleSave } = useSavedArticles();
+    const saved = checkSaved(articleId);
 
     const shareData = useMemo(
         () => ({
@@ -48,11 +48,7 @@ export function MobileArticleActionBar({
     };
 
     const handleSave = () => {
-        const map = getSavedMap();
-        const next = !isSaved;
-        map[articleId] = next;
-        localStorage.setItem("saved_articles_map", JSON.stringify(map));
-        setIsSaved(next);
+        toggleSave(articleId, { title, slug, imageUrl: imageUrl ?? null, excerpt, category });
     };
 
     const handleListen = () => {
@@ -79,9 +75,9 @@ export function MobileArticleActionBar({
                     className="inline-flex items-center justify-center gap-1 rounded-xl border border-ai-surface-border py-2 text-xs font-semibold text-ai-text-secondary hover:text-white"
                 >
                     <span className="material-symbols-outlined text-[16px]">
-                        {isSaved ? "bookmark" : "bookmark_add"}
+                        {saved ? "bookmark" : "bookmark_add"}
                     </span>
-                    {isSaved ? "Kaydedildi" : "Kaydet"}
+                    {saved ? "Kaydedildi" : "Kaydet"}
                 </button>
 
                 <button

@@ -659,6 +659,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           articleId={article.id}
           title={article.title}
           url={articleUrl}
+          slug={article.slug}
+          imageUrl={article.imageUrl}
+          excerpt={article.excerpt ?? undefined}
+          category={article.category?.name}
         />
       )}
     </div>

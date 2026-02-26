@@ -624,6 +624,10 @@ export default async function EnglishArticlePage({ params }: Props) {
           articleId={article.id}
           title={article.title}
           url={`https://aihaberleri.org/en/news/${article.slug}`}
+          slug={article.slug}
+          imageUrl={article.imageUrl}
+          excerpt={article.excerpt ?? undefined}
+          category={article.category?.name}
         />
       )}
     </>

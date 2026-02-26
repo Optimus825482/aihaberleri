@@ -12,6 +12,7 @@ import { AdSlot } from "@/components/AdSlot";
 import { AITermsGlossary } from "@/components/article/AITermsGlossary";
 import { getArticleInsightDisplaySettings } from "@/lib/article-insights";
 import { AD_SLOTS } from "@/lib/ad-slots";
+import { SavedArticlesSection } from "@/components/SavedArticlesSection";
 
 import {
   generateOrganizationSchema,
@@ -424,6 +425,9 @@ export default async function HomePage() {
         />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {/* Kayıtlı Haberler — localStorage'dan son 3 */}
+          <SavedArticlesSection />
+
           {featureSettings.showDailyBriefing && (
             <section className="mb-8 rounded-2xl border border-ai-surface-border bg-ai-surface-card p-5 sm:p-6">
               <div className="mb-4 flex items-center justify-between gap-3">

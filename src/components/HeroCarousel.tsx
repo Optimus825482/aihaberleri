@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { FavoritesPromoSlide } from "@/components/FavoritesPromoSlide";
 
 // Client-only wrapper to prevent hydration mismatch
 function ClientOnly({ children }: { children: React.ReactNode }) {
@@ -226,6 +227,8 @@ function HeroCarouselContent({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Favorites Promo Slide — ilk ziyarette gösterilir, 3sn sonra kaybolur */}
+      <FavoritesPromoSlide />
       {/* Background Images with Smooth Transition - LAZY RENDERING */}
       {/* Performans: Sadece current, prev, next slide'lar render ediliyor */}
       {articles.map((article, index) => {
