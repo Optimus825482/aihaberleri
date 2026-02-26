@@ -88,23 +88,23 @@ export function Header({ categories }: HeaderProps) {
                 {link.label}
               </Link>
             ))}
-            {savedCount > 0 && (
-              <Link
-                href="/favoriler"
-                className={cn(
-                  "relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                  isActive("/favoriler")
-                    ? "bg-ai-primary text-white"
-                    : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card",
-                )}
-              >
-                <span className="material-symbols-outlined text-[20px]">bookmark</span>
-                Favorilerim
+            <Link
+              href="/favoriler"
+              className={cn(
+                "relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                isActive("/favoriler")
+                  ? "bg-ai-primary text-white"
+                  : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card",
+              )}
+            >
+              <span className="material-symbols-outlined text-[20px]">bookmark</span>
+              Favorilerim
+              {savedCount > 0 && (
                 <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ai-primary/20 px-1.5 text-[10px] font-bold text-ai-primary">
                   {savedCount}
                 </span>
-              </Link>
-            )}
+              )}
+            </Link>
           </nav>
 
           {/* Right Actions */}
@@ -219,25 +219,25 @@ export function Header({ categories }: HeaderProps) {
                         </Link>
                       </SheetClose>
                     ))}
-                    {savedCount > 0 && (
-                      <SheetClose asChild>
-                        <Link
-                          href="/favoriler"
-                          className={cn(
-                            "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors",
-                            isActive("/favoriler")
-                              ? "bg-ai-primary text-white"
-                              : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card",
-                          )}
-                        >
-                          <span className="material-symbols-outlined text-[20px]">bookmark</span>
-                          Favori Haberlerim
+                    <SheetClose asChild>
+                      <Link
+                        href="/favoriler"
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors",
+                          isActive("/favoriler")
+                            ? "bg-ai-primary text-white"
+                            : "text-ai-text-secondary hover:text-white hover:bg-ai-surface-card",
+                        )}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">bookmark</span>
+                        Favori Haberlerim
+                        {savedCount > 0 && (
                           <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ai-primary/20 px-1.5 text-[10px] font-bold text-ai-primary">
                             {savedCount}
                           </span>
-                        </Link>
-                      </SheetClose>
-                    )}
+                        )}
+                      </Link>
+                    </SheetClose>
 
                     {/* Categories */}
                     <div className="pt-4 mt-4 border-t border-ai-surface-border">

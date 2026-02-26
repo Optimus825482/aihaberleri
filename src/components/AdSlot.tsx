@@ -87,11 +87,18 @@ export const AdSlot = ({
 
     const updateFallback = () => {
       const status = adElement.getAttribute("data-adsbygoogle-status");
-      if (!status || status === "unfilled") {
-        setShowFallback(true);
+      if (status === "unfilled") {
+        // Reklam dolmadı — alanı tamamen gizle (boş kutu kalsın diye)
+        setShowFallback(false);
+        adElement.style.display = "none";
+        const parent = adElement.closest('[aria-label]') as HTMLElement;
+        if (parent) parent.style.display = "none";
         return;
       }
-      setShowFallback(false);
+      if (status) {
+      // Reklam yüklendi
+        setShowFallback(false);
+      }
     };
 
     const observer = new MutationObserver(updateFallback);
@@ -100,7 +107,16 @@ export const AdSlot = ({
       attributeFilter: ["data-adsbygoogle-status"],
     });
 
-    const timeout = window.setTimeout(updateFallback, 4500);
+    // 3 saniye içinde reklam gelmezse gizle
+    const timeout = window.setTimeout(() => {
+      const status = adElement.getAttribute("data-adsbygoogle-status");
+      if (!status || status === "unfilled") {
+        setShowFallback(false);
+        adElement.style.display = "none";
+        const parent = adElement.closest('[aria-label]') as HTMLElement;
+        if (parent) parent.style.display = "none";
+      }
+    }, 3000);
 
     return () => {
       observer.disconnect();
@@ -146,8 +162,8 @@ export const AdSlot = ({
       />
 
       {showFallback ? (
-        <div className="mt-2 rounded-lg border border-ai-surface-border bg-ai-surface-dark/60 px-3 py-2 text-xs text-ai-text-secondary">
-          {label ? `${label} content is loading.` : "Advertisement is loading."}
+        <div className="mt-1 animate-pulse rounded-lg bg-ai-surface-dark/30">
+          <div className="h-[90px] rounded-lg bg-gradient-to-r from-ai-surface-dark/20 via-ai-surface-dark/40 to-ai-surface-dark/20" />
         </div>
       ) : null}
     </div>
