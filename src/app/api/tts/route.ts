@@ -14,7 +14,16 @@ import { Errors, handleApiError } from "@/lib/errors";
 // ============================================
 const CACHE_TTL_SECONDS = 3 * 24 * 60 * 60; // 3 days
 const CACHE_PREFIX = "tts:cache:";
-const MAX_CACHE_SIZE_BYTES = 512 * 1024; // 512KB - bundan büyük yanıtları cache'leme
+const MAX_CACHE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB - TTS audio genelde 700KB-3MB arası
+
+// ============================================
+// IN-FLIGHT DEDUPLICATION
+// Aynı cache key için eşzamanlı isteklerde tek Azure çağrısı yapılır
+// ============================================
+const inFlightRequests = new Map<
+  string,
+  Promise<{ audio: Buffer; metadata: unknown[] }>
+>();
 
 function expandCommonAcronyms(text: string, voice?: string): string {
   const isTurkishVoice = voice?.toLowerCase().startsWith("tr-") ?? false;
@@ -68,9 +77,15 @@ function generateCacheKey(text: string, voice: string): string {
 }
 
 /**
- * Get client IP from request headers
+ * Get real client IP from request headers
+ * Cloudflare arkasında cf-connecting-ip gerçek kullanıcı IP'sini verir
+ * x-forwarded-for'daki IP'ler Cloudflare proxy IP'leridir
  */
 function getClientIP(req: NextRequest): string {
+  // Cloudflare'ın gerçek kullanıcı IP header'ı (en güvenilir)
+  const cfIP = req.headers.get("cf-connecting-ip");
+  if (cfIP) return cfIP.trim();
+
   const forwarded = req.headers.get("x-forwarded-for");
   const realIP = req.headers.get("x-real-ip");
 
@@ -151,12 +166,36 @@ export async function POST(req: NextRequest) {
     }
 
     // ============================================
-    // GENERATE SPEECH
+    // GENERATE SPEECH (with in-flight deduplication)
     // ============================================
-    const { audio, metadata } = await generateSpeech({
-      text: cleanText,
-      voice,
-    });
+    let audio: Buffer;
+    let metadata: unknown[];
+
+    const existingRequest = inFlightRequests.get(cacheKey);
+    if (existingRequest) {
+      // Aynı içerik zaten üretiliyor — bekle, tekrar Azure çağrısı yapma
+      console.log(
+        `[TTS POST] IN-FLIGHT HIT: ${cacheKey} — reusing active generation`,
+      );
+      const result = await existingRequest;
+      audio = result.audio;
+      metadata = result.metadata;
+    } else {
+      // Yeni üretim başlat ve map'e kaydet
+      const generationPromise = generateSpeech({
+        text: cleanText,
+        voice,
+      });
+      inFlightRequests.set(cacheKey, generationPromise);
+
+      try {
+        const result = await generationPromise;
+        audio = result.audio;
+        metadata = result.metadata;
+      } finally {
+        inFlightRequests.delete(cacheKey);
+      }
+    }
 
     console.log(
       `[TTS POST] Success: ${audio.length} bytes, ${metadata.length} words`,
@@ -197,6 +236,13 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
+    // Client bağlantıyı kapattıysa sessizce logla (abort = normal durum)
+    if (error instanceof Error && error.message === "aborted") {
+      console.log(
+        `[TTS POST] Client disconnected before response, IP=${clientIP}`,
+      );
+      return new Response(null, { status: 499 }); // Client Closed Request
+    }
     return handleApiError(
       error instanceof Error ? error : new Error(String(error)),
       {
@@ -298,6 +344,13 @@ export async function GET(req: NextRequest) {
       },
     });
   } catch (error) {
+    // Client bağlantıyı kapattıysa sessizce logla
+    if (error instanceof Error && error.message === "aborted") {
+      console.log(
+        `[TTS GET] Client disconnected before response, IP=${clientIP}`,
+      );
+      return new Response(null, { status: 499 });
+    }
     return handleApiError(
       error instanceof Error ? error : new Error(String(error)),
       {
