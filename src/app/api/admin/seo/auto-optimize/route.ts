@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     if (body.maxScore) maxScore = body.maxScore;
     if (body.limit) {
-      limit = Math.min(Number(body.limit), 50);
+      limit = Math.min(Number(body.limit), 200);
     }
     if (body.language) {
       const normalized = String(body.language).toLowerCase();

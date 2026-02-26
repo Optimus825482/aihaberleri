@@ -157,7 +157,7 @@ export default function SEOPage() {
   const [bulkResult, setBulkResult] = useState<BulkResult | null>(null);
   const [processingTitle, setProcessingTitle] = useState<string | null>(null);
   const [optimizeThreshold, setOptimizeThreshold] = useState(80);
-  const [optimizeLimit, setOptimizeLimit] = useState(50);
+  const [optimizeLimit, setOptimizeLimit] = useState(100);
   const [optimizationMode, setOptimizationMode] =
     useState<OptimizationMode>("autonomous");
   const [languageFilter, setLanguageFilter] = useState<LanguageFilter>("tr");
@@ -174,6 +174,16 @@ export default function SEOPage() {
   const lastIndexRef = useRef(0);
   const hasRecalculated = useRef(false);
 
+  // Scan state
+  const [scanResult, setScanResult] = useState<{
+    tr: number;
+    en: number;
+    total: number;
+    maxScore: number;
+    timestamp: number;
+  } | null>(null);
+  const [scanning, setScanning] = useState(false);
+
   const formatDate = (value: string | null | undefined) => {
     if (!value) return "-";
     return new Date(value).toLocaleDateString("tr-TR");
@@ -183,6 +193,38 @@ export default function SEOPage() {
     if (!value) return "-";
     return new Date(value).toLocaleString("tr-TR");
   };
+
+  // ─── Scan: Optimize edilmemiş makaleleri tara ───
+  const scanUnoptimized = useCallback(async () => {
+    setScanning(true);
+    try {
+      const res = await fetch(
+        `/api/admin/seo/scan-unoptimized?maxScore=${optimizeThreshold}`,
+      );
+      if (!res.ok) throw new Error("Tarama başarısız");
+      const data = await res.json();
+      setScanResult({
+        tr: data.counts.tr,
+        en: data.counts.en,
+        total: data.counts.total,
+        maxScore: data.maxScore,
+        timestamp: data.timestamp,
+      });
+      toast({
+        title: "Tarama tamamlandı",
+        description: `${data.counts.total} optimize edilmemiş makale bulundu (TR: ${data.counts.tr}, EN: ${data.counts.en})`,
+      });
+    } catch (error) {
+      toast({
+        title: "Tarama hatası",
+        description:
+          error instanceof Error ? error.message : "Bilinmeyen hata",
+        variant: "destructive",
+      });
+    } finally {
+      setScanning(false);
+    }
+  }, [optimizeThreshold, toast]);
 
   const updateStats = useCallback((articlesData: ArticleSEO[]) => {
     const total = articlesData.length;
@@ -403,6 +445,106 @@ export default function SEOPage() {
     [pollJobStatus, stopPolling],
   );
 
+  // ─── Tara & Başlat: Scan sonrası otomatik batch başlat ───
+  const scanAndOptimize = useCallback(async () => {
+    setScanning(true);
+    try {
+      const res = await fetch(
+        `/api/admin/seo/scan-unoptimized?maxScore=${optimizeThreshold}`,
+      );
+      if (!res.ok) throw new Error("Tarama başarısız");
+      const data = await res.json();
+      setScanResult({
+        tr: data.counts.tr,
+        en: data.counts.en,
+        total: data.counts.total,
+        maxScore: data.maxScore,
+        timestamp: data.timestamp,
+      });
+
+      const targetCount =
+        languageFilter === "all"
+          ? data.counts.total
+          : data.counts[languageFilter] || 0;
+
+      if (targetCount === 0) {
+        toast({
+          title: "Tamamlanmış",
+          description: `${languageFilter.toUpperCase()} dilinde optimize edilmemiş makale bulunamadı.`,
+        });
+        setScanning(false);
+        return;
+      }
+
+      toast({
+        title: `${targetCount} makale bulundu`,
+        description: `${Math.min(targetCount, optimizeLimit)} makale batch olarak optimize edilecek...`,
+      });
+    } catch (error) {
+      toast({
+        title: "Tarama hatası",
+        description:
+          error instanceof Error ? error.message : "Bilinmeyen hata",
+        variant: "destructive",
+      });
+      setScanning(false);
+      return;
+    }
+
+    setScanning(false);
+
+    // Scan başarılı — şimdi otonom batch başlat
+    setOptimizationMode("autonomous");
+    setBulkOptimizing(true);
+    setBulkProgress([]);
+    setBulkResult(null);
+    setBulkTotal(0);
+    setBulkCurrent(0);
+    setProcessingTitle(null);
+
+    try {
+      const response = await fetch("/api/admin/seo/auto-optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          maxScore: optimizeThreshold,
+          limit: optimizeLimit,
+          language: languageFilter,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.status === 409 && result.jobId) {
+        startPolling(result.jobId);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(result.error || "İstek başarısız");
+      }
+
+      startPolling(result.jobId);
+    } catch (err) {
+      console.error("Scan & optimize error:", err);
+      setBulkOptimizing(false);
+      setBulkResult({
+        processed: 0,
+        succeeded: 0,
+        failed: 1,
+        skipped: 0,
+        avgImprovement: 0,
+        message: err instanceof Error ? err.message : "Bağlantı hatası",
+      });
+    }
+  }, [
+    languageFilter,
+    optimizeLimit,
+    optimizeThreshold,
+    startPolling,
+    toast,
+  ]);
+
   const fetchAutoOptimizeStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/seo/auto-optimize");
@@ -471,8 +613,8 @@ export default function SEOPage() {
               intervalMinutes: 30,
               maxScore: 80,
               language: "tr",
-              batchSize: 50,
-              delayMs: 2500,
+              batchSize: 100,
+              delayMs: 3000,
               nextRunAt: null,
               lastRunAt: null,
               lastResult: null,
@@ -676,9 +818,39 @@ export default function SEOPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button
+              onClick={scanAndOptimize}
+              disabled={bulkOptimizing || loading || scanning}
+              variant="default"
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {scanning ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4 mr-2" />
+              )}
+              {scanning
+                ? "Taranıyor..."
+                : bulkOptimizing
+                  ? `${bulkCurrent}/${bulkTotal} İşleniyor...`
+                  : "Tara & Optimize Et"}
+            </Button>
+            <Button
+              onClick={scanUnoptimized}
+              disabled={bulkOptimizing || scanning}
+              variant="outline"
+              size="sm"
+            >
+              {scanning ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Target className="h-4 w-4 mr-2" />
+              )}
+              Sadece Tara
+            </Button>
+            <Button
               onClick={startBulkOptimize}
               disabled={actionDisabled}
-              variant="default"
+              variant="outline"
             >
               {bulkOptimizing ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -762,6 +934,41 @@ export default function SEOPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Scan Sonuçları */}
+        {scanResult && (
+          <Card className="border-emerald-200 bg-emerald-50/50">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-emerald-600" />
+                    <span className="font-semibold text-emerald-800">
+                      Tarama Sonucu
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      (Skor &lt; {scanResult.maxScore})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="secondary" className="text-sm">
+                      Toplam: {scanResult.total}
+                    </Badge>
+                    <Badge variant="outline" className="text-sm">
+                      TR: {scanResult.tr}
+                    </Badge>
+                    <Badge variant="outline" className="text-sm">
+                      EN: {scanResult.en}
+                    </Badge>
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {formatTimestamp(scanResult.timestamp)}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
@@ -854,9 +1061,9 @@ export default function SEOPage() {
                   id="limit"
                   type="number"
                   min={10}
-                  max={100}
+                  max={200}
                   value={optimizeLimit}
-                  onChange={(e) => setOptimizeLimit(Number(e.target.value) || 50)}
+                  onChange={(e) => setOptimizeLimit(Number(e.target.value) || 100)}
                 />
               </div>
               <div className="space-y-2">

@@ -38,8 +38,8 @@ const SEO_AUTOPILOT_DEFAULTS: AutopilotSettings = {
   intervalMinutes: 30,
   maxScore: 80,
   language: "tr",
-  batchSize: 50,
-  delayMs: 2500,
+  batchSize: 100,
+  delayMs: 3000,
 };
 
 const SETTINGS_KEYS = {
@@ -112,7 +112,7 @@ async function getAutopilotSettings(): Promise<AutopilotSettings> {
     batchSize: clamp(
       Number(batchRaw ?? SEO_AUTOPILOT_DEFAULTS.batchSize),
       10,
-      50,
+      200,
     ),
     delayMs: clamp(
       Number(delayRaw ?? SEO_AUTOPILOT_DEFAULTS.delayMs),
@@ -395,7 +395,7 @@ export async function startSEOAutoOptimizeJob(options?: {
   const source = options?.source || "manual";
   const maxScore = clamp(options?.maxScore ?? settings.maxScore, 40, 95);
   const language = options?.language ?? settings.language;
-  const limit = clamp(options?.limit ?? settings.batchSize, 1, 50);
+  const limit = clamp(options?.limit ?? settings.batchSize, 1, 200);
 
   const articles = await selectCandidateArticles(maxScore, limit, language);
   if (articles.length === 0) {
@@ -517,7 +517,7 @@ export async function updateSEOAutopilotSettings(input: {
     ),
     maxScore: clamp(input.maxScore ?? settings.maxScore, 40, 95),
     language: input.language ?? settings.language,
-    batchSize: clamp(settings.batchSize, 10, 50),
+    batchSize: clamp(settings.batchSize, 10, 200),
     delayMs: clamp(input.delayMs ?? settings.delayMs, 1000, 15000),
   };
 
@@ -535,6 +535,33 @@ export async function updateSEOAutopilotSettings(input: {
   ]);
 
   return merged;
+}
+
+/**
+ * Optimize edilmemiş makalelerin sayısını döner (dil bazlı).
+ * Scan işlemi — ağır sorgu yapmaz, sadece count.
+ */
+export async function countUnoptimizedArticles(
+  maxScore: number = 80,
+): Promise<{ tr: number; en: number; total: number }> {
+  const [trCount, enCount] = await Promise.all([
+    db.article.count({
+      where: {
+        status: "PUBLISHED",
+        language: "tr",
+        OR: [{ seoScore: { lt: maxScore } }, { seoScore: null }],
+      },
+    }),
+    db.article.count({
+      where: {
+        status: "PUBLISHED",
+        language: "en",
+        OR: [{ seoScore: { lt: maxScore } }, { seoScore: null }],
+      },
+    }),
+  ]);
+
+  return { tr: trCount, en: enCount, total: trCount + enCount };
 }
 
 export async function runScheduledSEOPatrol() {
