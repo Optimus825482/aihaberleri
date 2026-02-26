@@ -14,6 +14,7 @@ import { ArticleImage } from "@/components/ResponsiveImage";
 import { ViewTracker } from "@/components/ViewTracker";
 import { ReadingProgressBar } from "@/components/ReadingProgressBar";
 import { MobileArticleActionBar } from "@/components/article/MobileArticleActionBar";
+import { SaveArticleButton } from "@/components/article/SaveArticleButton";
 import {
   ArticleInsightTopSections,
   ArticleTimelineSection,
@@ -533,6 +534,19 @@ export default async function EnglishArticlePage({ params }: Props) {
 
             <aside className="hidden lg:block lg:col-span-4">
               <div className="sticky top-24 space-y-6">
+                {/* Save to Favorites — Desktop */}
+                <div className="bg-ai-surface-card rounded-xl p-6 border border-ai-surface-border">
+                  <SaveArticleButton
+                    variant="sidebar"
+                    articleId={article.id}
+                    title={article.title}
+                    slug={article.slug}
+                    imageUrl={article.imageUrl}
+                    excerpt={article.excerpt ?? undefined}
+                    category={article.category?.name}
+                  />
+                </div>
+
                 <AdSlot
                   slot={AD_SLOTS.SIDEBAR_DISPLAY}
                   format="vertical"

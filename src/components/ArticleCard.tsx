@@ -7,6 +7,7 @@ import { calculateReadingTime, formatRelativeTime } from "@/lib/utils";
 import { TrendingBadge } from "@/components/TrendingBadge";
 
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
+import { SaveArticleButton } from "@/components/article/SaveArticleButton";
 
 interface ArticleCardProps {
   article: {
@@ -216,18 +217,29 @@ export const ArticleCard = memo(function ArticleCard({
                 {article.author?.name || "AI Haberleri"}
               </span>
             </div>
-            {/* Share Button */}
-            <button
-              type="button"
-              onClick={handleShare}
-              className="h-8 w-8 rounded-lg flex items-center justify-center text-ai-text-secondary hover:text-ai-primary hover:bg-ai-primary/10 transition-all duration-300"
-              title={t.share}
-              aria-label={`${t.share}: ${article.title}`}
-            >
-              <span className="material-symbols-outlined text-[18px]">
-                share
-              </span>
-            </button>
+            {/* Save & Share Buttons */}
+            <div className="flex items-center gap-1">
+              <SaveArticleButton
+                variant="card"
+                articleId={article.id}
+                title={article.title}
+                slug={article.slug}
+                imageUrl={article.imageUrl}
+                excerpt={article.excerpt}
+                category={article.category.name}
+              />
+              <button
+                type="button"
+                onClick={handleShare}
+                className="h-8 w-8 rounded-lg flex items-center justify-center text-ai-text-secondary hover:text-ai-primary hover:bg-ai-primary/10 transition-all duration-300"
+                title={t.share}
+                aria-label={`${t.share}: ${article.title}`}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  share
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

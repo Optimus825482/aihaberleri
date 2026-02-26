@@ -27,6 +27,7 @@ import { ReadCount } from "@/components/ReadCount";
 import { ReadingProgressBar } from "@/components/ReadingProgressBar";
 import { AITermsGlossary } from "@/components/article/AITermsGlossary";
 import { MobileArticleActionBar } from "@/components/article/MobileArticleActionBar";
+import { SaveArticleButton } from "@/components/article/SaveArticleButton";
 import {
   ArticleInsightTopSections,
   ArticleTimelineSection,
@@ -476,6 +477,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     title={article.title}
                     url={articleUrl}
                     description={article.excerpt}
+                  />
+                </div>
+
+                {/* Favorilere Ekle — Desktop */}
+                <div className="bg-ai-surface-card rounded-xl p-6 border border-ai-surface-border">
+                  <SaveArticleButton
+                    variant="sidebar"
+                    articleId={article.id}
+                    title={article.title}
+                    slug={article.slug}
+                    imageUrl={article.imageUrl}
+                    excerpt={article.excerpt ?? undefined}
+                    category={article.category?.name}
                   />
                 </div>
 
