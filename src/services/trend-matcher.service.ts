@@ -28,7 +28,8 @@ export const MATCH_CONFIG = {
   minSimilarity: 0.5,
 
   // Minimum trend score to consider article as "trending"
-  trendingThreshold: 50,
+  // Lowered from 50 to 38: articles typically score 44-50 and miss by a few points
+  trendingThreshold: 38,
 
   // Maximum number of hashtags to extract
   maxHashtags: 5,

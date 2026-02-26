@@ -34,6 +34,7 @@ interface UploadResult {
 /**
  * Download image from URL with retry for rate limits
  * Supports Pollinations.ai authenticated URLs with API key
+ * Includes pre-request delay for Pollinations to avoid 429 rate limits
  */
 async function downloadImage(
   url: string,
@@ -43,6 +44,11 @@ async function downloadImage(
   const BASE_DELAY = 3000; // 3 seconds base delay
 
   try {
+    // Pre-request delay for Pollinations to avoid 429 on parallel downloads
+    if (url.includes("pollinations.ai") && attempt === 1) {
+      const jitter = Math.floor(Math.random() * 500);
+      await new Promise((resolve) => setTimeout(resolve, 300 + jitter));
+    }
     console.log(
       `📥 Downloading image from: ${url}${attempt > 1 ? ` (attempt ${attempt})` : ""}`,
     );

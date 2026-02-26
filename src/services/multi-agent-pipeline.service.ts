@@ -155,13 +155,20 @@ export async function exitRecoveryMode(agentName: string): Promise<void> {
 
     if (existing) {
       const status = JSON.parse(existing) as AgentHealthStatus;
+
+      // Only log if agent was actually in recovery mode
+      const wasInRecovery = status.inRecoveryMode;
+
       status.consecutiveFailures = 0;
       status.inRecoveryMode = false;
       status.isHealthy = true;
       status.lastSeen = new Date();
 
       await redis.set(key, JSON.stringify(status), "EX", 3600);
-      logger.success(`✅ Agent ${agentName} exited RECOVERY MODE`);
+
+      if (wasInRecovery) {
+        logger.success(`✅ Agent ${agentName} exited RECOVERY MODE`);
+      }
     }
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : String(error);

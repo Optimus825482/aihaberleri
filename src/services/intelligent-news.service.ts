@@ -442,13 +442,16 @@ function extractEntities(text: string): string[] {
     { pattern: /xai|grok/i, entity: "xai" },
   ];
 
-  // Actions/Events
+  // Actions/Events (word boundaries to prevent substring false positives like "ban" in "Banana")
   const actionPatterns = [
-    { pattern: /ban|yasak|yasakla/i, entity: "ban" },
-    { pattern: /launch|release|tanıt|duyur/i, entity: "launch" },
-    { pattern: /acquisition|satın al|merge|birleş/i, entity: "acquisition" },
-    { pattern: /investment|yatırım|fund/i, entity: "investment" },
-    { pattern: /partnership|ortaklık|collab/i, entity: "partnership" },
+    { pattern: /\b(?:ban|yasak|yasakla)\b/i, entity: "ban" },
+    { pattern: /\b(?:launch|release)\b|tanıt|duyur/i, entity: "launch" },
+    {
+      pattern: /\b(?:acquisition|merge)\b|satın al|birleş/i,
+      entity: "acquisition",
+    },
+    { pattern: /\b(?:investment|fund)\b|yatırım/i, entity: "investment" },
+    { pattern: /\b(?:partnership|collab)\b|ortaklık/i, entity: "partnership" },
   ];
 
   // Countries (for specific news like bans)

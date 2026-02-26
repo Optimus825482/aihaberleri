@@ -527,7 +527,13 @@ export const AI_NEWS_RSS_FEEDS = [
 
 /**
  * Fetch and parse RSS feed with retry mechanism
+ * Known unreliable feeds get reduced retries and shorter timeouts
  */
+const UNRELIABLE_FEEDS = new Set([
+  "https://www.jiqizhixin.com/rss",
+  "https://www.qbitai.com/feed",
+]);
+
 export async function fetchRSSFeed(
   feedUrl: string,
   sourceName: string,
@@ -535,14 +541,19 @@ export async function fetchRSSFeed(
 ): Promise<RSSItem[]> {
   let lastError: any;
 
-  for (let attempt = 0; attempt <= retries; attempt++) {
+  // Reduce retries and timeout for known unreliable feeds
+  const isUnreliable = UNRELIABLE_FEEDS.has(feedUrl);
+  const effectiveRetries = isUnreliable ? 1 : retries;
+  const timeout = isUnreliable ? 8000 : 15000;
+
+  for (let attempt = 0; attempt <= effectiveRetries; attempt++) {
     try {
       console.log(
         `📡 RSS feed okunuyor: ${sourceName}${attempt > 0 ? ` (deneme ${attempt + 1})` : ""}`,
       );
 
       const response = await axios.get(feedUrl, {
-        timeout: 15000,
+        timeout,
         headers: {
           "User-Agent": "Mozilla/5.0 (compatible; AINewsBot/1.0)",
           Accept: "application/rss+xml, application/xml, text/xml, */*",

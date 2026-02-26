@@ -4,7 +4,7 @@
  * RESPONSIBILITIES:
  * 1. Multi-source research (SearXNG + Jina Reader) ⭐ UNLIMITED!
  * 2. Gather 8-10 sources per article
- * 3. DeepSeek content synthesis (TR + EN)
+ * 3. LLM content synthesis via callDeepSeek wrapper (TR + EN)
  * 4. Generate keywords and meta descriptions
  * 5. Emit enriched articles to enriched-articles queue
  *
@@ -548,7 +548,7 @@ export class ContentEnricherAgent extends BaseAgent<
           article.title,
         );
 
-        if (relevanceScore >= 30) {
+        if (relevanceScore >= 20) {
           candidateUrls.push({
             title: result.title,
             url: result.url,
@@ -556,6 +556,31 @@ export class ContentEnricherAgent extends BaseAgent<
           });
         }
       }
+    }
+
+    // Fallback: if no candidates found with threshold, take top 3 from all results by raw SearXNG score
+    if (candidateUrls.length === 0) {
+      this.logger.warn(`⚠️ No candidates above threshold, falling back to top SearXNG results`);
+      const allResults = searchResults.flat();
+      const uniqueResults: typeof allResults = [];
+      const fallbackSeen = new Set<string>();
+      for (const r of allResults) {
+        const norm = this.normalizeUrl(r.url);
+        if (!fallbackSeen.has(norm) && !seenUrls.has(norm) && !this.shouldSkipUrl(r.url)) {
+          fallbackSeen.add(norm);
+          uniqueResults.push(r);
+        }
+      }
+      // Sort by SearXNG native score (descending), take top 3
+      uniqueResults.sort((a, b) => (b.score || 0) - (a.score || 0));
+      for (const r of uniqueResults.slice(0, 3)) {
+        candidateUrls.push({
+          title: r.title,
+          url: r.url,
+          relevanceScore: 10, // Low but non-zero
+        });
+      }
+      this.logger.info(`📋 Fallback: ${candidateUrls.length} candidates from raw SearXNG scores`);
     }
 
     candidateUrls.sort((a, b) => b.relevanceScore - a.relevanceScore);
@@ -761,7 +786,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
   /**
    * Synthesize content from multiple sources (TR + EN)
-   * Using DeepSeek-chat for both TR and EN content generation
+   * Using LLM (NVIDIA Qwen3 primary) for both TR and EN content generation
    */
   private async synthesizeContent(
     article: UniqueArticle,
@@ -933,7 +958,7 @@ JSON formatında yanıt ver:
 
           if (isEnglishTitle && !hasTurkishChars) {
             this.logger.warn(
-              `🔄 DeepSeek returned English title (attempt ${trAttempt + 1}): "${trContent.title.substring(0, 60)}"`,
+              `🔄 LLM returned English title (attempt ${trAttempt + 1}): "${trContent.title.substring(0, 60)}"`,
             );
             lastRejectionReason = "english_title";
             trContent = null;
@@ -959,7 +984,7 @@ JSON formatında yanıt ver:
         ).length;
         if (dictMatchCount >= 2) {
           this.logger.warn(
-            `🔄 DeepSeek generated dictionary content (attempt ${trAttempt + 1}): ${dictMatchCount} flags`,
+            `🔄 LLM generated dictionary content (attempt ${trAttempt + 1}): ${dictMatchCount} flags`,
           );
           lastRejectionReason = "dictionary_content";
           trContent = null;
@@ -969,12 +994,12 @@ JSON formatında yanıt ver:
         // ✅ Passed all validation
         trSynthesisSuccess = true;
         this.logger.success(
-          `✅ DeepSeek TR content generated successfully${trAttempt > 0 ? ` (retry ${trAttempt})` : ""}`,
+          `✅ LLM TR content generated successfully${trAttempt > 0 ? ` (retry ${trAttempt})` : ""}`,
         );
         break;
       } catch (deepseekTrError: any) {
         this.logger.error(
-          `❌ DeepSeek TR attempt ${trAttempt + 1} failed: ${deepseekTrError.message}`,
+          `❌ LLM TR attempt ${trAttempt + 1} failed: ${deepseekTrError.message}`,
         );
         lastRejectionReason = "api_error";
         // Wait before retry (exponential backoff)
@@ -994,7 +1019,7 @@ JSON formatında yanıt ver:
       return this.generateEmergencyTemplate(article, sources);
     }
 
-    // English content (DeepSeek-chat)
+    // English content (LLM via callDeepSeek wrapper)
     const enPrompt = `You are a world-renowned investigative journalist.
 
 Task: Create a comprehensive, original English news article by synthesizing ${sources.length} sources.
@@ -1035,13 +1060,13 @@ Respond in JSON:
 
       const enJsonMatch = enResponse.match(/\{[\s\S]*\}/);
       if (!enJsonMatch) {
-        throw new Error("Failed to parse English content from DeepSeek");
+        throw new Error("Failed to parse English content from LLM");
       }
       enContent = JSON.parse(enJsonMatch[0]);
-      this.logger.success(`✅ DeepSeek EN content generated successfully`);
+      this.logger.success(`✅ LLM EN content generated successfully`);
     } catch (deepseekEnError: any) {
       this.logger.error(
-        `❌ DeepSeek EN failed: ${deepseekEnError.message}, using emergency template`,
+        `❌ LLM EN failed: ${deepseekEnError.message}, using emergency template`,
       );
       // Emergency template fallback
       return this.generateEmergencyTemplate(article, sources);
