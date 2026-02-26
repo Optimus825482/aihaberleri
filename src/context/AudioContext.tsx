@@ -55,7 +55,7 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AudioState>({
     isPlaying: false,
     isLoading: false,
-    rate: 1,
+    rate: 1.25,
     voice: "tr-TR-EmelNeural",
     currentTime: 0,
     duration: 0,
@@ -86,7 +86,7 @@ export const AudioProvider = ({ children }: { children: ReactNode }) => {
         const settings = JSON.parse(saved);
         setState((s) => ({
           ...s,
-          rate: settings.rate ?? 1,
+          rate: settings.rate ?? 1.25,
           voice: settings.voice ?? "tr-TR-EmelNeural",
           volume: settings.volume ?? 1,
           isMuted: settings.isMuted ?? false,

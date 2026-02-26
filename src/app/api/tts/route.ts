@@ -116,8 +116,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // High limit for POST
-    const cleanText = normalizeTTSInput(text, voice).slice(0, 4000);
+    // High limit for POST (10000 chars — haberlerin sonuna kadar seslendirilmesi için)
+    const cleanText = normalizeTTSInput(text, voice).slice(0, 10000);
     console.log(
       `[TTS POST] Processing ${cleanText.length} chars, voice=${voice}, IP=${clientIP}`,
     );
