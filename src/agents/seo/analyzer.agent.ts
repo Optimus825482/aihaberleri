@@ -62,133 +62,41 @@ export class SEOAnalyzerAgent {
 
   /**
    * Makaleyi detaylı analiz et ve SEO sorunlarını tespit et
+   * @param language - 'tr' for Turkish analysis, 'en' for English analysis
    */
-  async analyze(article: {
-    title: string;
-    content: string;
-    metaDescription?: string;
-    slug: string;
-    keywords?: string[];
-    imageUrl?: string;
-  }): Promise<SEOAnalysis> {
+  async analyze(
+    article: {
+      title: string;
+      content: string;
+      metaDescription?: string;
+      slug: string;
+      keywords?: string[];
+      imageUrl?: string;
+    },
+    language: "tr" | "en" = "tr",
+  ): Promise<SEOAnalysis> {
     this.metrics.startTime = Date.now();
     this.metrics.apiCalls++;
 
-    console.log(`🔍 SEO Analyzer: Analyzing article "${article.title}"...`);
+    console.log(
+      `🔍 SEO Analyzer [${language.toUpperCase()}]: Analyzing article "${article.title}"...`,
+    );
 
-    const prompt = `Sen dünya çapında ödüllü bir SEO uzmanısın.
+    const prompt =
+      language === "en"
+        ? this.buildEnglishPrompt(article)
+        : this.buildTurkishPrompt(article);
 
-Görevin: Bu makaleyi detaylı analiz et ve SEO sorunlarını tespit et.
-
-MAKALE:
-Başlık: ${article.title}
-Slug: ${article.slug}
-Meta Açıklama: ${article.metaDescription || "(eksik)"}
-Anahtar Kelimeler: ${article.keywords?.join(", ") || "(eksik)"}
-Görsel: ${article.imageUrl ? "Var" : "Yok"}
-İçerik Uzunluğu: ${article.content.length} karakter
-İçerik Önizleme: ${article.content.substring(0, 500)}...
-
-ANALİZ KRİTERLERİ:
-
-1. **BAŞLIK (Title Tag):**
-   - Uzunluk: 50-60 karakter optimal (30-60 kabul edilebilir)
-   - Anahtar kelime: İlk 5 kelimede olmalı
-   - Clickbait dengesi: Merak uyandırmalı ama dürüst
-   - Sayı/Yıl: Varsa CTR artar
-   - Örnekler:
-     * KÖTÜ: "AI Haberleri" (çok kısa, generic)
-     * İYİ: "AI Teknolojisinde Çığır Açan 5 Yeni Gelişme: 2026 Rehberi" (58 char, sayı, yıl)
-
-2. **META AÇIKLAMA (Meta Description):**
-   - Uzunluk: 150-160 karakter optimal
-   - CTA (Call-to-Action): "Keşfedin", "Öğrenin", "İnceleyin"
-   - Anahtar kelime: Doğal şekilde entegre
-   - Özet: Makaleyi özetlemeli
-   - Örnekler:
-     * KÖTÜ: "Bu makalede AI hakkında bilgi var." (çok kısa, generic)
-     * İYİ: "2026'da yapay zeka dünyasını değiştirecek 5 yeni gelişmeyi keşfedin. OpenAI, Google ve daha fazlası." (155 char, CTA, keywords)
-
-3. **İÇERİK (Content):**
-   - Uzunluk: Minimum 300 kelime (optimal 500-1000)
-   - Yapı: H2/H3 başlıklar (minimum 2 H2)
-   - Paragraflar: Kısa ve öz (max 3-4 cümle)
-   - Okunabilirlik: Basit dil, kısa cümleler
-   - Bullet points: Listelerde kullan
-   - İlk paragraf: Anahtar kelime ilk 100 kelimede
-
-4. **ANAHTAR KELİMELER (Keywords):**
-   - Yoğunluk: %1-2 optimal
-   - Yerleşim: Başlık, ilk paragraf, H2'ler, son paragraf
-   - LSI Keywords: İlgili terimler (örn: "AI" → "yapay zeka", "machine learning")
-   - Doğallık: Zorla ekleme, doğal akış
-
-5. **TEKNİK SEO:**
-   - Slug: Küçük harf, tire ile ayrılmış, max 75 karakter
-   - Görsel: Alt text olmalı
-   - İç linkler: 2-3 ilgili makale linki
-   - Dış linkler: Güvenilir kaynaklara
-
-6. **SKOR HESAPLAMA:**
-   - 0-40: Kötü (critical issues)
-   - 41-60: Orta (high issues)
-   - 61-80: İyi (medium issues)
-   - 81-100: Mükemmel (low/no issues)
-
-JSON formatında yanıt ver:
-{
-  "score": 45,
-  "issues": [
-    {
-      "type": "title",
-      "severity": "critical",
-      "current": "AI Haberleri",
-      "problem": "Başlık çok kısa (12 karakter, optimal 50-60)",
-      "impact": "CTR düşük olacak, arama motorlarında görünürlük azalacak",
-      "priority": 1
-    },
-    {
-      "type": "meta_description",
-      "severity": "critical",
-      "current": "(eksik)",
-      "problem": "Meta açıklama eksik",
-      "impact": "Google otomatik snippet oluşturacak, CTR düşük olacak",
-      "priority": 2
-    }
-  ],
-  "opportunities": [
-    {
-      "type": "content",
-      "suggestion": "H2 başlıkları ekle (minimum 2-3 tane)",
-      "expectedImpact": "+10 skor, okunabilirlik artacak"
-    },
-    {
-      "type": "keywords",
-      "suggestion": "LSI keywords ekle (yapay zeka, machine learning, deep learning)",
-      "expectedImpact": "+5 skor, semantic SEO güçlenecek"
-    }
-  ],
-  "summary": "Makale ciddi SEO sorunları içeriyor. Başlık ve meta açıklama eksik/yetersiz. İçerik yapısı zayıf. Öncelikle başlık ve meta açıklama optimize edilmeli."
-}
-
-**ÖNEMLİ:** 
-- Her issue için priority belirle (1 = en önemli)
-- Severity'yi doğru belirle (critical = skor 0-40, high = 41-60, medium = 61-80, low = 81-100)
-- Opportunities'de gerçekçi impact tahminleri yap
-- Summary'de en kritik sorunları vurgula`;
+    const systemMessage =
+      language === "en"
+        ? "You are an expert SEO analyst. You analyze articles in detail and provide actionable recommendations. Always respond with valid JSON only."
+        : "Sen uzman bir SEO analistisin. Makaleleri detaylı analiz eder ve actionable öneriler sunarsın. Her zaman sadece geçerli JSON yanıtı ver.";
 
     try {
       const response = await callDeepSeek(
         [
-          {
-            role: "system",
-            content:
-              "Sen uzman bir SEO analistisin. Makaleleri detaylı analiz eder ve actionable öneriler sunarsın. Her zaman sadece geçerli JSON yanıtı ver.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
+          { role: "system", content: systemMessage },
+          { role: "user", content: prompt },
         ],
         {
           model: "deepseek-chat",
@@ -209,7 +117,9 @@ JSON formatında yanıt ver:
       this.metrics.duration = this.metrics.endTime - this.metrics.startTime;
       this.metrics.success = true;
 
-      console.log(`✅ SEO Analyzer: Analysis complete`);
+      console.log(
+        `✅ SEO Analyzer [${language.toUpperCase()}]: Analysis complete`,
+      );
       console.log(`   Score: ${analysis.score}/100`);
       console.log(`   Issues: ${analysis.issues.length}`);
       console.log(`   Opportunities: ${analysis.opportunities.length}`);
@@ -220,9 +130,100 @@ JSON formatında yanıt ver:
       this.metrics.duration = this.metrics.endTime - this.metrics.startTime;
       this.metrics.success = false;
 
-      console.error("❌ SEO Analyzer: Analysis failed:", error);
+      console.error(
+        `❌ SEO Analyzer [${language.toUpperCase()}]: Analysis failed:`,
+        error,
+      );
       throw error;
     }
+  }
+
+  /**
+   * Turkish SEO analysis prompt
+   */
+  private buildTurkishPrompt(article: {
+    title: string;
+    content: string;
+    metaDescription?: string;
+    slug: string;
+    keywords?: string[];
+    imageUrl?: string;
+  }): string {
+    return `Sen dünya çapında ödüllü bir SEO uzmanısın.
+
+Görevin: Bu makaleyi detaylı analiz et ve SEO sorunlarını tespit et.
+
+MAKALE:
+Başlık: ${article.title}
+Slug: ${article.slug}
+Meta Açıklama: ${article.metaDescription || "(eksik)"}
+Anahtar Kelimeler: ${article.keywords?.join(", ") || "(eksik)"}
+Görsel: ${article.imageUrl ? "Var" : "Yok"}
+İçerik Uzunluğu: ${article.content.length} karakter
+İçerik Önizleme: ${article.content.substring(0, 500)}...
+
+ANALİZ KRİTERLERİ:
+
+1. **BAŞLIK (Title Tag):** Uzunluk: 50-60 karakter optimal. Anahtar kelime ilk 5 kelimede. Sayı/Yıl varsa CTR artar.
+2. **META AÇIKLAMA:** Uzunluk: 150-160 karakter. CTA ekle. Anahtar kelime doğal entegre.
+3. **İÇERİK:** Min 300 kelime. H2/H3 başlıklar (min 2 H2). Kısa paragraflar.
+4. **ANAHTAR KELİMELER:** Yoğunluk %1-2. Başlık, ilk paragraf, H2'ler, son paragrafta.
+5. **TEKNİK SEO:** Slug max 75 karakter. Görsel alt text. İç/dış linkler.
+6. **SKOR:** 0-40: Kötü, 41-60: Orta, 61-80: İyi, 81-100: Mükemmel.
+
+JSON formatında yanıt ver:
+{
+  "score": 45,
+  "issues": [{"type": "title", "severity": "critical", "current": "...", "problem": "...", "impact": "...", "priority": 1}],
+  "opportunities": [{"type": "content", "suggestion": "...", "expectedImpact": "..."}],
+  "summary": "Özet..."
+}
+
+ÖNEMLİ: Her issue için priority belirle (1=en önemli). Severity doğru belirle. Gerçekçi impact tahminleri yap.`;
+  }
+
+  /**
+   * English SEO analysis prompt
+   */
+  private buildEnglishPrompt(article: {
+    title: string;
+    content: string;
+    metaDescription?: string;
+    slug: string;
+    keywords?: string[];
+    imageUrl?: string;
+  }): string {
+    return `You are a world-class award-winning SEO expert.
+
+Your task: Analyze this article in detail and identify SEO issues.
+
+ARTICLE:
+Title: ${article.title}
+Slug: ${article.slug}
+Meta Description: ${article.metaDescription || "(missing)"}
+Keywords: ${article.keywords?.join(", ") || "(missing)"}
+Image: ${article.imageUrl ? "Yes" : "No"}
+Content Length: ${article.content.length} characters
+Content Preview: ${article.content.substring(0, 500)}...
+
+ANALYSIS CRITERIA:
+
+1. **TITLE TAG:** Length: 50-60 chars optimal. Primary keyword in first 5 words. Numbers/Year boost CTR.
+2. **META DESCRIPTION:** Length: 150-160 chars. Include CTA like "Discover", "Learn", "Explore". Keywords naturally integrated.
+3. **CONTENT:** Min 300 words. H2/H3 headings (min 2 H2). Short paragraphs (3-4 sentences max).
+4. **KEYWORDS:** Density 1-2%. Placement: title, first paragraph, H2s, last paragraph. Include LSI keywords.
+5. **TECHNICAL SEO:** Slug max 75 chars, lowercase, hyphenated. Image alt text. Internal/external links.
+6. **SCORING:** 0-40: Poor, 41-60: Fair, 61-80: Good, 81-100: Excellent.
+
+Respond in JSON format:
+{
+  "score": 45,
+  "issues": [{"type": "title", "severity": "critical", "current": "...", "problem": "...", "impact": "...", "priority": 1}],
+  "opportunities": [{"type": "content", "suggestion": "...", "expectedImpact": "..."}],
+  "summary": "Summary..."
+}
+
+IMPORTANT: Set priority for each issue (1=most important). Set severity correctly. Make realistic impact estimates.`;
   }
 
   /**
@@ -238,9 +239,10 @@ JSON formatında yanıt ver:
       keywords?: string[];
       imageUrl?: string;
     }>,
+    language: "tr" | "en" = "tr",
   ): Promise<Map<string, SEOAnalysis>> {
     console.log(
-      `🔍 SEO Analyzer: Batch analyzing ${articles.length} articles...`,
+      `🔍 SEO Analyzer: Batch analyzing ${articles.length} articles [${language.toUpperCase()}]...`,
     );
 
     const results = new Map<string, SEOAnalysis>();
@@ -253,7 +255,7 @@ JSON formatında yanıt ver:
       const analyses = await Promise.all(
         batch.map(async (article) => {
           try {
-            const analysis = await this.analyze(article);
+            const analysis = await this.analyze(article, language);
             return { id: article.id, analysis };
           } catch (error) {
             console.error(`❌ Failed to analyze article ${article.id}:`, error);

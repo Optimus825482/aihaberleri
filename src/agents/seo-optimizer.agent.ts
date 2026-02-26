@@ -3,10 +3,10 @@
  *
  * RESPONSIBILITIES:
  * 1. Runs BEFORE publishing (after VisualGenerator)
- * 2. Analyzes article SEO and identifies issues
- * 3. Optimizes title, meta description, and content
- * 4. Ensures SEO score is 70+ before publishing
- * 5. Passes optimized article to DatabasePublisher
+ * 2. Analyzes article SEO for BOTH Turkish (TR) and English (EN)
+ * 3. Optimizes title, meta description, and content in both languages
+ * 4. Ensures SEO score is above threshold before publishing
+ * 5. Passes fully optimized bilingual article to DatabasePublisher
  *
  * PIPELINE POSITION:
  * VisualGenerator → SEO Optimizer → DatabasePublisher
@@ -25,11 +25,20 @@ import {
 import type { ArticleWithVisuals } from "./visual-generator.agent";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 
-// Extended type with SEO data
+// Extended type with SEO data (TR + EN)
 export interface ArticleWithSEO extends ArticleWithVisuals {
   seoScore: number;
   seoOptimized: boolean;
   seoChanges?: {
+    titleOptimized: boolean;
+    metaOptimized: boolean;
+    contentOptimized: boolean;
+    originalScore: number;
+    finalScore: number;
+  };
+  seoScoreEn?: number;
+  seoOptimizedEn?: boolean;
+  seoChangesEn?: {
     titleOptimized: boolean;
     metaOptimized: boolean;
     contentOptimized: boolean;
@@ -92,119 +101,208 @@ export class SEOOptimizerAgent extends BaseAgent<
 
     for (const article of articles) {
       try {
+        const trContent = article.synthesizedContent.tr;
+        const slug = article.url.split("/").pop() || "article";
+        const imageUrl = article.imageUrl || undefined;
+
+        // ═══════════════════════════════════════════════
+        // TR (Türkçe) SEO Analysis & Optimization
+        // ═══════════════════════════════════════════════
         this.logger.info(
-          `📊 Analyzing: ${article.synthesizedContent.tr.title.substring(0, 50)}...`,
+          `📊 TR Analyzing: ${trContent.title.substring(0, 50)}...`,
         );
 
-        // Step 1: Analyze current SEO score
-        const analysis: SEOAnalysis = await this.analyzer.analyze({
-          title: article.synthesizedContent.tr.title,
-          content: article.synthesizedContent.tr.content,
-          metaDescription: article.synthesizedContent.tr.metaDescription,
-          slug: article.url.split("/").pop() || "article",
-          keywords: article.synthesizedContent.tr.keywords,
-          imageUrl: article.imageUrl || undefined, // null to undefined
-        });
+        const trAnalysis: SEOAnalysis = await this.analyzer.analyze({
+          title: trContent.title,
+          content: trContent.content,
+          metaDescription: trContent.metaDescription,
+          slug,
+          keywords: trContent.keywords,
+          imageUrl,
+        }, 'tr');
         apiCalls++;
 
-        const originalScore = analysis.score;
-        this.logger.info(`   Original SEO Score: ${originalScore}/100`);
+        const trOriginalScore = trAnalysis.score;
+        let trFinalScore = trOriginalScore;
+        let trOptimized = false;
+        let trSeoChanges: NonNullable<ArticleWithSEO['seoChanges']> = {
+          titleOptimized: false,
+          metaOptimized: false,
+          contentOptimized: false,
+          originalScore: trOriginalScore,
+          finalScore: trOriginalScore,
+        };
 
-        // Step 2: Decide if optimization is needed
-        if (originalScore >= this.OPTIMIZE_THRESHOLD) {
-          // Score is good enough, skip optimization
+        if (trOriginalScore >= this.OPTIMIZE_THRESHOLD) {
           this.logger.info(
-            `   ✅ Score is good (${originalScore}), skipping optimization`,
+            `   ✅ TR Score good (${trOriginalScore}), skipping TR optimization`,
+          );
+        } else {
+          this.logger.info(
+            `   🔧 TR Optimizing... (current: ${trOriginalScore}, target: ${this.OPTIMIZE_THRESHOLD}+)`,
           );
 
-          optimizedArticles.push({
-            ...article,
-            seoScore: originalScore,
-            seoOptimized: false,
-            seoChanges: {
+          const trChanges: ContentOptimizationChanges =
+            await this.optimizer.optimize(
+              {
+                title: trContent.title,
+                content: trContent.content,
+                metaDescription: trContent.metaDescription,
+                keywords: trContent.keywords,
+              },
+              trAnalysis,
+              'tr',
+            );
+          apiCalls++;
+
+          // Apply TR optimizations
+          article.synthesizedContent.tr = {
+            ...trContent,
+            title: trChanges.title.optimized || trContent.title,
+            metaDescription:
+              trChanges.metaDescription.optimized || trContent.metaDescription,
+            content:
+              trChanges.content.optimizedContent || trContent.content,
+            score: trChanges.estimatedScore,
+          };
+
+          trFinalScore = trChanges.estimatedScore;
+          trOptimized = true;
+          trSeoChanges = {
+            titleOptimized:
+              trChanges.title.optimized !== trContent.title,
+            metaOptimized:
+              trChanges.metaDescription.optimized !== trContent.metaDescription,
+            contentOptimized:
+              trChanges.content.optimizedContent !== trContent.content,
+            originalScore: trOriginalScore,
+            finalScore: trFinalScore,
+          };
+
+          const improvement = trFinalScore - trOriginalScore;
+          this.logger.success(
+            `   ✅ TR Optimized: ${trOriginalScore} → ${trFinalScore} (+${improvement})`,
+          );
+        }
+
+        // ═══════════════════════════════════════════════
+        // EN (English) SEO Analysis & Optimization
+        // ═══════════════════════════════════════════════
+        let enSeoScore: number | undefined;
+        let enOptimized = false;
+        let enSeoChanges: ArticleWithSEO['seoChangesEn'] | undefined;
+
+        const enContent = article.synthesizedContent?.en;
+        if (enContent?.title && enContent?.content) {
+          this.logger.info(
+            `📊 EN Analyzing: ${enContent.title.substring(0, 50)}...`,
+          );
+
+          const enAnalysis: SEOAnalysis = await this.analyzer.analyze({
+            title: enContent.title,
+            content: enContent.content,
+            metaDescription: enContent.metaDescription || '',
+            slug,
+            keywords: enContent.keywords || [],
+            imageUrl,
+          }, 'en');
+          apiCalls++;
+
+          const enOriginalScore = enAnalysis.score;
+          enSeoScore = enOriginalScore;
+
+          if (enOriginalScore >= this.OPTIMIZE_THRESHOLD) {
+            this.logger.info(
+              `   ✅ EN Score good (${enOriginalScore}), skipping EN optimization`,
+            );
+            enSeoChanges = {
               titleOptimized: false,
               metaOptimized: false,
               contentOptimized: false,
-              originalScore,
-              finalScore: originalScore,
-            },
-          });
-          skippedCount++;
-          continue;
-        }
+              originalScore: enOriginalScore,
+              finalScore: enOriginalScore,
+            };
+          } else {
+            this.logger.info(
+              `   🔧 EN Optimizing... (current: ${enOriginalScore}, target: ${this.OPTIMIZE_THRESHOLD}+)`,
+            );
 
-        // Step 3: Optimize the article
-        this.logger.info(
-          `   🔧 Optimizing... (current: ${originalScore}, target: ${this.OPTIMIZE_THRESHOLD}+)`,
-        );
+            const enChanges: ContentOptimizationChanges =
+              await this.optimizer.optimize(
+                {
+                  title: enContent.title,
+                  content: enContent.content,
+                  metaDescription: enContent.metaDescription || '',
+                  keywords: enContent.keywords || [],
+                },
+                enAnalysis,
+                'en',
+              );
+            apiCalls++;
 
-        const changes: ContentOptimizationChanges =
-          await this.optimizer.optimize(
-            {
-              title: article.synthesizedContent.tr.title,
-              content: article.synthesizedContent.tr.content,
-              metaDescription: article.synthesizedContent.tr.metaDescription,
-              keywords: article.synthesizedContent.tr.keywords,
-            },
-            analysis,
-          );
-        apiCalls++;
-
-        // Step 4: Apply optimizations to article
-        const optimizedArticle: ArticleWithSEO = {
-          ...article,
-          synthesizedContent: {
-            ...article.synthesizedContent,
-            tr: {
-              ...article.synthesizedContent.tr,
-              title:
-                changes.title.optimized || article.synthesizedContent.tr.title,
+            // Apply EN optimizations
+            article.synthesizedContent.en = {
+              ...enContent,
+              title: enChanges.title.optimized || enContent.title,
               metaDescription:
-                changes.metaDescription.optimized ||
-                article.synthesizedContent.tr.metaDescription,
+                enChanges.metaDescription.optimized ||
+                enContent.metaDescription,
               content:
-                changes.content.optimizedContent ||
-                article.synthesizedContent.tr.content,
-              score: changes.estimatedScore,
-            },
-          },
-          seoScore: changes.estimatedScore,
-          seoOptimized: true,
-          seoChanges: {
-            titleOptimized:
-              changes.title.optimized !== article.synthesizedContent.tr.title,
-            metaOptimized:
-              changes.metaDescription.optimized !==
-              article.synthesizedContent.tr.metaDescription,
-            contentOptimized:
-              changes.content.optimizedContent !==
-              article.synthesizedContent.tr.content,
-            originalScore,
-            finalScore: changes.estimatedScore,
-          },
-        };
+                enChanges.content.optimizedContent || enContent.content,
+            };
 
-        // Log improvements
-        const scoreImprovement = changes.estimatedScore - originalScore;
-        this.logger.success(
-          `   ✅ Optimized: ${originalScore} → ${changes.estimatedScore} (+${scoreImprovement})`,
-        );
+            enSeoScore = enChanges.estimatedScore;
+            enOptimized = true;
+            enSeoChanges = {
+              titleOptimized:
+                enChanges.title.optimized !== enContent.title,
+              metaOptimized:
+                enChanges.metaDescription.optimized !==
+                enContent.metaDescription,
+              contentOptimized:
+                enChanges.content.optimizedContent !== enContent.content,
+              originalScore: enOriginalScore,
+              finalScore: enChanges.estimatedScore,
+            };
 
-        if (optimizedArticle.seoChanges?.titleOptimized) {
+            const enImprovement = enChanges.estimatedScore - enOriginalScore;
+            this.logger.success(
+              `   ✅ EN Optimized: ${enOriginalScore} → ${enChanges.estimatedScore} (+${enImprovement})`,
+            );
+          }
+        } else {
           this.logger.info(
-            `      Title: "${changes.title.optimized.substring(0, 50)}..."`,
+            `   ℹ️ No EN content found, skipping EN optimization`,
           );
         }
 
-        // Check if final score meets minimum requirement
-        if (changes.estimatedScore < this.MIN_SEO_SCORE) {
+        // Check minimum scores
+        if (trFinalScore < this.MIN_SEO_SCORE) {
           this.logger.warn(
-            `   ⚠️ Score still below minimum (${changes.estimatedScore} < ${this.MIN_SEO_SCORE}), but will publish anyway`,
+            `   ⚠️ TR score below minimum (${trFinalScore} < ${this.MIN_SEO_SCORE}), publishing anyway`,
+          );
+        }
+        if (enSeoScore !== undefined && enSeoScore < this.MIN_SEO_SCORE) {
+          this.logger.warn(
+            `   ⚠️ EN score below minimum (${enSeoScore} < ${this.MIN_SEO_SCORE}), publishing anyway`,
           );
         }
 
-        optimizedArticles.push(optimizedArticle);
-        optimizedCount++;
+        optimizedArticles.push({
+          ...article,
+          seoScore: trFinalScore,
+          seoOptimized: trOptimized,
+          seoChanges: trSeoChanges,
+          seoScoreEn: enSeoScore,
+          seoOptimizedEn: enOptimized,
+          seoChangesEn: enSeoChanges,
+        });
+
+        if (trOptimized || enOptimized) {
+          optimizedCount++;
+        } else {
+          skippedCount++;
+        }
       } catch (error) {
         this.logger.error(
           `Failed to optimize article: ${article.synthesizedContent.tr.title.substring(0, 50)}...`,

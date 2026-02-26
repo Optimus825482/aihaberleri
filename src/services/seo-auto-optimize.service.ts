@@ -34,7 +34,7 @@ interface AutopilotStatus {
 }
 
 const SEO_AUTOPILOT_DEFAULTS: AutopilotSettings = {
-  enabled: true,
+  enabled: false, // DISABLED: Pre-publish SEO optimization handles this now
   intervalMinutes: 30,
   maxScore: 80,
   language: "tr",

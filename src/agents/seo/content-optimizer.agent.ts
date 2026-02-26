@@ -61,30 +61,121 @@ export class ContentOptimizerAgent extends BaseSEOAgent {
       keywords?: string[];
     },
     analysis: SEOAnalysis,
+    language: "tr" | "en" = "tr",
   ): Promise<ContentOptimizationChanges> {
     this.start();
 
     return this.executeWithErrorHandling(async () => {
       console.log(
-        `✍️ Content Optimizer: "${article.title.substring(0, 50)}..." için çalışıyor`,
+        `✍️ Content Optimizer [${language.toUpperCase()}]: "${article.title.substring(0, 50)}..." için çalışıyor`,
       );
 
       // Get current date for accurate year references
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
-      const formattedDate = currentDate.toLocaleDateString("tr-TR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+
+      const prompt =
+        language === "en"
+          ? this.buildEnglishOptimizePrompt(
+              article,
+              analysis,
+              currentYear,
+              currentDate,
+            )
+          : this.buildTurkishOptimizePrompt(
+              article,
+              analysis,
+              currentYear,
+              currentDate,
+            );
+
+      const systemMessage =
+        language === "en"
+          ? "You are an expert content writer and SEO specialist. You optimize articles and increase SEO scores. Always respond with valid JSON only."
+          : "Sen uzman bir content writer ve SEO uzmanısın. Makaleleri optimize eder ve SEO skorunu artırırsın. Her zaman sadece geçerli JSON yanıtı ver.";
+
+      this.incrementApiCalls();
+
+      const response = await this.retryWithBackoff(async () => {
+        return await callDeepSeek(
+          [
+            { role: "system", content: systemMessage },
+            { role: "user", content: prompt },
+          ],
+          {
+            model: "deepseek-chat",
+            maxTokens: 4000,
+            temperature: 0.8,
+          },
+        );
       });
 
-      const prompt = `Sen dünya çapında ödüllü bir content writer ve SEO uzmanısın.
+      // JSON parse et
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error("Failed to get valid JSON response from LLM");
+      }
+
+      const changes: ContentOptimizationChanges = JSON.parse(jsonMatch[0]);
+
+      // Validasyon
+      if (
+        changes.title.optimized.length < 30 ||
+        changes.title.optimized.length > 70
+      ) {
+        console.warn(
+          `⚠️ Title length not optimal: ${changes.title.optimized.length} chars`,
+        );
+      }
+
+      if (
+        changes.metaDescription.optimized.length < 140 ||
+        changes.metaDescription.optimized.length > 170
+      ) {
+        console.warn(
+          `⚠️ Meta description length not optimal: ${changes.metaDescription.optimized.length} chars`,
+        );
+      }
+
+      this.complete(true);
+
+      console.log(
+        `✅ Content Optimizer [${language.toUpperCase()}] done: Score ${changes.estimatedScore}`,
+      );
+      console.log(`   Title: ${changes.title.optimized}`);
+      console.log(
+        `   Meta: ${changes.metaDescription.optimized.substring(0, 50)}...`,
+      );
+
+      return changes;
+    }, "Content optimization failed");
+  }
+
+  /**
+   * Turkish optimization prompt
+   */
+  private buildTurkishOptimizePrompt(
+    article: {
+      title: string;
+      content: string;
+      metaDescription?: string;
+      keywords?: string[];
+    },
+    analysis: SEOAnalysis,
+    currentYear: number,
+    currentDate: Date,
+  ): string {
+    const formattedDate = currentDate.toLocaleDateString("tr-TR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    return `Sen dünya çapında ödüllü bir content writer ve SEO uzmanısın.
 
 ⚠️ KRİTİK TARİH BİLGİSİ:
 - BUGÜNÜN TARİHİ: ${formattedDate}
 - MEVCUT YIL: ${currentYear}
 - Başlık veya içerikte yıl kullanıyorsan MUTLAKA ${currentYear} yaz!
-- Eski yıllar (2024, 2023, 2022) ile ilgili referansları ${currentYear}'a güncelle!
 
 Görevin: Bu makaleyi SEO açısından optimize et.
 
@@ -100,148 +191,82 @@ Sorunlar: ${analysis.issues.map((i) => `- ${i.problem}`).join("\n")}
 Fırsatlar: ${analysis.opportunities.map((o) => `- ${o.suggestion}`).join("\n")}
 
 OPTİMİZASYON KURALLARI:
-
-1. **BAŞLIK (Title Tag):**
-   - Uzunluk: 50-60 karakter (optimal)
-   - Sayı ekle: "5 Yeni Gelişme", "10 İpucu" (CTR artar)
-   - Yıl ekle: "${currentYear} Rehberi" (freshness) - SADECE ${currentYear} KULLAN!
-   - Keyword başta: Ana keyword ilk 5 kelimede
-   - Clickbait dengesi: Merak uyandır ama dürüst ol
-   - Örnekler:
-     * KÖTÜ: "AI Haberleri" (çok kısa, generic)
-     * İYİ: "AI Teknolojisinde Çığır Açan 5 Yeni Gelişme: ${currentYear} Rehberi" (58 char)
-
-2. **META AÇIKLAMA (Meta Description):**
-   - Uzunluk: 150-160 karakter (optimal)
-   - CTA ekle: "Keşfedin", "Öğrenin", "İnceleyin", "Okuyun"
-   - Keywords: Doğal şekilde entegre et
-   - Özet: Makaleyi özetle, merak uyandır
-   - Örnekler:
-     * KÖTÜ: "Bu makalede AI hakkında bilgi var." (çok kısa)
-     * İYİ: "${currentYear}'da yapay zeka dünyasını değiştirecek 5 yeni gelişmeyi keşfedin. OpenAI, Google ve daha fazlası. Detaylı analiz." (155 char)
-
-3. **İÇERİK YAPISI:**
-   - H2 başlıklar: Minimum 2-3 tane (ana bölümler)
-   - H3 alt başlıklar: H2'lerin altında detaylar
-   - Paragraflar: Kısa ve öz (max 3-4 cümle)
-   - Bullet points: Listelerde kullan
-   - İlk paragraf: Ana keyword ilk 100 kelimede
-   - Son paragraf: Özet ve CTA
-
-4. **KEYWORD ENTEGRASYONU:**
-   - Yoğunluk: %1-2 optimal
-   - Yerleşim: Başlık, ilk paragraf, H2'ler, son paragraf
-   - LSI Keywords: İlgili terimler ekle
-   - Doğallık: Zorla ekleme, doğal akış
-
-5. **SKOR TAHMİNİ:**
-   - Mevcut skor: ${analysis.score}
-   - Hedef skor: 80+
-   - Beklenen artış: +${Math.max(80 - analysis.score, 0)} puan
+1. BAŞLIK: 50-60 karakter. Sayı/Yıl ekle. Keyword başta.
+2. META AÇIKLAMA: 150-160 karakter. CTA ekle. Keywords doğal entegre.
+3. İÇERİK: H2/H3 başlıklar. Kısa paragraflar. Bullet points. Keyword ilk 100 kelimede.
+4. KEYWORDS: Yoğunluk %1-2. LSI keywords ekle. Doğal akış.
+5. HEDEF SKOR: 80+ (mevcut: ${analysis.score})
 
 JSON formatında yanıt ver:
 {
-  "title": {
-    "original": "${article.title}",
-    "optimized": "Optimize edilmiş başlık buraya (50-60 char) - YIL KULLANIYORSAN ${currentYear} YAZ!",
-    "improvements": ["Sayı eklendi", "Yıl eklendi", "Keyword başa alındı"],
-    "score": 85
-  },
-  "metaDescription": {
-    "original": "${article.metaDescription || "(eksik)"}",
-    "optimized": "Optimize edilmiş meta açıklama buraya (150-160 char)",
-    "improvements": ["CTA eklendi", "Keywords entegre edildi", "Uzunluk optimize edildi"],
-    "score": 90
-  },
-  "content": {
-    "structure": {
-      "h2Added": 3,
-      "h3Added": 5,
-      "paragraphsRestructured": true
-    },
-    "optimizedContent": "Optimize edilmiş içerik buraya (HTML formatında, <h2>, <h3>, <p>, <ul> kullan)",
-    "improvements": ["H2 başlıklar eklendi", "Paragraflar yeniden yapılandırıldı", "Bullet points eklendi"],
-    "score": 80
-  },
-  "keywords": {
-    "primary": ["yapay zeka", "ai teknolojisi", "machine learning"],
-    "lsi": ["derin öğrenme", "neural network", "ai modelleri"],
-    "density": 1.5
-  },
+  "title": {"original": "${article.title}", "optimized": "...", "improvements": ["..."], "score": 85},
+  "metaDescription": {"original": "${article.metaDescription || ""}", "optimized": "...", "improvements": ["..."], "score": 90},
+  "content": {"structure": {"h2Added": 3, "h3Added": 5, "paragraphsRestructured": true}, "optimizedContent": "HTML formatında...", "improvements": ["..."], "score": 80},
+  "keywords": {"primary": ["..."], "lsi": ["..."], "density": 1.5},
   "estimatedScore": 85
 }
 
-**ÖNEMLİ:**
-- Başlık 50-60 karakter arasında olmalı
-- Meta açıklama 150-160 karakter arasında olmalı
-- İçerik HTML formatında olmalı (<h2>, <h3>, <p>, <ul>, <li>)
-- Doğal dil kullan, keyword stuffing yapma
-- Mevcut içeriği tamamen değiştirme, sadece optimize et
-
+ÖNEMLİ: Doğal dil kullan, keyword stuffing yapma. Mevcut içeriği tamamen değiştirme, optimize et.
 SADECE GEÇERLİ JSON YANIT VER.`;
+  }
 
-      this.incrementApiCalls();
+  /**
+   * English optimization prompt
+   */
+  private buildEnglishOptimizePrompt(
+    article: {
+      title: string;
+      content: string;
+      metaDescription?: string;
+      keywords?: string[];
+    },
+    analysis: SEOAnalysis,
+    currentYear: number,
+    currentDate: Date,
+  ): string {
+    const formattedDate = currentDate.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    return `You are a world-class award-winning content writer and SEO specialist.
 
-      const response = await this.retryWithBackoff(async () => {
-        return await callDeepSeek(
-          [
-            {
-              role: "system",
-              content:
-                "Sen uzman bir content writer ve SEO uzmanısın. Makaleleri optimize eder ve SEO skorunu artırırsın. Her zaman sadece geçerli JSON yanıtı ver.",
-            },
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-          {
-            model: "deepseek-chat",
-            maxTokens: 4000,
-            temperature: 0.8, // Yaratıcı yazım için
-          },
-        );
-      });
+⚠️ CRITICAL DATE INFO:
+- TODAY'S DATE: ${formattedDate}
+- CURRENT YEAR: ${currentYear}
+- If using a year in title or content, ALWAYS use ${currentYear}!
 
-      // JSON parse et
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error("DeepSeek'ten geçerli JSON yanıtı alınamadı");
-      }
+Your task: Optimize this article for SEO.
 
-      const changes: ContentOptimizationChanges = JSON.parse(jsonMatch[0]);
+ARTICLE:
+Title: ${article.title}
+Meta Description: ${article.metaDescription || "(missing)"}
+Keywords: ${article.keywords?.join(", ") || "(missing)"}
+Content: ${article.content}
 
-      // Validasyon
-      if (
-        changes.title.optimized.length < 30 ||
-        changes.title.optimized.length > 70
-      ) {
-        console.warn(
-          `⚠️ Başlık uzunluğu optimal değil: ${changes.title.optimized.length} karakter`,
-        );
-      }
+SEO ANALYSIS:
+Current Score: ${analysis.score}/100
+Issues: ${analysis.issues.map((i) => `- ${i.problem}`).join("\n")}
+Opportunities: ${analysis.opportunities.map((o) => `- ${o.suggestion}`).join("\n")}
 
-      if (
-        changes.metaDescription.optimized.length < 140 ||
-        changes.metaDescription.optimized.length > 170
-      ) {
-        console.warn(
-          `⚠️ Meta açıklama uzunluğu optimal değil: ${changes.metaDescription.optimized.length} karakter`,
-        );
-      }
+OPTIMIZATION RULES:
+1. TITLE: 50-60 chars. Add numbers/year. Primary keyword first.
+2. META DESCRIPTION: 150-160 chars. Add CTA ("Discover", "Learn", "Explore"). Keywords naturally integrated.
+3. CONTENT: H2/H3 headings. Short paragraphs (3-4 sentences). Bullet points. Keyword in first 100 words.
+4. KEYWORDS: Density 1-2%. Add LSI keywords. Natural flow.
+5. TARGET SCORE: 80+ (current: ${analysis.score})
 
-      this.complete(true);
+Respond in valid JSON:
+{
+  "title": {"original": "${article.title}", "optimized": "...", "improvements": ["..."], "score": 85},
+  "metaDescription": {"original": "${article.metaDescription || ""}", "optimized": "...", "improvements": ["..."], "score": 90},
+  "content": {"structure": {"h2Added": 3, "h3Added": 5, "paragraphsRestructured": true}, "optimizedContent": "HTML format...", "improvements": ["..."], "score": 80},
+  "keywords": {"primary": ["..."], "lsi": ["..."], "density": 1.5},
+  "estimatedScore": 85
+}
 
-      console.log(
-        `✅ Content Optimizer tamamlandı: Skor ${changes.estimatedScore}`,
-      );
-      console.log(`   Başlık: ${changes.title.optimized}`);
-      console.log(
-        `   Meta: ${changes.metaDescription.optimized.substring(0, 50)}...`,
-      );
-
-      return changes;
-    }, "Content optimization failed");
+IMPORTANT: Use natural language, no keyword stuffing. Don't completely rewrite, just optimize.
+RESPOND WITH VALID JSON ONLY.`;
   }
 
   /**
