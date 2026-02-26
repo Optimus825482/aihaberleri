@@ -118,23 +118,38 @@ export class ContentOptimizerAgent extends BaseSEOAgent {
 
       const changes: ContentOptimizationChanges = JSON.parse(jsonMatch[0]);
 
-      // Validasyon
+      // Validasyon - evaluator ile tutarlı limitler (30-60 title, 120-160 meta)
       if (
         changes.title.optimized.length < 30 ||
-        changes.title.optimized.length > 70
+        changes.title.optimized.length > 60
       ) {
         console.warn(
-          `⚠️ Title length not optimal: ${changes.title.optimized.length} chars`,
+          `⚠️ Title length not optimal: ${changes.title.optimized.length} chars (target: 30-60)`,
         );
+        // Hard-enforce: truncate if too long
+        if (changes.title.optimized.length > 60) {
+          const truncated = changes.title.optimized.substring(0, 57) + "...";
+          console.warn(`   ✂️ Title truncated: "${truncated}"`);
+          changes.title.optimized = truncated;
+        }
       }
 
       if (
-        changes.metaDescription.optimized.length < 140 ||
-        changes.metaDescription.optimized.length > 170
+        changes.metaDescription.optimized.length < 120 ||
+        changes.metaDescription.optimized.length > 160
       ) {
         console.warn(
-          `⚠️ Meta description length not optimal: ${changes.metaDescription.optimized.length} chars`,
+          `⚠️ Meta description length not optimal: ${changes.metaDescription.optimized.length} chars (target: 120-160)`,
         );
+        // Hard-enforce: truncate if too long
+        if (changes.metaDescription.optimized.length > 160) {
+          const truncated =
+            changes.metaDescription.optimized.substring(0, 157) + "...";
+          console.warn(
+            `   ✂️ Meta description truncated: "${truncated.substring(0, 50)}..."`,
+          );
+          changes.metaDescription.optimized = truncated;
+        }
       }
 
       this.complete(true);
@@ -148,7 +163,7 @@ export class ContentOptimizerAgent extends BaseSEOAgent {
       );
 
       return changes;
-    }, "Content optimization failed");
+    };, "Content optimization failed");
   }
 
   /**

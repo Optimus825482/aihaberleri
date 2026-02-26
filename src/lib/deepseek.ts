@@ -619,7 +619,7 @@ ${originalContent}
 
 3. **YAPI VE AKIŞ:**
    - **Piramit Tekniği:** En önemli bilgiyi en başta ver. Detayları aşağıya sakla.
-   - **Başlık:** Merak uyandıran ama "Clickbait" olmayan, haberin özünü veren 50-70 karakterlik başlık.
+   - **Başlık:** Merak uyandıran ama "Clickbait" olmayan, haberin özünü veren 50-60 karakterlik başlık.
    - **Alt Başlıklar:** Okumayı kolaylaştıran H2 başlıkları kullan.
 
 4. **KALİTE PUANLAMASI (CRITICAL):**
@@ -951,7 +951,7 @@ ABSOLUTE RULES:
 3. NO generic clichés: "holographic brain", "digital network", "glowing circuits", "abstract data"
 4. Focus on TANGIBLE subjects: specific devices, real environments, actual hardware, physical spaces
 5. Each prompt must describe a UNIQUE scene — avoid repeating common tech stock photo compositions
-6. Output ONLY the prompt text (max 140 chars). No explanation, no quotes.`;
+6. Output ONLY the prompt text (max 190 chars). No explanation, no quotes.`;
 
   const response = await callDeepSeek(
     [
@@ -986,12 +986,12 @@ ABSOLUTE RULES:
   // Remove any remaining tags
   cleanPrompt = cleanPrompt.replace(/<[^>]+>/g, "").trim();
 
-  // CRITICAL: Enforce max length
-  if (cleanPrompt.length > 150) {
+  // CRITICAL: Enforce max length (matches pollinations.ts 200 char URL limit)
+  if (cleanPrompt.length > 200) {
     console.warn(
-      `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 150`,
+      `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 200`,
     );
-    cleanPrompt = cleanPrompt.substring(0, 147) + "...";
+    cleanPrompt = cleanPrompt.substring(0, 197) + "...";
   }
 
   // Fallback if empty or too short
@@ -1128,7 +1128,7 @@ ${sourcesText}
    - Bağlam sağla: Geçmiş gelişmeler, gelecek beklentiler
 
 4. **YAPI:**
-   - Güçlü, merak uyandıran başlık (60-70 karakter)
+   - Güçlü, merak uyandıran başlık (50-60 karakter)
    - Piramit tekniği: En önemli bilgi en üstte
    - H2 alt başlıklarla organize et
    - "Kaynaklardan Derleme" veya "Çoklu Kaynak" gibi ifadeler KULLANMA
@@ -1279,7 +1279,7 @@ ${originalContent}
 
 ### ÇIKTI FORMATI (JSON):
 {
-  "title": "Düzeltilmiş/Güncellenmiş başlık (50-70 karakter)",
+  "title": "Düzeltilmiş/Güncellenmiş başlık (50-60 karakter)",
   "excerpt": "Özet (1-2 cümle)",
   "content": "HTML formatlı (<p>, <h2>, <ul>) tam içerik",
   "keywords": ["anahtar1", "anahtar2", "..."],

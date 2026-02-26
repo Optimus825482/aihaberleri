@@ -19,6 +19,17 @@ const INDEXNOW_TIMEOUT = 15000;
 // Max retry attempts for transient failures
 const INDEXNOW_MAX_RETRIES = 2;
 
+// Cloudflare key file purge cooldown (5 dakikada 1 kereden fazla purge yapma)
+let lastKeyPurgeTime = 0;
+const KEY_PURGE_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+
+async function purgeKeyFileCacheIfNeeded(keyFileUrl: string): Promise<void> {
+  const now = Date.now();
+  if (now - lastKeyPurgeTime < KEY_PURGE_COOLDOWN_MS) return;
+  lastKeyPurgeTime = now;
+  await purgeCloudflareCache(keyFileUrl);
+}
+
 /**
  * Cloudflare cache purge for specific URLs
  * Uses Cloudflare API to clear cached responses (e.g., stale 404s for key files)
@@ -152,6 +163,14 @@ export async function getOrCreateIndexNowKey(): Promise<string> {
     },
   });
 
+  // Yeni key oluşturulduğunda Cloudflare cache'ini temizle
+  // Eski 404 response'ları purge et ki IndexNow botu key dosyasına ulaşabilsin
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
+  const keyUrl = `${baseUrl}/${newKey}.txt`;
+  console.log(`🔑 New IndexNow key created: ${newKey}`);
+  console.log(`🔑 Purging Cloudflare cache for key URL: ${keyUrl}`);
+  await purgeCloudflareCache(keyUrl);
+
   return newKey;
 }
 
@@ -166,11 +185,15 @@ export async function submitUrlToIndexNow(
     const apiKey = await getOrCreateIndexNowKey();
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
     const host = new URL(baseUrl).hostname;
+    const keyFileUrl = `${baseUrl}/${apiKey}.txt`;
+
+    // Key file cache purge (cooldown'lu) — IndexNow 403 hatalarını azaltır
+    await purgeKeyFileCacheIfNeeded(keyFileUrl);
 
     const payload: IndexNowSubmission = {
       host,
       key: apiKey,
-      keyLocation: `${baseUrl}/${apiKey}.txt`,
+      keyLocation: keyFileUrl,
       urlList: [url],
     };
 
@@ -234,6 +257,11 @@ export async function submitUrlsToIndexNow(
     const apiKey = await getOrCreateIndexNowKey();
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001";
     const host = new URL(baseUrl).hostname;
+
+    // Batch submission öncesi key file cache'ini temizle (cooldown'lu)
+    // IndexNow 403 "UserForbiddedToAccessSite" hatası genellikle CF cache'den kaynaklanır
+    const keyFileUrl = `${baseUrl}/${apiKey}.txt`;
+    await purgeKeyFileCacheIfNeeded(keyFileUrl);
 
     // 10,000 URL limit
     const urlsToSubmit = urls.slice(0, 10000);

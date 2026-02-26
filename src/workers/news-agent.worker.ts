@@ -45,6 +45,10 @@ import { initializeQueues } from "@/lib/queue-manager";
 import { RelevanceFilterAgent } from "@/agents/relevance-filter.agent";
 import { DuplicateDetectorAgent } from "@/agents/duplicate-detector.agent";
 import { TrendEnricherAgent } from "@/agents/trend-enricher.agent"; // FIX: Missing agent causing pipeline break
+import {
+  startTrendFetcher,
+  stopTrendFetcher,
+} from "@/services/trend-fetcher.service";
 import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
 import { SEOOptimizerAgent } from "@/agents/seo-optimizer.agent"; // NEW: SEO before publish
@@ -207,6 +211,12 @@ async function stopMultiAgentPipeline(): Promise<void> {
  */
 async function cleanupMemoryResources(): Promise<void> {
   log.info("Cleaning up resources...");
+
+  try {
+    stopTrendFetcher();
+  } catch {
+    // Silent - not critical
+  }
 
   try {
     const { stopTrendCacheCleanup } = await import("@/lib/brave");
@@ -701,6 +711,16 @@ async function startWorker() {
   async function initStartupSync() {
     try {
       log.info("Startup sync started");
+
+      // 0. Start Trend Fetcher (Twitter/Reddit trend collection cron)
+      try {
+        startTrendFetcher();
+        log.success("Trend Fetcher started");
+      } catch (trendErr) {
+        log.warn(
+          "Trend Fetcher start failed — trend enrichment will degrade gracefully",
+        );
+      }
 
       // 1. IndexNow Sync
       try {

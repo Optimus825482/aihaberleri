@@ -624,7 +624,8 @@ export const CHINESE_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 10,
     requiresTranslation: true,
     priority: 5,
-    isActive: true,
+    // DISABLED (26.06.2025): Consistently returns HTTP 403 - wastes 3 retries per cycle
+    isActive: false,
     tags: ["ai-research", "ml", "china-ai"],
   },
   {

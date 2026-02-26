@@ -165,9 +165,17 @@ export class TrendEnricherAgent extends BaseAgent<
       };
     } catch (error) {
       // Graceful degradation: return article without trend data
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      const errorStack =
+        error instanceof Error
+          ? error.stack?.split("\n").slice(0, 3).join(" → ")
+          : "";
       logger.warn(
-        `Trend enrichment failed for "${article.title.substring(0, 30)}..."`,
+        `Trend enrichment failed for "${article.title.substring(0, 30)}..." — Error: ${errorMsg}`,
       );
+      if (errorStack) {
+        logger.warn(`   Stack: ${errorStack}`);
+      }
       return {
         ...article,
         trendScore: 0,
