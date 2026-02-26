@@ -1,7 +1,7 @@
 /**
  * Multi-Agent Pipeline Service
  *
- * Pipeline: Duplicate → Relevance → Trend → Enrich → Visual → Publish
+ * Pipeline: Duplicate → Relevance → Trend → Enrich → Visual → SEO → Publish
  * Each agent is autonomous and communicates via BullMQ queues.
  */
 
@@ -242,7 +242,7 @@ export async function startMultiAgentPipeline(
 /**
  * Monitor pipeline progress
  *
- * Pipeline: Duplicate → Relevance → Trend → Enrich → Visual → Publish
+ * Pipeline: Duplicate → Relevance → Trend → Enrich → Visual → SEO → Publish
  */
 export async function monitorPipelineProgress(agentLogId: string): Promise<{
   stage: string;

@@ -109,8 +109,8 @@ const log = {
 };
 
 /**
- * Initialize multi-agent pipeline agents (6 agents total)
- * Pipeline: Relevance → Duplicate → Trend → Enrich → Visual → Publish
+ * Initialize multi-agent pipeline agents (8 agents total)
+ * Pipeline: Relevance → Duplicate → Trend → Enrich → Visual → SEO → Publish → Social
  */
 async function initializeMultiAgentPipeline(): Promise<void> {
   log.info("Initializing multi-agent pipeline...");
@@ -124,6 +124,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     trendEnricher = new TrendEnricherAgent();
     contentEnricher = new ContentEnricherAgent();
     visualGenerator = new VisualGeneratorAgent();
+    seoOptimizer = new SEOOptimizerAgent(); // NEW: SEO before publish
     databasePublisher = new DatabasePublisherAgent();
     socialShare = new SocialShareAgent();
 
@@ -134,6 +135,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
       { name: "Trend", agent: trendEnricher },
       { name: "Enrich", agent: contentEnricher },
       { name: "Visual", agent: visualGenerator },
+      { name: "SEO", agent: seoOptimizer },
       { name: "Publish", agent: databasePublisher },
       { name: "Social", agent: socialShare },
     ];
@@ -157,7 +159,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     }
 
     log.success(
-      `Pipeline ready: ${ok}/6 agents | Relevance→Duplicate→Trend→Enrich→Visual→Publish`,
+      `Pipeline ready: ${ok}/8 agents | Relevance→Duplicate→Trend→Enrich→Visual→SEO→Publish→Social`,
     );
 
     // FIX (12.02.2026): Clear stale recovery mode states on worker startup
@@ -192,6 +194,7 @@ async function stopMultiAgentPipeline(): Promise<void> {
     trendEnricher?.stop(),
     contentEnricher?.stop(),
     visualGenerator?.stop(),
+    seoOptimizer?.stop(),
     databasePublisher?.stop(),
     socialShare?.stop(),
     seoCalculatorWorker?.close(),

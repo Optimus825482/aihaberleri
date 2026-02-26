@@ -36,7 +36,7 @@ interface AutopilotStatus {
 const SEO_AUTOPILOT_DEFAULTS: AutopilotSettings = {
   enabled: false, // DISABLED: Pre-publish SEO optimization handles this now
   intervalMinutes: 30,
-  maxScore: 80,
+  maxScore: 99,
   language: "tr",
   batchSize: 100,
   delayMs: 3000,
@@ -106,7 +106,7 @@ async function getAutopilotSettings(): Promise<AutopilotSettings> {
     maxScore: clamp(
       Number(maxScoreRaw ?? SEO_AUTOPILOT_DEFAULTS.maxScore),
       40,
-      95,
+      100,
     ),
     language: parsedLanguage,
     batchSize: clamp(
@@ -393,7 +393,7 @@ export async function startSEOAutoOptimizeJob(options?: {
 
   const settings = await getAutopilotSettings();
   const source = options?.source || "manual";
-  const maxScore = clamp(options?.maxScore ?? settings.maxScore, 40, 95);
+  const maxScore = clamp(options?.maxScore ?? settings.maxScore, 40, 100);
   const language = options?.language ?? settings.language;
   const limit = clamp(options?.limit ?? settings.batchSize, 1, 200);
 

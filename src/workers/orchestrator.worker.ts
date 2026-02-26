@@ -3,7 +3,7 @@
  *
  * ARCHITECTURE (7 Agents):
  * DuplicateDetector → RelevanceFilter → TrendEnricher →
- * ContentEnricher → VisualGenerator → DatabasePublisher
+ * ContentEnricher → VisualGenerator → SEO Optimizer → DatabasePublisher
  * (+ ContentCollector for standalone RSS collection)
  *
  * This worker:

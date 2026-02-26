@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
     return session;
   }
 
-  let maxScore = 80;
-  let limit = 50;
+  let maxScore = 99;
+  let limit = 100;
   let language: "tr" | "en" | "all" = "tr";
 
   try {

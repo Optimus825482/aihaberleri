@@ -38,6 +38,12 @@ const PIPELINE_STAGES = [
     shortLabel: "Visuals",
   },
   {
+    queue: "seo-optimization",
+    label: "SEO Optimizer",
+    icon: "🔍",
+    shortLabel: "SEO",
+  },
+  {
     queue: "database-publisher",
     label: "DB Publisher",
     icon: "💾",

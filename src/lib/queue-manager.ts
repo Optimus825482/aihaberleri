@@ -2,7 +2,7 @@
  * Centralized Queue Manager for Multi-Agent News Pipeline
  *
  * 7-AGENT ARCHITECTURE (2026-02-12):
- * ContentCollector → DuplicateDetector → RelevanceFilter → TrendEnricher → ContentEnricher → VisualGenerator → DatabasePublisher
+ * ContentCollector → DuplicateDetector → RelevanceFilter → TrendEnricher → ContentEnricher → VisualGenerator → SEO Optimizer → DatabasePublisher
  *
  * Each agent has its own queue with specific concurrency and rate limits.
  */

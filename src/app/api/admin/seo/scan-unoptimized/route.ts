@@ -19,8 +19,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const maxScoreStr = searchParams.get("maxScore");
   const maxScore = maxScoreStr
-    ? Math.min(Math.max(Number(maxScoreStr), 40), 95)
-    : 80;
+    ? Math.min(Math.max(Number(maxScoreStr), 40), 100)
+    : 99;
 
   try {
     const counts = await countUnoptimizedArticles(maxScore);

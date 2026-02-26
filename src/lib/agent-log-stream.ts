@@ -255,7 +255,7 @@ export function logPipelineBanner(
         `${c.dim}    Log ID:   ${c.reset}${data.logId.substring(0, 12)}…`,
       );
     console.log(
-      `${c.dim}    Flow:     Duplicate → Relevance → Trend → Enrich → Visual → Publish${c.reset}`,
+      `${c.dim}    Flow:     Duplicate → Relevance → Trend → Enrich → Visual → SEO → Publish${c.reset}`,
     );
     console.log(divider);
     console.log("");
