@@ -1,0 +1,1415 @@
+info: 🚀 Worker started {"environment":"production","module":"worker","service":"ai-news-agent","timestamp":"2026-02-26 21:18:46"}
+[INFO] Starting News Agent Worker...
+✅ Redis connected
+✅ Redis ready to accept commands
+[OK] Redis connected
+[INFO] DB connection attempt 1/10
+info: 🔌 database connection connected {"environment":"production","module":"worker","service":"database","status":"connected","timestamp":"2026-02-26 21:18:46"}
+[OK] Database connected
+[OK] All systems ready
+[INFO] Initializing BullMQ Worker (news-agent, concurrency=1)
+[INFO] Initializing multi-agent pipeline...
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Initializing all queues...
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: collected-articles
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: relevant-articles
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: unique-articles
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: trend-enrichment
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: enriched-articles
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: articles-with-visuals
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: database-publisher
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: social-share
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: seo-calculation
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: seo-optimization
+[2m21:18:46[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m All queues initialized
+[2m21:18:46[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m Starting — queue: relevant-articles, concurrency: 5
+[2m21:18:46[0m [92m✓[0m [36m[1mrelevance-filter    [0m [2m│[0m Ready
+[2m21:18:46[0m [2m│[0m [33m[1mduplicate-detector  [0m [2m│[0m Starting — queue: unique-articles, concurrency: 8
+[2m21:18:46[0m [92m✓[0m [33m[1mduplicate-detector  [0m [2m│[0m Ready
+[2m21:18:46[0m [2m│[0m [37m[1mTrendEnricher       [0m [2m│[0m Starting — queue: trend-enrichment, concurrency: 10
+[2m21:18:46[0m [92m✓[0m [37m[1mTrendEnricher       [0m [2m│[0m Ready
+[2m21:18:46[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m Starting — queue: enriched-articles, concurrency: 3
+[2m21:18:46[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m Ready
+[2m21:18:46[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Starting — queue: articles-with-visuals, concurrency: 5
+[2m21:18:46[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Ready
+[2m21:18:46[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Starting — queue: database-publisher, concurrency: 3
+[2m21:18:46[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m Ready
+[2m21:18:46[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m Starting — queue: social-share, concurrency: 2
+[2m21:18:46[0m [92m✓[0m [37m[1msocial-share        [0m [2m│[0m Ready
+[OK] Pipeline ready: 7/6 agents | Relevance→Duplicate→Trend→Enrich→Visual→Publish
+[2m21:18:46[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m Listening on queue: relevant-articles
+[2m21:18:46[0m [2m│[0m [33m[1mduplicate-detector  [0m [2m│[0m Listening on queue: unique-articles
+[2m21:18:46[0m [2m│[0m [37m[1mTrendEnricher       [0m [2m│[0m Listening on queue: trend-enrichment
+[2m21:18:46[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Listening on queue: articles-with-visuals
+[2m21:18:46[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Listening on queue: database-publisher
+[2m21:18:46[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m Listening on queue: social-share
+✅ Redis connected
+[2m21:18:46[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m Listening on queue: enriched-articles
+✅ Redis ready to accept commands
+[INFO] Cleared 7 stale agent health states
+[OK] Multi-agent pipeline ready
+[INFO] Pipeline: READY
+[OK] Worker started - listening on queue: news-agent
+[INFO] Startup sync started
+✅ Newsletter queue created
+[INFO] Initializing Newsletter Worker
+[OK] Newsletter worker started
+✅ Social batch queue created
+[INFO] Initializing Social Batch Worker
+[OK] Social batch worker started
+[OK] Worker ready
+🗑️ Removed existing newsletter job: 8397d10618ce9a6d653c11b6052e6192
+📧 Newsletter: daily at 19:00 (Europe/Istanbul) | cron: daily-digest
+[OK] Newsletter scheduler ready
+✅ News agent queue created
+[INFO] Schedule: every 8min, next: 2/26/2026, 9:21:58 PM
+[INFO] Job repeat:600ad401e0e42fffc81c051e101e1d2c:1772140784400 active
+info: 🔄 Job processing started {"environment":"production","jobId":"repeat:600ad401e0e42fffc81c051e101e1d2c:1772140784400","jobName":"scrape-and-publish","module":"worker","service":"ai-news-agent","timestamp":"2026-02-26 21:19:44"}
+
+[JOB:repeat:600ad401e0e42fffc81c051e101e1d2c:1772140784400] scrape-and-publish | priority=default | attempt=1/3
+[INFO] Job started (10%)
+[2m21:19:44[0m [2m│[0m [96m[1magent               [0m [2m│[0m Agent başlatıldı (cmm3yv8n…)
+info: 🤖 Agent execution started {"category":"all","environment":"production","logId":"cmm3yv8nb0000egaovbdj8tqk","module":"agent","service":"ai-news-agent","timestamp":"2026-02-26 21:19:44"}
+info: 📊 Agent step: fetch_news Haberler toplanıyor {"environment":"production","logId":"cmm3yv8nb0000egaovbdj8tqk","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-02-26 21:19:44"}
+[2m21:19:44[0m [2m│[0m [94m[1mrss                 [0m [2m│[0m RSS + YouTube taranıyor…
+📰 AI haberleri toplanıyor...
+📡 77 RSS feed okunuyor (AI-FOCUSED ONLY)...
+📡 RSS feed okunuyor: MIT Technology Review - AI
+📡 RSS feed okunuyor: VentureBeat - AI
+📡 RSS feed okunuyor: The Verge - AI
+📡 RSS feed okunuyor: TechCrunch - AI
+📡 RSS feed okunuyor: Wired - AI
+📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+📡 RSS feed okunuyor: AI News
+📡 RSS feed okunuyor: MarkTechPost
+✅ 10 haber bulundu: Wired - AI
+✅ 10 haber bulundu: The Verge - AI
+✅ 15 haber bulundu: TechCrunch - AI
+✅ 10 haber bulundu: MIT Technology Review - AI
+✅ 7 haber bulundu: VentureBeat - AI
+✅ 10 haber bulundu: MarkTechPost
+✅ 12 haber bulundu: AI News
+✅ 15 haber bulundu: ZDNet - Artificial Intelligence
+   İlerleme: 8/77 feed işlendi
+📡 RSS feed okunuyor: THE DECODER - AI News
+📡 RSS feed okunuyor: The Rundown AI
+📡 RSS feed okunuyor: AI Business
+📡 RSS feed okunuyor: SiliconANGLE - AI
+📡 RSS feed okunuyor: AI Trends
+📡 RSS feed okunuyor: Synced - AI Review
+📡 RSS feed okunuyor: The Gradient
+📡 RSS feed okunuyor: The Algorithmic Bridge
+✅ 10 haber bulundu: Synced - AI Review
+✅ 10 haber bulundu: AI Trends
+✅ 10 haber bulundu: THE DECODER - AI News
+✅ 15 haber bulundu: The Algorithmic Bridge
+✅ 15 haber bulundu: AI Business
+✅ 15 haber bulundu: The Rundown AI
+✅ 15 haber bulundu: The Gradient
+✅ 15 haber bulundu: SiliconANGLE - AI
+   İlerleme: 16/77 feed işlendi
+📡 RSS feed okunuyor: The AI Edge (Substack)
+📡 RSS feed okunuyor: Last Week in AI
+📡 RSS feed okunuyor: Ahead of AI
+📡 RSS feed okunuyor: AI Accelerator Institute
+📡 RSS feed okunuyor: AIModels.fyi
+📡 RSS feed okunuyor: AI Now Institute
+📡 RSS feed okunuyor: AI Snake Oil
+📡 RSS feed okunuyor: Artificial Intelligence – Futurism
+✅ 15 haber bulundu: The AI Edge (Substack)
+✅ 15 haber bulundu: AIModels.fyi
+✅ 15 haber bulundu: Artificial Intelligence – Futurism
+✅ 15 haber bulundu: AI Accelerator Institute
+✅ 15 haber bulundu: Last Week in AI
+✅ 15 haber bulundu: Ahead of AI
+✅ 15 haber bulundu: AI Snake Oil
+✅ 10 haber bulundu: AI Now Institute
+   İlerleme: 24/77 feed işlendi
+📡 RSS feed okunuyor: Artificial Intelligence - ScienceDaily
+📡 RSS feed okunuyor: Chain of Thought
+📡 RSS feed okunuyor: Chip Huyen
+📡 RSS feed okunuyor: OpenAI Blog
+📡 RSS feed okunuyor: Google AI Blog
+📡 RSS feed okunuyor: DeepMind Blog
+📡 RSS feed okunuyor: NVIDIA Blog - AI
+📡 RSS feed okunuyor: AWS Machine Learning Blog
+✅ 15 haber bulundu: DeepMind Blog
+✅ 15 haber bulundu: Chain of Thought
+✅ 15 haber bulundu: NVIDIA Blog - AI
+✅ 15 haber bulundu: OpenAI Blog
+✅ 15 haber bulundu: AWS Machine Learning Blog
+✅ 10 haber bulundu: Chip Huyen
+✅ 15 haber bulundu: Artificial Intelligence - ScienceDaily
+✅ 15 haber bulundu: Google AI Blog
+   İlerleme: 32/77 feed işlendi
+📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+📡 RSS feed okunuyor: Google Research
+📡 RSS feed okunuyor: Apple Machine Learning Research
+📡 RSS feed okunuyor: Microsoft AI Blog
+📡 RSS feed okunuyor: Machine Learning Mastery
+📡 RSS feed okunuyor: Towards Data Science
+📡 RSS feed okunuyor: Analytics Vidhya
+📡 RSS feed okunuyor: KDnuggets
+✅ 10 haber bulundu: Microsoft AI Blog
+✅ 10 haber bulundu: Apple Machine Learning Research
+✅ 15 haber bulundu: Towards Data Science
+✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+✅ 15 haber bulundu: Google Research
+✅ 10 haber bulundu: Analytics Vidhya
+✅ 10 haber bulundu: Machine Learning Mastery
+✅ 10 haber bulundu: KDnuggets
+   İlerleme: 40/77 feed işlendi
+📡 RSS feed okunuyor: Machine Learning Reddit
+📡 RSS feed okunuyor: r/artificial
+📡 RSS feed okunuyor: r/ChatGPT
+📡 RSS feed okunuyor: r/LocalLLaMA
+📡 RSS feed okunuyor: Hacker News (AI filtered - 50+ points)
+📡 RSS feed okunuyor: LangChain Blog
+📡 RSS feed okunuyor: Import AI
+📡 RSS feed okunuyor: Prompt Engineering Daily
+✅ 1 haber bulundu: Prompt Engineering Daily
+✅ 15 haber bulundu: Import AI
+✅ 15 haber bulundu: LangChain Blog
+✅ 15 haber bulundu: Hacker News (AI filtered - 50+ points)
+✅ 15 haber bulundu: r/artificial
+✅ 15 haber bulundu: r/ChatGPT
+✅ 15 haber bulundu: r/LocalLLaMA
+✅ 15 haber bulundu: Machine Learning Reddit
+   İlerleme: 48/77 feed işlendi
+📡 RSS feed okunuyor: Last Week in AI
+📡 RSS feed okunuyor: Gary Marcus
+📡 RSS feed okunuyor: Cognitive Revolution
+📡 RSS feed okunuyor: AI Tidbits
+📡 RSS feed okunuyor: Interconnects
+📡 RSS feed okunuyor: Ahead of AI (Sebastian Raschka)
+📡 RSS feed okunuyor: Latent Space
+📡 RSS feed okunuyor: The Algorithmic Bridge
+✅ 15 haber bulundu: Last Week in AI
+✅ 15 haber bulundu: Ahead of AI (Sebastian Raschka)
+✅ 15 haber bulundu: Gary Marcus
+✅ 15 haber bulundu: Interconnects
+✅ 15 haber bulundu: Latent Space
+✅ 15 haber bulundu: AI Tidbits
+✅ 15 haber bulundu: The Algorithmic Bridge
+✅ 15 haber bulundu: Cognitive Revolution
+   İlerleme: 56/77 feed işlendi
+📡 RSS feed okunuyor: Ars Technica - AI
+📡 RSS feed okunuyor: The Register - AI
+📡 RSS feed okunuyor: Weights & Biases Blog
+📡 RSS feed okunuyor: Hacker News - AI
+📡 RSS feed okunuyor: r/singularity
+📡 RSS feed okunuyor: r/OpenAI
+📡 RSS feed okunuyor: r/StableDiffusion
+📡 RSS feed okunuyor: Simon Willison's Weblog
+✅ 15 haber bulundu: Hacker News - AI
+✅ 15 haber bulundu: The Register - AI
+✅ 15 haber bulundu: Simon Willison's Weblog
+✅ 15 haber bulundu: Weights & Biases Blog
+✅ 15 haber bulundu: Ars Technica - AI
+✅ 15 haber bulundu: r/singularity
+✅ 15 haber bulundu: r/OpenAI
+✅ 15 haber bulundu: r/StableDiffusion
+   İlerleme: 64/77 feed işlendi
+📡 RSS feed okunuyor: Lilian Weng Blog
+📡 RSS feed okunuyor: Jay Alammar Blog
+📡 RSS feed okunuyor: Cohere Blog
+📡 RSS feed okunuyor: Replicate Blog
+📡 RSS feed okunuyor: AI Supremacy (Substack)
+📡 RSS feed okunuyor: One Useful Thing
+📡 RSS feed okunuyor: THE DECODER (DE)
+📡 RSS feed okunuyor: LeBigData.fr - IA
+✅ 15 haber bulundu: Lilian Weng Blog
+✅ 10 haber bulundu: Jay Alammar Blog
+✅ 15 haber bulundu: One Useful Thing
+✅ 15 haber bulundu: AI Supremacy (Substack)
+✅ 10 haber bulundu: LeBigData.fr - IA
+✅ 10 haber bulundu: THE DECODER (DE)
+✅ 15 haber bulundu: Replicate Blog
+   İlerleme: 72/77 feed işlendi
+📡 RSS feed okunuyor: ActuIA
+📡 RSS feed okunuyor: 机器之心 (Synced China)
+📡 RSS feed okunuyor: 量子位 (QbitAI)
+📡 RSS feed okunuyor: ITmedia AI+
+📡 RSS feed okunuyor: AI타임스
+✅ 15 haber bulundu: ActuIA
+📡 RSS feed okunuyor: 机器之心 (Synced China) (deneme 2)
+✅ 10 haber bulundu: 量子位 (QbitAI)
+✅ 15 haber bulundu: ITmedia AI+
+✅ 15 haber bulundu: AI타임스
+📡 RSS feed okunuyor: 机器之心 (Synced China) (deneme 3)
+   İlerleme: 77/77 feed işlendi
+
+📊 RSS Özeti:
+   Toplam feed: 77
+   Toplam haber: 1005
+   Süre: 16.6s
+📥 RSS: 1005 haber
+🔍 URL filter: 133 known, 899/1005 new
+📅 Son 48 saat: 220 haber
+✅ 100 haber trend puanlamaya gönderilecek
+📊 100 haber için trend puanlama (7-signal v3)...
+[2m21:20:01[0m [2m│[0m [37m[1mtrend               [0m [2m│[0m Scored 100 articles in 34ms
+[2m21:20:01[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [45] AI:4 F:19 S:11 T:5 D:2 N:4 E:0 — Samsung Galaxy S26 Ultra vs. Google Pixel 10 Pro XL: Wh
+[2m21:20:01[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [45] AI:9 F:11 S:8 T:3 D:7 N:7 E:0 — Math Legend Terence Tao on the Promise and Limits of Ge
+[2m21:20:01[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [44] AI:9 F:11 S:8 T:7 D:6 N:3 E:0 — Qwen3.5 122B in 72GB VRAM (3x3090) is the best model av
+[2m21:20:01[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [43] AI:4 F:11 S:6 T:5 D:7 N:9 E:1 — Nous Research Releases ‘Hermes Agent’ to Fix AI Forgetf
+[2m21:20:01[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [43] AI:14 F:10 S:8 T:4 D:6 N:0 E:1 — After Anthropic accused Chinese labs of scraping Claude
+✅ 2 unique trend haber seçildi (4 batch tarandı)
+🧹 Trend cache cleanup started (interval: 30 min, TTL: 60 min)
+🎬 YouTube konu keşfi başlatılıyor (son 72 saat)...
+[2m21:20:01[0m [2m│[0m [93m[1myoutube             [0m [2m│[0m 🎬 YouTube kanalları taranıyor...
+🎬 35 YouTube kanalı upsert edildi
+🎬 35 YouTube kanalı taranıyor...
+  ✅ The AI Daily Brief: 0/10 AI video
+  ✅ Matt Wolfe: 4/10 AI video
+  ✅ AI Explained: 0/10 AI video
+  ✅ Two Minute Papers: 0/10 AI video
+  ✅ Skill Leap AI: 2/10 AI video
+  ✅ Yannic Kilcher: 0/10 AI video
+  ✅ Andrej Karpathy: 0/10 AI video
+  ✅ Lex Fridman: 0/10 AI video
+  ✅ Matthew Berman: 0/5 AI video
+  ✅ Wes Roth: 3/10 AI video
+  ✅ TheAIGRID: 3/10 AI video
+  ✅ Fireship: 1/10 AI video
+  ✅ AI Andy: 0/5 AI video
+  ✅ Robert Miles AI Safety: 0/10 AI video
+  ✅ All About AI: 1/10 AI video
+  ✅ DeepLearning.AI: 3/10 AI video
+  ✅ The AI Advantage: 0/0 AI video
+  ✅ Dwarkesh Patel: 1/10 AI video
+  ✅ Machine Learning Street Talk: 0/10 AI video
+  ✅ sentdex: 0/10 AI video
+  ✅ Google DeepMind: 1/10 AI video
+  ✅ Hugging Face: 0/10 AI video
+  ✅ bycloud: 0/10 AI video
+  ✅ David Ondrej: 4/10 AI video
+  ✅ WorldofAI: 0/10 AI video
+  ✅ David Shapiro: 0/10 AI video
+  ✅ AI News Daily: 0/0 AI video
+  ✅ TWIML AI Podcast: 0/0 AI video
+  ✅ MIT CSAIL: 0/10 AI video
+  ✅ Stanford HAI: 0/10 AI video
+  ✅ Prompt Engineering: 2/10 AI video
+  ✅ AI Joe: 0/10 AI video
+  ✅ Bloomberg Technology: 0/10 AI video
+  ✅ Scale AI: 0/10 AI video
+  ✅ Eye on AI: 0/0 AI video
+🎬 Toplam 25 benzersiz AI konusu bulundu
+🎬 25 AI konusu bulundu, duplicate kontrolü yapılıyor...
+🔍 Duplikat kontrolü: "I Tested the First Diffusion Reasoning LLM… It’s Insanely Fa..."
+❌ DUPLICATE (URL): Dünyanın En Hızlı Akıl Yürütme AI'sı Geldi: Mercury 2, 5 Kat Hızlı ve 80% Daha Ucuz
+  ⏭️ YouTube duplicate: I Tested the First Diffusion Reasoning LLM… It’s I... (EXACT_URL_MATCH)
+🔍 Duplikat kontrolü: "OpenAI'S New AI Devices Explained - AI Glasses, Speakers & M..."
+❌ DUPLICATE (URL): OpenAI'nin Yeni AI Gözlükleri ve Akıllı Hoparlörleri: Teknoloji Devrimi mi, Yoksa Pazar Hilesi mi?
+  ⏭️ YouTube duplicate: OpenAI'S New AI Devices Explained - AI Glasses, Sp... (EXACT_URL_MATCH)
+🔍 Duplikat kontrolü: "The 2028 Global Intelligence Crisis Explained - What Happens..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "The 2028 Global Intelligence Crisis Explained - What Happens..."
+✅ Unique article: "The 2028 Global Intelligence Crisis Explained - What Happens..."
+  ✅ Unique YouTube topic: The 2028 Global Intelligence Crisis Explained - Wh...
+🔍 Duplikat kontrolü: "Every Vibe Coder Needs This AI Agent - Kane AI Testing Agent..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "Every Vibe Coder Needs This AI Agent - Kane AI Testing Agent..."
+✅ Unique article: "Every Vibe Coder Needs This AI Agent - Kane AI Testing Agent..."
+  ✅ Unique YouTube topic: Every Vibe Coder Needs This AI Agent - Kane AI Tes...
+🔍 Duplikat kontrolü: "Mercury 2: The First Diffusion Model That 'Thinks'"..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "Mercury 2: The First Diffusion Model That 'Thinks'"..."
+✅ Unique article: "Mercury 2: The First Diffusion Model That 'Thinks'"..."
+  ✅ Unique YouTube topic: Mercury 2: The First Diffusion Model That 'Thinks'...
+🔍 Duplikat kontrolü: "Anthropic might be DONE..."
+🔍 Popular topic detected - extending duplicate check to 7 days
+🔍 Checking for duplicates among 1246 recent articles...
+✅ No duplicates found for: "Anthropic might be DONE..."
+✅ Unique article: "Anthropic might be DONE..."
+  ✅ Unique YouTube topic: Anthropic might be DONE...
+🔍 Duplikat kontrolü: "$1 Trillion Gone..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "$1 Trillion Gone..."
+✅ Unique article: "$1 Trillion Gone..."
+  ✅ Unique YouTube topic: $1 Trillion Gone...
+🔍 Duplikat kontrolü: "the SCARIEST chart in AI..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "the SCARIEST chart in AI..."
+✅ Unique article: "the SCARIEST chart in AI..."
+  ✅ Unique YouTube topic: the SCARIEST chart in AI...
+🔍 Duplikat kontrolü: "Chinese AI Companies Are Using This Trick To Steal Model Dat..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "Chinese AI Companies Are Using This Trick To Steal Model Dat..."
+✅ Unique article: "Chinese AI Companies Are Using This Trick To Steal Model Dat..."
+  ✅ Unique YouTube topic: Chinese AI Companies Are Using This Trick To Steal...
+🔍 Duplikat kontrolü: "Nano Banana 2 is Here - Faster and Cheaper..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "Nano Banana 2 is Here - Faster and Cheaper..."
+✅ Unique article: "Nano Banana 2 is Here - Faster and Cheaper..."
+  ✅ Unique YouTube topic: Nano Banana 2 is Here - Faster and Cheaper...
+🔍 Duplikat kontrolü: "TensorFlow: Advanced Techniques Specialization..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "TensorFlow: Advanced Techniques Specialization..."
+✅ Unique article: "TensorFlow: Advanced Techniques Specialization..."
+  ✅ Unique YouTube topic: TensorFlow: Advanced Techniques Specialization...
+🔍 Duplikat kontrolü: "TensorFlow: Data and Deployment Specialization..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "TensorFlow: Data and Deployment Specialization..."
+✅ Unique article: "TensorFlow: Data and Deployment Specialization..."
+  ✅ Unique YouTube topic: TensorFlow: Data and Deployment Specialization...
+🔍 Duplikat kontrolü: "Anthropic Is Mad That China Did What They Did..."
+🔗 Entity overlap detected: [anthropic, china]
+❌ DUPLICATE (ENTITY): ENTITY_MATCH_anthropic+china
+  ⏭️ YouTube duplicate: Anthropic Is Mad That China Did What They Did... (ENTITY_MATCH_anthropic+china)
+🔍 Duplikat kontrolü: "Music AI Sandbox..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "Music AI Sandbox..."
+✅ Unique article: "Music AI Sandbox..."
+  ✅ Unique YouTube topic: Music AI Sandbox...
+🔍 Duplikat kontrolü: "I Tested Neo AI Browser — The AI Browser Built Around Privac..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "I Tested Neo AI Browser — The AI Browser Built Around Privac..."
+✅ Unique article: "I Tested Neo AI Browser — The AI Browser Built Around Privac..."
+  ✅ Unique YouTube topic: I Tested Neo AI Browser — The AI Browser Built Aro...
+🔍 Duplikat kontrolü: "Breaking: Google Upgraded Nano Banana Again!..."
+🔗 Entity overlap detected: [google, ban]
+❌ DUPLICATE (ENTITY): ENTITY_MATCH_google+ban
+  ⏭️ YouTube duplicate: Breaking: Google Upgraded Nano Banana Again!... (ENTITY_MATCH_google+ban)
+🔍 Duplikat kontrolü: "The Easiest Way To Host OpenClaw..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "The Easiest Way To Host OpenClaw..."
+✅ Unique article: "The Easiest Way To Host OpenClaw..."
+  ✅ Unique YouTube topic: The Easiest Way To Host OpenClaw...
+🔍 Duplikat kontrolü: "When open-sourcing your code goes wrong......"
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "When open-sourcing your code goes wrong......"
+✅ Unique article: "When open-sourcing your code goes wrong......"
+  ✅ Unique YouTube topic: When open-sourcing your code goes wrong......
+🔍 Duplikat kontrolü: "I Let My AI Agent Run for 504 Hours Straight — Here's What H..."
+🔍 Checking for duplicates among 582 recent articles...
+✅ No duplicates found for: "I Let My AI Agent Run for 504 Hours Straight — Here's What H..."
+✅ Unique article: "I Let My AI Agent Run for 504 Hours Straight — Here's What H..."
+  ✅ Unique YouTube topic: I Let My AI Agent Run for 504 Hours Straight — Her...
+🎬 15 benzersiz YouTube konusu pipeline'a hazır
+[2m21:20:22[0m [92m✓[0m [93m[1myoutube             [0m [2m│[0m 🎬 15 benzersiz YouTube konusu bulundu
+[2m21:20:22[0m [2m│[0m [94m[1mrss                 [0m [2m│[0m 15 YouTube konusu keşfedildi
+[2m21:20:22[0m [92m✓[0m [94m[1mrss                 [0m [2m│[0m 17 haber bulundu (RSS: 2, YT: 15)
+[2m21:20:22[0m [2m│[0m [96m[1magent               [0m [2m│[0m Hedef: 1 haber (ayar: 1)
+info: 📊 Agent step: content_variation İçerik çeşitlendirme {"environment":"production","logId":"cmm3yv8nb0000egaovbdj8tqk","module":"agent","progress":40,"service":"ai-news-agent","step":"content_variation","timestamp":"2026-02-26 21:20:22"}
+[2m21:20:22[0m [2m│[0m [96m[1magent               [0m [2m│[0m Son 48 saatte 100 haber yayınlanmış
+[2m21:20:22[0m [2m│[0m [96m[1magent               [0m [2m│[0m Pipeline limiti: 17 → 3 (hedef: 1)
+info: 📊 Agent step: multi_agent_pipeline Pipeline başlatılıyor {"environment":"production","logId":"cmm3yv8nb0000egaovbdj8tqk","module":"agent","progress":60,"service":"ai-news-agent","step":"multi_agent_pipeline","timestamp":"2026-02-26 21:20:22"}
+[2m21:20:22[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Pipeline starting: 3 articles → duplicate-detector
+[2m21:20:22[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Job 342 added — 3 articles queued
+[2m21:20:22[0m [2m│[0m [33m[1mduplicate-detector  [0m [2m│[0m Job 342 started — 3 items (timeout: 120s)
+[2m21:20:22[0m [2m│[0m [33m[1mduplicate-detector  [0m [2m│[0m Checking 3 articles for duplicates...
+[2m21:20:22[0m [92m✓[0m [33m[1mduplicate-detector  [0m [2m│[0m Duplicate check: 3/3 unique (0.0% duplicates)
+[2m21:20:22[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent duplicate-detector exited RECOVERY MODE
+[2m21:20:22[0m [92m✓[0m [33m[1mduplicate-detector  [0m [2m│[0m Job 342 done — 3 items in 0.0s
+[2m21:20:22[0m [2m│[0m [33m[1mduplicate-detector  [0m [2m│[0m → relevant-articles
+[2m21:20:22[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [unique-articles] Job 342 completed
+[2m21:20:22[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m Job 3477 started — 3 items (timeout: 180s)
+[2m21:20:22[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m Filtering 3 articles for relevance...
+[2m21:20:22[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m Processing batch 1/1 (3 articles)
+[2m21:20:22[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m 🤖 Using LLM for batch scoring
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+
+[2m────────────────────────────────────────────────────────────[0m
+[96m[1m  ▶ PIPELINE STARTED[0m
+[2m    Articles: [0m3[2m (target: 1)[0m
+[2m    Log ID:   [0mcmm3yv8nb000…
+[2m    Flow:     Duplicate → Relevance → Trend → Enrich → Visual → Publish[0m
+[2m────────────────────────────────────────────────────────────[0m
+
+[2m21:20:23[0m [2m│[0m [96m[1magent               [0m [2m│[0m Pipeline: 3 haber işlenecek
+[2m21:20:23[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Waiting for pipeline completion (timeout: 1200s, tracking job 342)
+[2m21:20:23[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Initial job 342 completed
+[2m21:20:26[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #1: relevant-articles — 1 queued, 117 done, 0 failed
+[2m21:20:26[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: relevant-articles (1 in queue, 117 completed, 0 failed)
+[2m21:20:30[0m [92m✓[0m [36m[1mrelevance-filter    [0m [2m│[0m Filtered: 2/3 articles passed (33.3% rejected)
+[2m21:20:30[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m All scored articles:
+[2m21:20:30[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m   ✅ [68] LFM2-24B-A2B is crazy fast on Strix Halo
+[2m21:20:30[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m   ✅ [55] SambaNova's Strategic Move in the AI Market
+[2m21:20:30[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m   ❌ [22] The 2028 Global Intelligence Crisis Explained - What Happens
+[2m21:20:30[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent relevance-filter exited RECOVERY MODE
+[2m21:20:30[0m [92m✓[0m [36m[1mrelevance-filter    [0m [2m│[0m Job 3477 done — 2 items in 8.2s
+[2m21:20:30[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m → trend-enrichment
+[2m21:20:30[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [relevant-articles] Job 3477 completed
+[2m21:20:30[0m [2m│[0m [37m[1mTrendEnricher       [0m [2m│[0m Job 3079 started — 2 items (timeout: 120s)
+[2m21:20:30[0m [2m│[0m [37m[1mTrendEnricher       [0m [2m│[0m 🔥 Processing 2 articles for trend enrichment...
+[2m21:20:30[0m [92m✓[0m [37m[1mTrendEnricher       [0m [2m│[0m ✅ Trend enrichment complete: 0/2 trending (12ms)
+[2m21:20:30[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent trend-enricher exited RECOVERY MODE
+[2m21:20:30[0m [92m✓[0m [37m[1mTrendEnricher       [0m [2m│[0m Job 3079 done — 2 items in 0.0s
+[2m21:20:30[0m [2m│[0m [37m[1mTrendEnricher       [0m [2m│[0m → enriched-articles
+[2m21:20:30[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [trend-enrichment] Job 3079 completed
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m Job 3469 started — 2 items (timeout: 720s)
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m Enriching 2 articles...
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🚀 Starting CONTROLLED enrichment for 2 articles (concurrency: 2)...
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📦 Processing batch 1/1 (2 articles)
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m [1/2] Enriching: LFM2-24B-A2B is crazy fast on Strix Halo...
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔑 Keywords extracted: "lfm224ba2b lemonade anyone strix halo rocm ran wh2aejmbtcuqop" (from: "LFM2-24B-A2B is crazy fast on Strix Halo...")
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔍 Source gathering: LOW priority (score: 0)
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔍 SearXNG search: "lfm224ba2b lemonade anyone strix halo rocm ran wh2aejmbtcuqop"
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m [2/2] Enriching: SambaNova's Strategic Move in the AI Market...
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔑 Keywords extracted: "partnering sambanova strategic market intel effective inference reasoning" (from: "SambaNova's Strategic Move in the AI Market...")
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔍 Source gathering: LOW priority (score: 0)
+[2m21:20:30[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔍 SearXNG search: "partnering sambanova strategic market intel effective inference reasoning"
+[2m21:20:31[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #2: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:20:31[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:20:36[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #3: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:20:36[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+✅ SearXNG: 10 sonuç bulundu (toplam: 31)
+✅ SearXNG: 10 sonuç bulundu (toplam: 10)
+✅ SearXNG: 10 sonuç bulundu (toplam: 20)
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📋 Found 0 candidate URLs
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📖 Using Jina Reader for remaining URLs
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ Jina Reader: 0 total sources
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ Total sources: 0
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🚀 Using LLM for BOTH TR + EN synthesis
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+✅ SearXNG: 10 sonuç bulundu (toplam: 31)
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📋 Found 0 candidate URLs
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📖 Using Jina Reader for remaining URLs
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ Jina Reader: 0 total sources
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ Total sources: 0
+[2m21:20:37[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🚀 Using LLM for BOTH TR + EN synthesis
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[2m21:20:41[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #4: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:20:41[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:20:46[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #5: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:20:46[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:20:51[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #6: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:20:51[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:20:54[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ DeepSeek TR content generated successfully
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[2m21:20:54[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ DeepSeek TR content generated successfully
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[2m21:20:56[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #7: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:20:56[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:21:01[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #8: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:21:01[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:21:02[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ DeepSeek EN content generated successfully
+[2m21:21:02[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ [2/2] Enriched: SambaNova ve Intel, AI’da Fiyat Çarpısını Yarattı:...
+[2m21:21:05[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ DeepSeek EN content generated successfully
+[2m21:21:05[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ [1/2] Enriched: LFM2-24B-A2B, Strix Halo'da GPT-NeoX'ı 2 Kat Hızla...
+[2m21:21:05[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m 🏁 CONTROLLED enrichment complete: 2/2 articles (0 failed)
+[2m21:21:05[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent content-enricher exited RECOVERY MODE
+[2m21:21:05[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m Job 3469 done — 2 items in 34.7s
+[2m21:21:05[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m → articles-with-visuals
+[2m21:21:05[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [enriched-articles] Job 3469 completed
+[2m21:21:05[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Job 3214 started — 2 items (timeout: 1200s)
+[2m21:21:05[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Generating visuals for 2 articles (parallel: 3)...
+[2m21:21:05[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Processing batch 1/1 (2 articles)
+[2m21:21:05[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Generating visual: SambaNova ve Intel, AI’da Fiyat Çarpısını Yarattı:...
+[2m21:21:05[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m 🤖 Using LLM for image prompt generation (content-aware)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[2m21:21:05[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Generating visual: LFM2-24B-A2B, Strix Halo'da GPT-NeoX'ı 2 Kat Hızla...
+[2m21:21:05[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m 🤖 Using LLM for image prompt generation (content-aware)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+✅ Added strong negative prompt suffix
+📝 Final prompt (150 chars): A shattered Intel CPU slab, half-submerged in molten gold, its fractured core..., no people, no humans, no faces, no hands, no body parts, empty scene
+[2m21:21:06[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Image prompt: A shattered Intel CPU slab, half-submerged in molten gold, its fractured core..., no people, no huma...
+🎯 Cache MISS for prompt: A shattered Intel CPU slab, half-submerged in molt...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: A shattered Intel CPU slab, half-submerged in molten gold, its fractured core..., no , no humans, no
+🎨 Authenticated URL: https://gen.pollinations.ai/image/A%20shattered%20Intel%20CPU%20slab%2C%20half-submerged%20in%20molten%20gold%2C%20its%2...
+[2m21:21:06[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #9: articles-with-visuals — 1 queued, 117 done, 0 failed
+[2m21:21:06[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: articles-with-visuals (1 in queue, 117 completed, 0 failed)
+✅ Added strong negative prompt suffix
+📝 Final prompt (150 chars): An AMD Strix Halo GPU rests on a matte black thermal pad, cool to the touch, ..., no people, no humans, no faces, no hands, no body parts, empty scene
+[2m21:21:06[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Image prompt: An AMD Strix Halo GPU rests on a matte black thermal pad, cool to the touch, ..., no people, no huma...
+🎯 Cache MISS for prompt: An AMD Strix Halo GPU rests on a matte black therm...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: An AMD Strix Halo GPU rests on a matte black thermal pad, cool to the touch, ..., no , no humans, no
+🎨 Authenticated URL: https://gen.pollinations.ai/image/An%20AMD%20Strix%20Halo%20GPU%20rests%20on%20a%20matte%20black%20thermal%20pad%2C%20co...
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+
+🖼️  Image Optimization Pipeline Started
+   Source: https://gen.pollinations.ai/image/A%20shattered%20Intel%20CPU%20slab%2C%20half-submerged%20in%20molten%20gold%2C%20its%20fractured%20core...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+   Slug: sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor
+📥 Downloading image from: https://gen.pollinations.ai/image/A%20shattered%20Intel%20CPU%20slab%2C%20half-submerged%20in%20molten%20gold%2C%20its%20fractured%20core...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+🔑 Adding Pollinations API key to download request
+⚠️ Rate limited (429), waiting 3s before retry (attempt 1/5)...
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+
+🖼️  Image Optimization Pipeline Started
+   Source: https://gen.pollinations.ai/image/An%20AMD%20Strix%20Halo%20GPU%20rests%20on%20a%20matte%20black%20thermal%20pad%2C%20cool%20to%20the%20touch%2C%20...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+   Slug: lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi
+📥 Downloading image from: https://gen.pollinations.ai/image/An%20AMD%20Strix%20Halo%20GPU%20rests%20on%20a%20matte%20black%20thermal%20pad%2C%20cool%20to%20the%20touch%2C%20...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+🔑 Adding Pollinations API key to download request
+⚠️ Rate limited (429), waiting 3s before retry (attempt 1/5)...
+📥 Downloading image from: https://gen.pollinations.ai/image/A%20shattered%20Intel%20CPU%20slab%2C%20half-submerged%20in%20molten%20gold%2C%20its%20fractured%20core...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true (attempt 2)
+🔑 Adding Pollinations API key to download request
+[2m21:21:11[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #10: articles-with-visuals — 1 queued, 117 done, 0 failed
+[2m21:21:11[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: articles-with-visuals (1 in queue, 117 completed, 0 failed)
+
+📊 Original Image:
+   Format: jpeg
+   Size: 1200x630
+   File Size: 140.2KB
+   Download Time: 3744ms
+🎨 Generating 4 image sizes for: sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor
+📥 Downloading image from: https://gen.pollinations.ai/image/An%20AMD%20Strix%20Halo%20GPU%20rests%20on%20a%20matte%20black%20thermal%20pad%2C%20cool%20to%20the%20touch%2C%20...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true (attempt 2)
+🔑 Adding Pollinations API key to download request
+
+📊 Original Image:
+   Format: jpeg
+   Size: 1200x630
+   File Size: 52.9KB
+   Download Time: 3807ms
+🎨 Generating 4 image sizes for: lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi
+✅ Uploaded to R2: https://images.aihaberleri.org/sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor-large.webp
+  ✅ large: 124.6KB → https://images.aihaberleri.org/sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor-large.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi-large.webp
+  ✅ large: 33.5KB → https://images.aihaberleri.org/lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi-large.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor-medium.webp
+  ✅ medium: 71.6KB → https://images.aihaberleri.org/sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor-medium.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi-medium.webp
+  ✅ medium: 18.1KB → https://images.aihaberleri.org/lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi-medium.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor-small.webp
+  ✅ small: 26.0KB → https://images.aihaberleri.org/sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor-small.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor-thumb.webp
+  ✅ thumb: 7.4KB → https://images.aihaberleri.org/sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor-thumb.webp
+
+✅ Optimization Complete!
+   Total Time: 5570ms
+   Storage: Cloudflare R2
+[2m21:21:13[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Image optimized and uploaded
+[2m21:21:13[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Visual generated in 8160ms: SambaNova ve Intel, AI’da Fiyat Çarpısını Yarattı:...
+✅ Uploaded to R2: https://images.aihaberleri.org/lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi-small.webp
+  ✅ small: 6.6KB → https://images.aihaberleri.org/lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi-small.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi-thumb.webp
+  ✅ thumb: 2.0KB → https://images.aihaberleri.org/lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi-thumb.webp
+
+✅ Optimization Complete!
+   Total Time: 5314ms
+   Storage: Cloudflare R2
+[2m21:21:14[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Image optimized and uploaded
+[2m21:21:14[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Visual generated in 8423ms: LFM2-24B-A2B, Strix Halo'da GPT-NeoX'ı 2 Kat Hızla...
+[2m21:21:14[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Visual generation complete: 2/2 successful (0 failed)
+[2m21:21:14[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent visual-generator exited RECOVERY MODE
+[2m21:21:14[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Job 3214 done — 2 items in 8.4s
+[2m21:21:14[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m → database-publisher
+[2m21:21:14[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [articles-with-visuals] Job 3214 completed
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Job 3077 started — 2 items (timeout: 120s)
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Publishing 2 articles (limit: 2)...
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📊 Content-based trend score: 39 (AI:3 F:20 S:8 T:3)
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Turkish translation created: lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m English translation created: lfm2-24b-a2b-delivers-breakthrough-speed-on-amd-strix-halo-outpaces-gpt-oss-20b
+📱 5 aboneye push bildirimi gönderiliyor...
+🗑️  Invalidating cache by tag: articles
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🗑️ Cache invalidated
+[2m21:21:14[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m Published: LFM2-24B-A2B, Strix Halo'da GPT-NeoX'ı 2 Kat Hızla... (lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi)
+[2m21:21:14[0m [2m│[0m [37m[1mseo-calculator      [0m [2m│[0m Queued SEO calculation: LFM2-24B-A2B, Strix Halo'da GPT-NeoX'ı 2 Kat Hızla...
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📊 Content-based trend score: 34 (AI:0 F:20 S:6 T:3)
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Turkish translation created: sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m English translation created: sambanova-and-intel-forge-alliance-to-deliver-cost-efficient-ai-inference-solutions
+🗑️  Invalidating cache by tag: articles
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🗑️ Cache invalidated
+📱 5 aboneye push bildirimi gönderiliyor...
+[2m21:21:14[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m Published: SambaNova ve Intel, AI’da Fiyat Çarpısını Yarattı:... (sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor)
+[2m21:21:14[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m Database publishing complete: 2/2 articles published
+[2m21:21:14[0m [2m│[0m [37m[1mseo-calculator      [0m [2m│[0m Queued SEO calculation: SambaNova ve Intel, AI’da Fiyat Çarpısını Yarattı:...
+✅ Push bildirimi tamamlandı: 5 başarılı, 0 başarısız
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📱 Push notification sent
+✅ Push bildirimi tamamlandı: 5 başarılı, 0 başarısız
+[2m21:21:14[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📱 Push notification sent
+✅ IndexNow: 3 URLs submitted successfully (via 1 endpoint(s))
+✅ IndexNow: Sitemap URLs submitted successfully
+✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor (via 1 endpoint(s))
+✅ IndexNow (TR): sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor
+🔐 Using GOOGLE_SERVICE_ACCOUNT_KEY from environment variable
+✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi (via 1 endpoint(s))
+✅ IndexNow (TR): lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi
+✅ Google Indexing API (TR): lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi
+✅ Google Indexing API (TR): sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor
+✅ WebSub ping successful: https://pubsubhubbub.appspot.com/
+🔑 IndexNow key in use: cc468dbb942faa834b9fb89bbee0b53f
+🔑 Key file URL: https://aihaberleri.org/cc468dbb942faa834b9fb89bbee0b53f.txt
+✅ IndexNow: URL submitted successfully - https://aihaberleri.org/en/news/sambanova-and-intel-forge-alliance-to-deliver-cost-efficient-ai-inference-solutions (via 1 endpoint(s))
+✅ IndexNow (EN): sambanova-and-intel-forge-alliance-to-deliver-cost-efficient-ai-inference-solutions
+✅ IndexNow: URL submitted successfully - https://aihaberleri.org/en/news/lfm2-24b-a2b-delivers-breakthrough-speed-on-amd-strix-halo-outpaces-gpt-oss-20b (via 1 endpoint(s))
+✅ IndexNow (EN): lfm2-24b-a2b-delivers-breakthrough-speed-on-amd-strix-halo-outpaces-gpt-oss-20b
+✅ Google Indexing API (EN): sambanova-and-intel-forge-alliance-to-deliver-cost-efficient-ai-inference-solutions
+[2m21:21:16[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🔍 Indexing: TR 2/2, EN 2/2
+✅ Google Indexing API (EN): lfm2-24b-a2b-delivers-breakthrough-speed-on-amd-strix-halo-outpaces-gpt-oss-20b
+[2m21:21:16[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🔍 Indexing: TR 2/2, EN 2/2
+🔑 ✅ Cloudflare cache purged for: https://aihaberleri.org/cc468dbb942faa834b9fb89bbee0b53f.txt
+📊 Sitemap ping summary: 4/4 methods successful
+   - IndexNow: ✅
+   - WebSub: ✅
+   - Google: ✅
+   - Bing: ✅
+[2m21:21:16[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🔔 Sitemap pings: IndexNow=✅ WebSub=✅ Google=✅ Bing=✅
+[2m21:21:16[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📱 2 articles queued for social sharing
+[2m21:21:16[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent database-publisher exited RECOVERY MODE
+[2m21:21:16[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m Job 3077 done — 2 items in 2.5s
+[2m21:21:16[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [database-publisher] Job 3077 completed
+[2m21:21:16[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m Job 260 started — 2 items (timeout: 300s)
+[2m21:21:16[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m Sharing 2 articles to social media...
+[2m21:21:16[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐦 Tweet posted: lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi
+📘 Posting to Facebook Page...
+✅ Facebook post successful! ID: 882602408279863_122108192217242298
+   📊 Share recorded: FACEBOOK (tr)
+[2m21:21:20[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📘 Facebook TR posted: lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi
+🦋 Bluesky session created successfully
+🦋 Posting to Bluesky...
+✅ Bluesky post successful! URI: at://did:plc:4hzo2bld5x7xava77fngd7ss/app.bsky.feed.post/3mfs4twxyx32z
+   📊 Share recorded: BLUESKY (tr)
+[2m21:21:23[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🦋 Bluesky TR posted
+🐘 Mastodon client created successfully
+🐘 Posting to Mastodon...
+✅ Mastodon toot successful! ID: 116139025058177866
+   📊 Share recorded: MASTODON (tr)
+[2m21:21:25[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐘 Mastodon TR posted
+📘 Posting to Facebook EN Page...
+[2m21:21:26[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Pipeline completed: 117 articles processed
+
+[2m────────────────────────────────────────────────────────────[0m
+[92m[1m  ✓ PIPELINE COMPLETE[0m
+[2m    Published: [0m[92m2[0m articles
+[2m    Duration:  [0m102s
+[2m────────────────────────────────────────────────────────────[0m
+
+[2m21:21:26[0m [92m✓[0m [92m[1mpublish             [0m [2m│[0m 2 haber yayında
+[2m21:21:26[0m [92m✓[0m [96m[1magent               [0m [2m│[0m Tamamlandı: 2 haber, 102s
+[2m21:21:26[0m [2m│[0m [96m[1magent               [0m [2m│[0m Sonraki çalışma: 26.02.2026 21:29:25
+info: ✅ Agent execution completed {"articlesCreated":2,"articlesScraped":17,"duration":102,"environment":"production","logId":"cmm3yv8nb0000egaovbdj8tqk","module":"agent","service":"ai-news-agent","success":true,"timestamp":"2026-02-26 21:21:26"}
+info: ✅ Job completed {"environment":"production","jobId":"repeat:600ad401e0e42fffc81c051e101e1d2c:1772140784400","module":"worker","result":{"articlesCreated":2,"articlesScraped":17,"duration":102,"errors":[],"publishedArticles":[{"id":"cmm3yx5vv001cegao767wa11t","slug":"sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor"},{"id":"cmm3yx5r20016egaozcabaxxu","slug":"lfm2-24b-a2b-strix-haloda-gpt-neoxi-2-kat-hizla-gecti-lokal-aida-yeni-bir-carpi"}],"success":true},"service":"ai-news-agent","timestamp":"2026-02-26 21:21:26"}
+
+[SUMMARY] Job Complete
+  └─ scraped: 17
+  └─ created: 2
+  └─ duration: 102s
+  └─ status: SUCCESS
+  └─ errors: undefined
+[INFO] Next run: 2/26/2026, 9:29:25 PM
+[OK] Job repeat:600ad401e0e42fffc81c051e101e1d2c:1772140784400 completed
+✅ IndexNow: 3 URLs submitted successfully (via 1 endpoint(s))
+✅ IndexNow: Sitemap URLs submitted successfully
+✅ Facebook EN post successful! ID: 982113784986233_122107534029250039
+   📊 Share recorded: FACEBOOK_EN (en)
+[2m21:21:28[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📘 Facebook EN posted: lfm2-24b-a2b-delivers-breakthrough-speed-on-amd-strix-halo-outpaces-gpt-oss-20b
+✅ WebSub ping successful: https://pubsubhubbub.appspot.com/
+🔑 IndexNow key in use: cc468dbb942faa834b9fb89bbee0b53f
+🔑 Key file URL: https://aihaberleri.org/cc468dbb942faa834b9fb89bbee0b53f.txt
+🦋 Posting to Bluesky...
+🔑 ✅ Cloudflare cache purged for: https://aihaberleri.org/cc468dbb942faa834b9fb89bbee0b53f.txt
+📊 Sitemap ping summary: 4/4 methods successful
+   - IndexNow: ✅
+   - WebSub: ✅
+   - Google: ✅
+   - Bing: ✅
+[2m21:21:28[0m [2m│[0m [92m[1mpublish             [0m [2m│[0m Sitemap ping: 4/4 başarılı
+✅ Bluesky post successful! URI: at://did:plc:4hzo2bld5x7xava77fngd7ss/app.bsky.feed.post/3mfs4u4vyk22h
+   📊 Share recorded: BLUESKY (en)
+[2m21:21:29[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🦋 Bluesky EN posted
+🐘 Posting to Mastodon...
+✅ Mastodon toot successful! ID: 116139025423356815
+   📊 Share recorded: MASTODON (en)
+[2m21:21:31[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐘 Mastodon EN posted
+[2m21:21:31[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📱 LFM2-24B-A2B, Strix Halo'da GPT-NeoX'ı 2... — 7/7 platforms shared
+[2m21:21:31[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐦 Tweet posted: sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor
+📘 Posting to Facebook Page...
+✅ Facebook post successful! ID: 882602408279863_122108192283242298
+   📊 Share recorded: FACEBOOK (tr)
+[2m21:21:38[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📘 Facebook TR posted: sambanova-ve-intel-aida-fiyat-carpisini-yaratti-neden-bu-ittifak-piyasayi-sarsiyor
+🦋 Posting to Bluesky...
+✅ Bluesky post successful! URI: at://did:plc:4hzo2bld5x7xava77fngd7ss/app.bsky.feed.post/3mfs4ugrtht2z
+   📊 Share recorded: BLUESKY (tr)
+[2m21:21:39[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🦋 Bluesky TR posted
+🐘 Posting to Mastodon...
+✅ Mastodon toot successful! ID: 116139026133950267
+   📊 Share recorded: MASTODON (tr)
+[2m21:21:41[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐘 Mastodon TR posted
+📘 Posting to Facebook EN Page...
+✅ Facebook EN post successful! ID: 982113784986233_122107534767250039
+   📊 Share recorded: FACEBOOK_EN (en)
+[2m21:21:56[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📘 Facebook EN posted: sambanova-and-intel-forge-alliance-to-deliver-cost-efficient-ai-inference-solutions
+🦋 Posting to Bluesky...
+✅ Bluesky post successful! URI: at://did:plc:4hzo2bld5x7xava77fngd7ss/app.bsky.feed.post/3mfs4uz6nbd2z
+   📊 Share recorded: BLUESKY (en)
+[2m21:21:59[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🦋 Bluesky EN posted
+🐘 Posting to Mastodon...
+✅ Mastodon toot successful! ID: 116139027417463809
+   📊 Share recorded: MASTODON (en)
+[2m21:22:01[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐘 Mastodon EN posted
+[2m21:22:01[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📱 SambaNova ve Intel, AI’da Fiyat Çarpısın... — 7/7 platforms shared
+[2m21:22:01[0m [92m✓[0m [37m[1msocial-share        [0m [2m│[0m Social sharing complete: 2 articles processed
+[2m21:22:01[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent social-share exited RECOVERY MODE
+[2m21:22:01[0m [92m✓[0m [37m[1msocial-share        [0m [2m│[0m Job 260 done — 2 items in 44.9s
+[2m21:22:01[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [social-share] Job 260 completed
+[INFO] Job repeat:600ad401e0e42fffc81c051e101e1d2c:1772141263200 active
+info: 🔄 Job processing started {"environment":"production","jobId":"repeat:600ad401e0e42fffc81c051e101e1d2c:1772141263200","jobName":"scrape-and-publish","module":"worker","service":"ai-news-agent","timestamp":"2026-02-26 21:27:43"}
+
+[JOB:repeat:600ad401e0e42fffc81c051e101e1d2c:1772141263200] scrape-and-publish | priority=default | attempt=1/3
+[INFO] Job started (10%)
+[2m21:27:43[0m [2m│[0m [96m[1magent               [0m [2m│[0m Agent başlatıldı (cmm3z5i2…)
+info: 🤖 Agent execution started {"category":"all","environment":"production","logId":"cmm3z5i240027egaohocgrx5y","module":"agent","service":"ai-news-agent","timestamp":"2026-02-26 21:27:43"}
+info: 📊 Agent step: fetch_news Haberler toplanıyor {"environment":"production","logId":"cmm3z5i240027egaohocgrx5y","module":"agent","progress":20,"service":"ai-news-agent","step":"fetch_news","timestamp":"2026-02-26 21:27:43"}
+[2m21:27:43[0m [2m│[0m [94m[1mrss                 [0m [2m│[0m RSS + YouTube taranıyor…
+📰 AI haberleri toplanıyor...
+📡 77 RSS feed okunuyor (AI-FOCUSED ONLY)...
+📡 RSS feed okunuyor: MIT Technology Review - AI
+📡 RSS feed okunuyor: VentureBeat - AI
+📡 RSS feed okunuyor: The Verge - AI
+📡 RSS feed okunuyor: TechCrunch - AI
+📡 RSS feed okunuyor: Wired - AI
+📡 RSS feed okunuyor: ZDNet - Artificial Intelligence
+📡 RSS feed okunuyor: AI News
+📡 RSS feed okunuyor: MarkTechPost
+✅ 10 haber bulundu: Wired - AI
+✅ 15 haber bulundu: TechCrunch - AI
+✅ 10 haber bulundu: The Verge - AI
+✅ 10 haber bulundu: MIT Technology Review - AI
+✅ 7 haber bulundu: VentureBeat - AI
+✅ 10 haber bulundu: MarkTechPost
+✅ 12 haber bulundu: AI News
+✅ 15 haber bulundu: ZDNet - Artificial Intelligence
+   İlerleme: 8/77 feed işlendi
+📡 RSS feed okunuyor: THE DECODER - AI News
+📡 RSS feed okunuyor: The Rundown AI
+📡 RSS feed okunuyor: AI Business
+📡 RSS feed okunuyor: SiliconANGLE - AI
+📡 RSS feed okunuyor: AI Trends
+📡 RSS feed okunuyor: Synced - AI Review
+📡 RSS feed okunuyor: The Gradient
+📡 RSS feed okunuyor: The Algorithmic Bridge
+✅ 10 haber bulundu: Synced - AI Review
+✅ 10 haber bulundu: THE DECODER - AI News
+✅ 15 haber bulundu: The Algorithmic Bridge
+✅ 15 haber bulundu: AI Business
+✅ 15 haber bulundu: The Rundown AI
+✅ 15 haber bulundu: The Gradient
+✅ 10 haber bulundu: AI Trends
+✅ 15 haber bulundu: SiliconANGLE - AI
+   İlerleme: 16/77 feed işlendi
+📡 RSS feed okunuyor: The AI Edge (Substack)
+📡 RSS feed okunuyor: Last Week in AI
+📡 RSS feed okunuyor: Ahead of AI
+📡 RSS feed okunuyor: AI Accelerator Institute
+📡 RSS feed okunuyor: AIModels.fyi
+📡 RSS feed okunuyor: AI Now Institute
+📡 RSS feed okunuyor: AI Snake Oil
+📡 RSS feed okunuyor: Artificial Intelligence – Futurism
+✅ 15 haber bulundu: Last Week in AI
+✅ 15 haber bulundu: The AI Edge (Substack)
+✅ 15 haber bulundu: AIModels.fyi
+✅ 15 haber bulundu: AI Accelerator Institute
+✅ 15 haber bulundu: Artificial Intelligence – Futurism
+✅ 15 haber bulundu: Ahead of AI
+✅ 15 haber bulundu: AI Snake Oil
+✅ 10 haber bulundu: AI Now Institute
+   İlerleme: 24/77 feed işlendi
+📡 RSS feed okunuyor: Artificial Intelligence - ScienceDaily
+📡 RSS feed okunuyor: Chain of Thought
+📡 RSS feed okunuyor: Chip Huyen
+📡 RSS feed okunuyor: OpenAI Blog
+📡 RSS feed okunuyor: Google AI Blog
+📡 RSS feed okunuyor: DeepMind Blog
+📡 RSS feed okunuyor: NVIDIA Blog - AI
+📡 RSS feed okunuyor: AWS Machine Learning Blog
+✅ 15 haber bulundu: Chain of Thought
+✅ 15 haber bulundu: DeepMind Blog
+✅ 15 haber bulundu: NVIDIA Blog - AI
+✅ 15 haber bulundu: OpenAI Blog
+✅ 15 haber bulundu: AWS Machine Learning Blog
+✅ 15 haber bulundu: Google AI Blog
+✅ 10 haber bulundu: Chip Huyen
+✅ 15 haber bulundu: Artificial Intelligence - ScienceDaily
+   İlerleme: 32/77 feed işlendi
+📡 RSS feed okunuyor: Berkeley AI Research (BAIR)
+📡 RSS feed okunuyor: Google Research
+📡 RSS feed okunuyor: Apple Machine Learning Research
+📡 RSS feed okunuyor: Microsoft AI Blog
+📡 RSS feed okunuyor: Machine Learning Mastery
+📡 RSS feed okunuyor: Towards Data Science
+📡 RSS feed okunuyor: Analytics Vidhya
+📡 RSS feed okunuyor: KDnuggets
+✅ 10 haber bulundu: Apple Machine Learning Research
+✅ 10 haber bulundu: Microsoft AI Blog
+✅ 15 haber bulundu: Google Research
+✅ 15 haber bulundu: Towards Data Science
+✅ 10 haber bulundu: Analytics Vidhya
+✅ 10 haber bulundu: Berkeley AI Research (BAIR)
+✅ 10 haber bulundu: Machine Learning Mastery
+✅ 10 haber bulundu: KDnuggets
+   İlerleme: 40/77 feed işlendi
+📡 RSS feed okunuyor: Machine Learning Reddit
+📡 RSS feed okunuyor: r/artificial
+📡 RSS feed okunuyor: r/ChatGPT
+📡 RSS feed okunuyor: r/LocalLLaMA
+📡 RSS feed okunuyor: Hacker News (AI filtered - 50+ points)
+📡 RSS feed okunuyor: LangChain Blog
+📡 RSS feed okunuyor: Import AI
+📡 RSS feed okunuyor: Prompt Engineering Daily
+✅ 15 haber bulundu: Import AI
+✅ 15 haber bulundu: LangChain Blog
+✅ 1 haber bulundu: Prompt Engineering Daily
+✅ 15 haber bulundu: Hacker News (AI filtered - 50+ points)
+✅ 15 haber bulundu: r/artificial
+✅ 15 haber bulundu: r/LocalLLaMA
+✅ 15 haber bulundu: Machine Learning Reddit
+✅ 15 haber bulundu: r/ChatGPT
+   İlerleme: 48/77 feed işlendi
+📡 RSS feed okunuyor: Last Week in AI
+📡 RSS feed okunuyor: Gary Marcus
+📡 RSS feed okunuyor: Cognitive Revolution
+📡 RSS feed okunuyor: AI Tidbits
+📡 RSS feed okunuyor: Interconnects
+📡 RSS feed okunuyor: Ahead of AI (Sebastian Raschka)
+📡 RSS feed okunuyor: Latent Space
+📡 RSS feed okunuyor: The Algorithmic Bridge
+✅ 15 haber bulundu: Last Week in AI
+✅ 15 haber bulundu: Gary Marcus
+✅ 15 haber bulundu: Ahead of AI (Sebastian Raschka)
+✅ 15 haber bulundu: Cognitive Revolution
+✅ 15 haber bulundu: Interconnects
+✅ 15 haber bulundu: Latent Space
+✅ 15 haber bulundu: The Algorithmic Bridge
+✅ 15 haber bulundu: AI Tidbits
+   İlerleme: 56/77 feed işlendi
+📡 RSS feed okunuyor: Ars Technica - AI
+📡 RSS feed okunuyor: The Register - AI
+📡 RSS feed okunuyor: Weights & Biases Blog
+📡 RSS feed okunuyor: Hacker News - AI
+📡 RSS feed okunuyor: r/singularity
+📡 RSS feed okunuyor: r/OpenAI
+📡 RSS feed okunuyor: r/StableDiffusion
+📡 RSS feed okunuyor: Simon Willison's Weblog
+✅ 15 haber bulundu: Ars Technica - AI
+✅ 15 haber bulundu: Hacker News - AI
+✅ 15 haber bulundu: Simon Willison's Weblog
+✅ 15 haber bulundu: The Register - AI
+✅ 15 haber bulundu: Weights & Biases Blog
+✅ 15 haber bulundu: r/OpenAI
+✅ 15 haber bulundu: r/singularity
+✅ 15 haber bulundu: r/StableDiffusion
+   İlerleme: 64/77 feed işlendi
+📡 RSS feed okunuyor: Lilian Weng Blog
+📡 RSS feed okunuyor: Jay Alammar Blog
+📡 RSS feed okunuyor: Cohere Blog
+📡 RSS feed okunuyor: Replicate Blog
+📡 RSS feed okunuyor: AI Supremacy (Substack)
+📡 RSS feed okunuyor: One Useful Thing
+📡 RSS feed okunuyor: THE DECODER (DE)
+📡 RSS feed okunuyor: LeBigData.fr - IA
+✅ 15 haber bulundu: Lilian Weng Blog
+✅ 10 haber bulundu: Jay Alammar Blog
+✅ 15 haber bulundu: One Useful Thing
+✅ 10 haber bulundu: LeBigData.fr - IA
+✅ 15 haber bulundu: AI Supremacy (Substack)
+✅ 10 haber bulundu: THE DECODER (DE)
+✅ 15 haber bulundu: Replicate Blog
+   İlerleme: 72/77 feed işlendi
+📡 RSS feed okunuyor: ActuIA
+📡 RSS feed okunuyor: 机器之心 (Synced China)
+📡 RSS feed okunuyor: 量子位 (QbitAI)
+📡 RSS feed okunuyor: ITmedia AI+
+📡 RSS feed okunuyor: AI타임스
+✅ 15 haber bulundu: ActuIA
+📡 RSS feed okunuyor: 机器之心 (Synced China) (deneme 2)
+✅ 15 haber bulundu: ITmedia AI+
+✅ 15 haber bulundu: AI타임스
+✅ 10 haber bulundu: 量子位 (QbitAI)
+📡 RSS feed okunuyor: 机器之心 (Synced China) (deneme 3)
+   İlerleme: 77/77 feed işlendi
+
+📊 RSS Özeti:
+   Toplam feed: 77
+   Toplam haber: 1005
+   Süre: 12.6s
+📥 RSS: 1005 haber
+🔍 URL filter: 133 known, 897/1005 new
+📅 Son 48 saat: 217 haber
+✅ 100 haber trend puanlamaya gönderilecek
+📊 100 haber için trend puanlama (7-signal v3)...
+[2m21:27:55[0m [2m│[0m [37m[1mtrend               [0m [2m│[0m Scored 100 articles in 20ms
+[2m21:27:55[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [50] AI:12 F:12 S:6 T:5 D:5 N:10 E:0 — Alibaba's open Qwen 3.5 takes aim at GPT-5 mini and Cla
+[2m21:27:55[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [45] AI:4 F:19 S:11 T:5 D:2 N:4 E:0 — Samsung Galaxy S26 Ultra vs. Google Pixel 10 Pro XL: Wh
+[2m21:27:55[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [45] AI:9 F:11 S:8 T:3 D:7 N:7 E:0 — Math Legend Terence Tao on the Promise and Limits of Ge
+[2m21:27:55[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [44] AI:9 F:11 S:8 T:7 D:6 N:3 E:0 — Qwen3.5 122B in 72GB VRAM (3x3090) is the best model av
+[2m21:27:55[0m [2m·[0m [37m[1mtrend               [0m [2m│[0m   [43] AI:4 F:11 S:6 T:5 D:7 N:9 E:1 — Nous Research Releases ‘Hermes Agent’ to Fix AI Forgetf
+✅ 2 unique trend haber seçildi (4 batch tarandı)
+🎬 YouTube konu keşfi başlatılıyor (son 72 saat)...
+[2m21:27:56[0m [2m│[0m [93m[1myoutube             [0m [2m│[0m 🎬 YouTube kanalları taranıyor...
+🎬 35 YouTube kanalı upsert edildi
+🎬 35 YouTube kanalı taranıyor...
+  ✅ The AI Daily Brief: 0/10 AI video
+  ✅ AI Explained: 0/10 AI video
+  ✅ Fireship: 1/10 AI video
+  ✅ Two Minute Papers: 0/10 AI video
+  ✅ Skill Leap AI: 2/10 AI video
+  ✅ Yannic Kilcher: 0/10 AI video
+  ✅ Andrej Karpathy: 0/10 AI video
+  ✅ Lex Fridman: 0/10 AI video
+  ✅ Wes Roth: 3/10 AI video
+  ✅ Matt Wolfe: 4/10 AI video
+  ✅ Matthew Berman: 0/5 AI video
+  ✅ TheAIGRID: 3/10 AI video
+  ✅ AI Andy: 0/5 AI video
+  ✅ Robert Miles AI Safety: 0/10 AI video
+  ✅ All About AI: 1/10 AI video
+  ✅ DeepLearning.AI: 3/10 AI video
+  ✅ The AI Advantage: 0/0 AI video
+  ✅ Dwarkesh Patel: 1/10 AI video
+  ✅ Machine Learning Street Talk: 0/10 AI video
+  ✅ sentdex: 0/10 AI video
+  ✅ Google DeepMind: 1/10 AI video
+  ✅ Hugging Face: 0/10 AI video
+  ✅ bycloud: 0/10 AI video
+  ✅ David Ondrej: 4/10 AI video
+  ✅ WorldofAI: 0/10 AI video
+  ✅ David Shapiro: 0/10 AI video
+  ✅ AI News Daily: 0/0 AI video
+  ✅ TWIML AI Podcast: 0/0 AI video
+  ✅ MIT CSAIL: 0/10 AI video
+  ✅ Stanford HAI: 0/10 AI video
+  ✅ Prompt Engineering: 2/10 AI video
+  ✅ AI Joe: 0/10 AI video
+  ✅ Bloomberg Technology: 0/10 AI video
+  ✅ Scale AI: 0/10 AI video
+  ✅ Eye on AI: 0/0 AI video
+🎬 Toplam 25 benzersiz AI konusu bulundu
+🎬 25 AI konusu bulundu, duplicate kontrolü yapılıyor...
+🔍 Duplikat kontrolü: "I Tested the First Diffusion Reasoning LLM… It’s Insanely Fa..."
+❌ DUPLICATE (URL): Dünyanın En Hızlı Akıl Yürütme AI'sı Geldi: Mercury 2, 5 Kat Hızlı ve 80% Daha Ucuz
+  ⏭️ YouTube duplicate: I Tested the First Diffusion Reasoning LLM… It’s I... (EXACT_URL_MATCH)
+🔍 Duplikat kontrolü: "OpenAI'S New AI Devices Explained - AI Glasses, Speakers & M..."
+❌ DUPLICATE (URL): OpenAI'nin Yeni AI Gözlükleri ve Akıllı Hoparlörleri: Teknoloji Devrimi mi, Yoksa Pazar Hilesi mi?
+  ⏭️ YouTube duplicate: OpenAI'S New AI Devices Explained - AI Glasses, Sp... (EXACT_URL_MATCH)
+🔍 Duplikat kontrolü: "The 2028 Global Intelligence Crisis Explained - What Happens..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "The 2028 Global Intelligence Crisis Explained - What Happens..."
+✅ Unique article: "The 2028 Global Intelligence Crisis Explained - What Happens..."
+  ✅ Unique YouTube topic: The 2028 Global Intelligence Crisis Explained - Wh...
+🔍 Duplikat kontrolü: "Every Vibe Coder Needs This AI Agent - Kane AI Testing Agent..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "Every Vibe Coder Needs This AI Agent - Kane AI Testing Agent..."
+✅ Unique article: "Every Vibe Coder Needs This AI Agent - Kane AI Testing Agent..."
+  ✅ Unique YouTube topic: Every Vibe Coder Needs This AI Agent - Kane AI Tes...
+🔍 Duplikat kontrolü: "Mercury 2: The First Diffusion Model That 'Thinks'"..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "Mercury 2: The First Diffusion Model That 'Thinks'"..."
+✅ Unique article: "Mercury 2: The First Diffusion Model That 'Thinks'"..."
+  ✅ Unique YouTube topic: Mercury 2: The First Diffusion Model That 'Thinks'...
+🔍 Duplikat kontrolü: "Anthropic might be DONE..."
+🔍 Popular topic detected - extending duplicate check to 7 days
+🔍 Checking for duplicates among 1248 recent articles...
+✅ No duplicates found for: "Anthropic might be DONE..."
+✅ Unique article: "Anthropic might be DONE..."
+  ✅ Unique YouTube topic: Anthropic might be DONE...
+🔍 Duplikat kontrolü: "$1 Trillion Gone..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "$1 Trillion Gone..."
+✅ Unique article: "$1 Trillion Gone..."
+  ✅ Unique YouTube topic: $1 Trillion Gone...
+🔍 Duplikat kontrolü: "the SCARIEST chart in AI..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "the SCARIEST chart in AI..."
+✅ Unique article: "the SCARIEST chart in AI..."
+  ✅ Unique YouTube topic: the SCARIEST chart in AI...
+🔍 Duplikat kontrolü: "Chinese AI Companies Are Using This Trick To Steal Model Dat..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "Chinese AI Companies Are Using This Trick To Steal Model Dat..."
+✅ Unique article: "Chinese AI Companies Are Using This Trick To Steal Model Dat..."
+  ✅ Unique YouTube topic: Chinese AI Companies Are Using This Trick To Steal...
+🔍 Duplikat kontrolü: "Nano Banana 2 is Here - Faster and Cheaper..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "Nano Banana 2 is Here - Faster and Cheaper..."
+✅ Unique article: "Nano Banana 2 is Here - Faster and Cheaper..."
+  ✅ Unique YouTube topic: Nano Banana 2 is Here - Faster and Cheaper...
+🔍 Duplikat kontrolü: "TensorFlow: Advanced Techniques Specialization..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "TensorFlow: Advanced Techniques Specialization..."
+✅ Unique article: "TensorFlow: Advanced Techniques Specialization..."
+  ✅ Unique YouTube topic: TensorFlow: Advanced Techniques Specialization...
+🔍 Duplikat kontrolü: "TensorFlow: Data and Deployment Specialization..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "TensorFlow: Data and Deployment Specialization..."
+✅ Unique article: "TensorFlow: Data and Deployment Specialization..."
+  ✅ Unique YouTube topic: TensorFlow: Data and Deployment Specialization...
+🔍 Duplikat kontrolü: "Anthropic Is Mad That China Did What They Did..."
+🔗 Entity overlap detected: [anthropic, china]
+❌ DUPLICATE (ENTITY): ENTITY_MATCH_anthropic+china
+  ⏭️ YouTube duplicate: Anthropic Is Mad That China Did What They Did... (ENTITY_MATCH_anthropic+china)
+🔍 Duplikat kontrolü: "Music AI Sandbox..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "Music AI Sandbox..."
+✅ Unique article: "Music AI Sandbox..."
+  ✅ Unique YouTube topic: Music AI Sandbox...
+🔍 Duplikat kontrolü: "I Tested Neo AI Browser — The AI Browser Built Around Privac..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "I Tested Neo AI Browser — The AI Browser Built Around Privac..."
+✅ Unique article: "I Tested Neo AI Browser — The AI Browser Built Around Privac..."
+  ✅ Unique YouTube topic: I Tested Neo AI Browser — The AI Browser Built Aro...
+🔍 Duplikat kontrolü: "When open-sourcing your code goes wrong......"
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "When open-sourcing your code goes wrong......"
+✅ Unique article: "When open-sourcing your code goes wrong......"
+  ✅ Unique YouTube topic: When open-sourcing your code goes wrong......
+🔍 Duplikat kontrolü: "Breaking: Google Upgraded Nano Banana Again!..."
+🔗 Entity overlap detected: [google, ban]
+❌ DUPLICATE (ENTITY): ENTITY_MATCH_google+ban
+  ⏭️ YouTube duplicate: Breaking: Google Upgraded Nano Banana Again!... (ENTITY_MATCH_google+ban)
+🔍 Duplikat kontrolü: "The Easiest Way To Host OpenClaw..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "The Easiest Way To Host OpenClaw..."
+✅ Unique article: "The Easiest Way To Host OpenClaw..."
+  ✅ Unique YouTube topic: The Easiest Way To Host OpenClaw...
+🔍 Duplikat kontrolü: "I Let My AI Agent Run for 504 Hours Straight — Here's What H..."
+🔍 Checking for duplicates among 584 recent articles...
+✅ No duplicates found for: "I Let My AI Agent Run for 504 Hours Straight — Here's What H..."
+✅ Unique article: "I Let My AI Agent Run for 504 Hours Straight — Here's What H..."
+  ✅ Unique YouTube topic: I Let My AI Agent Run for 504 Hours Straight — Her...
+🎬 15 benzersiz YouTube konusu pipeline'a hazır
+[2m21:28:11[0m [92m✓[0m [93m[1myoutube             [0m [2m│[0m 🎬 15 benzersiz YouTube konusu bulundu
+[2m21:28:11[0m [2m│[0m [94m[1mrss                 [0m [2m│[0m 15 YouTube konusu keşfedildi
+[2m21:28:11[0m [92m✓[0m [94m[1mrss                 [0m [2m│[0m 17 haber bulundu (RSS: 2, YT: 15)
+[2m21:28:11[0m [2m│[0m [96m[1magent               [0m [2m│[0m Hedef: 1 haber (ayar: 1)
+info: 📊 Agent step: content_variation İçerik çeşitlendirme {"environment":"production","logId":"cmm3z5i240027egaohocgrx5y","module":"agent","progress":40,"service":"ai-news-agent","step":"content_variation","timestamp":"2026-02-26 21:28:11"}
+[2m21:28:11[0m [2m│[0m [96m[1magent               [0m [2m│[0m Son 48 saatte 100 haber yayınlanmış
+[2m21:28:11[0m [2m│[0m [96m[1magent               [0m [2m│[0m Pipeline limiti: 17 → 3 (hedef: 1)
+info: 📊 Agent step: multi_agent_pipeline Pipeline başlatılıyor {"environment":"production","logId":"cmm3z5i240027egaohocgrx5y","module":"agent","progress":60,"service":"ai-news-agent","step":"multi_agent_pipeline","timestamp":"2026-02-26 21:28:12"}
+[2m21:28:12[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Pipeline starting: 3 articles → duplicate-detector
+[2m21:28:12[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Job 343 added — 3 articles queued
+[2m21:28:12[0m [2m│[0m [33m[1mduplicate-detector  [0m [2m│[0m Job 343 started — 3 items (timeout: 120s)
+[2m21:28:12[0m [2m│[0m [33m[1mduplicate-detector  [0m [2m│[0m Checking 3 articles for duplicates...
+[2m21:28:12[0m [92m✓[0m [33m[1mduplicate-detector  [0m [2m│[0m Duplicate check: 3/3 unique (0.0% duplicates)
+[2m21:28:12[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent duplicate-detector exited RECOVERY MODE
+[2m21:28:12[0m [92m✓[0m [33m[1mduplicate-detector  [0m [2m│[0m Job 343 done — 3 items in 0.1s
+[2m21:28:12[0m [2m│[0m [33m[1mduplicate-detector  [0m [2m│[0m → relevant-articles
+[2m21:28:12[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [unique-articles] Job 343 completed
+[2m21:28:12[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m Job 3478 started — 3 items (timeout: 180s)
+[2m21:28:12[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m Filtering 3 articles for relevance...
+[2m21:28:12[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m Processing batch 1/1 (3 articles)
+[2m21:28:12[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m 🤖 Using LLM for batch scoring
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+
+[2m────────────────────────────────────────────────────────────[0m
+[96m[1m  ▶ PIPELINE STARTED[0m
+[2m    Articles: [0m3[2m (target: 1)[0m
+[2m    Log ID:   [0mcmm3z5i24002…
+[2m    Flow:     Duplicate → Relevance → Trend → Enrich → Visual → Publish[0m
+[2m────────────────────────────────────────────────────────────[0m
+
+[2m21:28:13[0m [2m│[0m [96m[1magent               [0m [2m│[0m Pipeline: 3 haber işlenecek
+[2m21:28:13[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Waiting for pipeline completion (timeout: 1200s, tracking job 343)
+[2m21:28:13[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Initial job 343 completed
+[2m21:28:16[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #1: relevant-articles — 1 queued, 117 done, 0 failed
+[2m21:28:16[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: relevant-articles (1 in queue, 117 completed, 0 failed)
+[2m21:28:17[0m [92m✓[0m [36m[1mrelevance-filter    [0m [2m│[0m Filtered: 2/3 articles passed (33.3% rejected)
+[2m21:28:17[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m All scored articles:
+[2m21:28:17[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m   ✅ [62] Apple's new 'cheap' MacBook aims at the budget market, but t
+[2m21:28:17[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m   ✅ [58] Newest NVIDIA driver
+[2m21:28:17[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m   ❌ [32] The 2028 Global Intelligence Crisis Explained - What Happens
+[2m21:28:17[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent relevance-filter exited RECOVERY MODE
+[2m21:28:17[0m [92m✓[0m [36m[1mrelevance-filter    [0m [2m│[0m Job 3478 done — 2 items in 5.2s
+[2m21:28:17[0m [2m│[0m [36m[1mrelevance-filter    [0m [2m│[0m → trend-enrichment
+[2m21:28:17[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [relevant-articles] Job 3478 completed
+[2m21:28:17[0m [2m│[0m [37m[1mTrendEnricher       [0m [2m│[0m Job 3080 started — 2 items (timeout: 120s)
+[2m21:28:17[0m [2m│[0m [37m[1mTrendEnricher       [0m [2m│[0m 🔥 Processing 2 articles for trend enrichment...
+[2m21:28:17[0m [92m✓[0m [37m[1mTrendEnricher       [0m [2m│[0m ✅ Trend enrichment complete: 0/2 trending (28ms)
+[2m21:28:17[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent trend-enricher exited RECOVERY MODE
+[2m21:28:17[0m [92m✓[0m [37m[1mTrendEnricher       [0m [2m│[0m Job 3080 done — 2 items in 0.0s
+[2m21:28:17[0m [2m│[0m [37m[1mTrendEnricher       [0m [2m│[0m → enriched-articles
+[2m21:28:17[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [trend-enrichment] Job 3080 completed
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m Job 3470 started — 2 items (timeout: 720s)
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m Enriching 2 articles...
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🚀 Starting CONTROLLED enrichment for 2 articles (concurrency: 2)...
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📦 Processing batch 1/1 (2 articles)
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m [1/2] Enriching: Apple's new 'cheap' MacBook aims at the budget mar...
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔑 Keywords extracted: "macbook incremental announced distracts upgrades laptops budget market" (from: "Apple's new 'cheap' MacBook aims at the budget market, but t...")
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔍 Source gathering: LOW priority (score: 0)
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔍 SearXNG search: "macbook incremental announced distracts upgrades laptops budget market"
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m [2/2] Enriching: Newest NVIDIA driver...
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔑 Keywords extracted: "february newest nvidia driver studio klein vram rtx" (from: "Newest NVIDIA driver...")
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔍 Source gathering: LOW priority (score: 0)
+[2m21:28:17[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔍 SearXNG search: "february newest nvidia driver studio klein vram rtx"
+✅ SearXNG: 10 sonuç bulundu (toplam: 32)
+✅ SearXNG: 10 sonuç bulundu (toplam: 22)
+✅ SearXNG: 10 sonuç bulundu (toplam: 18)
+[2m21:28:18[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📋 Found 1 candidate URLs
+[2m21:28:18[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📖 Using Jina Reader for remaining URLs
+✅ SearXNG: 10 sonuç bulundu (toplam: 25)
+[2m21:28:18[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📋 Found 5 candidate URLs
+[2m21:28:18[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 📖 Using Jina Reader for remaining URLs
+[2m21:28:19[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ Jina Reader: 1 total sources
+[2m21:28:19[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ Total sources: 1
+[2m21:28:19[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🚀 Using LLM for BOTH TR + EN synthesis
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[2m21:28:19[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🔍 SearXNG fallback: searching for "article 3071250 a cheap macbook is the shakeup app..."
+✅ SearXNG: 5 sonuç bulundu (toplam: 15)
+[2m21:28:20[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ SearXNG fallback succeeded for https://www.macworld.com/article/3071250/a-cheap-macbook-is-the-shakeup-apples-laptop-lineup-needs.html (490 chars)
+[2m21:28:21[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #2: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:28:21[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:28:21[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ Jina Reader: 3 total sources
+[2m21:28:21[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ Total sources: 3
+[2m21:28:21[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m 🚀 Using LLM for BOTH TR + EN synthesis
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[2m21:28:26[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #3: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:28:26[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:28:31[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #4: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:28:31[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:28:36[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #5: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:28:36[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:28:41[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #6: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:28:41[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:28:43[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ DeepSeek TR content generated successfully
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[2m21:28:43[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ DeepSeek TR content generated successfully
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[2m21:28:46[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #7: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:28:46[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:28:51[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #8: enriched-articles — 1 queued, 117 done, 0 failed
+[2m21:28:51[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: enriched-articles (1 in queue, 117 completed, 0 failed)
+[2m21:28:52[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ DeepSeek EN content generated successfully
+[2m21:28:52[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ [1/2] Enriched: Apple’ın Ucuz MacBook’u Sadece Fiyat Değil, Strate...
+[2m21:28:52[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ DeepSeek EN content generated successfully
+[2m21:28:52[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m ✅ [2/2] Enriched: NVIDIA'nın Yeni Sürücüsü Fan Kontrolünü Bozdu: Yük...
+[2m21:28:52[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m 🏁 CONTROLLED enrichment complete: 2/2 articles (0 failed)
+[2m21:28:52[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent content-enricher exited RECOVERY MODE
+[2m21:28:52[0m [92m✓[0m [32m[1mcontent-enricher    [0m [2m│[0m Job 3470 done — 2 items in 35.2s
+[2m21:28:52[0m [2m│[0m [32m[1mcontent-enricher    [0m [2m│[0m → articles-with-visuals
+[2m21:28:52[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [enriched-articles] Job 3470 completed
+[2m21:28:52[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Job 3215 started — 2 items (timeout: 1200s)
+[2m21:28:52[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Generating visuals for 2 articles (parallel: 3)...
+[2m21:28:52[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Processing batch 1/1 (2 articles)
+[2m21:28:52[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Generating visual: NVIDIA'nın Yeni Sürücüsü Fan Kontrolünü Bozdu: Yük...
+[2m21:28:52[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m 🤖 Using LLM for image prompt generation (content-aware)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[2m21:28:52[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Generating visual: Apple’ın Ucuz MacBook’u Sadece Fiyat Değil, Strate...
+[2m21:28:52[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m 🤖 Using LLM for image prompt generation (content-aware)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+✅ Added strong negative prompt suffix
+📝 Final prompt (150 chars): A stripped-down NVIDIA GPU on a matte black workbench, fan blades frozen mid-..., no people, no humans, no faces, no hands, no body parts, empty scene
+[2m21:28:53[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Image prompt: A stripped-down NVIDIA GPU on a matte black workbench, fan blades frozen mid-..., no people, no huma...
+🎯 Cache MISS for prompt: A stripped-down NVIDIA GPU on a matte black workbe...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: A stripped-down NVIDIA GPU on a matte black workbench, fan blades frozen mid-..., no , no humans, no
+🎨 Authenticated URL: https://gen.pollinations.ai/image/A%20stripped-down%20NVIDIA%20GPU%20on%20a%20matte%20black%20workbench%2C%20fan%20blade...
+✅ Added strong negative prompt suffix
+📝 Final prompt (150 chars): A weathered, rusted MacBook Pro lies half-buried in dry desert soil, its crac..., no people, no humans, no faces, no hands, no body parts, empty scene
+[2m21:28:53[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m Image prompt: A weathered, rusted MacBook Pro lies half-buried in dry desert soil, its crac..., no people, no huma...
+🎯 Cache MISS for prompt: A weathered, rusted MacBook Pro lies half-buried i...
+🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt 1/3)
+🔑 API Key exists: YES, length: 19
+📝 Prompt: A weathered, rusted MacBook Pro lies half-buried in dry desert soil, its crac..., no , no humans, no
+🎨 Authenticated URL: https://gen.pollinations.ai/image/A%20weathered%2C%20rusted%20MacBook%20Pro%20lies%20half-buried%20in%20dry%20desert%20s...
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+
+🖼️  Image Optimization Pipeline Started
+   Source: https://gen.pollinations.ai/image/A%20stripped-down%20NVIDIA%20GPU%20on%20a%20matte%20black%20workbench%2C%20fan%20blades%20frozen%20mid-...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+   Slug: nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu
+📥 Downloading image from: https://gen.pollinations.ai/image/A%20stripped-down%20NVIDIA%20GPU%20on%20a%20matte%20black%20workbench%2C%20fan%20blades%20frozen%20mid-...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+🔑 Adding Pollinations API key to download request
+✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)
+💾 Image cached for 7 days
+
+🖼️  Image Optimization Pipeline Started
+   Source: https://gen.pollinations.ai/image/A%20weathered%2C%20rusted%20MacBook%20Pro%20lies%20half-buried%20in%20dry%20desert%20soil%2C%20its%20crac...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+   Slug: applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim
+📥 Downloading image from: https://gen.pollinations.ai/image/A%20weathered%2C%20rusted%20MacBook%20Pro%20lies%20half-buried%20in%20dry%20desert%20soil%2C%20its%20crac...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true
+🔑 Adding Pollinations API key to download request
+⚠️ Rate limited (429), waiting 3s before retry (attempt 1/5)...
+[2m21:28:56[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #9: articles-with-visuals — 1 queued, 117 done, 0 failed
+[2m21:28:56[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: articles-with-visuals (1 in queue, 117 completed, 0 failed)
+
+📊 Original Image:
+   Format: jpeg
+   Size: 1200x630
+   File Size: 165.8KB
+   Download Time: 689ms
+🎨 Generating 4 image sizes for: applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim
+✅ Uploaded to R2: https://images.aihaberleri.org/applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim-large.webp
+  ✅ large: 165.7KB → https://images.aihaberleri.org/applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim-large.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim-medium.webp
+  ✅ medium: 84.3KB → https://images.aihaberleri.org/applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim-medium.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim-small.webp
+  ✅ small: 26.1KB → https://images.aihaberleri.org/applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim-small.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim-thumb.webp
+  ✅ thumb: 6.3KB → https://images.aihaberleri.org/applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim-thumb.webp
+
+✅ Optimization Complete!
+   Total Time: 2038ms
+   Storage: Cloudflare R2
+[2m21:28:57[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Image optimized and uploaded
+[2m21:28:57[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Visual generated in 5031ms: Apple’ın Ucuz MacBook’u Sadece Fiyat Değil, Strate...
+📥 Downloading image from: https://gen.pollinations.ai/image/A%20stripped-down%20NVIDIA%20GPU%20on%20a%20matte%20black%20workbench%2C%20fan%20blades%20frozen%20mid-...%2C%20no%20%2C%20no%20humans%2C%20no%20faces%2C%20no%20hands%2C%20no%20parts%2C%20empty%20scene?width=1200&height=630&model=flux&enhance=true (attempt 2)
+🔑 Adding Pollinations API key to download request
+
+📊 Original Image:
+   Format: jpeg
+   Size: 1200x630
+   File Size: 69.7KB
+   Download Time: 4126ms
+🎨 Generating 4 image sizes for: nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu
+✅ Uploaded to R2: https://images.aihaberleri.org/nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu-large.webp
+  ✅ large: 49.3KB → https://images.aihaberleri.org/nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu-large.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu-medium.webp
+  ✅ medium: 26.5KB → https://images.aihaberleri.org/nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu-medium.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu-small.webp
+  ✅ small: 10.0KB → https://images.aihaberleri.org/nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu-small.webp
+✅ Uploaded to R2: https://images.aihaberleri.org/nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu-thumb.webp
+  ✅ thumb: 3.2KB → https://images.aihaberleri.org/nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu-thumb.webp
+
+✅ Optimization Complete!
+   Total Time: 5349ms
+   Storage: Cloudflare R2
+[2m21:29:00[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Image optimized and uploaded
+[2m21:29:00[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Visual generated in 7918ms: NVIDIA'nın Yeni Sürücüsü Fan Kontrolünü Bozdu: Yük...
+[2m21:29:00[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Visual generation complete: 2/2 successful (0 failed)
+[2m21:29:00[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent visual-generator exited RECOVERY MODE
+[2m21:29:00[0m [92m✓[0m [96m[1mvisual-generator    [0m [2m│[0m Job 3215 done — 2 items in 7.9s
+[2m21:29:00[0m [2m│[0m [96m[1mvisual-generator    [0m [2m│[0m → database-publisher
+[2m21:29:00[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [articles-with-visuals] Job 3215 completed
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Job 3078 started — 2 items (timeout: 120s)
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Publishing 2 articles (limit: 2)...
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📊 Content-based trend score: 37 (AI:0 F:20 S:11 T:3)
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Turkish translation created: applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m English translation created: apples-599-macbook-budget-entry-or-strategic-market-reorientation
+🗑️  Invalidating cache by tag: articles
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🗑️ Cache invalidated
+[2m21:29:00[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m Published: Apple’ın Ucuz MacBook’u Sadece Fiyat Değil, Strate... (applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim)
+[2m21:29:00[0m [2m│[0m [37m[1mseo-calculator      [0m [2m│[0m Queued SEO calculation: Apple’ın Ucuz MacBook’u Sadece Fiyat Değil, Strate...
+📱 5 aboneye push bildirimi gönderiliyor...
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📊 Content-based trend score: 44 (AI:4 F:20 S:8 T:7)
+🗑️  Invalidated 1 cache entries for tag: articles
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m Turkish translation created: nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m English translation created: nvidia-pulls-studio-driver-amid-fan-control-issues-despite-ai-performance-claims
+🗑️  Invalidating cache by tag: articles
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🗑️ Cache invalidated
+📱 5 aboneye push bildirimi gönderiliyor...
+[2m21:29:00[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m Published: NVIDIA'nın Yeni Sürücüsü Fan Kontrolünü Bozdu: Yük... (nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu)
+[2m21:29:00[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m Database publishing complete: 2/2 articles published
+[2m21:29:00[0m [2m│[0m [37m[1mseo-calculator      [0m [2m│[0m Queued SEO calculation: NVIDIA'nın Yeni Sürücüsü Fan Kontrolünü Bozdu: Yük...
+✅ Push bildirimi tamamlandı: 5 başarılı, 0 başarısız
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📱 Push notification sent
+✅ Push bildirimi tamamlandı: 5 başarılı, 0 başarısız
+[2m21:29:00[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📱 Push notification sent
+✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim (via 1 endpoint(s))
+✅ IndexNow (TR): applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim
+✅ IndexNow: 3 URLs submitted successfully (via 1 endpoint(s))
+✅ IndexNow: Sitemap URLs submitted successfully
+✅ IndexNow: URL submitted successfully - https://aihaberleri.org/news/nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu (via 1 endpoint(s))
+✅ IndexNow (TR): nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu
+[2m21:29:01[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #10: database-publisher — 1 queued, 117 done, 0 failed
+[2m21:29:01[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m 📊 Pipeline progress: database-publisher (1 in queue, 117 completed, 0 failed)
+✅ Google Indexing API (TR): nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu
+✅ Google Indexing API (TR): applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim
+✅ IndexNow: URL submitted successfully - https://aihaberleri.org/en/news/nvidia-pulls-studio-driver-amid-fan-control-issues-despite-ai-performance-claims (via 1 endpoint(s))
+✅ IndexNow: URL submitted successfully - https://aihaberleri.org/en/news/apples-599-macbook-budget-entry-or-strategic-market-reorientation (via 1 endpoint(s))
+✅ IndexNow (EN): apples-599-macbook-budget-entry-or-strategic-market-reorientation
+✅ IndexNow (EN): nvidia-pulls-studio-driver-amid-fan-control-issues-despite-ai-performance-claims
+✅ WebSub ping successful: https://pubsubhubbub.appspot.com/
+🔑 IndexNow key in use: cc468dbb942faa834b9fb89bbee0b53f
+🔑 Key file URL: https://aihaberleri.org/cc468dbb942faa834b9fb89bbee0b53f.txt
+✅ Google Indexing API (EN): apples-599-macbook-budget-entry-or-strategic-market-reorientation
+[2m21:29:02[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🔍 Indexing: TR 2/2, EN 2/2
+✅ Google Indexing API (EN): nvidia-pulls-studio-driver-amid-fan-control-issues-despite-ai-performance-claims
+[2m21:29:02[0m [2m│[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🔍 Indexing: TR 2/2, EN 2/2
+🔑 ✅ Cloudflare cache purged for: https://aihaberleri.org/cc468dbb942faa834b9fb89bbee0b53f.txt
+📊 Sitemap ping summary: 4/4 methods successful
+   - IndexNow: ✅
+   - WebSub: ✅
+   - Google: ✅
+   - Bing: ✅
+[2m21:29:02[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m 🔔 Sitemap pings: IndexNow=✅ WebSub=✅ Google=✅ Bing=✅
+[2m21:29:02[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m 📱 2 articles queued for social sharing
+[2m21:29:02[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m Job 261 started — 2 items (timeout: 300s)
+[2m21:29:02[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m Sharing 2 articles to social media...
+[2m21:29:02[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent database-publisher exited RECOVERY MODE
+[2m21:29:02[0m [92m✓[0m [92m[1mdatabase-publisher  [0m [2m│[0m Job 3078 done — 2 items in 2.3s
+[2m21:29:02[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [database-publisher] Job 3078 completed
+[2m21:29:02[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐦 Tweet posted: applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim
+📘 Posting to Facebook Page...
+✅ Facebook post successful! ID: 882602408279863_122108192763242298
+   📊 Share recorded: FACEBOOK (tr)
+[2m21:29:12[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📘 Facebook TR posted: applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim
+🦋 Posting to Bluesky...
+✅ Bluesky post successful! URI: at://did:plc:4hzo2bld5x7xava77fngd7ss/app.bsky.feed.post/3mfs5bycj6z2m
+   📊 Share recorded: BLUESKY (tr)
+[2m21:29:14[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🦋 Bluesky TR posted
+[2m21:29:16[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Pipeline completed: 117 articles processed
+
+[2m────────────────────────────────────────────────────────────[0m
+[92m[1m  ✓ PIPELINE COMPLETE[0m
+[2m    Published: [0m[92m2[0m articles
+[2m    Duration:  [0m92s
+[2m────────────────────────────────────────────────────────────[0m
+
+[2m21:29:16[0m [92m✓[0m [92m[1mpublish             [0m [2m│[0m 2 haber yayında
+[2m21:29:16[0m [92m✓[0m [96m[1magent               [0m [2m│[0m Tamamlandı: 2 haber, 92s
+[2m21:29:16[0m [2m│[0m [96m[1magent               [0m [2m│[0m Sonraki çalışma: 26.02.2026 21:37:14
+info: ✅ Agent execution completed {"articlesCreated":2,"articlesScraped":17,"duration":92,"environment":"production","logId":"cmm3z5i240027egaohocgrx5y","module":"agent","service":"ai-news-agent","success":true,"timestamp":"2026-02-26 21:29:16"}
+info: ✅ Job completed {"environment":"production","jobId":"repeat:600ad401e0e42fffc81c051e101e1d2c:1772141263200","module":"worker","result":{"articlesCreated":2,"articlesScraped":17,"duration":92,"errors":[],"publishedArticles":[{"id":"cmm3z75q2003degao9smrq5xl","slug":"applein-ucuz-macbooku-sadece-fiyat-degil-stratejik-bir-devrim"},{"id":"cmm3z75rc003jegaoawd9agfl","slug":"nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu"}],"success":true},"service":"ai-news-agent","timestamp":"2026-02-26 21:29:16"}
+
+[SUMMARY] Job Complete
+  └─ scraped: 17
+  └─ created: 2
+  └─ duration: 92s
+  └─ status: SUCCESS
+  └─ errors: undefined
+[INFO] Next run: 2/26/2026, 9:37:14 PM
+[OK] Job repeat:600ad401e0e42fffc81c051e101e1d2c:1772141263200 completed
+✅ IndexNow: 3 URLs submitted successfully (via 1 endpoint(s))
+✅ IndexNow: Sitemap URLs submitted successfully
+🐘 Posting to Mastodon...
+✅ Mastodon toot successful! ID: 116139055987948109
+   📊 Share recorded: MASTODON (tr)
+[2m21:29:17[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐘 Mastodon TR posted
+📘 Posting to Facebook EN Page...
+✅ WebSub ping successful: https://pubsubhubbub.appspot.com/
+🔑 IndexNow key in use: cc468dbb942faa834b9fb89bbee0b53f
+🔑 Key file URL: https://aihaberleri.org/cc468dbb942faa834b9fb89bbee0b53f.txt
+🔑 ✅ Cloudflare cache purged for: https://aihaberleri.org/cc468dbb942faa834b9fb89bbee0b53f.txt
+📊 Sitemap ping summary: 4/4 methods successful
+   - IndexNow: ✅
+   - WebSub: ✅
+   - Google: ✅
+   - Bing: ✅
+[2m21:29:18[0m [2m│[0m [92m[1mpublish             [0m [2m│[0m Sitemap ping: 4/4 başarılı
+✅ Facebook EN post successful! ID: 982113784986233_122107536021250039
+   📊 Share recorded: FACEBOOK_EN (en)
+[2m21:29:22[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📘 Facebook EN posted: apples-599-macbook-budget-entry-or-strategic-market-reorientation
+🦋 Posting to Bluesky...
+✅ Bluesky post successful! URI: at://did:plc:4hzo2bld5x7xava77fngd7ss/app.bsky.feed.post/3mfs5cbby5o2h
+   📊 Share recorded: BLUESKY (en)
+[2m21:29:23[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🦋 Bluesky EN posted
+🐘 Posting to Mastodon...
+✅ Mastodon toot successful! ID: 116139056521109004
+   📊 Share recorded: MASTODON (en)
+[2m21:29:25[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐘 Mastodon EN posted
+[2m21:29:25[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📱 Apple’ın Ucuz MacBook’u Sadece Fiyat Değ... — 7/7 platforms shared
+[2m21:29:25[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐦 Tweet posted: nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu
+📘 Posting to Facebook Page...
+✅ Facebook post successful! ID: 882602408279863_122108192787242298
+   📊 Share recorded: FACEBOOK (tr)
+[2m21:29:30[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📘 Facebook TR posted: nvidianin-yeni-surucusu-fan-kontrolunu-bozdu-yukleme-yasaklandi-yaraticilar-ise-mutlu
+🦋 Posting to Bluesky...
+✅ Bluesky post successful! URI: at://did:plc:4hzo2bld5x7xava77fngd7ss/app.bsky.feed.post/3mfs5cirdng2w
+   📊 Share recorded: BLUESKY (tr)
+[2m21:29:31[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🦋 Bluesky TR posted
+🐘 Posting to Mastodon...
+✅ Mastodon toot successful! ID: 116139057065185034
+   📊 Share recorded: MASTODON (tr)
+[2m21:29:34[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐘 Mastodon TR posted
+📘 Posting to Facebook EN Page...
+✅ Facebook EN post successful! ID: 982113784986233_122107536069250039
+   📊 Share recorded: FACEBOOK_EN (en)
+[2m21:29:37[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📘 Facebook EN posted: nvidia-pulls-studio-driver-amid-fan-control-issues-despite-ai-performance-claims
+🦋 Posting to Bluesky...
+✅ Bluesky post successful! URI: at://did:plc:4hzo2bld5x7xava77fngd7ss/app.bsky.feed.post/3mfs5cprsa42a
+   📊 Share recorded: BLUESKY (en)
+[2m21:29:38[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🦋 Bluesky EN posted
+🐘 Posting to Mastodon...
+✅ Mastodon toot successful! ID: 116139057531184678
+   📊 Share recorded: MASTODON (en)
+[2m21:29:40[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 🐘 Mastodon EN posted
+[2m21:29:40[0m [2m│[0m [37m[1msocial-share        [0m [2m│[0m 📱 NVIDIA'nın Yeni Sürücüsü Fan Kontrolünü ... — 7/7 platforms shared
+[2m21:29:40[0m [92m✓[0m [37m[1msocial-share        [0m [2m│[0m Social sharing complete: 2 articles processed
+[2m21:29:40[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Agent social-share exited RECOVERY MODE
+[2m21:29:40[0m [92m✓[0m [37m[1msocial-share        [0m [2m│[0m Job 261 done — 2 items in 38.0s
+[2m21:29:40[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m [social-share] Job 261 completed
