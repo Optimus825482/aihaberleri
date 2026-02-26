@@ -172,10 +172,27 @@ Sadece optimize edilmiş başlığı yaz, başka hiçbir şey yazma:`,
     ];
 
     const optimized = await this.callLLMWithRetry(messages);
-    const cleaned = this.cleanLLMOutput(optimized);
+    let cleaned = this.cleanLLMOutput(optimized);
+
+    // Smart truncation: başlık 60'ı aşıyorsa kelime sınırında kes
+    if (cleaned.length > GUARDRAILS.title.max) {
+      console.log(
+        `[SEO Optimizer] Title truncation: ${cleaned.length} → max ${GUARDRAILS.title.max} (raw: "${cleaned.substring(0, 80)}...")`,
+      );
+      cleaned = cleaned
+        .substring(0, GUARDRAILS.title.max)
+        .replace(/\s+\S*$/, "")
+        .trim();
+    }
 
     // Guardrail kontrolü
     const { passed, note } = this.validateTitle(cleaned);
+
+    if (!passed) {
+      console.log(
+        `[SEO Optimizer] Title guardrail FAIL: len=${cleaned.length}, value="${cleaned.substring(0, 100)}"`,
+      );
+    }
 
     return {
       field: "title",
@@ -222,9 +239,34 @@ Sadece optimize edilmiş meta açıklamayı yaz:`,
     ];
 
     const optimized = await this.callLLMWithRetry(messages);
-    const cleaned = this.cleanLLMOutput(optimized);
+    let cleaned = this.cleanLLMOutput(optimized);
+
+    // Smart truncation: meta 160'ı aşıyorsa cümle sınırında kes
+    if (cleaned.length > GUARDRAILS.metaDescription.max) {
+      console.log(
+        `[SEO Optimizer] Meta truncation: ${cleaned.length} → max ${GUARDRAILS.metaDescription.max}`,
+      );
+      // Cümle sınırında kesmeyi dene (120-160 arası nokta ara)
+      const cutAt = cleaned.lastIndexOf(".", GUARDRAILS.metaDescription.max - 1);
+      if (cutAt >= GUARDRAILS.metaDescription.min) {
+        cleaned = cleaned.substring(0, cutAt + 1);
+      } else {
+        // Kelime sınırında kes + "..." ekle
+        cleaned =
+          cleaned
+            .substring(0, GUARDRAILS.metaDescription.max - 3)
+            .replace(/\s+\S*$/, "")
+            .trim() + "...";
+      }
+    }
 
     const { passed, note } = this.validateMetaDescription(cleaned);
+
+    if (!passed) {
+      console.log(
+        `[SEO Optimizer] Meta guardrail FAIL: len=${cleaned.length}, value="${cleaned.substring(0, 80)}..."`,
+      );
+    }
 
     return {
       field: "metaDescription",
@@ -337,6 +379,12 @@ Yapısal düzeltmeleri uygulayarak içeriği ver. Sadece HTML içerik, başka a�
       .filter(Boolean).length;
     const contentShrunk = newWordCount < originalWordCount * 0.8;
 
+    if (contentShrunk) {
+      console.log(
+        `[SEO Optimizer] Content guardrail FAIL: ${originalWordCount} → ${newWordCount} words (shrunk ${Math.round((1 - newWordCount / originalWordCount) * 100)}%)`,
+      );
+    }
+
     return {
       field: "content",
       before: article.content,
@@ -385,6 +433,12 @@ Anahtar kelimeleri listele (her satıra 1 tane):`,
 
     const passed = keywords.length >= GUARDRAILS.keywords.min;
 
+    if (!passed) {
+      console.log(
+        `[SEO Optimizer] Keywords guardrail FAIL: count=${keywords.length}, min=${GUARDRAILS.keywords.min}`,
+      );
+    }
+
     return {
       field: "keywords",
       before: (article.keywords || []).join(", "),
@@ -424,11 +478,34 @@ Sadece özeti yaz:`,
     ];
 
     const optimized = await this.callLLMWithRetry(messages);
-    const cleaned = this.cleanLLMOutput(optimized);
+    let cleaned = this.cleanLLMOutput(optimized);
+
+    // Smart truncation: excerpt 200'ü aşıyorsa cümle sınırında kes
+    if (cleaned.length > GUARDRAILS.excerpt.max) {
+      console.log(
+        `[SEO Optimizer] Excerpt truncation: ${cleaned.length} → max ${GUARDRAILS.excerpt.max}`,
+      );
+      const cutAt = cleaned.lastIndexOf(".", GUARDRAILS.excerpt.max - 1);
+      if (cutAt >= GUARDRAILS.excerpt.min) {
+        cleaned = cleaned.substring(0, cutAt + 1);
+      } else {
+        cleaned =
+          cleaned
+            .substring(0, GUARDRAILS.excerpt.max - 3)
+            .replace(/\s+\S*$/, "")
+            .trim() + "...";
+      }
+    }
 
     const passed =
       cleaned.length >= GUARDRAILS.excerpt.min &&
       cleaned.length <= GUARDRAILS.excerpt.max;
+
+    if (!passed) {
+      console.log(
+        `[SEO Optimizer] Excerpt guardrail FAIL: len=${cleaned.length}, value="${cleaned.substring(0, 80)}..."`,
+      );
+    }
 
     return {
       field: "excerpt",
@@ -510,12 +587,39 @@ Sadece özeti yaz:`,
   }
 
   private cleanLLMOutput(output: string): string {
-    return output
-      .replace(/^["'`]+|["'`]+$/g, "") // Tırnak ve backtick temizle
-      .replace(
-        /^(Here|İşte|Optimize|Düzeltilmiş|Output|Result).*?[:：]\s*/i,
-        "",
-      ) // Açıklama prefix temizle
+    let cleaned = output;
+
+    // 1. Thinking taglerini temizle (qwen3 bazen hala üretiyor)
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+
+    // 2. Markdown code fence temizle
+    cleaned = cleaned
+      .replace(/^```[\w]*\n?/gm, "")
+      .replace(/\n?```$/gm, "")
       .trim();
+
+    // 3. Tırnak ve backtick temizle
+    cleaned = cleaned.replace(/^["'`]+|["'`]+$/g, "").trim();
+
+    // 4. Geniş açıklama prefix temizle (Türkçe & İngilizce)
+    cleaned = cleaned
+      .replace(
+        /^(Here|İşte|Optimize|Düzeltilmiş|Output|Result|Evet|Tabii|Anladım|Anlıyorum|Elbette|Tabi|Sure|Of course|OK|Tamam).*?[:：]\s*/i,
+        "",
+      )
+      .trim();
+
+    // 5. Çoklu satır varsa: model açıklama + cevap formatı kullanıyor olabilir
+    //    Son anlamlı satırı al (cevap genelde en sonda)
+    const lines = cleaned.split("\n").map((l) => l.trim()).filter((l) => l.length > 0);
+    if (lines.length > 1) {
+      // Son satır genelde gerçek cevap
+      cleaned = lines[lines.length - 1];
+    }
+
+    // 6. Tekrar tırnak temizle
+    cleaned = cleaned.replace(/^["'`]+|["'`]+$/g, "").trim();
+
+    return cleaned;
   }
 }

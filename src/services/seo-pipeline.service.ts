@@ -127,10 +127,25 @@ export class SEOPipelineService {
       const validFields = optimResult.optimizedFields.filter(
         (f) => f.guardrailPassed,
       );
+      const failedGuardrails = optimResult.optimizedFields.filter(
+        (f) => !f.guardrailPassed,
+      );
+
+      // Debug: hangi alanlar guardrail geçti/kaldı
+      if (failedGuardrails.length > 0) {
+        console.log(
+          `[SEO Pipeline] Guardrail FAIL: ${failedGuardrails.map((f) => `${f.field}(${f.guardrailNote || "?"})`).join(", ")}`,
+        );
+      }
+      if (validFields.length > 0) {
+        console.log(
+          `[SEO Pipeline] Guardrail OK: ${validFields.map((f) => f.field).join(", ")}`,
+        );
+      }
 
       if (validFields.length === 0) {
-        console.warn(
-          "[SEO Pipeline] Hiçbir alan guardrail'i geçemedi, yeniden deniyor...",
+        console.log(
+          `[SEO Pipeline] ⚠️ Hiçbir alan guardrail'i geçemedi (deneme ${attempt + 1}/${this.maxRetries + 1}), yeniden deniyor...`,
         );
         retries++;
         continue;
@@ -155,7 +170,7 @@ export class SEOPipelineService {
         break;
       }
 
-      console.warn(
+      console.log(
         `[SEO Pipeline] ❌ Skor düştü (${beforeReport.score} → ${afterReport.score}), retry ${attempt + 1}`,
       );
       retries++;
