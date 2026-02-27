@@ -154,7 +154,14 @@ export async function notifyTurkishArticle(
   } else {
     try {
       const turkishUrl = `${baseUrl}/news/${slug}`;
-      await notifyGoogle(turkishUrl, "URL_UPDATED");
+      const googleResult = await notifyGoogle(turkishUrl, "URL_UPDATED");
+      if (!googleResult?.success) {
+        const errorMessage =
+          googleResult?.error ||
+          googleResult?.details?.error?.message ||
+          "Google notify returned unsuccessful result";
+        throw new Error(errorMessage);
+      }
       await db.article.update({
         where: { id: articleId },
         data: {
@@ -250,7 +257,14 @@ export async function notifyEnglishArticle(
   } else {
     try {
       const englishGoogleUrl = `${baseUrl}/en/news/${slugEn}`;
-      await notifyGoogle(englishGoogleUrl, "URL_UPDATED");
+      const googleResult = await notifyGoogle(englishGoogleUrl, "URL_UPDATED");
+      if (!googleResult?.success) {
+        const errorMessage =
+          googleResult?.error ||
+          googleResult?.details?.error?.message ||
+          "Google notify returned unsuccessful result";
+        throw new Error(errorMessage);
+      }
       await db.article.update({
         where: { id: articleId },
         data: {

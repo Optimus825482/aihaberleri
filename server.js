@@ -32,6 +32,24 @@ app.prepare().then(() => {
   // Create HTTP server
   const server = createServer(async (req, res) => {
     try {
+      // Hard fallback for IndexNow key verification files: /{key}.txt
+      // This runs before Next routing/rewrites to avoid 404 issues in production.
+      if (req.method === 'GET' && req.url) {
+        const match = req.url.match(/^\/([0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.txt(?:\?.*)?$/i);
+        if (match) {
+          const requestedKey = match[1].toLowerCase();
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          res.setHeader('Cache-Control', 'public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400');
+          res.setHeader('CDN-Cache-Control', 'public, max-age=604800');
+          res.setHeader('Cloudflare-CDN-Cache-Control', 'public, max-age=604800');
+          res.setHeader('X-Robots-Tag', 'noindex');
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.end(requestedKey);
+          return;
+        }
+      }
+
       const parsedUrl = parse(req.url, true);
       await handle(req, res, parsedUrl);
     } catch (err) {
