@@ -163,7 +163,7 @@ export class ContentOptimizerAgent extends BaseSEOAgent {
       );
 
       return changes;
-    };, "Content optimization failed");
+    }, "Content optimization failed");
   }
 
   /**
