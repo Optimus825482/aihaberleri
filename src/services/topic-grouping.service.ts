@@ -134,11 +134,17 @@ function matchArticleToCluster(
   }
 
   // 3. Levenshtein bazlı benzerlik (kısa canonical topic'ler için)
-  const maxLen = Math.max(articleText.length, clusterTopic.length);
+  const truncatedArticle = articleText.substring(0, 80);
+  const compareMaxLen = Math.max(truncatedArticle.length, clusterTopic.length);
   const levenshteinSim =
-    maxLen > 0
-      ? 1 - distance(articleText.substring(0, 80), clusterTopic) / maxLen
+    compareMaxLen > 0
+      ? 1 - distance(truncatedArticle, clusterTopic) / compareMaxLen
       : 0;
+
+  // Minimum 1 kelime doğrudan eşleşmeli — yoksa false positive riski çok yüksek
+  if (directMatchCount === 0 && bestTrendMatch < 0.15) {
+    return 0;
+  }
 
   // Ağırlıklı toplam
   const score =
@@ -388,7 +394,7 @@ export async function groupAndRankByTopic(
 
     for (const cluster of popularClusters) {
       const matchScore = matchArticleToCluster(bestArticle, cluster);
-      if (matchScore > bestClusterScore && matchScore >= 0.25) {
+      if (matchScore > bestClusterScore && matchScore >= 0.40) {
         bestClusterScore = matchScore;
         bestCluster = cluster;
       }

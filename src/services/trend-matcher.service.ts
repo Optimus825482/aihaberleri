@@ -138,6 +138,7 @@ function calculateSimilarity(str1: string, str2: string): number {
  * Turkish text normalization (remove diacritics for matching)
  */
 function normalizeTurkish(text: string): string {
+  if (!text) return "";
   return text
     .toLowerCase()
     .replace(/ğ/g, "g")

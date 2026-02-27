@@ -396,13 +396,14 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
   failed: number;
   firstQueueCompleted: number;
 }> {
-  // Monitor all active pipeline queues (SEO removed from pipeline)
+  // Monitor all active pipeline queues
   const queues = [
     QUEUE_NAMES.UNIQUE_ARTICLES,
     QUEUE_NAMES.RELEVANT_ARTICLES,
     QUEUE_NAMES.TREND_ENRICHMENT,
     QUEUE_NAMES.ENRICHED_ARTICLES,
     QUEUE_NAMES.ARTICLES_WITH_VISUALS,
+    QUEUE_NAMES.SEO_OPTIMIZATION,
     QUEUE_NAMES.DATABASE_PUBLISHER,
   ];
 

@@ -128,8 +128,8 @@ export class TrendEnricherAgent extends BaseAgent<
   ): Promise<ArticleWithTrend> {
     const articleForMatching: ArticleForMatching = {
       id: article.id || "",
-      title: article.title,
-      content: article.content,
+      title: article.title || "",
+      content: article.content || (article as any).description || "",
       keywords: article.keywords || [],
       language: article.language || "tr",
     };
