@@ -13,6 +13,41 @@ const INDEXNOW_ENDPOINTS = [
   "https://yandex.com/indexnow", // Yandex
 ];
 
+// Endpoint cooldown for persistent authorization failures (e.g., 403 UserForbiddedToAccessSite)
+const ENDPOINT_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6 hours
+const endpointCooldownUntil = new Map<string, number>();
+
+function isEndpointInCooldown(endpoint: string): boolean {
+  const until = endpointCooldownUntil.get(endpoint);
+  if (!until) return false;
+  if (Date.now() > until) {
+    endpointCooldownUntil.delete(endpoint);
+    return false;
+  }
+  return true;
+}
+
+function putEndpointInCooldown(endpoint: string, reason: string): void {
+  const until = Date.now() + ENDPOINT_COOLDOWN_MS;
+  endpointCooldownUntil.set(endpoint, until);
+  console.warn(
+    `⏸️ IndexNow endpoint cooldown: ${endpoint} (${reason}) until ${new Date(until).toISOString()}`,
+  );
+}
+
+function getActiveIndexNowEndpoints(): string[] {
+  const disabled = new Set(
+    (process.env.INDEXNOW_DISABLED_ENDPOINTS || "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
+
+  return INDEXNOW_ENDPOINTS.filter(
+    (endpoint) => !disabled.has(endpoint) && !isEndpointInCooldown(endpoint),
+  );
+}
+
 // Timeout for IndexNow API calls (ms)
 const INDEXNOW_TIMEOUT = 15000;
 
@@ -248,12 +283,32 @@ export async function submitUrlToIndexNow(
       urlList: [url],
     };
 
-    // Tüm endpoint'lere paralel gönder (with timeout & retry)
+    const activeEndpoints = getActiveIndexNowEndpoints();
+    if (activeEndpoints.length === 0) {
+      console.warn(
+        "⚠️ IndexNow: All endpoints are disabled or in cooldown, skipping submit",
+      );
+      return false;
+    }
+
+    // Aktif endpoint'lere paralel gönder (with timeout & retry)
     const results = await Promise.all(
-      INDEXNOW_ENDPOINTS.map((endpoint) =>
+      activeEndpoints.map((endpoint) =>
         fetchIndexNowWithRetry(endpoint, payload),
       ),
     );
+
+    for (const result of results) {
+      if (
+        result.status === 403 &&
+        result.body?.includes("UserForbiddedToAccessSite")
+      ) {
+        putEndpointInCooldown(
+          result.endpoint,
+          "403 UserForbiddedToAccessSite",
+        );
+      }
+    }
 
     // En az bir başarılı response varsa true dön
     const hasSuccess = results.some((r) => r.ok);
@@ -335,12 +390,32 @@ export async function submitUrlsToIndexNow(
       urlList: urlsToSubmit,
     };
 
-    // Tüm endpoint'lere paralel gönder (with timeout & retry)
+    const activeEndpoints = getActiveIndexNowEndpoints();
+    if (activeEndpoints.length === 0) {
+      console.warn(
+        "⚠️ IndexNow: All endpoints are disabled or in cooldown, skipping batch submit",
+      );
+      return false;
+    }
+
+    // Aktif endpoint'lere paralel gönder (with timeout & retry)
     const results = await Promise.all(
-      INDEXNOW_ENDPOINTS.map((endpoint) =>
+      activeEndpoints.map((endpoint) =>
         fetchIndexNowWithRetry(endpoint, payload),
       ),
     );
+
+    for (const result of results) {
+      if (
+        result.status === 403 &&
+        result.body?.includes("UserForbiddedToAccessSite")
+      ) {
+        putEndpointInCooldown(
+          result.endpoint,
+          "403 UserForbiddedToAccessSite",
+        );
+      }
+    }
 
     const hasSuccess = results.some((r) => r.ok);
 
