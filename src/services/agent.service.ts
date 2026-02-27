@@ -189,16 +189,18 @@ export async function executeNewsAgent(
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // 🆕 YENİ YAKLAŞIM: Content Variation - Duplicate'leri Engelleme, Çeşitlendir!
+    // 🆕 KONU GRUPLAMA + HİBRİT SKOR ÖNCELİKLENDİRME
     // ═══════════════════════════════════════════════════════════════════
     //
-    // ESKİ SİSTEM: Duplicate haberler tamamen engelleniyordu → %100 duplicate oranı
-    // YENİ SİSTEM: Aynı konulardan FARKLI AÇILARDAN içerik üret
+    // 1. Haberleri konularına göre grupla (entity + keyword matching)
+    // 2. Cross-platform trend cluster'larıyla eşleştir
+    // 3. Hibrit skor hesapla:
+    //    finalScore = trendScore*0.4 + clusterPopularity*0.3
+    //               + sourceCount*0.2 + recency*0.1
+    // 4. Her grubun en iyi temsilcisini seç → pipeline'a gönder
     //
-    // Adım 1: Mevcut yayınlanmış haberleri getir
-    // Adım 2: Aday haberleri kontrol et
-    // Adım 3: Benzer konu varsa → VARIATION oluştur
-    // Adım 4: Benzer konu yoksa → Normal akış
+    // TEK KRİTER DEĞİL: Trend skoru, cluster popülaritesi, kaynak sayısı
+    //                     ve güncellik birlikte değerlendirilir
     // ═══════════════════════════════════════════════════════════════════
 
     // Get article count from database settings (admin panel saves "agent.articlesPerRun")
@@ -218,21 +220,69 @@ export async function executeNewsAgent(
       `Hedef: ${targetCount} haber (ayar: ${maxArticles})`,
     );
 
-    // Step 2: Content variation check
+    // Step 2: Konu gruplandırma + hibrit skorlama
+    agentLogger.step(
+      agentLog.id,
+      "topic_grouping",
+      "Konu gruplandırma + hibrit skor",
+      35,
+    );
+
+    emitToAdmin(SocketEvents.AGENT_PROGRESS, {
+      step: "topic_grouping",
+      message: "Haberler konularına göre gruplandırılıyor…",
+      progress: 35,
+    });
+
+    const topicSpan = tracer.span("topic-grouping");
+    await topicSpan.start({ articleCount: allArticles.length });
+
+    const { groupAndRankByTopic } = await import("./topic-grouping.service");
+    const groupingResult = await groupAndRankByTopic(allArticles);
+
+    await topicSpan.end({
+      totalGroups: groupingResult.stats.totalGroups,
+      clusteredGroups: groupingResult.stats.clusteredGroups,
+      topTopic: groupingResult.stats.topTopic,
+      topScore: groupingResult.stats.topScore,
+      durationMs: groupingResult.stats.durationMs,
+    });
+
+    // Log konu gruplandırma sonuçları
+    await liveLog.agent.info(
+      `📊 ${groupingResult.stats.totalGroups} konu grubu | ` +
+        `${groupingResult.stats.clusteredGroups} trend eşleşmesi | ` +
+        `Top: "${groupingResult.stats.topTopic}" (skor: ${groupingResult.stats.topScore})`,
+    );
+    await addLogMessage(
+      agentLog.id,
+      `Konu gruplandırma: ${groupingResult.stats.totalGroups} grup, ` +
+        `${groupingResult.stats.clusteredGroups} trend eşleşmesi`,
+    );
+
+    // Top 3 grubu logla
+    for (const g of groupingResult.groupSummary.slice(0, 3)) {
+      const clusterTag = g.matchedCluster ? ` ↔ 🔥 ${g.matchedCluster}` : "";
+      await liveLog.agent.info(
+        `  📌 ${g.topic} (${g.articleCount} kaynak, hibrit: ${g.avgHybridScore})${clusterTag}`,
+      );
+    }
+
+    // Step 2.5: Content variation check (son 48 saat dupleri)
     agentLogger.step(
       agentLog.id,
       "content_variation",
       "İçerik çeşitlendirme",
-      40,
+      45,
     );
 
     emitToAdmin(SocketEvents.AGENT_PROGRESS, {
       step: "variation",
       message: "İçerik çeşitlendirme kontrolü…",
-      progress: 40,
+      progress: 45,
     });
 
-    // 🆕 Mevcut haberleri getir (son 48 saat)
+    // Son 48 saatte yayınlanan haberler (konu tekrarını engellemek için)
     const recentHours = 48;
     const recentArticles = await db.article.findMany({
       where: {
@@ -256,17 +306,29 @@ export async function executeNewsAgent(
       `Son ${recentHours} saatte ${recentArticles.length} haber yayınlanmış`,
     );
 
-    // Use allArticles (RSS + YouTube, already filtered for duplicates)
-    // Limit articles entering pipeline to targetCount * 3 (buffer for filtering losses)
+    // Hibrit skora göre sıralı haberleri pipeline'a gönder
+    // rankedArticles zaten en önemli → en az önemli sıralı
     const pipelineLimit = targetCount * 3;
     const uniqueArticles =
-      allArticles.length > pipelineLimit
-        ? allArticles.slice(0, pipelineLimit)
-        : allArticles;
+      groupingResult.rankedArticles.length > pipelineLimit
+        ? groupingResult.rankedArticles.slice(0, pipelineLimit)
+        : groupingResult.rankedArticles;
 
-    if (allArticles.length > pipelineLimit) {
+    if (groupingResult.rankedArticles.length > pipelineLimit) {
       await liveLog.agent.info(
-        `Pipeline limiti: ${allArticles.length} → ${uniqueArticles.length} (hedef: ${targetCount})`,
+        `Pipeline limiti: ${groupingResult.rankedArticles.length} → ${uniqueArticles.length} (hedef: ${targetCount})`,
+      );
+    }
+
+    // Hibrit skor breakdown'u logla (ilk 5 haber)
+    for (const art of uniqueArticles.slice(0, 5)) {
+      const b = art.scoreBreakdown;
+      const clusterTag = art.matchedCluster
+        ? ` [🔥 ${art.matchedCluster}]`
+        : "";
+      await addLogMessage(
+        agentLog.id,
+        `  #${uniqueArticles.indexOf(art) + 1} [H:${art.hybridScore}] T:${b.trendComponent} C:${b.clusterComponent} S:${b.sourceComponent} R:${b.recencyComponent}${clusterTag} — ${art.title.substring(0, 50)}…`,
       );
     }
 
