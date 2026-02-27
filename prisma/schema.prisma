@@ -672,10 +672,10 @@ enum ShareStatus {
 // Social Media Trend Tracking
 // =============================================
 
-// Twitter & Reddit trend verileri (Dataset olarak saklanır)
+// Sosyal Medya & Akademik trend verileri
 model SocialTrend {
   id            String   @id @default(cuid())
-  platform      String   // "twitter" | "reddit"
+  platform      String   // "mastodon" | "bluesky" | "hackernews" | "arxiv" | "lobsters"
   topic         String   // Trend konusu
   hashtag       String?  // #hashtag (varsa)
   volume        Int      @default(0) // Tweet/Comment sayısı

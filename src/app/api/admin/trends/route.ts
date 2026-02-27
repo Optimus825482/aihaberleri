@@ -35,9 +35,11 @@ export async function GET(request: NextRequest) {
       SELECT 
         COUNT(*) as "totalTrends",
         COUNT(*) FILTER (WHERE "expiresAt" > NOW()) as "activeTrends",
-        COUNT(*) FILTER (WHERE platform = 'twitter') as "twitterTrends",
         COUNT(*) FILTER (WHERE platform = 'mastodon') as "mastodonTrends",
         COUNT(*) FILTER (WHERE platform = 'bluesky') as "blueskyTrends",
+        COUNT(*) FILTER (WHERE platform = 'hackernews') as "hackerNewsTrends",
+        COUNT(*) FILTER (WHERE platform = 'arxiv') as "arxivTrends",
+        COUNT(*) FILTER (WHERE platform = 'lobsters') as "lobstersTrends",
         COALESCE(AVG(score), 0) as "avgTrendScore"
       FROM "SocialTrend"
       WHERE "fetchedAt" > NOW() - INTERVAL '24 hours'
@@ -53,9 +55,11 @@ export async function GET(request: NextRequest) {
     const stats = {
       totalTrends: Number(statsRaw[0]?.totalTrends || 0),
       activeTrends: Number(statsRaw[0]?.activeTrends || 0),
-      twitterTrends: Number(statsRaw[0]?.twitterTrends || 0),
       mastodonTrends: Number(statsRaw[0]?.mastodonTrends || 0),
       blueskyTrends: Number(statsRaw[0]?.blueskyTrends || 0),
+      hackerNewsTrends: Number(statsRaw[0]?.hackerNewsTrends || 0),
+      arxivTrends: Number(statsRaw[0]?.arxivTrends || 0),
+      lobstersTrends: Number(statsRaw[0]?.lobstersTrends || 0),
       articlesEnriched: enrichedCount,
       avgTrendScore: Math.round(Number(statsRaw[0]?.avgTrendScore || 0)),
     };

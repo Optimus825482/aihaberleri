@@ -74,3 +74,5 @@ logs
 # Python cache
 __pycache__/
 *.pyc
+tsc-errors.txt
+tsc-output.txt

@@ -42,8 +42,8 @@ import {
   Timer,
   BarChart3,
   Flame,
-  Twitter,
-  MessageSquare,
+  BookOpen,
+  Bug,
   ArrowUpRight,
   Loader2,
 } from "lucide-react";
@@ -82,8 +82,11 @@ interface SocialTrend {
 interface TrendStats {
   totalTrends: number;
   activeTrends: number;
-  twitterTrends: number;
-  redditTrends: number;
+  mastodonTrends: number;
+  blueskyTrends: number;
+  hackerNewsTrends: number;
+  arxivTrends: number;
+  lobstersTrends: number;
   articlesEnriched: number;
   avgTrendScore: number;
 }
@@ -92,8 +95,11 @@ interface TrendStats {
 const mockStats: TrendStats = {
   totalTrends: 0,
   activeTrends: 0,
-  twitterTrends: 0,
-  redditTrends: 0,
+  mastodonTrends: 0,
+  blueskyTrends: 0,
+  hackerNewsTrends: 0,
+  arxivTrends: 0,
+  lobstersTrends: 0,
   articlesEnriched: 0,
   avgTrendScore: 0,
 };
@@ -275,24 +281,54 @@ export default function TrendsPage() {
   // Platform badge
   const getPlatformBadge = (platform: string) => {
     switch (platform.toLowerCase()) {
-      case "twitter":
+      case "mastodon":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-violet-500/10 text-violet-500 border-violet-500/30"
+          >
+            <Globe className="h-3 w-3 mr-1" />
+            Mastodon
+          </Badge>
+        );
+      case "bluesky":
         return (
           <Badge
             variant="outline"
             className="bg-sky-500/10 text-sky-500 border-sky-500/30"
           >
-            <Twitter className="h-3 w-3 mr-1" />
-            Twitter
+            <Globe className="h-3 w-3 mr-1" />
+            Bluesky
           </Badge>
         );
-      case "reddit":
+      case "hackernews":
         return (
           <Badge
             variant="outline"
             className="bg-orange-500/10 text-orange-500 border-orange-500/30"
           >
-            <MessageSquare className="h-3 w-3 mr-1" />
-            Reddit
+            <Hash className="h-3 w-3 mr-1" />
+            HackerNews
+          </Badge>
+        );
+      case "arxiv":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-500/10 text-red-500 border-red-500/30"
+          >
+            <BookOpen className="h-3 w-3 mr-1" />
+            ArXiv
+          </Badge>
+        );
+      case "lobsters":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-rose-500/10 text-rose-500 border-rose-500/30"
+          >
+            <Bug className="h-3 w-3 mr-1" />
+            Lobsters
           </Badge>
         );
       default:
@@ -347,7 +383,7 @@ export default function TrendsPage() {
               Haber Trendleri
             </h1>
             <p className="text-muted-foreground mt-1">
-              Twitter ve Reddit trendlerini takip edin, pipeline'ı yönetin
+              Mastodon, Bluesky, HackerNews, ArXiv ve Lobsters trendlerini takip edin
             </p>
           </div>
 
@@ -385,8 +421,8 @@ export default function TrendsPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {/* Genel Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="border-primary/10">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -415,34 +451,6 @@ export default function TrendsPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-sky-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-sky-500/10 rounded-lg">
-                  <Twitter className="h-5 w-5 text-sky-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.twitterTrends}</p>
-                  <p className="text-xs text-muted-foreground">Twitter</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-orange-500/20">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-500/10 rounded-lg">
-                  <MessageSquare className="h-5 w-5 text-orange-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.redditTrends}</p>
-                  <p className="text-xs text-muted-foreground">Reddit</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           <Card className="border-purple-500/20">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -451,9 +459,7 @@ export default function TrendsPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{stats.articlesEnriched}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Zenginleştirildi
-                  </p>
+                  <p className="text-xs text-muted-foreground">Zenginleştirildi</p>
                 </div>
               </div>
             </CardContent>
@@ -468,6 +474,79 @@ export default function TrendsPage() {
                 <div>
                   <p className="text-2xl font-bold">{stats.avgTrendScore}</p>
                   <p className="text-xs text-muted-foreground">Ort. Skor</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Platform Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <Card className="border-violet-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-violet-500/10 rounded-lg">
+                  <Globe className="h-5 w-5 text-violet-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.mastodonTrends}</p>
+                  <p className="text-xs text-muted-foreground">Mastodon</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-sky-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-sky-500/10 rounded-lg">
+                  <Globe className="h-5 w-5 text-sky-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.blueskyTrends}</p>
+                  <p className="text-xs text-muted-foreground">Bluesky</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-orange-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500/10 rounded-lg">
+                  <Hash className="h-5 w-5 text-orange-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.hackerNewsTrends}</p>
+                  <p className="text-xs text-muted-foreground">HackerNews</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-red-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-500/10 rounded-lg">
+                  <BookOpen className="h-5 w-5 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.arxivTrends}</p>
+                  <p className="text-xs text-muted-foreground">ArXiv</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-rose-500/20">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-rose-500/10 rounded-lg">
+                  <Bug className="h-5 w-5 text-rose-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.lobstersTrends}</p>
+                  <p className="text-xs text-muted-foreground">Lobsters</p>
                 </div>
               </div>
             </CardContent>

@@ -2,17 +2,21 @@
  * Trend Fetcher Service
  *
  * RESPONSIBILITIES:
- * 1. Fetch Twitter trends (static AI topics fallback)
- * 2. Fetch Mastodon trending tags (public API, no auth needed)
- * 3. Fetch Bluesky trending posts (AT Protocol search)
- * 4. Normalize and store trends in PostgreSQL
- * 5. Extract keywords for soft matching
- * 6. Run as background cron job (every 15 minutes)
+ * 1. Fetch Mastodon trending tags (public API, no auth needed)
+ * 2. Fetch Bluesky trending posts (AT Protocol search)
+ * 3. Fetch HackerNews top AI stories (Firebase API, free)
+ * 4. Fetch ArXiv latest AI papers (public API, free)
+ * 5. Fetch Lobsters AI-tagged stories (JSON API, free)
+ * 6. Normalize and store trends in PostgreSQL
+ * 7. Extract keywords for soft matching
+ * 8. Run as background cron job (every 15 minutes)
  *
  * PLATFORMS:
- * - Twitter: static AI trend topics (free, no API key)
  * - Mastodon: /api/v1/trends/tags (public, no auth required)
  * - Bluesky: app.bsky.feed.searchPosts (AT Protocol, auth required)
+ * - HackerNews: Firebase API (free, no auth, no rate limit)
+ * - ArXiv: export.arxiv.org/api (free, no auth)
+ * - Lobsters: lobste.rs/t/ai.json (free, no auth)
  */
 
 import { db } from "@/lib/db";
@@ -26,14 +30,6 @@ const logger = createModuleLogger("TrendFetcher");
 // ============================================================================
 
 export const TREND_CONFIG = {
-  twitter: {
-    enabled: true,
-    regions: {
-      TR: 23424969,
-      US: 23424977,
-      global: 1,
-    },
-  },
   mastodon: {
     enabled: process.env.MASTODON_ENABLED === "true",
     instanceUrl:
@@ -58,6 +54,28 @@ export const TREND_CONFIG = {
     ],
     postsPerQuery: 5,
   },
+  hackernews: {
+    enabled: true, // Always free, no API key needed
+    topStoriesLimit: 30, // Check top 30 stories
+    aiKeywords: [
+      "ai", "artificial intelligence", "machine learning", "deep learning",
+      "llm", "gpt", "chatgpt", "openai", "anthropic", "claude", "gemini",
+      "neural", "transformer", "diffusion", "generative", "copilot",
+      "langchain", "rag", "vector", "embedding", "fine-tuning", "fine tuning",
+      "mistral", "llama", "deepseek", "groq", "hugging face", "midjourney",
+      "stable diffusion", "sora", "multimodal", "agent", "agentic",
+    ],
+  },
+  arxiv: {
+    enabled: true, // Always free, no API key needed
+    categories: ["cs.AI", "cs.LG", "cs.CL", "cs.CV"],
+    maxResults: 20,
+  },
+  lobsters: {
+    enabled: true, // Always free, no API key needed
+    tags: ["ai", "ml", "llm"],
+    limit: 25,
+  },
   // How often to fetch (in minutes)
   fetchIntervalMinutes: 15,
   // How long trends are valid (in hours)
@@ -71,7 +89,7 @@ export const TREND_CONFIG = {
 // ============================================================================
 
 interface NormalizedTrend {
-  platform: "twitter" | "mastodon" | "bluesky";
+  platform: "mastodon" | "bluesky" | "hackernews" | "arxiv" | "lobsters";
   topic: string;
   hashtag?: string;
   volume: number;
@@ -309,52 +327,189 @@ function extractHashtag(text: string): string | undefined {
 // TWITTER FETCHER (Static AI topics fallback)
 // ============================================================================
 
+// ============================================================================
+// HACKER NEWS FETCHER (Free API, no auth)
+// ============================================================================
+
 /**
- * Fetch Twitter trends - static fallback since Twitter API requires paid access
+ * Fetch AI-related trends from Hacker News top stories
+ * API: https://hacker-news.firebaseio.com/v0/
  */
-async function fetchTwitterTrends(region: string): Promise<NormalizedTrend[]> {
-  logger.info(`📡 Twitter trends for ${region} - Using static AI topics`);
+async function fetchHackerNewsTrends(): Promise<NormalizedTrend[]> {
+  if (!TREND_CONFIG.hackernews.enabled) return [];
 
-  const staticTrends: NormalizedTrend[] = [
-    {
-      platform: "twitter",
-      topic: "ChatGPT",
-      hashtag: "#ChatGPT",
-      volume: 50000,
-      score: 95,
-      sentiment: "positive",
-      region,
-      language: region === "TR" ? "tr" : "en",
-      keywords: ["chatgpt", "openai", "yapay zeka", "ai"],
-      rank: 1,
-    },
-    {
-      platform: "twitter",
-      topic: "Gemini AI",
-      hashtag: "#GeminiAI",
-      volume: 30000,
-      score: 85,
-      sentiment: "positive",
-      region,
-      language: region === "TR" ? "tr" : "en",
-      keywords: ["gemini", "google", "ai", "yapay zeka"],
-      rank: 2,
-    },
-    {
-      platform: "twitter",
-      topic: "Claude AI",
-      hashtag: "#ClaudeAI",
-      volume: 25000,
-      score: 80,
-      sentiment: "positive",
-      region,
-      language: region === "TR" ? "tr" : "en",
-      keywords: ["claude", "anthropic", "ai", "yapay zeka"],
-      rank: 3,
-    },
-  ];
+  try {
+    logger.info("📡 HackerNews: Fetching top stories...");
 
-  return staticTrends;
+    // 1. Top story ID'lerini al
+    const topRes = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
+    if (!topRes.ok) throw new Error(`HN top stories failed: ${topRes.status}`);
+    const topIds: number[] = await topRes.json();
+
+    // 2. İlk N story'nin detayını paralel çek
+    const limit = TREND_CONFIG.hackernews.topStoriesLimit;
+    const storyPromises = topIds.slice(0, limit).map(async (id) => {
+      try {
+        const r = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+        return r.ok ? await r.json() : null;
+      } catch { return null; }
+    });
+    const stories = (await Promise.all(storyPromises)).filter(Boolean);
+
+    // 3. AI keyword filtresi
+    const aiKeywords = TREND_CONFIG.hackernews.aiKeywords;
+    const aiStories = stories.filter((s: any) => {
+      const text = `${s.title || ""} ${s.url || ""}`.toLowerCase();
+      return aiKeywords.some((kw) => text.includes(kw));
+    });
+
+    logger.info(`📡 HackerNews: ${aiStories.length}/${stories.length} AI-related stories found`);
+
+    // 4. NormalizedTrend'e dönüştür
+    return aiStories.map((story: any, i: number) => ({
+      platform: "hackernews" as const,
+      topic: story.title || "HN Story",
+      hashtag: undefined,
+      volume: (story.score || 0) * 10 + (story.descendants || 0),
+      score: Math.min(100, Math.max(10, (story.score || 0))),
+      sentiment: "neutral" as const,
+      region: "GLOBAL",
+      language: "en",
+      keywords: extractKeywords(story.title || "", "en"),
+      rank: i + 1,
+      url: story.url || `https://news.ycombinator.com/item?id=${story.id}`,
+    }));
+  } catch (error) {
+    logger.error(`❌ HackerNews trend fetch error: ${error instanceof Error ? error.message : String(error)}`);
+    return [];
+  }
+}
+
+// ============================================================================
+// ARXIV FETCHER (Free API, no auth)
+// ============================================================================
+
+/**
+ * Fetch latest AI papers from ArXiv
+ * API: https://export.arxiv.org/api/query
+ */
+async function fetchArXivTrends(): Promise<NormalizedTrend[]> {
+  if (!TREND_CONFIG.arxiv.enabled) return [];
+
+  try {
+    logger.info("📡 ArXiv: Fetching latest AI papers...");
+
+    const categories = TREND_CONFIG.arxiv.categories.map((c) => `cat:${c}`).join("+OR+");
+    const maxResults = TREND_CONFIG.arxiv.maxResults;
+    const url = `https://export.arxiv.org/api/query?search_query=${categories}&sortBy=submittedDate&sortOrder=descending&max_results=${maxResults}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`ArXiv API failed: ${res.status}`);
+    const xmlText = await res.text();
+
+    // Simple XML parsing (ArXiv returns Atom XML)
+    const entries: NormalizedTrend[] = [];
+    const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+    let match;
+    let rank = 0;
+
+    while ((match = entryRegex.exec(xmlText)) !== null) {
+      rank++;
+      const entry = match[1];
+      const title = entry.match(/<title>([\s\S]*?)<\/title>/)?.[1]?.replace(/\s+/g, " ").trim() || "";
+      const summary = entry.match(/<summary>([\s\S]*?)<\/summary>/)?.[1]?.replace(/\s+/g, " ").trim() || "";
+      const link = entry.match(/<id>([\s\S]*?)<\/id>/)?.[1]?.trim() || "";
+      const published = entry.match(/<published>([\s\S]*?)<\/published>/)?.[1]?.trim() || "";
+
+      // ArXiv paper'ların popülerliğini tarihine göre tahmini skor
+      const daysSincePublish = published
+        ? Math.max(0, (Date.now() - new Date(published).getTime()) / 86400000)
+        : 0;
+      const freshnessScore = Math.max(20, 100 - daysSincePublish * 10);
+
+      entries.push({
+        platform: "arxiv" as const,
+        topic: title,
+        hashtag: undefined,
+        volume: Math.round(freshnessScore * 100),
+        score: Math.round(freshnessScore),
+        sentiment: "neutral" as const,
+        region: "GLOBAL",
+        language: "en",
+        keywords: extractKeywords(`${title} ${summary.slice(0, 200)}`, "en"),
+        rank,
+        url: link,
+      });
+    }
+
+    logger.info(`📡 ArXiv: ${entries.length} AI papers fetched`);
+    return entries;
+  } catch (error) {
+    logger.error(`❌ ArXiv trend fetch error: ${error instanceof Error ? error.message : String(error)}`);
+    return [];
+  }
+}
+
+// ============================================================================
+// LOBSTERS FETCHER (Free API, no auth)
+// ============================================================================
+
+/**
+ * Fetch AI-tagged stories from Lobste.rs
+ * API: https://lobste.rs/t/{tag}.json
+ */
+async function fetchLobstersTrends(): Promise<NormalizedTrend[]> {
+  if (!TREND_CONFIG.lobsters.enabled) return [];
+
+  try {
+    logger.info("📡 Lobsters: Fetching AI-tagged stories...");
+
+    const limit = TREND_CONFIG.lobsters.limit;
+    const tags = TREND_CONFIG.lobsters.tags;
+
+    // Her tag için paralel fetch
+    const allStories: any[] = [];
+    const seenUrls = new Set<string>();
+
+    const tagPromises = tags.map(async (tag) => {
+      try {
+        const r = await fetch(`https://lobste.rs/t/${tag}.json`);
+        if (!r.ok) return [];
+        const data = await r.json();
+        return Array.isArray(data) ? data.slice(0, limit) : [];
+      } catch { return []; }
+    });
+
+    const tagResults = await Promise.all(tagPromises);
+    for (const stories of tagResults) {
+      for (const story of stories) {
+        const url = story.url || story.short_id_url || "";
+        if (!seenUrls.has(url)) {
+          seenUrls.add(url);
+          allStories.push(story);
+        }
+      }
+    }
+
+    logger.info(`📡 Lobsters: ${allStories.length} unique AI stories found`);
+
+    return allStories.slice(0, limit).map((story: any, i: number) => ({
+      platform: "lobsters" as const,
+      topic: story.title || "Lobsters Story",
+      hashtag: story.tags?.length ? `#${story.tags[0]}` : undefined,
+      volume: (story.score || 0) * 15 + (story.comment_count || 0) * 5,
+      score: Math.min(100, Math.max(10, (story.score || 0) * 3)),
+      sentiment: "neutral" as const,
+      region: "GLOBAL",
+      language: "en",
+      keywords: extractKeywords(story.title || "", "en"),
+      rank: i + 1,
+      url: story.url || story.short_id_url || `https://lobste.rs/s/${story.short_id}`,
+    }));
+  } catch (error) {
+    logger.error(`❌ Lobsters trend fetch error: ${error instanceof Error ? error.message : String(error)}`);
+    return [];
+  }
 }
 
 // ============================================================================
@@ -667,7 +822,7 @@ async function saveTrendsToDatabase(
  * Get active (non-expired) trends from database
  */
 export async function getActiveTrends(options?: {
-  platform?: "twitter" | "mastodon" | "bluesky";
+  platform?: "mastodon" | "bluesky" | "hackernews" | "arxiv" | "lobsters";
   region?: string;
   language?: string;
   limit?: number;
@@ -733,9 +888,11 @@ export async function cleanupExpiredTrends(): Promise<number> {
  */
 export async function fetchAllTrends(): Promise<{
   success: boolean;
-  twitterCount: number;
   mastodonCount: number;
   blueskyCount: number;
+  hackernewsCount: number;
+  arxivCount: number;
+  lobstersCount: number;
   savedCount: number;
   duration: number;
 }> {
@@ -745,27 +902,36 @@ export async function fetchAllTrends(): Promise<{
 
   try {
     // Fetch from all sources in parallel
-    const [mastodonTrends, blueskyTrends, twitterTrendsTR, twitterTrendsUS] =
-      await Promise.all([
-        TREND_CONFIG.mastodon.enabled
-          ? fetchMastodonTrends()
-          : Promise.resolve([]),
-        TREND_CONFIG.bluesky.enabled
-          ? fetchBlueskyTrends()
-          : Promise.resolve([]),
-        TREND_CONFIG.twitter.enabled
-          ? fetchTwitterTrends("TR")
-          : Promise.resolve([]),
-        TREND_CONFIG.twitter.enabled
-          ? fetchTwitterTrends("US")
-          : Promise.resolve([]),
-      ]);
+    const [
+      mastodonTrends,
+      blueskyTrends,
+      hackerNewsTrends,
+      arxivTrends,
+      lobstersTrends,
+    ] = await Promise.all([
+      TREND_CONFIG.mastodon.enabled
+        ? fetchMastodonTrends()
+        : Promise.resolve([]),
+      TREND_CONFIG.bluesky.enabled
+        ? fetchBlueskyTrends()
+        : Promise.resolve([]),
+      TREND_CONFIG.hackernews.enabled
+        ? fetchHackerNewsTrends()
+        : Promise.resolve([]),
+      TREND_CONFIG.arxiv.enabled
+        ? fetchArXivTrends()
+        : Promise.resolve([]),
+      TREND_CONFIG.lobsters.enabled
+        ? fetchLobstersTrends()
+        : Promise.resolve([]),
+    ]);
 
     const allTrends = [
       ...mastodonTrends,
       ...blueskyTrends,
-      ...twitterTrendsTR,
-      ...twitterTrendsUS,
+      ...hackerNewsTrends,
+      ...arxivTrends,
+      ...lobstersTrends,
     ];
 
     // Save to database
@@ -780,14 +946,16 @@ export async function fetchAllTrends(): Promise<{
     const duration = Date.now() - startTime;
 
     logger.success(
-      `✅ Trend fetch complete: ${savedCount} saved | Mastodon: ${mastodonTrends.length}, Bluesky: ${blueskyTrends.length}, Twitter: ${twitterTrendsTR.length + twitterTrendsUS.length} (${duration}ms)`,
+      `✅ Trend fetch complete: ${savedCount} saved | Mastodon: ${mastodonTrends.length}, Bluesky: ${blueskyTrends.length}, HN: ${hackerNewsTrends.length}, ArXiv: ${arxivTrends.length}, Lobsters: ${lobstersTrends.length} (${duration}ms)`,
     );
 
     return {
       success: true,
-      twitterCount: twitterTrendsTR.length + twitterTrendsUS.length,
       mastodonCount: mastodonTrends.length,
       blueskyCount: blueskyTrends.length,
+      hackernewsCount: hackerNewsTrends.length,
+      arxivCount: arxivTrends.length,
+      lobstersCount: lobstersTrends.length,
       savedCount,
       duration,
     };
@@ -797,9 +965,11 @@ export async function fetchAllTrends(): Promise<{
     );
     return {
       success: false,
-      twitterCount: 0,
       mastodonCount: 0,
       blueskyCount: 0,
+      hackernewsCount: 0,
+      arxivCount: 0,
+      lobstersCount: 0,
       savedCount: 0,
       duration: Date.now() - startTime,
     };
