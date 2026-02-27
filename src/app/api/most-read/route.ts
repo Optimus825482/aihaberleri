@@ -75,13 +75,13 @@ export async function GET(request: NextRequest) {
         },
       };
 
-      const orderByTranslation: any =
-        sortBy === "trend"
-          ? [
-              { article: { trendScore: "desc" } },
-              { article: { views: "desc" } },
-            ]
-          : [{ article: { views: "desc" } }];
+      // For "all" and "month" periods, prioritize views (popularity)
+      // For "week" and "today", prioritize trendScore (momentum)
+      const useViewsSortEn =
+        sortBy === "views" || period === "all" || period === "month";
+      const orderByTranslation: any = useViewsSortEn
+        ? [{ article: { views: "desc" } }, { article: { trendScore: "desc" } }]
+        : [{ article: { trendScore: "desc" } }, { article: { views: "desc" } }];
 
       const translations = await db.articleTranslation.findMany({
         where: whereTranslation,
@@ -138,10 +138,13 @@ export async function GET(request: NextRequest) {
     };
 
     // Sort by trend score or views
-    const orderBy =
-      sortBy === "trend"
-        ? [{ trendScore: "desc" as const }, { views: "desc" as const }]
-        : [{ views: "desc" as const }];
+    // For "all" and "month" periods, prioritize views (all-time/monthly popularity)
+    // For "week" and "today", prioritize trendScore (current momentum)
+    const useViewsSort =
+      sortBy === "views" || period === "all" || period === "month";
+    const orderBy = useViewsSort
+      ? [{ views: "desc" as const }, { trendScore: "desc" as const }]
+      : [{ trendScore: "desc" as const }, { views: "desc" as const }];
 
     const articles = await db.article.findMany({
       where: whereClause,
