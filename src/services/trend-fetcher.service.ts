@@ -715,6 +715,80 @@ function analyzeSentiment(text: string): "positive" | "negative" | "neutral" {
 }
 
 // ============================================================================
+// GLOBAL TREND SCORE NORMALIZATION
+// ============================================================================
+
+/**
+ * Calculate globally comparable trend scores across all platforms.
+ *
+ * Problem: Each platform scores on its own scale:
+ *   - ArXiv: freshness-based (new papers always ~87)
+ *   - HackerNews: raw upvotes (1-500+)
+ *   - Lobsters: upvotes * 3 (low numbers)
+ *   - Bluesky: engagement / 5
+ *   - Mastodon: (uses + accounts) / 2
+ *
+ * Solution:
+ *   1. Normalize each platform's scores to 0-1 range (within-platform)
+ *   2. Combine normalized score (60%) + normalized volume (40%)
+ *   3. Multiply by platform credibility ceiling
+ *
+ * Platform ceilings reflect signal quality:
+ *   - HackerNews: 100 (real upvotes from large tech community)
+ *   - Bluesky: 90 (real engagement metrics)
+ *   - Lobsters: 80 (curated tech community, real upvotes)
+ *   - ArXiv: 70 (academic, no real engagement metric)
+ *   - Mastodon: 65 (hashtag-based, less targeted)
+ */
+function calculateGlobalScores(trends: NormalizedTrend[]): NormalizedTrend[] {
+  const PLATFORM_CEILING: Record<string, number> = {
+    hackernews: 100,
+    bluesky: 90,
+    lobsters: 80,
+    arxiv: 70,
+    mastodon: 65,
+  };
+
+  // Group by platform
+  const byPlatform = new Map<string, NormalizedTrend[]>();
+  for (const t of trends) {
+    const group = byPlatform.get(t.platform) || [];
+    group.push(t);
+    byPlatform.set(t.platform, group);
+  }
+
+  for (const [platform, group] of byPlatform) {
+    if (group.length === 0) continue;
+
+    const scores = group.map((t) => t.score);
+    const volumes = group.map((t) => t.volume);
+
+    const maxScore = Math.max(...scores);
+    const minScore = Math.min(...scores);
+    const maxVolume = Math.max(...volumes);
+    const minVolume = Math.min(...volumes);
+
+    const scoreRange = maxScore - minScore || 1;
+    const volumeRange = maxVolume - minVolume || 1;
+    const ceiling = PLATFORM_CEILING[platform] || 50;
+
+    for (const t of group) {
+      // Normalize to 0-1 within platform
+      const normScore = (t.score - minScore) / scoreRange;
+      const normVolume = (t.volume - minVolume) / volumeRange;
+
+      // Weighted combination: engagement 60%, volume 40%
+      const combined = normScore * 0.6 + normVolume * 0.4;
+
+      // Apply platform ceiling → global score
+      t.score = Math.max(1, Math.round(combined * ceiling));
+    }
+  }
+
+  return trends;
+}
+
+// ============================================================================
 // DATABASE OPERATIONS
 // ============================================================================
 
@@ -957,7 +1031,10 @@ export async function fetchAllTrends(): Promise<{
       logger.info(`🔤 Filtered ${filteredCount} non-Latin/Turkish trends`);
     }
 
-    // Sort by score descending before saving
+    // Calculate globally comparable scores across platforms
+    calculateGlobalScores(allTrends);
+
+    // Sort by global score descending before saving
     allTrends.sort((a, b) => b.score - a.score);
 
     // Save to database
