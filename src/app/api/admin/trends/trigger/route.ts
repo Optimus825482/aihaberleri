@@ -42,10 +42,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `${result.twitterCount + result.redditCount} trend başarıyla çekildi`,
+      message: `${result.twitterCount + result.mastodonCount + result.blueskyCount} trend başarıyla çekildi`,
       details: {
         twitter: result.twitterCount,
-        reddit: result.redditCount,
+        mastodon: result.mastodonCount,
+        bluesky: result.blueskyCount,
         duration: result.duration,
       },
     });

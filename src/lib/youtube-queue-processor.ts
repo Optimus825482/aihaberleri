@@ -124,16 +124,20 @@ export async function processNextYouTubeTopic(): Promise<boolean> {
         },
       ];
 
-      const { jobId: ytJobId } = await startMultiAgentPipeline(articleInput, {
-        agentLogId: agentLog.id,
-        targetCount: 1,
-      });
+      const { jobId: ytJobId, runId: ytRunId } = await startMultiAgentPipeline(
+        articleInput,
+        {
+          agentLogId: agentLog.id,
+          targetCount: 1,
+        },
+      );
 
       // Wait for pipeline completion (max 10 minutes per topic)
       const result = await waitForPipelineCompletion(
         agentLog.id,
         10 * 60 * 1000,
         ytJobId,
+        ytRunId,
       );
 
       if (result.success && result.articlesPublished > 0) {

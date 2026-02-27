@@ -13,6 +13,135 @@ import { getRedis } from "@/lib/redis";
 const logger = createModuleLogger("multi-agent-pipeline");
 
 // ============================================================================
+// PIPELINE STATE (Redis) — Dashboard widget'ı besler
+// ============================================================================
+
+const PIPELINE_STATE_KEY = "pipeline:current-state";
+const PIPELINE_HISTORY_KEY = "pipeline:last-run";
+
+interface PipelineStepState {
+  id: string;
+  name: string;
+  displayName: string;
+  status: "pending" | "running" | "completed" | "error" | "skipped";
+  duration?: number;
+  itemsProcessed?: number;
+  error?: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+
+interface PipelineRedisState {
+  isRunning: boolean;
+  currentStep: number;
+  steps: PipelineStepState[];
+  startedAt?: string;
+  completedAt?: string;
+  articlesCreated: number;
+  totalDuration?: number;
+  runId?: string;
+}
+
+const PIPELINE_STEPS: Omit<PipelineStepState, "status">[] = [
+  { id: "duplicate-detector", name: "duplicate-detector", displayName: "Duplikat Tespiti" },
+  { id: "relevance-filter", name: "relevance-filter", displayName: "Alakalılık Filtresi" },
+  { id: "trend-enrichment", name: "trend-enrichment", displayName: "Trend Zenginleştirme" },
+  { id: "content-enricher", name: "content-enricher", displayName: "İçerik Zenginleştirme" },
+  { id: "visual-generator", name: "visual-generator", displayName: "Görsel Oluşturma" },
+  { id: "database-publisher", name: "database-publisher", displayName: "Yayınlama" },
+];
+
+const STEP_QUEUE_MAP: Record<string, string> = {
+  "duplicate-detector": QUEUE_NAMES.UNIQUE_ARTICLES,
+  "relevance-filter": QUEUE_NAMES.RELEVANT_ARTICLES,
+  "trend-enrichment": QUEUE_NAMES.TREND_ENRICHMENT,
+  "content-enricher": QUEUE_NAMES.ENRICHED_ARTICLES,
+  "visual-generator": QUEUE_NAMES.ARTICLES_WITH_VISUALS,
+  "database-publisher": QUEUE_NAMES.DATABASE_PUBLISHER,
+};
+
+/**
+ * Write pipeline state to Redis — powers the admin dashboard widget
+ */
+async function writePipelineState(state: PipelineRedisState): Promise<void> {
+  try {
+    const redis = getRedis();
+    if (!redis) return;
+    await redis.set(PIPELINE_STATE_KEY, JSON.stringify(state), "EX", 3600);
+  } catch (e) {
+    logger.warn("Failed to write pipeline state to Redis");
+  }
+}
+
+/**
+ * Save pipeline run to history (shown when pipeline is idle)
+ */
+async function savePipelineHistory(state: PipelineRedisState): Promise<void> {
+  try {
+    const redis = getRedis();
+    if (!redis) return;
+    await redis.set(PIPELINE_HISTORY_KEY, JSON.stringify(state), "EX", 86400); // 24h
+  } catch (e) {
+    logger.warn("Failed to save pipeline history to Redis");
+  }
+}
+
+/**
+ * Build live step statuses from BullMQ queues and write to Redis
+ */
+async function syncPipelineStateFromQueues(
+  runId: string,
+  startedAt: string,
+  articlesCreated: number,
+): Promise<PipelineRedisState> {
+  const stepStats = await Promise.all(
+    PIPELINE_STEPS.map(async (step) => {
+      const queueName = STEP_QUEUE_MAP[step.id];
+      const queue = getQueue(queueName);
+      if (!queue) return { step, active: 0, waiting: 0, completed: 0, failed: 0 };
+      const [active, waiting, completed, failed] = await Promise.all([
+        queue.getActiveCount(),
+        queue.getWaitingCount(),
+        queue.getCompletedCount(),
+        queue.getFailedCount(),
+      ]);
+      return { step, active, waiting, completed, failed };
+    }),
+  );
+
+  const firstActiveIdx = stepStats.findIndex((s) => s.active > 0);
+  const firstQueuedIdx = stepStats.findIndex((s) => s.waiting > 0);
+  const currentStep = firstActiveIdx !== -1 ? firstActiveIdx : firstQueuedIdx;
+  const hasWork = stepStats.some((s) => s.active > 0 || s.waiting > 0);
+
+  const steps: PipelineStepState[] = stepStats.map(({ step, active, waiting, completed, failed }, idx) => {
+    let status: PipelineStepState["status"] = "pending";
+    if (active > 0) {
+      status = "running";
+    } else if (currentStep !== -1 && idx < currentStep) {
+      status = "completed";
+    } else if (waiting > 0) {
+      status = "pending";
+    } else if (hasWork && currentStep !== -1 && idx < currentStep) {
+      status = "completed";
+    }
+    return { ...step, status, itemsProcessed: completed };
+  });
+
+  const state: PipelineRedisState = {
+    isRunning: hasWork,
+    currentStep,
+    steps,
+    startedAt,
+    articlesCreated,
+    runId,
+  };
+
+  await writePipelineState(state);
+  return state;
+}
+
+// ============================================================================
 // AGENT RECOVERY MECHANISM (FAZ 3)
 // ============================================================================
 
@@ -192,7 +321,7 @@ export interface PipelineConfig {
 export async function startMultiAgentPipeline(
   articles: ArticleWithTopic[],
   config: PipelineConfig,
-): Promise<{ jobId: string }> {
+): Promise<{ jobId: string; runId: string }> {
   logger.info(
     `Pipeline starting: ${articles.length} articles → duplicate-detector`,
   );
@@ -225,6 +354,22 @@ export async function startMultiAgentPipeline(
     `Job ${job.id} added — ${collectedArticles.length} articles queued`,
   );
 
+  // Write initial pipeline state to Redis → dashboard widget shows "Çalışıyor"
+  const runId = `run-${Date.now()}`;
+  const initialState: PipelineRedisState = {
+    isRunning: true,
+    currentStep: 0,
+    steps: PIPELINE_STEPS.map((s, idx) => ({
+      ...s,
+      status: idx === 0 ? "running" : "pending",
+    })),
+    startedAt: new Date().toISOString(),
+    articlesCreated: 0,
+    runId,
+  };
+  await writePipelineState(initialState);
+  logger.info(`Pipeline state written to Redis (runId: ${runId})`);
+
   // Brief queue status check
   await new Promise((resolve) => setTimeout(resolve, 1000));
   const activeCount = await duplicateQueue.getActiveCount();
@@ -236,7 +381,7 @@ export async function startMultiAgentPipeline(
     logger.warn("Job waiting — agents may not have started");
   }
 
-  return { jobId: job.id! };
+  return { jobId: job.id!, runId };
 }
 
 /**
@@ -309,6 +454,7 @@ export async function waitForPipelineCompletion(
   agentLogId: string,
   timeoutMs: number = 20 * 60 * 1000, // 20 minutes
   initialJobId?: string,
+  runId?: string,
 ): Promise<{
   success: boolean;
   articlesPublished: number;
@@ -365,12 +511,20 @@ export async function waitForPipelineCompletion(
   let hasSeenArticlesInQueue = initialJobCompleted;
   let checkCount = 0;
 
+  const pipelineStartedAt = new Date(startTime).toISOString();
+  const effectiveRunId = runId || `run-${startTime}`;
+
   while (Date.now() - startTime < timeoutMs) {
     checkCount++;
     const progress = await monitorPipelineProgress(agentLogId);
 
     if (progress.articlesInQueue > 0 || progress.completed > 0) {
       hasSeenArticlesInQueue = true;
+    }
+
+    // Sync pipeline state to Redis every check (dashboard polls every 3-5s)
+    if (hasSeenArticlesInQueue || checkCount <= 2) {
+      await syncPipelineStateFromQueues(effectiveRunId, pipelineStartedAt, 0);
     }
 
     if (progress.articlesInQueue > 0 || checkCount <= 2) {
@@ -395,6 +549,24 @@ export async function waitForPipelineCompletion(
           logger.error(
             `   Check worker logs for "Multi-agent pipeline ready" message.`,
           );
+          // Write error state to Redis
+          const errorState: PipelineRedisState = {
+            isRunning: false,
+            currentStep: -1,
+            steps: PIPELINE_STEPS.map((s) => ({
+              ...s,
+              status: "error" as const,
+              error: "Agents never started",
+            })),
+            startedAt: pipelineStartedAt,
+            completedAt: new Date().toISOString(),
+            articlesCreated: 0,
+            totalDuration: Date.now() - startTime,
+            runId: effectiveRunId,
+          };
+          await writePipelineState(errorState);
+          await savePipelineHistory(errorState);
+
           return {
             success: false,
             articlesPublished: 0,
@@ -428,6 +600,25 @@ export async function waitForPipelineCompletion(
         const pipelineRan =
           publishedCount > 0 || draftCount > 0 || hasSeenArticlesInQueue;
 
+        // Write final completed state to Redis
+        const totalDuration = Date.now() - startTime;
+        const finalState: PipelineRedisState = {
+          isRunning: false,
+          currentStep: PIPELINE_STEPS.length - 1,
+          steps: PIPELINE_STEPS.map((s) => ({
+            ...s,
+            status: "completed" as const,
+          })),
+          startedAt: pipelineStartedAt,
+          completedAt: new Date().toISOString(),
+          articlesCreated: publishedCount,
+          totalDuration,
+          runId: effectiveRunId,
+        };
+        await writePipelineState(finalState);
+        await savePipelineHistory(finalState);
+        logger.info(`Pipeline state finalized in Redis (${totalDuration}ms, ${publishedCount} published)`);
+
         return {
           success: pipelineRan,
           articlesPublished: publishedCount,
@@ -455,6 +646,25 @@ export async function waitForPipelineCompletion(
   }
 
   logger.error(`❌ Pipeline timeout after ${timeoutMs / 1000}s`);
+
+  // Write error state to Redis
+  const timeoutState: PipelineRedisState = {
+    isRunning: false,
+    currentStep: -1,
+    steps: PIPELINE_STEPS.map((s) => ({
+      ...s,
+      status: "error" as const,
+      error: "Pipeline timeout",
+    })),
+    startedAt: pipelineStartedAt,
+    completedAt: new Date().toISOString(),
+    articlesCreated: 0,
+    totalDuration: Date.now() - startTime,
+    runId: effectiveRunId,
+  };
+  await writePipelineState(timeoutState);
+  await savePipelineHistory(timeoutState);
+
   return {
     success: false,
     articlesPublished: 0,

@@ -712,7 +712,7 @@ async function startWorker() {
     try {
       log.info("Startup sync started");
 
-      // 0. Start Trend Fetcher (Twitter/Reddit trend collection cron)
+      // 0. Start Trend Fetcher (Twitter/Mastodon/Bluesky trend collection cron)
       try {
         startTrendFetcher();
         log.success("Trend Fetcher started");

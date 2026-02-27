@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
         COUNT(*) as "totalTrends",
         COUNT(*) FILTER (WHERE "expiresAt" > NOW()) as "activeTrends",
         COUNT(*) FILTER (WHERE platform = 'twitter') as "twitterTrends",
-        COUNT(*) FILTER (WHERE platform = 'reddit') as "redditTrends",
+        COUNT(*) FILTER (WHERE platform = 'mastodon') as "mastodonTrends",
+        COUNT(*) FILTER (WHERE platform = 'bluesky') as "blueskyTrends",
         COALESCE(AVG(score), 0) as "avgTrendScore"
       FROM "SocialTrend"
       WHERE "fetchedAt" > NOW() - INTERVAL '24 hours'
@@ -53,7 +54,8 @@ export async function GET(request: NextRequest) {
       totalTrends: Number(statsRaw[0]?.totalTrends || 0),
       activeTrends: Number(statsRaw[0]?.activeTrends || 0),
       twitterTrends: Number(statsRaw[0]?.twitterTrends || 0),
-      redditTrends: Number(statsRaw[0]?.redditTrends || 0),
+      mastodonTrends: Number(statsRaw[0]?.mastodonTrends || 0),
+      blueskyTrends: Number(statsRaw[0]?.blueskyTrends || 0),
       articlesEnriched: enrichedCount,
       avgTrendScore: Math.round(Number(statsRaw[0]?.avgTrendScore || 0)),
     };

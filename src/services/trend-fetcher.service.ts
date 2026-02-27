@@ -2,21 +2,22 @@
  * Trend Fetcher Service
  *
  * RESPONSIBILITIES:
- * 1. Fetch Twitter trends (free read-only API)
- * 2. Fetch Reddit hot posts from AI/Tech subreddits
- * 3. Normalize and store trends in PostgreSQL
- * 4. Extract keywords for soft matching
- * 5. Run as background cron job (every 15 minutes)
+ * 1. Fetch Twitter trends (static AI topics fallback)
+ * 2. Fetch Mastodon trending tags (public API, no auth needed)
+ * 3. Fetch Bluesky trending posts (AT Protocol search)
+ * 4. Normalize and store trends in PostgreSQL
+ * 5. Extract keywords for soft matching
+ * 6. Run as background cron job (every 15 minutes)
  *
  * PLATFORMS:
- * - Twitter: trends/place endpoint (free read-only)
- * - Reddit: /r/{subreddit}/hot.json (official API)
- *
- * NO API KEYS REQUIRED for basic access!
+ * - Twitter: static AI trend topics (free, no API key)
+ * - Mastodon: /api/v1/trends/tags (public, no auth required)
+ * - Bluesky: app.bsky.feed.searchPosts (AT Protocol, auth required)
  */
 
 import { db } from "@/lib/db";
 import { createModuleLogger } from "@/lib/agent-log-stream";
+import { BskyAgent } from "@atproto/api";
 
 const logger = createModuleLogger("TrendFetcher");
 
@@ -27,41 +28,39 @@ const logger = createModuleLogger("TrendFetcher");
 export const TREND_CONFIG = {
   twitter: {
     enabled: true,
-    // Twitter WOEID (Where On Earth ID)
     regions: {
-      TR: 23424969, // Turkey
-      US: 23424977, // United States
-      global: 1, // Worldwide
+      TR: 23424969,
+      US: 23424977,
+      global: 1,
     },
-    // Use Twitter's public trends endpoint (no auth required for basic access)
-    baseUrl: "https://api.twitter.com/1.1/trends/place.json",
-    // Alternative: Nitter instance for scraping (free)
-    nitterUrl: "https://nitter.net/search",
   },
-  reddit: {
-    enabled: true,
-    subreddits: [
-      "technology",
-      "artificial",
-      "MachineLearning",
+  mastodon: {
+    enabled: process.env.MASTODON_ENABLED === "true",
+    instanceUrl:
+      process.env.MASTODON_INSTANCE_URL || "https://mastodon.social",
+    // No auth needed for trending API
+    trendLimit: 20,
+  },
+  bluesky: {
+    enabled: process.env.BLUESKY_ENABLED === "true",
+    handle: process.env.BLUESKY_HANDLE || "",
+    appPassword: process.env.BLUESKY_APP_PASSWORD || "",
+    // AI/tech search queries for trend discovery
+    searchQueries: [
+      "artificial intelligence",
+      "yapay zeka",
+      "ChatGPT",
+      "LLM",
+      "machine learning",
       "OpenAI",
-      "LocalLLaMA",
-      "singularity",
-      "Futurology",
+      "Claude AI",
+      "Gemini AI",
     ],
-    // Reddit OAuth2 API (required since 2024)
-    baseUrl: "https://oauth.reddit.com",
-    publicUrl: "https://www.reddit.com", // Fallback for unauthenticated
-    authUrl: "https://www.reddit.com/api/v1/access_token",
-    clientId: process.env.REDDIT_CLIENT_ID || "",
-    clientSecret: process.env.REDDIT_CLIENT_SECRET || "",
-    userAgent:
-      process.env.REDDIT_USER_AGENT || "AIHaberleri/1.0 (AI News Aggregator)",
-    postsPerSubreddit: 10,
+    postsPerQuery: 5,
   },
   // How often to fetch (in minutes)
   fetchIntervalMinutes: 15,
-  // How long trends are valid (in hours) - extended to 6 hours for better visibility
+  // How long trends are valid (in hours)
   trendExpiryHours: 6,
   // Cleanup: delete trends older than X days
   cleanupDays: 30,
@@ -72,7 +71,7 @@ export const TREND_CONFIG = {
 // ============================================================================
 
 interface NormalizedTrend {
-  platform: "twitter" | "reddit";
+  platform: "twitter" | "mastodon" | "bluesky";
   topic: string;
   hashtag?: string;
   volume: number;
@@ -83,210 +82,239 @@ interface NormalizedTrend {
   keywords: string[];
   rank?: number;
   url?: string;
-  subreddit?: string;
 }
 
-interface RedditPost {
-  data: {
-    title: string;
-    selftext: string;
-    subreddit: string;
-    score: number;
-    num_comments: number;
-    url: string;
-    permalink: string;
-    created_utc: number;
-  };
-}
-
-interface RedditResponse {
-  data: {
-    children: RedditPost[];
-  };
+// Mastodon trending tag shape
+interface MastodonTrendingTag {
+  name: string;
+  url: string;
+  history: Array<{
+    day: string;
+    uses: string;
+    accounts: string;
+  }>;
 }
 
 // ============================================================================
-// REDDIT FETCHER (OAuth2 Authentication Required since 2024)
+// MASTODON TREND FETCHER (Public API - No Auth Required)
 // ============================================================================
-
-// Cache for Reddit access token
-let redditAccessToken: string | null = null;
-let redditTokenExpiry: number = 0;
 
 /**
- * Get Reddit OAuth2 access token
+ * Fetch trending hashtags from Mastodon instance
+ * Uses GET /api/v1/trends/tags - public endpoint, no auth needed
  */
-async function getRedditAccessToken(): Promise<string | null> {
-  const { clientId, clientSecret, userAgent, authUrl } = TREND_CONFIG.reddit;
+async function fetchMastodonTrends(): Promise<NormalizedTrend[]> {
+  const { instanceUrl, trendLimit } = TREND_CONFIG.mastodon;
 
-  // Check if we have valid credentials
-  if (!clientId || !clientSecret) {
-    logger.warn(
-      "Reddit API credentials not configured. Set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET.",
-    );
-    return null;
-  }
-
-  // Return cached token if still valid
-  if (redditAccessToken && Date.now() < redditTokenExpiry) {
-    return redditAccessToken;
-  }
+  logger.info(`🐘 Fetching Mastodon trends from ${instanceUrl}...`);
 
   try {
-    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString(
-      "base64",
-    );
-
-    const response = await fetch(authUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${credentials}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": userAgent,
+    const response = await fetch(
+      `${instanceUrl}/api/v1/trends/tags?limit=${trendLimit}`,
+      {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "AIHaberleri/1.0",
+        },
+        signal: AbortSignal.timeout(15000),
       },
-      body: "grant_type=client_credentials",
-    });
+    );
 
     if (!response.ok) {
       logger.error(
-        `Reddit auth failed: ${response.status} ${response.statusText}`,
+        `Mastodon trends API returned ${response.status}: ${response.statusText}`,
       );
-      return null;
-    }
-
-    const data = await response.json();
-    redditAccessToken = data.access_token;
-    // Token expires in ~1 hour, refresh 5 minutes early
-    redditTokenExpiry = Date.now() + (data.expires_in - 300) * 1000;
-
-    logger.info("✅ Reddit OAuth2 token acquired");
-    return redditAccessToken;
-  } catch (error) {
-    logger.error(
-      `Reddit auth error: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return null;
-  }
-}
-
-/**
- * Fetch hot posts from a Reddit subreddit
- */
-async function fetchRedditHot(subreddit: string): Promise<NormalizedTrend[]> {
-  const token = await getRedditAccessToken();
-
-  // Use OAuth endpoint if we have a token, otherwise try public (may fail with 403)
-  const baseUrl = token
-    ? TREND_CONFIG.reddit.baseUrl
-    : TREND_CONFIG.reddit.publicUrl;
-  const url = `${baseUrl}/r/${subreddit}/hot.json?limit=${TREND_CONFIG.reddit.postsPerSubreddit}`;
-
-  try {
-    const headers: Record<string, string> = {
-      "User-Agent": TREND_CONFIG.reddit.userAgent,
-    };
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    const response = await fetch(url, { headers });
-
-    if (!response.ok) {
-      logger.warn(`Reddit API error for r/${subreddit}: ${response.status}`);
       return [];
     }
 
-    const data: RedditResponse = await response.json();
-    const posts = data.data.children;
+    const tags: MastodonTrendingTag[] = await response.json();
 
-    return posts.map((post, index) => {
-      const {
-        title,
-        score,
-        num_comments,
-        permalink,
-        subreddit: sub,
-      } = post.data;
-
-      // Calculate trend score (0-100) based on engagement
-      const engagementScore = Math.min(
-        100,
-        Math.floor((score + num_comments * 2) / 10),
+    const trends: NormalizedTrend[] = tags.map((tag, index) => {
+      // Calculate volume from recent history
+      const recentHistory = tag.history.slice(0, 2);
+      const totalUses = recentHistory.reduce(
+        (sum, h) => sum + parseInt(h.uses, 10),
+        0,
+      );
+      const totalAccounts = recentHistory.reduce(
+        (sum, h) => sum + parseInt(h.accounts, 10),
+        0,
       );
 
-      // Extract keywords
-      const keywords = extractKeywords(title, "en");
-
-      // Simple sentiment analysis
-      const sentiment = analyzeSentiment(title);
+      // Score based on usage and unique accounts
+      const engagementScore = Math.min(
+        100,
+        Math.round((totalUses * 0.3 + totalAccounts * 0.7) / 2),
+      );
 
       return {
-        platform: "reddit" as const,
-        topic: title.length > 100 ? title.substring(0, 100) + "..." : title,
-        volume: score + num_comments,
-        score: engagementScore,
-        sentiment,
+        platform: "mastodon" as const,
+        topic: `#${tag.name}`,
+        hashtag: `#${tag.name}`,
+        volume: totalUses,
+        score: Math.max(10, engagementScore),
+        sentiment: analyzeSentiment(tag.name),
         region: "global",
         language: "en",
-        keywords,
+        keywords: extractKeywords(tag.name, "en"),
         rank: index + 1,
-        url: `https://reddit.com${permalink}`,
-        subreddit: sub,
+        url: tag.url,
       };
     });
+
+    logger.info(`✅ Fetched ${trends.length} Mastodon trending tags`);
+    return trends;
   } catch (error) {
     logger.error(
-      `Failed to fetch r/${subreddit}: ${error instanceof Error ? error.message : String(error)}`,
+      `❌ Mastodon trend fetch failed: ${error instanceof Error ? error.message : String(error)}`,
     );
     return [];
   }
 }
 
+// ============================================================================
+// BLUESKY TREND FETCHER (AT Protocol Search)
+// ============================================================================
+
+// Cache for Bluesky agent
+let bskyAgent: BskyAgent | null = null;
+let bskySessionExpiry: number = 0;
+
 /**
- * Fetch all configured Reddit subreddits
+ * Get or create authenticated Bluesky agent for search
  */
-async function fetchAllRedditTrends(): Promise<NormalizedTrend[]> {
-  logger.info(
-    `📡 Fetching Reddit trends from ${TREND_CONFIG.reddit.subreddits.length} subreddits...`,
-  );
+async function getBlueskyAgent(): Promise<BskyAgent | null> {
+  const { handle, appPassword } = TREND_CONFIG.bluesky;
 
-  const allTrends: NormalizedTrend[] = [];
-
-  for (const subreddit of TREND_CONFIG.reddit.subreddits) {
-    const trends = await fetchRedditHot(subreddit);
-    allTrends.push(...trends);
-
-    // Rate limiting: wait 1 second between requests
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  if (!handle || !appPassword) {
+    logger.warn("Bluesky credentials not configured");
+    return null;
   }
 
-  logger.info(`✅ Fetched ${allTrends.length} Reddit posts`);
+  const now = Date.now();
+  if (bskyAgent && now < bskySessionExpiry) {
+    return bskyAgent;
+  }
+
+  try {
+    const agent = new BskyAgent({ service: "https://bsky.social" });
+    await agent.login({ identifier: handle, password: appPassword });
+
+    bskyAgent = agent;
+    bskySessionExpiry = now + 90 * 60 * 1000; // 1.5 hours
+
+    logger.info("🦋 Bluesky session created for trend fetching");
+    return agent;
+  } catch (error) {
+    logger.error(
+      `❌ Bluesky login failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    bskyAgent = null;
+    bskySessionExpiry = 0;
+    return null;
+  }
+}
+
+/**
+ * Fetch trending AI/tech posts from Bluesky
+ * Uses searchPosts API to find popular AI-related content
+ */
+async function fetchBlueskyTrends(): Promise<NormalizedTrend[]> {
+  logger.info("🦋 Fetching Bluesky trends...");
+
+  const agent = await getBlueskyAgent();
+  if (!agent) {
+    logger.warn("Bluesky agent not available, skipping");
+    return [];
+  }
+
+  const allTrends: NormalizedTrend[] = [];
+  const seenTopics = new Set<string>();
+
+  for (const query of TREND_CONFIG.bluesky.searchQueries) {
+    try {
+      const result = await agent.app.bsky.feed.searchPosts({
+        q: query,
+        limit: TREND_CONFIG.bluesky.postsPerQuery,
+        sort: "top",
+      });
+
+      if (!result.success || !result.data.posts) continue;
+
+      for (const post of result.data.posts) {
+        const text =
+          (post.record as { text?: string })?.text || "";
+        if (!text || text.length < 10) continue;
+
+        // Deduplicate by first 50 chars of text
+        const topicKey = text.substring(0, 50).toLowerCase();
+        if (seenTopics.has(topicKey)) continue;
+        seenTopics.add(topicKey);
+
+        // Extract topic from first sentence/line
+        const topic = text.split(/[.\n]/)[0].substring(0, 100).trim();
+        if (!topic) continue;
+
+        // Engagement metrics
+        const likes = post.likeCount || 0;
+        const reposts = post.repostCount || 0;
+        const replies = post.replyCount || 0;
+        const engagement = likes + reposts * 2 + replies * 1.5;
+
+        // Score: 0-100 based on engagement
+        const score = Math.min(100, Math.round(engagement / 5));
+
+        // Detect language
+        const isTurkish =
+          /[ğüşıöçĞÜŞİÖÇ]/.test(text) ||
+          query === "yapay zeka";
+
+        allTrends.push({
+          platform: "bluesky" as const,
+          topic,
+          hashtag: extractHashtag(text),
+          volume: Math.round(engagement),
+          score: Math.max(10, score),
+          sentiment: analyzeSentiment(text),
+          region: isTurkish ? "TR" : "global",
+          language: isTurkish ? "tr" : "en",
+          keywords: extractKeywords(text, isTurkish ? "tr" : "en"),
+          rank: allTrends.length + 1,
+          url: `https://bsky.app/profile/${post.author.handle}/post/${post.uri.split("/").pop()}`,
+        });
+      }
+
+      // Rate limiting between queries
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    } catch (error) {
+      logger.warn(
+        `Bluesky search for "${query}" failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  logger.info(`✅ Fetched ${allTrends.length} Bluesky trending posts`);
   return allTrends;
 }
 
+/**
+ * Extract first hashtag from text
+ */
+function extractHashtag(text: string): string | undefined {
+  const match = text.match(/#[\w\u00C0-\u024FğüşıöçĞÜŞİÖÇ]+/);
+  return match ? match[0] : undefined;
+}
+
 // ============================================================================
-// TWITTER FETCHER (Using public/scraping approach)
+// TWITTER FETCHER (Static AI topics fallback)
 // ============================================================================
 
 /**
- * Fetch Twitter trends using Nitter (public scraping)
- * Note: This is a fallback since Twitter API requires paid access
+ * Fetch Twitter trends - static fallback since Twitter API requires paid access
  */
 async function fetchTwitterTrends(region: string): Promise<NormalizedTrend[]> {
-  // Twitter API v2 requires OAuth 2.0 with at least $100/month subscription
-  // For free access, we use alternative methods:
+  logger.info(`📡 Twitter trends for ${region} - Using static AI topics`);
 
-  // Option 1: Use Google Trends API for Twitter-like trends
-  // Option 2: Use Nitter scraping
-  // Option 3: Use RSS feeds from tech news sites
-
-  // For now, we'll return empty and rely on Reddit
-  // TODO: Implement Nitter scraping or Google Trends integration
-
-  logger.info(`📡 Twitter trends for ${region} - Using alternative sources`);
-
-  // Return trending AI topics as static fallback
   const staticTrends: NormalizedTrend[] = [
     {
       platform: "twitter",
@@ -614,7 +642,6 @@ async function saveTrendsToDatabase(
             keywords: trend.keywords,
             rank: trend.rank,
             url: trend.url,
-            subreddit: trend.subreddit,
             expiresAt,
           },
         });
@@ -640,7 +667,7 @@ async function saveTrendsToDatabase(
  * Get active (non-expired) trends from database
  */
 export async function getActiveTrends(options?: {
-  platform?: "twitter" | "reddit";
+  platform?: "twitter" | "mastodon" | "bluesky";
   region?: string;
   language?: string;
   limit?: number;
@@ -707,7 +734,8 @@ export async function cleanupExpiredTrends(): Promise<number> {
 export async function fetchAllTrends(): Promise<{
   success: boolean;
   twitterCount: number;
-  redditCount: number;
+  mastodonCount: number;
+  blueskyCount: number;
   savedCount: number;
   duration: number;
 }> {
@@ -717,19 +745,28 @@ export async function fetchAllTrends(): Promise<{
 
   try {
     // Fetch from all sources in parallel
-    const [redditTrends, twitterTrendsTR, twitterTrendsUS] = await Promise.all([
-      TREND_CONFIG.reddit.enabled
-        ? fetchAllRedditTrends()
-        : Promise.resolve([]),
-      TREND_CONFIG.twitter.enabled
-        ? fetchTwitterTrends("TR")
-        : Promise.resolve([]),
-      TREND_CONFIG.twitter.enabled
-        ? fetchTwitterTrends("US")
-        : Promise.resolve([]),
-    ]);
+    const [mastodonTrends, blueskyTrends, twitterTrendsTR, twitterTrendsUS] =
+      await Promise.all([
+        TREND_CONFIG.mastodon.enabled
+          ? fetchMastodonTrends()
+          : Promise.resolve([]),
+        TREND_CONFIG.bluesky.enabled
+          ? fetchBlueskyTrends()
+          : Promise.resolve([]),
+        TREND_CONFIG.twitter.enabled
+          ? fetchTwitterTrends("TR")
+          : Promise.resolve([]),
+        TREND_CONFIG.twitter.enabled
+          ? fetchTwitterTrends("US")
+          : Promise.resolve([]),
+      ]);
 
-    const allTrends = [...redditTrends, ...twitterTrendsTR, ...twitterTrendsUS];
+    const allTrends = [
+      ...mastodonTrends,
+      ...blueskyTrends,
+      ...twitterTrendsTR,
+      ...twitterTrendsUS,
+    ];
 
     // Save to database
     const savedCount = await saveTrendsToDatabase(allTrends);
@@ -743,13 +780,14 @@ export async function fetchAllTrends(): Promise<{
     const duration = Date.now() - startTime;
 
     logger.success(
-      `✅ Trend fetch complete: ${savedCount} saved (${duration}ms)`,
+      `✅ Trend fetch complete: ${savedCount} saved | Mastodon: ${mastodonTrends.length}, Bluesky: ${blueskyTrends.length}, Twitter: ${twitterTrendsTR.length + twitterTrendsUS.length} (${duration}ms)`,
     );
 
     return {
       success: true,
       twitterCount: twitterTrendsTR.length + twitterTrendsUS.length,
-      redditCount: redditTrends.length,
+      mastodonCount: mastodonTrends.length,
+      blueskyCount: blueskyTrends.length,
       savedCount,
       duration,
     };
@@ -760,7 +798,8 @@ export async function fetchAllTrends(): Promise<{
     return {
       success: false,
       twitterCount: 0,
-      redditCount: 0,
+      mastodonCount: 0,
+      blueskyCount: 0,
       savedCount: 0,
       duration: Date.now() - startTime,
     };
