@@ -47,7 +47,12 @@ export default async function middleware(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "public, max-age=86400",
+        // Aggressive caching — Cloudflare edge'de cache'lesin ki
+        // IndexNow/Bing verification botu challenge'a takılmasın
+        "Cache-Control":
+          "public, max-age=604800, s-maxage=604800, stale-while-revalidate=86400",
+        "CDN-Cache-Control": "public, max-age=604800",
+        "Cloudflare-CDN-Cache-Control": "public, max-age=604800",
         "X-Robots-Tag": "noindex",
         "Access-Control-Allow-Origin": "*",
       },

@@ -171,7 +171,55 @@ export async function getOrCreateIndexNowKey(): Promise<string> {
   console.log(`🔑 Purging Cloudflare cache for key URL: ${keyUrl}`);
   await purgeCloudflareCache(keyUrl);
 
+  // Fiziksel dosya da oluştur (Cloudflare CDN static asset olarak cache'leyebilsin)
+  await writeIndexNowKeyFileSafe(newKey);
+
   return newKey;
+}
+
+/**
+ * Cloudflare edge cache'ini key dosyası için pre-warm et
+ * IndexNow submission öncesi çağrılır — Bing botu geldiğinde CF cache'den servis edilsin
+ */
+async function preWarmKeyFileCache(keyFileUrl: string): Promise<void> {
+  try {
+    const resp = await fetch(keyFileUrl, {
+      method: "GET",
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; AIHaberleri/1.0)",
+        Accept: "text/plain",
+      },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (resp.ok) {
+      console.log(`🔑 Key file cache pre-warmed: ${resp.status}`);
+    } else {
+      console.warn(`🔑 Key file pre-warm returned HTTP ${resp.status}`);
+    }
+  } catch {
+    // Non-critical — don't fail submission
+  }
+}
+
+/**
+ * Key dosyasını fiziksel olarak yaz (hata yutarak)
+ */
+async function writeIndexNowKeyFileSafe(apiKey: string): Promise<void> {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const publicDir = path.join(process.cwd(), "public");
+    const keyFilePath = path.join(publicDir, `${apiKey}.txt`);
+    if (!fs.existsSync(keyFilePath)) {
+      fs.writeFileSync(keyFilePath, apiKey, "utf-8");
+      console.log(`🔑 Physical key file written: public/${apiKey}.txt`);
+    }
+  } catch (e) {
+    // Docker read-only filesystem'de normal — middleware fallback var
+    console.log(
+      `🔑 Could not write physical key file (middleware will serve it): ${e instanceof Error ? e.message : "error"}`,
+    );
+  }
 }
 
 /**
@@ -189,6 +237,9 @@ export async function submitUrlToIndexNow(
 
     // Key file cache purge (cooldown'lu) — IndexNow 403 hatalarını azaltır
     await purgeKeyFileCacheIfNeeded(keyFileUrl);
+
+    // Pre-warm Cloudflare edge cache — Bing botu geldiğinde cache'den servis edilsin
+    await preWarmKeyFileCache(keyFileUrl);
 
     const payload: IndexNowSubmission = {
       host,
@@ -208,8 +259,12 @@ export async function submitUrlToIndexNow(
     const hasSuccess = results.some((r) => r.ok);
 
     if (hasSuccess) {
-      const successEndpoints = results.filter((r) => r.ok).map((r) => r.endpoint);
-      console.log(`✅ IndexNow: URL submitted successfully - ${url} (via ${successEndpoints.length} endpoint(s))`);
+      const successEndpoints = results
+        .filter((r) => r.ok)
+        .map((r) => r.endpoint);
+      console.log(
+        `✅ IndexNow: URL submitted successfully - ${url} (via ${successEndpoints.length} endpoint(s))`,
+      );
       // DB durumunu güncelle
       if (articleId) {
         await db.article.update({
@@ -221,8 +276,12 @@ export async function submitUrlToIndexNow(
         });
       }
     } else {
-      const failDetails = results.map((r) => `${r.endpoint}→${r.status}`).join(", ");
-      console.warn(`⚠️ IndexNow: Failed to submit URL - ${url} | Details: ${failDetails}`);
+      const failDetails = results
+        .map((r) => `${r.endpoint}→${r.status}`)
+        .join(", ");
+      console.warn(
+        `⚠️ IndexNow: Failed to submit URL - ${url} | Details: ${failDetails}`,
+      );
       if (articleId) {
         await db.article.update({
           where: { id: articleId },
@@ -263,6 +322,9 @@ export async function submitUrlsToIndexNow(
     const keyFileUrl = `${baseUrl}/${apiKey}.txt`;
     await purgeKeyFileCacheIfNeeded(keyFileUrl);
 
+    // Pre-warm Cloudflare edge cache — Bing botu geldiğinde cache'den servis edilsin
+    await preWarmKeyFileCache(keyFileUrl);
+
     // 10,000 URL limit
     const urlsToSubmit = urls.slice(0, 10000);
 
@@ -283,7 +345,9 @@ export async function submitUrlsToIndexNow(
     const hasSuccess = results.some((r) => r.ok);
 
     if (hasSuccess) {
-      const successEndpoints = results.filter((r) => r.ok).map((r) => r.endpoint);
+      const successEndpoints = results
+        .filter((r) => r.ok)
+        .map((r) => r.endpoint);
       console.log(
         `✅ IndexNow: ${urlsToSubmit.length} URLs submitted successfully (via ${successEndpoints.length} endpoint(s))`,
       );
@@ -297,8 +361,15 @@ export async function submitUrlsToIndexNow(
         });
       }
     } else {
-      const failDetails = results.map((r) => `${r.endpoint}→HTTP${r.status}${r.body ? ` (${r.body.slice(0, 80)})` : ""}`).join(" | ");
-      console.warn(`⚠️ IndexNow: Failed to submit ${urlsToSubmit.length} URLs | ${failDetails}`);
+      const failDetails = results
+        .map(
+          (r) =>
+            `${r.endpoint}→HTTP${r.status}${r.body ? ` (${r.body.slice(0, 80)})` : ""}`,
+        )
+        .join(" | ");
+      console.warn(
+        `⚠️ IndexNow: Failed to submit ${urlsToSubmit.length} URLs | ${failDetails}`,
+      );
       if (articleIds && articleIds.length > 0) {
         await db.article.updateMany({
           where: { id: { in: articleIds } },

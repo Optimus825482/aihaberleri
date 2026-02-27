@@ -8,64 +8,88 @@
 
 import { db } from "@/lib/db";
 import { submitArticleToIndexNow, submitUrlToIndexNow } from "./indexnow";
-import { notifyGoogle } from "./google-indexing-api";
+import { notifyGoogle, getTodayIndexingCount } from "./google-indexing-api";
 
 // ============================================================
 // Google Indexing API Quota Manager
 // Günlük 200 limit — TR makalelere öncelik ver, EN için kalan kotayı kullan
+// DB-based tracking: article.googleIndexedAt ile sayar (restart-safe)
 // ============================================================
 const GOOGLE_DAILY_QUOTA = 200;
 const TR_RESERVE_RATIO = 0.6; // %60'ı TR'ye ayır (120 çağrı)
 
-let googleQuotaUsed = 0;
-let googleQuotaResetDate = new Date().toDateString();
+// RESOURCE_EXHAUSTED cache — API'den 429/quota hatası alınca geri kalan günü atla
+let quotaExhaustedUntil: Date | null = null;
 
-function resetQuotaIfNewDay(): void {
-  const today = new Date().toDateString();
-  if (today !== googleQuotaResetDate) {
-    console.log(`📊 Google Quota reset: ${googleQuotaUsed}/${GOOGLE_DAILY_QUOTA} used yesterday`);
-    googleQuotaUsed = 0;
-    googleQuotaResetDate = today;
+function isQuotaExhaustedCached(): boolean {
+  if (!quotaExhaustedUntil) return false;
+  if (new Date() > quotaExhaustedUntil) {
+    quotaExhaustedUntil = null; // Cache süresi doldu
+    return false;
   }
-}
-
-function canUseGoogleQuota(language: "tr" | "en"): boolean {
-  resetQuotaIfNewDay();
-
-  const remaining = GOOGLE_DAILY_QUOTA - googleQuotaUsed;
-  const trReserve = Math.floor(GOOGLE_DAILY_QUOTA * TR_RESERVE_RATIO);
-
-  if (remaining <= 0) {
-    return false; // Kota tamamen doldu
-  }
-
-  if (language === "en") {
-    // EN makaleler sadece TR reserve'den geriye kalan kotayı kullanabilir
-    // Eğer henüz yeterli TR submit yapılmamışsa, EN'e alan bırakılır
-    const trUsed = googleQuotaUsed; // approximate — we don't track per-language
-    if (remaining <= (trReserve - trUsed) / 2) {
-      // Kalan kota azaldıysa EN'i atla — TR'ye öncelik
-      return false;
-    }
-  }
-
   return true;
 }
 
-function recordGoogleQuotaUsage(): void {
-  googleQuotaUsed++;
-  if (googleQuotaUsed % 20 === 0 || googleQuotaUsed >= GOOGLE_DAILY_QUOTA - 10) {
-    console.log(`📊 Google Quota: ${googleQuotaUsed}/${GOOGLE_DAILY_QUOTA} used today (${GOOGLE_DAILY_QUOTA - googleQuotaUsed} remaining)`);
+function markQuotaExhausted(): void {
+  // Günün sonuna kadar cache'le
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+  quotaExhaustedUntil = endOfDay;
+  console.log(
+    `🚫 Google Indexing API quota exhausted — skipping until ${endOfDay.toISOString()}`,
+  );
+}
+
+async function canUseGoogleQuota(language: "tr" | "en"): Promise<boolean> {
+  // Önce cache kontrolü (API'ye gitmeden)
+  if (isQuotaExhaustedCached()) {
+    return false;
+  }
+
+  try {
+    const todayCount = await getTodayIndexingCount();
+    const remaining = GOOGLE_DAILY_QUOTA - todayCount;
+    const trReserve = Math.floor(GOOGLE_DAILY_QUOTA * TR_RESERVE_RATIO);
+
+    if (remaining <= 0) {
+      markQuotaExhausted();
+      return false;
+    }
+
+    if (language === "en") {
+      // EN makaleler sadece TR reserve'den geriye kalan kotayı kullanabilir
+      if (remaining <= trReserve / 3) {
+        // Kalan kota azaldıysa EN'i atla — TR'ye öncelik
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("❌ Quota check failed, allowing request:", error);
+    return true; // DB hatası durumunda izin ver
   }
 }
 
-export function getGoogleQuotaStatus(): { used: number; remaining: number; limit: number } {
-  resetQuotaIfNewDay();
-  return {
-    used: googleQuotaUsed,
-    remaining: GOOGLE_DAILY_QUOTA - googleQuotaUsed,
-    limit: GOOGLE_DAILY_QUOTA,
-  };
+export async function getGoogleQuotaStatus(): Promise<{
+  used: number;
+  remaining: number;
+  limit: number;
+}> {
+  try {
+    const todayCount = await getTodayIndexingCount();
+    return {
+      used: todayCount,
+      remaining: Math.max(0, GOOGLE_DAILY_QUOTA - todayCount),
+      limit: GOOGLE_DAILY_QUOTA,
+    };
+  } catch {
+    return {
+      used: 0,
+      remaining: GOOGLE_DAILY_QUOTA,
+      limit: GOOGLE_DAILY_QUOTA,
+    };
+  }
 }
 
 interface IndexingResult {
@@ -115,9 +139,12 @@ export async function notifyTurkishArticle(
     console.error(`❌ IndexNow (TR) failed: ${slug}`, error);
   }
 
-  // 2. Google Indexing API (Turkish) — kota kontrolü ile
-  if (!canUseGoogleQuota("tr")) {
-    console.log(`⏭️ Google Indexing API (TR) skipped — daily quota exhausted (${googleQuotaUsed}/${GOOGLE_DAILY_QUOTA}). IndexNow + sitemap will handle indexing.`);
+  // 2. Google Indexing API (Turkish) — DB-based kota kontrolü ile
+  if (!(await canUseGoogleQuota("tr"))) {
+    const status = await getGoogleQuotaStatus();
+    console.log(
+      `⏭️ Google Indexing API (TR) skipped — daily quota exhausted (${status.used}/${GOOGLE_DAILY_QUOTA}). IndexNow + sitemap will handle indexing.`,
+    );
     results.push({
       success: false,
       platform: "Google",
@@ -128,7 +155,6 @@ export async function notifyTurkishArticle(
     try {
       const turkishUrl = `${baseUrl}/news/${slug}`;
       await notifyGoogle(turkishUrl, "URL_UPDATED");
-      recordGoogleQuotaUsage();
       await db.article.update({
         where: { id: articleId },
         data: {
@@ -143,6 +169,14 @@ export async function notifyTurkishArticle(
       });
       console.log(`✅ Google Indexing API (TR): ${slug}`);
     } catch (error: any) {
+      // RESOURCE_EXHAUSTED hatası alındıysa bugünkü kalan çağrıları atla
+      if (
+        error.message?.includes("RESOURCE_EXHAUSTED") ||
+        error.message?.includes("Quota exceeded") ||
+        error.message?.includes("429")
+      ) {
+        markQuotaExhausted();
+      }
       await db.article.update({
         where: { id: articleId },
         data: { googleIndexStatus: "FAILED" },
@@ -201,9 +235,12 @@ export async function notifyEnglishArticle(
     console.error(`❌ IndexNow (EN) failed: ${slugEn}`, error);
   }
 
-  // 2. Google Indexing API (English) — kota kontrolü ile (EN daha düşük öncelik)
-  if (!canUseGoogleQuota("en")) {
-    console.log(`⏭️ Google Indexing API (EN) skipped — quota reserved for TR articles (${googleQuotaUsed}/${GOOGLE_DAILY_QUOTA}). IndexNow + sitemap will handle indexing.`);
+  // 2. Google Indexing API (English) — DB-based kota kontrolü ile (EN daha düşük öncelik)
+  if (!(await canUseGoogleQuota("en"))) {
+    const status = await getGoogleQuotaStatus();
+    console.log(
+      `⏭️ Google Indexing API (EN) skipped — quota reserved for TR articles (${status.used}/${GOOGLE_DAILY_QUOTA}). IndexNow + sitemap will handle indexing.`,
+    );
     results.push({
       success: false,
       platform: "Google",
@@ -214,7 +251,6 @@ export async function notifyEnglishArticle(
     try {
       const englishGoogleUrl = `${baseUrl}/en/news/${slugEn}`;
       await notifyGoogle(englishGoogleUrl, "URL_UPDATED");
-      recordGoogleQuotaUsage();
       await db.article.update({
         where: { id: articleId },
         data: {
@@ -229,6 +265,13 @@ export async function notifyEnglishArticle(
       });
       console.log(`✅ Google Indexing API (EN): ${slugEn}`);
     } catch (error: any) {
+      if (
+        error.message?.includes("RESOURCE_EXHAUSTED") ||
+        error.message?.includes("Quota exceeded") ||
+        error.message?.includes("429")
+      ) {
+        markQuotaExhausted();
+      }
       await db.article.update({
         where: { id: articleId },
         data: { googleIndexStatusEn: "FAILED" },

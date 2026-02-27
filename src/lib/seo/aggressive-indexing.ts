@@ -12,11 +12,9 @@
  * 6. Ping-o-Matic - 20+ servise broadcast
  */
 
-import { submitArticleToIndexNow, pingSitemaps } from "./indexnow";
+import { pingSitemaps } from "./indexnow";
 
 interface IndexingResult {
-  indexNow: boolean;
-  googleSearchConsole: boolean;
   webSub: boolean;
   sitemapPing: boolean;
   cloudflarePurge: boolean;
@@ -24,47 +22,9 @@ interface IndexingResult {
   timestamp: Date;
 }
 
-/**
- * Google Search Console API ile URL'i indexing kuyruğuna ekle
- * https://developers.google.com/search/apis/indexing-api/v3/quickstart
- */
-async function submitToGoogleSearchConsole(url: string): Promise<boolean> {
-  try {
-    // Google Search Console API key kontrolü
-    const apiKey = process.env.GOOGLE_SEARCH_CONSOLE_API_KEY;
-    if (!apiKey) {
-      console.log("⚠️ Google Search Console API key bulunamadı");
-      return false;
-    }
-
-    const response = await fetch(
-      "https://indexing.googleapis.com/v3/urlNotifications:publish",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          url,
-          type: "URL_UPDATED",
-        }),
-      },
-    );
-
-    if (response.ok) {
-      console.log(`✅ Google Search Console: URL submitted - ${url}`);
-      return true;
-    } else {
-      const error = await response.text();
-      console.warn(`⚠️ Google Search Console failed: ${error}`);
-      return false;
-    }
-  } catch (error) {
-    console.error("❌ Google Search Console error:", error);
-    return false;
-  }
-}
+// ℹ️ Google Indexing API çağrısı kaldırıldı — indexing-tracker.ts
+// zaten uygun kota yönetimi ile Google API'yi çağırıyor.
+// Bu modül sadece supplementary methods (WebSub, CF Purge, Ping) için.
 
 /**
  * Cloudflare Cache Purge - CDN'deki cache'i temizle
@@ -218,8 +178,6 @@ export async function aggressivelyIndexArticle(
   console.log(`🚀 AGGRESSIVE INDEXING başlatıldı: ${slug}`);
 
   const result: IndexingResult = {
-    indexNow: false,
-    googleSearchConsole: false,
     webSub: false,
     sitemapPing: false,
     cloudflarePurge: false,
@@ -227,45 +185,30 @@ export async function aggressivelyIndexArticle(
     timestamp: new Date(),
   };
 
-  // Tüm yöntemleri PARALEL çalıştır (hız için)
-  const [
-    indexNowResult,
-    googleResult,
-    webSubResult,
-    sitemapResult,
-    cloudflareResult,
-    pingOMaticResult,
-  ] = await Promise.allSettled([
-    // 1. IndexNow (Bing, Yandex)
-    submitArticleToIndexNow(slug, articleId),
+  // Supplementary yöntemleri PARALEL çalıştır
+  // NOT: IndexNow + Google Indexing API artık indexing-tracker.ts tarafından yönetiliyor
+  const [webSubResult, sitemapResult, cloudflareResult, pingOMaticResult] =
+    await Promise.allSettled([
+      // 1. WebSub (RSS feed)
+      notifyWebSub(feedUrl),
 
-    // 2. Google Search Console
-    submitToGoogleSearchConsole(articleUrl),
+      // 2. Sitemap Ping
+      pingSitemaps(),
 
-    // 3. WebSub (RSS feed)
-    notifyWebSub(feedUrl),
+      // 3. Cloudflare Cache Purge
+      purgeCloudflareCache([
+        articleUrl,
+        `${baseUrl}/`,
+        feedUrl,
+        newsSitemapUrl,
+        `${baseUrl}/sitemap.xml`,
+      ]),
 
-    // 4. Sitemap Ping
-    pingSitemaps(),
-
-    // 5. Cloudflare Cache Purge
-    purgeCloudflareCache([
-      articleUrl,
-      `${baseUrl}/`,
-      feedUrl,
-      newsSitemapUrl,
-      `${baseUrl}/sitemap.xml`,
-    ]),
-
-    // 6. Ping-o-Matic (20+ servise broadcast)
-    pingOMatic("AI Haberleri", baseUrl, feedUrl),
-  ]);
+      // 4. Ping-o-Matic (20+ servise broadcast)
+      pingOMatic("AI Haberleri", baseUrl, feedUrl),
+    ]);
 
   // Sonuçları kaydet
-  result.indexNow =
-    indexNowResult.status === "fulfilled" && indexNowResult.value === true;
-  result.googleSearchConsole =
-    googleResult.status === "fulfilled" && googleResult.value === true;
   result.webSub =
     webSubResult.status === "fulfilled" && webSubResult.value === true;
   result.sitemapPing =
@@ -281,11 +224,7 @@ export async function aggressivelyIndexArticle(
     (v) => typeof v === "boolean" && v === true,
   ).length;
 
-  console.log(`📊 AGGRESSIVE INDEXING tamamlandı: ${successCount}/6 başarılı`);
-  console.log(`   - IndexNow: ${result.indexNow ? "✅" : "❌"}`);
-  console.log(
-    `   - Google Search Console: ${result.googleSearchConsole ? "✅" : "❌"}`,
-  );
+  console.log(`📊 AGGRESSIVE INDEXING tamamlandı: ${successCount}/4 başarılı`);
   console.log(`   - WebSub: ${result.webSub ? "✅" : "❌"}`);
   console.log(`   - Sitemap Ping: ${result.sitemapPing ? "✅" : "❌"}`);
   console.log(`   - Cloudflare Purge: ${result.cloudflarePurge ? "✅" : "❌"}`);
@@ -318,7 +257,7 @@ export async function aggressivelyIndexMultipleArticles(
   }, 0);
 
   console.log(
-    `✅ BATCH INDEXING tamamlandı: ${totalSuccess}/${articles.length * 5} toplam başarı`,
+    `✅ BATCH INDEXING tamamlandı: ${totalSuccess}/${articles.length * 4} toplam başarı`,
   );
 
   return results;

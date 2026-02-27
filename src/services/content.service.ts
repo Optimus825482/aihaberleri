@@ -1222,15 +1222,9 @@ export async function publishArticle(
       // Don't fail article creation if cache invalidation fails
     }
 
-    // Post-publish tasks: AGGRESSIVE INDEXING (IndexNow + Google Indexing API + WebSub + Sitemap + Cloudflare)
+    // Post-publish tasks: Indexing + Supplementary methods
     try {
-      const { aggressivelyIndexArticle } =
-        await import("@/lib/seo/aggressive-indexing");
-      aggressivelyIndexArticle(article.slug, article.id).catch((err) =>
-        console.error("Aggressive indexing error:", err),
-      );
-
-      // 🆕 Use new indexing tracker for Turkish version
+      // 1. IndexNow + Google Indexing API (kota yönetimli, DB tracking)
       const { notifyTurkishArticle } =
         await import("@/lib/seo/indexing-tracker");
       notifyTurkishArticle(article.id, article.slug)
@@ -1240,8 +1234,15 @@ export async function publishArticle(
         .catch((err) => {
           console.error("Turkish version notification error:", err);
         });
+
+      // 2. Supplementary methods (WebSub, Sitemap Ping, CF Purge, Ping-o-Matic)
+      const { aggressivelyIndexArticle } =
+        await import("@/lib/seo/aggressive-indexing");
+      aggressivelyIndexArticle(article.slug, article.id).catch((err) =>
+        console.error("Supplementary indexing error:", err),
+      );
     } catch (e) {
-      console.error("Failed to trigger aggressive indexing:", e);
+      console.error("Failed to trigger indexing:", e);
     }
 
     // Post to Twitter (Async)
