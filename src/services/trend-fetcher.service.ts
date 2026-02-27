@@ -638,6 +638,22 @@ function extractKeywords(text: string, lang: string): string[] {
 // ============================================================================
 
 /**
+ * Check if text is primarily Latin/Turkish script
+ * Filters out CJK (Chinese/Japanese/Korean), Arabic, Cyrillic etc.
+ */
+function isLatinOrTurkish(text: string): boolean {
+  if (!text || text.length < 3) return false;
+  // Count Latin + Turkish characters vs total alphabetic characters
+  const latinTurkishPattern = /[a-zA-ZğüşıöçĞÜŞİÖÇàáâãäåæèéêëìíîïòóôõöùúûüýÿñ]/g;
+  const allAlphaPattern = /\p{L}/gu;
+  const latinMatches = text.match(latinTurkishPattern) || [];
+  const allAlphaMatches = text.match(allAlphaPattern) || [];
+  if (allAlphaMatches.length === 0) return false;
+  // At least 60% of alphabetic characters should be Latin/Turkish
+  return latinMatches.length / allAlphaMatches.length >= 0.6;
+}
+
+/**
  * Basic sentiment analysis based on keyword matching
  */
 function analyzeSentiment(text: string): "positive" | "negative" | "neutral" {
@@ -926,13 +942,23 @@ export async function fetchAllTrends(): Promise<{
         : Promise.resolve([]),
     ]);
 
-    const allTrends = [
+    const allTrendsRaw = [
       ...mastodonTrends,
       ...blueskyTrends,
       ...hackerNewsTrends,
       ...arxivTrends,
       ...lobstersTrends,
     ];
+
+    // Filter out non-Latin/Turkish trends (CJK, Arabic, Cyrillic etc.)
+    const allTrends = allTrendsRaw.filter((t) => isLatinOrTurkish(t.topic));
+    const filteredCount = allTrendsRaw.length - allTrends.length;
+    if (filteredCount > 0) {
+      logger.info(`🔤 Filtered ${filteredCount} non-Latin/Turkish trends`);
+    }
+
+    // Sort by score descending before saving
+    allTrends.sort((a, b) => b.score - a.score);
 
     // Save to database
     const savedCount = await saveTrendsToDatabase(allTrends);

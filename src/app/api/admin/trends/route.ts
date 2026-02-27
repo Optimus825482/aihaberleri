@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         "expiresAt"
       FROM "SocialTrend"
       WHERE "fetchedAt" > NOW() - INTERVAL '24 hours'
-      ORDER BY "fetchedAt" DESC, score DESC
+      ORDER BY score DESC, "fetchedAt" DESC
       LIMIT 100
     `;
 
