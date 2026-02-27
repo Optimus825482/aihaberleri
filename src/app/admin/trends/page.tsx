@@ -119,6 +119,10 @@ export default function TrendsPage() {
   });
   const [countdown, setCountdown] = useState<string>("--:--:--");
 
+  // Popular topics state
+  const [popularTopics, setPopularTopics] = useState<any>(null);
+  const [isLoadingTopics, setIsLoadingTopics] = useState(false);
+
   // Fetch trends data
   const fetchTrends = useCallback(async () => {
     try {
@@ -131,6 +135,22 @@ export default function TrendsPage() {
       }
     } catch (error) {
       console.error("Failed to fetch trends:", error);
+    }
+  }, []);
+
+  // Fetch popular topics (LLM clustering results)
+  const fetchPopularTopics = useCallback(async () => {
+    setIsLoadingTopics(true);
+    try {
+      const res = await fetch("/api/admin/trends/popular-topics");
+      if (res.ok) {
+        const data = await res.json();
+        setPopularTopics(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch popular topics:", error);
+    } finally {
+      setIsLoadingTopics(false);
     }
   }, []);
 
@@ -237,7 +257,7 @@ export default function TrendsPage() {
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
-      await Promise.all([fetchTrends(), fetchLogs()]);
+      await Promise.all([fetchTrends(), fetchLogs(), fetchPopularTopics()]);
       setIsLoading(false);
     };
     load();
@@ -246,10 +266,11 @@ export default function TrendsPage() {
     const refreshInterval = setInterval(() => {
       fetchTrends();
       fetchLogs();
+      fetchPopularTopics();
     }, 30000);
 
     return () => clearInterval(refreshInterval);
-  }, [fetchTrends, fetchLogs]);
+  }, [fetchTrends, fetchLogs, fetchPopularTopics]);
 
   // Log level colors
   const getLogLevelColor = (level: TrendLog["level"]) => {
@@ -626,8 +647,12 @@ export default function TrendsPage() {
         </Card>
 
         {/* Main Content Tabs */}
-        <Tabs defaultValue="trends" className="space-y-4">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+        <Tabs defaultValue="popular" className="space-y-4">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
+            <TabsTrigger value="popular">
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Popüler Konular
+            </TabsTrigger>
             <TabsTrigger value="trends">
               <Flame className="h-4 w-4 mr-2" />
               Aktif Trendler
@@ -637,6 +662,150 @@ export default function TrendsPage() {
               Pipeline Logları
             </TabsTrigger>
           </TabsList>
+
+          {/* Popular Topics Tab */}
+          <TabsContent value="popular" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-emerald-500" />
+                      Popüler Konu Cluster&apos;ları
+                    </CardTitle>
+                    <CardDescription>
+                      LLM ile platformlar arası konu gruplama — {popularTopics?.stats?.clusterCount || 0} cluster, {popularTopics?.stats?.trendCount || 0} trend
+                      {popularTopics?.stats?.lastUpdated && (
+                        <span className="ml-2 text-xs">
+                          (Son güncelleme: {new Date(popularTopics.stats.lastUpdated).toLocaleString("tr-TR")} — {popularTopics.stats.durationMs}ms)
+                        </span>
+                      )}
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchPopularTopics}
+                    disabled={isLoadingTopics}
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${isLoadingTopics ? "animate-spin" : ""}`} />
+                    Yenile
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {!popularTopics || popularTopics.clusters?.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="font-medium">Henüz cluster yok</p>
+                    <p className="text-sm mt-1">
+                      {popularTopics?.message || "Trend fetch çalıştığında topic clustering otomatik oluşturulacak"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {popularTopics.clusters.map((cluster: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className={`p-4 rounded-xl border transition-colors ${idx === 0
+                            ? "bg-gradient-to-r from-yellow-500/5 to-orange-500/5 border-yellow-500/30"
+                            : idx === 1
+                              ? "bg-gradient-to-r from-gray-500/5 to-slate-500/5 border-gray-400/30"
+                              : idx === 2
+                                ? "bg-gradient-to-r from-amber-700/5 to-orange-700/5 border-amber-700/30"
+                                : "bg-card hover:bg-muted/50 border-border"
+                          }`}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm font-mono text-muted-foreground">
+                                #{idx + 1}
+                              </span>
+                              <h3 className="font-bold text-lg">
+                                {cluster.canonicalTopic}
+                              </h3>
+                              {cluster.platformCount > 1 && (
+                                <Badge className="bg-emerald-500/20 text-emerald-500">
+                                  <Globe className="h-3 w-3 mr-1" />
+                                  {cluster.platformCount} platform
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="flex flex-wrap gap-1.5 mb-3">
+                              {cluster.platforms.map((p: string) => getPlatformBadge(p))}
+                            </div>
+
+                            <div className="space-y-1.5">
+                              {cluster.trends.map((t: any, ti: number) => (
+                                <div key={ti} className="flex items-center gap-2 text-sm">
+                                  <span className="text-muted-foreground text-xs w-20 shrink-0">
+                                    {t.platform}
+                                  </span>
+                                  <span className="truncate flex-1">
+                                    {t.url ? (
+                                      <a
+                                        href={t.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="hover:text-primary hover:underline inline-flex items-center gap-1"
+                                      >
+                                        {t.topic}
+                                        <ArrowUpRight className="h-3 w-3 shrink-0" />
+                                      </a>
+                                    ) : (
+                                      t.topic
+                                    )}
+                                  </span>
+                                  <Badge variant="secondary" className="text-xs shrink-0">
+                                    {t.score}
+                                  </Badge>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0 space-y-1">
+                            <div className="text-3xl font-bold text-primary">
+                              {cluster.avgScore}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Ort. Skor
+                            </p>
+                            <div className="text-sm text-muted-foreground">
+                              Max: <span className="font-medium text-foreground">{cluster.maxScore}</span>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Vol: <span className="font-medium text-foreground">{cluster.totalVolume?.toLocaleString("tr-TR")}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Unclustered trends */}
+                    {popularTopics.unclustered?.length > 0 && (
+                      <div className="mt-6">
+                        <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                          Tek Kalan Trend&apos;ler ({popularTopics.unclustered.length})
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {popularTopics.unclustered.map((t: any, i: number) => (
+                            <div key={i} className="p-2 rounded-lg border bg-muted/30 text-sm flex items-center gap-2">
+                              {getPlatformBadge(t.platform)}
+                              <span className="truncate flex-1">{t.topic}</span>
+                              <Badge variant="secondary" className="text-xs">{t.score}</Badge>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Trends Tab */}
           <TabsContent value="trends" className="space-y-4">

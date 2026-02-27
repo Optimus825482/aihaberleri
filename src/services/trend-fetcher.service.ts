@@ -22,6 +22,7 @@
 import { db } from "@/lib/db";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 import { BskyAgent } from "@atproto/api";
+import { clusterTrendTopics } from "@/services/trend-topic-clustering.service";
 
 const logger = createModuleLogger("TrendFetcher");
 
@@ -32,8 +33,7 @@ const logger = createModuleLogger("TrendFetcher");
 export const TREND_CONFIG = {
   mastodon: {
     enabled: process.env.MASTODON_ENABLED === "true",
-    instanceUrl:
-      process.env.MASTODON_INSTANCE_URL || "https://mastodon.social",
+    instanceUrl: process.env.MASTODON_INSTANCE_URL || "https://mastodon.social",
     // No auth needed for trending API
     trendLimit: 20,
   },
@@ -58,12 +58,39 @@ export const TREND_CONFIG = {
     enabled: true, // Always free, no API key needed
     topStoriesLimit: 30, // Check top 30 stories
     aiKeywords: [
-      "ai", "artificial intelligence", "machine learning", "deep learning",
-      "llm", "gpt", "chatgpt", "openai", "anthropic", "claude", "gemini",
-      "neural", "transformer", "diffusion", "generative", "copilot",
-      "langchain", "rag", "vector", "embedding", "fine-tuning", "fine tuning",
-      "mistral", "llama", "deepseek", "groq", "hugging face", "midjourney",
-      "stable diffusion", "sora", "multimodal", "agent", "agentic",
+      "ai",
+      "artificial intelligence",
+      "machine learning",
+      "deep learning",
+      "llm",
+      "gpt",
+      "chatgpt",
+      "openai",
+      "anthropic",
+      "claude",
+      "gemini",
+      "neural",
+      "transformer",
+      "diffusion",
+      "generative",
+      "copilot",
+      "langchain",
+      "rag",
+      "vector",
+      "embedding",
+      "fine-tuning",
+      "fine tuning",
+      "mistral",
+      "llama",
+      "deepseek",
+      "groq",
+      "hugging face",
+      "midjourney",
+      "stable diffusion",
+      "sora",
+      "multimodal",
+      "agent",
+      "agentic",
     ],
   },
   arxiv: {
@@ -260,8 +287,7 @@ async function fetchBlueskyTrends(): Promise<NormalizedTrend[]> {
       if (!result.success || !result.data.posts) continue;
 
       for (const post of result.data.posts) {
-        const text =
-          (post.record as { text?: string })?.text || "";
+        const text = (post.record as { text?: string })?.text || "";
         if (!text || text.length < 10) continue;
 
         // Deduplicate by first 50 chars of text
@@ -283,9 +309,7 @@ async function fetchBlueskyTrends(): Promise<NormalizedTrend[]> {
         const score = Math.min(100, Math.round(engagement / 5));
 
         // Detect language
-        const isTurkish =
-          /[ğüşıöçĞÜŞİÖÇ]/.test(text) ||
-          query === "yapay zeka";
+        const isTurkish = /[ğüşıöçĞÜŞİÖÇ]/.test(text) || query === "yapay zeka";
 
         allTrends.push({
           platform: "bluesky" as const,
@@ -342,7 +366,9 @@ async function fetchHackerNewsTrends(): Promise<NormalizedTrend[]> {
     logger.info("📡 HackerNews: Fetching top stories...");
 
     // 1. Top story ID'lerini al
-    const topRes = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
+    const topRes = await fetch(
+      "https://hacker-news.firebaseio.com/v0/topstories.json",
+    );
     if (!topRes.ok) throw new Error(`HN top stories failed: ${topRes.status}`);
     const topIds: number[] = await topRes.json();
 
@@ -350,9 +376,13 @@ async function fetchHackerNewsTrends(): Promise<NormalizedTrend[]> {
     const limit = TREND_CONFIG.hackernews.topStoriesLimit;
     const storyPromises = topIds.slice(0, limit).map(async (id) => {
       try {
-        const r = await fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`);
+        const r = await fetch(
+          `https://hacker-news.firebaseio.com/v0/item/${id}.json`,
+        );
         return r.ok ? await r.json() : null;
-      } catch { return null; }
+      } catch {
+        return null;
+      }
     });
     const stories = (await Promise.all(storyPromises)).filter(Boolean);
 
@@ -363,7 +393,9 @@ async function fetchHackerNewsTrends(): Promise<NormalizedTrend[]> {
       return aiKeywords.some((kw) => text.includes(kw));
     });
 
-    logger.info(`📡 HackerNews: ${aiStories.length}/${stories.length} AI-related stories found`);
+    logger.info(
+      `📡 HackerNews: ${aiStories.length}/${stories.length} AI-related stories found`,
+    );
 
     // 4. NormalizedTrend'e dönüştür
     return aiStories.map((story: any, i: number) => ({
@@ -371,7 +403,7 @@ async function fetchHackerNewsTrends(): Promise<NormalizedTrend[]> {
       topic: story.title || "HN Story",
       hashtag: undefined,
       volume: (story.score || 0) * 10 + (story.descendants || 0),
-      score: Math.min(100, Math.max(10, (story.score || 0))),
+      score: Math.min(100, Math.max(10, story.score || 0)),
       sentiment: "neutral" as const,
       region: "GLOBAL",
       language: "en",
@@ -380,7 +412,9 @@ async function fetchHackerNewsTrends(): Promise<NormalizedTrend[]> {
       url: story.url || `https://news.ycombinator.com/item?id=${story.id}`,
     }));
   } catch (error) {
-    logger.error(`❌ HackerNews trend fetch error: ${error instanceof Error ? error.message : String(error)}`);
+    logger.error(
+      `❌ HackerNews trend fetch error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return [];
   }
 }
@@ -399,7 +433,9 @@ async function fetchArXivTrends(): Promise<NormalizedTrend[]> {
   try {
     logger.info("📡 ArXiv: Fetching latest AI papers...");
 
-    const categories = TREND_CONFIG.arxiv.categories.map((c) => `cat:${c}`).join("+OR+");
+    const categories = TREND_CONFIG.arxiv.categories
+      .map((c) => `cat:${c}`)
+      .join("+OR+");
     const maxResults = TREND_CONFIG.arxiv.maxResults;
     const url = `https://export.arxiv.org/api/query?search_query=${categories}&sortBy=submittedDate&sortOrder=descending&max_results=${maxResults}`;
 
@@ -416,10 +452,19 @@ async function fetchArXivTrends(): Promise<NormalizedTrend[]> {
     while ((match = entryRegex.exec(xmlText)) !== null) {
       rank++;
       const entry = match[1];
-      const title = entry.match(/<title>([\s\S]*?)<\/title>/)?.[1]?.replace(/\s+/g, " ").trim() || "";
-      const summary = entry.match(/<summary>([\s\S]*?)<\/summary>/)?.[1]?.replace(/\s+/g, " ").trim() || "";
+      const title =
+        entry
+          .match(/<title>([\s\S]*?)<\/title>/)?.[1]
+          ?.replace(/\s+/g, " ")
+          .trim() || "";
+      const summary =
+        entry
+          .match(/<summary>([\s\S]*?)<\/summary>/)?.[1]
+          ?.replace(/\s+/g, " ")
+          .trim() || "";
       const link = entry.match(/<id>([\s\S]*?)<\/id>/)?.[1]?.trim() || "";
-      const published = entry.match(/<published>([\s\S]*?)<\/published>/)?.[1]?.trim() || "";
+      const published =
+        entry.match(/<published>([\s\S]*?)<\/published>/)?.[1]?.trim() || "";
 
       // ArXiv paper'ların popülerliğini tarihine göre tahmini skor
       const daysSincePublish = published
@@ -445,7 +490,9 @@ async function fetchArXivTrends(): Promise<NormalizedTrend[]> {
     logger.info(`📡 ArXiv: ${entries.length} AI papers fetched`);
     return entries;
   } catch (error) {
-    logger.error(`❌ ArXiv trend fetch error: ${error instanceof Error ? error.message : String(error)}`);
+    logger.error(
+      `❌ ArXiv trend fetch error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return [];
   }
 }
@@ -477,7 +524,9 @@ async function fetchLobstersTrends(): Promise<NormalizedTrend[]> {
         if (!r.ok) return [];
         const data = await r.json();
         return Array.isArray(data) ? data.slice(0, limit) : [];
-      } catch { return []; }
+      } catch {
+        return [];
+      }
     });
 
     const tagResults = await Promise.all(tagPromises);
@@ -504,10 +553,15 @@ async function fetchLobstersTrends(): Promise<NormalizedTrend[]> {
       language: "en",
       keywords: extractKeywords(story.title || "", "en"),
       rank: i + 1,
-      url: story.url || story.short_id_url || `https://lobste.rs/s/${story.short_id}`,
+      url:
+        story.url ||
+        story.short_id_url ||
+        `https://lobste.rs/s/${story.short_id}`,
     }));
   } catch (error) {
-    logger.error(`❌ Lobsters trend fetch error: ${error instanceof Error ? error.message : String(error)}`);
+    logger.error(
+      `❌ Lobsters trend fetch error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return [];
   }
 }
@@ -644,7 +698,8 @@ function extractKeywords(text: string, lang: string): string[] {
 function isLatinOrTurkish(text: string): boolean {
   if (!text || text.length < 3) return false;
   // Count Latin + Turkish characters vs total alphabetic characters
-  const latinTurkishPattern = /[a-zA-ZğüşıöçĞÜŞİÖÇàáâãäåæèéêëìíîïòóôõöùúûüýÿñ]/g;
+  const latinTurkishPattern =
+    /[a-zA-ZğüşıöçĞÜŞİÖÇàáâãäåæèéêëìíîïòóôõöùúûüýÿñ]/g;
   const allAlphaPattern = /\p{L}/gu;
   const latinMatches = text.match(latinTurkishPattern) || [];
   const allAlphaMatches = text.match(allAlphaPattern) || [];
@@ -984,6 +1039,7 @@ export async function fetchAllTrends(): Promise<{
   arxivCount: number;
   lobstersCount: number;
   savedCount: number;
+  clusterCount: number;
   duration: number;
 }> {
   const startTime = Date.now();
@@ -1002,15 +1058,11 @@ export async function fetchAllTrends(): Promise<{
       TREND_CONFIG.mastodon.enabled
         ? fetchMastodonTrends()
         : Promise.resolve([]),
-      TREND_CONFIG.bluesky.enabled
-        ? fetchBlueskyTrends()
-        : Promise.resolve([]),
+      TREND_CONFIG.bluesky.enabled ? fetchBlueskyTrends() : Promise.resolve([]),
       TREND_CONFIG.hackernews.enabled
         ? fetchHackerNewsTrends()
         : Promise.resolve([]),
-      TREND_CONFIG.arxiv.enabled
-        ? fetchArXivTrends()
-        : Promise.resolve([]),
+      TREND_CONFIG.arxiv.enabled ? fetchArXivTrends() : Promise.resolve([]),
       TREND_CONFIG.lobsters.enabled
         ? fetchLobstersTrends()
         : Promise.resolve([]),
@@ -1040,6 +1092,24 @@ export async function fetchAllTrends(): Promise<{
     // Save to database
     const savedCount = await saveTrendsToDatabase(allTrends);
 
+    // Cross-platform topic clustering (LLM-powered)
+    let clusterCount = 0;
+    try {
+      const clusterResult = await clusterTrendTopics(allTrends);
+      clusterCount = clusterResult.clusterCount;
+      if (clusterResult.clusters.length > 0) {
+        const topTopics = clusterResult.clusters
+          .slice(0, 3)
+          .map((c) => `${c.canonicalTopic}(${c.avgScore})`)
+          .join(", ");
+        logger.info(`🔬 Topic clusters: ${clusterCount} | Top: ${topTopics}`);
+      }
+    } catch (clusterError) {
+      logger.warn(
+        `⚠️ Topic clustering skipped: ${clusterError instanceof Error ? clusterError.message : String(clusterError)}`,
+      );
+    }
+
     // Cleanup old trends
     const cleanedCount = await cleanupExpiredTrends();
     if (cleanedCount > 0) {
@@ -1049,7 +1119,7 @@ export async function fetchAllTrends(): Promise<{
     const duration = Date.now() - startTime;
 
     logger.success(
-      `✅ Trend fetch complete: ${savedCount} saved | Mastodon: ${mastodonTrends.length}, Bluesky: ${blueskyTrends.length}, HN: ${hackerNewsTrends.length}, ArXiv: ${arxivTrends.length}, Lobsters: ${lobstersTrends.length} (${duration}ms)`,
+      `✅ Trend fetch complete: ${savedCount} saved, ${clusterCount} clusters | Mastodon: ${mastodonTrends.length}, Bluesky: ${blueskyTrends.length}, HN: ${hackerNewsTrends.length}, ArXiv: ${arxivTrends.length}, Lobsters: ${lobstersTrends.length} (${duration}ms)`,
     );
 
     return {
@@ -1060,6 +1130,7 @@ export async function fetchAllTrends(): Promise<{
       arxivCount: arxivTrends.length,
       lobstersCount: lobstersTrends.length,
       savedCount,
+      clusterCount,
       duration,
     };
   } catch (error) {
@@ -1074,6 +1145,7 @@ export async function fetchAllTrends(): Promise<{
       arxivCount: 0,
       lobstersCount: 0,
       savedCount: 0,
+      clusterCount: 0,
       duration: Date.now() - startTime,
     };
   }
