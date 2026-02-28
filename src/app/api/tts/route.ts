@@ -12,9 +12,10 @@ import { Errors, handleApiError } from "@/lib/errors";
 // ============================================
 // CACHE CONFIGURATION
 // ============================================
-const CACHE_TTL_SECONDS = 3 * 24 * 60 * 60; // 3 days
+const CACHE_TTL_SECONDS = 12 * 60 * 60; // 12 hours (was 3 days — caused Redis OOM at 1GB)
 const CACHE_PREFIX = "tts:cache:";
 const MAX_CACHE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB - TTS audio genelde 700KB-3MB arası
+const MAX_TTS_CACHE_COUNT = 150; // Max cached TTS entries (~150 * 2MB avg = ~300MB safe limit)
 
 // ============================================
 // IN-FLIGHT DEDUPLICATION
@@ -219,6 +220,29 @@ export async function POST(req: NextRequest) {
         );
       } else {
         try {
+          // Evict oldest TTS cache entries if count exceeds limit
+          const existingKeys = await redis.keys(`${CACHE_PREFIX}*`);
+          if (existingKeys.length >= MAX_TTS_CACHE_COUNT) {
+            // Get TTLs to find entries closest to expiry (oldest)
+            const keyTTLs = await Promise.all(
+              existingKeys.map(async (k) => ({
+                key: k,
+                ttl: await redis.ttl(k),
+              })),
+            );
+            keyTTLs.sort((a, b) => a.ttl - b.ttl); // lowest TTL = oldest
+            const toDelete = keyTTLs.slice(
+              0,
+              existingKeys.length - MAX_TTS_CACHE_COUNT + 10,
+            ); // free 10 slots
+            if (toDelete.length > 0) {
+              await redis.del(...toDelete.map((d) => d.key));
+              console.log(
+                `[TTS POST] Evicted ${toDelete.length} old TTS cache entries`,
+              );
+            }
+          }
+
           await redis.setex(cacheKey, CACHE_TTL_SECONDS, cachePayload);
           console.log(
             `[TTS POST] Cached ${(payloadSize / 1024).toFixed(0)}KB with TTL ${CACHE_TTL_SECONDS}s`,

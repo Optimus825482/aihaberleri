@@ -1,0 +1,847 @@
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.69.17.195
+[Rate Limit] OK: tts:17.246.15.230 - 1/20 requests
+[TTS POST] Processing 3810 chars, voice=tr-TR-EmelNeural, IP=17.246.15.230
+[TTS POST] CACHE MISS: tts:cache:cf80df852edeaa8e8aabf7b343286e5c
+[TTS Security] Text sanitized: removed 16 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=3794
+[GA4 Realtime] OK: 4 active users, 4 pages, 1 devices, 2 countries
+[GEO] Cache hit for 172.71.124.114
+[Rate Limit] OK: tts:182.191.134.21 - 2/20 requests
+[TTS POST] Processing 4102 chars, voice=tr-TR-EmelNeural, IP=182.191.134.21
+[TTS POST] CACHE MISS: tts:cache:bf4c5591f5a6cd7e66638ad91385b6f4
+[TTS Security] Text sanitized: removed 4 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=4098
+[TTS] Success: 1655568 bytes generated
+[TTS POST] Success: 1655568 bytes, 0 words
+[TTS] Success: 1630944 bytes generated
+[TTS POST] Success: 1630944 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+Starting bulk trend recalculation for 456 articles...
+✅ Indexing bekleyen makale yok
+Bulk trend recalculation completed.
+📊 Trend score recalculation completed
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 5 active users, 5 pages, 2 devices, 3 countries
+[GEO] Cache hit for 104.22.62.86
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 5 active users, 5 pages, 2 devices, 3 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Success: 104.23.211.117 -> Ashburn, United States
+[GEO] Cached data for 104.23.211.117 (TTL: 86400s)
+[GEO] Cached data for 172.71.255.118 (TTL: 86400s)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 5 active users, 5 pages, 2 devices, 3 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 108.162.246.148
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 5 active users, 5 pages, 2 devices, 3 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 108.162.246.235
+[GEO] Cached data for 172.70.38.33 (TTL: 86400s)
+[Rate Limit] OK: tts:17.22.245.243 - 1/20 requests
+[TTS POST] Processing 2730 chars, voice=tr-TR-EmelNeural, IP=17.22.245.243
+[TTS POST] CACHE MISS: tts:cache:a6d281a820e9f83c64e53f6e4fc222bc
+[TTS Security] Text sanitized: removed 2 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=2728
+[TTS] Success: 1104048 bytes generated
+[TTS POST] Success: 1104048 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 5 active users, 5 pages, 2 devices, 3 countries
+[GEO] Cached data for 172.69.7.150 (TTL: 86400s)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+✅ Indexing bekleyen makale yok
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 1 active users, 1 pages, 1 devices, 1 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 108.162.246.147
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 2 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 2 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+🛰️ SEO autopilot devriyesi başladı: seo-bulk-1772261250018
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 82/100, 4 sorun
+[SEO Pipeline] Optimizasyon denemesi 1/3
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[SEO Optimizer] Title truncation: 92 → max 60 (raw: "OpenAI ve Tata, Hindistan'da 1 GW AI Veri Merkezi ile küresel teknolojiyi yenide...")
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[SEO Pipeline] Guardrail OK: title, metaDescription, slug, content
+[SEO Pipeline] Yeni skor: 100/100 (önceki: 82)
+[SEO Pipeline] ✅ Validasyon geçti! 82 → 100
+prisma:error 
+Invalid `prisma.article.update()` invocation:
+
+
+Unique constraint failed on the fields: (`slug`)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 95/100, 1 sorun
+[SEO Pipeline] Optimizasyon denemesi 1/3
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[SEO Optimizer] Meta truncation: 171 → max 160
+[SEO Pipeline] Guardrail OK: metaDescription
+[SEO Pipeline] Yeni skor: 100/100 (önceki: 95)
+[SEO Pipeline] ✅ Validasyon geçti! 95 → 100
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 85/100, 3 sorun
+[SEO Pipeline] Optimizasyon denemesi 1/3
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[GA4 Realtime] OK: 2 active users, 2 pages, 2 devices, 2 countries
+[SEO Pipeline] Guardrail OK: title, metaDescription, content
+[SEO Pipeline] Yeni skor: 100/100 (önceki: 85)
+[SEO Pipeline] ✅ Validasyon geçti! 85 → 100
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 95/100, 1 sorun
+[SEO Pipeline] Optimizasyon denemesi 1/3
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[GEO] Cache hit for 172.71.154.170
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Guardrail OK: content
+[SEO Pipeline] Yeni skor: 100/100 (önceki: 95)
+[SEO Pipeline] ✅ Validasyon geçti! 95 → 100
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 1 active users, 1 pages, 1 devices, 1 countries
+[GEO] Cache hit for 172.69.58.77
+[GEO] Cache hit for 172.71.147.64
+[Rate Limit] OK: tts:17.241.227.192 - 1/20 requests
+[TTS POST] Processing 3914 chars, voice=tr-TR-EmelNeural, IP=17.241.227.192
+[TTS POST] CACHE MISS: tts:cache:a829b633ca36cffe571e03048f328997
+[TTS Security] Text sanitized: removed 3 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=3911
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[TTS] Success: 1594944 bytes generated
+[TTS POST] Success: 1594944 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+Starting bulk trend recalculation for 451 articles...
+🧹 Cleaned up 33 old visitors
+✅ Indexing bekleyen makale yok
+Bulk trend recalculation completed.
+📊 Trend score recalculation completed
+[GEO] Cache hit for 172.71.254.97
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.71.254.97
+[Rate Limit] OK: tts:17.246.15.192 - 1/20 requests
+[TTS POST] Processing 3720 chars, voice=tr-TR-EmelNeural, IP=17.246.15.192
+[TTS POST] CACHE MISS: tts:cache:6eb1fdcf0b1aee0904adacb550eadbea
+[TTS Security] Text sanitized: removed 2 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=3718
+[GA4 Realtime] OK: 1 active users, 1 pages, 1 devices, 1 countries
+[TTS] Success: 1524672 bytes generated
+[TTS POST] Success: 1524672 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 1 active users, 1 pages, 1 devices, 1 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 162.158.187.21
+[Rate Limit] OK: tts:61.156.44.14 - 1/20 requests
+[TTS POST] Processing 4132 chars, voice=tr-TR-EmelNeural, IP=61.156.44.14
+[TTS POST] CACHE HIT: tts:cache:892315f8223ed1500237b87385592767
+[GEO] Cache hit for 108.162.246.148
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 1 active users, 1 pages, 1 devices, 1 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[Rate Limit] OK: tts:17.246.15.221 - 1/20 requests
+[TTS POST] Processing 4832 chars, voice=tr-TR-EmelNeural, IP=17.246.15.221
+[TTS POST] CACHE MISS: tts:cache:7512f286e6c2745a7b0f58d80d7032ba
+[TTS Security] Text sanitized: removed 17 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=4815
+[GEO] Cached data for 172.69.6.81 (TTL: 86400s)
+[GEO] Cache hit for 172.69.17.194
+[GEO] Success: 104.22.42.148 -> Seattle, United States
+[GEO] Cached data for 104.22.42.148 (TTL: 86400s)
+[Rate Limit] OK: tts:17.241.219.66 - 1/20 requests
+[TTS POST] Processing 4218 chars, voice=tr-TR-EmelNeural, IP=17.241.219.66
+[TTS POST] CACHE MISS: tts:cache:eb7c3d6a2fb5b38ec8fbc01c34251cc7
+[TTS Security] Text sanitized: removed 1 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=4217
+[TTS] Success: 2194992 bytes generated
+[TTS POST] Success: 2194992 bytes, 0 words
+[TTS] Success: 1716192 bytes generated
+[TTS POST] Success: 1716192 bytes, 0 words
+[GEO] Cache hit for 172.70.100.202
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+[GEO] Cache hit for 172.71.194.119
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.71.146.30
+[Rate Limit] OK: tts:17.241.75.38 - 1/20 requests
+[TTS POST] Processing 4617 chars, voice=tr-TR-EmelNeural, IP=17.241.75.38
+[TTS POST] CACHE MISS: tts:cache:bb3d216702d302752790fdb7e1fca2e5
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=4617
+[TTS] Success: 1797552 bytes generated
+[TTS POST] Success: 1797552 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.70.100.202
+[Rate Limit] OK: tts:17.246.23.31 - 1/20 requests
+[TTS POST] Processing 3986 chars, voice=tr-TR-EmelNeural, IP=17.246.23.31
+[TTS POST] CACHE MISS: tts:cache:46acff1efc10a062c434235e96d7f3fa
+[TTS Security] Text sanitized: removed 10 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=3976
+[TTS] Success: 1603008 bytes generated
+[TTS POST] Success: 1603008 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+✅ Indexing bekleyen makale yok
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+[GEO] Cache hit for 162.158.41.28
+[GEO] Cache hit for 172.70.100.202
+[GEO] Cache hit for 108.162.246.147
+[Rate Limit] OK: tts:17.241.75.185 - 1/20 requests
+[TTS POST] Processing 4090 chars, voice=tr-TR-EmelNeural, IP=17.241.75.185
+[TTS POST] CACHE MISS: tts:cache:984b192e9ddb52d0ddd715abae6c4088
+[TTS Security] Text sanitized: removed 3 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=4087
+[TTS] Success: 1628640 bytes generated
+[TTS POST] Success: 1628640 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.70.100.202
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 1 active users, 1 pages, 1 devices, 1 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.71.222.153
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 104.22.62.87
+[GEO] Cache hit for 172.69.17.194
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 1 active users, 1 pages, 1 devices, 1 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.71.147.64
+[Rate Limit] OK: tts:17.241.75.108 - 1/20 requests
+[TTS POST] Processing 2257 chars, voice=tr-TR-EmelNeural, IP=17.241.75.108
+[TTS POST] CACHE MISS: tts:cache:1523d5c4e5d5e41167214e2e668f1c3b
+[TTS Security] Text sanitized: removed 4 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=2253
+[TTS] Success: 913104 bytes generated
+[TTS POST] Success: 913104 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 1 active users, 1 pages, 1 devices, 1 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+🛰️ SEO autopilot devriyesi başladı: seo-bulk-1772263170066
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 82/100, 4 sorun
+[SEO Pipeline] Optimizasyon denemesi 1/3
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[SEO Optimizer] Title truncation: 94 → max 60 (raw: "OpenAI ve Tata, Hindistan'da 1 GW AI Veri Merkezi Projesiyle Teknoloji Haritasın...")
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[GEO] Cached data for 172.68.102.25 (TTL: 86400s)
+[GEO] Cache hit for 172.69.17.195
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Guardrail OK: title, metaDescription, slug, content
+[SEO Pipeline] Yeni skor: 100/100 (önceki: 82)
+[SEO Pipeline] ✅ Validasyon geçti! 82 → 100
+prisma:error 
+Invalid `prisma.article.update()` invocation:
+
+
+Unique constraint failed on the fields: (`slug`)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[GEO] Cache hit for 172.70.127.157
+[GEO] Cache hit for 172.70.127.157
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 90/100, 2 sorun
+[SEO Pipeline] Optimizasyon denemesi 1/3
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Guardrail OK: title, content
+[SEO Pipeline] Yeni skor: 100/100 (önceki: 90)
+[SEO Pipeline] ✅ Validasyon geçti! 90 → 100
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[GEO] Cache hit for 172.70.100.201
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+🧹 Auto-trimmed 12 event streams (memory pressure)
+Starting bulk trend recalculation for 450 articles...
+✅ Indexing bekleyen makale yok
+Bulk trend recalculation completed.
+📊 Trend score recalculation completed
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.71.254.96
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cached data for 172.70.35.105 (TTL: 86400s)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.70.127.157
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Success: 104.23.166.14 -> Amsterdam, Netherlands
+[GEO] Cached data for 104.23.166.14 (TTL: 86400s)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+✅ Indexing bekleyen makale yok
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cached data for 172.70.39.4 (TTL: 86400s)
+[Rate Limit] OK: tts:240e:352:1980:1a00:2d21:66a5:9294:76f9 - 1/20 requests
+[TTS POST] Processing 4475 chars, voice=tr-TR-EmelNeural, IP=240e:352:1980:1a00:2d21:66a5:9294:76f9
+[TTS POST] CACHE MISS: tts:cache:f13fa5671eb04376ccab7a1d5ab32b2e
+[TTS Security] Text sanitized: removed 4 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=4471
+[TTS] Success: 1832544 bytes generated
+[TTS POST] Success: 1832544 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+[GEO] Cache hit for 172.71.194.52
+[Rate Limit] OK: tts:2603:9001:7b00:1e21:b970:7d8e:8ae:e170 - 1/20 requests
+[TTS POST] Processing 3919 chars, voice=tr-TR-EmelNeural, IP=2603:9001:7b00:1e21:b970:7d8e:8ae:e170
+[TTS POST] CACHE MISS: tts:cache:06cdbe737ef384f3970159c0768cfa5e
+[TTS Security] Text sanitized: removed 2 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=3917
+[TTS] Success: 1578672 bytes generated
+[TTS POST] Success: 1578672 bytes, 0 words
+[GEO] Cache hit for 172.70.127.158
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Success: 162.158.42.180 -> Seattle, United States
+[GEO] Cached data for 162.158.42.180 (TTL: 86400s)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[Rate Limit] OK: tts:17.246.23.250 - 1/20 requests
+[TTS POST] Processing 3997 chars, voice=tr-TR-EmelNeural, IP=17.246.23.250
+[TTS POST] CACHE MISS: tts:cache:81716d11342dc58802c5fff7bc7e4cf9
+[TTS Security] Text sanitized: removed 1 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=3996
+[GEO] Cache hit for 172.71.254.97
+[TTS] Success: 1611936 bytes generated
+[TTS POST] Success: 1611936 bytes, 0 words
+[GEO] Cache hit for 172.69.199.165
+[Rate Limit] OK: tts:188.119.8.72 - 1/20 requests
+[TTS POST] Processing 4137 chars, voice=tr-TR-EmelNeural, IP=188.119.8.72
+[TTS POST] CACHE MISS: tts:cache:fc1f19b6f3aaede0f61ad1053df93e35
+[TTS Security] Text sanitized: removed 6 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=4131
+[TTS] Success: 1672704 bytes generated
+[TTS POST] Success: 1672704 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 2 active users, 2 pages, 1 devices, 2 countries
+[GEO] Success: 104.23.170.48 -> Amsterdam, Netherlands
+[GEO] Cached data for 104.23.170.48 (TTL: 86400s)
+[Rate Limit] OK: tts:185.177.125.67 - 1/20 requests
+[TTS POST] Processing 2209 chars, voice=tr-TR-EmelNeural, IP=185.177.125.67
+[TTS POST] CACHE MISS: tts:cache:f5bbefdb74a188900adb5d6b82292124
+[TTS Security] Text sanitized: removed 2 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=2207
+[TTS] Success: 930672 bytes generated
+[TTS POST] Success: 930672 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 3 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.70.100.202
+[GEO] Cache hit for 108.162.246.148
+[GEO] Cache hit for 108.162.246.148
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.70.211.54
+[Rate Limit] OK: tts:2408:8726:1001:160:39:: - 1/20 requests
+[TTS POST] Processing 7260 chars, voice=tr-TR-EmelNeural, IP=2408:8726:1001:160:39::
+[TTS POST] CACHE MISS: tts:cache:18560fd1873c5051d213c58b478753f1
+[TTS Security] Text sanitized: removed 57 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=7203
+[TTS] Success: 3119904 bytes generated
+[TTS POST] Success: 3119904 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+🛰️ SEO autopilot devriyesi başladı: seo-bulk-1772265090054
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 3 countries
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 82/100, 4 sorun
+[SEO Pipeline] Optimizasyon denemesi 1/3
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[SEO Optimizer] Title truncation: 92 → max 60 (raw: "OpenAI ve Tata, Hindistan'da 1 GW AI Veri Merkezi ile küresel teknolojiyi yenide...")
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Guardrail OK: title, metaDescription, slug, content
+[SEO Pipeline] Yeni skor: 100/100 (önceki: 82)
+[SEO Pipeline] ✅ Validasyon geçti! 82 → 100
+prisma:error 
+Invalid `prisma.article.update()` invocation:
+
+
+Unique constraint failed on the fields: (`slug`)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 90/100, 2 sorun
+[SEO Pipeline] Optimizasyon denemesi 1/3
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Cleaned up 40 old visitors
+Starting bulk trend recalculation for 448 articles...
+✅ Indexing bekleyen makale yok
+Bulk trend recalculation completed.
+📊 Trend score recalculation completed
+[GEO] Cache hit for 172.70.100.201
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 3 countries
+[SEO Pipeline] Guardrail OK: title, content
+[SEO Pipeline] Yeni skor: 100/100 (önceki: 90)
+[SEO Pipeline] ✅ Validasyon geçti! 90 → 100
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 90/100, 2 sorun
+[SEO Pipeline] Optimizasyon denemesi 1/3
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[SEO Optimizer] Meta truncation: 164 → max 160
+🤖 LLM call → NVIDIA/qwen/qwen3-next-80b-a3b-instruct (circuit: CLOSED)
+[SEO Pipeline] Guardrail OK: metaDescription, content
+[SEO Pipeline] Yeni skor: 100/100 (önceki: 90)
+[SEO Pipeline] ✅ Validasyon geçti! 90 → 100
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+[GEO] Cached data for 172.68.245.45 (TTL: 86400s)
+[SEO Pipeline] Başlatılıyor...
+[SEO Pipeline] Mevcut skor: 100/100, 0 sorun
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Success: 162.158.41.180 -> Seattle, United States
+[GEO] Cached data for 162.158.41.180 (TTL: 86400s)
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 3 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 108.162.246.147
+[Rate Limit] OK: tts:2409:8c44:1b00:202:14:: - 1/20 requests
+[TTS POST] Processing 3975 chars, voice=tr-TR-EmelNeural, IP=2409:8c44:1b00:202:14::
+[TTS POST] CACHE MISS: tts:cache:898ce956e8f752ac0562dbc0341b1880
+[TTS Security] Text sanitized: removed 2 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=3973
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[TTS] Success: 1533456 bytes generated
+[TTS POST] Success: 1533456 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 2 countries
+[GEO] Cache hit for 172.69.17.195
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.70.127.157
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cache hit for 172.71.254.96
+[GEO] Cache hit for 172.71.254.96
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+✅ Indexing bekleyen makale yok
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+❌ Cache MISS: dashboard:stats:30m
+❌ Cache MISS: adsense:summary
+💾 Cache SET (L2): dashboard:stats:30m (TTL: 120s, Tags: [analytics, dashboard])
+💾 Cache SET (L2): adsense:summary (TTL: 300s, Tags: [adsense])
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 2 countries
+[GEO] Cache hit for 104.23.209.146
+[GEO] Cache hit for 172.71.194.119
+[Rate Limit] OK: tts:17.22.237.39 - 1/20 requests
+[TTS POST] Processing 5143 chars, voice=tr-TR-EmelNeural, IP=17.22.237.39
+[TTS POST] CACHE MISS: tts:cache:3db1e62430eb3f2f1afc618d2183b414
+[TTS Security] Text sanitized: removed 16 dangerous characters
+[TTS] Generating speech: voice=tr-TR-EmelNeural, textLength=5127
+[TTS] Success: 2284128 bytes generated
+[TTS POST] Success: 2284128 bytes, 0 words
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Success: 198.41.227.200 -> Dallas, United States
+[GEO] Cached data for 198.41.227.200 (TTL: 86400s)
+[GEO] Cached data for 172.71.167.6 (TTL: 86400s)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 3 active users, 3 pages, 1 devices, 2 countries
+[GEO] Cached data for 172.71.102.250 (TTL: 86400s)
+[Rate Limit] OK: tts:240e:978:1508:10:56:: - 1/20 requests
+[TTS POST] Processing 4226 chars, voice=tr-TR-EmelNeural, IP=240e:978:1508:10:56::
+[TTS POST] CACHE HIT: tts:cache:802f1fcbfec945d2f4ee4fd9629bc2f7
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cached data for 172.71.166.145 (TTL: 86400s)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 4 active users, 4 pages, 1 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cached data for 172.69.109.203 (TTL: 86400s)
+❌ Cache MISS: adsense:summary
+❌ Cache MISS: dashboard:stats:30m
+💾 Cache SET (L2): dashboard:stats:30m (TTL: 120s, Tags: [analytics, dashboard])
+💾 Cache SET (L2): adsense:summary (TTL: 300s, Tags: [adsense])
+[GEO] Cache hit for 172.71.166.145
+❌ Cache MISS: articles:list:p1:l25:s:c
+❌ Cache MISS: categories:list
+💾 Cache SET (L2): categories:list (TTL: 1800s, Tags: [categories])
+💾 Cache SET (L2): articles:list:p1:l25:s:c (TTL: 300s, Tags: [articles])
+🎬 35 YouTube kanalı upsert edildi
+🎬 Manuel YouTube taraması başlatılıyor (son 48 saat)...
+🎬 35 YouTube kanalı upsert edildi
+🎬 35 YouTube kanalı taranıyor...
+  ✅ AI Explained: 1/10 AI video
+  ✅ Fireship: 1/10 AI video
+  ✅ Skill Leap AI: 1/10 AI video
+  ✅ Yannic Kilcher: 0/10 AI video
+  ✅ Andrej Karpathy: 0/10 AI video
+  ✅ Lex Fridman: 0/10 AI video
+  ✅ Wes Roth: 1/10 AI video
+  ✅ The AI Daily Brief: 0/10 AI video
+  ✅ Matthew Berman: 0/5 AI video
+  ✅ TheAIGRID: 3/10 AI video
+  ✅ Two Minute Papers: 0/10 AI video
+  ✅ Matt Wolfe: 3/10 AI video
+  ✅ Robert Miles AI Safety: 0/10 AI video
+  ✅ Dwarkesh Patel: 0/10 AI video
+  ✅ Hugging Face: 0/10 AI video
+  ✅ The AI Advantage: 0/0 AI video
+  ✅ bycloud: 1/10 AI video
+  ✅ David Ondrej: 2/10 AI video
+  ✅ WorldofAI: 0/10 AI video
+  ✅ David Shapiro: 0/10 AI video
+  ✅ AI News Daily: 0/0 AI video
+  ✅ AI Andy: 0/5 AI video
+  ✅ All About AI: 0/10 AI video
+  ✅ sentdex: 0/10 AI video
+  ✅ Machine Learning Street Talk: 0/10 AI video
+  ✅ DeepLearning.AI: 1/10 AI video
+  ✅ Google DeepMind: 0/10 AI video
+  ✅ TWIML AI Podcast: 0/0 AI video
+  ✅ Eye on AI: 0/0 AI video
+  ✅ Stanford HAI: 0/10 AI video
+  ✅ Prompt Engineering: 1/10 AI video
+🧹 Auto-trimmed 12 event streams (memory pressure)
+  ✅ Scale AI: 0/10 AI video
+  ✅ AI Joe: 0/10 AI video
+  ✅ Bloomberg Technology: 0/10 AI video
+  ✅ MIT CSAIL: 0/10 AI video
+🎬 Toplam 15 benzersiz AI konusu bulundu
+🎬 YouTube yayın kuyruğu oluşturuldu: 1 konu, 15dk aralık
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[2m08:18:30[0m [2m│[0m [37m[1myoutube-queue       [0m [2m│[0m YouTube konu işleniyor: The US Government is Threatening to SEIZE Claude...
+[2m08:18:30[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Pipeline starting: 1 articles → duplicate-detector
+[2m08:18:30[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Job 448 added — 1 articles queued
+[2m08:18:30[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Pipeline state written to Redis (runId: run-1772266710424)
+[2m08:18:31[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Waiting for pipeline completion (timeout: 600s, tracking job 448)
+[GA4 Realtime] OK: 4 active users, 4 pages, 2 devices, 2 countries
+[2m08:18:50[0m [2m│[0m [37m[1mqueue-manager       [0m [2m│[0m Queue created: seo-optimization
+[2m08:18:50[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #1: unknown — 0 queued, 126 done, 2 failed
+[2m08:18:55[0m [2m·[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Check #2: unknown — 0 queued, 126 done, 2 failed
+[2m08:19:00[0m [92m✓[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m ✅ Pipeline completed: 126 articles processed
+[2m08:19:00[0m [2m│[0m [37m[1mmulti-agent-pipeline[0m [2m│[0m Pipeline state finalized in Redis (29071ms, 0 published)
+[2m08:19:00[0m [2m│[0m [37m[1myoutube-queue       [0m [2m│[0m YouTube konu atlandı (ilgili haber yok): The US Government is Threatening to SEIZE Claude...
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GEO] Cached data for 172.69.65.158 (TTL: 86400s)
+[GEO] Success: 162.158.174.230 -> Dallas, United States
+[GEO] Cached data for 162.158.174.230 (TTL: 86400s)
+🧹 Auto-trimmed 12 event streams (memory pressure)
+[GA4 Realtime] OK: 3 active users, 3 pages, 2 devices, 2 countries
+🧹 Auto-trimmed 12 event streams (memory pressure)
