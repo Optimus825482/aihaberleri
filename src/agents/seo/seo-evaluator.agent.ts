@@ -178,14 +178,14 @@ export class SEOEvaluatorAgent {
       return { score: max - 5, max, status: "warn" };
     }
 
-    if (title.length > 60) {
+    if (title.length > 100) {
       issues.push({
         field: "title",
         severity: "medium",
         problem: `Başlık çok uzun (${title.length} karakter)`,
         currentValue: title,
-        constraint: "30-60 karakter arası",
-        fixInstruction: `Başlığı 60 karakterin altına kısalt. Mevcut: "${title}" (${title.length} char). Ana mesajı ve anahtar kelimeyi koru, gereksiz kelimeleri çıkar.`,
+        constraint: "30-100 karakter arası (görüntülenen başlık)",
+        fixInstruction: `Başlığı 100 karakterin altına kısalt. Mevcut: "${title}" (${title.length} char). Ana mesajı ve anahtar kelimeyi koru, gereksiz kelimeleri çıkar.`,
         potentialGain: 5,
       });
       return { score: max - 5, max, status: "warn" };

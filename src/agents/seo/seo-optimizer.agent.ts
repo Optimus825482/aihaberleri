@@ -21,6 +21,7 @@ export interface OptimizedField {
   field: string;
   before: string;
   after: string;
+  metaTitle?: string; // SEO meta title (max 60 chars) — only for title field
   improvements: string[];
   guardrailPassed: boolean;
   guardrailNote?: string;
@@ -35,7 +36,8 @@ export interface OptimizationResult {
 // ─── Guardrails ──────────────────────────────────────────
 
 const GUARDRAILS = {
-  title: { min: 30, max: 60 },
+  title: { min: 30, max: 100 },
+  metaTitle: { min: 30, max: 60 },
   metaDescription: { min: 120, max: 160 },
   slug: { max: 75, pattern: /^[a-z0-9-]+$/ },
   excerpt: { min: 30, max: 200 },
@@ -152,6 +154,7 @@ export class SEOOptimizerAgent {
 KATIL KURALLAR:
 - Çıktı SADECE optimize edilmiş başlık olacak (tırnak işareti, açıklama, başka hiçbir şey yok)
 - Başlık ${GUARDRAILS.title.min}-${GUARDRAILS.title.max} karakter arasında OLMALI
+- Başlık okuyucuyu çekmeli, merak uyandırmalı ve konuyu net ifade etmeli
 - Orijinal başlığın dilini, tonunu ve ana mesajını koru
 - Clickbait yapma, doğal ol
 - "(2026)" veya gereksiz yıl/tarih ekleme
@@ -174,10 +177,10 @@ Sadece optimize edilmiş başlığı yaz, başka hiçbir şey yazma:`,
     const optimized = await this.callLLMWithRetry(messages);
     let cleaned = this.cleanLLMOutput(optimized);
 
-    // Smart truncation: başlık 60'ı aşıyorsa kelime sınırında kes
+    // Smart truncation: başlık max'ı aşıyorsa kelime sınırında kes
     if (cleaned.length > GUARDRAILS.title.max) {
       console.log(
-        `[SEO Optimizer] Title truncation: ${cleaned.length} → max ${GUARDRAILS.title.max} (raw: "${cleaned.substring(0, 80)}...")`,
+        `[SEO Optimizer] Title truncation: ${cleaned.length} → max ${GUARDRAILS.title.max} (raw: "${cleaned.substring(0, 120)}...")`,
       );
       cleaned = cleaned
         .substring(0, GUARDRAILS.title.max)
@@ -194,10 +197,14 @@ Sadece optimize edilmiş başlığı yaz, başka hiçbir şey yazma:`,
       );
     }
 
+    // metaTitle üret: SEO için 60 char optimized versiyon
+    const metaTitle = this.generateMetaTitle(cleaned);
+
     return {
       field: "title",
       before: article.title,
       after: cleaned,
+      metaTitle,
       improvements: issues.map((i) => i.problem),
       guardrailPassed: passed,
       guardrailNote: note,
@@ -517,6 +524,25 @@ Sadece özeti yaz:`,
         ? `Excerpt ${cleaned.length} karakter (hedef: ${GUARDRAILS.excerpt.min}-${GUARDRAILS.excerpt.max})`
         : undefined,
     };
+  }
+
+  // ─── MetaTitle Helper ───
+
+  /**
+   * Display title'dan SEO-uyumlu metaTitle üret (max 60 char)
+   * Google SERP'te görünen başlık budur
+   */
+  private generateMetaTitle(title: string): string {
+    if (title.length <= GUARDRAILS.metaTitle.max) {
+      return title;
+    }
+    // Kelime sınırında kes, "..." ekleme (Google zaten kırpar)
+    const truncated = title.substring(0, GUARDRAILS.metaTitle.max);
+    const lastSpace = truncated.lastIndexOf(" ");
+    if (lastSpace > GUARDRAILS.metaTitle.min) {
+      return truncated.substring(0, lastSpace);
+    }
+    return truncated;
   }
 
   // ─── Validation ───

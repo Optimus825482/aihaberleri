@@ -314,10 +314,10 @@ function HeroCarouselContent({
               </Link>
             </div>
 
-            {/* Title with Slide Animation */}
+            {/* Title with Slide Animation — responsive sizing for readability */}
             <h1
               key={`title-${currentArticle.id}`}
-              className={`text-3xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight drop-shadow-2xl animate-slide-${direction}`}
+              className={`text-2xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight line-clamp-3 drop-shadow-2xl animate-slide-${direction}`}
             >
               {currentArticle.title}
             </h1>

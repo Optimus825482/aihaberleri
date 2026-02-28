@@ -208,7 +208,7 @@ Content Preview: ${article.content.substring(0, 500)}...
 
 ANALYSIS CRITERIA:
 
-1. **TITLE TAG:** Length: 50-60 chars optimal. Primary keyword in first 5 words. Numbers/Year boost CTR.
+1. **TITLE TAG:** Length: 60-100 chars optimal for display. metaTitle 50-60 chars for Google SERP. Primary keyword in first 5 words. Numbers/Year boost CTR.
 2. **META DESCRIPTION:** Length: 150-160 chars. Include CTA like "Discover", "Learn", "Explore". Keywords naturally integrated.
 3. **CONTENT:** Min 300 words. H2/H3 headings (min 2 H2). Short paragraphs (3-4 sentences max).
 4. **KEYWORDS:** Density 1-2%. Placement: title, first paragraph, H2s, last paragraph. Include LSI keywords.

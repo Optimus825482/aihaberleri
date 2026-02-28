@@ -290,11 +290,21 @@ export class SEOOrchestratorService {
     changes: FinalSEOChanges,
   ): Promise<void> {
     try {
+      // metaTitle: title'dan SEO-uyumlu kısa versiyon üret (max 60 char)
+      let metaTitle = changes.title;
+      if (metaTitle.length > 60) {
+        const truncated = metaTitle.substring(0, 60);
+        const lastSpace = truncated.lastIndexOf(" ");
+        metaTitle =
+          lastSpace > 30 ? truncated.substring(0, lastSpace) : truncated;
+      }
+
       // Update article
       await db.article.update({
         where: { id: articleId },
         data: {
           title: changes.title,
+          metaTitle,
           metaDescription: changes.metaDescription,
           content: changes.content,
           slug: changes.slug,

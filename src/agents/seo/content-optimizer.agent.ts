@@ -2,7 +2,7 @@
  * Content Optimizer Agent
  *
  * SORUMLULUKLAR:
- * 1. Title optimization (50-60 char, sayı ekle, yıl ekle)
+ * 1. Title optimization (60-100 char display title, metaTitle 50-60 char for SEO)
  * 2. Meta description optimization (150-160 char, CTA, keywords)
  * 3. Content restructuring (H2/H3, paragraflar)
  * 4. Keyword integration (natural placement)
@@ -118,17 +118,17 @@ export class ContentOptimizerAgent extends BaseSEOAgent {
 
       const changes: ContentOptimizationChanges = JSON.parse(jsonMatch[0]);
 
-      // Validasyon - evaluator ile tutarlı limitler (30-60 title, 120-160 meta)
+      // Validasyon - display title 30-100, metaTitle ayrıca 60 char
       if (
         changes.title.optimized.length < 30 ||
-        changes.title.optimized.length > 60
+        changes.title.optimized.length > 100
       ) {
         console.warn(
-          `⚠️ Title length not optimal: ${changes.title.optimized.length} chars (target: 30-60)`,
+          `⚠️ Title length not optimal: ${changes.title.optimized.length} chars (target: 30-100)`,
         );
         // Hard-enforce: truncate if too long
-        if (changes.title.optimized.length > 60) {
-          const truncated = changes.title.optimized.substring(0, 57) + "...";
+        if (changes.title.optimized.length > 100) {
+          const truncated = changes.title.optimized.substring(0, 97) + "...";
           console.warn(`   ✂️ Title truncated: "${truncated}"`);
           changes.title.optimized = truncated;
         }
@@ -206,7 +206,7 @@ Sorunlar: ${analysis.issues.map((i) => `- ${i.problem}`).join("\n")}
 Fırsatlar: ${analysis.opportunities.map((o) => `- ${o.suggestion}`).join("\n")}
 
 OPTİMİZASYON KURALLARI:
-1. BAŞLIK: 50-60 karakter. Sayı/Yıl ekle. Keyword başta.
+1. BAŞLIK: 60-100 karakter. Dikkat çekici, merak uyandıran, okuyucuyu çeken. Sayı/Yıl ekle. Keyword başta.
 2. META AÇIKLAMA: 150-160 karakter. CTA ekle. Keywords doğal entegre.
 3. İÇERİK: H2/H3 başlıklar. Kısa paragraflar. Bullet points. Keyword ilk 100 kelimede.
 4. KEYWORDS: Yoğunluk %1-2. LSI keywords ekle. Doğal akış.
@@ -265,7 +265,7 @@ Issues: ${analysis.issues.map((i) => `- ${i.problem}`).join("\n")}
 Opportunities: ${analysis.opportunities.map((o) => `- ${o.suggestion}`).join("\n")}
 
 OPTIMIZATION RULES:
-1. TITLE: 50-60 chars. Add numbers/year. Primary keyword first.
+1. TITLE: 60-100 chars. Attention-grabbing, curiosity-inducing. Add numbers/year. Primary keyword first.
 2. META DESCRIPTION: 150-160 chars. Add CTA ("Discover", "Learn", "Explore"). Keywords naturally integrated.
 3. CONTENT: H2/H3 headings. Short paragraphs (3-4 sentences). Bullet points. Keyword in first 100 words.
 4. KEYWORDS: Density 1-2%. Add LSI keywords. Natural flow.
@@ -295,7 +295,7 @@ RESPOND WITH VALID JSON ONLY.`;
 Anahtar kelimeler: ${keywords?.join(", ") || "Yok"}
 
 SEO-friendly başlık oluştur:
-- 50-60 karakter
+- 60-100 karakter
 - Sayı ekle (mümkünse)
 - Yıl ekle (2026)
 - Keyword başta
@@ -324,7 +324,7 @@ Sadece başlığı yanıtla, açıklama yok.`;
         },
       );
 
-      return response.trim().substring(0, 70);
+      return response.trim().substring(0, 100);
     } catch (error) {
       console.error("❌ Title optimization hatası:", error);
       return currentTitle;

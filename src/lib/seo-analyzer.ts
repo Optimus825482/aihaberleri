@@ -41,15 +41,15 @@ export async function analyzeArticleSEO(
         type: "title",
         severity: "high" as const,
         message: "Başlık çok kısa",
-        suggestion: `Başlık ${30 - titleLength} karakter daha uzun olmalı (optimal: 50-60)`,
+        suggestion: `Başlık ${30 - titleLength} karakter daha uzun olmalı (optimal: 60-100)`,
       });
       score -= 15;
-    } else if (titleLength > 70) {
+    } else if (titleLength > 100) {
       recommendations.push({
         type: "title",
         severity: "medium" as const,
         message: "Başlık çok uzun",
-        suggestion: "Başlık 70 karakterden kısa olmalı (optimal: 50-60)",
+        suggestion: "Başlık 100 karakterden kısa olmalı (optimal: 60-100)",
       });
       score -= 10;
     }

@@ -52,14 +52,14 @@ async function calculateArticleSEO(articleId: string): Promise<{
     let score = 100;
     const issues: string[] = [];
 
-    // Title checks
+    // Title checks (display title: 30-100 chars)
     if (!article.title || article.title.length < 30) {
       score -= 10;
       issues.push("Title too short (min 30 chars)");
     }
-    if (article.title && article.title.length > 60) {
+    if (article.title && article.title.length > 100) {
       score -= 5;
-      issues.push("Title too long (max 60 chars)");
+      issues.push("Title too long (max 100 chars)");
     }
 
     // Meta description checks

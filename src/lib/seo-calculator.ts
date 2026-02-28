@@ -42,13 +42,13 @@ export function calculateSEOScore(input: SEOInput): SEOResult {
         message: `Başlık çok kısa (${input.title.length} karakter)`,
         suggestion: "Başlığı 30-60 karakter arasında tutun",
       });
-    } else if (input.title.length > 60) {
+    } else if (input.title.length > 100) {
       score -= 5;
       recommendations.push({
         type: "Başlık Uzun",
         severity: "medium",
         message: `Başlık çok uzun (${input.title.length} karakter)`,
-        suggestion: "Başlığı 30-60 karakter arasında tutun",
+        suggestion: "Başlığı 30-100 karakter arasında tutun",
       });
     }
   }

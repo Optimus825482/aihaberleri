@@ -957,7 +957,7 @@ ${sourcesText}
    - Teknik terimleri sadeleştir
 
 4. **YAPI:**
-   - Başlık: 50-70 karakter, SEO uyumlu, dikkat çekici
+   - Başlık: 60-100 karakter, dikkat çekici, merak uyandıran, okuyucuyu çeken
    - Özet: 2-3 cümle, haberin özü
    - İçerik: HTML formatlı (<p>, <h2>, <ul>), minimum 500 kelime
    - H2 alt başlıklarla organize et
@@ -1036,7 +1036,7 @@ ${sourcesText}
    - Third-person narrative
 
 4. **STRUCTURE:**
-   - Title: 50-70 characters, SEO-optimized, attention-grabbing
+   - Title: 60-100 characters, attention-grabbing, curiosity-inducing
    - Excerpt: 2-3 sentences summarizing the news
    - Content: HTML formatted (<p>, <h2>, <ul>), minimum 500 words
 
