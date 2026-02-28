@@ -11,6 +11,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { formatDate } from "@/lib/utils";
 
+/**
+ * Veritabanında bazen "/news/slug.jpg" gibi relative path saklanıyor.
+ * Bu dosyalar sunucuda mevcut olmadığından 404 + sonsuz retry döngüsüne yol açar.
+ * Sadece gerçek external CDN URL'lerini geçerli say.
+ */
+const isValidImageUrl = (url: string | null | undefined): url is string =>
+    !!url && (url.startsWith("http://") || url.startsWith("https://"));
+
 interface RelatedArticleItem {
     id: string;
     slug: string;
@@ -60,8 +68,8 @@ export function InlineRelatedArticles({
                             href={`/news/${article.slug}`}
                             className="flex gap-4 p-4 group hover:bg-ai-surface-hover transition-colors"
                         >
-                            {/* Thumbnail */}
-                            {article.imageUrl && (
+                            {/* Thumbnail — yalnızca geçerli external URL ise göster */}
+                            {isValidImageUrl(article.imageUrl) ? (
                                 <div className="relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-ai-surface-border">
                                     <Image
                                         src={article.imageUrl}
@@ -75,6 +83,12 @@ export function InlineRelatedArticles({
                                             article.imageUrl.includes("images.aihaberleri.org")
                                         }
                                     />
+                                </div>
+                            ) : (
+                                <div className="relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-ai-surface-border bg-ai-surface-dark flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-[24px] text-ai-text-muted/60">
+                                        article
+                                    </span>
                                 </div>
                             )}
 

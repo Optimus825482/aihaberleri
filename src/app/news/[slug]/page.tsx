@@ -539,7 +539,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                         href={`/news/${related.slug}`}
                         className="flex gap-3 group"
                       >
-                        {related.imageUrl && (
+                        {(related.imageUrl?.startsWith("http://") || related.imageUrl?.startsWith("https://")) ? (
                           <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-ai-surface-border">
                             <Image
                               src={related.imageUrl}
@@ -549,11 +549,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                               unoptimized={
                                 related.imageUrl.includes("pollinations.ai") ||
                                 related.imageUrl.includes("r2.dev") ||
-                                related.imageUrl.includes(
-                                  "images.aihaberleri.org",
-                                )
+                                related.imageUrl.includes("images.aihaberleri.org")
                               }
                             />
+                          </div>
+                        ) : (
+                          <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-ai-surface-border bg-ai-surface-dark flex items-center justify-center">
+                            <span className="material-symbols-outlined text-[28px] text-ai-text-muted/60">article</span>
                           </div>
                         )}
                         <div>
@@ -623,7 +625,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                       idx === 0 ? "md:col-span-2 lg:col-span-1" : ""
                     }`}
                   >
-                    {related.imageUrl && (
+                    {(related.imageUrl?.startsWith("http://") || related.imageUrl?.startsWith("https://")) ? (
                       <div className="relative h-56 w-full overflow-hidden">
                         <Image
                           src={related.imageUrl}
@@ -637,6 +639,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                           }
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-ai-background-dark/80 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                        <span className="absolute bottom-4 left-4 bg-ai-primary text-white text-xs px-2 py-1 rounded font-medium">
+                          {related.category.name}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="relative h-56 w-full overflow-hidden bg-ai-surface-dark flex items-center justify-center">
+                        <span className="material-symbols-outlined text-[48px] text-ai-text-muted/40">article</span>
                         <span className="absolute bottom-4 left-4 bg-ai-primary text-white text-xs px-2 py-1 rounded font-medium">
                           {related.category.name}
                         </span>
