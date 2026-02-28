@@ -70,10 +70,6 @@ export async function checkRateLimit(
       console.log(
         `[Rate Limit] BLOCKED: ${identifier} - ${currentCount}/${limit} requests, reset in ${ttl}s`,
       );
-    } else {
-      console.log(
-        `[Rate Limit] OK: ${identifier} - ${currentCount}/${limit} requests`,
-      );
     }
 
     return {

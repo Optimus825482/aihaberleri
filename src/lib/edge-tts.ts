@@ -65,12 +65,7 @@ export function sanitizeText(text: string): string {
     .replace(controlCharacters, "")
     .trim();
 
-  // Log if sanitization changed the text
-  if (sanitized !== text.trim()) {
-    console.log(
-      `[TTS Security] Text sanitized: removed ${text.length - sanitized.length} dangerous characters`,
-    );
-  }
+  // Sanitization is expected for most texts — no need to log every time
 
   return sanitized;
 }
@@ -103,9 +98,7 @@ export async function generateSpeech(
     throw new Error("Text is empty after sanitization");
   }
 
-  console.log(
-    `[TTS] Generating speech: voice=${voice}, textLength=${sanitizedText.length}`,
-  );
+  // Generating log removed — [TTS POST] Processing line in route.ts already covers this
 
   return new Promise((resolve, reject) => {
     const pythonScript = path.join(

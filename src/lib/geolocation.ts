@@ -132,7 +132,6 @@ export async function getCachedGeolocation(
     const cached = await cache.get(cacheKey);
     if (cached) {
       const data = JSON.parse(cached) as GeolocationData;
-      console.log(`[GEO] Cache hit for ${ip}`);
       return data;
     }
   } catch (error) {
@@ -146,7 +145,6 @@ export async function getCachedGeolocation(
   if (data) {
     try {
       await cache.set(cacheKey, JSON.stringify(data), ttl);
-      console.log(`[GEO] Cached data for ${ip} (TTL: ${ttl}s)`);
     } catch (error) {
       console.warn("[GEO] Cache write error:", error);
     }
