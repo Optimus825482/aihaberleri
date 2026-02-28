@@ -51,6 +51,7 @@ export interface EnrichedArticle extends UniqueArticle {
       content: string;
       keywords: string[];
       metaDescription: string;
+      metaTitle?: string;
       score: number;
     };
     en: {
@@ -59,6 +60,7 @@ export interface EnrichedArticle extends UniqueArticle {
       content: string;
       keywords: string[];
       metaDescription: string;
+      metaTitle?: string;
     };
   };
 }

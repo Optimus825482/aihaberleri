@@ -56,6 +56,7 @@ export interface ResearchedArticle {
       content: string;
       keywords: string[];
       metaDescription: string;
+      metaTitle?: string;
     };
     en: {
       title: string;
@@ -63,6 +64,7 @@ export interface ResearchedArticle {
       content: string;
       keywords: string[];
       metaDescription: string;
+      metaTitle?: string;
     };
   };
 }

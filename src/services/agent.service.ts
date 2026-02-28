@@ -7,6 +7,7 @@
  */
 
 import { db } from "@/lib/db";
+import { AgentStatus } from "@prisma/client";
 import { fetchAINews } from "./news.service";
 import { agentLogger } from "@/lib/logger";
 import { trackAgentExecution } from "@/lib/sentry";
@@ -207,7 +208,7 @@ export async function executeNewsAgent(
       await db.agentLog.update({
         where: { id: agentLog.id },
         data: {
-          status: "COMPLETED",
+          status: AgentStatus.SUCCESS,
           articlesCreated: 0,
           articlesScraped,
           duration,

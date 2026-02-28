@@ -705,7 +705,7 @@ export async function fetchAllRSSFeeds(
     redis = await getRedis();
     const cursorKeys = feeds.map((f) => rssCursorKey(f.url));
     // ioredis mget: returns (string | null)[]
-    const cursorValues = await redis.mget(...cursorKeys);
+    const cursorValues = await redis!.mget(...cursorKeys);
     feeds.forEach((f, i) => feedCursors.set(f.url, cursorValues[i] ?? null));
     const knownCount = cursorValues.filter((v) => v !== null).length;
     console.log(
