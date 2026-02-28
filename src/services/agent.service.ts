@@ -184,8 +184,68 @@ export async function executeNewsAgent(
     );
 
     if (allArticles.length === 0) {
-      await liveLog.agent.warn("Tüm haberler duplicate — yeni haber yok");
-      throw new Error("Tüm haberler duplicate - yeni haber bulunamadı");
+      // Normal durum: RSS feed'ler henüz güncellenmedi veya tüm haberler duplicate.
+      // Bu bir hata DEĞİLdir — 6 dakikada bir çalışan agent için beklenen durum.
+      // throw yerine graceful return yapılıyor ki BullMQ job FAILED göstermesin.
+      const duration = Math.floor((Date.now() - startTime) / 1000);
+
+      await liveLog.agent.warn(
+        "Tüm haberler duplicate — yeni haber yok, atlanıyor",
+      );
+      await addLogMessage(
+        agentLog.id,
+        "Yeni haber bulunamadı — tüm içerik zaten görülmüş",
+      );
+
+      await tracer.endTrace("SUCCESS" as any, {
+        articlesCreated: 0,
+        articlesScraped,
+        duration,
+        skipped: true,
+      });
+
+      await db.agentLog.update({
+        where: { id: agentLog.id },
+        data: {
+          status: "COMPLETED",
+          articlesCreated: 0,
+          articlesScraped,
+          duration,
+          errors: [],
+        },
+      });
+
+      emitToAdmin(SocketEvents.AGENT_COMPLETED, {
+        articlesCreated: 0,
+        articlesScraped,
+        duration,
+        timestamp: new Date().toISOString(),
+        logId: agentLog.id,
+      });
+
+      agentLogger.complete(agentLog.id, {
+        success: true,
+        articlesCreated: 0,
+        articlesScraped,
+        duration,
+        errors: [],
+      });
+
+      trackAgentExecution(agentLog.id, {
+        success: true,
+        articlesCreated: 0,
+        duration,
+        errors: [],
+      });
+
+      return {
+        success: true,
+        articlesCreated: 0,
+        articlesScraped,
+        duration,
+        errors: [],
+        publishedArticles: [],
+      };
     }
 
     // ═══════════════════════════════════════════════════════════════════
