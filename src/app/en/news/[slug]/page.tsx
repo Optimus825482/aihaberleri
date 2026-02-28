@@ -416,7 +416,7 @@ export default async function EnglishArticlePage({ params }: Props) {
             </header>
 
             {/* Featured Image with Responsive Sizes */}
-            {article.imageUrl && (
+              {article.imageUrl && (article.imageUrl.startsWith("http://") || article.imageUrl.startsWith("https://")) && (
               <div className="mb-8">
                 <ArticleImage
                   src={article.imageUrl}
@@ -606,7 +606,7 @@ export default async function EnglishArticlePage({ params }: Props) {
                     href={`/en/news/${related.slug}`}
                     className="bg-ai-surface-card rounded-xl overflow-hidden border border-ai-surface-border hover:border-ai-primary/40 transition-all group"
                   >
-                    {related.imageUrl && (
+                    {(related.imageUrl?.startsWith("http://") || related.imageUrl?.startsWith("https://")) && (
                       <div className="relative aspect-video overflow-hidden">
                         <Image
                           src={related.imageUrl}

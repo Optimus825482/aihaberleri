@@ -341,7 +341,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </div>
 
               {/* Featured Image - LCP Optimized with Responsive Sizes */}
-              {article.imageUrl && (
+              {article.imageUrl && (article.imageUrl.startsWith("http://") || article.imageUrl.startsWith("https://")) && (
                 <div className="mb-8">
                   <ArticleImage
                     src={article.imageUrl}

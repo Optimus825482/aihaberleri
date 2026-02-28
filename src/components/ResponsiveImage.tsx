@@ -40,6 +40,27 @@ export function ResponsiveImage({
     const [error, setError] = useState(false);
     const [loading, setLoading] = useState(true);
 
+    // Guard: DB'de bazen bare filename veya relative path saklanıyor.
+    // Geçersiz src next/image'da 404 + sonsuz retry döngüsüne yol açar.
+    const isValidSrc = src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/");
+    if (!isValidSrc) {
+        return (
+            <div
+                className={`flex items-center justify-center bg-muted ${className}`}
+                style={
+                    fill
+                        ? undefined
+                        : { width: width || "100%", height: height || "auto" }
+                }
+            >
+                <div className="text-center text-muted-foreground">
+                    <ImageOff className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Görsel yüklenemedi</p>
+                </div>
+            </div>
+        );
+    }
+
     // If all sizes are the same (fallback scenario), use simple Image
     const hasDifferentSizes =
         srcMedium !== src || srcSmall !== src || srcThumb !== src;
