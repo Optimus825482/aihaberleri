@@ -27,6 +27,7 @@ import { notifyBothLanguages } from "@/lib/seo/indexing-tracker";
 import { calculateTrendScore } from "@/lib/trend-scoring";
 import { getRedis } from "@/lib/redis";
 import type { SocialShareInput } from "./social-share.agent";
+import { isPrismaError, type PipelineReEnrichPayload } from "./pipeline-types";
 
 /** Reddedilen makaleyi 2 saat boyunca tüm pipeline'dan uzak tutar. */
 const REJECTION_COOLDOWN_SECONDS = 2 * 60 * 60; // 2 saat
@@ -154,7 +155,7 @@ export class DatabasePublisherAgent extends BaseAgent<
           const enContent = article.synthesizedContent?.en;
 
           if (!trContent?.title || !trContent?.content || !trContent?.excerpt) {
-            const retryCount = (article as any)._retryCount || 0;
+            const retryCount = article._retryCount || 0;
             if (retryCount < MAX_PIPELINE_RETRIES) {
               this.logger.warn(
                 `🔄 CONTENT MISSING → re-queue for retry (attempt ${retryCount + 1}): "${article.url.substring(0, 60)}"`,
@@ -169,9 +170,9 @@ export class DatabasePublisherAgent extends BaseAgent<
           }
 
           // 🛡️ QUALITY GATE: Check synthesis quality score
-          const qualityScore = (trContent as any).score || 0;
+          const qualityScore = trContent.score || 0;
           if (qualityScore > 0 && qualityScore < 50) {
-            const retryCount = (article as any)._retryCount || 0;
+            const retryCount = article._retryCount || 0;
             if (retryCount < MAX_PIPELINE_RETRIES) {
               this.logger.warn(
                 `🔄 LOW QUALITY → re-queue for retry (attempt ${retryCount + 1}, score: ${qualityScore}): "${trContent.title.substring(0, 60)}"`,
@@ -186,7 +187,7 @@ export class DatabasePublisherAgent extends BaseAgent<
           }
 
           // 🛡️ ZERO-SOURCE GATE: Block hallucinated articles (no external sources found)
-          if ((article as any).hasNoExternalSources === true) {
+          if (article.hasNoExternalSources === true) {
             this.logger.error(
               `🚫 YAYINLANMIYOR — HİÇ DIŞ KAYNAK YOK: "${trContent.title.substring(0, 80)}" (halüsinasyon riski yüksek, atlanıyor)`,
             );
@@ -205,7 +206,7 @@ export class DatabasePublisherAgent extends BaseAgent<
           );
 
           if (isEnglishTitle && !hasTurkishChars) {
-            const retryCount = (article as any)._retryCount || 0;
+            const retryCount = article._retryCount || 0;
             if (retryCount < MAX_PIPELINE_RETRIES) {
               this.logger.warn(
                 `🔄 ENGLISH TITLE → re-queue for retry (attempt ${retryCount + 1}): "${trContent.title.substring(0, 80)}"`,
@@ -220,7 +221,7 @@ export class DatabasePublisherAgent extends BaseAgent<
           }
 
           if (isEmergencyTitle) {
-            const retryCount = (article as any)._retryCount || 0;
+            const retryCount = article._retryCount || 0;
             if (retryCount < MAX_PIPELINE_RETRIES) {
               this.logger.warn(
                 `🔄 EMERGENCY TEMPLATE → re-queue for retry (attempt ${retryCount + 1}): "${trContent.title.substring(0, 80)}"`,
@@ -255,7 +256,7 @@ export class DatabasePublisherAgent extends BaseAgent<
             contentLower.includes(p),
           ).length;
           if (dictionaryMatchCount >= 2) {
-            const retryCount = (article as any)._retryCount || 0;
+            const retryCount = article._retryCount || 0;
             if (retryCount < MAX_PIPELINE_RETRIES) {
               this.logger.warn(
                 `🔄 DICTIONARY CONTENT → re-queue for retry (attempt ${retryCount + 1}): "${trContent.title.substring(0, 60)}"`,
@@ -295,7 +296,9 @@ export class DatabasePublisherAgent extends BaseAgent<
             const contentScore = calculateTrendScore({
               title: trContent.title,
               description: trContent.excerpt || article.description || "",
-              publishedAt: (article as any).publishedAt || new Date(),
+              publishedAt: article.publishedDate
+                ? new Date(article.publishedDate)
+                : new Date(),
               url: article.url,
             });
             finalTrendScore = contentScore.total;
@@ -332,7 +335,9 @@ export class DatabasePublisherAgent extends BaseAgent<
 
               // Metadata
               sourceUrl: article.url,
-              publishedAt: (article as any).publishedAt || new Date(),
+              publishedAt: article.publishedDate
+                ? new Date(article.publishedDate)
+                : new Date(),
               topic: article.topic,
               trendScore: finalTrendScore,
               isTrending: finalTrendScore >= 50,
@@ -340,7 +345,7 @@ export class DatabasePublisherAgent extends BaseAgent<
 
               // Relations
               categoryId: category.id,
-              agentLogId: (article as any)?.agentLogId || null, // Get from current article
+              agentLogId: article.agentLogId ?? null,
 
               // Status
               status: "PUBLISHED",
@@ -367,7 +372,7 @@ export class DatabasePublisherAgent extends BaseAgent<
             );
           } catch (trError) {
             // Ignore if already exists
-            if ((trError as any).code !== "P2002") {
+            if (!isPrismaError(trError) || trError.code !== "P2002") {
               this.logger.warn(
                 `Failed to create Turkish translation: ${(trError as Error).message}`,
               );
@@ -395,7 +400,7 @@ export class DatabasePublisherAgent extends BaseAgent<
               this.logger.info(`English translation created: ${enSlug}`);
             } catch (enError) {
               // If English slug already exists, create with unique suffix
-              if ((enError as any).code === "P2002") {
+              if (isPrismaError(enError) && enError.code === "P2002") {
                 enSlugFinal = `${enSlug}-${createdArticle.id.slice(-6)}`;
                 await db.articleTranslation.create({
                   data: {
@@ -532,9 +537,9 @@ export class DatabasePublisherAgent extends BaseAgent<
             `Failed to publish article: ${article.synthesizedContent?.tr?.title?.substring(0, 50) || "unknown"}... [${errName}]: ${errDetail}`,
           );
           // Log Prisma-specific details
-          if ((error as any)?.code) {
+          if (isPrismaError(error)) {
             this.logger.error(
-              `Prisma error code: ${(error as any).code}, meta: ${JSON.stringify((error as any).meta || {})}`,
+              `Prisma error code: ${error.code}, meta: ${JSON.stringify(error.meta || {})}`,
             );
           }
           // Continue with next article
@@ -556,13 +561,10 @@ export class DatabasePublisherAgent extends BaseAgent<
           const enricherQueue = getQueue(QUEUE_NAMES.ENRICHED_ARTICLES);
           const redis = getRedis();
           if (enricherQueue) {
-            const retryArticles: any[] = [];
+            const retryArticles: PipelineReEnrichPayload[] = [];
 
             for (const r of rejectedForRetry) {
-              const identifier =
-                r.article.url ||
-                (r.article as any).sourceUrl ||
-                r.article.title;
+              const identifier = r.article.url || r.article.title;
               const cooldownKey = rejectionCooldownKey(identifier);
 
               // Skip articles that are already in the 2-hour cooldown window
@@ -591,21 +593,20 @@ export class DatabasePublisherAgent extends BaseAgent<
                 title: r.article.title,
                 description: r.article.description || "",
                 url: identifier,
-                publishedDate: (r.article as any).publishedDate,
-                source: (r.article as any).source || "re-enrich",
+                publishedDate: r.article.publishedDate,
+                source: r.article.source || "re-enrich",
                 // ── Preserve REAL scores (not hardcoded fallbacks) ──
                 trendScore: r.article.trendScore ?? 0,
-                relevanceScore: (r.article as any).relevanceScore ?? 0,
+                relevanceScore: r.article.relevanceScore ?? 0,
                 // ── Routing / enrichment metadata ──
-                category: (r.article as any).category,
-                reasoning:
-                  (r.article as any).reasoning || "Re-enrich after rejection",
+                category: r.article.category,
+                reasoning: r.article.reasoning || "Re-enrich after rejection",
                 suggestedCategory: r.article.suggestedCategory || "yapay-zeka",
-                suggestedTags: (r.article as any).suggestedTags || [],
+                suggestedTags: r.article.suggestedTags || [],
                 topic: r.article.topic || "ai",
                 isDuplicate: false,
                 // ── Re-enrichment control flags ──
-                _retryCount: ((r.article as any)._retryCount || 0) + 1,
+                _retryCount: (r.article._retryCount || 0) + 1,
                 _forceReEnrich: true, // ContentEnricher: use aggressive source gathering
                 _rejectionReason: r.reason, // ContentEnricher: pre-prime retry loop with correction
                 // ── Intentionally OMITTED: synthesizedContent, sources, imageUrl ──

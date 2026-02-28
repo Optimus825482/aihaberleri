@@ -1,13 +1,14 @@
 /**
  * Orchestrator Worker - Multi-Agent News Pipeline
  *
- * ARCHITECTURE (7 Agents):
+ * ARCHITECTURE (10 Agents):
  * DuplicateDetector → RelevanceFilter → TrendEnricher →
- * ContentEnricher → VisualGenerator → SEO Optimizer → DatabasePublisher
+ * SourceGatherer → ContentSynthesizer → ContentValidator →
+ * VisualGenerator → SEO Optimizer → DatabasePublisher
  * (+ ContentCollector for standalone RSS collection)
  *
  * This worker:
- * 1. Starts all 7 agents
+ * 1. Starts all 10 agents
  * 2. Triggers ContentCollectorAgent on schedule
  * 3. Monitors pipeline health
  * 4. Handles graceful shutdown
@@ -37,7 +38,9 @@ import { ContentCollectorAgent } from "@/agents/content-collector.agent";
 import { RelevanceFilterAgent } from "@/agents/relevance-filter.agent";
 import { DuplicateDetectorAgent } from "@/agents/duplicate-detector.agent";
 import { TrendEnricherAgent } from "@/agents/trend-enricher.agent";
-import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
+import { SourceGathererAgent } from "@/agents/source-gatherer.agent";
+import { ContentSynthesizerAgent } from "@/agents/content-synthesizer.agent";
+import { ContentValidatorAgent } from "@/agents/content-validator.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
 import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
 import { SocialShareAgent } from "@/agents/social-share.agent";
@@ -62,7 +65,9 @@ let contentCollector: ContentCollectorAgent;
 let relevanceFilter: RelevanceFilterAgent;
 let duplicateDetector: DuplicateDetectorAgent;
 let trendEnricher: TrendEnricherAgent;
-let contentEnricher: ContentEnricherAgent;
+let sourceGatherer: SourceGathererAgent;
+let contentSynthesizer: ContentSynthesizerAgent;
+let contentValidator: ContentValidatorAgent;
 let visualGenerator: VisualGeneratorAgent;
 let databasePublisher: DatabasePublisherAgent;
 let socialShare: SocialShareAgent;
@@ -81,7 +86,9 @@ async function initializeAgents(): Promise<void> {
     "duplicate-detector",
     "relevance-filter",
     "trend-enricher",
-    "content-enricher",
+    "source-gatherer",
+    "content-synthesizer",
+    "content-validator",
     "visual-generator",
     "database-publisher",
     "social-share",
@@ -94,7 +101,9 @@ async function initializeAgents(): Promise<void> {
   relevanceFilter = new RelevanceFilterAgent();
   duplicateDetector = new DuplicateDetectorAgent();
   trendEnricher = new TrendEnricherAgent();
-  contentEnricher = new ContentEnricherAgent();
+  sourceGatherer = new SourceGathererAgent();
+  contentSynthesizer = new ContentSynthesizerAgent();
+  contentValidator = new ContentValidatorAgent();
   visualGenerator = new VisualGeneratorAgent();
   databasePublisher = new DatabasePublisherAgent();
   socialShare = new SocialShareAgent();
@@ -104,13 +113,15 @@ async function initializeAgents(): Promise<void> {
     relevanceFilter.start(),
     duplicateDetector.start(),
     trendEnricher.start(),
-    contentEnricher.start(),
+    sourceGatherer.start(),
+    contentSynthesizer.start(),
+    contentValidator.start(),
     visualGenerator.start(),
     databasePublisher.start(),
     socialShare.start(),
   ]);
 
-  logger.success("All 8 agents initialized");
+  logger.success("All 10 agents initialized");
 }
 
 /**
@@ -124,7 +135,9 @@ async function stopAgents(): Promise<void> {
     relevanceFilter?.stop(),
     duplicateDetector?.stop(),
     trendEnricher?.stop(),
-    contentEnricher?.stop(),
+    sourceGatherer?.stop(),
+    contentSynthesizer?.stop(),
+    contentValidator?.stop(),
     visualGenerator?.stop(),
     databasePublisher?.stop(),
     socialShare?.stop(),

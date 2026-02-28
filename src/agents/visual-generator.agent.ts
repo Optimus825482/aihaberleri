@@ -27,7 +27,7 @@ import { fetchPollinationsImage } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import { generateSlug } from "@/lib/utils";
 import { db } from "@/lib/db"; // ADDED: For early DB check
-import type { EnrichedArticle } from "./content-enricher.agent";
+import type { EnrichedArticle } from "./pipeline-types";
 
 export interface ArticleWithVisuals extends EnrichedArticle {
   imageUrl: string | null;
@@ -209,7 +209,7 @@ export class VisualGeneratorAgent extends BaseAgent<
 
       // Check if article has minimum required score (if score exists)
       const articleScore =
-        (article as any).score || (article as any).relevanceScore;
+        article.synthesizedContent?.tr?.score || article.relevanceScore;
       if (articleScore !== undefined && articleScore < 40) {
         this.logger.warn(
           `⚠️ Skipping visual: Article score ${articleScore} < 40 threshold`,

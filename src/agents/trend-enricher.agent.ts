@@ -129,7 +129,7 @@ export class TrendEnricherAgent extends BaseAgent<
     const articleForMatching: ArticleForMatching = {
       id: article.id || "",
       title: article.title || "",
-      content: article.content || (article as any).description || "",
+      content: article.content || String(article["description"] || ""),
       keywords: article.keywords || [],
       language: article.language || "tr",
     };

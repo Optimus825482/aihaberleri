@@ -28,6 +28,8 @@ export const QUEUE_NAMES = {
   UNIQUE_ARTICLES: "unique-articles",
   TREND_ENRICHMENT: "trend-enrichment", // NEW: Trend matching & enrichment
   ENRICHED_ARTICLES: "enriched-articles",
+  CONTENT_SYNTHESIS: "content-synthesis",
+  CONTENT_VALIDATION: "content-validation",
   ARTICLES_WITH_VISUALS: "articles-with-visuals",
   DATABASE_PUBLISHER: "database-publisher", // Final publishing step
   SOCIAL_SHARE: "social-share", // NEW: Social media sharing (split from publisher) (2026-02-12)
@@ -104,13 +106,33 @@ const QUEUE_CONFIG = {
     attempts: 3,
   },
   [QUEUE_NAMES.ENRICHED_ARTICLES]: {
-    concurrency: 3, // Content enrichment is slow (Brave API + Jina)
+    concurrency: 3, // Source gathering is slow (Tavily, SearXNG, Jina)
     rateLimit: {
       max: 5,
       duration: 1000,
     },
     lockDuration: 300000, // 5 minutes
-    jobTimeout: 600000, // FAZ 3: 10 minutes job timeout
+    jobTimeout: 480000, // 8 minutes job timeout
+    attempts: 3,
+  },
+  [QUEUE_NAMES.CONTENT_SYNTHESIS]: {
+    concurrency: 2, // LLM synthesis is slow (DeepSeek calls + retries)
+    rateLimit: {
+      max: 3,
+      duration: 1000,
+    },
+    lockDuration: 600000, // 10 minutes
+    jobTimeout: 720000, // 12 minutes job timeout
+    attempts: 3,
+  },
+  [QUEUE_NAMES.CONTENT_VALIDATION]: {
+    concurrency: 5, // Validation is fast (no external calls)
+    rateLimit: {
+      max: 10,
+      duration: 1000,
+    },
+    lockDuration: 60000, // 1 minute
+    jobTimeout: 120000, // 2 minutes job timeout
     attempts: 3,
   },
   [QUEUE_NAMES.ARTICLES_WITH_VISUALS]: {
