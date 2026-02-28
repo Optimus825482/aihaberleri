@@ -28,6 +28,7 @@ import { ReadingProgressBar } from "@/components/ReadingProgressBar";
 import { AITermsGlossary } from "@/components/article/AITermsGlossary";
 import { MobileArticleActionBar } from "@/components/article/MobileArticleActionBar";
 import { SaveArticleButton } from "@/components/article/SaveArticleButton";
+import { InlineRelatedArticles } from "@/components/article/InlineRelatedArticles";
 import {
   ArticleInsightTopSections,
   ArticleTimelineSection,
@@ -172,7 +173,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       status: "PUBLISHED",
     },
     include: { category: true },
-    take: 18,
+    take: 27,
     orderBy: { publishedAt: "desc" },
   });
 
@@ -183,9 +184,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     }
   }
 
-  let relatedArticles = Array.from(dedupedRelated.values()).slice(0, 6);
+  // 9 ilgili makale: 3 sidebar + 3 inline (içerik ortası) + 3 alt grid
+  let relatedArticles = Array.from(dedupedRelated.values()).slice(0, 9);
 
-  if (relatedArticles.length < 6) {
+  if (relatedArticles.length < 9) {
     const fallbackArticles = await db.article.findMany({
       where: {
         id: {
@@ -194,7 +196,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         status: "PUBLISHED",
       },
       include: { category: true },
-      take: 6 - relatedArticles.length,
+      take: 9 - relatedArticles.length,
       orderBy: { publishedAt: "desc" },
     });
 
@@ -203,7 +205,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   type RelatedArticle = (typeof relatedArticles)[0];
   const sidebarArticles = relatedArticles.slice(0, 3);
-  const bottomArticles = relatedArticles.slice(3, 6);
+  const inlineArticles = relatedArticles.slice(3, 6);  // İçerik ortasına enjekte edilecek
+  const bottomArticles = relatedArticles.slice(6, 9);  // Alt grid
 
   const readingTime = calculateReadingMinutes(article.content);
   const insightSettings = await getInsightSettings();
@@ -391,6 +394,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   className="my-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3 not-prose text-center"
                 />
 
+                {/* İçerik ortasına inline internal link bölümü */}
+                {/* SEO: okuyucu içeriğin tam ortasında iken bağlantılı sayfalara PageRank aktarımı */}
+                <InlineRelatedArticles
+                  articles={inlineArticles}
+                  currentCategoryName={article.category.name}
+                />
+
                 <HighlightedText
                   htmlContent={secondPart}
                   articleTitle={article.title}
@@ -420,12 +430,14 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {article.keywords.map((keyword: string) => (
-                      <span
+                      // Tıklanabilir search linki — Internal link + kullanıcı keşfi
+                      <Link
                         key={keyword}
-                        className="px-3 py-1 bg-ai-surface-dark hover:bg-ai-surface-hover border border-ai-surface-border text-ai-text-secondary hover:text-white rounded-full text-sm transition-colors cursor-pointer"
+                        href={`/search?q=${encodeURIComponent(keyword)}`}
+                        className="px-3 py-1 bg-ai-surface-dark hover:bg-ai-primary/20 border border-ai-surface-border hover:border-ai-primary/40 text-ai-text-secondary hover:text-ai-primary rounded-full text-sm transition-colors"
                       >
                         #{keyword}
-                      </span>
+                      </Link>
                     ))}
                   </div>
                 </div>

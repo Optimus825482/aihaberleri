@@ -19,22 +19,25 @@ export function generateOrganizationSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${baseUrl}/#organization`,
     name: siteName,
     url: baseUrl,
+    // Google Haberler Mart 2025: favicon = logo. Kare format zorunlu.
     logo: {
       "@type": "ImageObject",
-      url: `${baseUrl}/logos/brand/logo-primary.png`,
+      url: `${baseUrl}/icons/Icon-512.png`,
       width: 512,
-      height: 128,
+      height: 512,
     },
     sameAs: [
       `https://twitter.com/${process.env.TWITTER_HANDLE?.replace("@", "") || "aihaberleri"}`,
-      // Add other social links if available in env
+      `https://bsky.app/profile/${process.env.NEXT_PUBLIC_SITE_URL?.replace("https://", "") || "aihaberleri.org"}`,
     ],
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Customer Service",
       email: process.env.CONTACT_EMAIL || "info@aihaberleri.org",
+      availableLanguage: "Turkish",
     },
   };
 }
@@ -78,11 +81,12 @@ export function generateNewsArticleSchema(article: ArticleWithCategory) {
     "@id": `${baseUrl}/#organization`,
     name: siteName,
     url: baseUrl,
+    // Google Haberler Mart 2025: favicon = logo. Kare format zorunlu.
     logo: {
       "@type": "ImageObject",
-      url: `${baseUrl}/logos/brand/logo-primary.png`,
+      url: `${baseUrl}/icons/Icon-512.png`,
       width: 512,
-      height: 128,
+      height: 512,
     },
     sameAs: [
       `https://twitter.com/${process.env.TWITTER_HANDLE?.replace("@", "") || "aihaberleri"}`,
@@ -135,6 +139,17 @@ export function generateNewsArticleSchema(article: ArticleWithCategory) {
     copyrightYear:
       article.publishedAt?.getFullYear() || new Date().getFullYear(),
     copyrightHolder: publisherOrg,
+    // Google Discover + Google Haberler için speakable schema
+    // Hangi kısımların özet olarak kullanılacağını belirtir
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: [
+        "h1",
+        ".article-title",
+        ".article-excerpt",
+        "[data-speakable]",
+      ],
+    },
     // AI tarafından oluşturulduğunu belirten ek meta
     // Schema.org'da resmi bir "AI generated" alanı yok,
     // ancak "creativeWorkStatus" ile belirtilebilir

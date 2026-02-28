@@ -7,6 +7,8 @@ interface ArticleWithTranslation {
   title: string;
   slug: string;
   publishedAt: Date | null;
+  updatedAt: Date;
+  keywords: string[];
   enTitle: string | null;
   enSlug: string | null;
 }
@@ -26,6 +28,8 @@ export async function GET() {
         a.title,
         a.slug,
         a."publishedAt",
+        a."updatedAt",
+        a.keywords,
         at.title as "enTitle",
         at.slug as "enSlug"
       FROM "Article" a
@@ -38,10 +42,15 @@ export async function GET() {
 
     // Build Turkish article entries
     const turkishEntries = articles
-      .map(
-        (article: ArticleWithTranslation) => `
+      .map((article: ArticleWithTranslation) => {
+        const keywords = (article.keywords || [])
+          .filter(Boolean)
+          .slice(0, 10)
+          .join(", ");
+        return `
   <url>
     <loc>${baseUrl}/news/${article.slug}</loc>
+    <lastmod>${(article.updatedAt || article.publishedAt)?.toISOString()}</lastmod>
     <news:news>
       <news:publication>
         <news:name>${siteName}</news:name>
@@ -49,9 +58,10 @@ export async function GET() {
       </news:publication>
       <news:publication_date>${article.publishedAt?.toISOString()}</news:publication_date>
       <news:title>${escapeXml(article.title)}</news:title>
+      ${keywords ? `<news:keywords>${escapeXml(keywords)}</news:keywords>` : ""}
     </news:news>
-  </url>`,
-      )
+  </url>`;
+      })
       .join("");
 
     // Build English article entries (only for translated articles)

@@ -70,12 +70,16 @@ export const metadata: Metadata = {
   ),
   manifest: "/manifest.json",
   icons: {
-    icon: [{ url: "/logos/brand/ai-logo-dark.png", type: "image/png" }],
+    icon: [
+      { url: "/icons/Icon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/Icon-96.png", sizes: "96x96", type: "image/png" },
+      { url: "/icons/Icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: [
-      {
-        url: "/logos/brand/ai-logo-dark.png",
-        type: "image/png",
-      },
+      { url: "/icons/Icon-180.png", sizes: "180x180", type: "image/png" },
+    ],
+    other: [
+      { url: "/icons/Icon-512.png", sizes: "512x512", type: "image/png" },
     ],
   },
   appleWebApp: {
@@ -150,6 +154,57 @@ export default function RootLayout({
         />
 
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+
+        {/* WebSite + Organization Schema - Google Haberler için zorunlu (Mart 2025 yeni sistemi) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": `${process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org"}/#website`,
+                  name: "AI Haberleri",
+                  url: process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org",
+                  description: "Yapay zeka dünyasındaki gelişmeleri yakından takip edin",
+                  inLanguage: "tr-TR",
+                  potentialAction: {
+                    "@type": "SearchAction",
+                    target: {
+                      "@type": "EntryPoint",
+                      urlTemplate: `${process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org"}/search?q={search_term_string}`,
+                    },
+                    "query-input": "required name=search_term_string",
+                  },
+                },
+                {
+                  "@type": "Organization",
+                  "@id": `${process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org"}/#organization`,
+                  name: "AI Haberleri",
+                  url: process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org",
+                  // Google Haberler artık favicon'ı logo olarak kullanıyor (Mart 2025)
+                  logo: {
+                    "@type": "ImageObject",
+                    url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org"}/icons/Icon-512.png`,
+                    width: 512,
+                    height: 512,
+                  },
+                  sameAs: [
+                    "https://twitter.com/aihaberleri",
+                    "https://bsky.app/profile/aihaberleri.org",
+                  ],
+                  contactPoint: {
+                    "@type": "ContactPoint",
+                    contactType: "Customer Service",
+                    email: "info@aihaberleri.org",
+                    availableLanguage: "Turkish",
+                  },
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body
         className={cn(
