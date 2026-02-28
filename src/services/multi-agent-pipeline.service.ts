@@ -508,7 +508,7 @@ export async function waitForPipelineCompletion(
   await new Promise((resolve) => setTimeout(resolve, 3000));
 
   let consecutiveEmptyChecks = 0;
-  const REQUIRED_EMPTY_CHECKS = 3;
+  const REQUIRED_EMPTY_CHECKS = 5;
   let hasSeenArticlesInQueue = initialJobCompleted;
   let checkCount = 0;
 
@@ -529,9 +529,12 @@ export async function waitForPipelineCompletion(
     }
 
     if (progress.articlesInQueue > 0 || checkCount <= 2) {
-      logger.debug(
-        `Check #${checkCount}: ${progress.stage} — ${progress.articlesInQueue} queued, ${progress.completed} done, ${progress.failed} failed`,
-      );
+      // Log every 6th check (30s intervals) to reduce log spam, always log first 2
+      if (checkCount <= 2 || checkCount % 6 === 0) {
+        logger.debug(
+          `Check #${checkCount}: ${progress.stage} — ${progress.articlesInQueue} queued, ${progress.completed} done, ${progress.failed} failed`,
+        );
+      }
     }
 
     if (progress.articlesInQueue === 0 && progress.stage === "unknown") {
@@ -585,6 +588,9 @@ export async function waitForPipelineCompletion(
           `✅ Pipeline completed: ${progress.completed} articles processed`,
         );
 
+        // Wait for DB transactions to fully commit before counting
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
         const { db } = await import("@/lib/db");
         const publishedCount = await db.article.count({
           where: { agentLogId, status: "PUBLISHED" },
@@ -618,7 +624,9 @@ export async function waitForPipelineCompletion(
         };
         await writePipelineState(finalState);
         await savePipelineHistory(finalState);
-        logger.info(`Pipeline state finalized in Redis (${totalDuration}ms, ${publishedCount} published)`);
+        logger.info(
+          `Pipeline state finalized in Redis (${totalDuration}ms, ${publishedCount} published)`,
+        );
 
         return {
           success: pipelineRan,
@@ -630,7 +638,7 @@ export async function waitForPipelineCompletion(
       consecutiveEmptyChecks = 0;
     }
 
-    if (progress.articlesInQueue > 0) {
+    if (progress.articlesInQueue > 0 && checkCount % 6 === 0) {
       logger.info(
         `📊 Pipeline progress: ${progress.stage} (${progress.articlesInQueue} in queue, ${progress.completed} completed, ${progress.failed} failed)`,
       );

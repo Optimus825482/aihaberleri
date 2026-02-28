@@ -589,7 +589,7 @@ export const FRENCH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 3,
     requiresTranslation: true,
     priority: 5,
-    isActive: true,
+    isActive: false, // DISABLED (28.02.2026): Persistent 3x timeout (15s each), unreachable
     tags: ["french-ai", "industry", "research"],
   },
   {

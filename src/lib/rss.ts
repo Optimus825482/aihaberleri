@@ -653,16 +653,25 @@ function extractLink(element: any): string {
 
 /**
  * Fetch all RSS feeds with concurrency control
+ * Cross-references ALL_INTERNATIONAL_SOURCES config to skip isActive=false feeds
  */
 export async function fetchAllRSSFeeds(
   maxConcurrent: number = 8,
 ): Promise<RSSItem[]> {
-  console.log(
-    `📡 ${AI_NEWS_RSS_FEEDS.length} RSS feed okunuyor (AI-FOCUSED ONLY)...`,
+  // Build set of disabled feed URLs from centralized config
+  const disabledUrls = new Set(
+    ALL_INTERNATIONAL_SOURCES
+      .filter((s) => !s.isActive)
+      .map((s) => s.url),
   );
 
   const allItems: RSSItem[] = [];
-  const feeds = [...AI_NEWS_RSS_FEEDS];
+  const feeds = AI_NEWS_RSS_FEEDS.filter((f) => !disabledUrls.has(f.url));
+  const skipped = AI_NEWS_RSS_FEEDS.length - feeds.length;
+
+  console.log(
+    `📡 ${feeds.length} aktif RSS feed okunuyor (${skipped} devre dışı atlandı)...`,
+  );
   let completed = 0;
   const startTime = Date.now();
 
