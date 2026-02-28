@@ -29,8 +29,15 @@ import {
 } from "@/lib/tavily-extract";
 import axios from "axios";
 import type { UniqueArticle } from "./duplicate-detector.agent";
+// Re-enrichment path — extra services for rejected articles
+import { exaSearch } from "@/lib/exa";
+import {
+  firecrawlScrape,
+  isFirecrawlAvailable,
+} from "@/lib/firecrawl";
 
 export interface EnrichedArticle extends UniqueArticle {
+  hasNoExternalSources?: boolean; // true when SearXNG+Jina+Tavily returned 0 results — hallucination risk flag
   sources: Array<{
     title: string;
     url: string;
@@ -188,17 +195,48 @@ export class ContentEnricherAgent extends BaseAgent<
           );
 
           try {
-            // Step 1: Gather sources (priority-based: Tavily for high-priority, Jina for low-priority)
-            // TIMEOUT PROTECTION: Wrap in Promise.race with 40s timeout (increased from 30s)
+            // ─── RE-ENRICHMENT FLAGS ────────────────────────────────────────
+            // Set by database-publisher when an article failed a quality gate.
+            // Forces a deeper, multi-service source-gathering pass.
+            const isReEnrich = (article as any)._forceReEnrich === true;
+            const rejectionReason = (article as any)._rejectionReason as
+              | string
+              | undefined;
+
+            if (isReEnrich) {
+              this.logger.warn(
+                `🔁 DEEP RE-ENRICH mode: [${articleNum}/${articles.length}] "${article.title.substring(0, 50)}" (reason: ${rejectionReason ?? "unknown"})`,
+              );
+            }
+
+            // Step 1: Gather sources
+            // • Normal path  (40s)  — SearXNG + Tavily/Jina
+            // • Re-enrich path (65s) — Exa + SearXNG wide-net + Firecrawl fallback
+            const sourceTimeout = isReEnrich ? 65_000 : 40_000;
             const sources = await Promise.race([
-              this.gatherSourcesWithPriority(article),
+              isReEnrich
+                ? this.gatherSourcesAggressive(article, rejectionReason)
+                : this.gatherSourcesWithPriority(article),
               new Promise<any>((_, reject) =>
                 setTimeout(
-                  () => reject(new Error("Source gathering timeout (40s)")),
-                  40000, // FIXED: Increased from 30s
+                  () =>
+                    reject(
+                      new Error(
+                        `Source gathering timeout (${sourceTimeout / 1000}s)`,
+                      ),
+                    ),
+                  sourceTimeout,
                 ),
               ),
             ]);
+
+            // 🛡️ ZERO-SOURCE DETECTION: mark articles with no external grounding
+            const hadNoExternalSources = sources.length === 0;
+            if (hadNoExternalSources) {
+              this.logger.warn(
+                `⚠️  KAYNAK YOK: [${articleNum}/${articles.length}] "${article.title.substring(0, 60)}" için hiç dış kaynak bulunamadı — makale %100 LLM üretimidir, yayın engeli aktif`,
+              );
+            }
 
             if (sources.length < 2) {
               this.logger.warn(
@@ -219,6 +257,9 @@ export class ContentEnricherAgent extends BaseAgent<
                 article,
                 sources,
                 article.suggestedCategory || "yapay-zeka",
+                // Pre-prime the retry loop with the known rejection reason so
+                // the LLM starts with corrective instructions from attempt 0.
+                isReEnrich ? rejectionReason : undefined,
               ),
               new Promise<any>((_, reject) =>
                 setTimeout(
@@ -238,6 +279,7 @@ export class ContentEnricherAgent extends BaseAgent<
                 ...article,
                 sources,
                 synthesizedContent: synthesized,
+                hasNoExternalSources: hadNoExternalSources,
               },
             };
           } catch (error) {
@@ -683,6 +725,236 @@ export class ContentEnricherAgent extends BaseAgent<
     return sources;
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // AGGRESSIVE SOURCE GATHERING — used only for _forceReEnrich articles
+  // Triggered when DatabasePublisher rejected the article due to low quality,
+  // English title, missing content, or emergency template.
+  //
+  // Strategy (parallel 4-layer):
+  //   Layer 1 — SearXNG wide-net  (4 queries, relaxed threshold, 1-month range)
+  //   Layer 2 — Exa neural search (semantic/AI understanding)
+  //   Layer 3 — Brave Search      (independent web index)
+  //   Layer 4 — Firecrawl scrape  (clean extraction of the original article URL)
+  //
+  // Minimum target: 5 quality sources (vs 3 on normal path)
+  // ─────────────────────────────────────────────────────────────────────────
+  private async gatherSourcesAggressive(
+    article: UniqueArticle,
+    rejectionReason?: string,
+  ): Promise<
+    Array<{
+      title: string;
+      url: string;
+      content: string;
+      relevanceScore: number;
+    }>
+  > {
+    const sources: Array<{
+      title: string;
+      url: string;
+      content: string;
+      relevanceScore: number;
+    }> = [];
+    const seenUrls = new Set<string>();
+    seenUrls.add(this.normalizeUrl(article.url));
+
+    const keywords = this.extractSearchKeywords(
+      article.title,
+      article.description,
+    );
+
+    this.logger.warn(
+      `🔥 AGGRESSIVE source gathering — "${article.title.substring(0, 50)}" (rejection: ${rejectionReason ?? "?"})`,
+    );
+
+    // ── Helper: push deduped candidate ────────────────────────────────────
+    const candidateUrls: Array<{
+      title: string;
+      url: string;
+      relevanceScore: number;
+    }> = [];
+
+    const pushCandidate = (
+      title: string,
+      url: string,
+      relevanceScore: number,
+    ) => {
+      if (!url) return;
+      const norm = this.normalizeUrl(url);
+      if (seenUrls.has(norm) || this.shouldSkipUrl(url)) return;
+      seenUrls.add(norm);
+      candidateUrls.push({ title, url, relevanceScore });
+    };
+
+    // ─────────────────────────────────────────────────────────────────────
+    // PARALLEL SEARCH LAYERS (run simultaneously to fit 65s budget)
+    // ─────────────────────────────────────────────────────────────────────
+    const [searxResults, exaResults] =
+      await Promise.allSettled([
+        // ── Layer 1: SearXNG wide-net (4 queries, month range) ────────────
+        (async () => {
+          const queries = [
+            keywords,
+            `${keywords} news`,
+            `${keywords} AI`,
+            `${article.title.substring(0, 80)}`,
+          ].filter(Boolean);
+
+          const results = await Promise.all(
+            queries.map((q) =>
+              searxngSearch(q, {
+                count: 10,
+                time_range: "month", // wider than normal "week"
+                categories: "general,news",
+              }).catch(() => [] as any[]),
+            ),
+          );
+          return results.flat();
+        })(),
+
+        // ── Layer 2: Exa neural (semantic AI search) ─────────────────────
+        (process.env.EXA_API_KEY
+          ? exaSearch(keywords, {
+              num_results: 8,
+              use_autoprompt: true,
+              type: "neural",
+            })
+          : Promise.resolve([])
+        ).catch(() => []),
+      ]);
+
+    // ── Process SearXNG ──────────────────────────────────────────────────
+    if (searxResults.status === "fulfilled") {
+      const deduped: typeof candidateUrls = [];
+      const innerSeen = new Set<string>();
+      for (const r of searxResults.value) {
+        if (!r?.url) continue;
+        const norm = this.normalizeUrl(r.url);
+        if (innerSeen.has(norm)) continue;
+        innerSeen.add(norm);
+
+        const score = this.calculateRelevanceScoreSearXNG(r, article.title);
+        if (score >= 10) {
+          // Relaxed threshold (normal: 20)
+          deduped.push({ title: r.title, url: r.url, relevanceScore: score });
+        }
+      }
+      // Sort by score, take top 10
+      deduped.sort((a, b) => b.relevanceScore - a.relevanceScore);
+      for (const c of deduped.slice(0, 10)) {
+        pushCandidate(c.title, c.url, c.relevanceScore);
+      }
+      this.logger.info(
+        `🔍 SearXNG wide-net: ${deduped.length} candidates (took ${deduped.slice(0, 10).length})`,
+      );
+    }
+
+    // ── Process Exa ──────────────────────────────────────────────────────
+    if (exaResults.status === "fulfilled" && Array.isArray(exaResults.value)) {
+      for (const r of exaResults.value) {
+        if (!r?.url) continue;
+        const scoreBase = Math.round((r.score || 0.5) * 80);
+        pushCandidate(r.title ?? "", r.url, scoreBase);
+
+        // Exa often returns text inline — use it directly if available
+        if (r.text && r.text.length > 200) {
+          const norm = this.normalizeUrl(r.url);
+          // Mark as already extracted (will skip Jina for this URL)
+          sources.push({
+            title: r.title ?? "",
+            url: r.url,
+            content: r.text.substring(0, 5000),
+            relevanceScore: scoreBase,
+          });
+          seenUrls.add(norm); // prevent double-extract
+        }
+      }
+      this.logger.info(
+        `🤖 Exa neural: ${exaResults.value.length} results`,
+      );
+    } else if (exaResults.status === "rejected") {
+      this.logger.warn(`⚠️ Exa search failed: ${exaResults.reason}`);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // CONTENT EXTRACTION for candidates not yet in sources
+    // ─────────────────────────────────────────────────────────────────────
+    const TARGET = 7; // Aggressive target (normal: 5)
+    const remaining = candidateUrls
+      .filter((c) => !sources.some((s) => s.url === c.url))
+      .slice(0, TARGET - sources.length + 3); // Extra buffer
+
+    if (remaining.length > 0) {
+      this.logger.info(
+        `📖 Extracting content for ${remaining.length} candidates (target: ${TARGET})`,
+      );
+
+      const extractResults = await Promise.allSettled(
+        remaining.map(async (candidate) => {
+          const content = await this.readUrlContent(candidate.url);
+          return { ...candidate, content };
+        }),
+      );
+
+      for (const r of extractResults) {
+        if (
+          r.status === "fulfilled" &&
+          r.value.content &&
+          r.value.content.length > 100
+        ) {
+          sources.push({
+            title: r.value.title,
+            url: r.value.url,
+            content: r.value.content,
+            relevanceScore: r.value.relevanceScore,
+          });
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // LAST RESORT: Firecrawl (credit-guarded, 500 max)
+    // Only activated when free layers returned insufficient sources.
+    // Scrapes the original article URL — highest-relevance, JS-rendered.
+    // ─────────────────────────────────────────────────────────────────────
+    const MIN_SOURCES_BEFORE_FIRECRAWL = 4;
+    if (sources.length < MIN_SOURCES_BEFORE_FIRECRAWL && isFirecrawlAvailable()) {
+      this.logger.warn(
+        `🔥 Insufficient sources (${sources.length}/${MIN_SOURCES_BEFORE_FIRECRAWL}), trying Firecrawl as LAST RESORT for original URL...`,
+      );
+      try {
+        const fcPage = await firecrawlScrape(article.url, 12_000);
+        if (fcPage.content && fcPage.content.length > 200) {
+          this.logger.info(
+            `🔥 Firecrawl scraped original URL (${fcPage.content.length} chars) — credit consumed`,
+          );
+          // Insert at position 0 — original article has maximum relevance
+          sources.unshift({
+            title: fcPage.title || article.title,
+            url: article.url,
+            content: fcPage.content.substring(0, 5000),
+            relevanceScore: 100,
+          });
+        } else {
+          this.logger.warn(
+            `🔥 Firecrawl returned no usable content for ${article.url}`,
+          );
+        }
+      } catch (fcErr: any) {
+        this.logger.warn(`🔥 Firecrawl last-resort failed: ${fcErr?.message}`);
+      }
+    }
+
+    // Sort by relevance score (Firecrawl original stays at top due to unshift)
+    sources.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+    this.logger.warn(
+      `🔥 AGGRESSIVE gather complete: ${sources.length} sources (target was ${TARGET})`,
+    );
+
+    return sources;
+  }
+
   /**
    * Read URL content using Jina Reader with Tavily and SearXNG fallbacks
    * FIXED: Added detailed error logging and increased timeout
@@ -795,6 +1067,10 @@ export class ContentEnricherAgent extends BaseAgent<
   /**
    * Synthesize content from multiple sources (TR + EN)
    * Using LLM (NVIDIA Qwen3 primary) for both TR and EN content generation
+   *
+   * @param initialRejectionHint  When set (re-enrichment path), the retry loop
+   *   starts with this known failure reason so corrective prompts are applied
+   *   from attempt 0 instead of waiting for a second rejection.
    */
   private async synthesizeContent(
     article: UniqueArticle,
@@ -805,6 +1081,7 @@ export class ContentEnricherAgent extends BaseAgent<
       relevanceScore: number;
     }>,
     category: string,
+    initialRejectionHint?: string,
   ): Promise<{
     tr: {
       title: string;
@@ -855,7 +1132,9 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
     const MAX_TR_RETRIES = 2;
     let trContent: any = null;
     let trSynthesisSuccess = false;
-    let lastRejectionReason = "";
+    // Pre-prime with known rejection reason from DB-publisher (re-enrichment path).
+    // This means corrective prompt instructions are active from attempt 0.
+    let lastRejectionReason = initialRejectionHint ?? "";
     let activeSources = [...sources]; // May be filtered on dictionary retry
 
     for (let trAttempt = 0; trAttempt <= MAX_TR_RETRIES; trAttempt++) {

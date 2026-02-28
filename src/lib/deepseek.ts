@@ -1020,11 +1020,14 @@ ABSOLUTE RULES:
     }
   }
 
-  // CRITICAL: Remove any human-related words AI might have added
+  // CRITICAL: Remove any human-related words AI might have added.
+  // FIX (2026-02-28): Use negative lookbehind (?<![Nn][Oo]\s) so that words
+  // inside "no people", "no humans" etc. are preserved — previously the regex
+  // stripped "people" from "no people" producing the broken "no , no humans" URL.
   const humanPatterns = [
-    /\b(person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|user|staff)\b/gi,
-    /\b(head|hand|arm|leg|body|finger|eye|mouth|profile)\b/gi,
-    /\b(businessman|businesswoman|professional|executive|ceo)\b/gi,
+    /(?<![Nn][Oo]\s)\b(person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|user|staff)\b/gi,
+    /(?<![Nn][Oo]\s)\b(head|hand|arm|leg|body|finger|eye|mouth|profile)\b/gi,
+    /(?<![Nn][Oo]\s)\b(businessman|businesswoman|professional|executive|ceo)\b/gi,
   ];
 
   for (const pattern of humanPatterns) {

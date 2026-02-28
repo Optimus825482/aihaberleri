@@ -281,8 +281,9 @@ SADECE PROMPT İLE YANIT VER. AÇIKLAMA YOK.`;
 
   // CRITICAL: Remove any human-related words AI might have added
   const humanWords = [
-    /\b(insan|kişi|adam|kadın|erkek|çocuk|person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|user)\b/gi,
-    /\b(yüz|kafa|baş|el|kol|bacak|vücut|head|hand|arm|leg|body|finger|eye|mouth)\b/gi,
+    // FIX (2026-02-28): Negative lookbehind preserves "no people", "no humans" etc.
+    /(?<![Nn][Oo]\s)\b(insan|kişi|adam|kadın|erkek|çocuk|person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|user)\b/gi,
+    /(?<![Nn][Oo]\s)\b(yüz|kafa|baş|el|kol|bacak|vücut|head|hand|arm|leg|body|finger|eye|mouth)\b/gi,
   ];
 
   for (const pattern of humanWords) {

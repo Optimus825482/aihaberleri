@@ -371,6 +371,55 @@ const alertRules: AlertRule[] = [
       // TODO: Send immediate notification
     },
   },
+  {
+    id: "bullmq-failed-jobs",
+    name: "BullMQ Başarısız İşler",
+    description:
+      "BullMQ kuyruğunda takılı kalmış başarısız işler tespit edildi — otomatik temizleniyor",
+    severity: "error",
+    // 30-minute cooldown: alert every 30 min as long as new failures accumulate
+    cooldown: 30 * 60 * 1000,
+    check: async () => {
+      const { getAllQueueStats } = await import("@/lib/queue-manager");
+      const stats = await getAllQueueStats();
+      return stats.some((s) => s !== null && s.failed > 0);
+    },
+    action: async (alert) => {
+      const { getAllQueueStats, cleanQueue } =
+        await import("@/lib/queue-manager");
+      const stats = await getAllQueueStats();
+
+      const failedQueues: Array<{ name: string; count: number }> = [];
+
+      for (const s of stats) {
+        if (s && s.failed > 0) {
+          failedQueues.push({ name: s.queueName, count: s.failed });
+          // Auto-clean: grace=0 removes ALL failed jobs immediately
+          try {
+            await cleanQueue(s.queueName, 0);
+            console.log(
+              `🧹 Auto-cleaned ${s.failed} failed jobs from queue: ${s.queueName}`,
+            );
+          } catch (cleanErr) {
+            console.error(
+              `Failed to auto-clean queue ${s.queueName}:`,
+              cleanErr,
+            );
+          }
+        }
+      }
+
+      alert.message = `Toplam ${failedQueues.reduce((sum, q) => sum + q.count, 0)} başarısız iş otomatik temizlendi.`;
+      alert.metadata = {
+        ...alert.metadata,
+        failedQueues,
+        autoCleanApplied: true,
+        cleanedAt: new Date().toISOString(),
+      };
+
+      await defaultAlertAction(alert);
+    },
+  },
 ];
 
 /**

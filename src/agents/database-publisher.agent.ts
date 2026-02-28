@@ -16,6 +16,7 @@
  * Publisher now only handles DB + indexing + push + cache, then queues social sharing.
  */
 
+import { createHash } from "crypto";
 import { Job } from "bullmq";
 import { BaseAgent, AgentResult } from "./base-agent";
 import { db } from "@/lib/db";
@@ -24,7 +25,19 @@ import { QUEUE_NAMES, getQueue } from "@/lib/queue-manager";
 import type { ArticleWithVisuals } from "./visual-generator.agent";
 import { notifyBothLanguages } from "@/lib/seo/indexing-tracker";
 import { calculateTrendScore } from "@/lib/trend-scoring";
+import { getRedis } from "@/lib/redis";
 import type { SocialShareInput } from "./social-share.agent";
+
+/** Reddedilen makaleyi 2 saat boyunca tüm pipeline'dan uzak tutar. */
+const REJECTION_COOLDOWN_SECONDS = 2 * 60 * 60; // 2 saat
+
+function rejectionCooldownKey(urlOrTitle: string): string {
+  const hash = createHash("sha256")
+    .update(urlOrTitle)
+    .digest("hex")
+    .slice(0, 16);
+  return `rejection-cooldown:${hash}`;
+}
 
 export interface PublishedArticle {
   id: string;
@@ -169,6 +182,14 @@ export class DatabasePublisherAgent extends BaseAgent<
                 `🚫 PERMANENTLY REJECTED (max retries, score: ${qualityScore}): "${trContent.title.substring(0, 60)}"`,
               );
             }
+            continue;
+          }
+
+          // 🛡️ ZERO-SOURCE GATE: Block hallucinated articles (no external sources found)
+          if ((article as any).hasNoExternalSources === true) {
+            this.logger.error(
+              `🚫 YAYINLANMIYOR — HİÇ DIŞ KAYNAK YOK: "${trContent.title.substring(0, 80)}" (halüsinasyon riski yüksek, atlanıyor)`,
+            );
             continue;
           }
 
@@ -524,44 +545,97 @@ export class DatabasePublisherAgent extends BaseAgent<
         `Database publishing complete: ${publishedArticles.length}/${articles.length} articles published`,
       );
 
-      // 🔄 RE-QUEUE REJECTED ARTICLES for content enrichment retry
+      // 🔄 RE-QUEUE REJECTED ARTICLES — DEEP RE-ENRICHMENT
+      // Rejected articles get a FULL re-enrichment pass:
+      //   • Strip all previous synthesized content & sources (start fresh)
+      //   • Add _forceReEnrich + _rejectionReason → ContentEnricher uses aggressive source gathering
+      //   • Redis cooldown (2h TTL per URL hash) prevents the same article looping forever
+      //   • 5-minute delay so conditions can change before the next attempt
       if (rejectedForRetry.length > 0) {
         try {
           const enricherQueue = getQueue(QUEUE_NAMES.ENRICHED_ARTICLES);
+          const redis = getRedis();
           if (enricherQueue) {
-            const retryArticles = rejectedForRetry.map((r) => ({
-              title: r.article.title,
-              description: r.article.description || "",
-              url: r.article.url || (r.article as any).sourceUrl || "",
-              publishedDate: (r.article as any).publishedDate,
-              source: (r.article as any).source || "retry",
-              trendScore: r.article.trendScore || 50,
-              category: (r.article as any).category,
-              relevanceScore: (r.article as any).relevanceScore || 70,
-              reasoning:
-                (r.article as any).reasoning || "Retry after rejection",
-              suggestedCategory: r.article.suggestedCategory || "yapay-zeka",
-              suggestedTags: (r.article as any).suggestedTags || [],
-              topic: r.article.topic || "ai",
-              isDuplicate: false,
-              _retryCount: ((r.article as any)._retryCount || 0) + 1,
-              _rejectionReason: r.reason,
-            }));
+            const retryArticles: any[] = [];
 
-            await enricherQueue.add("retry-enrichment", retryArticles, {
-              removeOnComplete: 100,
-              removeOnFail: 50,
-              attempts: 1,
-              delay: 10000, // 10s delay before retry to avoid immediate re-processing
-            });
+            for (const r of rejectedForRetry) {
+              const identifier =
+                r.article.url ||
+                (r.article as any).sourceUrl ||
+                r.article.title;
+              const cooldownKey = rejectionCooldownKey(identifier);
 
-            this.logger.success(
-              `🔄 ${retryArticles.length} rejected article(s) re-queued for content enrichment retry`,
-            );
+              // Skip articles that are already in the 2-hour cooldown window
+              const alreadyCooling = redis
+                ? await redis.exists(cooldownKey)
+                : 0;
+              if (alreadyCooling) {
+                this.logger.warn(
+                  `⏸️ RE-ENRICH atlandı — cooldown aktif: "${r.article.title?.substring(0, 60)}"`,
+                );
+                continue;
+              }
+
+              // Write cooldown BEFORE queuing (prevents duplicate queueing on parallel runs)
+              if (redis) {
+                await redis.set(
+                  cooldownKey,
+                  r.reason,
+                  "EX",
+                  REJECTION_COOLDOWN_SECONDS,
+                );
+              }
+
+              retryArticles.push({
+                // ── Base fields that downstream agents need ──
+                title: r.article.title,
+                description: r.article.description || "",
+                url: identifier,
+                publishedDate: (r.article as any).publishedDate,
+                source: (r.article as any).source || "re-enrich",
+                // ── Preserve REAL scores (not hardcoded fallbacks) ──
+                trendScore: r.article.trendScore ?? 0,
+                relevanceScore: (r.article as any).relevanceScore ?? 0,
+                // ── Routing / enrichment metadata ──
+                category: (r.article as any).category,
+                reasoning:
+                  (r.article as any).reasoning || "Re-enrich after rejection",
+                suggestedCategory: r.article.suggestedCategory || "yapay-zeka",
+                suggestedTags: (r.article as any).suggestedTags || [],
+                topic: r.article.topic || "ai",
+                isDuplicate: false,
+                // ── Re-enrichment control flags ──
+                _retryCount: ((r.article as any)._retryCount || 0) + 1,
+                _forceReEnrich: true, // ContentEnricher: use aggressive source gathering
+                _rejectionReason: r.reason, // ContentEnricher: pre-prime retry loop with correction
+                // ── Intentionally OMITTED: synthesizedContent, sources, imageUrl ──
+                // ContentEnricher must rebuild these from scratch with fresh sources
+              });
+            }
+
+            if (retryArticles.length > 0) {
+              await enricherQueue.add("force-re-enrich", retryArticles, {
+                removeOnComplete: 100,
+                removeOnFail: 50,
+                attempts: 1,
+                delay: 5 * 60 * 1000, // 5 minutes — conditions change, LLM gets fresh context
+              });
+
+              this.logger.success(
+                `🔁 ${retryArticles.length} makale derin yeniden-zenginleştirme kuyruğuna eklendi (5dk sonra)`,
+              );
+            }
+
+            const skipped = rejectedForRetry.length - retryArticles.length;
+            if (skipped > 0) {
+              this.logger.info(
+                `⏸️ ${skipped} makale cooldown nedeniyle atlandı (2h TTL aktif)`,
+              );
+            }
           }
         } catch (retryError) {
           this.logger.warn(
-            `⚠️ Failed to re-queue rejected articles: ${(retryError as Error).message}`,
+            `⚠️ Yeniden-zenginleştirme kuyruğu hatası: ${(retryError as Error).message}`,
           );
         }
       }

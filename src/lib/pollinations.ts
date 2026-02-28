@@ -269,10 +269,13 @@ export async function fetchPollinationsImage(
   // CRITICAL: Ensure no humans in prompt - add strong negative prompt
   let sanitizedPrompt = prompt.trim();
 
-  // Remove any human-related terms that might have slipped through
+  // Remove any human-related terms that might have slipped through.
+  // FIX (2026-02-28): Negative lookbehind (?<![Nn][Oo]\s) preserves "no people",
+  // "no humans" etc.  Without this, the regex stripped "people" from "no people"
+  // which produced the broken "no , no humans, ..." artifact visible in image URLs.
   const humanPatterns = [
-    /\b(person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|staff)\b/gi,
-    /\b(head|hand|arm|leg|body|finger|eye|mouth|profile|businessman|businesswoman)\b/gi,
+    /(?<![Nn][Oo]\s)\b(person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|staff)\b/gi,
+    /(?<![Nn][Oo]\s)\b(head|hand|arm|leg|body|finger|eye|mouth|profile|businessman|businesswoman)\b/gi,
   ];
   for (const pattern of humanPatterns) {
     sanitizedPrompt = sanitizedPrompt

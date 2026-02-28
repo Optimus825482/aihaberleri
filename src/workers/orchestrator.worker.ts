@@ -29,6 +29,9 @@ import {
   logHealthSummary,
 } from "@/lib/agent-log-stream";
 
+// Alerting: check rules and auto-clean failed BullMQ jobs
+import { checkAlerts } from "@/lib/alerting";
+
 // Import agents
 import { ContentCollectorAgent } from "@/agents/content-collector.agent";
 import { RelevanceFilterAgent } from "@/agents/relevance-filter.agent";
@@ -159,7 +162,7 @@ async function triggerContentCollection(
 }
 
 /**
- * Monitor pipeline health
+ * Monitor pipeline health and trigger alerts for failed jobs
  */
 async function monitorPipelineHealth(): Promise<void> {
   const stats = await getAllQueueStats();
@@ -175,6 +178,28 @@ async function monitorPipelineHealth(): Promise<void> {
     }));
 
   logHealthSummary(queueSummary);
+
+  // --- FAILED JOB DETECTION & AUTO-ALERT ---
+  const queuesWithFailures = queueSummary.filter((q) => q.failed > 0);
+  if (queuesWithFailures.length > 0) {
+    logger.warn(
+      `⚠️ Failed jobs detected in ${queuesWithFailures.length} queue(s): ${queuesWithFailures.map((q) => `${q.name}(${q.failed})`).join(", ")}`,
+    );
+  }
+
+  // Run all alert rules (includes bullmq-failed-jobs which auto-cleans)
+  try {
+    const triggered = await checkAlerts();
+    if (triggered.length > 0) {
+      logger.warn(
+        `🔔 ${triggered.length} alert(s) triggered: ${triggered.map((a) => a.ruleName).join(", ")}`,
+      );
+    }
+  } catch (err) {
+    logger.error("Alert check failed:", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 /**
