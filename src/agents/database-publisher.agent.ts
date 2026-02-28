@@ -337,7 +337,7 @@ export class DatabasePublisherAgent extends BaseAgent<
                 slug: createdArticle.slug,
                 excerpt: trContent.excerpt || null,
                 content: trContent.content,
-                metaTitle: trContent.title,
+                metaTitle: trContent.metaTitle || trContent.title,
                 metaDescription: trContent.metaDescription || null,
               },
             });
@@ -367,7 +367,7 @@ export class DatabasePublisherAgent extends BaseAgent<
                   slug: enSlug,
                   excerpt: enContent.excerpt || null,
                   content: enContent.content,
-                  metaTitle: enContent.title,
+                  metaTitle: enContent.metaTitle || enContent.title,
                   metaDescription: enContent.metaDescription || null,
                 },
               });
@@ -384,7 +384,7 @@ export class DatabasePublisherAgent extends BaseAgent<
                     slug: enSlugFinal,
                     excerpt: enContent.excerpt || null,
                     content: enContent.content,
-                    metaTitle: enContent.title,
+                    metaTitle: enContent.metaTitle || enContent.title,
                     metaDescription: enContent.metaDescription || null,
                   },
                 });

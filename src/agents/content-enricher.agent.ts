@@ -560,13 +560,19 @@ export class ContentEnricherAgent extends BaseAgent<
 
     // Fallback: if no candidates found with threshold, take top 3 from all results by raw SearXNG score
     if (candidateUrls.length === 0) {
-      this.logger.warn(`⚠️ No candidates above threshold, falling back to top SearXNG results`);
+      this.logger.warn(
+        `⚠️ No candidates above threshold, falling back to top SearXNG results`,
+      );
       const allResults = searchResults.flat();
       const uniqueResults: typeof allResults = [];
       const fallbackSeen = new Set<string>();
       for (const r of allResults) {
         const norm = this.normalizeUrl(r.url);
-        if (!fallbackSeen.has(norm) && !seenUrls.has(norm) && !this.shouldSkipUrl(r.url)) {
+        if (
+          !fallbackSeen.has(norm) &&
+          !seenUrls.has(norm) &&
+          !this.shouldSkipUrl(r.url)
+        ) {
           fallbackSeen.add(norm);
           uniqueResults.push(r);
         }
@@ -580,7 +586,9 @@ export class ContentEnricherAgent extends BaseAgent<
           relevanceScore: 10, // Low but non-zero
         });
       }
-      this.logger.info(`📋 Fallback: ${candidateUrls.length} candidates from raw SearXNG scores`);
+      this.logger.info(
+        `📋 Fallback: ${candidateUrls.length} candidates from raw SearXNG scores`,
+      );
     }
 
     candidateUrls.sort((a, b) => b.relevanceScore - a.relevanceScore);
@@ -800,6 +808,7 @@ export class ContentEnricherAgent extends BaseAgent<
   ): Promise<{
     tr: {
       title: string;
+      metaTitle?: string;
       excerpt: string;
       content: string;
       keywords: string[];
@@ -808,6 +817,7 @@ export class ContentEnricherAgent extends BaseAgent<
     };
     en: {
       title: string;
+      metaTitle?: string;
       excerpt: string;
       content: string;
       keywords: string[];
@@ -917,19 +927,26 @@ ${retrySourcesText}
 4. KAYNAK KULLANIMI: "Reuters'a göre...", "TechCrunch'ın raporuna göre..."
 5. Benzersiz Anlatım: Her cümlen özgün olsun
 
-### YAPI:
-- Başlık: 50-70 karakter, tıklamaya teşvik eden
-- Özet: 2-3 cümlelik giriş
-- İçerik: En az 600 kelime, HTML formatlı (<p>, <h2>, <ul>/<ol>)
-- SEO: 150-160 karakterlik meta açıklama ve 6-10 anahtar kelime
+### YAPI VE SEO KURALLARI (KRİTİK — HEPSİNE UY):
+- **Başlık (title):** 50-70 karakter. Ana anahtar kelime İLK 5 kelimede olmalı. Mümkünse yıl veya rakam ekle (CTR artırır).
+- **Meta Başlık (metaTitle):** 50-60 karakter. Google SERP için optimize. Ana anahtar kelimeyi başa koy. Başlıktan farklı olabilir, daha kısa ve öz.
+- **Özet (excerpt):** 2-3 cümlelik giriş, ana anahtar kelimeyi içermeli.
+- **Meta Açıklama (metaDescription):** 120-155 karakter. CTA fiili ekle ("Keşfet", "Öğren", "İncele"). Ana anahtar kelimeyi doğal şekilde entegre et.
+- **İçerik (content):** En az 600 kelime, HTML formatlı (<p>, <h2>, <ul>/<ol>).
+  - Minimum 2 adet <h2> başlık kullan, H2'lerde anahtar kelime geçmeli.
+  - Paragraflar kısa: max 3-4 cümle.
+  - İlk paragrafta ana anahtar kelime GEÇMELİ.
+  - Son paragrafta ana anahtar kelime GEÇMELİ.
+- **Anahtar Kelimeler:** 6-10 adet. İçerikte yoğunluk %1-2.
 ${retryInstructions}
 JSON formatında yanıt ver:
 {
-  "title": "Çarpıcı ve SEO Uyumlu Başlık",
+  "title": "Çarpıcı ve SEO Uyumlu Başlık (50-70 kar)",
+  "metaTitle": "Google SERP İçin Kısa Başlık (50-60 kar)",
   "excerpt": "Okuyucuyu yakalayan özet",
   "content": "HTML formatlı, derin analiz içeren tam makale",
   "keywords": ["anahtar1", "anahtar2"],
-  "metaDescription": "SEO meta açıklama",
+  "metaDescription": "CTA içeren SEO meta açıklama (120-155 kar)",
   "score": 950
 }`;
 
@@ -1035,16 +1052,27 @@ ${sourcesText}
 1. CREATE ORIGINAL CONTENT (synthesize, don't copy)
 2. Cite sources: "According to Reuters...", "TechCrunch reports..."
 3. Professional tone: Objective, neutral, third-person
-4. Structure: Title (50-70 chars), Excerpt (2-3 sentences), Content (HTML, min 500 words)
-5. SEO: Meta description (150-160 chars), 5-8 keywords
+
+### STRUCTURE & SEO RULES (CRITICAL — FOLLOW ALL):
+- **Title (title):** 50-70 chars. Primary keyword in FIRST 5 words. Include year or number if possible (boosts CTR).
+- **Meta Title (metaTitle):** 50-60 chars. Optimized for Google SERP. Put primary keyword first. Can differ from title, shorter and more concise.
+- **Excerpt:** 2-3 sentences, must include primary keyword.
+- **Meta Description (metaDescription):** 120-155 chars. Add CTA verb ("Discover", "Learn", "Explore"). Naturally integrate primary keyword.
+- **Content:** HTML formatted, min 500 words.
+  - Minimum 2 <h2> headings, H2s MUST contain keywords.
+  - Short paragraphs: max 3-4 sentences each.
+  - Primary keyword MUST appear in FIRST paragraph.
+  - Primary keyword MUST appear in LAST paragraph.
+- **Keywords:** 5-8 keywords. Content density 1-2%.
 
 Respond in JSON:
 {
-  "title": "SEO-Optimized English Title",
+  "title": "SEO-Optimized English Title (50-70 chars)",
+  "metaTitle": "Short SERP Title (50-60 chars)",
   "excerpt": "2-3 sentence summary",
   "content": "Full HTML article",
   "keywords": ["keyword1", "keyword2"],
-  "metaDescription": "SEO meta description"
+  "metaDescription": "CTA-driven SEO meta description (120-155 chars)"
 }`;
 
     let enContent: any;

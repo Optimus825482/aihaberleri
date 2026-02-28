@@ -889,6 +889,7 @@ export async function synthesizeContent(
 ): Promise<{
   tr: {
     title: string;
+    metaTitle?: string;
     excerpt: string;
     content: string;
     keywords: string[];
@@ -897,6 +898,7 @@ export async function synthesizeContent(
   };
   en: {
     title: string;
+    metaTitle?: string;
     excerpt: string;
     content: string;
     keywords: string[];
@@ -956,24 +958,30 @@ ${sourcesText}
    - 3. tekil şahıs anlatım
    - Teknik terimleri sadeleştir
 
-4. **YAPI:**
-   - Başlık: 60-100 karakter, dikkat çekici, merak uyandıran, okuyucuyu çeken
-   - Özet: 2-3 cümle, haberin özü
+4. **YAPI VE SEO KURALLARI (KRİTİK):**
+   - **Başlık (title):** 50-70 karakter. Ana anahtar kelime İLK 5 kelimede. Mümkünse yıl veya rakam ekle.
+   - **Meta Başlık (metaTitle):** 50-60 karakter. Google SERP için optimize. Ana anahtar kelimeyi başa koy.
+   - Özet: 2-3 cümle, haberin özü, ana anahtar kelimeyi içermeli
    - İçerik: HTML formatlı (<p>, <h2>, <ul>), minimum 500 kelime
-   - H2 alt başlıklarla organize et
+   - Minimum 2 adet <h2> başlık, H2'lerde anahtar kelime geçmeli
+   - Paragraflar kısa: max 3-4 cümle
+   - İlk paragrafta ana anahtar kelime GEÇMELİ
+   - Son paragrafta ana anahtar kelime GEÇMELİ
 
 5. **SEO:**
-   - Meta açıklama: 150-160 karakter
-   - 5-8 anahtar kelime
-   - Doğal keyword yerleşimi
+   - Meta açıklama: 120-155 karakter, CTA fiili ekle ("Keşfet", "Öğren", "İncele")
+   - 6-10 anahtar kelime
+   - Anahtar kelime yoğunluğu %1-2
+   - Anahtar kelimeler: başlık, ilk paragraf, H2'ler ve son paragrafta yer almalı
 
 JSON formatında yanıt ver:
 {
-  "title": "SEO Uyumlu Türkçe Başlık",
+  "title": "SEO Uyumlu Türkçe Başlık (50-70 kar)",
+  "metaTitle": "Google SERP İçin Kısa Başlık (50-60 kar)",
   "excerpt": "Ana sayfada görünecek 2-3 cümlelik özet",
   "content": "HTML formatlı tam makale metni",
   "keywords": ["anahtar1", "anahtar2", "anahtar3"],
-  "metaDescription": "SEO uyumlu meta açıklama",
+  "metaDescription": "CTA içeren SEO meta açıklama (120-155 kar)",
   "score": 850
 }`;
 
@@ -1035,22 +1043,30 @@ ${sourcesText}
    - NEVER use "I", "We", "In my opinion"
    - Third-person narrative
 
-4. **STRUCTURE:**
-   - Title: 60-100 characters, attention-grabbing, curiosity-inducing
-   - Excerpt: 2-3 sentences summarizing the news
+4. **STRUCTURE & SEO RULES (CRITICAL):**
+   - **Title (title):** 50-70 chars. Primary keyword in FIRST 5 words. Include year or number if possible.
+   - **Meta Title (metaTitle):** 50-60 chars. Optimized for Google SERP. Primary keyword first.
+   - Excerpt: 2-3 sentences, must include primary keyword
    - Content: HTML formatted (<p>, <h2>, <ul>), minimum 500 words
+   - Minimum 2 <h2> headings, H2s MUST contain keywords
+   - Short paragraphs: max 3-4 sentences each
+   - Primary keyword MUST appear in FIRST paragraph
+   - Primary keyword MUST appear in LAST paragraph
 
 5. **SEO:**
-   - Meta description: 150-160 characters
-   - 5-8 keywords
+   - Meta description: 120-155 chars, include CTA verb ("Discover", "Learn", "Explore")
+   - 6-10 keywords
+   - Keyword density 1-2%
+   - Keywords must appear in: title, first paragraph, H2s, last paragraph
 
 Respond in JSON format:
 {
-  "title": "SEO-Optimized English Title",
+  "title": "SEO-Optimized English Title (50-70 chars)",
+  "metaTitle": "Short SERP Title (50-60 chars)",
   "excerpt": "2-3 sentence summary for homepage",
   "content": "Full HTML-formatted article",
   "keywords": ["keyword1", "keyword2", "keyword3"],
-  "metaDescription": "SEO-optimized meta description"
+  "metaDescription": "CTA-driven SEO meta description (120-155 chars)"
 }`;
 
   const enResponse = await callDeepSeek(
@@ -1214,7 +1230,7 @@ export async function processIntelligentNews(
           status: synthesized.tr.score >= 750 ? "PUBLISHED" : "DRAFT",
           score: synthesized.tr.score || 800,
           publishedAt: synthesized.tr.score >= 750 ? new Date() : null,
-          metaTitle: synthesized.tr.title,
+          metaTitle: synthesized.tr.metaTitle || synthesized.tr.title,
           metaDescription: synthesized.tr.metaDescription,
           keywords: synthesized.tr.keywords,
           topic: article.topic, // NEW: Save topic for future duplicate checks
@@ -1241,7 +1257,7 @@ export async function processIntelligentNews(
         ) VALUES (
           gen_random_uuid(), ${trArticle.id}, 'tr', ${synthesized.tr.title}, 
           ${trSlug}, ${synthesized.tr.excerpt}, ${synthesized.tr.content},
-          ${synthesized.tr.title}, ${synthesized.tr.metaDescription}, 
+          ${synthesized.tr.metaTitle || synthesized.tr.title}, ${synthesized.tr.metaDescription}, 
           NOW(), NOW()
         )
         ON CONFLICT ("articleId", locale) DO UPDATE SET
@@ -1262,7 +1278,7 @@ export async function processIntelligentNews(
         ) VALUES (
           gen_random_uuid(), ${trArticle.id}, 'en', ${synthesized.en.title}, 
           ${enSlug}, ${synthesized.en.excerpt}, ${synthesized.en.content},
-          ${synthesized.en.title}, ${synthesized.en.metaDescription}, 
+          ${synthesized.en.metaTitle || synthesized.en.title}, ${synthesized.en.metaDescription}, 
           NOW(), NOW()
         )
         ON CONFLICT ("articleId", locale) DO UPDATE SET
