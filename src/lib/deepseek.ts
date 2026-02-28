@@ -1375,7 +1375,13 @@ PUANLAMA KRİTERLERİ (0-100):
 4. İçerik Derinliği (0-15): Yeterli bilgi sağlıyor mu?
 5. Hedef Kitle Uyumu (0-15): Türk AI/teknoloji kitlesi için uygun mu?
 
-EŞIK: >= 45 puan alan makaleler yayınlanacak. AI ile ilgili içerikler genellikle 50+ almalıdır.
+EŞIK: >= 35 puan alan makaleler yayınlanacak.
+
+ÖNEMLİ - YOUTUBE İÇERİK KURALI:
+YouTube video başlıkları clickbait olabilir ama içerik değerli olabilir.
+Başlığın clickbait olması skoru düşürmemeli — konunun AI/teknoloji ile ilgili olup olmadığına bak.
+AI şirket haberleri, model duyuruları, regülasyon, AI politikaları gibi konular en az 45 puan almalı.
+Genel AI eğitim/tutorial içerikleri en az 35 puan almalı.
 
 KATEGORİ SEÇENEKLERİ (sadece bu slug'lardan birini kullan):
 - ai-modelleri (AI modelleri, LLM'ler, yeni model duyuruları)
@@ -1397,7 +1403,9 @@ JSON dizisi ile yanıt ver (makale başına bir nesne):
   ...
 ]
 
-AI/teknoloji haberleri için cömert ol — gerçekten alakasız olan içerikleri reddet ama AI ile ilgili haberlere en az 50 puan ver. Her makalenin en az 1 güçlü yönünü değerlendir.`;
+AI/teknoloji haberleri için cömert ol — gerçekten alakasız olan içerikleri reddet ama AI ile ilgili haberlere en az 45 puan ver.
+Clickbait başlıklar skoru düşürmemeli — konunun özüne bak.
+Her makalenin en az 1 güçlü yönünü değerlendir.`;
 
   try {
     const response = await callDeepSeek(

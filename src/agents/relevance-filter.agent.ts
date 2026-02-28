@@ -24,9 +24,10 @@ export interface ScoredArticle extends CollectedArticle {
   suggestedTags?: string[];
 }
 
-// 🔧 FIX: 65 → 45 — threshold was too aggressive, rejecting ~100% of articles (12.02.2026)
+// 🔧 FIX: 65 → 45 → 35 — threshold was too aggressive for YouTube-sourced content
+// YouTube articles have clickbait titles that LLM scores lower than their actual relevance
 // Content-collector already has negative keyword filtering for non-AI content
-const RELEVANCE_THRESHOLD = 45; // Minimum score to pass
+const RELEVANCE_THRESHOLD = 35; // Minimum score to pass
 const BATCH_SIZE = 15; // Articles per batch (10 → 15 for faster processing)
 
 // BYPASS MODE: If DeepSeek fails, apply basic AI keyword validation instead of passing everything
