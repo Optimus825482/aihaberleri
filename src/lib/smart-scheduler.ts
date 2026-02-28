@@ -331,6 +331,23 @@ export async function getOptimalInterval(): Promise<number> {
     return config.breakingNewsInterval;
   }
 
+  // ── ADMIN PANEL OVERRIDE ──────────────────────────────────────────────────
+  // agent.intervalHours (admin paneli ayarı) varsa time-slot hesabını geçersiz kıl.
+  // Bu sayede admin panelinden "6 dk" yazılırsa gerçekten 6 dk kullanılır.
+  const agentIntervalSetting = await db.setting.findUnique({
+    where: { key: "agent.intervalHours" },
+  });
+  if (agentIntervalSetting) {
+    const adminMinutes = parseFloat(agentIntervalSetting.value) * 60;
+    if (!isNaN(adminMinutes) && adminMinutes >= 5 && adminMinutes <= 120) {
+      logger.debug(
+        `⚙️ Admin panel override: ${adminMinutes} dk (agent.intervalHours=${agentIntervalSetting.value}h)`,
+      );
+      return Math.round(adminMinutes);
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   // Get Turkey time and detect slot
   const turkeyTime = getTurkeyTime();
   const timeSlot = detectTimeSlot(turkeyTime);

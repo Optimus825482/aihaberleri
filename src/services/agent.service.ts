@@ -369,7 +369,8 @@ export async function executeNewsAgent(
 
     // Hibrit skora göre sıralı haberleri pipeline'a gönder
     // rankedArticles zaten en önemli → en az önemli sıralı
-    const pipelineLimit = targetCount * 3;
+    // Pipeline limit: targetCount başına yeterli aday ver (min 8 — filter'lardan sonra yetsin)
+    const pipelineLimit = Math.max(8, targetCount * 4);
     const uniqueArticles =
       groupingResult.rankedArticles.length > pipelineLimit
         ? groupingResult.rankedArticles.slice(0, pipelineLimit)
