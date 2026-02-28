@@ -4,16 +4,20 @@
  * 7 bağımsız sinyal ile trend puanlama — harici API bağımlılığı YOK.
  * SearXNG kaldırıldı (v2'de %85+ sorgu 0 sonuç dönüyordu).
  *
- * SIGNALS:
- * 1. AI Relevance (0-25)       — AI keyword density & specificity
- * 2. Freshness (0-20)          — Publication recency (smooth curve)
- * 3. Source Authority (0-15)   — Source tier + YouTube bonus
- * 4. Title Quality (0-15)      — Specificity, action verbs, entities
- * 5. Content Depth (0-10)      — Description quality & detail
- * 6. Topic Novelty (0-10)      — Breaking news, exclusivity, unique angle
+ * SIGNALS (v3.1 — 28.02.2026):
+ * 1. AI Relevance (0-30)        — AI keyword density & specificity  [↑ 25→30]
+ * 2. Freshness (0-13)           — Publication recency (smooth curve) [↓ 20→13]
+ * 3. Source Authority (0-15)    — Source tier + YouTube bonus
+ * 4. Title Quality (0-15)       — Specificity, action verbs, entities
+ * 5. Content Depth (0-10)       — Description quality & detail
+ * 6. Topic Novelty (0-13)       — Breaking news, exclusivity, unique angle [↑ 10→13]
  * 7. Engagement Potential (0-5) — Numbers, impact, controversy
+ * 8. Clickbait Penalty (0–-15)  — Opinion/viral/consumer content cezası [YENİ]
  *
  * TOTAL: 0-100 (all local, zero external API calls)
+ *
+ * DEĞİŞİKLİK AMACI: Freshness hakimiyetini kır. Taze ama clickbait içerik
+ * artık quality (AI relevance + novelty) içeriğini yenemez.
  */
 
 import { createModuleLogger } from "@/lib/agent-log-stream";
@@ -310,58 +314,62 @@ export interface TrendScoreBreakdown {
   contentDepth: number;
   topicNovelty: number;
   engagementPotential: number;
+  clickbaitPenalty: number; // v3.1: negatif değer (0 veya pozitif sayı olarak saklanır)
   total: number;
 }
 
 /**
- * Signal 1: AI Relevance Score (0-25)
+ * Signal 1: AI Relevance Score (0-30)  [v3.1: max 25→30]
  * Measures how relevant the article is to AI/ML topics
  */
 function calculateAIRelevance(title: string, description: string): number {
   const text = `${title} ${description}`.toLowerCase();
   let score = 0;
 
-  // Tier 1 entity matches (highest value)
+  // Tier 1 entity matches (highest value) — 5 pts each, max 15
   let tier1Matches = 0;
   for (const entity of AI_ENTITIES_TIER1) {
     if (text.includes(entity)) tier1Matches++;
   }
-  score += Math.min(12, tier1Matches * 4); // Max 12 from tier 1
+  score += Math.min(15, tier1Matches * 5); // Max 15 from tier 1 (was 12)
 
-  // Tier 2 technical term matches
+  // Tier 2 technical term matches — 3 pts each, max 11
   let tier2Matches = 0;
   for (const term of AI_TERMS_TIER2) {
     if (text.includes(term)) tier2Matches++;
   }
-  score += Math.min(9, tier2Matches * 3); // Max 9 from tier 2
+  score += Math.min(11, tier2Matches * 3); // Max 11 from tier 2 (was 9)
 
-  // Tier 3 generic term matches (small bonus)
+  // Tier 3 generic term matches (small bonus) — max 4
   let tier3Matches = 0;
   for (const term of AI_TERMS_TIER3) {
     if (text.includes(term)) tier3Matches++;
   }
   score += Math.min(4, tier3Matches * 1); // Max 4 from tier 3
 
-  return Math.min(25, score);
+  return Math.min(30, score);
 }
 
 /**
- * Signal 2: Freshness Score (0-20)
- * Smooth exponential decay — more recent = higher score
+ * Signal 2: Freshness Score (0-13)  [v3.1: max 20→13]
+ * Smooth exponential decay — more recent = higher score.
+ *
+ * Azaltılma nedeni: F:20 ile taze clickbait, AI:8 olan haberleri geçiyordu.
+ * Artık taze ama alakasız içerik, gerçek AI haberleri karşısında kaybeder.
  */
 function calculateFreshness(publishedAt?: Date | string | null): number {
-  if (!publishedAt) return 8; // Default for unknown dates
+  if (!publishedAt) return 5; // Default for unknown dates
 
   const pubDate =
     typeof publishedAt === "string" ? new Date(publishedAt) : publishedAt;
-  if (isNaN(pubDate.getTime())) return 8;
+  if (isNaN(pubDate.getTime())) return 5;
 
   const ageHours = (Date.now() - pubDate.getTime()) / (1000 * 60 * 60);
 
-  // Smooth exponential decay: score = 20 * e^(-ageHours/24)
-  // < 1h: ~20, 6h: ~15, 12h: ~12, 24h: ~7, 48h: ~3, 72h: ~1
-  const score = 20 * Math.exp(-ageHours / 24);
-  return Math.round(Math.max(1, Math.min(20, score)));
+  // Smooth exponential decay: score = 13 * e^(-ageHours/24)
+  // < 1h: ~13, 6h: ~10, 12h: ~8, 24h: ~5, 48h: ~2, 72h: ~1
+  const score = 13 * Math.exp(-ageHours / 24);
+  return Math.round(Math.max(1, Math.min(13, score)));
 }
 
 /**
@@ -509,17 +517,20 @@ function calculateContentDepth(description: string): number {
 }
 
 /**
- * Signal 6: Topic Novelty Score (0-10)
- * Detects breaking news, exclusives, and unique angles
+ * Signal 6: Topic Novelty Score (0-13)  [v3.1: max 10→13]
+ * Detects breaking news, exclusives, and unique angles.
+ *
+ * Artırılma nedeni: Gerçek araştırma/duyuru haberleri freshness düşünce
+ * daha yüksek novelty ile öne çıkabilsin.
  */
 function calculateTopicNovelty(title: string, description: string): number {
   const text = `${title} ${description}`.toLowerCase();
   let score = 0;
 
-  // Breaking news / novelty indicators (+5)
+  // Breaking news / novelty indicators (+6, was +5)
   for (const indicator of NOVELTY_INDICATORS) {
     if (text.includes(indicator)) {
-      score += 5;
+      score += 6;
       break; // Only count once
     }
   }
@@ -534,17 +545,91 @@ function calculateTopicNovelty(title: string, description: string): number {
     score += 2;
   }
 
-  // Comparison/benchmark articles are valuable (+2)
+  // Comparison/benchmark articles (sadece teknik karşılaştırma, consumer değil) (+2)
   if (/vs\.?|versus|compared to|benchmark|karşılaştırma/i.test(text)) {
     score += 2;
   }
 
-  // Research paper / study references (+2)
+  // Research paper / study / arxiv references (+3, was +2)
   if (/paper|study|research|araştırma|arxiv/i.test(text)) {
-    score += 2;
+    score += 3;
   }
 
-  return Math.min(10, score);
+  return Math.min(13, score);
+}
+
+/**
+ * Signal 8: Clickbait Penalty (0 to -15)  [v3.1 YENİ]
+ *
+ * Opinion/viral/consumer içerikleri cezalandırır.
+ * "Cancel your ChatGPT" tarzı yazılar artık F:13 olsa bile öne geçemez.
+ *
+ * Üç kategori:
+ *   - Opinion/personal content (-8): "you should", "I tested", "here's why"
+ *   - Consumer gadget reviews (-5): "X vs Pro", "should you buy"
+ *   - Celebrity/viral AI content (-4): "Katy Perry subscribes to..."
+ */
+function calculateClickbaitPenalty(
+  title: string,
+  description: string,
+): number {
+  let penalty = 0;
+
+  // ── Kategori 1: Opinion / personal essay ─────────────────────────────────
+  const OPINION_PATTERNS = [
+    /cancel your/i,
+    /you (should|must|need to|have to)/i,
+    /here'?s why/i,
+    /why you (should|need to|must)/i,
+    /i (tested|tried|used|spent|asked)/i,
+    /my (honest|brutally honest|real|take on)/i,
+    /this is why/i,
+    /the truth about/i,
+    /stop using/i,
+    /nobody (talks|tells) (about|you)/i,
+    /\d+ (reasons|things|ways|tips) (why|to|you)/i,
+    /is it worth/i,
+  ];
+  if (OPINION_PATTERNS.some((p) => p.test(title))) {
+    penalty += 8;
+  }
+
+  // ── Kategori 2: Consumer gadget / product comparison ─────────────────────
+  const CONSUMER_PATTERNS = [
+    /\b(nano|pro|plus|ultra|mini|max)\b.{0,10}\bvs\.?\b/i,
+    /\bvs\.?\b.{0,10}\b(nano|pro|plus|ultra|mini|max)\b/i,
+    /should you (buy|upgrade|switch|get)/i,
+    /which (one|model|version|is better)/i,
+    /best (phones?|laptops?|tablets?|earbuds?|headphones?|smartwatch)/i,
+    /review:|unboxing/i,
+  ];
+  if (CONSUMER_PATTERNS.some((p) => p.test(title))) {
+    penalty += 5;
+  }
+
+  // ── Kategori 3: Celebrity / viral AI ─────────────────────────────────────
+  // Gerçek AI haberi değil; ünlü isim + AI bağlantısı
+  const CELEBRITY_NAMES = [
+    "katy perry",
+    "taylor swift",
+    "elon musk",
+    "kanye",
+    "kim kardashian",
+    "beyoncé",
+    "rihanna",
+    "drake",
+    "bieber",
+    "ariana grande",
+  ];
+  const combined = `${title} ${description}`.toLowerCase();
+  const hasCelebrity = CELEBRITY_NAMES.some((name) => combined.includes(name));
+  const hasSubscribesToPattern =
+    /subscribes? to|signs? up for|joins?\b.{0,20}\bai\b/i.test(title);
+  if (hasCelebrity || hasSubscribesToPattern) {
+    penalty += 4;
+  }
+
+  return penalty; // caller subtracts this from total
 }
 
 /**
@@ -618,8 +703,9 @@ export function calculateTrendScore(article: {
   const contentDepth = calculateContentDepth(desc);
   const topicNovelty = calculateTopicNovelty(article.title, desc);
   const engagementPotential = calculateEngagementPotential(article.title, desc);
+  const clickbaitPenalty = calculateClickbaitPenalty(article.title, desc);
 
-  const total =
+  const rawTotal =
     aiRelevance +
     freshness +
     sourceAuthority +
@@ -627,6 +713,8 @@ export function calculateTrendScore(article: {
     contentDepth +
     topicNovelty +
     engagementPotential;
+
+  const total = Math.max(0, Math.min(100, rawTotal - clickbaitPenalty));
 
   return {
     aiRelevance,
@@ -636,7 +724,8 @@ export function calculateTrendScore(article: {
     contentDepth,
     topicNovelty,
     engagementPotential,
-    total: Math.min(100, total),
+    clickbaitPenalty,
+    total,
   };
 }
 
@@ -671,8 +760,9 @@ export function rankArticlesByTrendScore(
   for (const r of top5) {
     const art = articles[r.index];
     const b = r.breakdown;
+    const penaltyStr = b.clickbaitPenalty > 0 ? ` CB:-${b.clickbaitPenalty}` : "";
     logger.debug(
-      `  [${r.score}] AI:${b.aiRelevance} F:${b.freshness} S:${b.sourceAuthority} T:${b.titleQuality} D:${b.contentDepth} N:${b.topicNovelty} E:${b.engagementPotential} — ${art.title.substring(0, 55)}`,
+      `  [${r.score}] AI:${b.aiRelevance} F:${b.freshness} S:${b.sourceAuthority} T:${b.titleQuality} D:${b.contentDepth} N:${b.topicNovelty} E:${b.engagementPotential}${penaltyStr} — ${art.title.substring(0, 55)}`,
     );
   }
 

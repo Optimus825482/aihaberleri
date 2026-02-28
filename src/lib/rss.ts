@@ -18,6 +18,7 @@ import {
   LANGUAGE_CONFIGS,
   getSourcesByLanguage as getConfigSourcesByLanguage,
 } from "../config/rss-sources";
+import { getRedis } from "./redis";
 
 export interface RSSItem {
   title: string;
@@ -525,6 +526,23 @@ export const AI_NEWS_RSS_FEEDS = [
   // },
 ];
 
+// ============================================================================
+// RSS CURSOR SYSTEM — incremental fetching (sadece yeni haberler)
+// ============================================================================
+
+/**
+ * Return a stable, short Redis key for a given feed URL.
+ * Uses a simple djb2-style hash — no crypto needed.
+ */
+function rssCursorKey(feedUrl: string): string {
+  let hash = 5381;
+  for (let i = 0; i < feedUrl.length; i++) {
+    hash = ((hash << 5) + hash) ^ feedUrl.charCodeAt(i);
+    hash = hash >>> 0; // keep 32-bit unsigned
+  }
+  return `rss:cursor:${hash.toString(36)}`;
+}
+
 /**
  * Fetch and parse RSS feed with retry mechanism
  * Known unreliable feeds get reduced retries and shorter timeouts
@@ -652,7 +670,16 @@ function extractLink(element: any): string {
 }
 
 /**
- * Fetch all RSS feeds with concurrency control
+ * Fetch all RSS feeds with concurrency control + cursor-based incremental fetching.
+ *
+ * 🔑 CURSOR SYSTEM:
+ *   - Her feed için Redis'te `rss:cursor:{hash}` key'i ile son görülen
+ *     haberin link'i saklanır (7 gün TTL).
+ *   - Sonraki çekişte o link'e kadar olan yeni itemlar alınır.
+ *   - Aynı link → feed değişmemiş → sıfır HTTP parse maliyeti yok
+ *     (HTTP isteği yine yapılır ama item listesi boş döner).
+ *   - Redis yoksa / cold-start → tüm itemlar döner (güvenli fallback).
+ *
  * Cross-references ALL_INTERNATIONAL_SOURCES config to skip isActive=false feeds
  */
 export async function fetchAllRSSFeeds(
@@ -660,43 +687,114 @@ export async function fetchAllRSSFeeds(
 ): Promise<RSSItem[]> {
   // Build set of disabled feed URLs from centralized config
   const disabledUrls = new Set(
-    ALL_INTERNATIONAL_SOURCES
-      .filter((s) => !s.isActive)
-      .map((s) => s.url),
+    ALL_INTERNATIONAL_SOURCES.filter((s) => !s.isActive).map((s) => s.url),
   );
 
-  const allItems: RSSItem[] = [];
   const feeds = AI_NEWS_RSS_FEEDS.filter((f) => !disabledUrls.has(f.url));
   const skipped = AI_NEWS_RSS_FEEDS.length - feeds.length;
 
   console.log(
     `📡 ${feeds.length} aktif RSS feed okunuyor (${skipped} devre dışı atlandı)...`,
   );
+
+  // ── Cursor'ları Redis'ten toplu yükle ────────────────────────────────────
+  const feedCursors = new Map<string, string | null>();
+  let redis: Awaited<ReturnType<typeof getRedis>> | null = null;
+
+  try {
+    redis = await getRedis();
+    const cursorKeys = feeds.map((f) => rssCursorKey(f.url));
+    // ioredis mget: returns (string | null)[]
+    const cursorValues = await redis.mget(...cursorKeys);
+    feeds.forEach((f, i) => feedCursors.set(f.url, cursorValues[i] ?? null));
+    const knownCount = cursorValues.filter((v) => v !== null).length;
+    console.log(
+      `📋 Cursor: ${knownCount}/${feeds.length} feed'in son pozisyonu yüklendi`,
+    );
+  } catch {
+    // Redis yoksa cursor'sız devam — tüm haberler döner (güvenli fallback)
+    console.warn("⚠️  Redis cursor yüklenemedi — tam fetch yapılıyor");
+  }
+
+  // ── Fetch + cursor filtresi ───────────────────────────────────────────────
+  const allItems: RSSItem[] = [];
+  const cursorUpdates: Array<{ key: string; value: string }> = [];
   let completed = 0;
+  let totalSkipped = 0;
+  let feedsUnchanged = 0;
   const startTime = Date.now();
 
-  // Process feeds in batches
   for (let i = 0; i < feeds.length; i += maxConcurrent) {
     const batch = feeds.slice(i, i + maxConcurrent);
     const results = await Promise.allSettled(
       batch.map((feed) => fetchRSSFeed(feed.url, feed.name)),
     );
 
-    for (const result of results) {
+    for (let j = 0; j < batch.length; j++) {
       completed++;
-      if (result.status === "fulfilled") {
-        allItems.push(...result.value);
+      const feed = batch[j];
+      const result = results[j];
+
+      if (result.status !== "fulfilled" || result.value.length === 0) continue;
+
+      const items = result.value; // newest-first (slice(0,15) from fetchRSSFeed)
+      const lastSeenLink = feedCursors.get(feed.url) ?? null;
+
+      // ── Cursor filtresi ────────────────────────────────────────────────
+      let newItems = items;
+      if (lastSeenLink) {
+        const cutoffIdx = items.findIndex(
+          (item) => item.link === lastSeenLink || item.guid === lastSeenLink,
+        );
+
+        if (cutoffIdx === 0) {
+          // İlk item aynı → hiçbir şey yeni
+          feedsUnchanged++;
+          newItems = [];
+        } else if (cutoffIdx > 0) {
+          // Bazı yeni haberler var
+          const skippedCount = items.length - cutoffIdx;
+          totalSkipped += skippedCount;
+          newItems = items.slice(0, cutoffIdx);
+        }
+        // cutoffIdx === -1: cursor sayfa dışında → tümü yeni (olası)
+      }
+
+      if (newItems.length > 0) {
+        allItems.push(...newItems);
+      }
+
+      // ── Cursor güncelle (her başarılı fetch'te en yeni link'i kaydet) ──
+      const newestLink = items[0].link || items[0].guid || null;
+      if (newestLink && newestLink !== lastSeenLink) {
+        cursorUpdates.push({ key: rssCursorKey(feed.url), value: newestLink });
       }
     }
 
-    // Progress log
     console.log(`   İlerleme: ${completed}/${feeds.length} feed işlendi`);
+  }
+
+  // ── Cursor'ları Redis'e toplu yaz (pipeline) ─────────────────────────────
+  if (redis && cursorUpdates.length > 0) {
+    try {
+      const CURSOR_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 gün
+      const pipeline = redis.pipeline();
+      for (const { key, value } of cursorUpdates) {
+        pipeline.set(key, value, "EX", CURSOR_TTL_SECONDS);
+      }
+      await pipeline.exec();
+      console.log(`💾 ${cursorUpdates.length} feed cursoru Redis'e kaydedildi`);
+    } catch {
+      // cursor yazılamazsa sadece bu sefer tam fetch yapılmış olur — sorun değil
+    }
   }
 
   const duration = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(`\n📊 RSS Özeti:`);
   console.log(`   Toplam feed: ${feeds.length}`);
-  console.log(`   Toplam haber: ${allItems.length}`);
+  console.log(`   Değişmemiş (atlandı): ${feedsUnchanged}`);
+  console.log(`   Zaten görülmüş item: ${totalSkipped}`);
+  console.log(`   Yeni haber: ${allItems.length}`);
   console.log(`   Süre: ${duration}s`);
 
   return allItems;

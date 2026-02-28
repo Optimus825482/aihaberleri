@@ -852,8 +852,10 @@ export async function fetchAINews(
     // Duplicate olanları eleyip KALAN haberlerden devam et
     // Top 10 duplicate olsa bile 11-77 arasından unique bul
 
-    const BATCH_SIZE = 2; // Her seferinde 2 makale kontrol et
-    const MIN_UNIQUE_NEEDED = 2; // En az 2 unique makale bul
+    // 🎯 FIX (28.02.2026): 2→8 — daha fazla kaliteli aday pipeline'a girsin
+    // Eski değer (2) çok kısıtlıydı: top-2 clickbait çıkınca 0 haber yayınlanıyordu
+    const BATCH_SIZE = 5; // Her seferinde 5 makale DB'de kontrol et
+    const MIN_UNIQUE_NEEDED = 8; // En az 8 unique makale bul (agent'a gerçek seçim hakkı ver)
     const TOTAL_ARTICLES = verifiedRankings.length;
     const MAX_BATCHES = Math.ceil(TOTAL_ARTICLES / BATCH_SIZE); // TÜM listeyi tara
     // Extended type: RSSItem + trendScore (for sorting & display)
