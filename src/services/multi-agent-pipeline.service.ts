@@ -387,7 +387,7 @@ export async function startMultiAgentPipeline(
 /**
  * Monitor pipeline progress
  *
- * Pipeline: Duplicate → Relevance → Trend → Enrich → Visual → SEO → Publish
+ * Pipeline: Duplicate → Relevance → Trend → SourceGather → Synthesize → Validate → Visual → SEO → Publish
  */
 export async function monitorPipelineProgress(agentLogId: string): Promise<{
   stage: string;
@@ -402,6 +402,8 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
     QUEUE_NAMES.RELEVANT_ARTICLES,
     QUEUE_NAMES.TREND_ENRICHMENT,
     QUEUE_NAMES.ENRICHED_ARTICLES,
+    QUEUE_NAMES.CONTENT_SYNTHESIS,
+    QUEUE_NAMES.CONTENT_VALIDATION,
     QUEUE_NAMES.ARTICLES_WITH_VISUALS,
     QUEUE_NAMES.SEO_OPTIMIZATION,
     QUEUE_NAMES.DATABASE_PUBLISHER,

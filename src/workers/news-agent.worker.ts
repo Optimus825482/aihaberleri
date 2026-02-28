@@ -49,7 +49,9 @@ import {
   startTrendFetcher,
   stopTrendFetcher,
 } from "@/services/trend-fetcher.service";
-import { ContentEnricherAgent } from "@/agents/content-enricher.agent";
+import { SourceGathererAgent } from "@/agents/source-gatherer.agent";
+import { ContentSynthesizerAgent } from "@/agents/content-synthesizer.agent";
+import { ContentValidatorAgent } from "@/agents/content-validator.agent";
 import { VisualGeneratorAgent } from "@/agents/visual-generator.agent";
 import { SEOOptimizerAgent } from "@/agents/seo-optimizer.agent"; // NEW: SEO before publish
 import { DatabasePublisherAgent } from "@/agents/database-publisher.agent";
@@ -82,7 +84,9 @@ const WORKER_CONSTANTS = {
 let relevanceFilter: RelevanceFilterAgent;
 let duplicateDetector: DuplicateDetectorAgent;
 let trendEnricher: TrendEnricherAgent; // FIX: Missing agent causing pipeline break
-let contentEnricher: ContentEnricherAgent;
+let sourceGatherer: SourceGathererAgent;
+let contentSynthesizer: ContentSynthesizerAgent;
+let contentValidator: ContentValidatorAgent;
 let visualGenerator: VisualGeneratorAgent;
 let seoOptimizer: SEOOptimizerAgent; // NEW: SEO Optimizer before publish
 let databasePublisher: DatabasePublisherAgent;
@@ -113,8 +117,8 @@ const log = {
 };
 
 /**
- * Initialize multi-agent pipeline agents (8 agents total)
- * Pipeline: Relevance → Duplicate → Trend → Enrich → Visual → SEO → Publish → Social
+ * Initialize multi-agent pipeline agents (10 agents total)
+ * Pipeline: Relevance → Duplicate → Trend → SourceGather → Synthesize → Validate → Visual → SEO → Publish → Social
  */
 async function initializeMultiAgentPipeline(): Promise<void> {
   log.info("Initializing multi-agent pipeline...");
@@ -126,7 +130,9 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     relevanceFilter = new RelevanceFilterAgent();
     duplicateDetector = new DuplicateDetectorAgent();
     trendEnricher = new TrendEnricherAgent();
-    contentEnricher = new ContentEnricherAgent();
+    sourceGatherer = new SourceGathererAgent();
+    contentSynthesizer = new ContentSynthesizerAgent();
+    contentValidator = new ContentValidatorAgent();
     visualGenerator = new VisualGeneratorAgent();
     seoOptimizer = new SEOOptimizerAgent(); // NEW: SEO before publish
     databasePublisher = new DatabasePublisherAgent();
@@ -137,7 +143,9 @@ async function initializeMultiAgentPipeline(): Promise<void> {
       { name: "Relevance", agent: relevanceFilter },
       { name: "Duplicate", agent: duplicateDetector },
       { name: "Trend", agent: trendEnricher },
-      { name: "Enrich", agent: contentEnricher },
+      { name: "SourceGatherer", agent: sourceGatherer },
+      { name: "ContentSynthesizer", agent: contentSynthesizer },
+      { name: "ContentValidator", agent: contentValidator },
       { name: "Visual", agent: visualGenerator },
       { name: "SEO", agent: seoOptimizer },
       { name: "Publish", agent: databasePublisher },
@@ -163,7 +171,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     }
 
     log.success(
-      `Pipeline ready: ${ok}/8 agents | Relevance→Duplicate→Trend→Enrich→Visual→SEO→Publish→Social`,
+      `Pipeline ready: ${ok}/10 agents | Relevance→Duplicate→Trend→SourceGather→Synthesize→Validate→Visual→SEO→Publish→Social`,
     );
 
     // FIX (12.02.2026): Clear stale recovery mode states on worker startup
@@ -196,7 +204,9 @@ async function stopMultiAgentPipeline(): Promise<void> {
     relevanceFilter?.stop(),
     duplicateDetector?.stop(),
     trendEnricher?.stop(),
-    contentEnricher?.stop(),
+    sourceGatherer?.stop(),
+    contentSynthesizer?.stop(),
+    contentValidator?.stop(),
     visualGenerator?.stop(),
     seoOptimizer?.stop(),
     databasePublisher?.stop(),
