@@ -171,6 +171,7 @@ export async function POST(req: NextRequest) {
     // ============================================
     let audio: Buffer;
     let metadata: unknown[];
+    let isOriginalGenerator = false;
 
     const existingRequest = inFlightRequests.get(cacheKey);
     if (existingRequest) {
@@ -183,6 +184,7 @@ export async function POST(req: NextRequest) {
       metadata = result.metadata;
     } else {
       // Yeni üretim başlat ve map'e kaydet
+      isOriginalGenerator = true;
       const generationPromise = generateSpeech({
         text: cleanText,
         voice,
@@ -198,8 +200,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
     console.log(
-      `[TTS POST] Success: ${audio.length} bytes, ${metadata.length} words`,
+      `[TTS POST] Success: ${audio.length} bytes, ${wordCount} words, ${metadata.length} boundaries${!isOriginalGenerator ? " (in-flight reuse)" : ""}`,
     );
 
     const responseData = {
@@ -208,9 +211,9 @@ export async function POST(req: NextRequest) {
     };
 
     // ============================================
-    // CACHE RESULT
+    // CACHE RESULT (sadece original generator yazar — in-flight bekleyenler YAZMAZ)
     // ============================================
-    if (redis) {
+    if (redis && isOriginalGenerator) {
       const cachePayload = JSON.stringify(responseData);
       const payloadSize = Buffer.byteLength(cachePayload);
 
@@ -255,7 +258,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(responseData, {
       headers: {
-        "X-Cache": "MISS",
+        "X-Cache": isOriginalGenerator ? "MISS" : "IN-FLIGHT",
         ...getRateLimitHeaders(rateLimitResult, TTS_RATE_LIMIT.limit),
       },
     });

@@ -1091,12 +1091,54 @@ function isValidContent(content: string): { valid: boolean; reason?: string } {
   return { valid: true };
 }
 
+// ============================================
+// URL BLACKLIST — 451/403 döndüren veya scrape izni olmayan siteler
+// Bu sitelere Jina Reader / fallback ile boşuna istek atılmasını önler
+// ============================================
+const CONTENT_FETCH_BLACKLIST = [
+  "google.com",
+  "anthropic.com",
+  "reuters.com",
+  "bloomberg.com",
+  "nytimes.com",
+  "wsj.com",
+  "washingtonpost.com",
+  "ft.com",
+  "paywallnews.com",
+  "nature.com",
+  "science.org",
+  "ieee.org",
+  "acm.org",
+  "linkedin.com",
+  "facebook.com",
+  "instagram.com",
+  "twitter.com",
+  "x.com",
+];
+
+function isUrlBlacklisted(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return CONTENT_FETCH_BLACKLIST.some(
+      (domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+    );
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Fetch article content from URL using Jina Reader API
  * ENHANCED: Now validates content quality and rejects garbage content
  */
 export async function fetchArticleContent(url: string): Promise<string> {
   try {
+    // URL blacklist check — 451/403 döndüren sitelere boşuna istek atma
+    if (isUrlBlacklisted(url)) {
+      console.log(`⛔ URL blacklisted, skipping content fetch: ${url}`);
+      return "";
+    }
+
     console.log(`📄 Makale içeriği alınıyor: ${url}`);
 
     // Try Jina Reader first (AI-powered content extraction)

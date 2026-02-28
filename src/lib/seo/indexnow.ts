@@ -7,10 +7,12 @@
 import { db } from "@/lib/db";
 
 // IndexNow API endpoint'leri
+// NOT: api.indexnow.org ve bing.com persistent 403 (UserForbiddedToAccessSite) döndürüyor
+// Sadece Yandex çalışıyor — diğerleri env var ile re-enable edilebilir
 const INDEXNOW_ENDPOINTS = [
-  "https://api.indexnow.org/indexnow", // Generic endpoint
-  "https://www.bing.com/indexnow", // Bing
-  "https://yandex.com/indexnow", // Yandex
+  // "https://api.indexnow.org/indexnow", // DISABLED: Persistent 403 since 2026-02
+  // "https://www.bing.com/indexnow", // DISABLED: Persistent 403 since 2026-02  
+  "https://yandex.com/indexnow", // Yandex — only working endpoint
 ];
 
 // Endpoint cooldown for persistent authorization failures (e.g., 403 UserForbiddedToAccessSite)

@@ -299,15 +299,61 @@ export class SEOOrchestratorService {
           lastSpace > 30 ? truncated.substring(0, lastSpace) : truncated;
       }
 
+      // metaDescription: Google SERP limiti 155 karakter
+      let metaDescription = changes.metaDescription;
+      if (metaDescription && metaDescription.length > 155) {
+        const truncated = metaDescription.substring(0, 155);
+        const lastSpace = truncated.lastIndexOf(" ");
+        metaDescription =
+          lastSpace > 100 ? truncated.substring(0, lastSpace) : truncated;
+      }
+
+      // Slug uniqueness check — P2002 Prisma hatası ve sonsuz döngüyü önle
+      let finalSlug = changes.slug;
+      if (finalSlug) {
+        const existing = await db.article.findFirst({
+          where: { slug: finalSlug, id: { not: articleId } },
+          select: { id: true },
+        });
+        if (existing) {
+          // Slug çakışması — suffix ekle
+          for (let i = 2; i <= 5; i++) {
+            const candidate = `${finalSlug}-${i}`;
+            const conflict = await db.article.findFirst({
+              where: { slug: candidate, id: { not: articleId } },
+              select: { id: true },
+            });
+            if (!conflict) {
+              finalSlug = candidate;
+              console.warn(
+                `[SEO Orchestrator] Slug collision resolved: ${changes.slug} → ${finalSlug}`,
+              );
+              break;
+            }
+            if (i === 5) {
+              // 5 deneme sonra slug değişikliğini atla
+              console.error(
+                `[SEO Orchestrator] Slug collision unresolvable for "${changes.slug}", keeping original`,
+              );
+              const current = await db.article.findUnique({
+                where: { id: articleId },
+                select: { slug: true },
+              });
+              finalSlug = current?.slug || finalSlug;
+            }
+          }
+        }
+      }
+
       // Update article
       await db.article.update({
         where: { id: articleId },
         data: {
           title: changes.title,
           metaTitle,
-          metaDescription: changes.metaDescription,
+          metaDescription,
           content: changes.content,
-          slug: changes.slug,
+          slug: finalSlug,
           keywords: changes.keywords.primary,
           // imageAltText: changes.imageAltText, // TODO: Add to schema
         },

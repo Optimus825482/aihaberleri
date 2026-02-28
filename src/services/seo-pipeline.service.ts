@@ -82,15 +82,10 @@ export class SEOPipelineService {
    * Full SEO pipeline çalıştır
    */
   async run(article: ArticleData): Promise<PipelineResult> {
-    console.log("[SEO Pipeline] Başlatılıyor...");
-
     // ─── STEP 1: İlk değerlendirme ───
     const beforeReport = this.evaluator.evaluate(article);
-    console.log(
-      `[SEO Pipeline] Mevcut skor: ${beforeReport.score}/100, ${beforeReport.issues.length} sorun`,
-    );
 
-    // Sorun yoksa düzeltmeye gerek yok
+    // Sorun yoksa düzeltmeye gerek yok — sessizce dön (log spam önle)
     if (beforeReport.issues.length === 0) {
       return {
         success: true,
@@ -108,6 +103,9 @@ export class SEOPipelineService {
     }
 
     // ─── STEP 2: Optimize et (retry loop ile) ───
+    console.log(
+      `[SEO Pipeline] Başlatılıyor: skor ${beforeReport.score}/100, ${beforeReport.issues.length} sorun`,
+    );
     let bestResult: OptimizationResult | null = null;
     let bestAfterScore = 0;
     let retries = 0;

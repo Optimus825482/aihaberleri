@@ -357,7 +357,7 @@ export function startSEOOptimizerWorker(): Worker | null {
     processJob,
     {
       connection: redis,
-      concurrency: 1, // Process 1 job at a time (AI-heavy)
+      concurrency: 3, // Process 3 jobs concurrently (was 1 — bottleneck)
       limiter: {
         max: 2,
         duration: 1000, // Max 2 jobs per second

@@ -288,6 +288,39 @@ async function runBulkOptimize(
       }
 
       const updateData = pipeline.buildUpdateData(result.diffs, allFields);
+
+      // Slug uniqueness check — P2002 Prisma hatası ve sonsuz döngüyü önle
+      if (updateData.slug && typeof updateData.slug === "string") {
+        const existing = await db.article.findFirst({
+          where: { slug: updateData.slug as string, id: { not: article.id } },
+          select: { id: true },
+        });
+        if (existing) {
+          let resolved = false;
+          for (let i = 2; i <= 5; i++) {
+            const candidate = `${updateData.slug}-${i}`;
+            const conflict = await db.article.findFirst({
+              where: { slug: candidate, id: { not: article.id } },
+              select: { id: true },
+            });
+            if (!conflict) {
+              console.warn(
+                `[SEO Auto] Slug collision resolved: ${updateData.slug} → ${candidate}`,
+              );
+              updateData.slug = candidate;
+              resolved = true;
+              break;
+            }
+          }
+          if (!resolved) {
+            console.error(
+              `[SEO Auto] Slug collision unresolvable for "${updateData.slug}", removing from update`,
+            );
+            delete updateData.slug;
+          }
+        }
+      }
+
       await db.article.update({ where: { id: article.id }, data: updateData });
 
       const updatedArticle = await db.article.findUnique({
