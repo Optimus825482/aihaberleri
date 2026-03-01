@@ -469,6 +469,187 @@ export const AI_NEWS_RSS_FEEDS = [
   },
 
   // ========================================
+  // TIER 7: RESULT.MD INTEGRATION (2026-03)
+  // Academic, Corporate, Media, Specialized, Education, Ethics
+  // ========================================
+
+  // 🎓 Academic & Research
+  {
+    name: "MIT News - AI",
+    url: "https://news.mit.edu/rss/topic/artificial-intelligence2",
+    language: "en",
+  },
+  {
+    name: "Stanford HAI",
+    url: "https://hai.stanford.edu/news/rss.xml",
+    language: "en",
+  },
+  {
+    name: "AI2 (Allen Institute)",
+    url: "https://allenai.org/blog/rss.xml",
+    language: "en",
+  },
+  {
+    name: "arXiv cs.AI",
+    url: "http://export.arxiv.org/rss/cs.AI",
+    language: "en",
+  },
+  {
+    name: "CMU AI",
+    url: "https://www.cs.cmu.edu/ai/feed",
+    language: "en",
+  },
+  {
+    name: "NIST AI",
+    url: "https://www.nist.gov/artificial-intelligence/rss-feed",
+    language: "en",
+  },
+
+  // 🏢 Corporate AI Blogs (new endpoints)
+  {
+    name: "NVIDIA Developer Blog",
+    url: "https://developer.nvidia.com/blog/feed/",
+    language: "en",
+  },
+  {
+    name: "AWS AI Blog",
+    url: "https://aws.amazon.com/blogs/ai/feed/",
+    language: "en",
+  },
+  {
+    name: "Meta AI (FB News)",
+    url: "https://about.fb.com/news/category/ai/feed/",
+    language: "en",
+  },
+  {
+    name: "IBM Developer AI",
+    url: "https://developer.ibm.com/analytics/feed/",
+    language: "en",
+  },
+  {
+    name: "Intel AI Blog",
+    url: "https://www.intel.com/content/www/us/en/artificial-intelligence/ai-blog/rss.xml",
+    language: "en",
+  },
+  {
+    name: "DataRobot Blog",
+    url: "https://www.datarobot.com/blog/rss/",
+    language: "en",
+  },
+
+  // 📰 Tech Media (AI sections)
+  {
+    name: "The Guardian - AI",
+    url: "https://www.theguardian.com/technology/artificialintelligenceai/rss",
+    language: "en",
+  },
+  {
+    name: "Financial Times - AI",
+    url: "https://www.ft.com/artificial-intelligence?format=rss",
+    language: "en",
+  },
+  {
+    name: "New York Times - Tech",
+    url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+    language: "en",
+  },
+  {
+    name: "The Conversation - AI",
+    url: "https://theconversation.com/us/topics/artificial-intelligence-764/feed",
+    language: "en",
+  },
+
+  // 🤖 Specialized AI Publications
+  {
+    name: "AI Weekly",
+    url: "https://aiweekly.co/feed/",
+    language: "en",
+  },
+  {
+    name: "DailyAI",
+    url: "https://dailyai.com/feed/",
+    language: "en",
+  },
+  {
+    name: "AIwire",
+    url: "https://aiwire.org/feed/",
+    language: "en",
+  },
+  {
+    name: "AI Time Journal",
+    url: "https://www.aitimejournal.com/feed/",
+    language: "en",
+  },
+  {
+    name: "InsideAI",
+    url: "https://inside.com/ai/feed/",
+    language: "en",
+  },
+
+  // 📚 Education & Learning
+  {
+    name: "fast.ai Blog",
+    url: "https://www.fast.ai/feed.xml",
+    language: "en",
+  },
+  {
+    name: "O'Reilly",
+    url: "https://www.oreilly.com/feed/",
+    language: "en",
+  },
+  {
+    name: "Coursera Blog",
+    url: "https://www.coursera.org/blog/feed",
+    language: "en",
+  },
+  {
+    name: "Kaggle Blog",
+    url: "https://www.kaggle.com/blog/feed",
+    language: "en",
+  },
+
+  // 🔧 Open Source & Technical
+  {
+    name: "OpenCV AI",
+    url: "https://opencv.org/feed/",
+    language: "en",
+  },
+
+  // 🌍 Regional
+  {
+    name: "Indian Express - AI",
+    url: "https://indianexpress.com/section/technology/artificial-intelligence/feed/",
+    language: "en",
+  },
+  {
+    name: "Mint - AI",
+    url: "https://www.livemint.com/rss/technology/artificial-intelligence/feed",
+    language: "en",
+  },
+  {
+    name: "France 24 - AI",
+    url: "https://www.france24.com/en/tag/artificial-intelligence/rss",
+    language: "en",
+  },
+
+  // ⚖️ AI Ethics & Policy
+  {
+    name: "Future of Life Institute",
+    url: "https://futureoflife.org/feed/",
+    language: "en",
+  },
+  {
+    name: "Partnership on AI",
+    url: "https://www.partnershiponai.org/feed/",
+    language: "en",
+  },
+  {
+    name: "AI Ethics",
+    url: "https://aiethics.ai/feed/",
+    language: "en",
+  },
+
+  // ========================================
   // TIER 6: MULTI-LANGUAGE AI SOURCES
   // ========================================
 
