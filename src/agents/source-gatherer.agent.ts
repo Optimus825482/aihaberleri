@@ -256,6 +256,13 @@ export class SourceGathererAgent extends BaseAgent<
         const settled = await Promise.allSettled(promises);
         for (const r of settled) {
           if (r.status === "fulfilled" && r.value.success) {
+            // P0-1: Filter out 0-source articles — don't waste LLM compute
+            if (r.value.data.hasNoExternalSources) {
+              this.logger.warn(
+                `🚫 FILTERED: "${r.value.data.title.substring(0, 60)}" — 0 external sources, skipping synthesis`,
+              );
+              continue;
+            }
             results.push(r.value.data);
           }
         }

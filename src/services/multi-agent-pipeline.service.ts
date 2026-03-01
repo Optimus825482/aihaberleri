@@ -93,12 +93,28 @@ async function syncPipelineStateFromQueues(
   runId: string,
   startedAt: string,
   articlesCreated: number,
+  agentLogId?: string,
 ): Promise<PipelineRedisState> {
+  // P1-6: Read real-time published count from Redis instead of hardcoded 0
+  let effectiveArticlesCreated = articlesCreated;
+  if (agentLogId) {
+    try {
+      const redis = getRedis();
+      if (redis) {
+        const count = await redis.get(`pipeline:published:${agentLogId}`);
+        if (count) effectiveArticlesCreated = parseInt(count, 10) || 0;
+      }
+    } catch {
+      // Fallback to passed value
+    }
+  }
+
   const stepStats = await Promise.all(
     PIPELINE_STEPS.map(async (step) => {
       const queueName = STEP_QUEUE_MAP[step.id];
       const queue = getQueue(queueName);
-      if (!queue) return { step, active: 0, waiting: 0, completed: 0, failed: 0 };
+      if (!queue)
+        return { step, active: 0, waiting: 0, completed: 0, failed: 0 };
       const [active, waiting, completed, failed] = await Promise.all([
         queue.getActiveCount(),
         queue.getWaitingCount(),
@@ -114,26 +130,28 @@ async function syncPipelineStateFromQueues(
   const currentStep = firstActiveIdx !== -1 ? firstActiveIdx : firstQueuedIdx;
   const hasWork = stepStats.some((s) => s.active > 0 || s.waiting > 0);
 
-  const steps: PipelineStepState[] = stepStats.map(({ step, active, waiting, completed, failed }, idx) => {
-    let status: PipelineStepState["status"] = "pending";
-    if (active > 0) {
-      status = "running";
-    } else if (currentStep !== -1 && idx < currentStep) {
-      status = "completed";
-    } else if (waiting > 0) {
-      status = "pending";
-    } else if (hasWork && currentStep !== -1 && idx < currentStep) {
-      status = "completed";
-    }
-    return { ...step, status, itemsProcessed: completed };
-  });
+  const steps: PipelineStepState[] = stepStats.map(
+    ({ step, active, waiting, completed, failed }, idx) => {
+      let status: PipelineStepState["status"] = "pending";
+      if (active > 0) {
+        status = "running";
+      } else if (currentStep !== -1 && idx < currentStep) {
+        status = "completed";
+      } else if (waiting > 0) {
+        status = "pending";
+      } else if (hasWork && currentStep !== -1 && idx < currentStep) {
+        status = "completed";
+      }
+      return { ...step, status, itemsProcessed: completed };
+    },
+  );
 
   const state: PipelineRedisState = {
     isRunning: hasWork,
     currentStep,
     steps,
     startedAt,
-    articlesCreated,
+    articlesCreated: effectiveArticlesCreated,
     runId,
   };
 
@@ -510,7 +528,7 @@ export async function waitForPipelineCompletion(
   await new Promise((resolve) => setTimeout(resolve, 3000));
 
   let consecutiveEmptyChecks = 0;
-  const REQUIRED_EMPTY_CHECKS = 5;
+  const REQUIRED_EMPTY_CHECKS = 3; // P1-5: 5→3 for faster completion detection (9s vs 25s)
   let hasSeenArticlesInQueue = initialJobCompleted;
   let checkCount = 0;
 
@@ -527,7 +545,12 @@ export async function waitForPipelineCompletion(
 
     // Sync pipeline state to Redis every check (dashboard polls every 3-5s)
     if (hasSeenArticlesInQueue || checkCount <= 2) {
-      await syncPipelineStateFromQueues(effectiveRunId, pipelineStartedAt, 0);
+      await syncPipelineStateFromQueues(
+        effectiveRunId,
+        pipelineStartedAt,
+        0,
+        agentLogId,
+      );
     }
 
     if (progress.articlesInQueue > 0 || checkCount <= 2) {
@@ -653,7 +676,7 @@ export async function waitForPipelineCompletion(
       errors.push(`${progress.failed} articles failed in pipeline`);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 3000)); // P1-5: 5s→3s polling interval
   }
 
   logger.error(`❌ Pipeline timeout after ${timeoutMs / 1000}s`);

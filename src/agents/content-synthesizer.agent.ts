@@ -222,7 +222,57 @@ ${sanitizeForPrompt(s.content.substring(0, 1500))}
       )
       .join("\n");
 
-    this.logger.info(`🚀 Using LLM for BOTH TR + EN synthesis`);
+    this.logger.info(`🚀 Using LLM for BOTH TR + EN synthesis (parallel)`);
+
+    // P2-9: Fire EN synthesis concurrently with TR (EN doesn't depend on TR output)
+    const enPrompt = `You are a world-renowned investigative journalist.
+
+Task: Create a comprehensive, original English news article by synthesizing ${sources.length} sources.
+
+### ORIGINAL NEWS:
+Title: ${article.title}
+Description: ${article.description}
+
+### SOURCES:
+${sourcesText}
+
+### RULES:
+1. CREATE ORIGINAL CONTENT (synthesize, don't copy)
+2. Cite sources: "According to Reuters...", "TechCrunch reports..."
+3. Professional tone: Objective, neutral, third-person
+
+### STRUCTURE & SEO RULES (CRITICAL — FOLLOW ALL):
+- **Title (title):** 50-70 chars. Primary keyword in FIRST 5 words. Include year or number if possible (boosts CTR).
+- **Meta Title (metaTitle):** 50-60 chars. Optimized for Google SERP. Put primary keyword first. Can differ from title, shorter and more concise.
+- **Excerpt:** 2-3 sentences, must include primary keyword.
+- **Meta Description (metaDescription):** 120-150 chars. NEVER exceed 155 characters. Add CTA verb ("Discover", "Learn", "Explore"). Naturally integrate primary keyword.
+- **Content:** HTML formatted, min 500 words.
+  - Minimum 2 <h2> headings, H2s MUST contain keywords.
+  - Short paragraphs: max 3-4 sentences each.
+  - Primary keyword MUST appear in FIRST paragraph.
+  - Primary keyword MUST appear in LAST paragraph.
+- **Keywords:** 5-8 keywords. Content density 1-2%.
+
+Respond in JSON:
+{
+  "title": "SEO-Optimized English Title (50-70 chars)",
+  "metaTitle": "Short SERP Title (50-60 chars)",
+  "excerpt": "2-3 sentence summary",
+  "content": "Full HTML article",
+  "keywords": ["keyword1", "keyword2"],
+  "metaDescription": "CTA-driven SEO meta description (120-150 chars, MAX 155)"
+}`;
+
+    // Start EN synthesis immediately (non-blocking)
+    const enPromise = callDeepSeek([{ role: "user", content: enPrompt }], {
+      model: "deepseek-chat",
+      maxTokens: 6000,
+      temperature: 0.7,
+    }).catch((err: unknown) => {
+      const msg = err instanceof Error ? err.message : String(err);
+      this.logger.error(`❌ LLM EN (parallel) failed: ${msg}`);
+      return null; // Will be handled after TR completes
+    });
 
     // 🔄 RETRY LOOP: TR content synthesis with escalating prompts on failure
     let trContent: SynthesizedContentTR | null = null;
@@ -303,7 +353,7 @@ ${retrySourcesText}
 - **Başlık (title):** 50-70 karakter. Ana anahtar kelime İLK 5 kelimede olmalı. Mümkünse yıl veya rakam ekle (CTR artırır).
 - **Meta Başlık (metaTitle):** 50-60 karakter. Google SERP için optimize. Ana anahtar kelimeyi başa koy. Başlıktan farklı olabilir, daha kısa ve öz.
 - **Özet (excerpt):** 2-3 cümlelik giriş, ana anahtar kelimeyi içermeli.
-- **Meta Açıklama (metaDescription):** 120-155 karakter. CTA fiili ekle ("Keşfet", "Öğren", "İncele"). Ana anahtar kelimeyi doğal şekilde entegre et.
+- **Meta Açıklama (metaDescription):** 120-150 karakter. ASLA 155 karakteri GEÇME. CTA fiili ekle ("Keşfet", "Öğren", "İncele"). Ana anahtar kelimeyi doğal şekilde entegre et.
 - **İçerik (content):** En az 600 kelime, HTML formatlı (<p>, <h2>, <ul>/<ol>).
   - Minimum 2 adet <h2> başlık kullan, H2'lerde anahtar kelime geçmeli.
   - Paragraflar kısa: max 3-4 cümle.
@@ -318,7 +368,7 @@ JSON formatında yanıt ver:
   "excerpt": "Okuyucuyu yakalayan özet",
   "content": "HTML formatlı, derin analiz içeren tam makale",
   "keywords": ["anahtar1", "anahtar2"],
-  "metaDescription": "CTA içeren SEO meta açıklama (120-155 kar)",
+  "metaDescription": "CTA içeren SEO meta açıklama (120-150 kar, MAX 155)",
   "score": 950
 }`;
 
@@ -405,62 +455,22 @@ JSON formatında yanıt ver:
       return this.generateEmergencyTemplate(article);
     }
 
-    // ── English content ──
-    const enPrompt = `You are a world-renowned investigative journalist.
-
-Task: Create a comprehensive, original English news article by synthesizing ${sources.length} sources.
-
-### ORIGINAL NEWS:
-Title: ${article.title}
-Description: ${article.description}
-
-### SOURCES:
-${sourcesText}
-
-### RULES:
-1. CREATE ORIGINAL CONTENT (synthesize, don't copy)
-2. Cite sources: "According to Reuters...", "TechCrunch reports..."
-3. Professional tone: Objective, neutral, third-person
-
-### STRUCTURE & SEO RULES (CRITICAL — FOLLOW ALL):
-- **Title (title):** 50-70 chars. Primary keyword in FIRST 5 words. Include year or number if possible (boosts CTR).
-- **Meta Title (metaTitle):** 50-60 chars. Optimized for Google SERP. Put primary keyword first. Can differ from title, shorter and more concise.
-- **Excerpt:** 2-3 sentences, must include primary keyword.
-- **Meta Description (metaDescription):** 120-155 chars. Add CTA verb ("Discover", "Learn", "Explore"). Naturally integrate primary keyword.
-- **Content:** HTML formatted, min 500 words.
-  - Minimum 2 <h2> headings, H2s MUST contain keywords.
-  - Short paragraphs: max 3-4 sentences each.
-  - Primary keyword MUST appear in FIRST paragraph.
-  - Primary keyword MUST appear in LAST paragraph.
-- **Keywords:** 5-8 keywords. Content density 1-2%.
-
-Respond in JSON:
-{
-  "title": "SEO-Optimized English Title (50-70 chars)",
-  "metaTitle": "Short SERP Title (50-60 chars)",
-  "excerpt": "2-3 sentence summary",
-  "content": "Full HTML article",
-  "keywords": ["keyword1", "keyword2"],
-  "metaDescription": "CTA-driven SEO meta description (120-155 chars)"
-}`;
-
+    // ── English content (P2-9: already running in parallel, just await result) ──
     let enContent: SynthesizedContentEN;
     try {
-      const enResponse = await callDeepSeek(
-        [{ role: "user", content: enPrompt }],
-        {
-          model: "deepseek-chat",
-          maxTokens: 6000,
-          temperature: 0.7,
-        },
-      );
+      const enResponse = await enPromise;
+      if (!enResponse) {
+        throw new Error("EN synthesis failed (parallel promise returned null)");
+      }
 
       const enJsonMatch = enResponse.match(/\{[\s\S]*\}/);
       if (!enJsonMatch) {
         throw new Error("Failed to parse English content from LLM");
       }
       enContent = JSON.parse(enJsonMatch[0]) as SynthesizedContentEN;
-      this.logger.success(`✅ LLM EN content generated successfully`);
+      this.logger.success(
+        `✅ LLM EN content generated successfully (parallel)`,
+      );
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
       this.logger.error(`❌ LLM EN failed: ${msg}, using emergency template`);

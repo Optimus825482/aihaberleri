@@ -501,6 +501,26 @@ async function startWorker() {
         attempt: `${job.attemptsMade + 1}/${job.opts.attempts || 3}`,
       });
 
+      // P1-7: Smart cycle timing — check consecutive empty cycles
+      try {
+        const redis = (await import("@/lib/redis")).getRedis();
+        if (redis) {
+          const emptyCount = parseInt(
+            (await redis.get("pipeline:consecutive_empties")) || "0",
+            10,
+          );
+          if (emptyCount >= 2) {
+            const delayMinutes = Math.min(emptyCount * 3, 15); // 6min, 9min, 12min, max 15min
+            log.info(
+              `⏳ P1-7: ${emptyCount} ardışık boş döngü — ${delayMinutes}dk bekleniyor...`,
+            );
+            await new Promise((r) => setTimeout(r, delayMinutes * 60 * 1000));
+          }
+        }
+      } catch {
+        // Non-critical — don't block execution
+      }
+
       let result;
       try {
         // 🚀 PERFORMANCE (FAZ 2): No need for explicit $connect()
@@ -565,6 +585,24 @@ async function startWorker() {
           errors:
             result.errors.length > 0 ? result.errors.join(", ") : undefined,
         });
+
+        // P1-7: Track consecutive empty cycles for smart timing
+        try {
+          const redis = (await import("@/lib/redis")).getRedis();
+          if (redis) {
+            const key = "pipeline:consecutive_empties";
+            if (result.articlesCreated === 0) {
+              const newCount = await redis.incr(key);
+              await redis.expire(key, 3600); // 1h TTL
+              log.info(`📊 P1-7: Boş döngü #${newCount} kaydedildi`);
+            } else {
+              await redis.del(key);
+              log.info(`📊 P1-7: Verimli döngü — boş sayaç sıfırlandı`);
+            }
+          }
+        } catch {
+          // Non-critical
+        }
       } catch (error) {
         workerLogger.jobFailed(job.id!, error as Error);
         trackWorkerError(job.id!, error as Error, {

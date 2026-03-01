@@ -15,6 +15,7 @@ import { Job } from "bullmq";
 import { BaseAgent, AgentResult } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
 import { batchScoreArticles } from "@/lib/deepseek"; // DeepSeek-only (Gemini removed)
+import { recordYouTubeFailure } from "@/lib/youtube-pipeline";
 import type { CollectedArticle } from "./content-collector.agent";
 
 export interface ScoredArticle extends CollectedArticle {
@@ -98,6 +99,21 @@ export class RelevanceFilterAgent extends BaseAgent<
       const relevantArticles = scoredArticles.filter(
         (article) => article.relevanceScore >= RELEVANCE_THRESHOLD,
       );
+
+      // P0-3: Track YouTube relevance failures for blacklisting
+      const rejectedYouTube = scoredArticles.filter(
+        (a) =>
+          a.relevanceScore < RELEVANCE_THRESHOLD &&
+          a.url?.includes("youtube.com/watch"),
+      );
+      if (rejectedYouTube.length > 0) {
+        await Promise.allSettled(
+          rejectedYouTube.map((a) => recordYouTubeFailure(a.url)),
+        );
+        this.logger.info(
+          `🚫 ${rejectedYouTube.length} YouTube video relevance failure kaydedildi`,
+        );
+      }
 
       const rejectedCount = scoredArticles.length - relevantArticles.length;
       const rejectionRate = (
@@ -244,5 +260,4 @@ export class RelevanceFilterAgent extends BaseAgent<
       };
     });
   }
-
 }

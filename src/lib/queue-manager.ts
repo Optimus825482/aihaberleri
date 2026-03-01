@@ -176,9 +176,9 @@ const QUEUE_CONFIG = {
     attempts: 3,
   },
   [QUEUE_NAMES.SEO_OPTIMIZATION]: {
-    concurrency: 1, // Sequential optimization (AI-heavy)
+    concurrency: 3, // P0-2: Increased from 1 → 3 (was bottleneck: 40-50% of pipeline time)
     rateLimit: {
-      max: 2,
+      max: 5, // P0-2: Increased from 2 → 5
       duration: 1000,
     },
     lockDuration: 1200000, // 20 minutes (AI calls)

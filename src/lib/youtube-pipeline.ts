@@ -15,8 +15,76 @@ import {
 import { isArticleDuplicate } from "@/services/intelligent-news.service";
 import type { NewsArticle } from "@/services/news.service";
 import { createModuleLogger } from "@/lib/agent-log-stream";
+import { getRedis } from "@/lib/redis";
 
 const liveLog = createModuleLogger("youtube");
+
+// ─── P0-3: YouTube Redis Blacklist ───
+const YT_BLACKLIST_PREFIX = "youtube:blacklist:";
+const YT_BLACKLIST_TTL_SECONDS = 48 * 60 * 60; // 48 hours
+const YT_FAIL_PREFIX = "youtube:fail:";
+const YT_FAIL_THRESHOLD = 2; // Blacklist after 2 relevance failures
+
+/**
+ * Check if a YouTube video is blacklisted
+ */
+async function isBlacklisted(videoUrl: string): Promise<boolean> {
+  try {
+    const redis = getRedis();
+    if (!redis) return false;
+    const videoId = extractVideoId(videoUrl);
+    if (!videoId) return false;
+    const result = await redis.get(`${YT_BLACKLIST_PREFIX}${videoId}`);
+    return result !== null;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Record a relevance failure for a YouTube video.
+ * If failures >= threshold, auto-blacklist for 48h.
+ */
+export async function recordYouTubeFailure(videoUrl: string): Promise<void> {
+  try {
+    const redis = getRedis();
+    if (!redis) return;
+    const videoId = extractVideoId(videoUrl);
+    if (!videoId) return;
+
+    const failKey = `${YT_FAIL_PREFIX}${videoId}`;
+    const count = await redis.incr(failKey);
+    await redis.expire(failKey, YT_BLACKLIST_TTL_SECONDS);
+
+    if (count >= YT_FAIL_THRESHOLD) {
+      await redis.set(
+        `${YT_BLACKLIST_PREFIX}${videoId}`,
+        "1",
+        "EX",
+        YT_BLACKLIST_TTL_SECONDS,
+      );
+      console.log(
+        `🚫 YouTube blacklisted: ${videoId} (${count} failures, 48h TTL)`,
+      );
+    }
+  } catch {
+    // Silent — don't break pipeline for blacklist errors
+  }
+}
+
+/**
+ * Extract video ID from YouTube URL
+ */
+function extractVideoId(url: string): string | null {
+  try {
+    const match = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    );
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Convert YouTube discovered topics to NewsArticle format
@@ -55,8 +123,20 @@ export async function discoverYouTubeTopics(
 
   const uniqueTopics: NewsArticle[] = [];
 
+  let blacklistedCount = 0;
+
   for (const topic of topics) {
     if (uniqueTopics.length >= maxTopics) break;
+
+    // P0-3: Check Redis blacklist BEFORE expensive duplicate check
+    const blacklisted = await isBlacklisted(topic.sourceUrl);
+    if (blacklisted) {
+      blacklistedCount++;
+      console.log(
+        `  🚫 YouTube blacklisted (skip): ${topic.topic.substring(0, 50)}...`,
+      );
+      continue;
+    }
 
     const article = topicToNewsArticle(topic);
 
@@ -72,6 +152,12 @@ export async function discoverYouTubeTopics(
     uniqueTopics.push(article);
     console.log(
       `  ✅ Unique YouTube topic: ${topic.topic.substring(0, 50)}...`,
+    );
+  }
+
+  if (blacklistedCount > 0) {
+    console.log(
+      `  🚫 ${blacklistedCount} YouTube video blacklist nedeniyle atlandı`,
     );
   }
 

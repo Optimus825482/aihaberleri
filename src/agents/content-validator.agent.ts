@@ -228,12 +228,12 @@ export class ContentValidatorAgent extends BaseAgent<
       reasons.push(`insufficient_tr_keywords (${sc.tr.keywords?.length || 0})`);
     }
 
-    // ── 8. ZERO-SOURCE WARNING (not a hard reject, but flag) ──
+    // ── 8. ZERO-SOURCE HARD REJECT ──
     if (article.hasNoExternalSources) {
+      reasons.push("zero_external_sources");
       this.logger.warn(
-        `⚠️ Article has no external sources — content is 100% LLM-generated: "${article.title.substring(0, 50)}"`,
+        `🚫 Article REJECTED — no external sources (100% LLM-generated): "${article.title.substring(0, 50)}"`,
       );
-      // Not rejecting — DatabasePublisher handles this with its own quality gate
     }
 
     return reasons;

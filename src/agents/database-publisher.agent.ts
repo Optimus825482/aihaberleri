@@ -526,6 +526,18 @@ export class DatabasePublisherAgent extends BaseAgent<
             status: "PUBLISHED",
           });
 
+          // P1-6: Increment real-time published counter in Redis
+          try {
+            const redis = getRedis();
+            if (redis && article.agentLogId) {
+              const counterKey = `pipeline:published:${article.agentLogId}`;
+              await redis.incr(counterKey);
+              await redis.expire(counterKey, 3600); // 1h TTL
+            }
+          } catch {
+            // Non-critical — don't break publishing
+          }
+
           this.logger.success(
             `Published: ${createdArticle.title.substring(0, 50)}... (${createdArticle.slug})`,
           );
