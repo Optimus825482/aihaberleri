@@ -36,6 +36,12 @@ export const AdSlot = ({
   minHeight = 120,
   label,
 }: AdSlotProps) => {
+  // ============================================================
+  // ⛔ ADSENSE CEZASI AKTIF — TÜM REKLAMLAR DEVRE DIŞI
+  // Ceza süresi bitince bu return'u kaldır.
+  // ============================================================
+  return null;
+
   const pathname = usePathname();
   const [adElement, setAdElement] = useState<HTMLModElement | null>(null);
   const [isInViewport, setIsInViewport] = useState(false);
