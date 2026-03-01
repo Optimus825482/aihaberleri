@@ -21,8 +21,9 @@
 
 export const AD_SLOTS = {
   // Dedicated mobile sticky slot (override via env when separate AdSense unit is ready)
+  // ⚠️ Eski fallback "1563878275" BANNER_TOP ile aynıydı → 400 hatası veriyordu
   _STICKY_BOTTOM_MOBILE_SLOT:
-    process.env.NEXT_PUBLIC_ADSENSE_SLOT_STICKY_BOTTOM_MOBILE || "1563878275",
+    process.env.NEXT_PUBLIC_ADSENSE_SLOT_STICKY_BOTTOM_MOBILE || "2050458858",
 
   // ─── Ana Sayfa ───────────────────────
   /** TR ana sayfa — trending altı banner */
@@ -55,9 +56,12 @@ export const AD_SLOTS = {
   INFEED_GENERAL: "6653849624",
 
   // ─── Site Geneli ─────────────────────
-  /** Mobil yapışkan alt reklam — Görüntülü (display) tip olmalı, feed slot sticky'de 400 verir */
+  /** Mobil yapışkan alt reklam — Görüntülü (display) tip olmalı, feed slot sticky'de 400 verir
+   *  ⚠️ BANNER_TOP (1563878275) ile AYNI slot kullanılmamalı — ayrı unit şart!
+   *  Geçici: ARTICLE_BOTTOM (2050458858) kullanılıyor, AdSense'ten yeni slot açılınca env ile override et
+   */
   STICKY_BOTTOM_MOBILE:
-    process.env.NEXT_PUBLIC_ADSENSE_SLOT_STICKY_BOTTOM_MOBILE || "1563878275",
+    process.env.NEXT_PUBLIC_ADSENSE_SLOT_STICKY_BOTTOM_MOBILE || "2050458858",
 } as const;
 
 export type AdSlotKey = keyof typeof AD_SLOTS;

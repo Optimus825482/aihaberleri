@@ -128,6 +128,17 @@ export default async function EnCategoryPage({ params }: CategoryPageProps) {
                             </p>
                         </div>
                     )}
+
+                    {/* Multiplex — end-of-page recommendations */}
+                    <div className="mt-10">
+                        <AdSlot
+                            slot={AD_SLOTS.MULTIPLEX_RELATED}
+                            format="autorelaxed"
+                            minHeight={200}
+                            label="You May Also Like"
+                            className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+                        />
+                    </div>
                 </section>
             </main>
         </div>

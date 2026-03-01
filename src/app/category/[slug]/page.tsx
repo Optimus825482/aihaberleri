@@ -115,6 +115,17 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               </p>
             </div>
           )}
+
+          {/* Multiplex — sayfa sonu öneriler */}
+          <div className="mt-10">
+            <AdSlot
+              slot={AD_SLOTS.MULTIPLEX_RELATED}
+              format="autorelaxed"
+              minHeight={200}
+              label="Bunları da Okuyun"
+              className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+            />
+          </div>
         </section>
       </main>
     </div>
