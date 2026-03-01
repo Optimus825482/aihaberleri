@@ -563,7 +563,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 1,
     requiresTranslation: true,
     priority: 5,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): not valid XML/RSS
     tags: ["academic", "human-centered-ai", "stanford", "policy"],
   },
   {
@@ -576,7 +576,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.5,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["academic", "nlp", "scientific-ai", "open-source"],
   },
   {
@@ -602,7 +602,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.5,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 500
     tags: ["academic", "robotics", "ml", "carnegie-mellon"],
   },
   {
@@ -615,7 +615,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.3,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["standards", "safety", "governance", "us-government"],
   },
 
@@ -656,7 +656,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.5,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["official", "llama", "meta", "research"],
   },
   {
@@ -669,7 +669,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 1,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["watson", "enterprise", "analytics", "ibm"],
   },
   {
@@ -682,7 +682,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.5,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["hardware", "optimization", "edge-ai", "intel"],
   },
   {
@@ -749,7 +749,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 2,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["academic", "explainer", "public-understanding"],
   },
 
@@ -764,7 +764,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.2,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["weekly", "curated", "newsletter"],
   },
   {
@@ -790,7 +790,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 3,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): not valid XML/RSS
     tags: ["industry", "news-wire", "press-releases"],
   },
   {
@@ -816,7 +816,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 2,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): not valid XML/RSS
     tags: ["curated", "daily-digest", "links"],
   },
 
@@ -831,7 +831,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.3,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["education", "deep-learning", "jeremy-howard", "practical"],
   },
   {
@@ -844,7 +844,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 3,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): not valid XML/RSS
     tags: ["publishing", "education", "programming", "broad"],
   },
   {
@@ -857,7 +857,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.5,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["education", "online-learning", "courses"],
   },
   {
@@ -870,7 +870,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.5,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["competitions", "data-science", "community", "google"],
   },
 
@@ -913,7 +913,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 2,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): HTTP 404
     tags: ["india", "finance-tech", "business"],
   },
   {
@@ -967,7 +967,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 0.5,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-01): unreachable
     tags: ["ethics", "fairness", "bias", "accountability"],
   },
 ];

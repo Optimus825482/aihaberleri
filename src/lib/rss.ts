@@ -412,11 +412,7 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://wandb.ai/fully-connected/rss.xml",
     language: "en",
   },
-  {
-    name: "Hacker News - AI",
-    url: "https://hnrss.org/newest?q=AI+OR+GPT+OR+LLM+OR+machine+learning+OR+OpenAI+OR+Anthropic+OR+Claude+OR+Gemini&points=50",
-    language: "en",
-  },
+  // ❌ Hacker News - AI duplicate removed (same URL as line 325)
   {
     name: "r/singularity",
     url: "https://www.reddit.com/r/singularity/.rss",
@@ -447,11 +443,8 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://jalammar.github.io/feed.xml",
     language: "en",
   },
-  {
-    name: "Cohere Blog",
-    url: "https://cohere.com/blog/rss.xml",
-    language: "en",
-  },
+  // ❌ Cohere Blog - DISABLED: not valid XML/RSS (tested 2026-03-01)
+  // { name: "Cohere Blog", url: "https://cohere.com/blog/rss.xml", language: "en" },
   {
     name: "Replicate Blog",
     url: "https://replicate.com/blog/rss",
@@ -479,31 +472,19 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://news.mit.edu/rss/topic/artificial-intelligence2",
     language: "en",
   },
-  {
-    name: "Stanford HAI",
-    url: "https://hai.stanford.edu/news/rss.xml",
-    language: "en",
-  },
-  {
-    name: "AI2 (Allen Institute)",
-    url: "https://allenai.org/blog/rss.xml",
-    language: "en",
-  },
+  // ❌ Stanford HAI - DISABLED: not valid XML/RSS (tested 2026-03-01)
+  // { name: "Stanford HAI", url: "https://hai.stanford.edu/news/rss.xml", language: "en" },
+  // ❌ AI2 (Allen Institute) - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "AI2 (Allen Institute)", url: "https://allenai.org/blog/rss.xml", language: "en" },
   {
     name: "arXiv cs.AI",
     url: "http://export.arxiv.org/rss/cs.AI",
     language: "en",
   },
-  {
-    name: "CMU AI",
-    url: "https://www.cs.cmu.edu/ai/feed",
-    language: "en",
-  },
-  {
-    name: "NIST AI",
-    url: "https://www.nist.gov/artificial-intelligence/rss-feed",
-    language: "en",
-  },
+  // ❌ CMU AI - DISABLED: HTTP 500 (tested 2026-03-01)
+  // { name: "CMU AI", url: "https://www.cs.cmu.edu/ai/feed", language: "en" },
+  // ❌ NIST AI - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "NIST AI", url: "https://www.nist.gov/artificial-intelligence/rss-feed", language: "en" },
 
   // 🏢 Corporate AI Blogs (new endpoints)
   {
@@ -516,21 +497,12 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://aws.amazon.com/blogs/ai/feed/",
     language: "en",
   },
-  {
-    name: "Meta AI (FB News)",
-    url: "https://about.fb.com/news/category/ai/feed/",
-    language: "en",
-  },
-  {
-    name: "IBM Developer AI",
-    url: "https://developer.ibm.com/analytics/feed/",
-    language: "en",
-  },
-  {
-    name: "Intel AI Blog",
-    url: "https://www.intel.com/content/www/us/en/artificial-intelligence/ai-blog/rss.xml",
-    language: "en",
-  },
+  // ❌ Meta AI (FB News) - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "Meta AI (FB News)", url: "https://about.fb.com/news/category/ai/feed/", language: "en" },
+  // ❌ IBM Developer AI - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "IBM Developer AI", url: "https://developer.ibm.com/analytics/feed/", language: "en" },
+  // ❌ Intel AI Blog - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "Intel AI Blog", url: "https://www.intel.com/content/www/us/en/artificial-intelligence/ai-blog/rss.xml", language: "en" },
   {
     name: "DataRobot Blog",
     url: "https://www.datarobot.com/blog/rss/",
@@ -553,60 +525,36 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
     language: "en",
   },
-  {
-    name: "The Conversation - AI",
-    url: "https://theconversation.com/us/topics/artificial-intelligence-764/feed",
-    language: "en",
-  },
+  // ❌ The Conversation - AI - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "The Conversation - AI", url: "https://theconversation.com/us/topics/artificial-intelligence-764/feed", language: "en" },
 
   // 🤖 Specialized AI Publications
-  {
-    name: "AI Weekly",
-    url: "https://aiweekly.co/feed/",
-    language: "en",
-  },
+  // ❌ AI Weekly - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "AI Weekly", url: "https://aiweekly.co/feed/", language: "en" },
   {
     name: "DailyAI",
     url: "https://dailyai.com/feed/",
     language: "en",
   },
-  {
-    name: "AIwire",
-    url: "https://aiwire.org/feed/",
-    language: "en",
-  },
+  // ❌ AIwire - DISABLED: not valid XML/RSS (tested 2026-03-01)
+  // { name: "AIwire", url: "https://aiwire.org/feed/", language: "en" },
   {
     name: "AI Time Journal",
     url: "https://www.aitimejournal.com/feed/",
     language: "en",
   },
-  {
-    name: "InsideAI",
-    url: "https://inside.com/ai/feed/",
-    language: "en",
-  },
+  // ❌ InsideAI - DISABLED: not valid XML/RSS (tested 2026-03-01)
+  // { name: "InsideAI", url: "https://inside.com/ai/feed/", language: "en" },
 
   // 📚 Education & Learning
-  {
-    name: "fast.ai Blog",
-    url: "https://www.fast.ai/feed.xml",
-    language: "en",
-  },
-  {
-    name: "O'Reilly",
-    url: "https://www.oreilly.com/feed/",
-    language: "en",
-  },
-  {
-    name: "Coursera Blog",
-    url: "https://www.coursera.org/blog/feed",
-    language: "en",
-  },
-  {
-    name: "Kaggle Blog",
-    url: "https://www.kaggle.com/blog/feed",
-    language: "en",
-  },
+  // ❌ fast.ai Blog - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "fast.ai Blog", url: "https://www.fast.ai/feed.xml", language: "en" },
+  // ❌ O'Reilly - DISABLED: not valid XML/RSS (tested 2026-03-01)
+  // { name: "O'Reilly", url: "https://www.oreilly.com/feed/", language: "en" },
+  // ❌ Coursera Blog - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "Coursera Blog", url: "https://www.coursera.org/blog/feed", language: "en" },
+  // ❌ Kaggle Blog - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "Kaggle Blog", url: "https://www.kaggle.com/blog/feed", language: "en" },
 
   // 🔧 Open Source & Technical
   {
@@ -621,11 +569,8 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://indianexpress.com/section/technology/artificial-intelligence/feed/",
     language: "en",
   },
-  {
-    name: "Mint - AI",
-    url: "https://www.livemint.com/rss/technology/artificial-intelligence/feed",
-    language: "en",
-  },
+  // ❌ Mint - AI - DISABLED: HTTP 404 (tested 2026-03-01)
+  // { name: "Mint - AI", url: "https://www.livemint.com/rss/technology/artificial-intelligence/feed", language: "en" },
   {
     name: "France 24 - AI",
     url: "https://www.france24.com/en/tag/artificial-intelligence/rss",
@@ -643,11 +588,8 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://www.partnershiponai.org/feed/",
     language: "en",
   },
-  {
-    name: "AI Ethics",
-    url: "https://aiethics.ai/feed/",
-    language: "en",
-  },
+  // ❌ AI Ethics - DISABLED: fetch failed / unreachable (tested 2026-03-01)
+  // { name: "AI Ethics", url: "https://aiethics.ai/feed/", language: "en" },
 
   // ========================================
   // TIER 6: MULTI-LANGUAGE AI SOURCES
@@ -673,11 +615,8 @@ export const AI_NEWS_RSS_FEEDS = [
   },
 
   // 🇨🇳 Chinese AI Sources
-  {
-    name: "机器之心 (Synced China)",
-    url: "https://www.jiqizhixin.com/rss",
-    language: "zh",
-  },
+  // ❌ 机器之心 (Synced China) - DISABLED: not valid XML/RSS (tested 2026-03-01)
+  // { name: "机器之心 (Synced China)", url: "https://www.jiqizhixin.com/rss", language: "zh" },
   {
     name: "量子位 (QbitAI)",
     url: "https://www.qbitai.com/feed",
