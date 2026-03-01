@@ -76,3 +76,4 @@ __pycache__/
 *.pyc
 tsc-errors.txt
 tsc-output.txt
+worker-*.txt

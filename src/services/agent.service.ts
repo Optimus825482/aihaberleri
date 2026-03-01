@@ -152,18 +152,41 @@ export async function executeNewsAgent(
 
     const newsArticles = await fetchAINews(categorySlug);
 
-    // YouTube topics
+    // YouTube topics — skip when ALL RSS feeds are unchanged (saves ~10-15s/cycle)
     let youtubeTopics: typeof newsArticles = [];
-    try {
-      const { discoverYouTubeTopics } = await import("@/lib/youtube-pipeline");
-      youtubeTopics = await discoverYouTubeTopics(72, 15);
-      if (youtubeTopics.length > 0) {
-        await liveLog.rss.info(
-          `${youtubeTopics.length} YouTube konusu keşfedildi`,
-        );
+    let youtubeSkipped = false;
+
+    if (newsArticles.length === 0) {
+      // Check Redis flag set by fetchAllRSSFeeds
+      try {
+        const redis = getRedis();
+        if (redis) {
+          const allUnchanged = await redis.get("rss:all_feeds_unchanged");
+          if (allUnchanged === "1") {
+            youtubeSkipped = true;
+            await liveLog.rss.info(
+              "📋 Tüm RSS feed'ler değişmemiş — YouTube tarama atlanıyor",
+            );
+          }
+        }
+      } catch {
+        // Non-critical — proceed with YouTube scan
       }
-    } catch (ytError: any) {
-      await liveLog.rss.warn(`YouTube tarama hatası: ${ytError.message}`);
+    }
+
+    if (!youtubeSkipped) {
+      try {
+        const { discoverYouTubeTopics } =
+          await import("@/lib/youtube-pipeline");
+        youtubeTopics = await discoverYouTubeTopics(72, 15);
+        if (youtubeTopics.length > 0) {
+          await liveLog.rss.info(
+            `${youtubeTopics.length} YouTube konusu keşfedildi`,
+          );
+        }
+      } catch (ytError: any) {
+        await liveLog.rss.warn(`YouTube tarama hatası: ${ytError.message}`);
+      }
     }
 
     // Merge RSS + YouTube

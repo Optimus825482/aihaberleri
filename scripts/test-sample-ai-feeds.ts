@@ -103,8 +103,8 @@ async function testSampleFeeds() {
 
       const items = await fetchRSSFeed(feed.url, feed.name, 1);
 
-      if (items.length === 0) {
-        console.log(`   ⚠️  UYARI: Feed boş`);
+      if (!items || items.length === 0) {
+        console.log(`   ⚠️  UYARI: Feed boş veya değişmemiş (HTTP 304)`);
         results.empty.push(feed.name);
       } else {
         console.log(`   ✅ BAŞARILI: ${items.length} haber bulundu`);

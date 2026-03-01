@@ -544,19 +544,26 @@ function rssCursorKey(feedUrl: string): string {
 }
 
 /**
- * Fetch and parse RSS feed with retry mechanism
- * Known unreliable feeds get reduced retries and shorter timeouts
+ * Fetch and parse RSS feed with retry mechanism + HTTP conditional requests.
+ * Known unreliable feeds get reduced retries and shorter timeouts.
+ *
+ * Returns:
+ *  - RSSItem[]  → items fetched
+ *  - null       → HTTP 304 Not Modified (feed unchanged at server level)
  */
 const UNRELIABLE_FEEDS = new Set([
   "https://www.jiqizhixin.com/rss",
   "https://www.qbitai.com/feed",
 ]);
 
+const HTTP_CACHE_PREFIX = "rss:http:";
+const HTTP_CACHE_TTL = 7 * 24 * 60 * 60; // 7 days
+
 export async function fetchRSSFeed(
   feedUrl: string,
   sourceName: string,
   retries: number = 2,
-): Promise<RSSItem[]> {
+): Promise<RSSItem[] | null> {
   let lastError: any;
 
   // Reduce retries and timeout for known unreliable feeds
@@ -564,20 +571,69 @@ export async function fetchRSSFeed(
   const effectiveRetries = isUnreliable ? 1 : retries;
   const timeout = isUnreliable ? 8000 : 15000;
 
+  // ── Load cached HTTP ETag/Last-Modified from Redis ──
+  let cachedETag: string | null = null;
+  let cachedLastModified: string | null = null;
+  const redis = getRedis();
+  const httpCacheKey = `${HTTP_CACHE_PREFIX}${rssCursorKey(feedUrl).replace("rss:cursor:", "")}`;
+
+  try {
+    if (redis) {
+      const cached = await redis.get(httpCacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        cachedETag = parsed.etag || null;
+        cachedLastModified = parsed.lastModified || null;
+      }
+    }
+  } catch {
+    // Non-critical — proceed without conditional headers
+  }
+
   for (let attempt = 0; attempt <= effectiveRetries; attempt++) {
     try {
-      console.log(
-        `📡 RSS feed okunuyor: ${sourceName}${attempt > 0 ? ` (deneme ${attempt + 1})` : ""}`,
-      );
+      // Build conditional headers for HTTP 304 support
+      const conditionalHeaders: Record<string, string> = {};
+      if (cachedETag) conditionalHeaders["If-None-Match"] = cachedETag;
+      if (cachedLastModified)
+        conditionalHeaders["If-Modified-Since"] = cachedLastModified;
 
       const response = await axios.get(feedUrl, {
         timeout,
         headers: {
           "User-Agent": "Mozilla/5.0 (compatible; AINewsBot/1.0)",
           Accept: "application/rss+xml, application/xml, text/xml, */*",
+          ...conditionalHeaders,
         },
-        validateStatus: (status) => status === 200,
+        validateStatus: (status) => status === 200 || status === 304,
       });
+
+      // ── HTTP 304: Feed unchanged at server level → skip entirely ──
+      if (response.status === 304) {
+        console.log(`⚡ HTTP 304: ${sourceName} (değişmemiş)`);
+        return null; // Sentinel: unchanged at HTTP level
+      }
+
+      // ── Save new ETag/Last-Modified for next cycle ──
+      try {
+        if (redis) {
+          const newETag = response.headers["etag"] || null;
+          const newLastModified = response.headers["last-modified"] || null;
+          if (newETag || newLastModified) {
+            await redis.set(
+              httpCacheKey,
+              JSON.stringify({
+                etag: newETag,
+                lastModified: newLastModified,
+              }),
+              "EX",
+              HTTP_CACHE_TTL,
+            );
+          }
+        }
+      } catch {
+        // Non-critical
+      }
 
       const xml = response.data;
       const parsed = await parseStringPromise(xml, {
@@ -622,7 +678,7 @@ export async function fetchRSSFeed(
     } catch (error: any) {
       lastError = error;
 
-      if (attempt < retries) {
+      if (attempt < effectiveRetries) {
         console.warn(
           `⚠️  Hata (${sourceName}), tekrar deneniyor... ${error.message}`,
         );
@@ -722,6 +778,7 @@ export async function fetchAllRSSFeeds(
   let completed = 0;
   let totalSkipped = 0;
   let feedsUnchanged = 0;
+  let http304Count = 0;
   const startTime = Date.now();
 
   for (let i = 0; i < feeds.length; i += maxConcurrent) {
@@ -735,7 +792,16 @@ export async function fetchAllRSSFeeds(
       const feed = batch[j];
       const result = results[j];
 
-      if (result.status !== "fulfilled" || result.value.length === 0) continue;
+      if (result.status !== "fulfilled") continue;
+
+      // null = HTTP 304 (feed unchanged at server level)
+      if (result.value === null) {
+        feedsUnchanged++;
+        http304Count++;
+        continue;
+      }
+
+      if (result.value.length === 0) continue;
 
       const items = result.value; // newest-first (slice(0,15) from fetchRSSFeed)
       const lastSeenLink = feedCursors.get(feed.url) ?? null;
@@ -792,10 +858,28 @@ export async function fetchAllRSSFeeds(
   const duration = ((Date.now() - startTime) / 1000).toFixed(1);
   console.log(`\n📊 RSS Özeti:`);
   console.log(`   Toplam feed: ${feeds.length}`);
-  console.log(`   Değişmemiş (atlandı): ${feedsUnchanged}`);
+  console.log(
+    `   Değişmemiş (atlandı): ${feedsUnchanged}${http304Count > 0 ? ` (${http304Count} HTTP 304)` : ""}`,
+  );
   console.log(`   Zaten görülmüş item: ${totalSkipped}`);
   console.log(`   Yeni haber: ${allItems.length}`);
   console.log(`   Süre: ${duration}s`);
+
+  // ── Set "all feeds unchanged" flag for YouTube skip optimization ──
+  if (redis) {
+    try {
+      if (feedsUnchanged >= feeds.length && allItems.length === 0) {
+        await redis.set("rss:all_feeds_unchanged", "1", "EX", 600); // 10min TTL
+        console.log(
+          `📋 rss:all_feeds_unchanged = 1 (tüm feed'ler değişmemiş)`,
+        );
+      } else {
+        await redis.del("rss:all_feeds_unchanged");
+      }
+    } catch {
+      // Non-critical
+    }
+  }
 
   return allItems;
 }

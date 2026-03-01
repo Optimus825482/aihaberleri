@@ -501,7 +501,7 @@ async function startWorker() {
         attempt: `${job.attemptsMade + 1}/${job.opts.attempts || 3}`,
       });
 
-      // P1-7: Smart cycle timing — check consecutive empty cycles
+      // P1-7: Smart cycle timing — progressive delay + nighttime awareness
       try {
         const redis = (await import("@/lib/redis")).getRedis();
         if (redis) {
@@ -509,12 +509,35 @@ async function startWorker() {
             (await redis.get("pipeline:consecutive_empties")) || "0",
             10,
           );
+
+          // ── Nighttime check: 00:00-06:00 TRT (UTC+3) ──
+          const now = new Date();
+          const turkeyHour = (now.getUTCHours() + 3) % 24;
+          const isNighttime = turkeyHour >= 0 && turkeyHour < 6;
+
+          let totalDelayMin = 0;
+          const reasons: string[] = [];
+
+          // Empty cycle progressive delay (threshold: 2+ empties)
           if (emptyCount >= 2) {
-            const delayMinutes = Math.min(emptyCount * 3, 15); // 6min, 9min, 12min, max 15min
+            const emptyDelay = Math.min(emptyCount * 3, 30); // max 30min (was 15)
+            totalDelayMin += emptyDelay;
+            reasons.push(`${emptyCount} boş döngü (+${emptyDelay}dk)`);
+          }
+
+          // Nighttime base delay: 15 min extra between 00-06 TRT
+          if (isNighttime) {
+            totalDelayMin += 15;
+            reasons.push(`gece modu ${turkeyHour}:xx TRT (+15dk)`);
+          }
+
+          if (totalDelayMin > 0) {
+            // Cap total delay at 45 minutes
+            totalDelayMin = Math.min(totalDelayMin, 45);
             log.info(
-              `⏳ P1-7: ${emptyCount} ardışık boş döngü — ${delayMinutes}dk bekleniyor...`,
+              `⏳ P1-7: ${reasons.join(" + ")} — toplam ${totalDelayMin}dk bekleniyor...`,
             );
-            await new Promise((r) => setTimeout(r, delayMinutes * 60 * 1000));
+            await new Promise((r) => setTimeout(r, totalDelayMin * 60 * 1000));
           }
         }
       } catch {
