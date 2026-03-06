@@ -161,6 +161,7 @@ RUN npm install --no-save tsx typescript --legacy-peer-deps 2>/dev/null && \
 
 COPY --link --chown=worker:nodejs prisma ./prisma
 COPY --link --chown=worker:nodejs src ./src
+COPY --link --chown=worker:nodejs scripts/worker-healthcheck.js ./scripts/worker-healthcheck.js
 COPY --link --chown=worker:nodejs tsconfig.json ./tsconfig.json
 
 ENV NODE_ENV=production \
