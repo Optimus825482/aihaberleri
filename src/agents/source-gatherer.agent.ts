@@ -19,6 +19,7 @@ import { BaseAgent, AgentResult } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
 import { searxngSearch, type SearXNGResult } from "@/lib/searxng";
 import { batchExtract, filterQualityResults } from "@/lib/tavily-extract";
+import { tavilySearch } from "@/lib/tavily";
 import axios from "axios";
 import type { UniqueArticle } from "./duplicate-detector.agent";
 import { exaSearch } from "@/lib/exa";
@@ -522,6 +523,38 @@ export class SourceGathererAgent extends BaseAgent<
       this.logger.info(
         `📋 Fallback: ${candidateUrls.length} candidates from raw SearXNG scores`,
       );
+    }
+
+    if (candidateUrls.length === 0) {
+      this.logger.warn(
+        `⚠️ SearXNG produced no candidates, trying Tavily search fallback`,
+      );
+
+      try {
+        const tavilyResults = await tavilySearch(keywords, {
+          max_results: 5,
+        });
+
+        for (const result of tavilyResults) {
+          const normalizedUrl = this.normalizeUrl(result.url);
+          if (seenUrls.has(normalizedUrl)) continue;
+          if (this.shouldSkipUrl(result.url)) continue;
+
+          seenUrls.add(normalizedUrl);
+          candidateUrls.push({
+            title: result.title,
+            url: result.url,
+            relevanceScore: Math.max(25, Math.round(result.score * 100)),
+          });
+        }
+
+        this.logger.info(
+          `📋 Tavily fallback: ${candidateUrls.length} candidates collected`,
+        );
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`⚠️ Tavily fallback failed: ${msg}`);
+      }
     }
 
     candidateUrls.sort((a, b) => b.relevanceScore - a.relevanceScore);
