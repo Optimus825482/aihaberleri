@@ -11,14 +11,19 @@ import {
     Search,
     Image as ImageIcon,
     Database,
+    FileText,
     CheckCircle2,
     Circle,
     Loader2,
+    Share2,
+    ShieldCheck,
     XCircle,
     Zap,
     Clock,
+    TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PIPELINE_STEP_DEFINITIONS, type PipelineStepId } from "@/lib/pipeline-registry";
 
 interface AgentStep {
     id: string;
@@ -41,14 +46,34 @@ interface PipelineState {
     totalDuration?: number;
 }
 
-const DEFAULT_STEPS: AgentStep[] = [
-    { id: "duplicate-detector", name: "duplicate-detector", displayName: "Duplikat Tespiti", icon: Copy, status: "pending" },
-    { id: "relevance-filter", name: "relevance-filter", displayName: "Alakalılık Filtresi", icon: Filter, status: "pending" },
-    { id: "trend-enrichment", name: "trend-enrichment", displayName: "Trend Zenginleştirme", icon: Globe, status: "pending" },
-    { id: "content-enricher", name: "content-enricher", displayName: "İçerik Zenginleştirme", icon: Search, status: "pending" },
-    { id: "visual-generator", name: "visual-generator", displayName: "Görsel Oluşturma", icon: ImageIcon, status: "pending" },
-    { id: "database-publisher", name: "database-publisher", displayName: "Yayınlama", icon: Database, status: "pending" },
+const LEGACY_CONTENT_ENRICHER_ID = "content-enricher";
+
+const LEGACY_CONTENT_ENRICHER_STEP_IDS: PipelineStepId[] = [
+    "source-gatherer",
+    "content-synthesizer",
+    "content-validator",
 ];
+
+const STEP_ICON_BY_ID: Record<PipelineStepId, React.ElementType> = {
+    "duplicate-detector": Copy,
+    "relevance-filter": Filter,
+    "trend-enrichment": Globe,
+    "source-gatherer": Search,
+    "content-synthesizer": FileText,
+    "content-validator": ShieldCheck,
+    "visual-generator": ImageIcon,
+    "seo-optimizer": TrendingUp,
+    "database-publisher": Database,
+    "social-share": Share2,
+};
+
+const DEFAULT_STEPS: AgentStep[] = PIPELINE_STEP_DEFINITIONS.map((step) => ({
+    id: step.id,
+    name: step.name,
+    displayName: step.displayName,
+    icon: STEP_ICON_BY_ID[step.id] ?? Circle,
+    status: "pending",
+}));
 
 const STEP_META_BY_ID = DEFAULT_STEPS.reduce<Record<string, Pick<AgentStep, "displayName" | "icon" | "name">>>((acc, step) => {
     acc[step.id] = {
@@ -59,24 +84,84 @@ const STEP_META_BY_ID = DEFAULT_STEPS.reduce<Record<string, Pick<AgentStep, "dis
     return acc;
 }, {});
 
+const normalizeStepRecord = (rawStep: any, overrideId?: string): AgentStep => {
+    const id = overrideId ?? rawStep?.id ?? "unknown-step";
+    const meta = STEP_META_BY_ID[id] ?? {};
+
+    return {
+        id,
+        name: rawStep?.name ?? meta.name ?? id,
+        displayName: rawStep?.displayName ?? meta.displayName ?? rawStep?.name ?? id ?? "Bilinmeyen Adım",
+        icon: meta.icon ?? Circle,
+        status: rawStep?.status ?? "pending",
+        duration: rawStep?.duration,
+        itemsProcessed: rawStep?.itemsProcessed,
+        error: rawStep?.error,
+    } as AgentStep;
+};
+
+const expandLegacyContentEnricherStep = (rawStep: any): AgentStep[] => {
+    const legacyStatus = rawStep?.status ?? "pending";
+
+    return LEGACY_CONTENT_ENRICHER_STEP_IDS.map((stepId, index) => {
+        let status: AgentStep["status"] = "pending";
+
+        if (legacyStatus === "completed" || legacyStatus === "skipped") {
+            status = legacyStatus;
+        } else if (legacyStatus === "error") {
+            status = index === 0 ? "error" : "pending";
+        } else if (legacyStatus === "running") {
+            status = index === 0 ? "running" : "pending";
+        }
+
+        return normalizeStepRecord(
+            {
+                ...rawStep,
+                status,
+                duration: index === 0 ? rawStep?.duration : undefined,
+                itemsProcessed: rawStep?.itemsProcessed,
+                error: index === 0 ? rawStep?.error : undefined,
+            },
+            stepId,
+        );
+    });
+};
+
 const normalizeSteps = (steps: unknown): AgentStep[] => {
     if (!Array.isArray(steps) || steps.length === 0) {
         return DEFAULT_STEPS;
     }
 
-    return steps.map((rawStep: any) => {
-        const meta = STEP_META_BY_ID[rawStep?.id] ?? {};
-        return {
-            id: rawStep?.id ?? "unknown-step",
-            name: rawStep?.name ?? meta.name ?? rawStep?.id ?? "unknown-step",
-            displayName: rawStep?.displayName ?? meta.displayName ?? rawStep?.name ?? rawStep?.id ?? "Bilinmeyen Adım",
-            icon: meta.icon ?? Circle,
-            status: rawStep?.status ?? "pending",
-            duration: rawStep?.duration,
-            itemsProcessed: rawStep?.itemsProcessed,
-            error: rawStep?.error,
-        } as AgentStep;
+    const stepMap = new Map<string, AgentStep>();
+    const hasSplitContentSteps = steps.some((step: any) =>
+        LEGACY_CONTENT_ENRICHER_STEP_IDS.includes(step?.id),
+    );
+
+    for (const rawStep of steps) {
+        if (
+            rawStep?.id === LEGACY_CONTENT_ENRICHER_ID &&
+            !hasSplitContentSteps
+        ) {
+            for (const expandedStep of expandLegacyContentEnricherStep(rawStep)) {
+                stepMap.set(expandedStep.id, expandedStep);
+            }
+            continue;
+        }
+
+        const normalizedStep = normalizeStepRecord(rawStep);
+        stepMap.set(normalizedStep.id, normalizedStep);
+    }
+
+    const orderedSteps = DEFAULT_STEPS.map((defaultStep) => {
+        const normalizedStep = stepMap.get(defaultStep.id);
+        return normalizedStep ? { ...defaultStep, ...normalizedStep } : defaultStep;
     });
+
+    const extraSteps = Array.from(stepMap.values()).filter(
+        (step) => !STEP_META_BY_ID[step.id],
+    );
+
+    return [...orderedSteps, ...extraSteps];
 };
 
 export function AgentPipelineStepper() {

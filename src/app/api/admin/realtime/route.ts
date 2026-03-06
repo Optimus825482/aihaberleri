@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdminAuth } from "@/lib/admin-auth";
+import { PIPELINE_STEP_DEFINITIONS } from "@/lib/pipeline-registry";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -141,20 +142,13 @@ async function getRealtimeData() {
   });
 
   // Agent status from queues
-  const agentQueues = [
-    { name: "relevance-filter", queue: "relevant-articles" },
-    { name: "duplicate-detector", queue: "unique-articles" },
-    { name: "content-enricher", queue: "enriched-articles" },
-    { name: "visual-generator", queue: "articles-with-visuals" },
-    { name: "database-publisher", queue: "database-publisher" },
-  ];
-
-  const agentStatus = agentQueues.map((agent) => {
+  const agentStatus = PIPELINE_STEP_DEFINITIONS.map((step) => {
     const stat = (queueStats || []).find(
-      (q: any) => q?.queueName === agent.queue,
+      (q: any) => q?.queueName === step.queueName,
     );
+
     return {
-      name: agent.name,
+      name: step.id,
       active: stat?.active || 0,
       waiting: stat?.waiting || 0,
       completed: stat?.completed || 0,

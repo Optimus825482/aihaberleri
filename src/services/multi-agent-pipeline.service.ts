@@ -6,6 +6,13 @@
  */
 
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
+import {
+  PIPELINE_HISTORY_KEY,
+  PIPELINE_STATE_KEY,
+  PIPELINE_STEP_DEFINITIONS,
+  PIPELINE_STEP_QUEUE_MAP,
+  type PipelineStepId,
+} from "@/lib/pipeline-registry";
 import { createModuleLogger } from "@/lib/agent-log-stream";
 import type { ArticleWithTopic } from "./topic-extraction.service";
 import { getRedis } from "@/lib/redis";
@@ -15,9 +22,6 @@ const logger = createModuleLogger("multi-agent-pipeline");
 // ============================================================================
 // PIPELINE STATE (Redis) — Dashboard widget'ı besler
 // ============================================================================
-
-const PIPELINE_STATE_KEY = "pipeline:current-state";
-const PIPELINE_HISTORY_KEY = "pipeline:last-run";
 
 interface PipelineStepState {
   id: string;
@@ -42,23 +46,12 @@ interface PipelineRedisState {
   runId?: string;
 }
 
-const PIPELINE_STEPS: Omit<PipelineStepState, "status">[] = [
-  { id: "duplicate-detector", name: "duplicate-detector", displayName: "Duplikat Tespiti" },
-  { id: "relevance-filter", name: "relevance-filter", displayName: "Alakalılık Filtresi" },
-  { id: "trend-enrichment", name: "trend-enrichment", displayName: "Trend Zenginleştirme" },
-  { id: "content-enricher", name: "content-enricher", displayName: "İçerik Zenginleştirme" },
-  { id: "visual-generator", name: "visual-generator", displayName: "Görsel Oluşturma" },
-  { id: "database-publisher", name: "database-publisher", displayName: "Yayınlama" },
-];
-
-const STEP_QUEUE_MAP: Record<string, string> = {
-  "duplicate-detector": QUEUE_NAMES.UNIQUE_ARTICLES,
-  "relevance-filter": QUEUE_NAMES.RELEVANT_ARTICLES,
-  "trend-enrichment": QUEUE_NAMES.TREND_ENRICHMENT,
-  "content-enricher": QUEUE_NAMES.ENRICHED_ARTICLES,
-  "visual-generator": QUEUE_NAMES.ARTICLES_WITH_VISUALS,
-  "database-publisher": QUEUE_NAMES.DATABASE_PUBLISHER,
-};
+const PIPELINE_STEPS: Omit<PipelineStepState, "status">[] =
+  PIPELINE_STEP_DEFINITIONS.map(({ id, name, displayName }) => ({
+    id,
+    name,
+    displayName,
+  }));
 
 /**
  * Write pipeline state to Redis — powers the admin dashboard widget
@@ -111,7 +104,7 @@ async function syncPipelineStateFromQueues(
 
   const stepStats = await Promise.all(
     PIPELINE_STEPS.map(async (step) => {
-      const queueName = STEP_QUEUE_MAP[step.id];
+      const queueName = PIPELINE_STEP_QUEUE_MAP[step.id as PipelineStepId];
       const queue = getQueue(queueName);
       if (!queue)
         return { step, active: 0, waiting: 0, completed: 0, failed: 0 };
@@ -135,12 +128,14 @@ async function syncPipelineStateFromQueues(
       let status: PipelineStepState["status"] = "pending";
       if (active > 0) {
         status = "running";
+      } else if (failed > 0 && completed === 0) {
+        status = "error";
+      } else if (completed > 0) {
+        status = "completed";
       } else if (currentStep !== -1 && idx < currentStep) {
         status = "completed";
       } else if (waiting > 0) {
         status = "pending";
-      } else if (hasWork && currentStep !== -1 && idx < currentStep) {
-        status = "completed";
       }
       return { ...step, status, itemsProcessed: completed };
     },
@@ -634,13 +629,21 @@ export async function waitForPipelineCompletion(
 
         // Write final completed state to Redis
         const totalDuration = Date.now() - startTime;
+        const finalizedLiveState = await syncPipelineStateFromQueues(
+          effectiveRunId,
+          pipelineStartedAt,
+          publishedCount,
+          agentLogId,
+        );
+        const lastReachedStep = finalizedLiveState.steps.reduce(
+          (lastIdx, step, idx) => (step.status === "pending" ? lastIdx : idx),
+          -1,
+        );
+
         const finalState: PipelineRedisState = {
           isRunning: false,
-          currentStep: PIPELINE_STEPS.length - 1,
-          steps: PIPELINE_STEPS.map((s) => ({
-            ...s,
-            status: "completed" as const,
-          })),
+          currentStep: lastReachedStep,
+          steps: finalizedLiveState.steps,
           startedAt: pipelineStartedAt,
           completedAt: new Date().toISOString(),
           articlesCreated: publishedCount,

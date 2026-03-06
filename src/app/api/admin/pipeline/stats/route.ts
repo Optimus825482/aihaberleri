@@ -1,35 +1,17 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
+import { PIPELINE_STEP_DEFINITIONS } from "@/lib/pipeline-registry";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = await requireAdminAuth();
-    if (session instanceof NextResponse) {
-      return session; // Return 401 response
-    }
+  if (session instanceof NextResponse) {
+    return session; // Return 401 response
+  }
 
   try {
-    // Default agent list
-    const agentNames = [
-      "content-collector",
-      "relevance-filter",
-      "duplicate-detector",
-      "content-enricher",
-      "visual-generator",
-      "database-publisher",
-    ];
-
-    const AGENT_DISPLAY_NAMES: Record<string, string> = {
-      "content-collector": "İçerik Toplayıcı",
-      "relevance-filter": "Uygunluk Filtresi",
-      "duplicate-detector": "Tekrar Dedektörü",
-      "content-enricher": "İçerik Zenginleştirici",
-      "visual-generator": "Görsel Üretici",
-      "database-publisher": "Veritabanı Yayıncısı",
-    };
-
     // Try to get queue stats (may fail if Redis not available)
     let queueStats: Array<{
       queueName: string;
@@ -126,24 +108,13 @@ export async function GET() {
       console.warn("Schedule info unavailable:", scheduleError);
     }
 
-    // Map queue stats to agent format
-    const { QUEUE_NAMES } = await import("@/lib/queue-manager");
-    const queueNameMap: Record<string, string> = {
-      "content-collector": QUEUE_NAMES.COLLECTED_ARTICLES,
-      "relevance-filter": QUEUE_NAMES.RELEVANT_ARTICLES,
-      "duplicate-detector": QUEUE_NAMES.UNIQUE_ARTICLES,
-      "content-enricher": QUEUE_NAMES.ENRICHED_ARTICLES,
-      "visual-generator": QUEUE_NAMES.ARTICLES_WITH_VISUALS,
-      "database-publisher": QUEUE_NAMES.DATABASE_PUBLISHER,
-    };
-
-    const agents = agentNames.map((name) => {
-      const queueName = queueNameMap[name];
-      const stat = queueStats.find((s) => s?.queueName === queueName);
+    // Map queue stats to registry-defined pipeline steps
+    const agents = PIPELINE_STEP_DEFINITIONS.map((step) => {
+      const stat = queueStats.find((s) => s?.queueName === step.queueName);
 
       return {
-        name,
-        displayName: AGENT_DISPLAY_NAMES[name] || name,
+        name: step.id,
+        displayName: step.displayName,
         status:
           (stat?.active ?? 0) > 0
             ? "running"

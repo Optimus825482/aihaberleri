@@ -2,60 +2,25 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { getAdminSession } from "@/lib/admin-auth";
 import { getAllQueueStats } from "@/lib/queue-manager";
+import {
+  PIPELINE_STEP_DEFINITIONS,
+  type PipelineStepId,
+} from "@/lib/pipeline-registry";
 
 export const dynamic = "force-dynamic";
 
-// Pipeline stage order for display
-const PIPELINE_STAGES = [
-  {
-    queue: "unique-articles",
-    label: "Duplicate Detector",
-    icon: "🔍",
-    shortLabel: "Dedupe",
-  },
-  {
-    queue: "relevant-articles",
-    label: "Relevance Filter",
-    icon: "🎯",
-    shortLabel: "Relevance",
-  },
-  {
-    queue: "trend-enrichment",
-    label: "Trend Enricher",
-    icon: "📈",
-    shortLabel: "Trends",
-  },
-  {
-    queue: "enriched-articles",
-    label: "Content Enricher",
-    icon: "✍️",
-    shortLabel: "Enrich",
-  },
-  {
-    queue: "articles-with-visuals",
-    label: "Visual Generator",
-    icon: "🎨",
-    shortLabel: "Visuals",
-  },
-  {
-    queue: "seo-optimization",
-    label: "SEO Optimizer",
-    icon: "🔍",
-    shortLabel: "SEO",
-  },
-  {
-    queue: "database-publisher",
-    label: "DB Publisher",
-    icon: "💾",
-    shortLabel: "Publish",
-  },
-  {
-    queue: "social-share",
-    label: "Social Share",
-    icon: "📢",
-    shortLabel: "Share",
-  },
-];
+const STEP_ICONS: Record<PipelineStepId, string> = {
+  "duplicate-detector": "🔍",
+  "relevance-filter": "🎯",
+  "trend-enrichment": "📈",
+  "source-gatherer": "🧭",
+  "content-synthesizer": "✍️",
+  "content-validator": "✅",
+  "visual-generator": "🎨",
+  "seo-optimizer": "🔎",
+  "database-publisher": "💾",
+  "social-share": "📢",
+};
 
 export async function GET() {
   const [session, adminSession] = await Promise.all([
@@ -69,8 +34,8 @@ export async function GET() {
   try {
     const allStats = await getAllQueueStats();
 
-    const stages = PIPELINE_STAGES.map((stage) => {
-      const stats = allStats.find((s) => s.queueName === stage.queue);
+    const stages = PIPELINE_STEP_DEFINITIONS.map((step) => {
+      const stats = allStats.find((s) => s.queueName === step.queueName);
       const status =
         stats && stats.active > 0
           ? "active"
@@ -83,10 +48,10 @@ export async function GET() {
                 : "idle";
 
       return {
-        queue: stage.queue,
-        label: stage.label,
-        shortLabel: stage.shortLabel,
-        icon: stage.icon,
+        queue: step.queueName,
+        label: step.displayName,
+        shortLabel: step.shortLabel,
+        icon: STEP_ICONS[step.id],
         status,
         waiting: stats?.waiting ?? 0,
         active: stats?.active ?? 0,

@@ -11,13 +11,16 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { getRedis } from "@/lib/redis";
-import { getQueueStats, QUEUE_NAMES } from "@/lib/queue-manager";
+import { getQueueStats } from "@/lib/queue-manager";
+import {
+  PIPELINE_HISTORY_KEY,
+  PIPELINE_STATE_KEY,
+  PIPELINE_STEP_DEFINITIONS,
+  PIPELINE_STEP_QUEUE_MAP,
+  type PipelineStepId,
+} from "@/lib/pipeline-registry";
 
 export const dynamic = "force-dynamic";
-
-// Redis keys for pipeline state
-const PIPELINE_STATE_KEY = "pipeline:current-state";
-const PIPELINE_HISTORY_KEY = "pipeline:last-run";
 
 export interface PipelineStep {
   id: string;
@@ -42,52 +45,17 @@ export interface PipelineState {
   runId?: string;
 }
 
-const DEFAULT_STEPS: Omit<PipelineStep, "status">[] = [
-  {
-    id: "duplicate-detector",
-    name: "duplicate-detector",
-    displayName: "Duplikat Tespiti",
-  },
-  {
-    id: "relevance-filter",
-    name: "relevance-filter",
-    displayName: "Alakalılık Filtresi",
-  },
-  {
-    id: "trend-enrichment",
-    name: "trend-enrichment",
-    displayName: "Trend Zenginleştirme",
-  },
-  {
-    id: "content-enricher",
-    name: "content-enricher",
-    displayName: "İçerik Zenginleştirme",
-  },
-  {
-    id: "visual-generator",
-    name: "visual-generator",
-    displayName: "Görsel Oluşturma",
-  },
-  {
-    id: "database-publisher",
-    name: "database-publisher",
-    displayName: "Yayınlama",
-  },
-];
-
-const STEP_QUEUE_MAP: Record<string, string> = {
-  "duplicate-detector": QUEUE_NAMES.UNIQUE_ARTICLES,
-  "relevance-filter": QUEUE_NAMES.RELEVANT_ARTICLES,
-  "trend-enrichment": QUEUE_NAMES.TREND_ENRICHMENT,
-  "content-enricher": QUEUE_NAMES.ENRICHED_ARTICLES,
-  "visual-generator": QUEUE_NAMES.ARTICLES_WITH_VISUALS,
-  "database-publisher": QUEUE_NAMES.DATABASE_PUBLISHER,
-};
+const DEFAULT_STEPS: Omit<PipelineStep, "status">[] =
+  PIPELINE_STEP_DEFINITIONS.map(({ id, name, displayName }) => ({
+    id,
+    name,
+    displayName,
+  }));
 
 async function buildLivePipelineState(): Promise<PipelineState> {
   const stepStats = await Promise.all(
     DEFAULT_STEPS.map(async (step) => {
-      const queueName = STEP_QUEUE_MAP[step.id];
+      const queueName = PIPELINE_STEP_QUEUE_MAP[step.id as PipelineStepId];
       const stats = await getQueueStats(queueName);
 
       return {
@@ -120,6 +88,10 @@ async function buildLivePipelineState(): Promise<PipelineState> {
       status = "pending";
     } else if ((stats?.active || 0) > 0) {
       status = "running";
+    } else if ((stats?.failed || 0) > 0 && (stats?.completed || 0) === 0) {
+      status = "error";
+    } else if ((stats?.completed || 0) > 0) {
+      status = "completed";
     } else if ((stats?.waiting || 0) > 0 || (stats?.delayed || 0) > 0) {
       status = "pending";
     } else if (currentStep !== -1 && index < currentStep) {

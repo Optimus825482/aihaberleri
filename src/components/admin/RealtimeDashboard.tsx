@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
 import Link from "next/link";
+import { PIPELINE_STEP_DEFINITIONS, type PipelineStepId } from "@/lib/pipeline-registry";
 
 interface RealtimeData {
   timestamp: string;
@@ -84,12 +85,60 @@ interface RealtimeData {
   };
 }
 
-const AGENT_DISPLAY_NAMES: Record<string, string> = {
-  "relevance-filter": "Alakalılık Filtresi",
-  "duplicate-detector": "Duplikat Tespiti",
-  "content-enricher": "İçerik Zenginleştirici",
-  "visual-generator": "Görsel Oluşturucu",
-  "database-publisher": "Yayınlayıcı",
+type RealtimeAgent = RealtimeData["pipeline"]["agents"][number];
+
+const LEGACY_CONTENT_ENRICHER_ID = "content-enricher";
+
+const LEGACY_CONTENT_ENRICHER_AGENT_IDS: PipelineStepId[] = [
+  "source-gatherer",
+  "content-synthesizer",
+  "content-validator",
+];
+
+const AGENT_DISPLAY_NAMES = Object.fromEntries(
+  PIPELINE_STEP_DEFINITIONS.map((step) => [step.id, step.displayName]),
+) as Record<string, string>;
+
+const normalizeAgents = (agents: RealtimeAgent[]): RealtimeAgent[] => {
+  const agentMap = new Map<string, RealtimeAgent>();
+  const hasSplitContentAgents = agents.some((agent) =>
+    LEGACY_CONTENT_ENRICHER_AGENT_IDS.includes(agent.name as PipelineStepId),
+  );
+
+  for (const agent of agents) {
+    if (agent.name === LEGACY_CONTENT_ENRICHER_ID && !hasSplitContentAgents) {
+      for (const stepId of LEGACY_CONTENT_ENRICHER_AGENT_IDS) {
+        agentMap.set(stepId, {
+          ...agent,
+          name: stepId,
+        });
+      }
+      continue;
+    }
+
+    agentMap.set(agent.name, agent);
+  }
+
+  const orderedAgents = PIPELINE_STEP_DEFINITIONS.map((step) => {
+    const normalizedAgent = agentMap.get(step.id);
+
+    return (
+      normalizedAgent ?? {
+        name: step.id,
+        active: 0,
+        waiting: 0,
+        completed: 0,
+        failed: 0,
+        isRunning: false,
+      }
+    );
+  });
+
+  const extraAgents = Array.from(agentMap.values()).filter(
+    (agent) => !AGENT_DISPLAY_NAMES[agent.name],
+  );
+
+  return [...orderedAgents, ...extraAgents];
 };
 
 const CIRCUIT_DISPLAY_NAMES: Record<string, string> = {
@@ -170,6 +219,7 @@ export function RealtimeDashboard() {
   }
 
   const { visitors, articles, pipeline } = data;
+  const normalizedAgents = normalizeAgents(pipeline.agents);
 
   return (
     <div className="space-y-6">
@@ -297,7 +347,7 @@ export function RealtimeDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {pipeline.agents.map((agent) => (
+                {normalizedAgents.map((agent) => (
                   <div key={agent.name} className="flex items-center gap-4">
                     <div
                       className={cn(

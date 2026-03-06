@@ -93,6 +93,25 @@ let databasePublisher: DatabasePublisherAgent;
 let socialShare: SocialShareAgent;
 let seoCalculatorWorker: BullMQWorker | null = null;
 
+async function setPipelineRuntimeState(isReady: boolean): Promise<void> {
+  try {
+    const redisClient = getRedis();
+    if (!redisClient) return;
+
+    await redisClient.set("pipeline:ready", isReady ? "true" : "false");
+    await redisClient.set(
+      "pipeline:agents:started",
+      isReady ? "true" : "false",
+    );
+
+    if (isReady) {
+      await redisClient.set("pipeline:start-time", new Date().toISOString());
+    }
+  } catch (error) {
+    log.warn("Pipeline runtime state güncellenemedi");
+  }
+}
+
 // ============================================================================
 // COMPACT LOGGER - Less verbose, more informative
 // ============================================================================
@@ -118,7 +137,7 @@ const log = {
 
 /**
  * Initialize multi-agent pipeline agents (10 agents total)
- * Pipeline: Relevance → Duplicate → Trend → SourceGather → Synthesize → Validate → Visual → SEO → Publish → Social
+ * Pipeline: Duplicate → Relevance → Trend → SourceGather → Synthesize → Validate → Visual → SEO → Publish → Social
  */
 async function initializeMultiAgentPipeline(): Promise<void> {
   log.info("Initializing multi-agent pipeline...");
@@ -171,7 +190,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     }
 
     log.success(
-      `Pipeline ready: ${ok}/10 agents | Relevance→Duplicate→Trend→SourceGather→Synthesize→Validate→Visual→SEO→Publish→Social`,
+      `Pipeline ready: ${ok}/10 agents | Duplicate→Relevance→Trend→SourceGather→Synthesize→Validate→Visual→SEO→Publish→Social`,
     );
 
     // FIX (12.02.2026): Clear stale recovery mode states on worker startup
@@ -191,6 +210,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
     }
   } catch (error) {
     log.error("Pipeline init failed", error);
+    await setPipelineRuntimeState(false);
     throw error;
   }
 }
@@ -200,6 +220,7 @@ async function initializeMultiAgentPipeline(): Promise<void> {
  */
 async function stopMultiAgentPipeline(): Promise<void> {
   log.info("Stopping pipeline...");
+  await setPipelineRuntimeState(false);
   await Promise.all([
     relevanceFilter?.stop(),
     duplicateDetector?.stop(),
@@ -475,10 +496,12 @@ async function startWorker() {
     await initializeMultiAgentPipeline();
     log.success("Multi-agent pipeline ready");
     pipelineReady = true;
+    await setPipelineRuntimeState(true);
   } catch (error) {
     log.error("Multi-agent pipeline init failed", error);
-    log.warn("Articles will be queued but NOT processed!");
-    // Don't exit - main worker can still run for other tasks
+    await setPipelineRuntimeState(false);
+    log.error("Worker start aborted: pipeline hazır değil");
+    process.exit(1);
   }
 
   // Log pipeline status

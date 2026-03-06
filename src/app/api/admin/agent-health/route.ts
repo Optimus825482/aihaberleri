@@ -7,6 +7,10 @@ import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
 import { db } from "@/lib/db";
 import {
+  PIPELINE_AGENT_TO_QUEUE_MAP,
+  PIPELINE_STEP_DEFINITIONS,
+} from "@/lib/pipeline-registry";
+import {
   getAllAgentHealthStatuses,
   type AgentHealthStatus,
 } from "@/services/multi-agent-pipeline.service";
@@ -96,18 +100,58 @@ export async function GET() {
     if (redis) {
       // 1. Get agent health statuses
       const agentStatuses = await getAllAgentHealthStatuses();
+      const healthByAgent = new Map(
+        agentStatuses.map((status) => [status.agentName, status]),
+      );
 
-      // Enrich with queue info
+      // Enrich registry-defined pipeline agents with queue info
+      const pipelineAgents = await Promise.all(
+        PIPELINE_STEP_DEFINITIONS.map(async (step) => {
+          const status = healthByAgent.get(step.agentName);
+          const queueHealth = await getQueueHealth(step.queueName);
+
+          return {
+            status,
+            queueHealth,
+            step,
+          };
+        }),
+      );
+
+      for (const { status, queueHealth, step } of pipelineAgents) {
+        dashboard.agents.push({
+          agentName: step.agentName,
+          isHealthy: status?.isHealthy ?? true,
+          lastSeen: status?.lastSeen ?? new Date(),
+          consecutiveFailures: status?.consecutiveFailures ?? 0,
+          inRecoveryMode: status?.inRecoveryMode ?? false,
+          queueName: step.queueName,
+          isRunning: (queueHealth?.active ?? 0) > 0,
+          lastJobTime: queueHealth?.lastJobTime ?? null,
+          jobsProcessedLastHour: queueHealth?.jobsProcessedLastHour ?? 0,
+        });
+
+        if (queueHealth) {
+          dashboard.queues.push(queueHealth);
+        }
+      }
+
+      // Preserve unknown health records that are not part of the shared registry.
       for (const status of agentStatuses) {
-        const queueName = getQueueNameForAgent(status.agentName);
+        if (PIPELINE_AGENT_TO_QUEUE_MAP[status.agentName]) {
+          continue;
+        }
+
+        const queueName =
+          PIPELINE_AGENT_TO_QUEUE_MAP[status.agentName] || "unknown";
         const queueHealth = await getQueueHealth(queueName);
 
         dashboard.agents.push({
           ...status,
           queueName,
-          isRunning: status.isHealthy && !status.inRecoveryMode,
-          lastJobTime: queueHealth?.lastJobTime || null,
-          jobsProcessedLastHour: queueHealth?.jobsProcessedLastHour || 0,
+          isRunning: (queueHealth?.active ?? 0) > 0,
+          lastJobTime: queueHealth?.lastJobTime ?? null,
+          jobsProcessedLastHour: queueHealth?.jobsProcessedLastHour ?? 0,
         });
       }
 
@@ -166,23 +210,6 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
-
-/**
- * Get queue name for agent
- */
-function getQueueNameForAgent(agentName: string): string {
-  const agentToQueue: Record<string, string> = {
-    RelevanceFilterAgent: "relevant-articles",
-    DuplicateDetectorAgent: "unique-articles",
-    TrendEnricherAgent: "enriched-articles",
-    ContentEnricherAgent: "content-enriched",
-    VisualGeneratorAgent: "articles-with-visuals",
-    SEOOptimizerAgent: "seo-optimized",
-    DatabasePublisherAgent: "ready-to-publish",
-  };
-
-  return agentToQueue[agentName] || "unknown";
 }
 
 /**
