@@ -6,6 +6,45 @@ import { executeNewsAgent } from "@/services/agent.service";
 import { getRedis } from "@/lib/redis";
 import { apiLogger } from "@/lib/logger";
 
+const WORKER_HEARTBEAT_MAX_AGE_MS = 120 * 1000;
+const STALE_ACTIVE_JOB_MAX_AGE_MS = 30 * 60 * 1000;
+
+interface WorkerHeartbeatStatus {
+  isAlive: boolean;
+  lastHeartbeat: string | null;
+  ageMs: number | null;
+}
+
+async function getWorkerHeartbeatStatus(
+  redis: ReturnType<typeof getRedis>,
+): Promise<WorkerHeartbeatStatus> {
+  if (!redis) {
+    return {
+      isAlive: false,
+      lastHeartbeat: null,
+      ageMs: null,
+    };
+  }
+
+  const heartbeat = await redis.get("worker:heartbeat");
+  if (!heartbeat) {
+    return {
+      isAlive: false,
+      lastHeartbeat: null,
+      ageMs: null,
+    };
+  }
+
+  const lastHeartbeatMs = parseInt(heartbeat, 10);
+  const ageMs = Date.now() - lastHeartbeatMs;
+
+  return {
+    isAlive: ageMs < WORKER_HEARTBEAT_MAX_AGE_MS,
+    lastHeartbeat: new Date(lastHeartbeatMs).toISOString(),
+    ageMs,
+  };
+}
+
 export async function POST(request: Request) {
   const startTime = Date.now();
   try {
@@ -104,6 +143,85 @@ export async function POST(request: Request) {
         });
         console.log("📋 Queue available, adding job...");
 
+        const workerHeartbeat = await getWorkerHeartbeatStatus(redis);
+
+        const activeJobs = await newsAgentQueue.getJobs(["active"]);
+        const staleActiveJobs = activeJobs.filter((job) => {
+          const startedAt = job.processedOn || job.timestamp || 0;
+          return Date.now() - startedAt > STALE_ACTIVE_JOB_MAX_AGE_MS;
+        });
+
+        let cleanedStaleActiveJobs = 0;
+        for (const staleJob of staleActiveJobs) {
+          console.warn(
+            `⚠️ Cleaning stale active job: ${staleJob.id} (started: ${new Date(staleJob.processedOn || staleJob.timestamp || Date.now()).toISOString()})`,
+          );
+
+          try {
+            await staleJob.moveToFailed(
+              new Error("Stale active job cleaned during manual trigger"),
+              "manual-trigger-cleanup",
+            );
+          } catch (cleanupError) {
+            console.warn(
+              `⚠️ Failed to move stale job ${staleJob.id} to failed: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`,
+            );
+          }
+
+          try {
+            await staleJob.remove();
+            cleanedStaleActiveJobs++;
+          } catch (cleanupError) {
+            console.warn(
+              `⚠️ Failed to remove stale job ${staleJob.id}: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`,
+            );
+          }
+        }
+
+        const remainingActiveJobs = await newsAgentQueue.getJobs(["active"]);
+
+        if (!workerHeartbeat.isAlive) {
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                "Worker heartbeat alınamıyor. Job kuyruğa alınmadı çünkü worker şu an çalışmıyor veya kilitlenmiş durumda.",
+              details: {
+                lastHeartbeat: workerHeartbeat.lastHeartbeat,
+                heartbeatAgeSeconds: workerHeartbeat.ageMs
+                  ? Math.floor(workerHeartbeat.ageMs / 1000)
+                  : null,
+                activeJobs: remainingActiveJobs.length,
+                staleActiveJobsCleaned: cleanedStaleActiveJobs,
+              },
+            },
+            { status: 503 },
+          );
+        }
+
+        if (remainingActiveJobs.length > 0) {
+          const oldestActiveJob = remainingActiveJobs[0];
+          const startedAt =
+            oldestActiveJob.processedOn || oldestActiveJob.timestamp;
+
+          return NextResponse.json(
+            {
+              success: false,
+              error:
+                "Agent zaten aktif olarak çalışıyor. Aynı anda ikinci bir manuel job başlatılmadı.",
+              details: {
+                activeJobId: oldestActiveJob.id,
+                activeJobName: oldestActiveJob.name,
+                activeJobStartedAt: startedAt
+                  ? new Date(startedAt).toISOString()
+                  : null,
+                staleActiveJobsCleaned: cleanedStaleActiveJobs,
+              },
+            },
+            { status: 409 },
+          );
+        }
+
         // Remove any existing jobs (including failed) to avoid conflicts
         const existingJobs = await newsAgentQueue.getJobs([
           "delayed",
@@ -171,6 +289,8 @@ export async function POST(request: Request) {
             triggeredAt: new Date().toISOString(),
             nextRun: nextRun.toISOString(),
             executionMode: "queue",
+            workerHeartbeat: workerHeartbeat.lastHeartbeat,
+            staleActiveJobsCleaned: cleanedStaleActiveJobs,
           },
         });
       } else {
