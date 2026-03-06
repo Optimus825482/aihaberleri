@@ -5,8 +5,8 @@ import { db } from "@/lib/db";
 import { executeNewsAgent } from "@/services/agent.service";
 import { getRedis } from "@/lib/redis";
 import { apiLogger } from "@/lib/logger";
+import { parseWorkerHeartbeat } from "@/lib/worker-health";
 
-const WORKER_HEARTBEAT_MAX_AGE_MS = 120 * 1000;
 const STALE_ACTIVE_JOB_MAX_AGE_MS = 30 * 60 * 1000;
 
 interface WorkerHeartbeatStatus {
@@ -26,23 +26,7 @@ async function getWorkerHeartbeatStatus(
     };
   }
 
-  const heartbeat = await redis.get("worker:heartbeat");
-  if (!heartbeat) {
-    return {
-      isAlive: false,
-      lastHeartbeat: null,
-      ageMs: null,
-    };
-  }
-
-  const lastHeartbeatMs = parseInt(heartbeat, 10);
-  const ageMs = Date.now() - lastHeartbeatMs;
-
-  return {
-    isAlive: ageMs < WORKER_HEARTBEAT_MAX_AGE_MS,
-    lastHeartbeat: new Date(lastHeartbeatMs).toISOString(),
-    ageMs,
-  };
+  return parseWorkerHeartbeat(await redis.get("worker:heartbeat"));
 }
 
 export async function POST(request: Request) {
@@ -120,11 +104,13 @@ export async function POST(request: Request) {
     const intervalSetting = await db.setting.findUnique({
       where: { key: "agent.intervalHours" },
     });
-    const intervalHours = parseInt(intervalSetting?.value || "6");
+    const intervalHours = parseFloat(intervalSetting?.value || "6");
 
     // Calculate and update next run time
     const nextRun = new Date();
-    nextRun.setHours(nextRun.getHours() + intervalHours);
+    nextRun.setTime(
+      nextRun.getTime() + Math.round(intervalHours * 60 * 60 * 1000),
+    );
 
     await db.setting.upsert({
       where: { key: "agent.nextRun" },

@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
 import { db } from "@/lib/db";
+import { parseWorkerHeartbeat } from "@/lib/worker-health";
 
 export const dynamic = "force-dynamic";
 
@@ -104,18 +105,14 @@ export async function GET() {
     // 1. Check heartbeat
     if (redis) {
       try {
-        const heartbeatData = await redis.get("worker:heartbeat");
-        if (heartbeatData) {
-          const lastHeartbeat = parseInt(heartbeatData);
-          healthStatus.heartbeat.lastSeen = new Date(
-            lastHeartbeat,
-          ).toISOString();
-          healthStatus.heartbeat.secondsSince = Math.floor(
-            (Date.now() - lastHeartbeat) / 1000,
-          );
-          healthStatus.heartbeat.isAlive =
-            healthStatus.heartbeat.secondsSince < 120; // 2 minutes threshold
-        }
+        const heartbeatState = parseWorkerHeartbeat(
+          await redis.get("worker:heartbeat"),
+        );
+        healthStatus.heartbeat.lastSeen = heartbeatState.lastHeartbeat;
+        healthStatus.heartbeat.secondsSince = heartbeatState.ageMs
+          ? Math.floor(heartbeatState.ageMs / 1000)
+          : null;
+        healthStatus.heartbeat.isAlive = heartbeatState.isAlive;
       } catch (heartbeatError) {
         // Heartbeat check failed, continue
       }
@@ -252,20 +249,10 @@ export async function GET() {
           QUEUE_NAMES.ARTICLES_WITH_VISUALS,
           QUEUE_NAMES.DATABASE_PUBLISHER,
         ]) {
-          // Check if queue has active jobs from previous stats
-          const hasActive =
-            (queueName === QUEUE_NAMES.RELEVANT_ARTICLES &&
-              healthStatus.queues.relevantArticles?.active) ||
-            (queueName === QUEUE_NAMES.UNIQUE_ARTICLES &&
-              healthStatus.queues.uniqueArticles?.active) ||
-            (queueName === QUEUE_NAMES.ENRICHED_ARTICLES &&
-              healthStatus.queues.enrichedArticles?.active) ||
-            (queueName === QUEUE_NAMES.ARTICLES_WITH_VISUALS &&
-              healthStatus.queues.articlesWithVisuals?.active);
-
-          if (hasActive) {
-            const queue = getQueue(queueName);
-            if (queue) {
+          const queue = getQueue(queueName);
+          if (queue) {
+            const activeCount = await queue.getActiveCount();
+            if (activeCount > 0) {
               try {
                 const active = await queue.getActive(0, 5);
                 healthStatus.activeJobs[queueName] = active.map((job: any) => ({

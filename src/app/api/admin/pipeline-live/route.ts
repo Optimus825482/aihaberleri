@@ -34,16 +34,22 @@ export async function GET() {
   try {
     const allStats = await getAllQueueStats();
 
+    const hasActive = allStats.some((stats) => stats.active > 0);
+    const hasWaiting = allStats.some(
+      (stats) => stats.waiting > 0 || stats.delayed > 0,
+    );
+    const hasWork = hasActive || hasWaiting;
+
     const stages = PIPELINE_STEP_DEFINITIONS.map((step) => {
       const stats = allStats.find((s) => s.queueName === step.queueName);
       const status =
         stats && stats.active > 0
           ? "active"
-          : stats && stats.waiting > 0
+          : stats && (stats.waiting > 0 || stats.delayed > 0)
             ? "waiting"
-            : stats && stats.failed > 0 && stats.completed === 0
+            : hasWork && stats && stats.failed > 0 && stats.completed === 0
               ? "failed"
-              : stats && stats.completed > 0
+              : hasWork && stats && stats.completed > 0
                 ? "completed"
                 : "idle";
 
@@ -62,8 +68,6 @@ export async function GET() {
     });
 
     // Determine overall pipeline status
-    const hasActive = stages.some((s) => s.status === "active");
-    const hasWaiting = stages.some((s) => s.status === "waiting");
     const pipelineStatus = hasActive
       ? "running"
       : hasWaiting

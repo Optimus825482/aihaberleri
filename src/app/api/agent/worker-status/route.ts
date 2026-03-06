@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
+import {
+  parseWorkerHeartbeat,
+  WORKER_HEARTBEAT_MAX_AGE_MS,
+} from "@/lib/worker-health";
 
 export const dynamic = "force-dynamic";
 
@@ -30,15 +34,15 @@ export async function GET() {
       });
     }
 
-    const lastHeartbeatTime = parseInt(heartbeat);
-    const timeSinceHeartbeat = Date.now() - lastHeartbeatTime;
-    const isAlive = timeSinceHeartbeat < 60000; // Consider alive if heartbeat < 60s ago
+    const heartbeatState = parseWorkerHeartbeat(heartbeat);
 
     return NextResponse.json({
-      workerOnline: isAlive,
-      lastHeartbeat: new Date(lastHeartbeatTime).toISOString(),
-      timeSinceHeartbeat: Math.floor(timeSinceHeartbeat / 1000), // seconds
-      threshold: 60, // seconds
+      workerOnline: heartbeatState.isAlive,
+      lastHeartbeat: heartbeatState.lastHeartbeat,
+      timeSinceHeartbeat: heartbeatState.ageMs
+        ? Math.floor(heartbeatState.ageMs / 1000)
+        : null,
+      threshold: Math.floor(WORKER_HEARTBEAT_MAX_AGE_MS / 1000),
     });
   } catch (error) {
     console.error("Worker status check error:", error);
