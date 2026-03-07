@@ -37,7 +37,6 @@ export interface ArticleWithVisuals extends EnrichedArticle {
   imageGenerationTime?: number;
 }
 
-const IMAGE_TIMEOUT = 30000; // 30 seconds per image
 const MAX_RETRIES = 3;
 const PARALLEL_CONCURRENCY = 3; // OPTIMIZED: Process 3 images at a time (faster processing)
 const RATE_LIMIT_DELAY = 1000; // OPTIMIZED: 1 second between batches (faster but safe)
@@ -250,16 +249,12 @@ export class VisualGeneratorAgent extends BaseAgent<
       // Step 2: Fetch image from Pollinations.ai with retry
       const imageUrl = await retryWithBackoff(
         () =>
-          withTimeout(
-            fetchPollinationsImage(imagePrompt, {
-              width: 1200,
-              height: 630,
-              model: "flux",
-              enhance: true,
-            }),
-            IMAGE_TIMEOUT,
-            "Pollinations image fetch timeout",
-          ),
+          fetchPollinationsImage(imagePrompt, {
+            width: 1200,
+            height: 630,
+            model: "flux",
+            enhance: true,
+          }),
         MAX_RETRIES,
       );
 

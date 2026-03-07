@@ -38,6 +38,7 @@ const PICSUM_URL = "https://picsum.photos";
 // Cache Configuration
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const CACHE_KEY_PREFIX = "pollinations:image:";
+const POLLINATIONS_REQUEST_TIMEOUT_MS = 25000;
 
 /**
  * Generate cache key from prompt using SHA-256 hash
@@ -346,7 +347,10 @@ export async function fetchPollinationsImage(
 
         // Verify image is accessible with timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 180000); // 180s timeout
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          POLLINATIONS_REQUEST_TIMEOUT_MS,
+        );
 
         try {
           const response = await fetch(imageUrl, {
@@ -449,7 +453,10 @@ async function fetchPollinationsImageAnonymous(
 
   // Fetch image to verify it exists with timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 180000); // 180s timeout - Pollinations can be VERY slow (increased from 120s)
+  const timeoutId = setTimeout(
+    () => controller.abort(),
+    POLLINATIONS_REQUEST_TIMEOUT_MS,
+  );
 
   try {
     const response = await fetch(imageUrl, {

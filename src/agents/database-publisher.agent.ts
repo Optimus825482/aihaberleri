@@ -194,6 +194,22 @@ export class DatabasePublisherAgent extends BaseAgent<
             continue;
           }
 
+          // 🛡️ IMAGE GATE: Never publish articles without a resolved image URL.
+          if (!article.imageUrl) {
+            const retryCount = article._retryCount || 0;
+            if (retryCount < MAX_PIPELINE_RETRIES) {
+              this.logger.warn(
+                `🔄 MISSING IMAGE → re-queue for retry (attempt ${retryCount + 1}): "${trContent.title.substring(0, 80)}"`,
+              );
+              rejectedForRetry.push({ article, reason: "missing_image" });
+            } else {
+              this.logger.error(
+                `🚫 PERMANENTLY REJECTED (max retries): "${trContent.title.substring(0, 80)}" — image generation failed`,
+              );
+            }
+            continue;
+          }
+
           // 🛡️ LANGUAGE GATE: TR title must be in Turkish, not English
           const isEnglishTitle = /^[a-zA-Z0-9\s\-:,.'""!?&@#$%()—–]+$/.test(
             trContent.title.trim(),
