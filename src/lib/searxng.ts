@@ -6,6 +6,7 @@
 
 import axios from "axios";
 
+/** Public SearXNG (sslip.io). Override with SEARXNG_BASE_URL if using self-hosted. */
 const SEARXNG_BASE_URL =
   process.env.SEARXNG_BASE_URL ||
   "http://searxng-pwcsc8ow08oks0ggokwoo8ww.77.42.68.4.sslip.io";

@@ -21,6 +21,8 @@ import {
   scheduleNewsletterJob,
   getNewsletterQueue,
   getSocialBatchQueue,
+  addDelayedScrapeAndPublish,
+  EMPTY_WAIT_UNTIL_KEY,
 } from "@/lib/queue";
 import { sendDailyDigest } from "@/services/newsletter.service";
 import {
@@ -524,48 +526,56 @@ async function startWorker() {
         attempt: `${job.attemptsMade + 1}/${job.opts.attempts || 3}`,
       });
 
-      // P1-7: Smart cycle timing — progressive delay after repeated empty cycles
-      try {
-        const redis = (await import("@/lib/redis")).getRedis();
-        if (redis) {
-          const emptyCount = parseInt(
-            (await redis.get("pipeline:consecutive_empties")) || "0",
-            10,
-          );
+      const redis = (await import("@/lib/redis")).getRedis();
+      const isDelayedRun = !!(job.data && (job.data as { skipEmptyDelay?: boolean }).skipEmptyDelay);
 
-          let totalDelayMin = 0;
-          const reasons: string[] = [];
-
-          // Empty cycle progressive delay (threshold: 2+ empties)
-          if (emptyCount >= 2) {
-            const emptyDelay = Math.min(emptyCount * 3, 30); // max 30min (was 15)
-            totalDelayMin += emptyDelay;
-            reasons.push(`${emptyCount} boş döngü (+${emptyDelay}dk)`);
-          }
-
-          if (totalDelayMin > 0) {
-            // Cap total delay at 45 minutes
-            totalDelayMin = Math.min(totalDelayMin, 45);
-            const waitUntil = new Date(Date.now() + totalDelayMin * 60 * 1000);
-            const waitMs = totalDelayMin * 60 * 1000;
-
-            log.info(
-              `⏳ P1-7: ${reasons.join(" + ")} — toplam ${totalDelayMin}dk bekleniyor, devam: ${waitUntil.toLocaleString("tr-TR")}`,
-            );
-            // Wait in 1-min chunks and touch job progress so lock is renewed and job isn't marked stalled
-            const chunkMs = 60_000;
-            let remaining = waitMs;
-            while (remaining > 0) {
-              const step = Math.min(chunkMs, remaining);
-              await new Promise((r) => setTimeout(r, step));
-              remaining -= step;
-              if (remaining > 0) await job.updateProgress(5);
-            }
-          }
-        }
-      } catch {
-        // Non-critical — don't block execution
+      if (isDelayedRun && redis) {
+        await redis.del(EMPTY_WAIT_UNTIL_KEY);
       }
+
+      // P1-7: Smart cycle timing — use delayed job instead of in-process wait to avoid stalled jobs
+      if (!isDelayedRun && redis) {
+        const waitUntilRaw = await redis.get(EMPTY_WAIT_UNTIL_KEY);
+        const waitUntilTs = waitUntilRaw ? parseInt(waitUntilRaw, 10) : 0;
+        if (waitUntilTs > 0 && Date.now() < waitUntilTs) {
+          log.info(`⏭️ P1-7: Cooldown aktif, ${new Date(waitUntilTs).toLocaleString("tr-TR")} sonrası çalışacak — bu run atlanıyor`);
+          return { skipped: true, reason: "cooldown", waitUntil: new Date(waitUntilTs).toISOString() };
+        }
+
+        const emptyCount = parseInt(
+          (await redis.get("pipeline:consecutive_empties")) || "0",
+          10,
+        );
+
+        let totalDelayMin = 0;
+        const reasons: string[] = [];
+
+        if (emptyCount >= 2) {
+          const emptyDelay = Math.min(emptyCount * 3, 30);
+          totalDelayMin += emptyDelay;
+          reasons.push(`${emptyCount} boş döngü (+${emptyDelay}dk)`);
+        }
+
+        if (totalDelayMin > 0) {
+          totalDelayMin = Math.min(totalDelayMin, 45);
+          const waitUntil = new Date(Date.now() + totalDelayMin * 60 * 1000);
+          const waitMs = totalDelayMin * 60 * 1000;
+
+          await redis.set(EMPTY_WAIT_UNTIL_KEY, String(waitUntil.getTime()), "EX", 3600);
+          const delayedId = await addDelayedScrapeAndPublish(waitMs);
+          log.info(
+            `⏳ P1-7: ${reasons.join(" + ")} — ${totalDelayMin}dk sonra delayed job (${delayedId ?? "—"}), devam: ${waitUntil.toLocaleString("tr-TR")}`,
+          );
+          return {
+            skipped: true,
+            reason: "P1-7 empty delay",
+            waitUntil: waitUntil.toISOString(),
+            delayedJobId: delayedId,
+          };
+        }
+      }
+
+      if (redis) await redis.del(EMPTY_WAIT_UNTIL_KEY);
 
       let result;
       try {

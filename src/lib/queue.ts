@@ -181,6 +181,34 @@ export async function scheduleNewsAgentJob() {
   }
 }
 
+const EMPTY_WAIT_UNTIL_KEY = "pipeline:empty_wait_until";
+
+/**
+ * Add a single delayed scrape-and-publish job (e.g. after P1-7 empty-cycle wait).
+ * Job runs with skipEmptyDelay so it doesn't re-apply the delay.
+ */
+export async function addDelayedScrapeAndPublish(delayMs: number): Promise<string | null> {
+  const queue = getNewsAgentQueue();
+  if (!queue) return null;
+  try {
+    const job = await queue.add(
+      "scrape-and-publish",
+      { skipEmptyDelay: true },
+      {
+        delay: delayMs,
+        jobId: `p1-7-delayed-${Date.now()}`,
+        removeOnComplete: true,
+      },
+    );
+    return job.id ?? null;
+  } catch (error) {
+    console.error("❌ addDelayedScrapeAndPublish failed:", error);
+    return null;
+  }
+}
+
+export { EMPTY_WAIT_UNTIL_KEY };
+
 // =====================================================
 // NEWSLETTER SCHEDULER - Daily at 19:00 Turkey Time
 // =====================================================
