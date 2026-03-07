@@ -547,11 +547,20 @@ async function startWorker() {
             // Cap total delay at 45 minutes
             totalDelayMin = Math.min(totalDelayMin, 45);
             const waitUntil = new Date(Date.now() + totalDelayMin * 60 * 1000);
+            const waitMs = totalDelayMin * 60 * 1000;
 
             log.info(
               `⏳ P1-7: ${reasons.join(" + ")} — toplam ${totalDelayMin}dk bekleniyor, devam: ${waitUntil.toLocaleString("tr-TR")}`,
             );
-            await new Promise((r) => setTimeout(r, totalDelayMin * 60 * 1000));
+            // Wait in 1-min chunks and touch job progress so lock is renewed and job isn't marked stalled
+            const chunkMs = 60_000;
+            let remaining = waitMs;
+            while (remaining > 0) {
+              const step = Math.min(chunkMs, remaining);
+              await new Promise((r) => setTimeout(r, step));
+              remaining -= step;
+              if (remaining > 0) await job.updateProgress(5);
+            }
           }
         }
       } catch {
@@ -697,7 +706,8 @@ async function startWorker() {
         max: 1,
         duration: 1000, // Max 1 job per second
       },
-      lockDuration: 1800000, // Lock job for 30 minutes (1800000ms) - increased from 20min to prevent stuck jobs
+      lockDuration: 1800000, // Lock job for 30 minutes - long enough for P1-7 empty-cycle wait (up to 45 min)
+      lockRenewTime: 120000, // Renew lock every 2 min so long waits (15–45 min) don't trigger stalled
       maxStalledCount: 2, // Allow 2 stalls before failing
       stalledInterval: 60000, // Check for stalled jobs every 60 seconds
     },
