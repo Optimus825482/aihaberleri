@@ -1,23 +1,28 @@
 ---
 name: clean-code
-description: Pragmatic coding standards - concise, direct, no over-engineering, no unnecessary comments
+description: Pragmatic coding standards - concise, direct, no over-engineering, no unnecessary comments. UNIVERSAL skill that applies to ALL programming languages and ALL projects.
 allowed-tools: Read, Write, Edit
 version: 2.0
 priority: CRITICAL
+global: true
 ---
 
-# Clean Code - Pragmatic AI Coding Standards
+# Clean Code - Universal Pragmatic Standards
 
+> **🌍 GLOBAL SKILL** - Applies to **ANY** language, **ANY** project, **ANY** framework
+>
 > **CRITICAL SKILL** - Be **concise, direct, and solution-focused**.
 
 ---
 
-## Core Principles
+## Language-Agnostic Principles
 
-| Principle | Rule |
-|-----------|------|
+These rules work for JavaScript, Python, Java, C#, Go, Rust, and ANY language:
+
+| Principle | Universal Rule |
+|-----------|----------------|
 | **SRP** | Single Responsibility - each function/class does ONE thing |
-| **DRY** | Don't Repeat Yourself - extract duplicates, reuse |
+| **DRY** | Don't Repeat Yourself - extract duplicates, reuse logic |
 | **KISS** | Keep It Simple - simplest solution that works |
 | **YAGNI** | You Aren't Gonna Need It - don't build unused features |
 | **Boy Scout** | Leave code cleaner than you found it |
