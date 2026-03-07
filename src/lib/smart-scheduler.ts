@@ -10,8 +10,7 @@
  * - Morning: 08:00-10:00 → 8 min (peak)
  * - Lunch: 12:00-14:00 → 8 min (peak)
  * - Evening: 18:00-22:00 → 8 min (peak)
- * - Night: 00:00-07:00 → 10 min (consistent)
- * - Normal: other times → 10 min
+ * - Normal: all other times → 10 min
  *
  * NOTE: No slowdown on weekends/holidays - consistent 10 min
  */
@@ -44,7 +43,6 @@ export interface SchedulerConfig {
   peakMorningInterval: number;
   peakLunchInterval: number;
   peakEveningInterval: number;
-  nightInterval: number;
   normalInterval: number;
   weekendMultiplier: number;
   holidayMultiplier: number;
@@ -54,7 +52,6 @@ export type TimeSlot =
   | "PEAK_MORNING"
   | "PEAK_LUNCH"
   | "PEAK_EVENING"
-  | "NIGHT"
   | "NORMAL";
 
 // ============================================================================
@@ -72,7 +69,6 @@ const DEFAULT_CONFIG: SchedulerConfig = {
   peakMorningInterval: 7, // 8 → 7 dakika (peak saatlerde daha sık)
   peakLunchInterval: 7, // 8 → 7 dakika
   peakEveningInterval: 7, // 8 → 7 dakika
-  nightInterval: 10, // Gece sabit 10 dakika
   normalInterval: 8, // 10 → 8 dakika (normal saatlerde de sıklaştı)
   weekendMultiplier: 1.0, // No slowdown on weekends
   holidayMultiplier: 1.0, // No slowdown on holidays
@@ -165,11 +161,6 @@ export function detectTimeSlot(turkeyTime?: Date): TimeSlot {
   // Peak Evening: 18:00-22:00
   if (hour >= 18 && hour < 22) {
     return "PEAK_EVENING";
-  }
-
-  // Night: 00:00-07:00
-  if (hour >= 0 && hour < 7) {
-    return "NIGHT";
   }
 
   // Normal: all other times
@@ -363,9 +354,6 @@ export async function getOptimalInterval(): Promise<number> {
       break;
     case "PEAK_EVENING":
       interval = config.peakEveningInterval;
-      break;
-    case "NIGHT":
-      interval = config.nightInterval;
       break;
     case "NORMAL":
     default:
