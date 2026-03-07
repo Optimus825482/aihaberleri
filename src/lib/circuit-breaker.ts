@@ -131,6 +131,21 @@ export const SERVICE_CONFIGS: Record<string, Partial<CircuitBreakerOptions>> = {
     resetTimeout: 60_000,
     halfOpenSuccessThreshold: 2,
   },
+  firecrawl: {
+    failureThreshold: 5,
+    resetTimeout: 60_000,
+    halfOpenSuccessThreshold: 2,
+  },
+  tavily: {
+    failureThreshold: 5,
+    resetTimeout: 60_000,
+    halfOpenSuccessThreshold: 2,
+  },
+  resend: {
+    failureThreshold: 3,
+    resetTimeout: 30_000,
+    halfOpenSuccessThreshold: 2,
+  },
 };
 
 // ============================================================================
@@ -582,6 +597,43 @@ export async function withCircuitBreaker<T>(
 ): Promise<T> {
   const circuit = CircuitBreaker.getCircuit(name, options);
   return circuit.execute(fn);
+}
+
+// ============================================================================
+// Circuit Breaker + Retry (rapor önerisi – dış API çağrıları için ortak wrapper)
+// ============================================================================
+
+export interface CircuitBreakerRetryOptions {
+  circuit?: Partial<CircuitBreakerOptions>;
+  retries?: number;
+  baseDelayMs?: number;
+}
+
+/**
+ * Execute with circuit breaker + exponential backoff retry.
+ * Dış API çağrıları (Firecrawl, Tavily, Resend, Pollinations vb.) için önerilir.
+ */
+export async function withCircuitBreakerAndRetry<T>(
+  name: string,
+  fn: () => Promise<T>,
+  options: CircuitBreakerRetryOptions = {},
+): Promise<T> {
+  const { retries = 2, baseDelayMs = 1000, circuit: circuitOpts } = options;
+  const maxAttempts = 1 + retries;
+  let lastError: Error | undefined;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await withCircuitBreaker(name, fn, circuitOpts);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt === maxAttempts) throw lastError;
+      const delayMs = baseDelayMs * Math.pow(2, attempt - 1);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw lastError ?? new Error("withCircuitBreakerAndRetry failed");
 }
 
 /**

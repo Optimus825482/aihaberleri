@@ -28,7 +28,11 @@ import { calculateTrendScore } from "@/lib/trend-scoring";
 import { getRedis } from "@/lib/redis";
 import { isFallbackImageUrl } from "@/lib/pollinations";
 import type { SocialShareInput } from "./social-share.agent";
-import { isPrismaError, type PipelineReEnrichPayload } from "./pipeline-types";
+import {
+  isPrismaError,
+  type PipelineReEnrichPayload,
+  RE_ENRICH_JOB_NAME,
+} from "./pipeline-types";
 
 /** Reddedilen makaleyi 2 saat boyunca tüm pipeline'dan uzak tutar. */
 const REJECTION_COOLDOWN_SECONDS = 2 * 60 * 60; // 2 saat
@@ -660,7 +664,7 @@ export class DatabasePublisherAgent extends BaseAgent<
             }
 
             if (retryArticles.length > 0) {
-              await enricherQueue.add("force-re-enrich", retryArticles, {
+              await enricherQueue.add(RE_ENRICH_JOB_NAME, retryArticles, {
                 removeOnComplete: 100,
                 removeOnFail: 50,
                 attempts: 1,

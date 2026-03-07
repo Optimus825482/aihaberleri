@@ -9,8 +9,8 @@ import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import {
   sensitiveRateLimit,
-  getClientIdentifier,
   checkRateLimit,
+  createRateLimitHeaders,
 } from "@/lib/rate-limiter";
 
 export const dynamic = "force-dynamic";
@@ -38,13 +38,18 @@ export async function GET(
       );
     }
 
-    // 3. Rate limiting (temporarily disabled due to type issues)
-    // const identifier = getClientIdentifier(request);
-    // const rateLimitResponse = await checkRateLimit(
-    //   sensitiveRateLimit,
-    //   identifier,
-    // );
-    // if (rateLimitResponse) return rateLimitResponse;
+    // 3. Rate limiting
+    const rateLimitResult = await checkRateLimit(request, sensitiveRateLimit);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Çok fazla istek. Lütfen daha sonra tekrar deneyin.",
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult) },
+      );
+    }
 
     // 4. Get user ID from params
     const userId = params.id;

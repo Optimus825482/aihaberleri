@@ -54,6 +54,7 @@ export class SEOOptimizerAgent extends BaseAgent<
   protected config = {
     name: "seo-optimizer",
     queueName: QUEUE_NAMES.SEO_OPTIMIZATION,
+    nextQueueName: QUEUE_NAMES.DATABASE_PUBLISHER,
     enableMetrics: true,
   };
 

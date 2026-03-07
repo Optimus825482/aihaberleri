@@ -5,15 +5,15 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requireAdminAuthWithPermission } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { BulkRoleSchema, formatZodError } from "@/lib/validation/admin";
 import { createAuditLog } from "@/lib/audit-logger";
 import {
   bulkRateLimit,
-  getClientIdentifier,
   checkRateLimit,
+  createRateLimitHeaders,
 } from "@/lib/rate-limiter";
 import { revalidateTag } from "next/cache";
 
@@ -25,29 +25,24 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Authentication check
-    const session = await requireAdminAuth();
-    if (session instanceof NextResponse) {
-      return session;
-    }
+    // 1. Auth + RBAC (matrix: POST /api/admin/users/bulk-role → SUPER_ADMIN only)
+    const session = await requireAdminAuthWithPermission(request);
+    if (session instanceof NextResponse) return session;
 
-    // 2. Authorization check (only SUPER_ADMIN can bulk assign roles)
-    if (session.role !== "SUPER_ADMIN") {
+    // 2. Rate limiting
+    const rateLimitResult = await checkRateLimit(request, bulkRateLimit);
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
           success: false,
-          error: "Sadece SUPER_ADMIN toplu rol ataması yapabilir",
+          error: "Çok fazla istek. Lütfen daha sonra tekrar deneyin.",
+          retryAfter: rateLimitResult.retryAfter,
         },
-        { status: 403 },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult) },
       );
     }
 
-    // 3. Rate limiting (temporarily disabled due to type issues)
-    // const identifier = getClientIdentifier(request);
-    // const rateLimitResponse = await checkRateLimit(bulkRateLimit, identifier);
-    // if (rateLimitResponse) return rateLimitResponse;
-
-    // 4. Parse and validate request body
+    // 3. Parse and validate request body
     const body = await request.json();
 
     let validatedData;

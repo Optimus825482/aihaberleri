@@ -28,7 +28,15 @@ import type {
   ArticleSource,
   ArticleWithSources,
   ReEnrichMetadata,
+  PipelineReEnrichPayload,
 } from "./pipeline-types";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INPUT TYPE (normal flow: UniqueArticle[]; re-enrich: PipelineReEnrichPayload[])
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type SourceGathererInput = (UniqueArticle | PipelineReEnrichPayload) &
+  Partial<ReEnrichMetadata>;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
@@ -40,62 +48,7 @@ const TAVILY_EXTRACT_URL = "https://api.tavily.com/extract";
 const TAVILY_TIMEOUT = 20000;
 const TARGET_SOURCE_COUNT = 3;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CIRCUIT BREAKER
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** Circuit Breaker for API failure protection */
-class CircuitBreaker {
-  private failures = 0;
-  private lastFailTime = 0;
-  private state: "CLOSED" | "OPEN" | "HALF_OPEN" = "CLOSED";
-  private logger?: ReturnType<
-    typeof import("@/lib/agent-log-stream").createModuleLogger
-  >;
-
-  async execute<T>(fn: () => Promise<T>, fallback: () => T): Promise<T> {
-    if (this.state === "OPEN") {
-      if (Date.now() - this.lastFailTime > 60000) {
-        this.state = "HALF_OPEN";
-      } else {
-        return fallback();
-      }
-    }
-
-    try {
-      const result = await fn();
-      this.onSuccess();
-      return result;
-    } catch {
-      this.onFailure();
-      return fallback();
-    }
-  }
-
-  private onSuccess() {
-    this.failures = 0;
-    this.state = "CLOSED";
-  }
-
-  private onFailure() {
-    this.failures++;
-    this.lastFailTime = Date.now();
-    if (this.failures >= 3) {
-      this.state = "OPEN";
-      this.logger?.warn(`Circuit breaker OPEN after ${this.failures} failures`);
-    }
-  }
-
-  setLogger(logger: CircuitBreaker["logger"]) {
-    this.logger = logger;
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// INPUT TYPE (UniqueArticle + optional re-enrich metadata)
-// ─────────────────────────────────────────────────────────────────────────────
-
-type SourceGathererInput = UniqueArticle & Partial<ReEnrichMetadata>;
+// Dış API çağrıları için lib/circuit-breaker + withCircuitBreakerAndRetry kullanılır (tavily, firecrawl, vb.).
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AGENT
@@ -112,13 +65,8 @@ export class SourceGathererAgent extends BaseAgent<
     enableMetrics: true,
   };
 
-  private tavilyBreaker = new CircuitBreaker();
-  private jinaBreaker = new CircuitBreaker();
-
   constructor() {
     super("source-gatherer");
-    this.tavilyBreaker.setLogger(this.logger);
-    this.jinaBreaker.setLogger(this.logger);
   }
 
   // ─────────────────────────────────────────────────────────────────────────

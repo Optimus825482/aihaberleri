@@ -85,7 +85,7 @@ export class TrendEnricherAgent extends BaseAgent<
   private lastTrendCheck: Date | null = null;
 
   constructor() {
-    super("TrendEnricher");
+    super("trend-enricher");
   }
 
   /**

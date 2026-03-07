@@ -1,17 +1,9 @@
 /**
  * Orchestrator Worker - Multi-Agent News Pipeline
  *
- * ARCHITECTURE (10 Agents):
- * DuplicateDetector → RelevanceFilter → TrendEnricher →
- * SourceGatherer → ContentSynthesizer → ContentValidator →
- * VisualGenerator → SEO Optimizer → DatabasePublisher
- * (+ ContentCollector for standalone RSS collection)
- *
- * This worker:
- * 1. Starts all 10 agents
- * 2. Triggers ContentCollectorAgent on schedule
- * 3. Monitors pipeline health
- * 4. Handles graceful shutdown
+ * Pipeline: Collector → Duplicate → Relevance → Trend → SourceGatherer → ContentSynthesizer
+ *   → ContentValidator → VisualGenerator → SEO Optimizer → DatabasePublisher → SocialShare.
+ * This worker starts all 10 agents, triggers ContentCollector on schedule, monitors health, graceful shutdown.
  */
 
 import { getRedis } from "@/lib/redis";

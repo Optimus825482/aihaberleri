@@ -7,7 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requireAdminAuthWithPermission } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { getCache } from "@/lib/cache";
 import { createAuditLog } from "@/lib/audit-logger";
@@ -18,8 +18,8 @@ import {
 } from "@/lib/validation/admin";
 import {
   bulkRateLimit,
-  getClientIdentifier,
   checkRateLimit,
+  createRateLimitHeaders,
 } from "@/lib/rate-limiter";
 import { z } from "zod";
 
@@ -29,17 +29,22 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // 1. Authentication check
-    const session = await requireAdminAuth();
-    if (session instanceof NextResponse) {
-      return session; // Return 401 response
-    }
+    // 1. Auth + RBAC (matrix: POST /api/admin/articles/bulk → EDITOR+)
+    const session = await requireAdminAuthWithPermission(request);
+    if (session instanceof NextResponse) return session;
 
-    // 2. Rate limiting check (5 requests per minute)
-    const identifier = getClientIdentifier(request);
-    // Note: Using inline rate limit config as checkRateLimit expects Request or config
-    // For simplicity, we skip rate limiting here or implement custom logic
-    // const rateLimitResponse = await checkRateLimit(request);
+    // 2. Rate limiting (bulk operations: 10 req/min)
+    const rateLimitResult = await checkRateLimit(request, bulkRateLimit);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Çok fazla istek. Lütfen daha sonra tekrar deneyin.",
+          retryAfter: rateLimitResult.retryAfter,
+        },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult) },
+      );
+    }
 
     // 3. Parse and validate request body
     const body = await request.json();

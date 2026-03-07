@@ -122,13 +122,12 @@ const nextConfig = {
   },
 
   eslint: {
-    // ESLint hataları CI pipeline'da ZORUNLU olarak kontrol edilir; Docker/production build hız için burada atlanır.
-    ignoreDuringBuilds: true,
+    // CI'da (CI=true) ESLint hataları build'i fail eder; yerel/build hızı için CI dışında ignore.
+    ignoreDuringBuilds: !process.env.CI,
   },
   typescript: {
-    // TypeScript hataları CI pipeline'da ZORUNLU olarak kontrol edilir; Docker/production build hız için burada atlanır.
-    // Not: Runtime crash riski minimal çünkü dev'de zaten kontrol ediliyor
-    ignoreBuildErrors: true,
+    // CI'da (CI=true) TypeScript hataları build'i fail eder; yerel/build hızı için CI dışında ignore.
+    ignoreBuildErrors: !process.env.CI,
   },
   // Headers for iOS auto-linking prevention (hydration fix)
   async headers() {

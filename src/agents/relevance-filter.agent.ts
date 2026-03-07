@@ -18,9 +18,10 @@ import { batchScoreArticles } from "@/lib/deepseek"; // DeepSeek-only (Gemini re
 import { recordYouTubeFailure } from "@/lib/youtube-pipeline";
 import type { CollectedArticle } from "./content-collector.agent";
 
+/** RelevanceFilter bu alanları ekler; DuplicateDetector çıktısında henüz yok (opsiyonel). */
 export interface ScoredArticle extends CollectedArticle {
-  relevanceScore: number;
-  reasoning: string;
+  relevanceScore?: number;
+  reasoning?: string;
   suggestedCategory?: string;
   suggestedTags?: string[];
 }
@@ -97,13 +98,13 @@ export class RelevanceFilterAgent extends BaseAgent<
 
       // Filter by threshold
       const relevantArticles = scoredArticles.filter(
-        (article) => article.relevanceScore >= RELEVANCE_THRESHOLD,
+        (article) => (article.relevanceScore ?? 0) >= RELEVANCE_THRESHOLD,
       );
 
       // P0-3: Track YouTube relevance failures for blacklisting
       const rejectedYouTube = scoredArticles.filter(
         (a) =>
-          a.relevanceScore < RELEVANCE_THRESHOLD &&
+          (a.relevanceScore ?? 0) < RELEVANCE_THRESHOLD &&
           a.url?.includes("youtube.com/watch"),
       );
       if (rejectedYouTube.length > 0) {
@@ -128,12 +129,12 @@ export class RelevanceFilterAgent extends BaseAgent<
       // 🔍 Log ALL scored articles for debugging (not just passed ones)
       this.logger.info("All scored articles:");
       scoredArticles
-        .sort((a, b) => b.relevanceScore - a.relevanceScore)
+        .sort((a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0))
         .forEach((article, i) => {
           const status =
-            article.relevanceScore >= RELEVANCE_THRESHOLD ? "✅" : "❌";
+            (article.relevanceScore ?? 0) >= RELEVANCE_THRESHOLD ? "✅" : "❌";
           this.logger.info(
-            `  ${status} [${article.relevanceScore}] ${article.title.substring(0, 60)}`,
+            `  ${status} [${article.relevanceScore ?? "?"}] ${article.title.substring(0, 60)}`,
           );
         });
 
@@ -202,15 +203,19 @@ export class RelevanceFilterAgent extends BaseAgent<
         this.serializeError(error),
       );
 
-      // BYPASS MODE: Pass articles with trend-based scores
+      // BYPASS MODE: Pass articles with trend-based scores (metrik: bypass_count)
       if (BYPASS_MODE_ENABLED) {
-        this.logger.warn(
-          `🔄 BYPASS MODE: Passing ${articles.length} articles based on trend scores`,
-        );
-        return this.bypassScoring(
+        const bypassResult = this.bypassScoring(
           articles,
           "DeepSeek API error - using bypass",
         );
+        const passed = bypassResult.filter(
+          (a) => (a.relevanceScore ?? 0) >= RELEVANCE_THRESHOLD,
+        ).length;
+        this.logger.warn(
+          `🔄 BYPASS MODE: bypass_count=${articles.length} passed=${passed} filtered=${articles.length - passed} (DeepSeek unavailable)`,
+        );
+        return bypassResult;
       }
 
       // Fallback: assign default scores based on trend score

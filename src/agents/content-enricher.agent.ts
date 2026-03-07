@@ -1,18 +1,15 @@
 /**
  * Content Enricher Agent
  *
+ * @deprecated Orchestrator artık SourceGatherer + ContentSynthesizer kullanıyor.
+ * Bu agent ENRICHED_ARTICLES_LEGACY kuyruğunu dinler; ENRICHED_ARTICLES ile çakışmaz.
+ * Yeni pipeline: TrendEnricher → ENRICHED_ARTICLES → SourceGatherer → CONTENT_SYNTHESIS → …
+ *
  * RESPONSIBILITIES:
- * 1. Multi-source research (SearXNG + Jina Reader) ⭐ UNLIMITED!
- * 2. Gather 8-10 sources per article
- * 3. LLM content synthesis via callDeepSeek wrapper (TR + EN)
- * 4. Generate keywords and meta descriptions
- * 5. Emit enriched articles to enriched-articles queue
+ * 1. Multi-source research (SearXNG + Jina Reader)
+ * 2. Gather sources, LLM synthesis (TR + EN), emit to articles-with-visuals
  *
  * EXTRACTED FROM: src/services/intelligent-news.service.ts
- * - gatherSources() function
- * - synthesizeContent() function
- *
- * UPDATED: Using SearXNG instead of Brave API (no rate limits!)
  */
 
 import { Job } from "bullmq";
@@ -133,7 +130,7 @@ export class ContentEnricherAgent extends BaseAgent<
 > {
   protected config = {
     name: "content-enricher",
-    queueName: QUEUE_NAMES.ENRICHED_ARTICLES,
+    queueName: QUEUE_NAMES.ENRICHED_ARTICLES_LEGACY, // DEPRECATED: SourceGatherer uses ENRICHED_ARTICLES
     nextQueueName: QUEUE_NAMES.ARTICLES_WITH_VISUALS,
     enableMetrics: true,
   };

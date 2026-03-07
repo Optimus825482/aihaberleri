@@ -6,15 +6,15 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAdminAuth } from "@/lib/admin-auth";
+import { requireAdminAuthWithPermission } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { UpdateUserSchema, formatZodError } from "@/lib/validation/admin";
 import { createAuditLog } from "@/lib/audit-logger";
 import {
   sensitiveRateLimit,
-  getClientIdentifier,
   checkRateLimit,
+  createRateLimitHeaders,
 } from "@/lib/rate-limiter";
 import { revalidateTag } from "next/cache";
 
@@ -29,35 +29,27 @@ export async function PATCH(
   { params }: { params: { id: string } },
 ) {
   try {
-    // 1. Authentication check
-    const session = await requireAdminAuth();
-    if (session instanceof NextResponse) {
-      return session;
-    }
+    // 1. Auth + RBAC (matrix: PATCH /api/admin/users/:id → SUPER_ADMIN only)
+    const session = await requireAdminAuthWithPermission(request);
+    if (session instanceof NextResponse) return session;
 
-    // 2. Authorization check (only SUPER_ADMIN can update users)
-    if (session.role !== "SUPER_ADMIN") {
+    // 2. Rate limiting
+    const rateLimitResult = await checkRateLimit(request, sensitiveRateLimit);
+    if (!rateLimitResult.allowed) {
       return NextResponse.json(
         {
           success: false,
-          error: "Sadece SUPER_ADMIN kullanıcı güncelleyebilir",
+          error: "Çok fazla istek. Lütfen daha sonra tekrar deneyin.",
+          retryAfter: rateLimitResult.retryAfter,
         },
-        { status: 403 },
+        { status: 429, headers: createRateLimitHeaders(rateLimitResult) },
       );
     }
 
-    // 3. Rate limiting (temporarily disabled due to type issues)
-    // const identifier = getClientIdentifier(request);
-    // const rateLimitResponse = await checkRateLimit(
-    //   sensitiveRateLimit,
-    //   identifier,
-    // );
-    // if (rateLimitResponse) return rateLimitResponse;
-
-    // 4. Get user ID from params
+    // 3. Get user ID from params
     const userId = params.id;
 
-    // 5. Check if user exists
+    // 4. Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId },
     });
@@ -203,35 +195,33 @@ export async function DELETE(
   { params }: { params: { id: string } },
 ) {
   try {
-    // 1. Authentication check
-    const session = await requireAdminAuth();
-    if (session instanceof NextResponse) {
-      return session;
-    }
+    // 1. Auth + RBAC (matrix: DELETE /api/admin/users/:id → SUPER_ADMIN only)
+    const session = await requireAdminAuthWithPermission(request);
+    if (session instanceof NextResponse) return session;
 
-    // 2. Authorization check (only SUPER_ADMIN can delete users)
-    if (session.role !== "SUPER_ADMIN") {
+    // 2. Rate limiting
+    const rateLimitResultDelete = await checkRateLimit(
+      request,
+      sensitiveRateLimit,
+    );
+    if (!rateLimitResultDelete.allowed) {
       return NextResponse.json(
         {
           success: false,
-          error: "Sadece SUPER_ADMIN kullanıcı silebilir",
+          error: "Çok fazla istek. Lütfen daha sonra tekrar deneyin.",
+          retryAfter: rateLimitResultDelete.retryAfter,
         },
-        { status: 403 },
+        {
+          status: 429,
+          headers: createRateLimitHeaders(rateLimitResultDelete),
+        },
       );
     }
 
-    // 3. Rate limiting (temporarily disabled due to type issues)
-    // const identifier = getClientIdentifier(request);
-    // const rateLimitResponse = await checkRateLimit(
-    //   sensitiveRateLimit,
-    //   identifier,
-    // );
-    // if (rateLimitResponse) return rateLimitResponse;
-
-    // 4. Get user ID from params
+    // 3. Get user ID from params
     const userId = params.id;
 
-    // 5. Prevent self-deletion
+    // 4. Prevent self-deletion
     if (userId === session.id) {
       return NextResponse.json(
         {
@@ -242,7 +232,7 @@ export async function DELETE(
       );
     }
 
-    // 6. Check if user exists
+    // 5. Check if user exists
     const existingUser = await db.user.findUnique({
       where: { id: userId },
       select: {

@@ -18,23 +18,25 @@ import {
   EMBEDDING_DIMENSIONS,
 } from "@/lib/embeddings";
 import { getRedis } from "@/lib/redis";
+import type { CollectedArticle } from "./content-collector.agent";
 import type { ScoredArticle } from "./relevance-filter.agent";
 
+/** DuplicateDetector çıktısı; RelevanceFilter relevanceScore/reasoning ekler. */
 export interface UniqueArticle extends ScoredArticle {
-  topic?: string; // Short topic identifier for duplicate detection
+  topic?: string;
   isDuplicate: boolean;
   duplicateReason?: string;
-  embedding?: number[]; // Pre-generated embedding for storage
+  embedding?: number[];
 }
 
 export class DuplicateDetectorAgent extends BaseAgent<
-  ScoredArticle[],
+  CollectedArticle[],
   UniqueArticle[]
 > {
   protected config = {
     name: "duplicate-detector",
     queueName: QUEUE_NAMES.UNIQUE_ARTICLES,
-    nextQueueName: QUEUE_NAMES.RELEVANT_ARTICLES, // 🆕 Route to RelevanceFilter FIRST (09.02.2026)
+    nextQueueName: QUEUE_NAMES.RELEVANT_ARTICLES,
     enableMetrics: true,
   };
 
@@ -43,7 +45,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
   }
 
   protected async process(
-    job: Job<ScoredArticle[]>,
+    job: Job<CollectedArticle[]>,
   ): Promise<AgentResult<UniqueArticle[]>> {
     const articles = job.data;
     const startTime = Date.now();
@@ -131,7 +133,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
       return {
         success: true,
         data: uniqueArticles,
-        nextQueue: QUEUE_NAMES.RELEVANT_ARTICLES, // Route to RelevanceFilter (Duplicate → Relevance → Trend)
+        nextQueue: QUEUE_NAMES.RELEVANT_ARTICLES,
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls: 0,

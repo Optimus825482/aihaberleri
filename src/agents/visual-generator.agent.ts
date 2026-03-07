@@ -114,21 +114,22 @@ export class VisualGeneratorAgent extends BaseAgent<
       const successCount = articlesWithVisuals.filter(
         (a) => a.imageUrl !== null,
       ).length;
-      const failureCount = articlesWithVisuals.length - successCount;
+      const visualFailedCount = articlesWithVisuals.length - successCount;
 
       this.logger.success(
-        `Visual generation complete: ${successCount}/${articlesWithVisuals.length} successful (${failureCount} failed)`,
+        `Visual generation complete: ${successCount}/${articlesWithVisuals.length} successful (visual_failed=${visualFailedCount})`,
       );
 
       return {
         success: true,
         data: articlesWithVisuals,
-        nextQueue: QUEUE_NAMES.SEO_OPTIMIZATION, // Pipeline: Visual → SEO Optimizer → Publish
+        nextQueue: QUEUE_NAMES.SEO_OPTIMIZATION,
         metrics: {
           processingTime: Date.now() - startTime,
           apiCalls,
           tokensUsed,
           itemsProcessed: successCount,
+          visualFailed: visualFailedCount,
         },
       };
     } catch (error) {

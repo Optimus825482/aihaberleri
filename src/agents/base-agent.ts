@@ -45,6 +45,8 @@ export interface AgentMetrics {
   apiCalls: number;
   tokensUsed?: number;
   itemsProcessed: number;
+  /** VisualGenerator: görsel üretilemeyen makale sayısı */
+  visualFailed?: number;
 }
 
 export interface AgentResult<T = any> {

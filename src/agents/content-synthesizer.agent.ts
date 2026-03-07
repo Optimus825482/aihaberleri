@@ -34,6 +34,8 @@ import type {
 
 /** Maximum retry attempts for TR synthesis before falling back to emergency template */
 const MAX_TR_RETRIES = 2;
+/** Makale başına sentez timeout (ms). Agent timeout base-agent'ta 12 dk. */
+const SYNTHESIS_TIMEOUT_MS = 180_000;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AGENT
@@ -104,7 +106,7 @@ export class ContentSynthesizerAgent extends BaseAgent<
           try {
             const rejectionHint = article._rejectionReason;
 
-            // Synthesize with timeout (180s per article)
+            // Synthesize with timeout (agent-level 12 min in base-agent)
             const synthesizedContent: SynthesizedContent = await Promise.race([
               this.synthesizeContent(
                 article,
@@ -114,8 +116,13 @@ export class ContentSynthesizerAgent extends BaseAgent<
               ),
               new Promise<SynthesizedContent>((_, reject) =>
                 setTimeout(
-                  () => reject(new Error("Synthesis timeout (180s)")),
-                  180_000,
+                  () =>
+                    reject(
+                      new Error(
+                        `Synthesis timeout (${SYNTHESIS_TIMEOUT_MS / 1000}s)`,
+                      ),
+                    ),
+                  SYNTHESIS_TIMEOUT_MS,
                 ),
               ),
             ]);

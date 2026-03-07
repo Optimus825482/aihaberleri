@@ -1,9 +1,8 @@
 /**
  * Centralized Queue Manager for Multi-Agent News Pipeline
  *
- * 7-AGENT ARCHITECTURE (2026-02-12):
- * ContentCollector → DuplicateDetector → RelevanceFilter → TrendEnricher → ContentEnricher → VisualGenerator → SEO Optimizer → DatabasePublisher
- *
+ * Pipeline: Collector → Duplicate → Relevance → Trend → SourceGatherer → ContentSynthesizer
+ *   → ContentValidator → VisualGenerator → SEO Optimizer → DatabasePublisher → SocialShare.
  * Each agent has its own queue with specific concurrency and rate limits.
  */
 
@@ -28,6 +27,8 @@ export const QUEUE_NAMES = {
   UNIQUE_ARTICLES: "unique-articles",
   TREND_ENRICHMENT: "trend-enrichment", // NEW: Trend matching & enrichment
   ENRICHED_ARTICLES: "enriched-articles",
+  /** @deprecated ContentEnricher için; SourceGatherer ENRICHED_ARTICLES kullanır. Çakışmayı önlemek için ayrı queue. */
+  ENRICHED_ARTICLES_LEGACY: "enriched-articles-legacy",
   CONTENT_SYNTHESIS: "content-synthesis",
   CONTENT_VALIDATION: "content-validation",
   ARTICLES_WITH_VISUALS: "articles-with-visuals",
@@ -114,6 +115,13 @@ const QUEUE_CONFIG = {
     lockDuration: 300000, // 5 minutes
     jobTimeout: 480000, // 8 minutes job timeout
     attempts: 3,
+  },
+  [QUEUE_NAMES.ENRICHED_ARTICLES_LEGACY]: {
+    concurrency: 2,
+    rateLimit: { max: 3, duration: 1000 },
+    lockDuration: 300000,
+    jobTimeout: 480000,
+    attempts: 2,
   },
   [QUEUE_NAMES.CONTENT_SYNTHESIS]: {
     concurrency: 2, // LLM synthesis is slow (DeepSeek calls + retries)

@@ -137,6 +137,9 @@ export interface EnrichedArticle extends ArticleWithSources {
 // RE-ENRICH PAYLOAD
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Re-enrich job name (DatabasePublisher → ENRICHED_ARTICLES); izleme/debug için sabit. */
+export const RE_ENRICH_JOB_NAME = "source-gatherer-re-enrich";
+
 /**
  * Shape of the object DatabasePublisher pushes into the enricher queue
  * when an article fails a quality gate and needs deep re-enrichment.
