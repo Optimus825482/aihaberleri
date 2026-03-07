@@ -108,6 +108,7 @@ export default function AgentSettingsPage() {
 
   // Live log states
   const [showLiveLog, setShowLiveLog] = useState(false);
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
   const [liveLogData, setLiveLogData] = useState<{
     isRunning: boolean;
     progress: { step: string; message: string; progress: number } | null;
@@ -272,6 +273,7 @@ export default function AgentSettingsPage() {
       const data = await response.json();
 
       if (data.success) {
+        setCurrentJobId(data.data?.jobId || null);
         toast({
           title: "✅ Agent Başlatıldı",
           description:
@@ -302,7 +304,10 @@ export default function AgentSettingsPage() {
   // Live log polling function
   const fetchLiveLogProgress = useCallback(async () => {
     try {
-      const response = await fetch("/api/agent/job-progress");
+      const query = currentJobId
+        ? `?jobId=${encodeURIComponent(currentJobId)}`
+        : "";
+      const response = await fetch(`/api/agent/job-progress${query}`);
       const data = await response.json();
 
       if (data.success) {
@@ -317,6 +322,7 @@ export default function AgentSettingsPage() {
         if (!data.data.isRunning && pollingRef.current) {
           clearInterval(pollingRef.current);
           pollingRef.current = null;
+          setCurrentJobId(null);
 
           // Refresh recent logs
           fetchRecentLogs();
@@ -340,7 +346,7 @@ export default function AgentSettingsPage() {
     } catch (error) {
       console.error("Failed to fetch live log progress:", error);
     }
-  }, [toast]);
+  }, [currentJobId, toast]);
 
   const startLiveLogPolling = useCallback(() => {
     // Clear existing polling
@@ -994,8 +1000,8 @@ export default function AgentSettingsPage() {
                       switch (status) {
                         case "running":
                           return "bg-blue-500 animate-pulse";
-                        case "success":
-                          return "bg-green-500";
+                        case "queued":
+                          return "bg-yellow-500";
                         case "error":
                           return "bg-red-500";
                         default:
@@ -1019,6 +1025,9 @@ export default function AgentSettingsPage() {
                         <div className="flex items-center gap-3 text-xs text-gray-400">
                           <span>Kuyruk: {agent.queueCount}</span>
                           <span>İşlenen: {agent.processedCount}</span>
+                          {agent.failedCount > 0 && (
+                            <span>Hata: {agent.failedCount}</span>
+                          )}
                         </div>
                       </div>
                     );

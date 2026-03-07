@@ -17,7 +17,7 @@ import os
 import sys
 import math
 from datetime import datetime, timedelta
-from typing import Optional, Tuple
+from typing import Any, Optional, Tuple, cast
 
 try:
     import psycopg2
@@ -44,6 +44,7 @@ except ImportError:
 # VERITABANI BAĞLANTISI
 # ============================================================
 DATABASE_URL = "postgres://postgres:518518Erkan@77.42.68.4:5435/postgresainewsdb"
+ArticleRow = dict[str, Any]
 
 
 def parse_database_url(url: str) -> dict:
@@ -217,8 +218,8 @@ def main():
         WHERE a.status = 'PUBLISHED'
         ORDER BY COALESCE(a."publishedAt", a."createdAt") DESC
     """)
-    
-    articles = cursor.fetchall()
+
+    articles = cast(list[ArticleRow], cursor.fetchall())
     total_articles = len(articles)
     
     print(Fore.GREEN + f"✅ {total_articles} haber bulundu!")
@@ -250,6 +251,7 @@ def main():
     
     for article in tqdm(articles, desc="İşleniyor", ncols=80, 
                         bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}]'):
+        article_id = "unknown"
         try:
             article_id = article["id"]
             title = article["title"][:50] + "..." if len(article["title"]) > 50 else article["title"]
@@ -267,8 +269,8 @@ def main():
                 WHERE "articleId" = %s 
                 AND "createdAt" >= NOW() - INTERVAL '24 hours'
             """, (article_id,))
-            
-            recent_result = cursor.fetchone()
+
+            recent_result = cast(Optional[ArticleRow], cursor.fetchone())
             recent_views = recent_result["count"] if recent_result else 0
             
             # Trend skorunu hesapla
@@ -360,8 +362,8 @@ def main():
         ORDER BY "trendScore" DESC
         LIMIT 10
     """)
-    
-    top_articles = cursor.fetchall()
+
+    top_articles = cast(list[ArticleRow], cursor.fetchall())
     
     for i, art in enumerate(top_articles, 1):
         score = art["trendScore"] or 0

@@ -111,18 +111,28 @@ export async function GET() {
     // Map queue stats to registry-defined pipeline steps
     const agents = PIPELINE_STEP_DEFINITIONS.map((step) => {
       const stat = queueStats.find((s) => s?.queueName === step.queueName);
+      const active = stat?.active ?? 0;
+      const waiting = stat?.waiting ?? 0;
+      const failed = stat?.failed ?? 0;
+      const delayed = (stat as { delayed?: number } | undefined)?.delayed ?? 0;
+      const queueCount = waiting + active + delayed;
+
+      let status = "idle";
+      if (active > 0) {
+        status = "running";
+      } else if (queueCount > 0) {
+        status = "queued";
+      } else if (failed > 0 && (stat?.completed ?? 0) === 0) {
+        status = "error";
+      }
 
       return {
         name: step.id,
         displayName: step.displayName,
-        status:
-          (stat?.active ?? 0) > 0
-            ? "running"
-            : (stat?.failed ?? 0) > 0
-              ? "error"
-              : "idle",
-        queueCount: (stat?.waiting || 0) + (stat?.active || 0),
+        status,
+        queueCount,
         processedCount: stat?.completed || 0,
+        failedCount: failed,
         lastRun: null,
         avgProcessingTime: 0,
       };

@@ -7,7 +7,7 @@ Tests HTTP status, XML parsing, entry count, and response time
 import requests
 import feedparser
 import time
-from typing import List, Dict
+from typing import Any, Dict, List, Mapping, cast
 from datetime import datetime
 import sys
 
@@ -76,8 +76,9 @@ def test_rss_feed(url: str, name: str, retry: int = 0) -> Dict:
             }
         
         # Extract feed metadata
-        feed_title = feed.feed.get('title', 'Unknown')
-        feed_language = feed.feed.get('language', 'en')
+        feed_metadata = cast(Mapping[str, Any], feed.feed)
+        feed_title = str(feed_metadata.get("title", "Unknown"))
+        feed_language = str(feed_metadata.get("language", "en"))
         
         # Check if entries have required fields
         sample_entry = feed.entries[0] if feed.entries else {}
