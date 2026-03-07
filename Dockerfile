@@ -34,7 +34,7 @@ COPY package.json package-lock.json* ./
 COPY prisma ./prisma
 
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
+    PRISMA_SKIP_POSTINSTALL_GENERATE=true npm ci --include=dev --legacy-peer-deps --network-timeout=300000 && \
     npx prisma@5.22.0 generate && \
     echo "✓ deps: $(ls -1 node_modules | wc -l) packages"
 
@@ -47,7 +47,7 @@ COPY package.json package-lock.json* ./
 COPY prisma ./prisma
 
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev --legacy-peer-deps --network-timeout=300000 && \
+    PRISMA_SKIP_POSTINSTALL_GENERATE=true npm ci --omit=dev --legacy-peer-deps --network-timeout=300000 && \
     npx prisma@5.22.0 generate && \
     rm -rf node_modules/.cache \
         node_modules/@next/swc-linux-arm* \

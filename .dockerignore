@@ -48,10 +48,18 @@ yarn-debug.log
 yarn-error.log
 worker-*.txt
 deployment-*.txt
+*.tsbuildinfo
+*.ipynb
+result.md
+backups/
+*.sql.bak
+*-all-logs-*.txt
 
 # Agent & skills (not needed in Docker)
 .agent/
 .kiro/
+.memories/
+ai-news-collectors-1.0.0/
 
 # Config files not needed at runtime
 jest.config.js
