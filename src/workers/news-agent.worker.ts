@@ -533,8 +533,10 @@ async function startWorker() {
         await redis.del(EMPTY_WAIT_UNTIL_KEY);
       }
 
-      // P1-7: Smart cycle timing — use delayed job instead of in-process wait to avoid stalled jobs
-      if (!isDelayedRun && redis) {
+      // P1-7: Boş döngü gecikmesi — kapatmak için AGENT_SKIP_EMPTY_DELAY=true (env)
+      const skipEmptyDelay = process.env.AGENT_SKIP_EMPTY_DELAY === "true" || process.env.AGENT_SKIP_EMPTY_DELAY === "1";
+      if (skipEmptyDelay && redis) await redis.del(EMPTY_WAIT_UNTIL_KEY);
+      if (!skipEmptyDelay && !isDelayedRun && redis) {
         const waitUntilRaw = await redis.get(EMPTY_WAIT_UNTIL_KEY);
         const waitUntilTs = waitUntilRaw ? parseInt(waitUntilRaw, 10) : 0;
         if (waitUntilTs > 0 && Date.now() < waitUntilTs) {

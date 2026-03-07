@@ -121,9 +121,11 @@ export async function scheduleNewsAgentJob() {
       );
     }
 
-    // Also check for any pending/waiting/delayed jobs and remove them
+    // Also check for any pending/waiting/delayed jobs and remove them (keep P1-7 delayed jobs)
     const pendingJobs = await queue.getJobs(["waiting", "delayed", "active"]);
     for (const job of pendingJobs) {
+      if (typeof job.id === "string" && job.id.startsWith("p1-7-delayed-"))
+        continue;
       if (
         job.id === "news-agent-scheduled-run" ||
         job.name === "scrape-and-publish"
