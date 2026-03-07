@@ -75,7 +75,7 @@ const PICSUM_URL = "https://picsum.photos";
 // Cache Configuration
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const CACHE_KEY_PREFIX = "pollinations:image:";
-const POLLINATIONS_REQUEST_TIMEOUT_MS = 25000;
+const DEFAULT_POLLINATIONS_REQUEST_TIMEOUT_MS = 25000;
 
 /**
  * Generate cache key from prompt using SHA-256 hash
@@ -273,6 +273,7 @@ export async function fetchPollinationsImage(
   prompt: string,
   options: PollinationsOptions = {},
   maxRetries = 3,
+  requestTimeoutMs = DEFAULT_POLLINATIONS_REQUEST_TIMEOUT_MS,
 ): Promise<string> {
   // Validate prompt
   if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
@@ -364,7 +365,7 @@ export async function fetchPollinationsImage(
         const controller = new AbortController();
         const timeoutId = setTimeout(
           () => controller.abort(),
-          POLLINATIONS_REQUEST_TIMEOUT_MS,
+          requestTimeoutMs,
         );
 
         try {
@@ -421,6 +422,7 @@ export async function fetchPollinationsImage(
             return await fetchPollinationsImageAnonymous(
               sanitizedPrompt,
               options,
+              requestTimeoutMs,
             );
           }
         } catch (fetchError) {
@@ -430,7 +432,11 @@ export async function fetchPollinationsImage(
       }
 
       // No API key, use anonymous method
-      return await fetchPollinationsImageAnonymous(sanitizedPrompt, options);
+      return await fetchPollinationsImageAnonymous(
+        sanitizedPrompt,
+        options,
+        requestTimeoutMs,
+      );
     } catch (error) {
       const isLastAttempt = attempt === maxRetries;
 
@@ -461,6 +467,7 @@ export async function fetchPollinationsImage(
 async function fetchPollinationsImageAnonymous(
   prompt: string,
   options: PollinationsOptions = {},
+  requestTimeoutMs = DEFAULT_POLLINATIONS_REQUEST_TIMEOUT_MS,
 ): Promise<string> {
   const imageUrl = generateImageUrl(prompt, options);
   console.log("📝 Prompt:", prompt.substring(0, 100));
@@ -468,10 +475,7 @@ async function fetchPollinationsImageAnonymous(
 
   // Fetch image to verify it exists with timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(
-    () => controller.abort(),
-    POLLINATIONS_REQUEST_TIMEOUT_MS,
-  );
+  const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
 
   try {
     const response = await fetch(imageUrl, {

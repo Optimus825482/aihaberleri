@@ -6,6 +6,8 @@ import { generateImagePrompt } from "@/lib/deepseek";
 import { fetchPollinationsImage, isFallbackImageUrl } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 
+export const maxDuration = 120;
+
 // POST - Refresh article image
 export async function POST(
   request: Request,
@@ -50,13 +52,18 @@ export async function POST(
     console.log("📝 Görsel prompt:", imagePrompt);
 
     // Get new image from Pollinations.ai
-    const newImageUrl = await fetchPollinationsImage(imagePrompt, {
-      width: 1200,
-      height: 630,
-      model: "flux",
-      enhance: true,
-      nologo: true,
-    });
+    const newImageUrl = await fetchPollinationsImage(
+      imagePrompt,
+      {
+        width: 1200,
+        height: 630,
+        model: "flux",
+        enhance: true,
+        nologo: true,
+      },
+      2,
+      45000,
+    );
     console.log("✅ Yeni görsel URL:", newImageUrl);
 
     // Never treat stock fallback images as successful regeneration.
