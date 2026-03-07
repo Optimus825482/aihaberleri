@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { Logo } from "@/components/Logo";
 import { NewsletterForm } from "@/components/NewsletterForm";
 import { PushNotificationButton } from "@/components/PushNotificationButton";
@@ -6,6 +7,20 @@ import { db } from "@/lib/db";
 
 interface FooterProps {
   locale?: "tr" | "en";
+}
+
+interface FooterCategoryRecord {
+  id: string;
+  name: string;
+  slug: string;
+  order: number;
+}
+
+interface FooterSocialRecord {
+  id: string;
+  platform: string;
+  url: string;
+  enabled: boolean;
 }
 
 const EN_CATEGORY_SLUG_TRANSLATIONS: Record<string, string> = {
@@ -112,6 +127,26 @@ const translations = {
   },
 };
 
+const getCachedFooterData = unstable_cache(
+  async (): Promise<{
+    categories: FooterCategoryRecord[];
+    socialMedia: FooterSocialRecord[];
+  }> => {
+    const [categories, socialMedia] = await db.$transaction([
+      db.category.findMany({
+        orderBy: { order: "asc" },
+      }),
+      db.socialMedia.findMany({
+        where: { enabled: true },
+      }),
+    ]);
+
+    return { categories, socialMedia };
+  },
+  ["footer-data"],
+  { revalidate: 300 },
+);
+
 export async function Footer({ locale }: FooterProps) {
   // Locale is always "tr" when rendered from root layout (LayoutWrapper hides footer for /en)
   // For explicit usage, locale prop can be passed directly
@@ -127,30 +162,14 @@ export async function Footer({ locale }: FooterProps) {
     process.env.SKIP_ENV_VALIDATION === "1" ||
     process.env.NEXT_PHASE === "phase-production-build";
 
-  let categories: Array<{
-    id: string;
-    name: string;
-    slug: string;
-    order: number;
-  }> = [];
-  let socialMedia: Array<{
-    id: string;
-    platform: string;
-    url: string;
-    enabled: boolean;
-  }> = [];
+  let categories: FooterCategoryRecord[] = [];
+  let socialMedia: FooterSocialRecord[] = [];
 
   if (!isBuildTime) {
     try {
-      // Fetch all categories
-      categories = await db.category.findMany({
-        orderBy: { order: "asc" },
-      });
-
-      // Fetch social media links
-      socialMedia = await db.socialMedia.findMany({
-        where: { enabled: true },
-      });
+      const footerData = await getCachedFooterData();
+      categories = footerData.categories;
+      socialMedia = [...footerData.socialMedia];
 
       // Ensure Bluesky and Mastodon are always present
       const hasBsky = socialMedia.some(

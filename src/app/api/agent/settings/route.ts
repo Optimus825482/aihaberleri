@@ -34,23 +34,39 @@ export async function GET() {
       return session; // Return 401 response
     }
 
-    // Get settings from database
-    const settings = await db.setting.findMany({
-      where: {
-        key: {
-          in: [
-            "agent.enabled",
-            "agent.intervalHours",
-            "agent.articlesPerRun",
-            "agent.categories",
-            "agent.lastRun",
-            "agent.nextRun",
-            "agent.emailNotifications",
-            "agent.adminEmail",
-          ],
+    const [settings, categories] = await db.$transaction([
+      db.setting.findMany({
+        where: {
+          key: {
+            in: [
+              "agent.enabled",
+              "agent.intervalHours",
+              "agent.articlesPerRun",
+              "agent.categories",
+              "agent.lastRun",
+              "agent.nextRun",
+              "agent.emailNotifications",
+              "agent.adminEmail",
+            ],
+          },
         },
-      },
-    });
+      }),
+      db.category.findMany({
+        where: {
+          slug: {
+            not: "teknoloji",
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+      }),
+    ]);
 
     // Parse settings
     const settingsMap = settings.reduce(
@@ -60,23 +76,6 @@ export async function GET() {
       },
       {} as Record<string, string>,
     );
-
-    // Get all categories for selection
-    const categories = await db.category.findMany({
-      where: {
-        slug: {
-          not: "teknoloji", // Exclude "teknoloji" category
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
 
     // Parse and return settings
     const agentSettings = {
