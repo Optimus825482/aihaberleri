@@ -9,7 +9,7 @@ import {
   aggregateMultiSourceArticles,
 } from "@/lib/deepseek";
 import { fetchPollinationsImage } from "@/lib/pollinations";
-import { generateSlug } from "@/lib/utils";
+import { generateSlug, normalizeUrl } from "@/lib/utils";
 import { db } from "@/lib/db";
 import type { NewsArticle } from "./news.service";
 import { fetchArticleContent, isDuplicateNews } from "./news.service";
@@ -105,18 +105,7 @@ export interface ProcessedArticle {
  * ENHANCED: Multiple layers of duplicate detection using new isDuplicateNews()
  */
 async function isDuplicate(article: NewsArticle): Promise<boolean> {
-  // 1. Normalize URL: remove query parameters, fragments, trailing slashes
-  const normalizeUrl = (url: string) => {
-    try {
-      const urlObj = new URL(url);
-      // Remove trailing slash and normalize path
-      const path = urlObj.pathname.replace(/\/$/, "");
-      return `${urlObj.origin}${path}`;
-    } catch {
-      return url;
-    }
-  };
-
+  // Normalize URL using shared utility
   const normalizedUrl = normalizeUrl(article.url);
 
   // Check 1: Exact sourceUrl match (fastest)

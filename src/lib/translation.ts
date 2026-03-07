@@ -11,6 +11,7 @@ import {
   recordShareSuccess,
   recordShareFailure,
 } from "@/services/social-share.service";
+import { generateSlug } from "./utils";
 
 export type SupportedLocale = "tr" | "en";
 
@@ -44,27 +45,6 @@ Translate the following English text to Turkish.
 - Do not add or remove information
 - Return ONLY the translated text, no explanations`,
 };
-
-/**
- * Generate URL-friendly slug from title
- */
-function generateSlug(title: string, locale: SupportedLocale): string {
-  const slug = title
-    .toLowerCase()
-    .replace(/[çÇ]/g, "c")
-    .replace(/[ğĞ]/g, "g")
-    .replace(/[ıİ]/g, "i")
-    .replace(/[öÖ]/g, "o")
-    .replace(/[şŞ]/g, "s")
-    .replace(/[üÜ]/g, "u")
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim()
-    .substring(0, 100);
-
-  return slug;
-}
 
 /**
  * Translate text using LLM API (NVIDIA NIM primary, DeepSeek fallback)

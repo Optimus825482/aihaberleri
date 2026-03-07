@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 /**
  * Bulk Selection Hook for Admin Tables
@@ -80,14 +80,17 @@ export function useBulkSelection<T extends { id: string }>(items: T[]) {
   };
 
   /**
-   * Get selected items
+   * Get selected items (memoized to avoid recalculation on every render)
    */
-  const selectedItems = items.filter((item) => selected.has(item.id));
+  const selectedItems = useMemo(
+    () => items.filter((item) => selected.has(item.id)),
+    [items, selected],
+  );
 
   /**
-   * Get selected IDs as array
+   * Get selected IDs as array (memoized)
    */
-  const selectedIds = Array.from(selected);
+  const selectedIds = useMemo(() => Array.from(selected), [selected]);
 
   return {
     selected, // Set of selected IDs

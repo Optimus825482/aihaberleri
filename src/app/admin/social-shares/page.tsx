@@ -36,38 +36,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { usePageVisibility } from "@/hooks/usePageVisibility";
-
-// Platform icons and colors
-const platformConfig: Record<
-  string,
-  { icon: string; color: string; label: string }
-> = {
-  FACEBOOK: { icon: "📘", color: "bg-blue-600", label: "Facebook TR" },
-  FACEBOOK_EN: { icon: "📘", color: "bg-blue-500", label: "Facebook EN" },
-  BLUESKY: { icon: "🦋", color: "bg-sky-500", label: "Bluesky TR" },
-  BLUESKY_EN: { icon: "🦋", color: "bg-sky-400", label: "Bluesky EN" },
-  MASTODON: { icon: "🐘", color: "bg-purple-600", label: "Mastodon TR" },
-  MASTODON_EN: { icon: "🐘", color: "bg-purple-500", label: "Mastodon EN" },
-};
-
-const platformRateProfiles: Record<string, { minIntervalSeconds: number }> = {
-  FACEBOOK: { minIntervalSeconds: 30 },
-  BLUESKY: { minIntervalSeconds: 5 },
-  MASTODON: { minIntervalSeconds: 5 },
-};
-
-const normalizePlatformKey = (platform: string) => platform.replace("_EN", "");
-
-const getRecommendedMinInterval = (platforms: string[]) => {
-  if (platforms.length === 0) return 10;
-
-  return Math.max(
-    ...platforms.map((platform) => {
-      const key = normalizePlatformKey(platform);
-      return platformRateProfiles[key]?.minIntervalSeconds ?? 10;
-    }),
-  );
-};
+import {
+  platformConfig,
+  platformRateProfiles,
+  normalizePlatformKey,
+  getRecommendedMinInterval,
+  ALL_PLATFORMS,
+} from "@/config/social-platforms";
 
 // Status badge component
 function StatusBadge({ status }: { status: string }) {

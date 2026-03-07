@@ -15,7 +15,7 @@ import { db } from "@/lib/db";
 import { braveSearch, type BraveSearchResult } from "@/lib/brave";
 import { callDeepSeek, generateImagePrompt } from "@/lib/deepseek";
 import { isDuplicateNews, type NewsArticle } from "./news.service";
-import { generateSlug } from "@/lib/utils";
+import { generateSlug, normalizeUrl } from "@/lib/utils";
 import {
   fetchPollinationsImage,
   fetchFreeBackupImage,
@@ -477,29 +477,6 @@ function extractEntities(text: string): string[] {
   }
 
   return [...new Set(entities)]; // Remove duplicates
-}
-
-/**
- * URL normalize et
- */
-function normalizeUrl(url: string): string {
-  try {
-    const urlObj = new URL(url);
-    // YouTube URLs: video ID is in ?v= query param — MUST preserve it
-    if (
-      urlObj.hostname.includes("youtube.com") &&
-      urlObj.searchParams.has("v")
-    ) {
-      return `${urlObj.origin}${urlObj.pathname}?v=${urlObj.searchParams.get("v")}`;
-    }
-    if (urlObj.hostname === "youtu.be") {
-      return `${urlObj.origin}${urlObj.pathname.replace(/\/$/, "")}`;
-    }
-    // Query params ve fragment'ı kaldır
-    return `${urlObj.origin}${urlObj.pathname.replace(/\/$/, "")}`;
-  } catch {
-    return url;
-  }
 }
 
 // ============================================

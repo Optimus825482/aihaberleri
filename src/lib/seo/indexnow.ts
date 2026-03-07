@@ -243,12 +243,14 @@ async function preWarmKeyFileCache(keyFileUrl: string): Promise<void> {
  */
 async function writeIndexNowKeyFileSafe(apiKey: string): Promise<void> {
   try {
-    const fs = require("fs");
-    const path = require("path");
+    const fs = await import("fs");
+    const path = await import("path");
     const publicDir = path.join(process.cwd(), "public");
     const keyFilePath = path.join(publicDir, `${apiKey}.txt`);
-    if (!fs.existsSync(keyFilePath)) {
-      fs.writeFileSync(keyFilePath, apiKey, "utf-8");
+
+    const exists = await fs.promises.access(keyFilePath).then(() => true).catch(() => false);
+    if (!exists) {
+      await fs.promises.writeFile(keyFilePath, apiKey, "utf-8");
       console.log(`🔑 Physical key file written: public/${apiKey}.txt`);
     }
   } catch (e) {

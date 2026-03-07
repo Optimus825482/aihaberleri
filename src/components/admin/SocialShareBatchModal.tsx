@@ -21,19 +21,12 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Loader2, Play } from "lucide-react";
-
-// Platform icons and colors
-const platformConfig: Record<
-  string,
-  { icon: string; color: string; label: string }
-> = {
-  FACEBOOK: { icon: "📘", color: "bg-blue-600", label: "Facebook TR" },
-  FACEBOOK_EN: { icon: "📘", color: "bg-blue-500", label: "Facebook EN" },
-  BLUESKY: { icon: "🦋", color: "bg-sky-500", label: "Bluesky TR" },
-  BLUESKY_EN: { icon: "🦋", color: "bg-sky-400", label: "Bluesky EN" },
-  MASTODON: { icon: "🐘", color: "bg-purple-600", label: "Mastodon TR" },
-  MASTODON_EN: { icon: "🐘", color: "bg-purple-500", label: "Mastodon EN" },
-};
+import {
+  platformConfig,
+  platformRateProfiles,
+  normalizePlatformKey,
+  ALL_PLATFORMS,
+} from "@/config/social-platforms";
 
 interface SocialShareBatchModalProps {
   isOpen: boolean;
@@ -54,14 +47,9 @@ export function SocialShareBatchModal({
   loading = false,
   articleCount = 0,
 }: SocialShareBatchModalProps) {
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([
-    "FACEBOOK",
-    "FACEBOOK_EN",
-    "BLUESKY",
-    "BLUESKY_EN",
-    "MASTODON",
-    "MASTODON_EN",
-  ]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(
+    ALL_PLATFORMS,
+  );
   const [batchSize, setBatchSize] = useState(50);
   const [intervalSeconds, setIntervalSeconds] = useState(10);
 

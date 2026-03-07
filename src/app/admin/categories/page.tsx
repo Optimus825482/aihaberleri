@@ -30,6 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { generateSlug } from "@/lib/utils";
 import {
   Tags,
   Plus,
@@ -237,21 +238,6 @@ export default function CategoriesPage() {
     setEditingCategory(null);
     setFormData({ name: "", slug: "", description: "", order: 0 });
     setShowForm(false);
-  };
-
-  const generateSlug = (name: string) => {
-    const turkishMap: Record<string, string> = {
-      ç: "c", ğ: "g", ı: "i", ö: "o", ş: "s", ü: "u",
-      Ç: "c", Ğ: "g", İ: "i", Ö: "o", Ş: "s", Ü: "u",
-    };
-
-    return name
-      .toLowerCase()
-      .split("")
-      .map((char) => turkishMap[char] || char)
-      .join("")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
   };
 
   if (loading) {
