@@ -76,6 +76,8 @@ const PICSUM_URL = "https://picsum.photos";
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const CACHE_KEY_PREFIX = "pollinations:image:";
 const DEFAULT_POLLINATIONS_REQUEST_TIMEOUT_MS = 25000;
+const POLLINATIONS_IMAGE_ACCEPT_HEADER =
+  "image/jpeg, image/png, image/webp, */*";
 
 /**
  * Generate cache key from prompt using SHA-256 hash
@@ -371,6 +373,7 @@ export async function fetchPollinationsImage(
         try {
           const response = await fetch(imageUrl, {
             headers: {
+              Accept: POLLINATIONS_IMAGE_ACCEPT_HEADER,
               Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
             },
             signal: controller.signal,
@@ -479,6 +482,9 @@ async function fetchPollinationsImageAnonymous(
 
   try {
     const response = await fetch(imageUrl, {
+      headers: {
+        Accept: POLLINATIONS_IMAGE_ACCEPT_HEADER,
+      },
       signal: controller.signal,
     });
 

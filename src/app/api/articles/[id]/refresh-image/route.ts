@@ -17,7 +17,7 @@ const IMAGE_GENERATION_STRATEGIES = [
     label: "primary",
   },
   {
-    model: "seedream5" as const,
+    model: "zimage" as const,
     width: 1200,
     height: 630,
     requestTimeoutMs: 30000,
