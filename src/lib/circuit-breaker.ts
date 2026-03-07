@@ -146,6 +146,11 @@ export const SERVICE_CONFIGS: Record<string, Partial<CircuitBreakerOptions>> = {
     resetTimeout: 30_000,
     halfOpenSuccessThreshold: 2,
   },
+  exa: {
+    failureThreshold: 5,
+    resetTimeout: 60_000,
+    halfOpenSuccessThreshold: 2,
+  },
 };
 
 // ============================================================================

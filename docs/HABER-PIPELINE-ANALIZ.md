@@ -219,5 +219,6 @@ Pipeline mimarisi sağlam; kuyruk zinciri, kalite kapıları ve re-enrich döng�
 | 3.4 SEO Optimizer | nextQueueName DATABASE_PUBLISHER. |
 | 3.5+3.8 Re-enrich | SourceGathererInput union; RE_ENRICH_JOB_NAME. |
 | 3.6-3.7 Doc + TrendEnricher | Comments; super("trend-enricher"). |
-| 4.1 SourceGatherer | Local CircuitBreaker removed. |
+| 4.1 SourceGatherer | Local CircuitBreaker removed; Tavily/Firecrawl/Exa/SearXNG wrapped with withCircuitBreakerAndRetry. |
 | 4.2-4.4 Timeout, bypass, visual_failed | SYNTHESIS_TIMEOUT_MS; bypass_count log; metrics.visualFailed. |
+| 4.7 Pipeline health tek özet | GET /api/admin/pipeline/health; admin ana sayfada Pipeline İzleme kartı (PipelineHealthCard). |

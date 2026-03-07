@@ -49,10 +49,12 @@ import { DashboardSkeleton } from "@/components/admin/SkeletonLoaders";
 import {
   useDashboardStats,
   useAgentStats,
+  usePipelineHealth,
   useGA4RealtimeLite,
   useSystemStats,
   useAdSenseSummary,
 } from "@/hooks/use-swr-admin";
+import { PipelineHealthCard } from "@/components/admin/PipelineHealthCard";
 
 // === Lazy load heavy components ===
 const AgentPipelineStepper = dynamic(
@@ -852,6 +854,14 @@ export default function AdminDashboard() {
     setGaDisplay({ users: gaActiveUsers, level });
   }, [gaActiveUsers]);
 
+  const {
+    data: pipelineHealthData,
+    isLoading: pipelineHealthLoading,
+    error: pipelineHealthError,
+  } = usePipelineHealth(10000);
+  const pipelineHealth =
+    pipelineHealthData?.success === true ? pipelineHealthData.summary : null;
+
   const isAgentEnabled = agentStats?.agent?.enabled ?? false;
   const isLoading = dashLoading && agentLoading && !dashboardStats;
   const hasError = dashError && agentError;
@@ -950,6 +960,13 @@ export default function AdminDashboard() {
             color="amber"
           />
         </div>
+
+        {/* Pipeline İzleme — Tek özet (agent + kuyruk + circuit + program) */}
+        <PipelineHealthCard
+          summary={pipelineHealth}
+          isLoading={pipelineHealthLoading}
+          error={!!pipelineHealthError || pipelineHealthData?.success === false}
+        />
 
         {/* Hero Metrics — 2x2 on mobile, 4 cols on desktop */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

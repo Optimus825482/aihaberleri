@@ -42,6 +42,17 @@ export function useAgentStats(refreshInterval = 30000) {
 }
 
 /**
+ * Pipeline Health Hook – tek özet (agent + kuyruk + circuit + program)
+ * Admin ana sayfa "Pipeline İzleme" kartı için.
+ */
+export function usePipelineHealth(refreshInterval = 10000) {
+  return useSWR("/api/admin/pipeline/health", fetcher, {
+    ...defaultConfig,
+    refreshInterval,
+  });
+}
+
+/**
  * System Stats Hook (RAM, Disk) with SWR caching
  */
 export function useSystemStats(refreshInterval = 30000) {

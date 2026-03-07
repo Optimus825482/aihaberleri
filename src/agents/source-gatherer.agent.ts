@@ -24,6 +24,7 @@ import axios from "axios";
 import type { UniqueArticle } from "./duplicate-detector.agent";
 import { exaSearch } from "@/lib/exa";
 import { firecrawlScrape, isFirecrawlAvailable } from "@/lib/firecrawl";
+import { withCircuitBreakerAndRetry } from "@/lib/circuit-breaker";
 import type {
   ArticleSource,
   ArticleWithSources,
@@ -264,13 +265,15 @@ export class SourceGathererAgent extends BaseAgent<
     );
     this.logger.info(`🔍 Deep research: Tavily + SearXNG for "${keywords}"`);
 
-    // STEP 1: Tavily Deep Research
+    // STEP 1: Tavily Deep Research (circuit breaker + retry)
     let tavilySourceCount = 0;
     try {
       const { tavilySearch } = await import("@/lib/tavily");
       this.logger.info(`🔬 Tavily deep research starting...`);
 
-      const tavilyResults = await tavilySearch(keywords, { max_results: 8 });
+      const tavilyResults = await withCircuitBreakerAndRetry("tavily", () =>
+        tavilySearch(keywords, { max_results: 8 }),
+      );
 
       for (const result of tavilyResults) {
         const normalizedUrl = this.normalizeUrl(result.url);
@@ -304,19 +307,20 @@ export class SourceGathererAgent extends BaseAgent<
         relevanceScore: number;
       }> = [];
 
-      const searchResults = await Promise.all(
-        searchQueries.map(async (query) => {
-          try {
-            return await searxngSearch(query, {
-              count: 8,
-              time_range: "week",
-              categories: "general,news",
-            });
-          } catch {
-            return [];
-          }
-        }),
-      );
+      const searchResults = await withCircuitBreakerAndRetry(
+        "searxng",
+        () =>
+          Promise.all(
+            searchQueries.map((query) =>
+              searxngSearch(query, {
+                count: 8,
+                time_range: "week",
+                categories: "general,news",
+              }),
+            ),
+          ),
+        { retries: 1, baseDelayMs: 500 },
+      ).catch(() => [] as SearXNGResult[][]);
 
       for (const results of searchResults) {
         for (const result of results) {
@@ -619,38 +623,42 @@ export class SourceGathererAgent extends BaseAgent<
       candidateUrls.push({ title, url, relevanceScore });
     };
 
-    // PARALLEL SEARCH LAYERS
+    // PARALLEL SEARCH LAYERS (circuit breaker + retry)
+    const queries = [
+      keywords,
+      `${keywords} news`,
+      `${keywords} AI`,
+      `${article.title.substring(0, 80)}`,
+    ].filter(Boolean);
+
     const [searxResults, exaResults] = await Promise.allSettled([
-      // Layer 1: SearXNG wide-net (4 queries, month range)
-      (async () => {
-        const queries = [
-          keywords,
-          `${keywords} news`,
-          `${keywords} AI`,
-          `${article.title.substring(0, 80)}`,
-        ].filter(Boolean);
+      withCircuitBreakerAndRetry(
+        "searxng",
+        () =>
+          Promise.all(
+            queries.map((q) =>
+              searxngSearch(q, {
+                count: 10,
+                time_range: "month",
+                categories: "general,news",
+              }),
+            ),
+          ).then((r) => r.flat()),
+        { retries: 1, baseDelayMs: 500 },
+      ).catch(() => [] as SearXNGResult[]),
 
-        const results = await Promise.all(
-          queries.map((q) =>
-            searxngSearch(q, {
-              count: 10,
-              time_range: "month",
-              categories: "general,news",
-            }).catch(() => [] as SearXNGResult[]),
-          ),
-        );
-        return results.flat();
-      })(),
-
-      // Layer 2: Exa neural search
-      (process.env.EXA_API_KEY
-        ? exaSearch(keywords, {
-            num_results: 8,
-            use_autoprompt: true,
-            type: "neural",
-          })
-        : Promise.resolve([])
-      ).catch(() => []),
+      process.env.EXA_API_KEY
+        ? withCircuitBreakerAndRetry(
+            "exa",
+            () =>
+              exaSearch(keywords, {
+                num_results: 8,
+                use_autoprompt: true,
+                type: "neural",
+              }),
+            { retries: 1, baseDelayMs: 1000 },
+          ).catch(() => [] as Awaited<ReturnType<typeof exaSearch>>)
+        : Promise.resolve([]),
     ]);
 
     // Process SearXNG
@@ -731,7 +739,7 @@ export class SourceGathererAgent extends BaseAgent<
       }
     }
 
-    // LAST RESORT: Firecrawl
+    // LAST RESORT: Firecrawl (circuit breaker + retry)
     const MIN_SOURCES_BEFORE_FIRECRAWL = 4;
     if (
       sources.length < MIN_SOURCES_BEFORE_FIRECRAWL &&
@@ -741,7 +749,11 @@ export class SourceGathererAgent extends BaseAgent<
         `🔥 Insufficient sources (${sources.length}/${MIN_SOURCES_BEFORE_FIRECRAWL}), trying Firecrawl...`,
       );
       try {
-        const fcPage = await firecrawlScrape(article.url, 12_000);
+        const fcPage = await withCircuitBreakerAndRetry(
+          "firecrawl",
+          () => firecrawlScrape(article.url, 12_000),
+          { retries: 1, baseDelayMs: 2000 },
+        );
         if (fcPage.content && fcPage.content.length > 200) {
           this.logger.info(
             `🔥 Firecrawl scraped original URL (${fcPage.content.length} chars)`,
