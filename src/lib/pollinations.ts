@@ -39,6 +39,7 @@ interface PollinationsOptions {
   safe?: boolean;
   quality?: "low" | "medium" | "high" | "hd";
   transparent?: boolean;
+  allowBackupFallback?: boolean;
 }
 
 const POLLINATIONS_IMAGE_MODELS = new Set([
@@ -321,6 +322,7 @@ export async function fetchPollinationsImage(
     width = 1200,
     height = 630,
     model = "flux", // Use flux as default - most stable model
+    allowBackupFallback = true,
   } = options;
   const normalizedModel = normalizeModel(model);
 
@@ -448,6 +450,9 @@ export async function fetchPollinationsImage(
           `❌ Pollinations.ai failed after ${maxRetries} attempts:`,
           error,
         );
+        if (!allowBackupFallback) {
+          throw error;
+        }
         return await fetchFreeBackupImage(sanitizedPrompt, options);
       }
 
@@ -459,6 +464,10 @@ export async function fetchPollinationsImage(
       );
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
+  }
+
+  if (!allowBackupFallback) {
+    throw new Error("Pollinations image generation failed without fallback");
   }
 
   return await fetchFreeBackupImage(sanitizedPrompt, options);

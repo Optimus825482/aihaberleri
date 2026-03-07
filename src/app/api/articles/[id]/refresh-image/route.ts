@@ -71,18 +71,29 @@ export async function POST(
     let newImageUrl: string | null = null;
 
     for (const strategy of IMAGE_GENERATION_STRATEGIES) {
-      const candidateImageUrl = await fetchPollinationsImage(
-        imagePrompt,
-        {
-          width: strategy.width,
-          height: strategy.height,
-          model: strategy.model,
-          enhance: true,
-          nologo: true,
-        },
-        1,
-        strategy.requestTimeoutMs,
-      );
+      let candidateImageUrl: string;
+
+      try {
+        candidateImageUrl = await fetchPollinationsImage(
+          imagePrompt,
+          {
+            width: strategy.width,
+            height: strategy.height,
+            model: strategy.model,
+            enhance: true,
+            nologo: true,
+            allowBackupFallback: false,
+          },
+          1,
+          strategy.requestTimeoutMs,
+        );
+      } catch (error) {
+        console.warn(
+          `⚠️ Pollinations ${strategy.model} (${strategy.label}) isteği başarısız oldu`,
+          error,
+        );
+        continue;
+      }
 
       if (isFallbackImageUrl(candidateImageUrl)) {
         console.warn(
