@@ -31,6 +31,7 @@
     "worker:orchestrator": "tsx src/workers/orchestrator.worker.ts",
     "worker:seo-calculator": "tsx src/workers/seo-calculator.worker.ts",
     "worker:seo-optimizer": "tsx src/workers/seo-optimizer.worker.ts",
+    "queue:clear-waiting": "tsx scripts/clear-waiting-queues.ts",
     "migrate:search-providers": "tsx scripts/apply-search-provider-migration.ts",
     "migrate:search-providers:test": "tsx scripts/apply-search-provider-migration.ts --with-test-data",
     "test:search-providers": "tsx scripts/test-search-provider-monitoring.ts"

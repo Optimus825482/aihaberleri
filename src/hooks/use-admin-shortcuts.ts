@@ -63,7 +63,7 @@ export function useAdminShortcuts(options?: {
       // Ctrl+N: New article
       if (e.ctrlKey && e.key === "n" && !isInput) {
         e.preventDefault();
-        router.push("/admin/create");
+        router.push("/admin/articles/create");
         return;
       }
 

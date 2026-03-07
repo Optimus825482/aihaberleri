@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useState, useEffect } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -48,6 +48,30 @@ interface AdminLayoutProps {
   children: ReactNode;
 }
 
+type MatchMode = "exact" | "prefix";
+
+interface MenuItem {
+  title: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  requiredResource: Parameters<typeof canAccessResource>[1] | null;
+  matchMode?: MatchMode;
+}
+
+const AdminShellContext = createContext(false);
+
+function isPathActive(
+  pathname: string,
+  href: string,
+  matchMode: MatchMode = "exact",
+): boolean {
+  if (matchMode === "exact") {
+    return pathname === href;
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 const menuGroups = [
   {
     title: "Genel",
@@ -57,8 +81,9 @@ const menuGroups = [
         href: "/admin",
         icon: LayoutDashboard,
         requiredResource: null,
+        matchMode: "exact",
       },
-    ],
+    ] satisfies MenuItem[],
   },
   {
     title: "İçerik Yönetimi",
@@ -68,38 +93,51 @@ const menuGroups = [
         href: "/admin/articles",
         icon: FileText,
         requiredResource: "articles" as const,
+        matchMode: "prefix",
+      },
+      {
+        title: "Yeni Makale Oluştur",
+        href: "/admin/articles/create",
+        icon: PlusCircle,
+        requiredResource: "articles" as const,
+        matchMode: "exact",
       },
       {
         title: "TR-EN Senkron",
         href: "/admin/articles/en-sync",
         icon: Languages,
         requiredResource: "articles" as const,
+        matchMode: "exact",
       },
       {
         title: "Yeni Haber Ekle",
         href: "/admin/add-news",
         icon: PlusCircle,
         requiredResource: null,
+        matchMode: "exact",
       },
       {
         title: "Kategoriler",
         href: "/admin/categories",
         icon: Tags,
         requiredResource: "categories" as const,
+        matchMode: "prefix",
       },
       {
         title: "YouTube Kanalları",
         href: "/admin/youtube-channels",
         icon: Youtube,
         requiredResource: null,
+        matchMode: "exact",
       },
       {
         title: "YouTube Konuları",
         href: "/admin/youtube-topics",
         icon: Newspaper,
         requiredResource: null,
+        matchMode: "exact",
       },
-    ],
+    ] satisfies MenuItem[],
   },
   {
     title: "Analitik",
@@ -109,20 +147,23 @@ const menuGroups = [
         href: "/admin/visitor-analytics",
         icon: Activity,
         requiredResource: null,
+        matchMode: "exact",
       },
       {
         title: "Trendler",
         href: "/admin/trends",
         icon: TrendingUp,
         requiredResource: null,
+        matchMode: "exact",
       },
       {
         title: "Pipeline Metrikleri",
         href: "/admin/pipeline-metrics",
         icon: Gauge,
         requiredResource: null,
+        matchMode: "exact",
       },
-    ],
+    ] satisfies MenuItem[],
   },
   {
     title: "Agent & SEO",
@@ -132,26 +173,51 @@ const menuGroups = [
         href: "/admin/agent-settings",
         icon: Bot,
         requiredResource: "settings" as const,
+        matchMode: "exact",
       },
       {
         title: "SEO Dashboard",
         href: "/admin/seo",
         icon: Search,
         requiredResource: null,
+        matchMode: "exact",
+      },
+      {
+        title: "SEO Önerileri",
+        href: "/admin/seo/recommendations",
+        icon: Sparkles,
+        requiredResource: null,
+        matchMode: "exact",
+      },
+      {
+        title: "SEO Toplu İşlemler",
+        href: "/admin/seo/bulk-actions",
+        icon: Gauge,
+        requiredResource: null,
+        matchMode: "exact",
       },
       {
         title: "İçerik Kalitesi",
         href: "/admin/content-quality",
         icon: Sparkles,
         requiredResource: null,
+        matchMode: "exact",
       },
       {
         title: "AdSense Yönetimi",
         href: "/admin/adsense",
         icon: DollarSign,
         requiredResource: null,
+        matchMode: "exact",
       },
-    ],
+      {
+        title: "AdSense Hazırlık",
+        href: "/admin/adsense-readiness",
+        icon: DollarSign,
+        requiredResource: null,
+        matchMode: "exact",
+      },
+    ] satisfies MenuItem[],
   },
   {
     title: "Dağıtım",
@@ -161,20 +227,23 @@ const menuGroups = [
         href: "/admin/social-shares",
         icon: Share2,
         requiredResource: null,
+        matchMode: "exact",
       },
       {
         title: "Newsletter",
         href: "/admin/newsletter",
         icon: Mail,
         requiredResource: "settings" as const,
+        matchMode: "exact",
       },
       {
         title: "Bildirimler",
         href: "/admin/notifications",
         icon: Bell,
         requiredResource: "settings" as const,
+        matchMode: "exact",
       },
-    ],
+    ] satisfies MenuItem[],
   },
   {
     title: "Yönetim",
@@ -184,31 +253,35 @@ const menuGroups = [
         href: "/admin/users",
         icon: Users,
         requiredResource: "users" as const,
+        matchMode: "exact",
       },
       {
         title: "İletişim",
         href: "/admin/messages",
         icon: MessageSquare,
         requiredResource: "messages" as const,
+        matchMode: "exact",
       },
       {
         title: "İşlem Geçmişi",
         href: "/admin/audit-logs",
         icon: Shield,
         requiredResource: null,
+        matchMode: "exact",
       },
       {
         title: "Ayarlar",
         href: "/admin/settings",
         icon: Settings,
         requiredResource: "settings" as const,
+        matchMode: "exact",
       },
-    ],
+    ] satisfies MenuItem[],
   },
 ];
 
-export function AdminLayout({ children }: AdminLayoutProps) {
-  const pathname = usePathname();
+export function AdminShell({ children }: AdminLayoutProps) {
+  const pathname = usePathname() ?? "";
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>(
     {},
@@ -216,8 +289,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const { isInstallable, installApp } = usePWA();
   const router = useRouter();
 
-  // Default to VIEWER role - actual auth is handled by middleware
-  const userRole = "ADMIN"; // You can fetch this from an API if needed
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
+  const userRole = "ADMIN";
 
   // Toggle submenu expansion
   const toggleSubmenu = (title: string) => {
@@ -242,16 +318,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     setIsMobileMenuOpen(false);
   };
 
-  // Filter menu items based on user role and organize by groups
-  const visibleGroups = menuGroups
-    .map((group) => ({
-      ...group,
-      items: group.items.filter((item) => {
-        if (!item.requiredResource) return true;
-        return canAccessResource(userRole, item.requiredResource);
-      }),
-    }))
-    .filter((group) => group.items.length > 0);
+  // Role-specific filtering should use real session data.
+  // Until that is wired, show the full navigation consistently.
+  const visibleGroups = menuGroups;
 
   // Role badge colors
   const getRoleBadgeColor = (role: string) => {
@@ -289,8 +358,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <AdminNotificationProvider>
-      <div className="min-h-[100dvh] bg-background flex">
+    <AdminShellContext.Provider value={true}>
+      <AdminNotificationProvider>
+        <div className="min-h-[100dvh] bg-background flex">
         {/* Mobile Header - Enhanced for PWA */}
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-card/95 border-b border-primary/10 px-4 py-3 flex items-center justify-between shadow-lg safe-area-top">
           <div className="flex items-center gap-2">
@@ -399,7 +469,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </div>
                 {group.items.map((item) => {
                   const Icon = item.icon;
-                  const isActive = pathname === item.href;
+                  const isActive = isPathActive(
+                    pathname,
+                    item.href,
+                    item.matchMode,
+                  );
                   const hasSubmenu =
                     "submenu" in item &&
                     Array.isArray((item as any).submenu) &&
@@ -611,11 +685,22 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </main>
 
         {/* Toast Notifications */}
-        <Toaster />
+          <Toaster />
 
-        {/* Keyboard Shortcuts Dialog */}
-        <KeyboardShortcutsDialog />
-      </div>
-    </AdminNotificationProvider>
+          {/* Keyboard Shortcuts Dialog */}
+          <KeyboardShortcutsDialog />
+        </div>
+      </AdminNotificationProvider>
+    </AdminShellContext.Provider>
   );
+}
+
+export function AdminLayout({ children }: AdminLayoutProps) {
+  const hasShell = useContext(AdminShellContext);
+
+  if (hasShell) {
+    return <>{children}</>;
+  }
+
+  return <AdminShell>{children}</AdminShell>;
 }

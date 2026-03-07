@@ -51,6 +51,7 @@ import {
   ExternalLink,
   AlertTriangle,
 } from "lucide-react";
+import { usePageVisibility } from "@/hooks/usePageVisibility";
 
 // Types
 interface ScanTopic {
@@ -93,6 +94,7 @@ type FilterMode = "all" | "uncovered" | "covered";
 export default function YouTubeTopicsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const isPageVisible = usePageVisibility();
 
   // Scan state
   const [isScanning, setIsScanning] = useState(false);
@@ -134,10 +136,18 @@ export default function YouTubeTopicsPage() {
   }, []);
 
   useEffect(() => {
+    if (!isPageVisible) {
+      return undefined;
+    }
+
     fetchQueueStatus();
-    const interval = setInterval(fetchQueueStatus, 15000);
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchQueueStatus();
+      }
+    }, 30000);
     return () => clearInterval(interval);
-  }, [fetchQueueStatus]);
+  }, [fetchQueueStatus, isPageVisible]);
 
   // Scan channels
   const handleScan = async () => {

@@ -48,6 +48,7 @@ import {
 import { AdminLayout } from "@/components/AdminLayout";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
+import { usePageVisibility } from "@/hooks/usePageVisibility";
 
 // =====================================================
 // INTERFACES
@@ -94,6 +95,7 @@ interface Subscriber {
 function NewsletterPreviewSection() {
     const [preview, setPreview] = useState<NewsletterPreview | null>(null);
     const [loading, setLoading] = useState(true);
+    const isPageVisible = usePageVisibility();
 
     const fetchPreview = async () => {
         setLoading(true);
@@ -111,10 +113,18 @@ function NewsletterPreviewSection() {
     };
 
     useEffect(() => {
+        if (!isPageVisible) {
+            return undefined;
+        }
+
         fetchPreview();
-        const interval = setInterval(fetchPreview, 300000);
+        const interval = setInterval(() => {
+            if (document.visibilityState === "visible") {
+                fetchPreview();
+            }
+        }, 300000);
         return () => clearInterval(interval);
-    }, []);
+    }, [isPageVisible]);
 
     if (loading) {
         return (

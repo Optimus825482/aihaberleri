@@ -27,6 +27,7 @@ import {
 import Link from "next/link";
 import { SEOPanel } from "@/components/admin/SEOPanel";
 import { useToast } from "@/hooks/use-toast";
+import { usePageVisibility } from "@/hooks/usePageVisibility";
 
 // == Constants ==
 const TARGET_SCORE = 99;
@@ -95,6 +96,7 @@ function getProgressColor(pct: number) {
 
 export default function SEOPage() {
   const { toast } = useToast();
+  const isPageVisible = usePageVisibility();
 
   // == Article data ==
   const [articles, setArticles] = useState<ArticleSEO[]>([]);
@@ -208,6 +210,10 @@ export default function SEOPage() {
   }, []);
 
   const pollJobStatus = useCallback(async () => {
+    if (!isPageVisible) {
+      return;
+    }
+
     const jobId = jobIdRef.current;
     if (!jobId) return;
 
@@ -249,16 +255,18 @@ export default function SEOPage() {
     } catch (err) {
       console.error("Polling error:", err);
     }
-  }, [fetchArticles, stopPolling]);
+  }, [fetchArticles, isPageVisible, stopPolling]);
 
   const startPolling = useCallback(
     (jobId: string) => {
       stopPolling();
       jobIdRef.current = jobId;
       lastIndexRef.current = 0;
-      pollingRef.current = setInterval(pollJobStatus, 2000);
+      if (isPageVisible) {
+        pollingRef.current = setInterval(pollJobStatus, 5000);
+      }
     },
-    [pollJobStatus, stopPolling],
+    [isPageVisible, pollJobStatus, stopPolling],
   );
 
   // == Sayfa yuklendiginde aktif job kontrolu ==
@@ -292,12 +300,30 @@ export default function SEOPage() {
 
   useEffect(() => {
     fetchAutoOptimizeStatus();
-    const statusInterval = setInterval(fetchAutoOptimizeStatus, 15000);
+    const statusInterval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchAutoOptimizeStatus();
+      }
+    }, 30000);
     return () => {
       clearInterval(statusInterval);
       stopPolling();
     };
   }, [fetchAutoOptimizeStatus, stopPolling]);
+
+  useEffect(() => {
+    if (!jobIdRef.current) {
+      return;
+    }
+
+    if (!isPageVisible) {
+      stopPolling();
+      return;
+    }
+
+    startPolling(jobIdRef.current);
+    pollJobStatus();
+  }, [isPageVisible, pollJobStatus, startPolling, stopPolling]);
 
   // == Tara & Baslat ==
   const scanAndOptimize = useCallback(async () => {

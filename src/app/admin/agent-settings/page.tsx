@@ -41,6 +41,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { usePageVisibility } from "@/hooks/usePageVisibility";
 
 interface AgentSettings {
   enabled: boolean;
@@ -78,6 +79,7 @@ interface RecentLog {
 export default function AgentSettingsPage() {
   const defaultAdminEmail =
     process.env.NEXT_PUBLIC_ADMIN_EMAIL || "admin@example.com";
+  const isPageVisible = usePageVisibility();
 
   const [settings, setSettings] = useState<AgentSettings>({
     enabled: true,
@@ -129,14 +131,18 @@ export default function AgentSettingsPage() {
     fetchRecentLogs();
     fetchPipelineStats();
 
-    // Poll worker status every 30 seconds
+    // Poll worker status only while the tab is visible.
     const interval = setInterval(() => {
+      if (!isPageVisible) {
+        return;
+      }
+
       fetchWorkerStatus();
       fetchPipelineStats();
-    }, 30000);
+    }, 45000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isPageVisible]);
 
   const fetchSettings = async () => {
     try {
@@ -280,9 +286,8 @@ export default function AgentSettingsPage() {
             "Haber tarama işlemi arka planda başlatıldı. Logları aşağıda takip edebilirsiniz.",
         });
 
-        // Open live log panel and start polling
+        // Open live log panel; polling resumes only while the tab is visible.
         setShowLiveLog(true);
-        startLiveLogPolling();
       } else {
         toast({
           title: "Hata",
@@ -303,6 +308,10 @@ export default function AgentSettingsPage() {
 
   // Live log polling function
   const fetchLiveLogProgress = useCallback(async () => {
+    if (!isPageVisible) {
+      return;
+    }
+
     try {
       const query = currentJobId
         ? `?jobId=${encodeURIComponent(currentJobId)}`
@@ -346,9 +355,13 @@ export default function AgentSettingsPage() {
     } catch (error) {
       console.error("Failed to fetch live log progress:", error);
     }
-  }, [currentJobId, toast]);
+  }, [currentJobId, isPageVisible, toast]);
 
   const startLiveLogPolling = useCallback(() => {
+    if (!isPageVisible) {
+      return;
+    }
+
     // Clear existing polling
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
@@ -357,9 +370,42 @@ export default function AgentSettingsPage() {
     // Initial fetch
     fetchLiveLogProgress();
 
-    // Poll every 2 seconds
-    pollingRef.current = setInterval(fetchLiveLogProgress, 2000);
-  }, [fetchLiveLogProgress]);
+    // Poll every 5 seconds while the tab is visible
+    pollingRef.current = setInterval(fetchLiveLogProgress, 5000);
+  }, [fetchLiveLogProgress, isPageVisible]);
+
+  useEffect(() => {
+    if (!currentJobId) {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+      return;
+    }
+
+    if (!isPageVisible) {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+      return;
+    }
+
+    startLiveLogPolling();
+  }, [currentJobId, isPageVisible, startLiveLogPolling]);
+
+  useEffect(() => {
+    if (!isPageVisible) {
+      return;
+    }
+
+    fetchWorkerStatus();
+    fetchPipelineStats();
+
+    if (currentJobId) {
+      fetchLiveLogProgress();
+    }
+  }, [currentJobId, fetchLiveLogProgress, isPageVisible]);
 
   // Cleanup polling on unmount
   useEffect(() => {

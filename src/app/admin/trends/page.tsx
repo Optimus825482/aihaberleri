@@ -47,6 +47,7 @@ import {
   ArrowUpRight,
   Loader2,
 } from "lucide-react";
+import { usePageVisibility } from "@/hooks/usePageVisibility";
 
 // Types
 interface PipelineStatus {
@@ -105,6 +106,7 @@ const mockStats: TrendStats = {
 };
 
 export default function TrendsPage() {
+  const isPageVisible = usePageVisibility();
   const [isLoading, setIsLoading] = useState(true);
   const [isFetching, setIsFetching] = useState(false);
   const [stats, setStats] = useState<TrendStats>(mockStats);
@@ -255,6 +257,10 @@ export default function TrendsPage() {
 
   // Initial load
   useEffect(() => {
+    if (!isPageVisible) {
+      return undefined;
+    }
+
     const load = async () => {
       setIsLoading(true);
       await Promise.all([fetchTrends(), fetchLogs(), fetchPopularTopics()]);
@@ -262,15 +268,17 @@ export default function TrendsPage() {
     };
     load();
 
-    // Auto-refresh every 30 seconds
+    // Auto-refresh only while the tab is visible.
     const refreshInterval = setInterval(() => {
-      fetchTrends();
-      fetchLogs();
-      fetchPopularTopics();
-    }, 30000);
+      if (document.visibilityState === "visible") {
+        fetchTrends();
+        fetchLogs();
+        fetchPopularTopics();
+      }
+    }, 45000);
 
     return () => clearInterval(refreshInterval);
-  }, [fetchTrends, fetchLogs, fetchPopularTopics]);
+  }, [fetchTrends, fetchLogs, fetchPopularTopics, isPageVisible]);
 
   // Log level colors
   const getLogLevelColor = (level: TrendLog["level"]) => {

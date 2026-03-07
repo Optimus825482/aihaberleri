@@ -35,6 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { usePageVisibility } from "@/hooks/usePageVisibility";
 
 // Platform icons and colors
 const platformConfig: Record<
@@ -138,6 +139,7 @@ type VisibilityFilter = "all" | "shared" | "unshared" | "pending" | "failed";
 type BatchTargetMode = "auto-unshared" | "selected" | "filtered";
 
 export default function SocialSharesPage() {
+  const isPageVisible = usePageVisibility();
   const { toast } = useToast();
   const [articles, setArticles] = useState<any[]>([]);
   const [pagination, setPagination] = useState({
@@ -323,14 +325,6 @@ export default function SocialSharesPage() {
       if (data.batches) setBatches(data.batches);
       if (data.activeBatch) {
         setActiveBatch(data.activeBatch);
-        // Start polling if active batch exists
-        if (!progressPollingRef.current) {
-          const interval = setInterval(() => {
-            fetchStats();
-            fetchArticles(); // Also refresh articles during active batch
-          }, 3000); // Poll every 3 seconds
-          progressPollingRef.current = interval;
-        }
       } else {
         // Batch completed or stopped
         if (activeBatch) {
@@ -352,6 +346,37 @@ export default function SocialSharesPage() {
       console.error("Stats fetch error:", error);
     }
   }, [activeBatch, fetchArticles, toast]);
+
+  useEffect(() => {
+    if (progressPollingRef.current) {
+      clearInterval(progressPollingRef.current);
+      progressPollingRef.current = null;
+    }
+
+    if (!activeBatch || !isPageVisible) {
+      return undefined;
+    }
+
+    progressPollingRef.current = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchStats();
+        fetchArticles();
+      }
+    }, 5000);
+
+    return () => {
+      if (progressPollingRef.current) {
+        clearInterval(progressPollingRef.current);
+        progressPollingRef.current = null;
+      }
+    };
+  }, [activeBatch, fetchArticles, fetchStats, isPageVisible]);
+
+  useEffect(() => {
+    if (activeBatch && isPageVisible) {
+      fetchStats();
+    }
+  }, [activeBatch, fetchStats, isPageVisible]);
 
   const fetchSocialInsights = useCallback(async () => {
     try {
