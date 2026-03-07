@@ -386,7 +386,9 @@ try {
 - **Location**: /admin/* routes
 - **Layout**: src/components/AdminLayout.tsx (glassmorphism design)
 - **Pages**: Dashboard, Analytics, Articles, Agent Settings, Visitors, Messages
-- **Charts**: Chart.js with eact-chartjs-2 and echarts
+- **Charts**: Chart.js with 
+eact-chartjs-2 and 
+echarts
 - **Real-time**: /admin/visitors shows live traffic (Visitor model updated on page views)
 
 ---
