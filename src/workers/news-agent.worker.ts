@@ -689,7 +689,7 @@ async function startWorker() {
       }
 
       return result;
-    };,
+    },
     {
       connection: redis!,
       concurrency: 1, // Process one job at a time
