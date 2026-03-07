@@ -4,6 +4,7 @@ import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { generateImagePrompt } from "@/lib/deepseek";
 import { fetchPollinationsImage, isFallbackImageUrl } from "@/lib/pollinations";
+import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 
 // POST - Refresh article image
 export async function POST(
@@ -58,24 +59,52 @@ export async function POST(
     });
     console.log("✅ Yeni görsel URL:", newImageUrl);
 
-    // Check if fallback was used
-    const isFallback = isFallbackImageUrl(newImageUrl);
-    if (isFallback) {
-      console.warn("⚠️ Pollinations.ai başarısız, fallback kullanıldı");
+    // Never treat stock fallback images as successful regeneration.
+    if (isFallbackImageUrl(newImageUrl)) {
+      console.warn(
+        "⚠️ Pollinations.ai gerçek görsel üretemedi, stock fallback reddedildi",
+      );
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Görsel servisi şu anda gerçek görsel üretemedi. Lütfen daha sonra tekrar deneyin.",
+        },
+        { status: 502 },
+      );
+    }
+
+    let imageSizes = {
+      large: newImageUrl,
+      medium: newImageUrl,
+      small: newImageUrl,
+      thumb: newImageUrl,
+    };
+
+    try {
+      imageSizes = await optimizeAndGenerateSizes(newImageUrl, article.slug);
+    } catch (optimizeError) {
+      console.warn(
+        "⚠️ Görsel optimizasyonu başarısız, orijinal URL kullanılacak",
+        optimizeError,
+      );
     }
 
     // Update article
     const updatedArticle = await db.article.update({
       where: { id },
-      data: { imageUrl: newImageUrl },
+      data: {
+        imageUrl: imageSizes.large,
+        imageUrlMedium: imageSizes.medium,
+        imageUrlSmall: imageSizes.small,
+        imageUrlThumb: imageSizes.thumb,
+      },
     });
 
     return NextResponse.json({
       success: true,
-      usedFallback: isFallback,
-      message: isFallback
-        ? "Görsel servisi yanıt vermedi, varsayılan görsel kullanıldı"
-        : "Görsel başarıyla güncellendi",
+      usedFallback: false,
+      message: "Görsel başarıyla güncellendi",
       data: updatedArticle,
     });
   } catch (error) {

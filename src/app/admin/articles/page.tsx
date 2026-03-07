@@ -383,20 +383,10 @@ export default function ArticlesPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Check if fallback was used
-        if (data.usedFallback) {
-          toast({
-            variant: "destructive",
-            title: "⚠️ Görsel Servisi Hatası",
-            description:
-              "Görsel servisi yanıt vermedi. Varsayılan görsel kullanıldı. Birkaç dakika sonra tekrar deneyin.",
-          });
-        } else {
-          toast({
-            title: "Başarılı",
-            description: "Görsel başarıyla güncellendi",
-          });
-        }
+        toast({
+          title: "Başarılı",
+          description: "Görsel başarıyla güncellendi",
+        });
         // Optimistic update - refresh only this article
         const updatedArticle = await fetch(`/api/articles/${id}`).then((r) =>
           r.json(),
