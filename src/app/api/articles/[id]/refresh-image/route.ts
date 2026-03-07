@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { generateImagePrompt } from "@/lib/deepseek";
-import { fetchPollinationsImage } from "@/lib/pollinations";
+import { fetchPollinationsImage, isFallbackImageUrl } from "@/lib/pollinations";
 
 // POST - Refresh article image
 export async function POST(
@@ -59,7 +59,7 @@ export async function POST(
     console.log("✅ Yeni görsel URL:", newImageUrl);
 
     // Check if fallback was used
-    const isFallback = newImageUrl.includes("/logos/og-image.png");
+    const isFallback = isFallbackImageUrl(newImageUrl);
     if (isFallback) {
       console.warn("⚠️ Pollinations.ai başarısız, fallback kullanıldı");
     }

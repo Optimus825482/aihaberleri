@@ -26,6 +26,7 @@ import type { ArticleWithVisuals } from "./visual-generator.agent";
 import { notifyBothLanguages } from "@/lib/seo/indexing-tracker";
 import { calculateTrendScore } from "@/lib/trend-scoring";
 import { getRedis } from "@/lib/redis";
+import { isFallbackImageUrl } from "@/lib/pollinations";
 import type { SocialShareInput } from "./social-share.agent";
 import { isPrismaError, type PipelineReEnrichPayload } from "./pipeline-types";
 
@@ -205,6 +206,22 @@ export class DatabasePublisherAgent extends BaseAgent<
             } else {
               this.logger.error(
                 `🚫 PERMANENTLY REJECTED (max retries): "${trContent.title.substring(0, 80)}" — image generation failed`,
+              );
+            }
+            continue;
+          }
+
+          // 🛡️ STOCK FALLBACK GATE: Random backup visuals should never be published.
+          if (isFallbackImageUrl(article.imageUrl)) {
+            const retryCount = article._retryCount || 0;
+            if (retryCount < MAX_PIPELINE_RETRIES) {
+              this.logger.warn(
+                `🔄 STOCK FALLBACK IMAGE → re-queue for retry (attempt ${retryCount + 1}): "${trContent.title.substring(0, 80)}"`,
+              );
+              rejectedForRetry.push({ article, reason: "fallback_image" });
+            } else {
+              this.logger.error(
+                `🚫 PERMANENTLY REJECTED (max retries): "${trContent.title.substring(0, 80)}" — stock fallback image`,
               );
             }
             continue;

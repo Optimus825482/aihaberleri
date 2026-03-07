@@ -18,21 +18,58 @@ interface PollinationsOptions {
   seed?: number;
   model?:
     | "kontext"
-    | "turbo"
     | "nanobanana"
+    | "nanobanana-2"
     | "nanobanana-pro"
+    | "seedream5"
     | "seedream"
+    | "seedream-pro"
     | "flux"
-    | "gptimage";
+    | "zimage"
+    | "klein"
+    | "klein-large"
+    | "imagen-4"
+    | "flux-2-dev"
+    | "grok-imagine"
+    | "gptimage"
+    | "gptimage-large";
   enhance?: boolean;
   nologo?: boolean;
+  negativePrompt?: string;
+  safe?: boolean;
+  quality?: "low" | "medium" | "high" | "hd";
+  transparent?: boolean;
 }
+
+const POLLINATIONS_IMAGE_MODELS = new Set([
+  "kontext",
+  "nanobanana",
+  "nanobanana-2",
+  "nanobanana-pro",
+  "seedream5",
+  "seedream",
+  "seedream-pro",
+  "gptimage",
+  "gptimage-large",
+  "flux",
+  "zimage",
+  "klein",
+  "klein-large",
+  "imagen-4",
+  "flux-2-dev",
+  "grok-imagine",
+]);
+
+const NEGATIVE_PROMPT_MODELS = new Set(["flux", "zimage"]);
+const QUALITY_MODELS = new Set(["gptimage", "gptimage-large"]);
+const TRANSPARENT_MODELS = new Set(["gptimage", "gptimage-large"]);
+const DEFAULT_NEGATIVE_PROMPT =
+  "people, humans, faces, hands, portraits, selfies, crowded scene, text watermark, logo";
 
 // API Configuration
 const POLLINATIONS_API_KEY = process.env.POLLINATIONS_API_KEY;
 const POLLINATIONS_IMAGE_URL = "https://image.pollinations.ai/prompt"; // Legacy anonymous endpoint
 const POLLINATIONS_GEN_URL = "https://gen.pollinations.ai/image"; // New authenticated endpoint
-const UNSPLASH_SOURCE_URL = "https://source.unsplash.com";
 const PICSUM_URL = "https://picsum.photos";
 
 // Cache Configuration
@@ -47,36 +84,71 @@ function generateCacheKey(prompt: string): string {
   return `${CACHE_KEY_PREFIX}${createHash("sha256").update(prompt).digest("hex")}`;
 }
 
-function buildQueryFromPrompt(prompt: string): string {
-  const words = prompt
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, " ")
-    .split(/\s+/)
-    .filter((word) => word.length > 2)
-    .slice(0, 6);
-
-  if (words.length === 0) {
-    return "artificial,intelligence,technology";
+function normalizeModel(
+  model: PollinationsOptions["model"],
+): NonNullable<PollinationsOptions["model"]> {
+  if (!model || !POLLINATIONS_IMAGE_MODELS.has(model)) {
+    if (model) {
+      console.warn(`⚠️ Invalid model "${model}", falling back to "flux"`);
+    }
+    return "flux";
   }
 
-  return words.join(",");
+  return model;
 }
 
-async function canFetchImage(url: string, timeoutMs = 8000): Promise<boolean> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+function buildPollinationsParams(
+  options: PollinationsOptions,
+): URLSearchParams {
+  const model = normalizeModel(options.model);
+  const params = new URLSearchParams({
+    width: String(options.width ?? 1200),
+    height: String(options.height ?? 630),
+    model,
+    enhance: String(options.enhance ?? true),
+  });
 
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      signal: controller.signal,
-    });
-    return response.ok;
-  } catch {
-    return false;
-  } finally {
-    clearTimeout(timeoutId);
+  if (typeof options.seed === "number") {
+    params.append("seed", String(options.seed));
   }
+
+  if (typeof options.safe === "boolean") {
+    params.append("safe", String(options.safe));
+  }
+
+  if (NEGATIVE_PROMPT_MODELS.has(model)) {
+    params.append(
+      "negative_prompt",
+      options.negativePrompt?.trim() || DEFAULT_NEGATIVE_PROMPT,
+    );
+  }
+
+  if (options.quality && QUALITY_MODELS.has(model)) {
+    params.append("quality", options.quality);
+  }
+
+  if (
+    typeof options.transparent === "boolean" &&
+    TRANSPARENT_MODELS.has(model)
+  ) {
+    params.append("transparent", String(options.transparent));
+  }
+
+  return params;
+}
+
+export function isFallbackImageUrl(
+  imageUrl: string | null | undefined,
+): boolean {
+  if (!imageUrl) {
+    return false;
+  }
+
+  return (
+    imageUrl.includes("source.unsplash.com") ||
+    imageUrl.includes("picsum.photos") ||
+    imageUrl.includes("/logos/og-image.png")
+  );
 }
 
 export async function fetchFreeBackupImage(
@@ -84,19 +156,9 @@ export async function fetchFreeBackupImage(
   options: PollinationsOptions = {},
 ): Promise<string> {
   const { width = 1200, height = 630 } = options;
-  const query = buildQueryFromPrompt(prompt);
-
-  const unsplashUrl = `${UNSPLASH_SOURCE_URL}/${width}x${height}/?${encodeURIComponent(query)}`;
-  if (await canFetchImage(unsplashUrl)) {
-    console.warn(
-      "⚠️ Pollinations başarısız, Unsplash Source fallback kullanılıyor",
-    );
-    return unsplashUrl;
-  }
-
   const seed = createHash("md5").update(prompt).digest("hex").slice(0, 12);
   const picsumUrl = `${PICSUM_URL}/seed/${seed}/${width}/${height}`;
-  console.warn("⚠️ Unsplash başarısız, Picsum fallback kullanılıyor");
+  console.warn("⚠️ Pollinations başarısız, Picsum fallback kullanılıyor");
   return picsumUrl;
 }
 
@@ -171,48 +233,10 @@ export function generateImageUrl(
   const {
     width = 1200,
     height = 630,
-    seed,
     model = "flux", // Use flux as default - most stable model
-    enhance = true,
   } = options;
 
-  // Validate model - updated with actual API supported models from gen.pollinations.ai
-  const validModels = [
-    "kontext",
-    "turbo",
-    "nanobanana",
-    "nanobanana-pro",
-    "seedream",
-    "seedream-pro",
-    "gptimage",
-    "gptimage-large",
-    "flux",
-    "zimage",
-    "veo",
-    "seedance",
-    "seedance-pro",
-    "wan",
-    "klein",
-    "klein-large",
-    "gpt-image",
-    "gpt-image-1-mini",
-    "gpt-image-1.5",
-    "gpt-image-large",
-    "z-image",
-    "z-image-turbo",
-    "veo-3.1-fast",
-    "video",
-    "wan2.6",
-    "wan-i2v",
-    "flux-klein",
-    "flux-klein-9b",
-    "klein-9b",
-  ];
-
-  if (model && !validModels.includes(model)) {
-    console.warn(`⚠️ Invalid model "${model}", falling back to "flux"`);
-    options.model = "flux";
-  }
+  const normalizedModel = normalizeModel(model);
 
   const encodedPrompt = encodeURIComponent(cleanPrompt);
 
@@ -227,16 +251,12 @@ export function generateImageUrl(
     return generateImageUrl(fallbackPrompt, options);
   }
 
-  const params = new URLSearchParams({
-    width: width.toString(),
-    height: height.toString(),
-    model,
-    enhance: enhance.toString(),
+  const params = buildPollinationsParams({
+    ...options,
+    width,
+    height,
+    model: normalizedModel,
   });
-
-  if (seed) {
-    params.append("seed", seed.toString());
-  }
 
   console.log("🎨 Pollinations.ai isteği:", cleanPrompt.substring(0, 100));
   return `${POLLINATIONS_IMAGE_URL}/${encodedPrompt}?${params.toString()}`;
@@ -297,10 +317,9 @@ export async function fetchPollinationsImage(
   const {
     width = 1200,
     height = 630,
-    seed,
     model = "flux", // Use flux as default - most stable model
-    enhance = true,
   } = options;
+  const normalizedModel = normalizeModel(model);
 
   // Retry loop with exponential backoff (OPTIMIZED: faster retries)
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -326,16 +345,12 @@ export async function fetchPollinationsImage(
         const encodedPrompt = encodeURIComponent(cleanPrompt);
 
         // Build new API URL: https://gen.pollinations.ai/image/{prompt}
-        const params = new URLSearchParams({
-          width: width.toString(),
-          height: height.toString(),
-          model,
-          enhance: enhance.toString(),
+        const params = buildPollinationsParams({
+          ...options,
+          width,
+          height,
+          model: normalizedModel,
         });
-
-        if (seed) {
-          params.append("seed", seed.toString());
-        }
 
         const imageUrl = `${POLLINATIONS_GEN_URL}/${encodedPrompt}?${params.toString()}`;
 

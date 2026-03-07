@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
-import { fetchPollinationsImage } from "@/lib/pollinations";
+import { fetchPollinationsImage, isFallbackImageUrl } from "@/lib/pollinations";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -75,11 +75,13 @@ export async function POST(request: NextRequest) {
           2,
         );
 
-        if (
-          imageUrl.includes("source.unsplash.com") ||
-          imageUrl.includes("picsum.photos")
-        ) {
+        if (isFallbackImageUrl(imageUrl)) {
           backupProviderUsed += 1;
+          failed += 1;
+          console.warn(
+            `[ImageBackfill] Skipping stock fallback image for ${article.slug}`,
+          );
+          continue;
         }
 
         if (!dryRun) {
