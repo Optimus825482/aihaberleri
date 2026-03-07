@@ -152,11 +152,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Prod deps + tsx/typescript for running .ts files
-COPY --link --from=prod-deps --chown=worker:nodejs /app/node_modules ./node_modules
+COPY --link --from=deps --chown=worker:nodejs /app/node_modules ./node_modules
 COPY --link --chown=worker:nodejs package.json package-lock.json* ./
 
-RUN npm install --no-save tsx typescript --legacy-peer-deps 2>/dev/null && \
-    rm -rf node_modules/.cache 2>/dev/null || true && \
+RUN rm -rf node_modules/.cache 2>/dev/null || true && \
     echo "✓ worker deps: $(ls -1 node_modules | wc -l) packages"
 
 COPY --link --chown=worker:nodejs prisma ./prisma

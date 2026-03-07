@@ -43,6 +43,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+ENV RUN_PRISMA_MIGRATIONS=false
 
 # Install runtime dependencies including OpenSSL 3.x
 RUN apk add --no-cache openssl curl python3 py3-pip
