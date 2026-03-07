@@ -611,7 +611,15 @@ async function startWorker() {
 
         try {
           result = (await Promise.race([
-            executeNewsAgent(),
+            executeNewsAgent(undefined, {
+              queueJobId: String(job.id),
+              onAgentLogCreated: async (agentLogId) => {
+                await job.updateData({
+                  ...(job.data ?? {}),
+                  agentLogId,
+                });
+              },
+            }),
             timeoutPromise,
           ])) as any;
         } finally {

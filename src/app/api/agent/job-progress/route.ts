@@ -20,26 +20,45 @@ type JobProgressSnapshot = {
   stage?: string;
 };
 
-async function resolveQueueJobState(jobId: string | null) {
+type QueueJobContext = {
+  state: string | null;
+  agentLogId: string | null;
+};
+
+async function resolveQueueJobContext(
+  jobId: string | null,
+  redis: ReturnType<typeof getRedis>,
+): Promise<QueueJobContext> {
   if (!jobId) {
-    return null;
+    return { state: null, agentLogId: null };
+  }
+
+  let mappedAgentLogId: string | null = null;
+  if (redis) {
+    mappedAgentLogId = await redis.get(`job:mapping:${jobId}`);
   }
 
   try {
     const { getNewsAgentQueue } = await import("@/lib/queue");
     const queue = getNewsAgentQueue();
     if (!queue) {
-      return null;
+      return { state: null, agentLogId: mappedAgentLogId };
     }
 
     const job = await queue.getJob(jobId);
     if (!job) {
-      return null;
+      return { state: null, agentLogId: mappedAgentLogId };
     }
 
-    return await job.getState();
+    const jobAgentLogId =
+      typeof job.data?.agentLogId === "string" ? job.data.agentLogId : null;
+
+    return {
+      state: await job.getState(),
+      agentLogId: jobAgentLogId ?? mappedAgentLogId,
+    };
   } catch {
-    return null;
+    return { state: null, agentLogId: mappedAgentLogId };
   }
 }
 
@@ -147,9 +166,24 @@ export async function GET(req: NextRequest) {
     const jobId = searchParams.get("jobId");
 
     const redis = getRedis();
-    const requestedJobState = await resolveQueueJobState(jobId);
+    const requestedJobContext = await resolveQueueJobContext(jobId, redis);
 
-    const [runningLog, latestLog] = await Promise.all([
+    const [requestedLog, runningLog, latestLog] = await Promise.all([
+      requestedJobContext.agentLogId
+        ? db.agentLog.findUnique({
+            where: { id: requestedJobContext.agentLogId },
+            select: {
+              id: true,
+              status: true,
+              articlesCreated: true,
+              articlesScraped: true,
+              duration: true,
+              executionTime: true,
+              errors: true,
+              progressUpdates: true,
+            },
+          })
+        : Promise.resolve(null),
       db.agentLog.findFirst({
         where: { status: "RUNNING" },
         orderBy: { executionTime: "desc" },
@@ -179,7 +213,7 @@ export async function GET(req: NextRequest) {
       }),
     ]);
 
-    const targetLog = runningLog ?? latestLog;
+    const targetLog = requestedLog ?? runningLog ?? latestLog;
     const { progress, logs } = targetLog
       ? await getProgressSnapshot(
           redis,
@@ -189,9 +223,9 @@ export async function GET(req: NextRequest) {
       : { progress: null, logs: [] };
 
     const isQueueJobActive =
-      requestedJobState === "waiting" ||
-      requestedJobState === "delayed" ||
-      requestedJobState === "active";
+      requestedJobContext.state === "waiting" ||
+      requestedJobContext.state === "delayed" ||
+      requestedJobContext.state === "active";
 
     const isRunning = isQueueJobActive || targetLog?.status === "RUNNING";
 
@@ -200,7 +234,8 @@ export async function GET(req: NextRequest) {
       data: {
         isRunning,
         requestedJobId: jobId,
-        requestedJobState,
+        requestedJobState: requestedJobContext.state,
+        requestedAgentLogId: requestedJobContext.agentLogId,
         latestLog: targetLog
           ? {
               id: targetLog.id,

@@ -41,6 +41,11 @@ export interface AgentExecutionResult {
   publishedArticles: Array<{ id: string; slug: string }>;
 }
 
+type ExecuteNewsAgentOptions = {
+  queueJobId?: string;
+  onAgentLogCreated?: (agentLogId: string) => Promise<void> | void;
+};
+
 // Helper to update job progress in Redis
 async function updateJobProgress(
   agentLogId: string,
@@ -100,6 +105,7 @@ async function addLogMessage(agentLogId: string, message: string) {
  */
 export async function executeNewsAgent(
   categorySlug?: string,
+  options: ExecuteNewsAgentOptions = {},
 ): Promise<AgentExecutionResult> {
   const startTime = Date.now();
   const errors: string[] = [];
@@ -121,6 +127,26 @@ export async function executeNewsAgent(
   // Initialize pipeline tracer
   const tracer = new PipelineTracer("news-pipeline");
   await tracer.startTrace(agentLog.id, { categorySlug });
+
+  const agentLogCreatedTasks: Promise<unknown>[] = [];
+  if (options.queueJobId) {
+    const redis = getRedis();
+    if (redis) {
+      agentLogCreatedTasks.push(
+        redis.set(`job:mapping:${options.queueJobId}`, agentLog.id, "EX", 3600),
+      );
+    }
+  }
+
+  if (options.onAgentLogCreated) {
+    agentLogCreatedTasks.push(
+      Promise.resolve(options.onAgentLogCreated(agentLog.id)),
+    );
+  }
+
+  if (agentLogCreatedTasks.length > 0) {
+    await Promise.allSettled(agentLogCreatedTasks);
+  }
 
   // Live log: Agent started
   await liveLog.agent.info(
