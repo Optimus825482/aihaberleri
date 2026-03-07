@@ -8,6 +8,23 @@ import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 
 export const maxDuration = 120;
 
+const IMAGE_GENERATION_STRATEGIES = [
+  {
+    model: "flux" as const,
+    width: 1200,
+    height: 630,
+    requestTimeoutMs: 45000,
+    label: "primary",
+  },
+  {
+    model: "seedream5" as const,
+    width: 1200,
+    height: 630,
+    requestTimeoutMs: 30000,
+    label: "fallback-model",
+  },
+];
+
 // POST - Refresh article image
 export async function POST(
   request: Request,
@@ -51,26 +68,35 @@ export async function POST(
     );
     console.log("📝 Görsel prompt:", imagePrompt);
 
-    // Get new image from Pollinations.ai
-    const newImageUrl = await fetchPollinationsImage(
-      imagePrompt,
-      {
-        width: 1200,
-        height: 630,
-        model: "flux",
-        enhance: true,
-        nologo: true,
-      },
-      2,
-      45000,
-    );
-    console.log("✅ Yeni görsel URL:", newImageUrl);
+    let newImageUrl: string | null = null;
 
-    // Never treat stock fallback images as successful regeneration.
-    if (isFallbackImageUrl(newImageUrl)) {
-      console.warn(
-        "⚠️ Pollinations.ai gerçek görsel üretemedi, stock fallback reddedildi",
+    for (const strategy of IMAGE_GENERATION_STRATEGIES) {
+      const candidateImageUrl = await fetchPollinationsImage(
+        imagePrompt,
+        {
+          width: strategy.width,
+          height: strategy.height,
+          model: strategy.model,
+          enhance: true,
+          nologo: true,
+        },
+        1,
+        strategy.requestTimeoutMs,
       );
+
+      if (isFallbackImageUrl(candidateImageUrl)) {
+        console.warn(
+          `⚠️ Pollinations ${strategy.model} (${strategy.label}) gerçek görsel üretemedi`,
+        );
+        continue;
+      }
+
+      newImageUrl = candidateImageUrl;
+      console.log(`✅ Yeni görsel URL (${strategy.model}):`, newImageUrl);
+      break;
+    }
+
+    if (!newImageUrl) {
       return NextResponse.json(
         {
           success: false,
