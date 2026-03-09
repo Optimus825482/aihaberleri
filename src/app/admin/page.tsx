@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Activity,
+  AlertTriangle,
   FileText,
   TrendingUp,
   Eye,
@@ -51,6 +52,7 @@ import {
   useAgentStats,
   usePipelineHealth,
   useGA4RealtimeLite,
+  useSearchProviderStats,
   useSystemStats,
   useAdSenseSummary,
 } from "@/hooks/use-swr-admin";
@@ -835,9 +837,13 @@ export default function AdminDashboard() {
   const agentStats = agentData?.success ? agentData.data : null;
 
   const { data: systemData } = useSystemStats(10000); // 10s refresh for realtime
+  const { data: searchProviderData } = useSearchProviderStats(15000);
   const { data: gaRealtimeLiteData } = useGA4RealtimeLite(60000); // 60s refresh, düşük yük
   const { data: adSenseData } = useAdSenseSummary(30000); // 5 dakika
   const systemStats = systemData?.success ? systemData.data : null;
+  const whoogleStats = searchProviderData?.success
+    ? searchProviderData.data?.whoogle
+    : null;
   const adSense = adSenseData?.success ? adSenseData.data : null;
   const adSenseConfigured = adSenseData?.configured !== false;
   const gaActiveUsers =
@@ -967,6 +973,118 @@ export default function AdminDashboard() {
           isLoading={pipelineHealthLoading}
           error={!!pipelineHealthError || pipelineHealthData?.success === false}
         />
+
+        {whoogleStats && (
+          <Card
+            className={
+              whoogleStats.shouldAlert
+                ? "border-amber-500/30 bg-amber-500/5"
+                : "border-emerald-500/20 bg-emerald-500/5"
+            }
+          >
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <CardTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
+                    {whoogleStats.shouldAlert ? (
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    ) : (
+                      <Activity className="h-4 w-4 text-emerald-500" />
+                    )}
+                    Whoogle Sağlığı
+                  </CardTitle>
+                  <CardDescription className="text-[11px]">
+                    Canlı istek başarımı ve fallback oranı
+                  </CardDescription>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={
+                    whoogleStats.shouldAlert
+                      ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
+                      : whoogleStats.available
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
+                        : "border-red-500/30 bg-red-500/10 text-red-500"
+                  }
+                >
+                  {whoogleStats.shouldAlert
+                    ? "Alarm"
+                    : whoogleStats.available
+                      ? "Stabil"
+                      : "Degraded"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground font-bold">
+                    İstek
+                  </p>
+                  <p className="text-2xl font-black">{whoogleStats.requests}</p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground font-bold">
+                    Başarı
+                  </p>
+                  <p className="text-2xl font-black text-emerald-500">
+                    %{whoogleStats.successRate}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground font-bold">
+                    Fallback
+                  </p>
+                  <p
+                    className={
+                      "text-2xl font-black " +
+                      (whoogleStats.shouldAlert
+                        ? "text-amber-500"
+                        : "text-primary")
+                    }
+                  >
+                    %{whoogleStats.fallbackRate}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground font-bold">
+                    Timeout
+                  </p>
+                  <p className="text-2xl font-black text-orange-500">
+                    {whoogleStats.timeouts}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase text-muted-foreground font-bold">
+                    Ortalama
+                  </p>
+                  <p className="text-2xl font-black text-blue-500">
+                    {whoogleStats.avgLatencyMs === null
+                      ? "-"
+                      : `${whoogleStats.avgLatencyMs}ms`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>
+                    Fallback oranı alarm eşiği: %{whoogleStats.alertThreshold}
+                  </span>
+                  <span>Fallback: {whoogleStats.fallbacks}</span>
+                </div>
+                <Progress value={Math.min(whoogleStats.fallbackRate, 100)} className="h-2" />
+              </div>
+
+              {whoogleStats.lastError && (
+                <div className="rounded-xl border border-border/60 bg-background/60 px-3 py-2 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">Son hata:</span>{" "}
+                  {whoogleStats.lastError}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Hero Metrics — 2x2 on mobile, 4 cols on desktop */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

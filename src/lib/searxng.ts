@@ -20,6 +20,15 @@ const WHOOGLE_MAX_ATTEMPTS = Number(process.env.WHOOGLE_MAX_ATTEMPTS || 2);
 const WHOOGLE_RETRY_DELAY_MS = Number(
   process.env.WHOOGLE_RETRY_DELAY_MS || 1200,
 );
+const WHOOGLE_FALLBACK_ALERT_THRESHOLD = Number(
+  process.env.WHOOGLE_FALLBACK_ALERT_THRESHOLD || 35,
+);
+const WHOOGLE_ALERT_MIN_REQUESTS = Number(
+  process.env.WHOOGLE_ALERT_MIN_REQUESTS || 10,
+);
+const WHOOGLE_ALERT_COOLDOWN_MS = Number(
+  process.env.WHOOGLE_ALERT_COOLDOWN_MS || 5 * 60 * 1000,
+);
 
 // Rate limiting: Prevent overwhelming SearXNG with parallel requests
 let lastRequestTime = 0;
@@ -54,6 +63,7 @@ const whoogleStats: WhoogleStats = {
   lastSuccessAt: null,
   consecutiveFailures: 0,
 };
+let lastWhoogleAlertAt = 0;
 
 function isWhoogleTimeout(error: unknown): boolean {
   if (!axios.isAxiosError(error)) {
@@ -113,6 +123,33 @@ function recordWhoogleFallback(reason: "error" | "zero_results"): void {
   if (reason === "zero_results") {
     whoogleStats.zeroResults++;
   }
+
+  maybeWarnWhoogleFallbackRate();
+}
+
+function maybeWarnWhoogleFallbackRate(): void {
+  const now = Date.now();
+  const fallbackRate =
+    whoogleStats.requests > 0
+      ? (whoogleStats.fallbacks / whoogleStats.requests) * 100
+      : 0;
+
+  if (whoogleStats.requests < WHOOGLE_ALERT_MIN_REQUESTS) {
+    return;
+  }
+
+  if (fallbackRate < WHOOGLE_FALLBACK_ALERT_THRESHOLD) {
+    return;
+  }
+
+  if (now - lastWhoogleAlertAt < WHOOGLE_ALERT_COOLDOWN_MS) {
+    return;
+  }
+
+  lastWhoogleAlertAt = now;
+  console.warn(
+    `🚨 Whoogle fallback oranı yüksek: %${fallbackRate.toFixed(2)} (${whoogleStats.fallbacks}/${whoogleStats.requests}) | timeout=${whoogleStats.timeouts} | lastError=${whoogleStats.lastError || "n/a"}`,
+  );
 }
 
 export function getWhoogleStats() {
@@ -120,11 +157,29 @@ export function getWhoogleStats() {
     whoogleStats.successes > 0
       ? Math.round(whoogleStats.totalLatencyMs / whoogleStats.successes)
       : null;
+  const fallbackRate =
+    whoogleStats.requests > 0
+      ? Number(
+          ((whoogleStats.fallbacks / whoogleStats.requests) * 100).toFixed(2),
+        )
+      : 0;
+  const timeoutRate =
+    whoogleStats.requests > 0
+      ? Number(
+          ((whoogleStats.timeouts / whoogleStats.requests) * 100).toFixed(2),
+        )
+      : 0;
 
   return {
     ...whoogleStats,
     avgLatencyMs,
     available: whoogleStats.consecutiveFailures < 3,
+    fallbackRate,
+    timeoutRate,
+    alertThreshold: WHOOGLE_FALLBACK_ALERT_THRESHOLD,
+    shouldAlert:
+      whoogleStats.requests >= WHOOGLE_ALERT_MIN_REQUESTS &&
+      fallbackRate >= WHOOGLE_FALLBACK_ALERT_THRESHOLD,
     successRate:
       whoogleStats.requests > 0
         ? Number(
@@ -146,6 +201,7 @@ export function resetWhoogleStats(): void {
   whoogleStats.lastError = null;
   whoogleStats.lastSuccessAt = null;
   whoogleStats.consecutiveFailures = 0;
+  lastWhoogleAlertAt = 0;
 }
 
 async function rateLimitedRequest<T>(fn: () => Promise<T>): Promise<T> {

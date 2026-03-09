@@ -63,6 +63,17 @@ export function useSystemStats(refreshInterval = 30000) {
 }
 
 /**
+ * Search provider live stats hook
+ */
+export function useSearchProviderStats(refreshInterval = 15000) {
+  return useSWR("/api/admin/search-providers", fetcher, {
+    ...defaultConfig,
+    refreshInterval,
+    dedupingInterval: 3000,
+  });
+}
+
+/**
  * Categories Data Hook with SWR caching
  */
 export function useCategories() {
