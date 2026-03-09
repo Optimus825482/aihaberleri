@@ -14,7 +14,7 @@
  * QUEUE:  Listens on ENRICHED_ARTICLES, emits to CONTENT_SYNTHESIS
  */
 
-import { Job } from "bullmq";
+import type { Job } from "bullmq";
 import { BaseAgent, AgentResult } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
 import { searxngSearch, type SearXNGResult } from "@/lib/searxng";

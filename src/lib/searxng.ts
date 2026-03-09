@@ -241,16 +241,19 @@ function recordWhoogleFailure(error: unknown): void {
   syncWhoogleStatsSnapshot();
 }
 
-function recordWhoogleFallback(reason: "error" | "zero_results"): void {
+function recordWhoogleFallback(): void {
   whoogleStats.fallbacks++;
-  if (reason === "zero_results") {
-    whoogleStats.zeroResults++;
-  }
 
   touchWhoogleStats();
   syncWhoogleStatsSnapshot();
 
   maybeWarnWhoogleFallbackRate();
+}
+
+function recordFinalZeroResults(): void {
+  whoogleStats.zeroResults++;
+  touchWhoogleStats();
+  syncWhoogleStatsSnapshot();
 }
 
 function maybeWarnWhoogleFallbackRate(): void {
@@ -503,6 +506,8 @@ export async function searxngSearch(
     categories?: string; // general, images, videos, news, etc.
   } = {},
 ): Promise<SearXNGResult[]> {
+  let whoogleReturnedZeroResults = false;
+
   try {
     const whoogleResults = await rateLimitedRequest(() =>
       whoogleSearch(query, options),
@@ -512,10 +517,11 @@ export async function searxngSearch(
       return whoogleResults;
     }
 
-    recordWhoogleFallback("zero_results");
+    whoogleReturnedZeroResults = true;
+    recordWhoogleFallback();
     console.warn("⚠️ Whoogle 0 sonuç döndürdü, SearXNG fallback deneniyor");
   } catch {
-    recordWhoogleFallback("error");
+    recordWhoogleFallback();
     // Fallback below intentionally handles the request.
   }
 
@@ -554,6 +560,10 @@ export async function searxngSearch(
     console.log(
       `✅ SearXNG: ${limitedResults.length} sonuç bulundu (toplam: ${results.length})`,
     );
+
+    if (limitedResults.length === 0 && whoogleReturnedZeroResults) {
+      recordFinalZeroResults();
+    }
 
     return limitedResults;
   } catch (error: any) {
