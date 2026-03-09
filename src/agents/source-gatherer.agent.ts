@@ -266,7 +266,9 @@ export class SourceGathererAgent extends BaseAgent<
       article.title,
       article.description,
     );
-    this.logger.info(`🔍 Deep research: Tavily + SearXNG for "${keywords}"`);
+    this.logger.info(
+      `🔍 Deep research: Tavily + Whoogle-first web search for "${keywords}"`,
+    );
 
     // STEP 1: Tavily Deep Research (circuit breaker + retry)
     let tavilySourceCount = 0;
@@ -302,7 +304,7 @@ export class SourceGathererAgent extends BaseAgent<
     // STEP 2: SearXNG (if Tavily insufficient)
     if (sources.length < TARGET_SOURCE_COUNT) {
       const searchQueries = [keywords, `${keywords} news`];
-      this.logger.info(`🔍 SearXNG search: ${keywords}`);
+      this.logger.info(`🔍 Whoogle-first web search: ${keywords}`);
 
       const candidateUrls: Array<{
         title: string;
@@ -376,11 +378,11 @@ export class SourceGathererAgent extends BaseAgent<
         }
       }
       this.logger.info(
-        `✅ SearXNG: ${sources.length - tavilySourceCount} additional sources`,
+        `✅ Web search: ${sources.length - tavilySourceCount} additional sources`,
       );
     }
 
-    this.logger.info(`✅ Total sources: ${sources.length} (Tavily + SearXNG)`);
+    this.logger.info(`✅ Total sources: ${sources.length} (Tavily + web search)`);
     sources.sort((a, b) => b.relevanceScore - a.relevanceScore);
     return sources;
   }
@@ -408,7 +410,7 @@ export class SourceGathererAgent extends BaseAgent<
     );
 
     // STEP 1: Find candidate URLs using SearXNG
-    this.logger.info(`🔍 SearXNG search: "${keywords}"`);
+    this.logger.info(`🔍 Whoogle-first web search: "${keywords}"`);
     const candidateUrls: Array<{
       title: string;
       url: string;
@@ -452,10 +454,10 @@ export class SourceGathererAgent extends BaseAgent<
       }
     }
 
-    // Fallback: if no candidates found with threshold, take top 3 from raw SearXNG scores
+    // Fallback: if no candidates found with threshold, take top 3 from raw web-search scores
     if (candidateUrls.length === 0) {
       this.logger.warn(
-        `⚠️ No candidates above threshold, falling back to top SearXNG results`,
+        `⚠️ No candidates above threshold, falling back to top web-search results`,
       );
       const allResults = searchResults.flat();
       const uniqueResults: typeof allResults = [];
@@ -476,13 +478,13 @@ export class SourceGathererAgent extends BaseAgent<
         candidateUrls.push({ title: r.title, url: r.url, relevanceScore: 10 });
       }
       this.logger.info(
-        `📋 Fallback: ${candidateUrls.length} candidates from raw SearXNG scores`,
+        `📋 Fallback: ${candidateUrls.length} candidates from raw web-search scores`,
       );
     }
 
     if (candidateUrls.length === 0) {
       this.logger.warn(
-        `⚠️ SearXNG produced no candidates, trying Tavily search fallback`,
+        `⚠️ Whoogle-first web search produced no candidates, trying Tavily fallback`,
       );
 
       try {

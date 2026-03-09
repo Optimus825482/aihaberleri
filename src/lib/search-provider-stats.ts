@@ -7,6 +7,7 @@
 
 import { db } from "@/lib/db";
 import { getProviderStats } from "@/lib/hybrid-search";
+import { getWhoogleStats } from "@/lib/searxng";
 
 /**
  * Provider istatistiklerini database'e kaydet
@@ -27,6 +28,7 @@ export async function saveProviderStats(): Promise<void> {
 
     // Mevcut stats'ı al
     const stats = getProviderStats();
+    const whoogleStats = getWhoogleStats();
     const timestamp = new Date();
 
     // Her provider için ayrı kayıt oluştur
@@ -55,6 +57,14 @@ export async function saveProviderStats(): Promise<void> {
         available: stats.searxng.available,
         avgResponseTime: null,
       },
+      {
+        provider: "whoogle",
+        timestamp,
+        requests: whoogleStats.requests,
+        errors: whoogleStats.errors + whoogleStats.timeouts,
+        available: whoogleStats.available,
+        avgResponseTime: whoogleStats.avgLatencyMs,
+      },
     ];
 
     // Batch insert
@@ -66,6 +76,7 @@ export async function saveProviderStats(): Promise<void> {
       brave: `${stats.brave.requests} requests, ${stats.brave.errors} errors`,
       tavily: `${stats.tavily.requests} requests, ${stats.tavily.errors} errors`,
       searxng: `${stats.searxng.requests} requests, ${stats.searxng.errors} errors`,
+      whoogle: `${whoogleStats.requests} requests, ${whoogleStats.successes} success, ${whoogleStats.timeouts} timeout, ${whoogleStats.fallbacks} fallback`,
     });
   } catch (error) {
     console.error("❌ Search provider stats kaydetme hatası:", error);

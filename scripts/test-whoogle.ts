@@ -7,7 +7,7 @@
  */
 
 import axios from "axios";
-import { searxngSearch } from "../src/lib/searxng";
+import { getWhoogleStats, searxngSearch } from "../src/lib/searxng";
 
 const WHOOGLE_BASE_URL =
   process.env.WHOOGLE_BASE_URL ||
@@ -116,6 +116,18 @@ async function main() {
       process.exit(1);
     }
   }
+
+  const stats = getWhoogleStats();
+  console.log("\n📈 Whoogle stability metrics");
+  console.log(`   Requests: ${stats.requests}`);
+  console.log(`   Successes: ${stats.successes}`);
+  console.log(`   Timeouts: ${stats.timeouts}`);
+  console.log(`   Fallbacks: ${stats.fallbacks}`);
+  console.log(`   Zero results: ${stats.zeroResults}`);
+  console.log(`   Success rate: ${stats.successRate}%`);
+  console.log(
+    `   Avg latency: ${stats.avgLatencyMs === null ? "n/a" : `${stats.avgLatencyMs}ms`}`,
+  );
 
   console.log("\n✅ Whoogle test tamamlandı");
 }

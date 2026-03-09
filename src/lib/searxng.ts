@@ -15,13 +15,138 @@ const SEARXNG_BASE_URL =
   process.env.SEARXNG_BASE_URL ||
   "http://searxng-pwcsc8ow08oks0ggokwoo8ww.77.42.68.4.sslip.io";
 
+const WHOOGLE_TIMEOUT_MS = Number(process.env.WHOOGLE_TIMEOUT_MS || 20000);
+const WHOOGLE_MAX_ATTEMPTS = Number(process.env.WHOOGLE_MAX_ATTEMPTS || 2);
+const WHOOGLE_RETRY_DELAY_MS = Number(
+  process.env.WHOOGLE_RETRY_DELAY_MS || 1200,
+);
+
 // Rate limiting: Prevent overwhelming SearXNG with parallel requests
 let lastRequestTime = 0;
-let requestQueue: Array<() => void> = [];
-let isProcessingQueue = false;
 const MIN_REQUEST_INTERVAL = 500; // 500ms between requests
 const MAX_CONCURRENT_REQUESTS = 2; // Max 2 concurrent requests
 let activeRequests = 0;
+
+interface WhoogleStats {
+  requests: number;
+  successes: number;
+  timeouts: number;
+  errors: number;
+  fallbacks: number;
+  zeroResults: number;
+  lastLatencyMs: number | null;
+  totalLatencyMs: number;
+  lastError: string | null;
+  lastSuccessAt: string | null;
+  consecutiveFailures: number;
+}
+
+const whoogleStats: WhoogleStats = {
+  requests: 0,
+  successes: 0,
+  timeouts: 0,
+  errors: 0,
+  fallbacks: 0,
+  zeroResults: 0,
+  lastLatencyMs: null,
+  totalLatencyMs: 0,
+  lastError: null,
+  lastSuccessAt: null,
+  consecutiveFailures: 0,
+};
+
+function isWhoogleTimeout(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  return (
+    error.code === "ECONNABORTED" ||
+    error.message.toLowerCase().includes("timeout")
+  );
+}
+
+function shouldRetryWhoogle(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  if (isWhoogleTimeout(error)) {
+    return true;
+  }
+
+  if (
+    error.code &&
+    ["ECONNRESET", "EAI_AGAIN", "ENOTFOUND", "ETIMEDOUT"].includes(error.code)
+  ) {
+    return true;
+  }
+
+  const status = error.response?.status;
+  return status === 429 || status === 502 || status === 503 || status === 504;
+}
+
+function recordWhoogleSuccess(latencyMs: number): void {
+  whoogleStats.successes++;
+  whoogleStats.lastLatencyMs = latencyMs;
+  whoogleStats.totalLatencyMs += latencyMs;
+  whoogleStats.lastError = null;
+  whoogleStats.lastSuccessAt = new Date().toISOString();
+  whoogleStats.consecutiveFailures = 0;
+}
+
+function recordWhoogleFailure(error: unknown): void {
+  whoogleStats.consecutiveFailures++;
+  whoogleStats.lastError =
+    error instanceof Error ? error.message : String(error ?? "Unknown error");
+
+  if (isWhoogleTimeout(error)) {
+    whoogleStats.timeouts++;
+    return;
+  }
+
+  whoogleStats.errors++;
+}
+
+function recordWhoogleFallback(reason: "error" | "zero_results"): void {
+  whoogleStats.fallbacks++;
+  if (reason === "zero_results") {
+    whoogleStats.zeroResults++;
+  }
+}
+
+export function getWhoogleStats() {
+  const avgLatencyMs =
+    whoogleStats.successes > 0
+      ? Math.round(whoogleStats.totalLatencyMs / whoogleStats.successes)
+      : null;
+
+  return {
+    ...whoogleStats,
+    avgLatencyMs,
+    available: whoogleStats.consecutiveFailures < 3,
+    successRate:
+      whoogleStats.requests > 0
+        ? Number(
+            ((whoogleStats.successes / whoogleStats.requests) * 100).toFixed(2),
+          )
+        : 0,
+  };
+}
+
+export function resetWhoogleStats(): void {
+  whoogleStats.requests = 0;
+  whoogleStats.successes = 0;
+  whoogleStats.timeouts = 0;
+  whoogleStats.errors = 0;
+  whoogleStats.fallbacks = 0;
+  whoogleStats.zeroResults = 0;
+  whoogleStats.lastLatencyMs = null;
+  whoogleStats.totalLatencyMs = 0;
+  whoogleStats.lastError = null;
+  whoogleStats.lastSuccessAt = null;
+  whoogleStats.consecutiveFailures = 0;
+}
 
 async function rateLimitedRequest<T>(fn: () => Promise<T>): Promise<T> {
   // Wait if too many active requests
@@ -130,51 +255,86 @@ async function whoogleSearch(
     return [];
   }
 
-  const client = axios.create({
-    baseURL: WHOOGLE_BASE_URL,
-    timeout: 15000,
-    maxRedirects: 5,
-    headers: {
-      "User-Agent": "AIHaberleri-NewsBot/1.0",
-    },
-    validateStatus: (status) => status >= 200 && status < 400,
-  });
+  whoogleStats.requests++;
 
-  let cookieHeader = "";
+  let lastError: unknown;
 
-  try {
-    const sessionResponse = await client.get("/");
-    const sessionCookies = sessionResponse.headers["set-cookie"];
-
-    if (Array.isArray(sessionCookies) && sessionCookies.length > 0) {
-      cookieHeader = sessionCookies
-        .map((cookie) => cookie.split(";")[0])
-        .filter(Boolean)
-        .join("; ");
-    }
-
-    const response = await client.get<WhoogleResponse>("/search", {
-      params: {
-        q: query,
-        format: "json",
-        ...(options.language ? { lang: options.language } : {}),
+  for (let attempt = 1; attempt <= WHOOGLE_MAX_ATTEMPTS; attempt++) {
+    const startedAt = Date.now();
+    const client = axios.create({
+      baseURL: WHOOGLE_BASE_URL,
+      timeout: WHOOGLE_TIMEOUT_MS,
+      maxRedirects: 5,
+      headers: {
+        "User-Agent": "AIHaberleri-NewsBot/1.0",
       },
-      headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
+      validateStatus: (status) => status >= 200 && status < 400,
     });
 
-    const results = (response.data.results || [])
-      .map(mapWhoogleResult)
-      .filter((result): result is SearXNGResult => result !== null)
-      .slice(0, options.count || 10);
+    let cookieHeader = "";
 
-    console.log(`✅ Whoogle: ${results.length} sonuç bulundu`);
-    return results;
-  } catch (error: any) {
-    console.warn(
-      `⚠️ Whoogle search error, SearXNG fallback devrede: ${error.message}`,
-    );
-    throw error;
+    try {
+      const sessionResponse = await client.get("/");
+      const sessionCookies = sessionResponse.headers["set-cookie"];
+
+      if (Array.isArray(sessionCookies) && sessionCookies.length > 0) {
+        cookieHeader = sessionCookies
+          .map((cookie) => cookie.split(";")[0])
+          .filter(Boolean)
+          .join("; ");
+      }
+
+      const response = await client.get<WhoogleResponse>("/search", {
+        params: {
+          q: query,
+          format: "json",
+          ...(options.language ? { lang: options.language } : {}),
+        },
+        headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
+      });
+
+      const results = (response.data.results || [])
+        .map(mapWhoogleResult)
+        .filter((result): result is SearXNGResult => result !== null)
+        .slice(0, options.count || 10);
+
+      const latencyMs = Date.now() - startedAt;
+      recordWhoogleSuccess(latencyMs);
+      console.log(
+        `✅ Whoogle: ${results.length} sonuç bulundu (${latencyMs}ms, deneme ${attempt}/${WHOOGLE_MAX_ATTEMPTS})`,
+      );
+      return results;
+    } catch (error) {
+      lastError = error;
+      recordWhoogleFailure(error);
+
+      const retryable = shouldRetryWhoogle(error);
+      const shouldRetry = retryable && attempt < WHOOGLE_MAX_ATTEMPTS;
+      const reason =
+        error instanceof Error
+          ? error.message
+          : String(error ?? "Unknown error");
+
+      if (shouldRetry) {
+        console.warn(
+          `⚠️ Whoogle denemesi başarısız (${attempt}/${WHOOGLE_MAX_ATTEMPTS}), yeniden denenecek: ${reason}`,
+        );
+        await new Promise((resolve) =>
+          setTimeout(resolve, WHOOGLE_RETRY_DELAY_MS * attempt),
+        );
+        continue;
+      }
+
+      console.warn(
+        `⚠️ Whoogle search error, SearXNG fallback devrede: ${reason}`,
+      );
+      throw error;
+    }
   }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Whoogle search failed");
 }
 
 /**
@@ -199,8 +359,10 @@ export async function searxngSearch(
       return whoogleResults;
     }
 
+    recordWhoogleFallback("zero_results");
     console.warn("⚠️ Whoogle 0 sonuç döndürdü, SearXNG fallback deneniyor");
   } catch {
+    recordWhoogleFallback("error");
     // Fallback below intentionally handles the request.
   }
 
