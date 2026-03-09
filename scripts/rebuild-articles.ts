@@ -21,6 +21,7 @@ import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
 import * as crypto from "crypto";
+import { searxngSearch } from "../src/lib/searxng";
 
 // ============================================================================
 // CONFIG
@@ -30,9 +31,6 @@ const DEEPSEEK_API_KEY =
   process.env.DEEPSEEK_API_KEY || "sk-2750fa1691164dd2940c2ec3cb37d2e6";
 const DEEPSEEK_API_URL =
   process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1";
-const SEARXNG_BASE_URL =
-  process.env.SEARXNG_BASE_URL ||
-  "http://searxng-pwcsc8ow08oks0ggokwoo8ww.77.42.68.4.sslip.io";
 const R2_PUBLIC_URL = "https://images.aihaberleri.org";
 
 const BATCH_SIZE = parseInt(
@@ -143,19 +141,13 @@ function extractCategorySlug(msg: string): string {
 async function searchWeb(query: string): Promise<SearchResult[]> {
   if (SKIP_SEARCH) return [];
   try {
-    const params = new URLSearchParams({
-      q: query,
-      format: "json",
+    const results = await searxngSearch(query, {
+      count: 5,
       language: "tr-TR",
-      safesearch: "1",
+      safesearch: 1,
       categories: "general,news",
     });
-    const resp = await axios.get(`${SEARXNG_BASE_URL}/search`, {
-      params,
-      timeout: 10000,
-      headers: { "User-Agent": "AIHaberleri-Rebuild/1.0" },
-    });
-    const results = (resp.data.results || []).slice(0, 5);
+
     return results.map((r: any) => ({
       title: r.title || "",
       url: r.url || "",

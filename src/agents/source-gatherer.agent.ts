@@ -37,7 +37,10 @@ import type {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type SourceGathererInput = (UniqueArticle | PipelineReEnrichPayload) &
-  Partial<ReEnrichMetadata>;
+  Partial<ReEnrichMetadata> & {
+    duplicateReason?: string;
+    embedding?: number[];
+  };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
@@ -176,8 +179,8 @@ export class SourceGathererAgent extends BaseAgent<
               source: article.source,
               trendScore: article.trendScore,
               category: article.category,
-              relevanceScore: article.relevanceScore,
-              reasoning: article.reasoning,
+              relevanceScore: article.relevanceScore ?? 0,
+              reasoning: article.reasoning ?? "",
               suggestedCategory: article.suggestedCategory,
               suggestedTags: article.suggestedTags,
               topic: article.topic,

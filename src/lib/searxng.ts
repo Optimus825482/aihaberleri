@@ -6,6 +6,10 @@
 
 import axios from "axios";
 
+const WHOOGLE_BASE_URL =
+  process.env.WHOOGLE_BASE_URL ||
+  "http://whoogle-e4s8oc4kkc8sokcsco808ccw.77.42.68.4.sslip.io";
+
 /** Public SearXNG (sslip.io). Override with SEARXNG_BASE_URL if using self-hosted. */
 const SEARXNG_BASE_URL =
   process.env.SEARXNG_BASE_URL ||
@@ -72,8 +76,109 @@ export interface SearXNGResponse {
   unresponsive_engines: string[];
 }
 
+interface WhoogleResult {
+  title?: string;
+  href?: string;
+  content?: string;
+  text?: string;
+}
+
+interface WhoogleResponse {
+  results?: WhoogleResult[];
+}
+
+function createParsedUrl(url: string): string[] {
+  try {
+    const parsed = new URL(url);
+    return [parsed.protocol.replace(":", ""), parsed.hostname, parsed.pathname];
+  } catch {
+    return [];
+  }
+}
+
+function mapWhoogleResult(result: WhoogleResult): SearXNGResult | null {
+  const url = result.href?.trim();
+  if (!url) {
+    return null;
+  }
+
+  return {
+    title: result.title?.trim() || url,
+    url,
+    content: (result.content || result.text || "").trim(),
+    engine: "whoogle",
+    parsed_url: createParsedUrl(url),
+    template: "default.html",
+    engines: ["whoogle"],
+    positions: [],
+    score: 0,
+    category: "general",
+  };
+}
+
+async function whoogleSearch(
+  query: string,
+  options: {
+    count?: number;
+    language?: string;
+    time_range?: string;
+    safesearch?: 0 | 1 | 2;
+    categories?: string;
+  } = {},
+): Promise<SearXNGResult[]> {
+  if (!WHOOGLE_BASE_URL) {
+    return [];
+  }
+
+  const client = axios.create({
+    baseURL: WHOOGLE_BASE_URL,
+    timeout: 15000,
+    maxRedirects: 5,
+    headers: {
+      "User-Agent": "AIHaberleri-NewsBot/1.0",
+    },
+    validateStatus: (status) => status >= 200 && status < 400,
+  });
+
+  let cookieHeader = "";
+
+  try {
+    const sessionResponse = await client.get("/");
+    const sessionCookies = sessionResponse.headers["set-cookie"];
+
+    if (Array.isArray(sessionCookies) && sessionCookies.length > 0) {
+      cookieHeader = sessionCookies
+        .map((cookie) => cookie.split(";")[0])
+        .filter(Boolean)
+        .join("; ");
+    }
+
+    const response = await client.get<WhoogleResponse>("/search", {
+      params: {
+        q: query,
+        format: "json",
+        ...(options.language ? { lang: options.language } : {}),
+      },
+      headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
+    });
+
+    const results = (response.data.results || [])
+      .map(mapWhoogleResult)
+      .filter((result): result is SearXNGResult => result !== null)
+      .slice(0, options.count || 10);
+
+    console.log(`✅ Whoogle: ${results.length} sonuç bulundu`);
+    return results;
+  } catch (error: any) {
+    console.warn(
+      `⚠️ Whoogle search error, SearXNG fallback devrede: ${error.message}`,
+    );
+    throw error;
+  }
+}
+
 /**
- * Search using SearXNG
+ * Search using Whoogle first, then SearXNG fallback
  */
 export async function searxngSearch(
   query: string,
@@ -85,6 +190,20 @@ export async function searxngSearch(
     categories?: string; // general, images, videos, news, etc.
   } = {},
 ): Promise<SearXNGResult[]> {
+  try {
+    const whoogleResults = await rateLimitedRequest(() =>
+      whoogleSearch(query, options),
+    );
+
+    if (whoogleResults.length > 0) {
+      return whoogleResults;
+    }
+
+    console.warn("⚠️ Whoogle 0 sonuç döndürdü, SearXNG fallback deneniyor");
+  } catch {
+    // Fallback below intentionally handles the request.
+  }
+
   try {
     const params = new URLSearchParams({
       q: query,

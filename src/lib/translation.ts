@@ -107,7 +107,7 @@ export async function translateArticle(
     ]);
 
   // Generate slug from translated title
-  const slug = generateSlug(title, to);
+  const slug = generateSlug(title);
 
   console.log(`✅ Translation complete: ${title.substring(0, 50)}...`);
 

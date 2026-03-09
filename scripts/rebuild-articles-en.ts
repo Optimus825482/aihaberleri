@@ -18,15 +18,12 @@
 import { PrismaClient } from "@prisma/client";
 import * as fs from "fs";
 import axios from "axios";
+import { searxngSearch } from "../src/lib/searxng";
 
 const DEEPSEEK_API_KEY =
   process.env.DEEPSEEK_API_KEY || "sk-2750fa1691164dd2940c2ec3cb37d2e6";
 const DEEPSEEK_API_URL =
   process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1";
-const SEARXNG_BASE_URL =
-  process.env.SEARXNG_BASE_URL ||
-  "http://searxng-pwcsc8ow08oks0ggokwoo8ww.77.42.68.4.sslip.io";
-
 const BATCH_SIZE = parseInt(
   process.argv.find((a) => a.startsWith("--batch="))?.split("=")[1] || "5",
 );
@@ -189,18 +186,13 @@ async function generateEnContent(
 } | null> {
   let webContext = "No web results found.";
   try {
-    const params = new URLSearchParams({
-      q: title,
-      format: "json",
+    const results = await searxngSearch(title, {
+      count: 5,
       language: "en",
-      safesearch: "1",
+      safesearch: 1,
       categories: "general,news",
     });
-    const resp = await axios.get(`${SEARXNG_BASE_URL}/search`, {
-      params,
-      timeout: 10000,
-    });
-    const results = (resp.data.results || []).slice(0, 5);
+
     if (results.length > 0) {
       webContext = results
         .map((r: any, i: number) => `[${i + 1}] ${r.title}\n${r.content}`)

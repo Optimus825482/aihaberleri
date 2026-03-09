@@ -9,7 +9,8 @@ import {
   aggregateMultiSourceArticles,
 } from "@/lib/deepseek";
 import { fetchPollinationsImage } from "@/lib/pollinations";
-import { generateSlug, normalizeUrl } from "@/lib/utils";
+import { generateSlug } from "@/lib/utils";
+import { normalizeUrl } from "@/lib/url-utils";
 import { db } from "@/lib/db";
 import type { NewsArticle } from "./news.service";
 import { fetchArticleContent, isDuplicateNews } from "./news.service";

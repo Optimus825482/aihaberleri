@@ -15,7 +15,8 @@ import { db } from "@/lib/db";
 import { braveSearch, type BraveSearchResult } from "@/lib/brave";
 import { callDeepSeek, generateImagePrompt } from "@/lib/deepseek";
 import { isDuplicateNews, type NewsArticle } from "./news.service";
-import { generateSlug, normalizeUrl } from "@/lib/utils";
+import { generateSlug } from "@/lib/utils";
+import { normalizeUrl } from "@/lib/url-utils";
 import {
   fetchPollinationsImage,
   fetchFreeBackupImage,

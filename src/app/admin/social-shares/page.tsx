@@ -42,7 +42,12 @@ import {
   normalizePlatformKey,
   getRecommendedMinInterval,
   ALL_PLATFORMS,
+  type SocialPlatformKey,
 } from "@/config/social-platforms";
+
+function isSocialPlatformKey(value: string): value is SocialPlatformKey {
+  return value in platformConfig;
+}
 
 // Status badge component
 function StatusBadge({ status }: { status: string }) {
@@ -1201,12 +1206,19 @@ export default function SocialSharesPage() {
                 <span className="text-gray-400">Platformlar:</span>
                 <div className="flex items-center gap-2">
                   {activeBatch.platform?.split(",").map((p: string) => (
+                    (() => {
+                      const platformKey = isSocialPlatformKey(p) ? p : null;
+                      const config = platformKey ? platformConfig[platformKey] : null;
+
+                      return (
                     <span
                       key={p}
                       className="text-white bg-white/10 px-2 py-0.5 rounded text-xs"
                     >
-                      {platformConfig[p]?.icon} {platformConfig[p]?.label || p}
+                          {config?.icon} {config?.label || p}
                     </span>
+                      );
+                    })()
                   ))}
                 </div>
               </div>
@@ -1273,14 +1285,21 @@ export default function SocialSharesPage() {
             </h3>
             <div className="space-y-2">
               {batches.slice(0, 5).map((batch) => (
+                (() => {
+                  const batchPlatform = String(batch.platform || "");
+                  const batchPlatformConfig = isSocialPlatformKey(batchPlatform)
+                    ? platformConfig[batchPlatform]
+                    : null;
+
+                  return (
                 <div
                   key={batch.id}
                   className="flex items-center justify-between py-2 px-3 bg-white/5 rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <span>{platformConfig[batch.platform]?.icon}</span>
+                        <span>{batchPlatformConfig?.icon}</span>
                     <span className="text-white text-sm">
-                      {platformConfig[batch.platform]?.label}
+                          {batchPlatformConfig?.label || batchPlatform}
                     </span>
                     <span className="text-gray-400 text-xs">
                       {batch.processedItems}/{batch.totalItems} işlendi
@@ -1305,6 +1324,8 @@ export default function SocialSharesPage() {
                     </span>
                   </div>
                 </div>
+                  );
+                })()
               ))}
             </div>
           </div>
