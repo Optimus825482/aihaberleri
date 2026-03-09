@@ -994,7 +994,7 @@ export default function AdminDashboard() {
                     Whoogle Sağlığı
                   </CardTitle>
                   <CardDescription className="text-[11px]">
-                    Canlı istek başarımı ve fallback oranı
+                    Worker ve web process'lerinden paylasilan son snapshot
                   </CardDescription>
                 </div>
                 <Badge

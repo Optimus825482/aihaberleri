@@ -5,6 +5,7 @@
  */
 
 import axios from "axios";
+import { getRedis } from "@/lib/redis";
 
 const WHOOGLE_BASE_URL =
   process.env.WHOOGLE_BASE_URL ||
@@ -47,8 +48,22 @@ interface WhoogleStats {
   totalLatencyMs: number;
   lastError: string | null;
   lastSuccessAt: string | null;
+  updatedAt: string | null;
   consecutiveFailures: number;
 }
+
+export interface WhoogleStatsSnapshot extends WhoogleStats {
+  avgLatencyMs: number | null;
+  available: boolean;
+  fallbackRate: number;
+  timeoutRate: number;
+  alertThreshold: number;
+  shouldAlert: boolean;
+  successRate: number;
+}
+
+const WHOOGLE_STATS_REDIS_KEY = "stats:whoogle:health";
+const WHOOGLE_STATS_REDIS_TTL_SECONDS = 60 * 60 * 24;
 
 const whoogleStats: WhoogleStats = {
   requests: 0,
@@ -61,9 +76,111 @@ const whoogleStats: WhoogleStats = {
   totalLatencyMs: 0,
   lastError: null,
   lastSuccessAt: null,
+  updatedAt: null,
   consecutiveFailures: 0,
 };
 let lastWhoogleAlertAt = 0;
+
+function touchWhoogleStats(): void {
+  whoogleStats.updatedAt = new Date().toISOString();
+}
+
+function createWhoogleStatsSnapshot(stats: WhoogleStats): WhoogleStatsSnapshot {
+  const avgLatencyMs =
+    stats.successes > 0
+      ? Math.round(stats.totalLatencyMs / stats.successes)
+      : null;
+  const fallbackRate =
+    stats.requests > 0
+      ? Number(((stats.fallbacks / stats.requests) * 100).toFixed(2))
+      : 0;
+  const timeoutRate =
+    stats.requests > 0
+      ? Number(((stats.timeouts / stats.requests) * 100).toFixed(2))
+      : 0;
+
+  return {
+    ...stats,
+    avgLatencyMs,
+    available: stats.consecutiveFailures < 3,
+    fallbackRate,
+    timeoutRate,
+    alertThreshold: WHOOGLE_FALLBACK_ALERT_THRESHOLD,
+    shouldAlert:
+      stats.requests >= WHOOGLE_ALERT_MIN_REQUESTS &&
+      fallbackRate >= WHOOGLE_FALLBACK_ALERT_THRESHOLD,
+    successRate:
+      stats.requests > 0
+        ? Number(((stats.successes / stats.requests) * 100).toFixed(2))
+        : 0,
+  };
+}
+
+async function persistWhoogleStatsSnapshot(): Promise<void> {
+  const redis = getRedis();
+  if (!redis) {
+    return;
+  }
+
+  try {
+    await redis.set(
+      WHOOGLE_STATS_REDIS_KEY,
+      JSON.stringify(createWhoogleStatsSnapshot(whoogleStats)),
+      "EX",
+      WHOOGLE_STATS_REDIS_TTL_SECONDS,
+    );
+  } catch (error) {
+    console.warn("⚠️ Whoogle stats Redis'e yazılamadı:", error);
+  }
+}
+
+function syncWhoogleStatsSnapshot(): void {
+  void persistWhoogleStatsSnapshot();
+}
+
+export async function getSharedWhoogleStats(): Promise<WhoogleStatsSnapshot | null> {
+  const redis = getRedis();
+  if (!redis) {
+    return null;
+  }
+
+  try {
+    const raw = await redis.get(WHOOGLE_STATS_REDIS_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<WhoogleStatsSnapshot>;
+    if (typeof parsed.requests !== "number") {
+      return null;
+    }
+
+    return {
+      requests: parsed.requests ?? 0,
+      successes: parsed.successes ?? 0,
+      timeouts: parsed.timeouts ?? 0,
+      errors: parsed.errors ?? 0,
+      fallbacks: parsed.fallbacks ?? 0,
+      zeroResults: parsed.zeroResults ?? 0,
+      lastLatencyMs: parsed.lastLatencyMs ?? null,
+      totalLatencyMs: parsed.totalLatencyMs ?? 0,
+      lastError: parsed.lastError ?? null,
+      lastSuccessAt: parsed.lastSuccessAt ?? null,
+      updatedAt: parsed.updatedAt ?? null,
+      consecutiveFailures: parsed.consecutiveFailures ?? 0,
+      avgLatencyMs: parsed.avgLatencyMs ?? null,
+      available: parsed.available ?? true,
+      fallbackRate: parsed.fallbackRate ?? 0,
+      timeoutRate: parsed.timeoutRate ?? 0,
+      alertThreshold: parsed.alertThreshold ?? WHOOGLE_FALLBACK_ALERT_THRESHOLD,
+      shouldAlert: parsed.shouldAlert ?? false,
+      successRate: parsed.successRate ?? 0,
+    };
+  } catch (error) {
+    console.warn("⚠️ Whoogle stats Redis'den okunamadı:", error);
+    return null;
+  }
+}
 
 function isWhoogleTimeout(error: unknown): boolean {
   if (!axios.isAxiosError(error)) {
@@ -103,6 +220,8 @@ function recordWhoogleSuccess(latencyMs: number): void {
   whoogleStats.lastError = null;
   whoogleStats.lastSuccessAt = new Date().toISOString();
   whoogleStats.consecutiveFailures = 0;
+  touchWhoogleStats();
+  syncWhoogleStatsSnapshot();
 }
 
 function recordWhoogleFailure(error: unknown): void {
@@ -112,10 +231,14 @@ function recordWhoogleFailure(error: unknown): void {
 
   if (isWhoogleTimeout(error)) {
     whoogleStats.timeouts++;
+    touchWhoogleStats();
+    syncWhoogleStatsSnapshot();
     return;
   }
 
   whoogleStats.errors++;
+  touchWhoogleStats();
+  syncWhoogleStatsSnapshot();
 }
 
 function recordWhoogleFallback(reason: "error" | "zero_results"): void {
@@ -123,6 +246,9 @@ function recordWhoogleFallback(reason: "error" | "zero_results"): void {
   if (reason === "zero_results") {
     whoogleStats.zeroResults++;
   }
+
+  touchWhoogleStats();
+  syncWhoogleStatsSnapshot();
 
   maybeWarnWhoogleFallbackRate();
 }
@@ -152,41 +278,8 @@ function maybeWarnWhoogleFallbackRate(): void {
   );
 }
 
-export function getWhoogleStats() {
-  const avgLatencyMs =
-    whoogleStats.successes > 0
-      ? Math.round(whoogleStats.totalLatencyMs / whoogleStats.successes)
-      : null;
-  const fallbackRate =
-    whoogleStats.requests > 0
-      ? Number(
-          ((whoogleStats.fallbacks / whoogleStats.requests) * 100).toFixed(2),
-        )
-      : 0;
-  const timeoutRate =
-    whoogleStats.requests > 0
-      ? Number(
-          ((whoogleStats.timeouts / whoogleStats.requests) * 100).toFixed(2),
-        )
-      : 0;
-
-  return {
-    ...whoogleStats,
-    avgLatencyMs,
-    available: whoogleStats.consecutiveFailures < 3,
-    fallbackRate,
-    timeoutRate,
-    alertThreshold: WHOOGLE_FALLBACK_ALERT_THRESHOLD,
-    shouldAlert:
-      whoogleStats.requests >= WHOOGLE_ALERT_MIN_REQUESTS &&
-      fallbackRate >= WHOOGLE_FALLBACK_ALERT_THRESHOLD,
-    successRate:
-      whoogleStats.requests > 0
-        ? Number(
-            ((whoogleStats.successes / whoogleStats.requests) * 100).toFixed(2),
-          )
-        : 0,
-  };
+export function getWhoogleStats(): WhoogleStatsSnapshot {
+  return createWhoogleStatsSnapshot(whoogleStats);
 }
 
 export function resetWhoogleStats(): void {
@@ -200,8 +293,10 @@ export function resetWhoogleStats(): void {
   whoogleStats.totalLatencyMs = 0;
   whoogleStats.lastError = null;
   whoogleStats.lastSuccessAt = null;
+  whoogleStats.updatedAt = null;
   whoogleStats.consecutiveFailures = 0;
   lastWhoogleAlertAt = 0;
+  syncWhoogleStatsSnapshot();
 }
 
 async function rateLimitedRequest<T>(fn: () => Promise<T>): Promise<T> {
@@ -312,6 +407,8 @@ async function whoogleSearch(
   }
 
   whoogleStats.requests++;
+  touchWhoogleStats();
+  syncWhoogleStatsSnapshot();
 
   let lastError: unknown;
 
