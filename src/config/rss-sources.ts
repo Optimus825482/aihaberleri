@@ -900,7 +900,7 @@ export const ENGLISH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 3,
     requiresTranslation: true,
     priority: 3,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-13): HTTP 403 during live feed audit
     tags: ["india", "regional", "industry"],
   },
   {
@@ -1037,7 +1037,7 @@ export const FRENCH_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 3,
     requiresTranslation: true,
     priority: 4,
-    isActive: true,
+    isActive: false, // DISABLED (2026-03-13): HTTP 404 during live feed audit
     tags: ["enterprise-ai", "business", "french"],
   },
 ];
@@ -1059,7 +1059,7 @@ export const CHINESE_SOURCES: RSSSource[] = [
     averageArticlesPerDay: 10,
     requiresTranslation: true,
     priority: 5,
-    // DISABLED (26.06.2025): Consistently returns HTTP 403 - wastes 3 retries per cycle
+    isActive: false, // DISABLED (2026-03-13): HTTP 403 during live feed audit
     isActive: false,
     tags: ["ai-research", "ml", "china-ai"],
   },

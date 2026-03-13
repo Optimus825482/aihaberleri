@@ -23,6 +23,7 @@
     "topic:extract:all": "tsx scripts/extract-topics-for-existing-articles.ts --all",
     "test:smart-filtering": "tsx scripts/test-smart-filtering.ts",
     "test:new-rss-feeds": "tsx scripts/test-new-rss-feeds.ts",
+    "test:configured-rss-feeds": "tsx scripts/audit-configured-rss-feeds.ts",
     "test:whoogle": "tsx scripts/test-whoogle.ts",
     "test:all-ai-feeds": "tsx scripts/test-all-ai-feeds.ts",
     "audit:social-links": "tsx scripts/audit-social-links.ts",
