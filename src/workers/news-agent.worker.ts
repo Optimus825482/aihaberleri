@@ -1,6 +1,15 @@
 /**
- * News Agent Worker - Background job processor
- * Run this with: npm run worker
+ * @deprecated Legacy ingestion-oriented worker entrypoint.
+ *
+ * Canonical production worker is `src/workers/orchestrator.worker.ts`
+ * and should be started with `npm run worker`.
+ *
+ * This file remains available for internal troubleshooting / legacy
+ * `executeNewsAgent()` orchestration only. It owns ingestion, candidate
+ * selection, progress/log mapping, and scheduler-facing runtime glue —
+ * not the canonical BullMQ processing pipeline.
+ *
+ * Run this directly only with: `npm run worker:legacy`
  */
 
 // Suppress BullMQ "IMPORTANT! Eviction policy" spam

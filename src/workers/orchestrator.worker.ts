@@ -1,9 +1,15 @@
 /**
- * Orchestrator Worker - Multi-Agent News Pipeline
+ * Orchestrator Worker - Canonical Multi-Agent News Pipeline Runtime
  *
  * Pipeline: Collector → Duplicate → Relevance → Trend → SourceGatherer → ContentSynthesizer
  *   → ContentValidator → VisualGenerator → SEO Optimizer → DatabasePublisher → SocialShare.
- * This worker starts all 10 agents, triggers ContentCollector on schedule, monitors health, graceful shutdown.
+ *
+ * This is the single production worker entrypoint. It starts the BullMQ
+ * processing / validation / publish pipeline, triggers ContentCollector on
+ * schedule, monitors health, and manages graceful shutdown.
+ *
+ * Legacy ingestion / candidate-selection orchestration remains in
+ * `news-agent.worker.ts` + `executeNewsAgent()` until fully retired.
  */
 
 import { getRedis } from "@/lib/redis";

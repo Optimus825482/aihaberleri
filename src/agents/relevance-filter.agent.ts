@@ -16,10 +16,10 @@ import { BaseAgent, AgentResult } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
 import { batchScoreArticles } from "@/lib/deepseek"; // DeepSeek-only (Gemini removed)
 import { recordYouTubeFailure } from "@/lib/youtube-pipeline";
-import type { CollectedArticle } from "./content-collector.agent";
+import type { DeduplicatedArticle } from "./duplicate-detector.agent";
 
 /** RelevanceFilter bu alanları ekler; DuplicateDetector çıktısında henüz yok (opsiyonel). */
-export interface ScoredArticle extends CollectedArticle {
+export interface ScoredArticle extends DeduplicatedArticle {
   relevanceScore?: number;
   reasoning?: string;
   suggestedCategory?: string;
@@ -36,7 +36,7 @@ const BATCH_SIZE = 15; // Articles per batch (10 → 15 for faster processing)
 const BYPASS_MODE_ENABLED = true;
 
 export class RelevanceFilterAgent extends BaseAgent<
-  CollectedArticle[],
+  DeduplicatedArticle[],
   ScoredArticle[]
 > {
   protected config = {
@@ -51,7 +51,7 @@ export class RelevanceFilterAgent extends BaseAgent<
   }
 
   protected async process(
-    job: Job<CollectedArticle[]>,
+    job: Job<DeduplicatedArticle[]>,
   ): Promise<AgentResult<ScoredArticle[]>> {
     const articles = job.data;
     const startTime = Date.now();

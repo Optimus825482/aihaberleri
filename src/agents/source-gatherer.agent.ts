@@ -9,7 +9,7 @@
  *
  * EXTRACTED FROM: content-enricher.agent.ts (source gathering methods)
  *
- * INPUT:  UniqueArticle[] (+ optional ReEnrichMetadata)
+ * INPUT:  DeduplicatedArticle[] (+ optional ReEnrichMetadata)
  * OUTPUT: ArticleWithSources[]
  * QUEUE:  Listens on ENRICHED_ARTICLES, emits to CONTENT_SYNTHESIS
  */
@@ -21,7 +21,7 @@ import { searxngSearch, type SearXNGResult } from "@/lib/searxng";
 import { batchExtract, filterQualityResults } from "@/lib/tavily-extract";
 import { tavilySearch } from "@/lib/tavily";
 import axios from "axios";
-import type { UniqueArticle } from "./duplicate-detector.agent";
+import type { DeduplicatedArticle } from "./duplicate-detector.agent";
 import { exaSearch } from "@/lib/exa";
 import { firecrawlScrape, isFirecrawlAvailable } from "@/lib/firecrawl";
 import { withCircuitBreakerAndRetry } from "@/lib/circuit-breaker";
@@ -33,10 +33,10 @@ import type {
 } from "./pipeline-types";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INPUT TYPE (normal flow: UniqueArticle[]; re-enrich: PipelineReEnrichPayload[])
+// INPUT TYPE (normal flow: DeduplicatedArticle[]; re-enrich: PipelineReEnrichPayload[])
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type SourceGathererInput = (UniqueArticle | PipelineReEnrichPayload) &
+export type SourceGathererInput = (DeduplicatedArticle | PipelineReEnrichPayload) &
   Partial<ReEnrichMetadata> & {
     duplicateReason?: string;
     embedding?: number[];

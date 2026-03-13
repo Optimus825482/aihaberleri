@@ -101,7 +101,13 @@ async function addLogMessage(agentLogId: string, message: string) {
 }
 
 /**
- * Execute the autonomous news agent workflow
+ * Execute the legacy ingestion orchestration workflow.
+ *
+ * Responsibility boundary:
+ * - `executeNewsAgent()` owns ingestion, candidate selection, topic grouping,
+ *   hybrid scoring, and scheduling-facing orchestration.
+ * - The BullMQ pipeline owns processing, validation, visual generation,
+ *   SEO enrichment, publishing, and social distribution.
  */
 export async function executeNewsAgent(
   categorySlug?: string,
@@ -313,7 +319,8 @@ export async function executeNewsAgent(
     //                     ve güncellik birlikte değerlendirilir
     // ═══════════════════════════════════════════════════════════════════
 
-    // Get article count from database settings (admin panel saves "agent.articlesPerRun")
+    // Source of truth: DB setting (`agent.articlesPerRun`).
+    // Env is bootstrap/fallback only when the DB/admin value does not exist.
     const articlesPerRunSetting = await db.setting.findUnique({
       where: { key: "agent.articlesPerRun" },
     });
@@ -323,7 +330,7 @@ export async function executeNewsAgent(
       ? parseInt(articlesPerRunSetting.value)
       : envMax;
 
-    // targetCount = admin panel setting (1-10), default 2
+    // targetCount = DB setting first, env fallback second (1-10 clamp)
     const targetCount = Math.max(1, Math.min(maxArticles, 10));
 
     await liveLog.agent.info(

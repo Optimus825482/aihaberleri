@@ -7,7 +7,7 @@
 
 ## 1. Pipeline Akış Özeti
 
-```
+```text
 ContentCollector (RSS)
     → UNIQUE_ARTICLES (DuplicateDetector)
     → RELEVANT_ARTICLES (RelevanceFilter)
@@ -83,7 +83,7 @@ ContentCollector (RSS)
 
 - DatabasePublisher re-enrich’te `PipelineReEnrichPayload[]` ekliyor.
 - SourceGatherer job tipi: `SourceGathererInput[]` = `(UniqueArticle & Partial<ReEnrichMetadata>)[]`.
-- PipelineReEnrichPayload’da sources/synthesizedContent yok; sadece temel alanlar + _forceReEnrich, _rejectionReason, _retryCount var. SourceGatherer bu alanlarla çalışıyor, runtime’da sorun yok.
+- `PipelineReEnrichPayload` içinde `sources` / `synthesizedContent` yok; sadece temel alanlar ile `_forceReEnrich`, `_rejectionReason`, `_retryCount` bulunuyor. SourceGatherer bu alanlarla çalıştığı için runtime’da sorun yok.
 
 **Öneri:** Tipi netleştirmek için `SourceGathererInput = (UniqueArticle | PipelineReEnrichPayload) & Partial<ReEnrichMetadata>` gibi bir union kullanılabilir; böylece re-enrich payload’ı açıkça modellenir.
 
@@ -191,15 +191,15 @@ ContentCollector (RSS)
 ## 5. Özet Tablo
 
 | Konu | Önem | Durum | Aksiyon |
-|------|------|--------|--------|
-| DuplicateDetector input tipi (CollectedArticle vs ScoredArticle) | Orta | Tutarsız | Tipi CollectedArticle[] veya union yap |
+| ---- | ---- | ----- | ------- |
+| DuplicateDetector input tipi (CollectedArticle vs ScoredArticle) | Orta | Tutarsız | Tipi `CollectedArticle[]` veya union yap |
 | Legacy ContentEnricher aynı queue | Yüksek | Risk | Kaldır veya queue’yu değiştir |
-| SourceGatherer yerel circuit breaker | Orta | Tekrarlı | lib/circuit-breaker + withCircuitBreakerAndRetry kullan |
-| SEO Optimizer nextQueueName eksik | Düşük | Tutarsız | nextQueueName ekle veya tamamen emitToNextQueue’ya geç |
+| SourceGatherer yerel circuit breaker | Orta | Tekrarlı | `lib/circuit-breaker` + `withCircuitBreakerAndRetry` kullan |
+| SEO Optimizer nextQueueName eksik | Düşük | Tutarsız | `nextQueueName` ekle veya tamamen `emitToNextQueue`'ya geç |
 | ContentSynthesizer 180s sabit timeout | Düşük | Belirsiz | Config/env veya dinamik timeout |
 | RelevanceFilter bypass metrikleri | Orta | Eksik | Bypass sayısı log + metrik/alert |
-| Re-enrich job tipi (SourceGatherer union) | Düşük | Net değil | PipelineReEnrichPayload union tipi |
-| TrendEnricher super("TrendEnricher") | Düşük | İsim tutarsız | super("trend-enricher") |
+| Re-enrich job tipi (SourceGatherer union) | Düşük | Net değil | `PipelineReEnrichPayload` union tipi |
+| TrendEnricher `super("TrendEnricher")` | Düşük | İsim tutarsız | `super("trend-enricher")` |
 | Pipeline health tek özet | Orta | Dağınık | Tek health/dashboard endpoint veya sayfa |
 
 ---
@@ -213,12 +213,257 @@ Pipeline mimarisi sağlam; kuyruk zinciri, kalite kapıları ve re-enrich döng�
 ## 7. Uygulanan Öneriler (2026-03-07)
 
 | Öneri | Uygulama |
-|-------|----------|
-| 3.1-3.2 DuplicateDetector tipi | Input CollectedArticle[]; ScoredArticle optional; RelevanceFilter ?? 0. |
-| 3.3 ContentEnricher | ENRICHED_ARTICLES_LEGACY queue; @deprecated. |
-| 3.4 SEO Optimizer | nextQueueName DATABASE_PUBLISHER. |
-| 3.5+3.8 Re-enrich | SourceGathererInput union; RE_ENRICH_JOB_NAME. |
-| 3.6-3.7 Doc + TrendEnricher | Comments; super("trend-enricher"). |
-| 4.1 SourceGatherer | Local CircuitBreaker removed; Tavily/Firecrawl/Exa/SearXNG wrapped with withCircuitBreakerAndRetry. |
-| 4.2-4.4 Timeout, bypass, visual_failed | SYNTHESIS_TIMEOUT_MS; bypass_count log; metrics.visualFailed. |
-| 4.7 Pipeline health tek özet | GET /api/admin/pipeline/health; admin ana sayfada Pipeline İzleme kartı (PipelineHealthCard). |
+| ----- | -------- |
+| 3.1-3.2 DuplicateDetector tipi | Input `CollectedArticle[]`; `ScoredArticle` optional; `RelevanceFilter ?? 0` |
+| 3.3 ContentEnricher | `ENRICHED_ARTICLES_LEGACY` queue; `@deprecated` |
+| 3.4 SEO Optimizer | `nextQueueName = DATABASE_PUBLISHER` |
+| 3.5+3.8 Re-enrich | `SourceGathererInput` union; `RE_ENRICH_JOB_NAME` |
+| 3.6-3.7 Doc + TrendEnricher | Comments; `super("trend-enricher")` |
+| 4.1 SourceGatherer | Local CircuitBreaker removed; Tavily/Firecrawl/Exa/SearXNG wrapped with `withCircuitBreakerAndRetry` |
+| 4.2-4.4 Timeout, bypass, visual_failed | `SYNTHESIS_TIMEOUT_MS`; `bypass_count` log; `metrics.visualFailed` |
+| 4.7 Pipeline health tek özet | `GET /api/admin/pipeline/health`; admin ana sayfada `PipelineHealthCard` |
+
+---
+
+## 8. Güncel Önceliklendirilmiş Öneri Listesi (2026-03-13)
+
+> **Önemli not:** Yukarıdaki bölümler 2026-03-07 snapshot’ını içerir. Aşağıdaki liste, 2026-03-13 itibarıyla kod tabanının güncel durumuna göre revize edilmiş **uygulama öncelik sırası** ve **önerilen kararları** temsil eder.
+
+### 8.1 Öncelik 1 — Tek canonical worker belirle
+
+#### 8.1.1 Mevcut durum
+
+- `package.json` içinde varsayılan worker komutu: `npm run worker` → `src/workers/news-agent.worker.ts`
+- Ayrı bir worker daha var: `npm run worker:orchestrator` → `src/workers/orchestrator.worker.ts`
+- `orchestrator.worker.ts` yeni BullMQ/agent zincirini daha temiz temsil ediyor.
+- `news-agent.worker.ts` ise hem queue worker, hem progress/log orchestration, hem de legacy `executeNewsAgent()` akışını birlikte taşıyor.
+
+#### 8.1.2 Risk
+
+- Operasyonda iki farklı giriş noktası farklı davranış üretir.
+- Bakım maliyeti artar; hata anında “hangi worker gerçeği temsil ediyor?” sorusu çıkar.
+
+#### 8.1.3 Karar önerisi
+
+- **Canonical runtime:** `src/workers/orchestrator.worker.ts`
+- `npm run worker` bu dosyaya yönlenmeli.
+- `news-agent.worker.ts` şu seçeneklerden biriyle netleştirilmeli:
+  - `deprecated` + sadece internal/legacy,
+  - veya tamamen kaldırılmalı,
+  - veya sadece ingestion/scheduling sorumluluğuna indirgenmeli.
+
+#### 8.1.4 Somut aksiyonlar
+
+1. `package.json` içinde `worker` script’ini `worker:orchestrator` ile hizala.
+2. `news-agent.worker.ts` dosyasının tepesine açık bir durum notu ekle:
+    - `@deprecated`
+    - veya `@internal ingestion-only`
+3. README ve deployment dokümanında tek çalışma komutu bırak.
+
+#### 8.1.5 Done when
+
+- Tek production worker komutu vardır.
+- Legacy worker’ın rolü açıkça belgelenmiştir.
+- Operasyon ekibi için belirsizlik kalmaz.
+
+---
+
+### 8.2 Öncelik 2 — Pipeline type sözleşmesini gerçek sıraya uydur
+
+#### 8.2.1 Mevcut durum
+
+- Queue akışı fiilen: `CollectedArticle → DuplicateDetector → RelevanceFilter → TrendEnricher → SourceGatherer ...`
+- Ancak `src/agents/pipeline-types.ts` başındaki kavramsal akış hâlâ `CollectedArticle → ScoredArticle → UniqueArticle` diye yazılmış.
+- Runtime bug büyük ölçüde çözülmüş olsa da, tip isimleri ile gerçek stage sırası arasında kavramsal kayma sürüyor.
+
+#### 8.2.2 Risk
+
+- Yeni geliştirici yanlış sırayı öğrenir.
+- Kod review ve refactor sırasında tip akışını takip etmek zorlaşır.
+
+#### 8.2.3 Karar önerisi
+
+Stage isimleri queue sırasını birebir yansıtmalı:
+
+```text
+CollectedArticle
+  → DeduplicatedArticle
+  → ScoredArticle
+  → TrendEnrichedArticle
+  → ArticleWithSources
+  → SynthesizedArticle
+  → EnrichedArticle
+  → ArticleWithVisuals
+  → ArticleWithSEO
+  → PublishedArticle
+```
+
+#### 8.2.4 Somut aksiyonlar
+
+1. `pipeline-types.ts` içindeki başlık yorumunu güncelle.
+2. `UniqueArticle` yerine `DeduplicatedArticle` gibi gerçek aşamayı anlatan isim kullan.
+3. Agent import zincirlerini yeni type isimleriyle hizala.
+4. Kuyruk isimleri ile type isimlerini aynı sırada belgeleyen küçük bir tablo ekle.
+
+#### 8.2.5 Done when
+
+- Tip isimleri gerçek pipeline sırasını yansıtır.
+- Header comment, queue-manager ve orchestrator açıklamaları aynı dili konuşur.
+
+---
+
+### 8.3 Öncelik 3 — README + admin settings + env davranışını hizala
+
+#### 8.3.1 Mevcut durum
+
+- README env değişkenleri üzerinden “her çalıştırmada 1 haber” gibi konuşuyor.
+- Gerçekte `agent.articlesPerRun` admin paneli ve DB setting’i kullanılıyor.
+- `agent.service.ts` env değerini fallback olarak alıyor.
+- `database-publisher.agent.ts` ayrıca publish limit uyguluyor.
+
+#### 8.3.2 Risk
+
+- Operasyon tarafı env değiştirir ama sonuç DB setting yüzünden beklediği gibi olmaz.
+- Dokümantasyon kullanıcıyı yanlış yönlendirir.
+
+#### 8.3.3 Karar önerisi
+
+- **Tek source of truth:** `agent.articlesPerRun` (DB setting)
+- Env yalnızca **bootstrap/fallback** amacıyla kullanılmalı.
+
+#### 8.3.4 Önerilen davranış modeli
+
+- Admin panel kaydı varsa: onu kullan
+- DB’de yoksa: env fallback kullan
+- README bunu açıkça söyle
+
+#### 8.3.5 Somut aksiyonlar
+
+1. README’de `AGENT_MIN_ARTICLES_PER_RUN` / `AGENT_MAX_ARTICLES_PER_RUN` anlatısını güncelle.
+2. `articlesPerRun` için “DB setting > env fallback” kuralını dokümante et.
+3. Admin panel açıklama metninde “çalışma başına işlenecek/yayınlanacak hedef haber sayısı” ifadesini netleştir.
+4. Gerekirse collect limiti ile publish limitini ayrı isimlendir:
+    - `candidateArticlesPerRun`
+    - `publishArticlesPerRun`
+
+#### 8.3.6 Done when
+
+- README, admin panel ve runtime davranışı aynı modeli anlatır.
+- `articlesPerRun` konusunda tek bir doğru açıklama vardır.
+
+---
+
+### 8.4 Öncelik 4 — Legacy orchestration sınırını belgeleyin veya kaldırın
+
+#### 8.4.1 Mevcut durum
+
+- `executeNewsAgent()` hâlâ önemli bir orchestration katmanı gibi duruyor.
+- Bu katman topic grouping, hibrit skor, seçim ve bazı scheduling bağlamlarını taşıyor.
+- BullMQ pipeline ise asıl processing zincirini taşıyor.
+
+#### 8.4.2 Şu an belirsiz olan soru
+
+- `executeNewsAgent()` tam olarak neyin sahibi?
+- BullMQ zinciri nerede başlıyor, nerede bitiyor?
+
+#### 8.4.3 Karar önerisi
+
+İki rolden biri seçilmeli:
+
+#### Seçenek A — Korunacaksa açık sınır çiz
+
+- `executeNewsAgent()` = **ingestion / candidate selection / scheduling orchestration**
+- BullMQ pipeline = **processing / validation / publish orchestration**
+
+#### Seçenek B — Sadeleştirilecekse kaldır
+
+- Topic grouping ve seçim logic’i canonical orchestrator içine veya ayrı ingestion service’e taşınır
+- `news-agent.worker.ts` küçültülür / kaldırılır
+
+#### 8.4.4 Somut aksiyonlar
+
+1. `executeNewsAgent()` için tek cümlelik resmi sorumluluk tanımı yaz.
+2. README veya bu dokümana “ingestion vs processing” sınır diyagramı ekle.
+3. Eğer legacy ise dosya başına `@deprecated` ve kaldırma planı ekle.
+
+#### 8.4.5 Done when
+
+- Herkes `executeNewsAgent()` ile BullMQ zincirinin farkını 30 saniyede anlayabilir.
+- Aynı işi yapan iki orchestration katmanı kalmaz.
+
+---
+
+### 8.5 Öncelik 5 — Kalite metriklerini görünürleştir
+
+#### 8.5.1 Mevcut durum
+
+- `bypass_count` log seviyesinde var.
+- `visualFailed` metric/log olarak var.
+- re-enrich queue adı ve cooldown davranışı tiplerle belgeli.
+- `ContentValidator` reject reason’ları log’a yazıyor.
+- `PipelineHealthCard` ve `/api/admin/pipeline/health` mevcut.
+
+#### 8.5.2 Eksik olan
+
+- Bu kalite sinyalleri tek ekranda veya zaman serisi halinde görünmüyor.
+- Özellikle şu sayılar admin için ilk sınıf metrik değil:
+  - bypass count
+  - re-enrich count
+  - visual fail count
+  - publish reject reasons dağılımı
+
+#### 8.5.3 Karar önerisi
+
+Kalite metrikleri iki katmanda görünür olmalı:
+
+1. **Anlık operasyonel görünüm**
+    - bugünkü bypass
+    - bugünkü re-enrich
+    - bugünkü visual fail
+    - son reject reason dağılımı
+
+2. **Trend görünümü**
+    - 24 saat / 7 gün eğilimleri
+
+#### 8.5.4 Somut aksiyonlar
+
+1. Yeni bir `pipeline quality summary` endpoint’i ekle veya mevcut health/stats endpoint’ini genişlet.
+2. Redis/DB’de aşağıdaki sayaçları topla:
+    - `quality:bypass_count`
+    - `quality:re_enrich_count`
+    - `quality:visual_failed`
+    - `quality:reject_reason:<reason>`
+3. Admin ana sayfaya “Kalite Sinyalleri” kartı ekle.
+4. En az şu reject reason’ları breakdown olarak göster:
+    - `english_title`
+    - `dictionary_content`
+    - `low_quality`
+    - `missing_image`
+    - `fallback_image`
+    - `zero_external_sources`
+
+#### 8.5.5 Done when
+
+- Admin panelde kalite düşüşü log okumadan anlaşılır.
+- LLM fallback / re-enrich / reject artışları görünür hale gelir.
+
+---
+
+## 9. Önerilen uygulama sırası
+
+| Sıra | İş | Etki | Risk | Not |
+| ---- | --- | ---- | ---- | --- |
+| 1 | Canonical worker kararı | Çok yüksek | Düşük-Orta | Operasyonel belirsizliği hemen azaltır |
+| 2 | Legacy orchestration sınırı | Yüksek | Orta | Worker sadeleştirme kararını destekler |
+| 3 | Pipeline type sözleşmesi | Yüksek | Düşük | Refactor güvenliğini artırır |
+| 4 | `articlesPerRun` davranış hizası | Orta-Yüksek | Düşük | Dokümantasyon ve admin UX netleşir |
+| 5 | Kalite metrikleri görünürlüğü | Orta | Düşük-Orta | Operasyonel kaliteyi görünür yapar |
+
+---
+
+## 10. Kısa yönetici özeti
+
+- **En kritik karar:** Tek worker standardı belirlenmeli.
+- **En kritik teknik borç:** Type sözleşmesi ve runtime sırası aynı dili konuşmalı.
+- **En kritik operasyonel eksik:** `articlesPerRun` davranışı ve kalite sinyalleri merkezi şekilde görünür değil.
+- **Önerilen yön:** `orchestrator.worker.ts` canonical olsun; legacy orchestration ya küçültülsün ya kaldırma planına alınsın.

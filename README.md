@@ -45,7 +45,7 @@ DeepSeek Reasoner kullanarak günde iki kez yapay zeka haberlerini tarayan, yeni
 Coolify ile otomatik deployment için:
 
 1. **Coolify Dashboard'a giriş yapın**
-   - URL: https://your-coolify-instance.com
+   - URL: <https://your-coolify-instance.com>
 
 2. **Yeni Resource oluşturun**
    - Resource Type: **Docker Compose**
@@ -68,6 +68,7 @@ Coolify ile otomatik deployment için:
    - Logs'tan deployment'ı takip edin
 
 6. **İlk kurulum komutlarını çalıştırın**
+
    ```bash
    # App container'a gir
    docker exec -it aihaberleri-app sh
@@ -92,26 +93,26 @@ git clone <repository-url>
 cd ai-news-site
 ```
 
-2. **Environment dosyası oluşturun**
+1. **Environment dosyası oluşturun**
 
 ```bash
 cp .env.example .env
 ```
 
-3. **Environment değişkenlerini yapılandırın**
+1. **Environment değişkenlerini yapılandırın**
    `.env` dosyasını düzenleyin ve ayarlayın:
 
 - `DEEPSEEK_API_KEY` - DeepSeek API anahtarınız (gerekli)
 - `NEXTAUTH_SECRET` - Şununla oluşturun: `openssl rand -base64 32`
 - `UNSPLASH_ACCESS_KEY` - Unsplash API anahtarı (opsiyonel)
 
-4. **Servisleri başlatın**
+1. **Servisleri başlatın**
 
 ```bash
 docker-compose up -d
 ```
 
-5. **Veritabanı migration'larını çalıştırın**
+1. **Veritabanı migration'larını çalıştırın**
 
 ```bash
 docker-compose exec app npx prisma migrate deploy
@@ -120,17 +121,17 @@ docker-compose exec app npx prisma migrate deploy
 docker exec -i aihaberleri-postgres psql -U ${POSTGRES_USER:-aiuser} -d ${POSTGRES_DB:-ainewsdb} < migrations/add-ai-glossary-setting.sql
 ```
 
-6. **Admin kullanıcısı oluşturun**
+1. **Admin kullanıcısı oluşturun**
 
 ```bash
 docker-compose exec app npx prisma db seed
 ```
 
-7. **Siteye erişin**
+1. **Siteye erişin**
 
-- Web sitesi: http://localhost:3000
-- Yönetim: http://localhost:3000/admin
-- Varsayılan kimlik bilgileri: admin@example.com / admin123
+- Web sitesi: <http://localhost:3000>
+- Yönetim: <http://localhost:3000/admin>
+- Varsayılan kimlik bilgileri: <admin@example.com> / admin123
 
 ### Seçenek 2: Manuel Kurulum
 
@@ -140,7 +141,7 @@ docker-compose exec app npx prisma db seed
 npm install
 ```
 
-2. **Veritabanını kurun**
+1. **Veritabanını kurun**
 
 ```bash
 # PostgreSQL ve Redis'i başlatın
@@ -151,19 +152,19 @@ npx prisma migrate deploy
 npx prisma generate
 ```
 
-3. **Admin kullanıcısı oluşturun**
+1. **Admin kullanıcısı oluşturun**
 
 ```bash
 npx prisma db seed
 ```
 
-4. **Development sunucusunu başlatın**
+1. **Development sunucusunu başlatın**
 
 ```bash
 npm run dev
 ```
 
-5. **Arka plan worker'ını başlatın** (ayrı terminal'de)
+1. **Arka plan worker'ını başlatın** (ayrı terminal'de)
 
 ```bash
 npm run worker
@@ -195,8 +196,8 @@ AGENT_MIN_INTERVAL_HOURS=5
 5. **İçerik Zenginleştirme**: SearXNG ile kaynak toplama, DeepSeek ile yeniden yazım
 6. **Görsel Oluşturma**: Pollinations.ai ile AI görseli
 7. **SEO Optimizasyonu**: Meta başlık, açıklama, slug optimizasyonu
-5. **Yayınlama**: Web sitesine otomatik olarak yayınlar
-6. **Zamanlama**: Sonraki çalıştırmayı planlar (5-8 saat sonra, rastgele zaman)
+8. **Yayınlama**: Web sitesine otomatik olarak yayınlar
+9. **Zamanlama**: Sonraki çalıştırmayı planlar (5-8 saat sonra, rastgele zaman)
 
 ### Manuel Çalıştırma
 
@@ -301,13 +302,13 @@ Sözlük için eklenen migration `migrations/add-ai-glossary-setting.sql` dosyas
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-2. **Domain yapılandırın**
+1. **Domain yapılandırın**
    `.env` dosyasında `NEXT_PUBLIC_SITE_URL`'yi güncelleyin
 
-3. **SSL kurun**
+2. **SSL kurun**
    Let's Encrypt ile Nginx veya Caddy'yi reverse proxy olarak kullanın
 
-4. **İzleme yapılandırın**
+3. **İzleme yapılandırın**
 
 - Hata takibi kurun (Sentry)
 - Uptime monitoring yapılandırın
@@ -382,7 +383,7 @@ Katkılar memnuniyetle karşılanır! Lütfen önce CONTRIBUTING.md dosyasını 
 Sorunlar ve sorular için:
 
 - GitHub Issues: [repository-url]/issues
-- E-posta: support@example.com
+- E-posta: <support@example.com>
 
 ## 🎯 Yol Haritası
 

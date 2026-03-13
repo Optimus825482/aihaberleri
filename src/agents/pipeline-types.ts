@@ -1,12 +1,52 @@
 /**
  * Pipeline Type Contracts — Strict TypeScript Interface Chain
  *
- * PIPELINE FLOW:
- * CollectedArticle → ScoredArticle → UniqueArticle
- *   → ArticleWithSources (SourceGatherer)
- *   → SynthesizedArticle (ContentSynthesizer)
- *   → EnrichedArticle (ContentValidator)
- *   → ArticleWithVisuals → ArticleWithSEO → PublishedArticle
+ * CANONICAL PIPELINE FLOW:
+ * CollectedArticle
+ *   → DeduplicatedArticle
+ *   → ScoredArticle
+ *   → TrendEnrichedArticle (runtime queue stage / no additional type today)
+ *   → ArticleWithSources
+ *   → SynthesizedArticle
+ *   → EnrichedArticle
+ *   → ArticleWithVisuals
+ *   → ArticleWithSEO
+ *   → PublishedArticle
+ *
+ * Pipeline type flow (current canonical runtime order):
+ * CollectedArticle
+ *   → DeduplicatedArticle
+ *   → ScoredArticle
+ *   → TrendEnrichedArticle
+ *   → ArticleWithSources
+ *   → SynthesizedArticle
+ *   → EnrichedArticle
+ *   → ArticleWithVisuals
+ *   → ArticleWithSEO
+ *   → PublishedArticle
+ *
+ * Queue / type alignment:
+ * - UNIQUE_ARTICLES → DeduplicatedArticle
+ * - RELEVANT_ARTICLES → ScoredArticle
+ * - TREND_ENRICHMENT → TrendEnrichedArticle
+ * - ENRICHED_ARTICLES → ArticleWithSources
+ * - CONTENT_SYNTHESIS → SynthesizedArticle
+ * - CONTENT_VALIDATION → EnrichedArticle
+ * - ARTICLES_WITH_VISUALS → ArticleWithVisuals
+ * - SEO_OPTIMIZATION → ArticleWithSEO
+ * - DATABASE_PUBLISHER → PublishedArticle
+ *
+ * QUEUE / TYPE ALIGNMENT:
+ * ContentCollector      → CollectedArticle
+ * DuplicateDetector     → DeduplicatedArticle
+ * RelevanceFilter       → ScoredArticle
+ * TrendEnricher         → ScoredArticle (trendScore enriched at runtime)
+ * SourceGatherer        → ArticleWithSources
+ * ContentSynthesizer    → SynthesizedArticle
+ * ContentValidator      → EnrichedArticle
+ * VisualGenerator       → ArticleWithVisuals
+ * SEOOptimizer          → ArticleWithSEO
+ * DatabasePublisher     → PublishedArticle
  *
  * RE-ENRICH LOOP:
  * DatabasePublisher rejects → PipelineReEnrichPayload → SourceGatherer (aggressive mode)

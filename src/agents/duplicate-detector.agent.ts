@@ -19,19 +19,25 @@ import {
 } from "@/lib/embeddings";
 import { getRedis } from "@/lib/redis";
 import type { CollectedArticle } from "./content-collector.agent";
-import type { ScoredArticle } from "./relevance-filter.agent";
 
 /** DuplicateDetector çıktısı; RelevanceFilter relevanceScore/reasoning ekler. */
-export interface UniqueArticle extends ScoredArticle {
+export interface DeduplicatedArticle extends CollectedArticle {
+  relevanceScore?: number;
+  reasoning?: string;
+  suggestedCategory?: string;
+  suggestedTags?: string[];
   topic?: string;
   isDuplicate: boolean;
   duplicateReason?: string;
   embedding?: number[];
 }
 
+/** @deprecated Use DeduplicatedArticle. Kept temporarily for compatibility while imports migrate. */
+export type UniqueArticle = DeduplicatedArticle;
+
 export class DuplicateDetectorAgent extends BaseAgent<
   CollectedArticle[],
-  UniqueArticle[]
+  DeduplicatedArticle[]
 > {
   protected config = {
     name: "duplicate-detector",
@@ -46,7 +52,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
 
   protected async process(
     job: Job<CollectedArticle[]>,
-  ): Promise<AgentResult<UniqueArticle[]>> {
+  ): Promise<AgentResult<DeduplicatedArticle[]>> {
     const articles = job.data;
     const startTime = Date.now();
 
@@ -66,7 +72,7 @@ export class DuplicateDetectorAgent extends BaseAgent<
     }
 
     try {
-      const uniqueArticles: UniqueArticle[] = [];
+      const uniqueArticles: DeduplicatedArticle[] = [];
       let duplicateCount = 0;
 
       for (const article of articles) {
