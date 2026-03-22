@@ -83,17 +83,16 @@ const nextConfig = {
 
   async redirects() {
     return [
-      // Fix: /news/en/news/ double prefix → /en/news/
+      // Fix: /news/en/news/ double prefix → /news/en/
       {
         source: "/news/en/news/:slug*",
-        destination: "/en/news/:slug*",
+        destination: "/news/en/:slug*",
         permanent: true,
       },
-      // Fix: Turkish content with /news/ prefix → remove prefix
-      // Only redirect if NOT starting with /en/ (to avoid catching English URLs)
+      // Fix: /en/news/ wrong format → /news/en/
       {
-        source: "/news/:slug((?!en/).*)",
-        destination: "/:slug*",
+        source: "/en/news/:slug*",
+        destination: "/news/en/:slug*",
         permanent: true,
       },
     ];
