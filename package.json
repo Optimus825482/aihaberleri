@@ -39,7 +39,8 @@
     "queue:clear-waiting": "tsx scripts/clear-waiting-queues.ts",
     "migrate:search-providers": "tsx scripts/apply-search-provider-migration.ts",
     "migrate:search-providers:test": "tsx scripts/apply-search-provider-migration.ts --with-test-data",
-    "test:search-providers": "tsx scripts/test-search-provider-monitoring.ts"
+    "test:search-providers": "tsx scripts/test-search-provider-monitoring.ts",
+    "check:sitemap": "tsx scripts/check-sitemap.ts"
   },
   "dependencies": {
     "@atproto/api": "^0.18.20",
