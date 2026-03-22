@@ -65,7 +65,8 @@ const nextConfig = {
         destination: "/api/indexnow-key?key=:key",
       },
       {
-        source: "/:key([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).txt",
+        source:
+          "/:key([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}).txt",
         destination: "/api/indexnow-key?key=:key",
       },
       // Turkish URL rewrites
@@ -81,7 +82,21 @@ const nextConfig = {
   },
 
   async redirects() {
-    return [];
+    return [
+      // Fix: /news/en/news/ double prefix → /en/news/
+      {
+        source: "/news/en/news/:slug*",
+        destination: "/en/news/:slug*",
+        permanent: true,
+      },
+      // Fix: Turkish content with /news/ prefix → remove prefix
+      // Only redirect if NOT starting with /en/ (to avoid catching English URLs)
+      {
+        source: "/news/:slug((?!en/).*)",
+        destination: "/:slug*",
+        permanent: true,
+      },
+    ];
   },
 
   images: {
