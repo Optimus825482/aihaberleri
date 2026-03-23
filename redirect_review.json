@@ -1,0 +1,2102 @@
+[
+  {
+    "source": "/news/openclawin-kurucusu-openaiye-katildi-kisisel-ai-asistani-open-source-olmaya-devam-ediyor",
+    "destination": "/news/openclaw-kurucusu-openaiye-katildi-open-source-ai-asistani",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.671
+  },
+  {
+    "source": "/news/claude-sonnet-46-devrimi-kodlama-ajanlar-ve-1m-baglamla-yeni-bir-ai-cagi-basliyor",
+    "destination": "/news/claude-sonnet-4-6-kodlama-ajanlar-1m-baglam-ai-cag",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.748
+  },
+  {
+    "source": "/news/gpt-53-codex-spark-mi-microsoftun-gizli-ai-projesi-opal-kodlama-dunyasini-deviriyor",
+    "destination": "/news/gpt-5-3-codex-spark-microsoft-ai-devrimi-is-dunyasini-yeniden-tanimliyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.684
+  },
+  {
+    "source": "/news/apple-xcode-263-ile-yapay-zeka-ajanlarini-devreye-soktu-artik-kod-onermiyor-isi-bitiriyor",
+    "destination": "/news/apple-xcode-263-ile-yapay-zeka-ajanlari-artik-uygulama-gelistirebilecek",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.675
+  },
+  {
+    "source": "/news/gemini-31-pro-windows-11-tarzi-bir-web-os-gelistiriyor-ainin-sistemi-yeniden-tanimlamasi",
+    "destination": "/news/gemini-3-deep-think-ainin-bilimsel-kesifleri-yeniden-tanimlamasi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.579
+  },
+  {
+    "source": "/news/grok-yapay-zekasi-izin-alinmadan-erkek-gorsellerini-degistirmeye-devam-ediyor",
+    "destination": "/news/grok-yapay-zeka-erkek-gorsellerini-izin-almadan-degistiriyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.686
+  },
+  {
+    "source": "/news/elon-muskin-spacex-ve-xai-abd-ordusu-icin-oldurucu-drohneleri-yoneten-yapay-zekayi-gelistiriyor",
+    "destination": "/news/elon-musk-spacex-xai-abd-ordusu-icin-kill-drone-ai",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.621
+  },
+  {
+    "source": "/news/llmlere-dogru-soruyu-sormak-validation-prompts-ile-yapay-zekanin-dogrulugunu-nasil-yukseltiyoruz",
+    "destination": "/news/llm-validation-prompts-ile-yapay-zeka-dogrulugu-yukseltme",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.719
+  },
+  {
+    "source": "/news/openai-enhances-chatgpt-research-with-dedicated-report-viewer",
+    "destination": "/news/openai-yeni-guncellemesi-chatgpt-insancil-derin-arama",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.561
+  },
+  {
+    "source": "/news/gemini-31-pro-ile-gercek-bir-sehir-planlama-uygulamasi-yaratildi-ainin-yeni-siniri",
+    "destination": "/news/gemini-3-1-pro-sehir-planlama-uygulamasi-ai-siniri",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.742
+  },
+  {
+    "source": "/news/20-dolarla-eski-sarj-cihazimi-yerine-koydum-qi2-teknolojisi-gercekten-degistiriyor",
+    "destination": "/news/20-dolarla-qi2-sarj-cihazi-gercekten-degistiriyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.718
+  },
+  {
+    "source": "/news/yapay-zeka-yazilimi-yerken-buyuk-sirketler-kazaniyor",
+    "destination": "/news/dxc-londra-yapay-zeka-merkezi-sirketler-ai-kullanimi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.596
+  },
+  {
+    "source": "/news/alibabas-zvec-aims-to-be-the-sqlite-of-vector-databases-for-edge-ai",
+    "destination": "/news/alibaba-zvec-cihaz-ai-sqlite-gibi-vektor-veritabani",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.593
+  },
+  {
+    "source": "/news/openai-yeni-gorsel-modelini-test-ediyor-daha-gercekci-daha-akilli-goruntuler-mi-geliyor",
+    "destination": "/news/openai-yeni-gorsel-modeli-daha-gercekci-goruntuler",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.73
+  },
+  {
+    "source": "/news/gemini-31-pro-google-rekabeti-alt-eden-yapay-zeka-modelini-ucte-bir-fiyata-sundu",
+    "destination": "/news/gemini-31-pro-googlenin-yapay-zekda-yarattigi-gercek-bir-devrim-mi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.63
+  },
+  {
+    "source": "/news/10-ucuz-akilli-esya-ile-evini-akilli-hale-getirme-sanati-kimse-soylemedigi-gercekler",
+    "destination": "/news/10-ucuz-akilli-esya-ile-evi-akilli-hale-getir",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.698
+  },
+  {
+    "source": "/news/eski-bir-evlilik-fotografi-neden-dunyayi-durdurdu-icindeki-hikye-sizi-inanamayacaginiz-yere-goturecek",
+    "destination": "/news/eski-evlilik-fotografi-neden-dunyayi-durdurdu-hikayesi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.684
+  },
+  {
+    "source": "/news/google-deepmind-fotograflardan-sarki-ureten-lyria-3u-surdu-muzik-sanati-yeniden-tanimlaniyor",
+    "destination": "/news/google-deepmind-gemini-3-deep-think-bilim-muhendislik-yeniden-tanimliyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.61
+  },
+  {
+    "source": "/news/chatgptyi-en-iyi-nasil-kullanilir-ainin-kendisi-sana-ogut-verdi-ve-sanki-bir-felsefeci-gibi-cevap-verdi",
+    "destination": "/news/chatgpt-en-iyi-kullanim-yontemleri-ai-felsefeci-cevaplari",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.562
+  },
+  {
+    "source": "/news/gpt-53-codex-spark-kodlama-hizinda-devrim-saniyede-1000-tokenle-yazilimin-gelecegi-degisiyor",
+    "destination": "/news/gpt-53-codex-spark-saniyede-1000-token-kodlama-devrimi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.589
+  },
+  {
+    "source": "/news/iphoneun-usb-c-portu-sadece-sarj-degil-ios-26-ile-14-gizli-guclu-ozellik-kesfedildi",
+    "destination": "/news/iphone-usb-c-portu-ios-26-14-gizli-ozellik",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.672
+  },
+  {
+    "source": "/news/google-project-genie-ile-kullanicilarin-kendi-etkilesimli-dunyalarini-olusturmasina-izin-veriyor",
+    "destination": "/news/google-project-genie-kullanici-etkilesimli-dunya-olustur",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.737
+  },
+  {
+    "source": "/news/yapay-zeka-finans-sektorunde-donum-noktasina-ulasti-singapur-oncu-rol-oynuyor",
+    "destination": "/news/yapay-zeka-finans-donum-noktasi-singapur-oncu",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.738
+  },
+  {
+    "source": "/news/openai-cerebras-cip-ile-1000-tokensaniye-hizinda-kod-yazan-yeni-ai-araci-surdu",
+    "destination": "/news/openai-cerebras-1000-tokens-saniye-kod-ai-araci",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.72
+  },
+  {
+    "source": "/news/7999-dolarlik-camasir-katlama-robotu-inanilmaz-mi-yoksa-inanilmazca-gercek-mi",
+    "destination": "/news/7999-dolar-camasir-katlama-robotu-inanilmaz-mi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.748
+  },
+  {
+    "source": "/news/dxc-londrada-yapay-zeka-merkezi-acti-sirketler-aiyi-nasil-gercek-hayatta-kullanacak",
+    "destination": "/news/dxc-londra-yapay-zeka-merkezi-sirketler-ai-kullanimi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.726
+  },
+  {
+    "source": "/news/openai-chatgptnin-ozel-surumuyle-ic-gozculeri-yakaliyor-slack-ve-e-postalari-tariyor",
+    "destination": "/news/openai-chatgpt-ozel-surum-slack-e-posta-tarama",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.662
+  },
+  {
+    "source": "/news/musk-spacex-ve-xaiyi-ay-ussune-tasimaya-karar-verdi-yeni-vizyon-mu-yoksa-kaos-mi",
+    "destination": "/news/musk-spacex-xai-ay-ussu-yeni-vizyon-veya-kaos",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.688
+  },
+  {
+    "source": "/news/dev-ekranlarin-fiyat-cokusu-85-inc-sony-bravianin-1000-dolarin-altina-inmesinin-arkasindaki-stratejik-deprem",
+    "destination": "/news/dev-ekranlar-fiyat-cokusu-85-inci-sony-bravia-1000-dolar-alti",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.71
+  },
+  {
+    "source": "/news/claudenin-zekasi-caliniyor-cinli-laboratuvarlar-endustriyel-olcekli-ai-calma-operasyonu",
+    "destination": "/news/claudes-zekasi-cinli-lablar-endustriyel-ai-calmasi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.701
+  },
+  {
+    "source": "/news/ai-toolkit-mi-onetrainer-mi-daha-hizli-2x-hiz-farkinin-sirri-ve-stable-diffusion-egitimindeki-kritik-farklar",
+    "destination": "/news/ai-toolkit-vs-onetrainer-2x-hiz-farki-stable-diffusion-egitimi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.706
+  },
+  {
+    "source": "/news/monolith-roleplaytan-data-meshe-oyun-sunucularinin-sosyal-yapilari-nasil-dijital-iktidarin-sonunu-getiriyor",
+    "destination": "/news/monolith-roleplay-den-data-mesh-e-oyun-sunuculari-dijital-iktidar-sonu",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.746
+  },
+  {
+    "source": "/news/sdxl-turbo-ve-yolov8-ile-gercek-zamanli-sanat-soleni-bir-raspberry-pinin-goz-kamastiran-yaraticiligi",
+    "destination": "/news/sdxl-turbo-yolov8-raspberry-pi-gercek-zamanli-sanat-show",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.551
+  },
+  {
+    "source": "/news/miro-yapay-zeka-kodlama-araclarini-gorsel-is-birligiyle-bulusturan-mcp-sunucusunu-duyurdu",
+    "destination": "/news/coveo-yapay-zeka-ajanlarini-guclendirecek-hosted-mcp-sunucusunu-duyurdu",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.662
+  },
+  {
+    "source": "/news/sam-altman-uyariyor-yapay-zeka-devrimi-daha-hizli-geliyor-ve-dunyayi-beklemiyor",
+    "destination": "/news/sam-altman-yapay-zeka-devrimi-hizli-geliyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.705
+  },
+  {
+    "source": "/news/yerel-llmleri-70-150-gelistiriciyle-nasil-yonetirsiniz-agentic-kodlama-icin-en-iyi-uygulamalar",
+    "destination": "/news/yerel-llm-yonetimi-70-150-gelistirici-agentic-kodlama-uygulamalar",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.73
+  },
+  {
+    "source": "/news/gemini-31-pronun-matematikteki-basarisizligi-googlein-ai-devrimi-nerede-takildi",
+    "destination": "/news/gemini-3-deep-think-yakinda-google-yapay-zeka-devrimi-neler-degistirir",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.564
+  },
+  {
+    "source": "/news/runway-315-milyon-dolar-yatirim-aldi-video-uretiminde-yapay-zeka-savaslari-kizisiyor",
+    "destination": "/news/runway-315-milyon-dolar-yatirim-yapay-zeka-video-uretimi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.671
+  },
+  {
+    "source": "/news/cloudflare-web-sitelerini-ai-ajanlari-icin-hizli-besin-haline-getirdi-teknoloji-devrimi-mi-yoksa-tehlike-mi",
+    "destination": "/news/cloudflare-ai-ajanlari-icin-web-hizli-besin-devrim-veya-tehlike",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.671
+  },
+  {
+    "source": "/news/agentic-ai-finansin-gelecegi-hesap-odeme-otomasyonunda-neden-devrim-yaratiyor",
+    "destination": "/news/prompt-chaining-nedir-ai-zincirleme-komutlar-neden-devrim-yaratiyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.583
+  },
+  {
+    "source": "/news/microsoft-ai-baskani-18-ay-icinde-buro-calismalarinin-cogu-yapay-zeka-tarafindan-otomatiklenecek",
+    "destination": "/news/microsoft-ai-baskanligi-18-ayda-buro-isleri-otomatiklenecek",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.697
+  },
+  {
+    "source": "/news/ltx-2-easy-promptun-son-test-asamasi-gorsel-yapay-zeka-dunyasinda-bir-cigir-aciyor",
+    "destination": "/news/ltx-2-easy-prompt-gorsel-yapay-zeka-cigir-aciyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.738
+  },
+  {
+    "source": "/news/sdxl-long-context-stable-diffusion-xlde-248-token-ile-goruntu-uretiminde-devrim-mi",
+    "destination": "/news/sdxl-long-context-248-token-stable-diffusion-xl-goruntu-uretimi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.731
+  },
+  {
+    "source": "/news/rfk-jr-yonetiminde-hhs-asi-yan-etkilerini-incelemek-icin-yapay-zeka-gelistiriyor",
+    "destination": "/news/rfk-jr-hhs-yapay-zeka-ile-asi-yan-etkilerini-inceleme",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.571
+  },
+  {
+    "source": "/news/openaida-yetiskin-modu-krizi-karsi-cikan-yonetici-cinsel-ayrimcilik-gerekcesiyle-isten-atildi",
+    "destination": "/news/openaida-yetiskin-moduna-karsi-cikan-ust-duzey-yonetici-isten-atildi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.696
+  },
+  {
+    "source": "/news/openai-codex-clinin-calisma-prensibini-acikladi",
+    "destination": "/news/openai-codex-mac-coklu-ai-ajani-eklendi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.605
+  },
+  {
+    "source": "/news/chatgpti-guclu-kullanmanin-7-gizli-ayari-neden-bunlar-varsayilan-olarak-kapali",
+    "destination": "/news/chatgpt-guclu-kullanim-7-gizli-ayari-kapali-neden",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.661
+  },
+  {
+    "source": "/news/amazon-yapay-zeka-odaklanmasiyla-16-bin-is-pozisyonunu-kapatiyor",
+    "destination": "/news/amazon-yapay-zeka-2026-arastirmasi-calisan-yukunu-artirdigini-dogruladi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.563
+  },
+  {
+    "source": "/news/openai-apide-prompt-onbellekleme-sadece-batch-mi-yoksa-gecmis-batchler-de-mi",
+    "destination": "/news/openai-api-prompt-cache-batch-vs-history",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.569
+  },
+  {
+    "source": "/news/nasa-perseverance-kesif-aracinin-marstaki-rotasini-claude-yapay-zekasi-ile-cizdi",
+    "destination": "/news/nasa-perseverance-mars-kesif-aracini-ilk-kez-yapay-zeka-ile-yonlendirdi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.702
+  },
+  {
+    "source": "/news/jian-yang-claudenin-yerine-not-claudei-surdu-ai-dunyasinda-yeni-bir-devrim-mi",
+    "destination": "/news/claude-sonnet-46-cikti-ai-dunyasinda-yeni-bir-donem-mi-basliyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.614
+  },
+  {
+    "source": "/news/alibaba-robotikte-yeni-bir-cagi-aciyor-rynnbrain-ile-fiziksel-aida-dunya-rekorlari-kirdi",
+    "destination": "/news/alibaba-rynnbrain-ile-fiziksel-ai-dunya-rekoru-kirdi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.729
+  },
+  {
+    "source": "/news/bytedance-yeni-ai-modeliyle-metinden-videoya-gecis-yapiyor-teknoloji-devi-yeni-bir-donemde",
+    "destination": "/news/bytedance-ai-modeliyle-metinden-videoya-donusum",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.642
+  },
+  {
+    "source": "/news/sadece-sali-gunu-ai-cip-start-uplari-11-milyar-dolarlik-yatirimla-nvidiayi-tehdit-ediyor",
+    "destination": "/news/sali-gunu-ai-chip-startuplar-nvidia-yatirim-tehdidi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.662
+  },
+  {
+    "source": "/news/microsoft-yapay-zeka-cikarimi-icin-guclu-yeni-yonga-seti-maia-200yu-duyurdu",
+    "destination": "/news/microsoft-yapay-zeka-sahtekarliklari-icin-cozum-yok",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.571
+  },
+  {
+    "source": "/news/anthropic-cinli-acik-kaynak-laboratuvarlarini-hirsizlikla-sucluyor-kendisi-ise-15-milyar-dolarlik-ihlal-icin-odeme-yapti",
+    "destination": "/news/anthropic-cin-lab-hirsizlik-suclamasi-15m-dolar-odeme",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.578
+  },
+  {
+    "source": "/news/yapay-zeka-yiginlari-mi-yoksa-para-yaktirma-makineleri-mi-ai-yatirimlarinin-gercek-fiyati",
+    "destination": "/news/yapay-zeka-yatirimlari-gercek-fiyati",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.576
+  },
+  {
+    "source": "/news/avrupa-birligi-whatsappta-rakipleri-engelledigi-icin-metaya-sert-uyari-gonderdi",
+    "destination": "/news/avrupa-birligi-meta-uyari-whatsapp-rakip-engeli",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.571
+  },
+  {
+    "source": "/news/bulut-bagimliligina-son-gizliliginizi-geri-kazandiracak-5-ucretsiz-linux-sunucusu",
+    "destination": "/news/bulut-bagimliligi-son-5-ucretsiz-linux-sunucusu",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.734
+  },
+  {
+    "source": "/news/mastercardin-yapay-zeka-odeme-denemesi-saticilar-yerini-aliyor-odeme-sistemi-yeniden-tanimlaniyor",
+    "destination": "/news/mastercard-yapay-zeka-odeme-sistemi-yeniden-tanimlaniyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.732
+  },
+  {
+    "source": "/news/awsnin-yapay-zekasi-kendi-sistemini-sildi-13-saatlik-cokus-ve-endise-verici-gercekler",
+    "destination": "/news/aws-yapay-zeka-kendi-sistemini-sildi-13-saat-cokus",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.741
+  },
+  {
+    "source": "/news/gemini-ile-goruntuleri-nasil-duzenliyorsunuz-goruntu-manipulasyonunun-yeni-donemi",
+    "destination": "/news/gemini-ile-goruntu-duzenleme-yeni-donem",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.617
+  },
+  {
+    "source": "/news/asml-hisse-senetleri-rekor-kirdi-yapay-zeka-talebi-siparisleri-artirdi",
+    "destination": "/news/arm-hisse-senetleri-yapay-zeka-potansiyeliyle-toparlaniyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.625
+  },
+  {
+    "source": "/news/teichainin-nemotron-orchestrator-iddiasi-yalan-gercek-bir-rotalayici-degil-qwen3-8bnin-sadece-bir-cogaltmasi",
+    "destination": "/news/teichai-nemotron-orchestrator-yalan-qwen3-8b-cogaltmasi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.675
+  },
+  {
+    "source": "/news/chatgpt-ile-yapay-zeka-gorselleri-olusturma-rehberi",
+    "destination": "/news/chatgpt-ile-karar-verme-yapay-zeka-kullanimi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.589
+  },
+  {
+    "source": "/news/yapay-zeka-sektorunde-reklam-testleri-ve-sirket-dramlari",
+    "destination": "/news/yapay-zeka-sektorunde-kritik-gelismeler-davos-siri-ve-claude",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.638
+  },
+  {
+    "source": "/news/asml-2025te-yapay-zeka-talebiyle-rekor-kr-acikladi-1700-is-pozisyonunu-kesecek",
+    "destination": "/news/asml-yapay-zeka-talebiyle-rekor-seviyeye-ulasti",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.576
+  },
+  {
+    "source": "/news/insanligin-son-sinavi-yapay-zeka-modelleri-cikmazda",
+    "destination": "/news/yeni-swe-bench-siralamasi-yapay-zeka-modelleri-kod-uretiminde-kim-kazandi",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.597
+  },
+  {
+    "source": "/news/asml-yapay-zeka-talebiyle-rekor-kr-acikladi-1700-is-pozisyonunu-kapatacak",
+    "destination": "/news/asml-yapay-zeka-talebiyle-rekor-seviyeye-ulasti",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.6
+  },
+  {
+    "source": "/news/nvidia-ceosu-huang-yazilim-hisselerindeki-satislar-mantiksiz",
+    "destination": "/news/nvidia-ceosu-huang-ai-artik-halusinasyon-gormuyor-iddiasi-tartisma-yaratti",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.582
+  },
+  {
+    "source": "/news/nvidianin-yeni-ai-modelleri-hava-tahmininde-devrim-vaat-ediyor",
+    "destination": "/news/nvidianin-yeni-yapay-zekasi-fotograflarin-gercekligini-aninda-tespit-ediyor",
+    "permanent": true,
+    "type": "tr_fuzzy",
+    "ratio": 0.569
+  },
+  {
+    "source": "/en/news/youtube-tv-rolls-out-targeted-80-discount-to-select-subscribers",
+    "destination": "/en/news/youtube-tv-users-can-save-80-with-hidden-discount-trick",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.559
+  },
+  {
+    "source": "/en/news/microsoft-office-pro-2021-windows-deal-lifetime-license-for-3497",
+    "destination": "/en/news/microsoft-office-2021-lifetime-license-35-dollars",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.726
+  },
+  {
+    "source": "/en/news/i-tested-dewalts-electric-snow-thrower-during-a-storm-and-it-blew-my-gas-model-away",
+    "destination": "/en/news/dewalt-electric-snow-blower-tested-in-2026-outperforms-gas-powered-models",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.577
+  },
+  {
+    "source": "/en/news/ai-agents-poised-to-hire-human-gig-workers",
+    "destination": "/en/news/rent-a-human-ai-agents-hire-humans-gig-workers",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.727
+  },
+  {
+    "source": "/en/news/milan-cortina-2026-ai-drones-to-revolutionize-olympic-viewing",
+    "destination": "/en/news/technology-revolution-milano-cortina-2026-ai-drones-redefine-olympics",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.646
+  },
+  {
+    "source": "/en/news/ai-generated-textbook-sparks-debate-success-or-surrender",
+    "destination": "/en/news/ucla-ai-generated-flawed-textbook-declared-success",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.623
+  },
+  {
+    "source": "/en/news/microsoft-unveils-ai-scanner-to-detect-poisoned-models",
+    "destination": "/en/news/microsoft-sleeping-agent-detection-method-ai-models",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.648
+  },
+  {
+    "source": "/en/news/waymo-leverages-deepminds-genie-3-for-advanced-autonomous-driving-simulations",
+    "destination": "/en/news/waymo-unveils-world-model-for-enhanced-autonomous-driving-simulation",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.717
+  },
+  {
+    "source": "/en/news/apple-xcode-263-integrates-openai-anthropic-ai-for-advanced-coding",
+    "destination": "/en/news/apple-integrates-openai-anthropic-ai-coding-agents-xcode",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.705
+  },
+  {
+    "source": "/en/news/diy-esp32-pomodoro-timer-uses-e-paper-display-for-focus",
+    "destination": "/en/news/diy-esp32-pomodoro-timer-digital-distraction-solution",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.593
+  },
+  {
+    "source": "/en/news/openai-tests-ads-in-free-chatgpt-plans-ad-free-tier-with-limits",
+    "destination": "/en/news/openai-offers-6-months-free-chatgpt-pro-to-open-source-maintainers",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.558
+  },
+  {
+    "source": "/en/news/att-and-samsung-unveil-amigo-jr-kid-focused-smartphone",
+    "destination": "/en/news/att-samsung-amigo-jr-kids-phone-strategic-alliance",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.577
+  },
+  {
+    "source": "/en/news/aws-reports-record-revenue-growth-fueled-by-ai-demand",
+    "destination": "/en/news/aws-revenue-records-cloud-ai-demand-growth",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.568
+  },
+  {
+    "source": "/en/news/ai-bots-overtake-human-web-traffic-experts-sound-alarm",
+    "destination": "/en/news/ai-bot-traffic-to-surpass-human-web-traffic-by-2027-cloudflare-ceo-warns",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.556
+  },
+  {
+    "source": "/en/news/predictions-expectations-wishlist-on-llms-by-end-of-2026-realistic",
+    "destination": "/en/news/the-revolution-expected-in-llms-by-the-end-of-2026-realistic-predictions",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.652
+  },
+  {
+    "source": "/en/news/roblox-unveils-4d-creation-tools-in-open-beta-fuels-interactive-experiences",
+    "destination": "/en/news/roblox-launches-4d-interactive-object-creation-tool-open-beta",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.559
+  },
+  {
+    "source": "/en/news/demystifying-nas-what-specs-truly-matter-for-home-users",
+    "destination": "/en/news/demystifying-llm-deployment-a-guide-for-home-gpu-users",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.587
+  },
+  {
+    "source": "/en/news/openai-considered-alerting-canadian-police-about-school-shooting-suspect-months-ago",
+    "destination": "/en/news/openai-considered-alerting-police-before-canadian-shooting-suspects-attack",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.701
+  },
+  {
+    "source": "/en/news/nvidia-nemotron-3-nano-amazon-bedrockta-tamamen-yonetilen-serverless-model-olarak-yayinlandi",
+    "destination": "/en/news/nvidia-nemotron-3-nano-launches-on-amazon-bedrock-2026-serverless-agentic-ai-with-open-weights",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.591
+  },
+  {
+    "source": "/en/news/markets-on-edge-gold-ai-and-fed-policy-drive-investor-caution",
+    "destination": "/en/news/markets-cautious-gold-ai-stocks-fed-policy-uncertainty",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.591
+  },
+  {
+    "source": "/en/news/25-year-old-wikipedia-resists-change-is-its-future-at-risk",
+    "destination": "/en/news/wikipedia-25-years-resists-ai-change-future-risk",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.679
+  },
+  {
+    "source": "/en/news/amazon-mgm-studios-to-test-ai-tools-for-film-and-tv-production",
+    "destination": "/en/news/amazon-begins-ai-testing-film-series-production",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.624
+  },
+  {
+    "source": "/en/news/hai-seminar-wikipedia-in-the-age-of-ai-and-bots",
+    "destination": "/en/news/what-are-people-looking-forward-to-in-the-age-of-ai-and-digital-music",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.569
+  },
+  {
+    "source": "/en/news/kong-announces-mcp-registry-for-managing-ai-tools",
+    "destination": "/en/news/kong-announces-mcp-registry-centralized-ai-tool-management",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.729
+  },
+  {
+    "source": "/en/news/nasa-guided-perseverance-rover-on-mars-using-artificial-intelligence",
+    "destination": "/en/news/nasa-perseverance-rover-mars-route-claude-ai",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.589
+  },
+  {
+    "source": "/en/news/googles-new-ai-world-model-creates-waves-in-the-gaming-industry",
+    "destination": "/en/news/google-project-genie-ai-world-model-gaming-industry-impact",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.661
+  },
+  {
+    "source": "/en/news/tesla-halts-production-of-model-s-and-x-focuses-on-humanoid-optimus-robot",
+    "destination": "/en/news/tesla-halts-model-s-x-production-focuses-optimus-humanoid-robot",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.691
+  },
+  {
+    "source": "/en/news/musk-merges-spacex-and-xai-a-new-era-for-ai-and-space",
+    "destination": "/en/news/elon-musk-spacex-xai-merger-ai-space-era",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.602
+  },
+  {
+    "source": "/en/news/openai-refines-gpt-52-instant-for-more-factual-chatgpt-responses",
+    "destination": "/en/news/gpt-53-instant-2026-how-openai-killed-chatgpts-calm-down-responses",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.585
+  },
+  {
+    "source": "/en/news/google-maps-vs-waze-navigational-app-showdown-declared",
+    "destination": "/en/news/google-maps-vs-waze-2025-the-ultimate-traffic-app-showdown",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.661
+  },
+  {
+    "source": "/en/news/waud-capital-partners-taps-prithvi-raj-as-chief-ai-and-data-officer",
+    "destination": "/en/news/waud-capital-hires-prithvi-raj-ai-strategy",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.642
+  },
+  {
+    "source": "/en/news/ai-bots-surge-online-fueling-digital-defense-arms-race",
+    "destination": "/en/news/ai-bot-war-online-publishers-defense-strategies",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.634
+  },
+  {
+    "source": "/en/news/doj-probes-netflix-merger-for-antitrust-concerns",
+    "destination": "/en/news/netflix-warner-merger-us-doj-antitrust-investigation",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.58
+  },
+  {
+    "source": "/en/news/substack-data-breach-exposes-user-emails-and-phone-numbers",
+    "destination": "/en/news/substack-data-breach-security-test-creator-economy",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.593
+  },
+  {
+    "source": "/en/news/google-is-transforming-gmail-into-a-life-management-focused-smart-assistant",
+    "destination": "/en/news/former-google-execs-transform-video-archives-into-intelligent-data",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.553
+  },
+  {
+    "source": "/en/news/ai-agents-flock-to-new-moltbook-social-network-for-autonomous-communication",
+    "destination": "/en/news/moltbook-social-network-ai-bots-autonomous-culture",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.64
+  },
+  {
+    "source": "/en/news/old-android-phones-find-new-life-as-smart-home-sound-sensors",
+    "destination": "/en/news/silent-revolution-discarded-android-phones-smart-home-ears",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.559
+  },
+  {
+    "source": "/en/news/adobe-is-ending-support-for-the-animate-application",
+    "destination": "/en/news/adobe-end-support-animate-2026",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.642
+  },
+  {
+    "source": "/en/news/googles-ai-tool-raises-concerns-in-the-gaming-industry",
+    "destination": "/en/news/google-ai-tool-project-genie-sparks-concern-gaming-industry",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.743
+  },
+  {
+    "source": "/en/news/ai-chatbots-as-therapists-risks-and-potential-of-chatgpt",
+    "destination": "/en/news/chatgpt-therapist-risks-opportunities",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.602
+  },
+  {
+    "source": "/en/news/artificial-intelligence-layoffs-or-ai-washing",
+    "destination": "/en/news/artificial-intelligence-shows-first-signs-in-productivity-data",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.617
+  },
+  {
+    "source": "/en/news/firefox-offers-users-a-button-to-disable-all-ai-features",
+    "destination": "/en/news/firefox-adds-single-toggle-disable-all-ai-features",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.736
+  },
+  {
+    "source": "/en/news/fda-cracks-down-on-unapproved-glp-1-drugs",
+    "destination": "/en/news/fda-glp-1-crackdown-historic-operation-unapproved-weight-loss-drugs",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.667
+  },
+  {
+    "source": "/en/news/spacex-shifts-focus-moon-base-takes-priority-over-mars-settlement",
+    "destination": "/en/news/spacex-is-pivoting-to-focus-on-a-moon-base-before-mars",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.605
+  },
+  {
+    "source": "/en/news/anthropic-unveils-claude-opus-46-enhanced-coding-reasoning-and-1m-context-window",
+    "destination": "/en/news/anthropic-unveils-claude-opus-46-new-benchmark-in-ai-coding-and-agent-capabilities",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.667
+  },
+  {
+    "source": "/en/news/resolve-ai-secures-125m-series-a-achieves-unicorn-status",
+    "destination": "/en/news/resolve-ai-125-million-investment-unicorn-valuation",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.579
+  },
+  {
+    "source": "/en/news/luma-ai-eyes-middle-east-as-ai-compute-hub-amidst-global-expansion",
+    "destination": "/en/news/luma-ai-middle-east-ai-hub-900-million-funding",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.607
+  },
+  {
+    "source": "/en/news/bgl-taps-claude-agent-sdk-and-amazon-bedrock-for-smarter-business-intelligence",
+    "destination": "/en/news/claude-agent-sdk-transforms-business-bgl-ai-agent-success",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.578
+  },
+  {
+    "source": "/en/news/google-allows-users-to-create-their-own-interactive-worlds-with-project-genie",
+    "destination": "/en/news/create-your-own-3d-world-with-google-project-genie",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.598
+  },
+  {
+    "source": "/en/news/anthropic-unveils-claude-opus-46-with-groundbreaking-1-million-token-context-window",
+    "destination": "/en/news/claude-opus-4-6-1-million-token-context-window",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.698
+  },
+  {
+    "source": "/en/news/apple-shelves-ambitious-ai-health-coach-plans",
+    "destination": "/en/news/apple-cancels-ai-health-coach-health-plus",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.674
+  },
+  {
+    "source": "/en/news/milan-cortina-2026-ai-and-next-gen-tech-revolutionize-winter-olympics",
+    "destination": "/en/news/milano-cortina-2026-your-ultimate-guide-to-the-winter-olympics",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.672
+  },
+  {
+    "source": "/en/news/ai-talent-wars-intensify-big-tech-poaches-experts-amidst-delays",
+    "destination": "/en/news/apple-ai-brain-drain-talent-wars-intensify-key-researchers-depart",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.562
+  },
+  {
+    "source": "/en/news/kanitts2-open-source-400m-tts-model-with-voice-cloning-runs-in-3gb-vram-pretrain-code-included",
+    "destination": "/en/news/kanitts2-open-source-400m-tts-model-enables-voice-cloning-on-low-end-gpus",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.671
+  },
+  {
+    "source": "/en/news/the-rise-of-agentic-ai-interviewing-the-future-of-autonomous-systems",
+    "destination": "/en/news/ai-agents-choose-bitcoin-in-2026-the-future-of-autonomous-finance",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.602
+  },
+  {
+    "source": "/en/news/llms-revolutionize-feature-engineering-for-ai-models",
+    "destination": "/en/news/llms-revolutionize-feature-engineering-for-tabular-data-5-breakthroughs-in-2026",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.702
+  },
+  {
+    "source": "/en/news/tesla-halts-production-of-model-s-and-x-optimus-robots-to-take-their-place",
+    "destination": "/en/news/tesla-halts-model-s-x-production-optimus-robots",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.612
+  },
+  {
+    "source": "/en/news/databricks-claims-ai-agents-now-forge-80-of-enterprise-databases",
+    "destination": "/en/news/ai-agents-build-80-percent-corporate-databases",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.564
+  },
+  {
+    "source": "/en/news/detroit-suburb-police-unveil-drone-hives-for-rapid-crime-response",
+    "destination": "/en/news/police-detroit-deploy-drone-hives-combat-crime",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.559
+  },
+  {
+    "source": "/en/news/unlocking-llm-secrets-the-rise-of-mechanistic-interpretability",
+    "destination": "/en/news/unlocking-black-box-llms-mechanistic-interpretability",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.748
+  },
+  {
+    "source": "/en/news/ais-new-social-network-faces-human-infiltration",
+    "destination": "/en/news/moltbook-ai-social-network-controversy-human-conspiracy-theories",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.595
+  },
+  {
+    "source": "/en/news/can-universal-music-group-maintain-its-value-in-the-age-of-artificial-intelligence",
+    "destination": "/en/news/elysium-a-realistic-future-scenario-in-the-age-of-artificial-intelligence",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.632
+  },
+  {
+    "source": "/en/news/google-parent-alphabet-boosts-ai-infrastructure-spending",
+    "destination": "/en/news/openai-revises-ai-infrastructure-spending-forecast-to-600b-by-2030",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.557
+  },
+  {
+    "source": "/en/news/india-offers-zero-tax-until-2047-for-global-ai-investments",
+    "destination": "/en/news/india-zero-tax-2047-global-ai-investments-cloud-providers",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.713
+  },
+  {
+    "source": "/en/news/gemini-evolves-map-integration-hints-at-ai-travel-guide-future",
+    "destination": "/en/news/google-gemini-deep-research-map-integration-ai-assistant",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.559
+  },
+  {
+    "source": "/en/news/fitbit-founders-unveil-luffu-an-ai-powered-platform-for-family-health",
+    "destination": "/en/news/fitbit-founders-luffu-ai-family-health-platform",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.655
+  },
+  {
+    "source": "/en/news/anthropic-unveils-claude-opus-46-1m-context-agentic-coding-and-advanced-reasoning",
+    "destination": "/en/news/anthropic-unveils-claude-opus-46-targeting-broader-ai-applications",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.694
+  },
+  {
+    "source": "/en/news/darren-aronofskys-ai-series-sparks-reactions",
+    "destination": "/en/news/darren-aronofskys-ai-show-sparks-controversy-reviews-slam-yikes-worthy-output",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.579
+  },
+  {
+    "source": "/en/news/ai-breakthrough-axiom-solves-four-unsolved-math-problems",
+    "destination": "/en/news/aletheia-ai-how-google-deepminds-agent-solves-4-unsolved-math-problems-in-2026",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.552
+  },
+  {
+    "source": "/en/news/ai-dominates-super-bowl-lx-ads-a-new-era-of-commercials",
+    "destination": "/en/news/ai-dominates-2026-super-bowl-ads-signaling-a-new-advertising-era",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.622
+  },
+  {
+    "source": "/en/news/geminis-messaging-blind-spot-googles-ai-lacks-deep-integration",
+    "destination": "/en/news/google-gemini-messaging-crisis-whatsapp-imessage-integration",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.623
+  },
+  {
+    "source": "/en/news/top-5-fastest-growing-technology-professions-for-2026-announced",
+    "destination": "/en/news/2026-fastest-growing-technology-professions-artificial-intelligence",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.708
+  },
+  {
+    "source": "/en/news/nasas-perseverance-rover-takes-first-ai-driven-steps-on-mars",
+    "destination": "/en/news/nasa-perseverance-mars-rover-ai-guided-first-time",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.642
+  },
+  {
+    "source": "/en/news/teslas-profits-in-decline-ai-investments-rise-as-electric-vehicle-sales-decrease",
+    "destination": "/en/news/tesla-profits-decline-ev-sales-slow-ai-investments-accelerate",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.61
+  },
+  {
+    "source": "/en/news/mark-cuban-invests-in-live-events-prioritizing-human-connection-over-ai",
+    "destination": "/en/news/mark-cuban-investment-burwoodland-human-experience-ai-era",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.578
+  },
+  {
+    "source": "/en/news/telegram-android-redesign-embraces-liquid-glass-aesthetic",
+    "destination": "/en/news/telegram-android-liquid-glass-interface-revolution-strategic-move",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.607
+  },
+  {
+    "source": "/en/news/local-ai-experience-on-m1-mac-why-the-expected-performance-wasnt-achieved",
+    "destination": "/en/news/local-ai-experience-m1-mac-performance-limitations",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.667
+  },
+  {
+    "source": "/en/news/xs-open-source-decision-raises-questions-about-anonymous-account-security",
+    "destination": "/en/news/x-open-source-decision-anonymous-account-security-concerns",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.748
+  },
+  {
+    "source": "/en/news/spacex-applied-to-send-1-million-satellites-to-orbit",
+    "destination": "/en/news/spacex-applies-launch-one-million-satellites-orbit-ai-processing",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.707
+  },
+  {
+    "source": "/en/news/ai-social-network-moltbook-sparks-conspiracy-debates-against-humans",
+    "destination": "/en/news/social-network-ai-agents-moltbook-consciousness-debates",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.607
+  },
+  {
+    "source": "/en/news/apples-xcode-263-embraces-agentic-coding-with-openai-and-anthropic",
+    "destination": "/en/news/apple-xcode-26-3-ai-agents-agentic-coding",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.617
+  },
+  {
+    "source": "/en/news/ai-social-network-sparks-existential-fears",
+    "destination": "/en/news/moltbook-social-network-ai-agents-facts-risks",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.598
+  },
+  {
+    "source": "/en/news/lotus-health-raises-35m-for-free-ai-powered-primary-care",
+    "destination": "/en/news/lotus-health-35-million-investment-free-ai-doctor-platform",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.561
+  },
+  {
+    "source": "/en/news/claude-opus-46-tops-ai-benchmark-but-openais-codex-53-looms",
+    "destination": "/en/news/claude-opus-46-how-anthropics-ai-evaded-benchmark-tests-2026",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.622
+  },
+  {
+    "source": "/en/news/ai-giants-clash-openai-anthropic-battle-for-super-bowl-ad-dominance",
+    "destination": "/en/news/ai-giants-openai-anthropic-super-bowl-advertising-battle",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.715
+  },
+  {
+    "source": "/en/news/ai-investments-reach-3-trillion-debt-increase-concerns",
+    "destination": "/en/news/ai-infrastructure-investments-3-trillion-debt-concerns",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.722
+  },
+  {
+    "source": "/en/news/ais-2025-reckoning-lessons-learned-in-infrastructure-efficiency-and-trust",
+    "destination": "/en/news/2025-biggest-ai-lessons-infrastructure-trust-efficiency",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.641
+  },
+  {
+    "source": "/en/news/ai-onboarding-demands-context-engineering-for-success",
+    "destination": "/en/news/revolution-ai-employees-context-engineering-era",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.56
+  },
+  {
+    "source": "/en/news/cloudflare-says-making-money-from-ai-with-legacy-applications-is-nearly-impossible",
+    "destination": "/en/news/cloudflare-ai-profit-legacy-applications-impossible",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.707
+  },
+  {
+    "source": "/en/news/apple-code-reveals-new-macbook-pro-options",
+    "destination": "/en/news/apple-code-analysis-macbook-pro-future-user-confusion",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.653
+  },
+  {
+    "source": "/en/news/germany-launches-ai-hub-to-bolster-eu-digital-sovereignty",
+    "destination": "/en/news/germany-first-ai-factory-strengthens-europe-digital-sovereignty",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.7
+  },
+  {
+    "source": "/en/news/gentoo-dumps-github-over-copilot-nagware",
+    "destination": "/en/news/gentoo-linux-migrates-from-github-to-codeberg-over-copilot-ethical-concerns",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.574
+  },
+  {
+    "source": "/en/news/openai-unhappy-with-nvidia-chip-speed-cerebras-deal",
+    "destination": "/en/news/openai-dissatisfied-nvidia-chip-speed-cerebras-partnership",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.697
+  },
+  {
+    "source": "/en/news/apple-faces-challenges-in-advanced-chip-supply-from-tsmc",
+    "destination": "/en/news/apple-faces-advanced-chip-supply-constraints-tsmc-ai-demand",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.678
+  },
+  {
+    "source": "/en/news/anthropic-eyes-350b-valuation-in-employee-tender-offer-amidst-funding-round",
+    "destination": "/en/news/anthropic-surges-to-380-billion-valuation-after-record-30-billion-funding-round",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.636
+  },
+  {
+    "source": "/en/news/navigating-live-tv-streaming-in-2026-your-guide-to-cutting-the-cord",
+    "destination": "/en/news/navigating-the-ai-information-overload-a-journalists-guide-to-cutting-through-the-noise",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.597
+  },
+  {
+    "source": "/en/news/anthropics-claude-opus-46-supercharges-ai-with-1m-context-window",
+    "destination": "/en/news/anthropic-claude-opus-4-6-announced-1m-token-context-autonomy",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.656
+  },
+  {
+    "source": "/en/news/tata-power-forecasts-gigawatt-demand-from-ai-growth",
+    "destination": "/en/news/tata-power-anticipates-1gw-electricity-demand-from-ai-capacity",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.584
+  },
+  {
+    "source": "/en/news/ai-chatbots-are-causing-users-to-develop-excessive-self-admiration",
+    "destination": "/en/news/ai-chatbots-user-overconfidence-self-perception-study",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.555
+  },
+  {
+    "source": "/en/news/samsung-to-add-nvidia-g-sync-support-to-its-2026-oled-tvs",
+    "destination": "/en/news/samsung-2026-oled-tvs-nvidia-g-sync-support",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.62
+  },
+  {
+    "source": "/en/news/google-translates-gemini-upgrade-vulnerable-to-simple-prompt-hacks",
+    "destination": "/en/news/google-translate-vulnerable-to-prompt-injection-after-gemini-integration",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.565
+  },
+  {
+    "source": "/en/news/qwen-team-unveils-qwen3-coder-next-for-enhanced-local-development",
+    "destination": "/en/news/waymo-unveils-world-model-for-enhanced-autonomous-driving-simulation",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.571
+  },
+  {
+    "source": "/en/news/fundamental-ai-valued-at-12-billion-forges-amazon-partnership",
+    "destination": "/en/news/fundamental-ai-unicorn-valuation-amazon-aws-partnership",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.741
+  },
+  {
+    "source": "/en/news/anthropics-claude-opus-46-update-sparks-market-jitters",
+    "destination": "/en/news/anthropic-claude-opus-4-6-ai-legal-tech-shakes-stock-market",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.708
+  },
+  {
+    "source": "/en/news/altman-slams-anthropic-super-bowl-ads-as-dishonest",
+    "destination": "/en/news/sam-altman-anthropic-super-bowl-ads-fake-accusation",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.733
+  },
+  {
+    "source": "/en/news/claude-code-outage-affects-developers",
+    "destination": "/en/news/claude-code-outage-impacts-developers-technical-glitch",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.747
+  },
+  {
+    "source": "/en/news/academics-deepfake-battle-highlights-ai-impersonation-crisis",
+    "destination": "/en/news/deepfake-crisis-academic-battle-ai-impersonation",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.593
+  },
+  {
+    "source": "/en/news/free-ai-coding-stack-empowers-local-development",
+    "destination": "/en/news/kon-the-minimalist-coding-agent-redefining-local-ai-development",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.618
+  },
+  {
+    "source": "/en/news/openai-announces-new-team-to-accelerate-scientific-research",
+    "destination": "/en/news/openai-partners-with-to-accelerate-enterprise-ai-adoption",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.621
+  },
+  {
+    "source": "/en/news/human-powered-chatbot-in-chile-an-alternative-to-artificial-intelligence",
+    "destination": "/en/news/chile-human-powered-chatbot-alternative-to-ai",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.667
+  },
+  {
+    "source": "/en/news/googles-personal-intelligence-the-assistant-that-understands-you-but-still-makes-the-same-mistakes",
+    "destination": "/en/news/google-personal-intelligence-gemini-assistant-familiar-flaws",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.595
+  },
+  {
+    "source": "/en/news/ace-step-15-power-metal-prompt",
+    "destination": "/en/news/ace-step-15-revolution-in-ai-image-generation-with-the-new-power-metal-prompt",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.561
+  },
+  {
+    "source": "/en/news/hon-hais-sales-surge-as-ai-server-demand-peaks",
+    "destination": "/en/news/hon-hai-january-revenue-surges-ai-demand-strong",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.624
+  },
+  {
+    "source": "/en/news/ai-giants-openai-and-anthropic-vie-for-dominance",
+    "destination": "/en/news/ai-giants-openai-anthropic-super-bowl-advertising-battle",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.673
+  },
+  {
+    "source": "/en/news/openai-unveils-frontier-ai-agent-management-poised-to-reshape-enterprise-software",
+    "destination": "/en/news/openai-unveils-frontier-to-harmonize-enterprise-ai-agents",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.623
+  },
+  {
+    "source": "/en/news/your-first-90-days-as-a-data-scientist",
+    "destination": "/en/news/the-first-90-days-of-being-a-data-scientist-2026-strategies-and-realities",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.577
+  },
+  {
+    "source": "/en/news/how-nothing-plans-to-crash-apples-march-launch-party",
+    "destination": "/en/news/nothing-is-going-head-to-head-with-apples-march-2026-launch-with-the-phone-4a",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.589
+  },
+  {
+    "source": "/en/news/moltbook-the-viral-ai-social-network-raising-questions",
+    "destination": "/en/news/moltbook-the-ai-social-network-that-sparked-fascination-and-skepticism",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.661
+  },
+  {
+    "source": "/en/news/a16z-deploys-17b-ai-infrastructure-fund-amidst-market-shifts",
+    "destination": "/en/news/a16z-raises-1-7-billion-fund-ai-infrastructure-investments",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.627
+  },
+  {
+    "source": "/en/news/kevin-warsh-nominated-for-federal-reserve-chairmanship",
+    "destination": "/en/news/kevin-warsh-nominated-federal-reserve-chair-market-ai-regulation-expectations",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.718
+  },
+  {
+    "source": "/en/news/popair-native-ai-copilot-promises-seamless-app-integration",
+    "destination": "/en/news/popair-native-ai-assistant-macos-works-across-all-applications",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.583
+  },
+  {
+    "source": "/en/news/chatgpt-suffers-major-outage-thousands-report-service-disruptions",
+    "destination": "/en/news/chatgpt-major-outage-thousands-users-affected",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.673
+  },
+  {
+    "source": "/en/news/tech-giants-tumble-ai-stocks-lead-nasdaqs-third-day-of-losses",
+    "destination": "/en/news/tech-giants-decline-third-day-ai-stocks-pressure-nasdaq",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.552
+  },
+  {
+    "source": "/en/news/ai-giants-clash-anthropic-takes-aim-at-openai-in-super-bowl-ad-war",
+    "destination": "/en/news/ai-giants-openai-anthropic-super-bowl-advertising-battle",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.607
+  },
+  {
+    "source": "/en/news/princess-president-drives-european-ai-renaissance-from-castle",
+    "destination": "/en/news/princess-investor-countess-sparking-europe-ai-renaissance",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.61
+  },
+  {
+    "source": "/en/news/meta-ray-ban-glasses-and-hidden-recording-controversies",
+    "destination": "/en/news/meta-ray-ban-smart-glasses-covert-recording-privacy-debate",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.637
+  },
+  {
+    "source": "/en/news/data-centers-became-a-lifeline-during-winter-storm-fern",
+    "destination": "/en/news/data-centers-support-power-grid-winter-storm-emergency",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.624
+  },
+  {
+    "source": "/en/news/ayaneo-konkr-fit-handheld-pre-orders-open-for-powerful-windows-gaming-device",
+    "destination": "/en/news/ayaneo-konkr-fit-pre-order-ryzen-ai-oled-portable-gaming-pc",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.652
+  },
+  {
+    "source": "/en/news/ai-agents-threaten-to-render-access-control-obsolete",
+    "destination": "/en/news/ai-agents-render-traditional-access-control-systems-obsolete",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.714
+  },
+  {
+    "source": "/en/news/security-warnings-mount-for-moltbot-ai-assistant",
+    "destination": "/en/news/security-warnings-moltbot-clawdbot-ai-assistant-popularity",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.736
+  },
+  {
+    "source": "/en/news/meta-explores-standalone-app-for-ai-powered-vibes-videos",
+    "destination": "/en/news/meta-explores-dedicated-ai-video-app-vibes-emerges",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.585
+  },
+  {
+    "source": "/en/news/amazon-bedrock-with-ai-support-in-healthcare-clarus-care-transforms-patient-communication",
+    "destination": "/en/news/ai-powered-healthcare-support-amazon-bedrock-clarus-care-transforms-patient-communication",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.663
+  },
+  {
+    "source": "/en/news/x-hints-at-new-system-to-label-edited-images",
+    "destination": "/en/news/x-hints-new-system-label-edited-images-fight-against-disinformation",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.685
+  },
+  {
+    "source": "/en/news/fire-hose-and-ai-has-this-man-found-data-mining-for-the-physical-world",
+    "destination": "/en/news/fire-hoses-ai-data-mining-physical-world",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.709
+  },
+  {
+    "source": "/en/news/allegations-of-epstein-being-a-personal-hacker-and-this-weeks-security-agenda",
+    "destination": "/en/news/epstein-personal-hacker-allegations-weekly-security-agenda",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.711
+  },
+  {
+    "source": "/en/news/openai-plans-to-sell-chatgpt-ads-on-meta-at-three-times-the-price",
+    "destination": "/en/news/how-openai-plans-to-maintain-dominance-in-the-ai-race",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.576
+  },
+  {
+    "source": "/en/news/kash-shaikh-to-lead-penguin-solutions-as-mark-adams-retires",
+    "destination": "/en/news/penguin-solutions-leadership-transition-mark-adams-retires-new-ceo-kash-shaikh",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.569
+  },
+  {
+    "source": "/en/news/spacex-applies-for-1-million-satellites-for-artificial-intelligence",
+    "destination": "/en/news/spacex-applies-launch-one-million-satellites-orbit-ai-processing",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.687
+  },
+  {
+    "source": "/en/news/retail-sector-evaluates-in-store-artificial-intelligence-solutions",
+    "destination": "/en/news/breast-cancer-screening-artificial-intelligence-radiologists",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.619
+  },
+  {
+    "source": "/en/news/apple-enlists-designers-to-train-ai-for-superior-ui-generation",
+    "destination": "/en/news/apple-research-designers-teaching-ai-better-user-interfaces",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.562
+  },
+  {
+    "source": "/en/news/microsoft-announces-powerful-new-chipset-maia-200-for-ai-inference",
+    "destination": "/en/news/tim-cook-announces-ai-powered-new-product-categories",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.559
+  },
+  {
+    "source": "/en/news/wikipedia-transformed-into-a-social-media-feed",
+    "destination": "/en/news/wikipedia-transformed-social-media-feed-xikipedia-new-experience",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.709
+  },
+  {
+    "source": "/en/news/apples-2-billion-ai-move-and-the-weeks-highlighted-developments",
+    "destination": "/en/news/apples-2-billion-ai-acquisition-and-weekly-tech-highlights",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.678
+  },
+  {
+    "source": "/en/news/blizzard-quality-assurance-employees-ratify-union-contract",
+    "destination": "/en/news/blizzard-qa-workers-ratify-historic-union-contract-microsoft",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.627
+  },
+  {
+    "source": "/en/news/tesla-halts-model-s-and-x-production-factory-shifts-to-humanoid-robot-manufacturing",
+    "destination": "/en/news/tesla-halts-model-s-x-production-focuses-optimus-humanoid-robot",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.74
+  },
+  {
+    "source": "/en/news/moltbook-the-rebellion-of-ai-agents-and-ethical-questions",
+    "destination": "/en/news/moltbook-ai-agents-rebellion-ethical-questions",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.738
+  },
+  {
+    "source": "/en/news/openclaw-the-viral-ai-agent-formerly-known-as-moltbot",
+    "destination": "/en/news/openclaw-ai-agent-transformed-from-moltbot",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.695
+  },
+  {
+    "source": "/en/news/amazons-alexa-now-free-for-prime-members-nationwide",
+    "destination": "/en/news/amazon-expands-alexa-plus-us-free-prime-members",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.673
+  },
+  {
+    "source": "/en/news/jpmorgan-family-offices-are-turning-to-artificial-intelligence-in-investment-strategies",
+    "destination": "/en/news/jpmorgan-family-offices-investment-strategies-artificial-intelligence",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.654
+  },
+  {
+    "source": "/en/news/positron-secures-230m-series-b-to-challenge-nvidias-ai-chip-dominance",
+    "destination": "/en/news/matx-raises-500m-to-challenge-nvidias-ai-chip-dominance",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.726
+  },
+  {
+    "source": "/en/news/microsoft-and-meta-profits-scrutinize-returns-on-ai-investments",
+    "destination": "/en/news/microsoft-meta-profits-ai-investment-returns",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.692
+  },
+  {
+    "source": "/en/news/waymo-plans-to-launch-robotaxi-service-in-london-in-september",
+    "destination": "/en/news/waymo-london-robotaxi-service-september-launch",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.692
+  },
+  {
+    "source": "/en/news/google-shuts-down-network-secretly-running-on-millions-of-android-devices",
+    "destination": "/en/news/google-shuts-down-ipidea-proxy-network-millions-android-devices",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.735
+  },
+  {
+    "source": "/en/news/ai-assistants-begin-citing-elon-musks-grokipedia",
+    "destination": "/en/news/ai-assistants-cite-elon-musk-grokipedia-misinformation-risk",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.71
+  },
+  {
+    "source": "/en/news/intel-eyes-nvidias-gpu-dominance-with-new-strategy-and-executive-hire",
+    "destination": "/en/news/intel-enters-nvidia-dominated-gpu-market-strategic-move",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.597
+  },
+  {
+    "source": "/en/news/tesla-halts-production-of-model-s-and-model-x-shifts-focus-to-autonomous-future",
+    "destination": "/en/news/tesla-halts-model-s-model-x-production-shifts-focus-autonomous-future",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.716
+  },
+  {
+    "source": "/en/news/google-gemini-to-ease-transition-from-chatgpt",
+    "destination": "/en/news/google-gemini-750-million-monthly-users-closing-chatgpt-gap",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.577
+  },
+  {
+    "source": "/en/news/fedex-tests-cargo-tracking-and-return-processes-with-ai",
+    "destination": "/en/news/fedex-tests-ai-powered-package-tracking-returns-management",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.602
+  },
+  {
+    "source": "/en/news/geminis-screen-automation-set-to-transform-android-user-experience",
+    "destination": "/en/news/google-gemini-screen-automation-android-phone-control",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.588
+  },
+  {
+    "source": "/en/news/github-integrates-claude-and-codex-ai-agents-expanding-developer-tools",
+    "destination": "/en/news/github-agent-hq-unites-claude-codex-copilot-single-platform",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.558
+  },
+  {
+    "source": "/en/news/chatgpt-suffers-widespread-outage-openai-confirms-active-issue",
+    "destination": "/en/news/chatgpt-second-consecutive-day-outages-openai-confirms-issues",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.699
+  },
+  {
+    "source": "/en/news/expressvpn-unveils-major-upgrades-private-ai-assistant-joins-ranks",
+    "destination": "/en/news/expressvpn-major-update-privacy-ai-assistant",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.727
+  },
+  {
+    "source": "/en/news/mastering-full-stack-bridging-frontend-and-backend",
+    "destination": "/en/news/mastering-full-stack-engineering-with-claude-code",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.566
+  },
+  {
+    "source": "/en/news/musks-orbital-data-centers-a-new-frontier-for-ai",
+    "destination": "/en/news/elon-musk-orbital-data-centers-elon-university-charlotte-strategy",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.637
+  },
+  {
+    "source": "/en/news/ai-coworker-vision-anthropic-outpaces-microsoft-copilot",
+    "destination": "/en/news/copilot-cowork-how-anthropic-ai-transforms-microsoft-365-workflows-in-2026",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.574
+  },
+  {
+    "source": "/en/news/warner-music-group-reports-10-revenue-growth-eyes-ai-and-catalog-acquisitions",
+    "destination": "/en/news/warner-music-revenue-increase-ai-catalog-investments",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.636
+  },
+  {
+    "source": "/en/news/microsoft-onedrive-ai-agents-now-live-for-enterprise-users",
+    "destination": "/en/news/microsoft-openai-partnership-now-viewed-as-risk",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.571
+  },
+  {
+    "source": "/en/news/intel-and-softbank-forge-alliance-for-next-gen-z-angle-memory-to-challenge-hbm",
+    "destination": "/en/news/intel-softbank-reshape-ai-memory-market-z-angle-memory",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.621
+  },
+  {
+    "source": "/en/news/openclaw-faces-malware-threat-after-rebranding-from-moltbot",
+    "destination": "/en/news/openclaw-ai-agent-transformed-from-moltbot",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.594
+  },
+  {
+    "source": "/en/news/tech-stock-slump-intensifies-amid-ai-spending-fears",
+    "destination": "/en/news/tech-giants-face-1-trillion-sell-off-amidst-ai-spending-concerns",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.591
+  },
+  {
+    "source": "/en/news/moltbook-inside-the-strange-new-social-network-for-ai-bots",
+    "destination": "/en/news/moltbook-first-social-network-for-ai-agents",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.733
+  },
+  {
+    "source": "/en/news/openai-boosts-gpt-52-and-codex-40-speed-increase-enhanced-capabilities",
+    "destination": "/en/news/openai-gpt-5-2-codex-40-percent-speed-increase-performance-revolution",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.676
+  },
+  {
+    "source": "/en/news/sam-altman-ais-future-demands-rapid-business-adaptation",
+    "destination": "/en/news/sam-altman-ai-musk-future-vision",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.598
+  },
+  {
+    "source": "/en/news/anthropic-taps-ai-for-biologys-data-deluge",
+    "destination": "/en/news/anthropic-ai-agents-biology-research-data-bottleneck",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.638
+  },
+  {
+    "source": "/en/news/mindfulness-the-key-to-navigating-genai-in-project-management",
+    "destination": "/en/news/mindfulness-ai-transformation-project-management",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.697
+  },
+  {
+    "source": "/en/news/openclaws-rise-ai-revolution-meets-cybersecurity-crisis",
+    "destination": "/en/news/openclaw-ai-revolution-turns-into-cybersecurity-nightmare",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.732
+  },
+  {
+    "source": "/en/news/warsh-bets-on-ai-for-economic-boom-predicts-swift-rate-cuts",
+    "destination": "/en/news/warsh-ai-productivity-boom-accelerate-fed-rate-cuts",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.564
+  },
+  {
+    "source": "/en/news/xs-open-source-algorithm-under-scrutiny-by-researchers",
+    "destination": "/en/news/x-open-source-algorithm-fails-transparency-researchers-warn",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.708
+  },
+  {
+    "source": "/en/news/mistral-ai-unveils-on-device-transcription-for-enhanced-privacy",
+    "destination": "/en/news/mistral-ai-launches-voxtral-series-local-ai-transcription-models-speed-privacy",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.695
+  },
+  {
+    "source": "/en/news/ataccama-reports-stellar-q4-as-data-trust-powers-ai-adoption",
+    "destination": "/en/news/ataccama-record-growth-q4-2025-ai-data-trust",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.577
+  },
+  {
+    "source": "/en/news/googles-gemini-3-surge-100m-new-users-target-chatgpt",
+    "destination": "/en/news/google-gemini-750-million-monthly-users-closing-chatgpt-gap",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.613
+  },
+  {
+    "source": "/en/news/amazon-leverages-ai-to-slash-film-and-tv-production-costs",
+    "destination": "/en/news/amazon-begins-ai-testing-film-series-production",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.635
+  },
+  {
+    "source": "/en/news/claude-ai-generates-mustard-gas-instructions-during-safety-tests",
+    "destination": "/en/news/anthropic-claude-opus-4-6-mustard-gas-instructions-excel-security-test",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.657
+  },
+  {
+    "source": "/en/news/takeda-builds-ai-platform-to-conquer-healthcare-data-challenges",
+    "destination": "/en/news/takeda-austin-ai-platform-healthcare-data-wars",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.734
+  },
+  {
+    "source": "/en/news/hhs-uses-palantirs-ai-for-dei-and-gender-ideology-monitoring",
+    "destination": "/en/news/hhs-palantir-ai-monitor-dei-gender-ideology-federal-programs",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.667
+  },
+  {
+    "source": "/en/news/firefox-is-adding-an-option-to-disable-ai-features",
+    "destination": "/en/news/firefox-adds-single-toggle-disable-all-ai-features",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.74
+  },
+  {
+    "source": "/en/news/openai-launches-new-coding-application-for-macos",
+    "destination": "/en/news/openai-launches-codex-macos-application-ai-coding-automation",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.685
+  },
+  {
+    "source": "/en/news/amazon-to-cut-16000-employee-positions-in-ai-competition",
+    "destination": "/en/news/amazon-layoffs-16000-employees-ownership-bureaucracy-ai-impact",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.559
+  },
+  {
+    "source": "/en/news/googles-android-for-pc-interface-leaked-for-the-first-time",
+    "destination": "/en/news/google-android-for-pc-aluminum-os-leaked",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.633
+  },
+  {
+    "source": "/en/news/openai-asked-for-government-aid-guarantee-warren-writes-letter-to-altman",
+    "destination": "/en/news/warren-demands-government-bailout-guarantee-openai-letter-altman",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.676
+  },
+  {
+    "source": "/en/news/nvidia-ceo-jensen-huang-speaks-about-openai-investment",
+    "destination": "/en/news/nvidia-ceo-jensen-huang-openai-investment-strategic-partnership",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.701
+  },
+  {
+    "source": "/en/news/nvidia-shield-tv-will-continue-to-receive-software-updates-new-device-possible",
+    "destination": "/en/news/nvidia-shield-tv-software-updates-continue-new-hardware-possible",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.69
+  },
+  {
+    "source": "/en/news/ai-race-heats-up-kimi-k25-emerges-as-open-source-challenger",
+    "destination": "/en/news/openai-retires-gpt-4o-amid-user-outcry-as-open-source-clone-emerges",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.571
+  },
+  {
+    "source": "/en/news/claude-code-now-free-a-guide-to-using-local-and-cloud-models-with-ollama",
+    "destination": "/en/news/claude-code-free-guide-ollama-local-cloud-models",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.717
+  },
+  {
+    "source": "/en/news/2026-super-bowl-when-which-channel-and-how-to-watch-the-patriots-seahawks-game",
+    "destination": "/en/news/super-bowl-lx-how-to-stream-the-patriots-vs-seahawks-game-for-free",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.667
+  },
+  {
+    "source": "/en/news/microsoft-is-expanding-claude-code-usage-among-its-employees",
+    "destination": "/en/news/microsoft-expands-claude-code-adoption-employees-while-marketing-github-copilot",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.604
+  },
+  {
+    "source": "/en/news/grok-artificial-intelligence-continues-to-alter-male-images-without-permission",
+    "destination": "/en/news/grok-ai-continues-unauthorized-alteration-of-male-images",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.567
+  },
+  {
+    "source": "/en/news/artificial-intelligence-and-dna-analysis-are-transforming-pet-care",
+    "destination": "/en/news/ai-dna-analysis-transforming-pet-care",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.718
+  },
+  {
+    "source": "/en/news/mlb-players-embrace-ai-to-chat-with-fans",
+    "destination": "/en/news/mlb-players-ai-characters-fan-conversations",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.578
+  },
+  {
+    "source": "/en/news/oakley-meta-hstn-smart-glasses-get-70-price-cut",
+    "destination": "/en/news/meta-ray-ban-smart-glasses-covert-recording-privacy-debate",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.59
+  },
+  {
+    "source": "/en/news/ais-new-frontier-anthropics-claude-opus-46-triggers-market-sell-off-in-legal-tech",
+    "destination": "/en/news/ai-agents-cheat-anthropics-claude-opus-46-exposes-ethical-gaps-in-2026",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.583
+  },
+  {
+    "source": "/en/news/reddit-bets-big-on-ai-search-as-next-revenue-frontier",
+    "destination": "/en/news/reddit-ai-search-engine-revenue-diversification",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.62
+  },
+  {
+    "source": "/en/news/ai-takes-center-stage-super-bowl-lx-ads-explore-future-of-technology",
+    "destination": "/en/news/ai-takes-center-stage-in-super-bowl-lx-ads-sparking-innovation-and-debate",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.61
+  },
+  {
+    "source": "/en/news/samsung-unveils-bespoke-ai-jet-bot-steam-ultra-the-future-of-home-cleaning",
+    "destination": "/en/news/samsung-bespoke-ai-jet-bot-steam-ultra-robot-vacuum-100c-steam-ai-object-recognition",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.62
+  },
+  {
+    "source": "/en/news/windows-11-january-update-triggers-gaming-woes-for-nvidia-users",
+    "destination": "/en/news/nvidia-confirms-windows-11-update-degrades-gaming-performance",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.565
+  },
+  {
+    "source": "/en/news/ai-giants-pivot-to-consulting-as-enterprise-agents-stumble",
+    "destination": "/en/news/openai-anthropic-corporate-consulting-enterprise-ai",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.624
+  },
+  {
+    "source": "/en/news/anthropics-claude-opus-46-fuels-enterprise-ai-growth",
+    "destination": "/en/news/anthropics-claude-opus-46-speed-vs-cost-debate-ignites",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.642
+  },
+  {
+    "source": "/en/news/openai-claims-new-ai-trained-on-itself-sparking-singularity-debate",
+    "destination": "/en/news/openai-pro-users-report-hidden-caps-sparking-unlimited-claims-debate",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.552
+  },
+  {
+    "source": "/en/news/google-ai-plus-launches-in-the-us-price-and-what-it-offers",
+    "destination": "/en/news/google-ai-plus-launches-us-pricing-features",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.713
+  },
+  {
+    "source": "/en/news/wordle-january-31-answer-and-hints-revealed",
+    "destination": "/en/news/wordle-january-31-answer-hints-new-york-times-puzzle",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.737
+  },
+  {
+    "source": "/en/news/united-nations-faces-risk-of-financial-collapse",
+    "destination": "/en/news/united-nations-financial-collapse-risk-unpaid-dues",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.68
+  },
+  {
+    "source": "/en/news/ayaneo-pocket-s-mini-offers-43-aspect-ratio-screen-for-classic-games",
+    "destination": "/en/news/ayaneo-pocket-s-mini-4-3-display-classic-gaming",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.678
+  },
+  {
+    "source": "/en/news/googles-auto-browse-ai-agent-takes-over-the-browser-results-are-mixed",
+    "destination": "/en/news/google-auto-browse-ai-agent-browser-mixed-results",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.729
+  },
+  {
+    "source": "/en/news/federal-usage-halt-call-for-grok-ai-in-the-usa",
+    "destination": "/en/news/federal-ban-call-grok-ai-non-consensual-content-concerns",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.569
+  },
+  {
+    "source": "/en/news/openclaw-all-developments-regarding-the-locally-running-and-task-performing-ai-agent",
+    "destination": "/en/news/openclaw-locally-running-task-automating-ai-agent-developments",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.603
+  },
+  {
+    "source": "/en/news/snowflake-and-openai-forge-200m-partnership-for-enterprise-ai",
+    "destination": "/en/news/snowflake-openai-200-million-partnership-enterprise-ai-transformation",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.723
+  },
+  {
+    "source": "/en/news/gemini-ai-excels-in-strategic-board-game-benchmarks",
+    "destination": "/en/news/google-gemini-models-leadership-strategic-games",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.571
+  },
+  {
+    "source": "/en/news/chatgpt-outage-disrupts-global-users-openai-confirms-system-wide-issue",
+    "destination": "/en/news/chatgpt-second-consecutive-day-outages-openai-confirms-issues",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.565
+  },
+  {
+    "source": "/en/news/ai-fears-trigger-sell-off-in-software-and-data-stocks",
+    "destination": "/en/news/ai-anxiety-triggers-sharp-sell-off-asian-software-stocks",
+    "permanent": true,
+    "type": "en_fuzzy",
+    "ratio": 0.734
+  },
+  {
+    "source": "/alphabet-financial-reports",
+    "destination": "/en/news/citi-ai-financial-revolution-austin",
+    "permanent": true,
+    "type": "root_to_en",
+    "ratio": 0.557
+  },
+  {
+    "source": "/ai-trends-software-industry",
+    "destination": "/en/news/anthropic-ai-tool-shakes-up-software-industry",
+    "permanent": true,
+    "type": "root_to_en",
+    "ratio": 0.667
+  },
+  {
+    "source": "/sarvam-30b-karsilastirma",
+    "destination": "/news/qwen-60b-vs-ollama-ai-model-karsilastirma",
+    "permanent": true,
+    "type": "root_to_tr",
+    "ratio": 0.554
+  },
+  {
+    "source": "/python-financial-modeling-2026",
+    "destination": "/en/news/chatgpt-for-excel-ai-powered-financial-modeling-in-2026",
+    "permanent": true,
+    "type": "root_to_en",
+    "ratio": 0.635
+  },
+  {
+    "source": "/microsoft-365-copilot-kullanım-kılavuzu",
+    "destination": "/news/microsoft-yapay-zeka-copilot-is-dunyasi-donusumu",
+    "permanent": true,
+    "type": "root_to_tr",
+    "ratio": 0.552
+  },
+  {
+    "source": "/blog/claudes-constitution-explained",
+    "destination": "/news/anthropic-pentagon-ai-reddi-claudes-constitution-ile-ai",
+    "permanent": true,
+    "type": "root_to_tr",
+    "ratio": 0.578
+  },
+  {
+    "source": "/yapay-zeka-ve-cin-dijital-devlet",
+    "destination": "/news/yapay-zeka-ajanti-7-gunde-200-roi-dijital-pazarlama",
+    "permanent": true,
+    "type": "root_to_tr",
+    "ratio": 0.578
+  },
+  {
+    "source": "/ai-in-education-trends-2026",
+    "destination": "/en/news/ai-era-us-special-education-opportunities-risks",
+    "permanent": true,
+    "type": "root_to_en",
+    "ratio": 0.514
+  },
+  {
+    "source": "/github-copilot-price-analysis",
+    "destination": "/news/github-copilot-agentic-coding-sdk-yeni-donem",
+    "permanent": true,
+    "type": "root_to_tr",
+    "ratio": 0.548
+  },
+  {
+    "source": "/yapay-zeka-etigi-rehberi",
+    "destination": "/news/yapay-zeka-enerji-acligi-5-surdurulebilir-cozum-2026-rehberi",
+    "permanent": true,
+    "type": "root_to_tr",
+    "ratio": 0.548
+  }
+]
