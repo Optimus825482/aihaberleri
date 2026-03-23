@@ -68,5 +68,7 @@ export function generateSlug(text: string): string {
     .replace(/[^a-z0-9\s-]/g, "") // Remove non-alphanumeric characters except spaces and hyphens
     .replace(/\s+/g, "-") // Replace spaces with hyphens
     .replace(/-+/g, "-") // Remove redundant hyphens
+    .replace(/^-+/, "") // Remove leading dashes
+    .replace(/-+$/, "") // Remove trailing dashes
     .trim();
 }

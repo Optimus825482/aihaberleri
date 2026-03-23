@@ -16,8 +16,9 @@ Disallow: /admin/
 Disallow: /api/admin/
 
 # Arama sonuçları (duplicate content önleme)
+Disallow: /search
+Disallow: /en/search
 Disallow: /arama?
-Disallow: /en/search?
 
 # Host
 Host: https://aihaberleri.org

@@ -10,6 +10,7 @@ import {
   addApiSecurityHeaders,
 } from "./middleware/security-headers";
 import { jwtVerify } from "jose";
+import { REDIRECT_MAP } from "./data/redirect-map";
 
 // CRITICAL: JWT_SECRET must be set in production
 // Using fallback in development is acceptable but not in production
@@ -17,9 +18,7 @@ const getJwtSecret = (): Uint8Array => {
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "NEXTAUTH_SECRET must be set in production environment",
-      );
+      throw new Error("NEXTAUTH_SECRET must be set in production environment");
     }
     // Development-only fallback with clear warning
     console.warn(
@@ -57,6 +56,21 @@ export default async function middleware(request: NextRequest) {
         "Access-Control-Allow-Origin": "*",
       },
     });
+  }
+
+  // www → non-www redirect (301)
+  const host = request.headers.get("host") || "";
+  if (host.startsWith("www.")) {
+    const newUrl = new URL(request.url);
+    newUrl.host = host.replace("www.", "");
+    return NextResponse.redirect(newUrl, 301);
+  }
+
+  // 404 redirect map — old slugs → new slugs (301 permanent)
+  const redirectDest = REDIRECT_MAP.get(pathname);
+  if (redirectDest) {
+    const newUrl = new URL(redirectDest, request.url);
+    return NextResponse.redirect(newUrl, 301);
   }
 
   // Skip middleware for:
@@ -99,6 +113,11 @@ export default async function middleware(request: NextRequest) {
 
   // Create response
   const response = NextResponse.next();
+
+  // noindex for search pages (prevent duplicate content + 403 from Cloudflare bot protection)
+  if (pathname.startsWith("/search") || pathname.startsWith("/en/search")) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
 
   // Add security headers to all responses
   const secureResponse = addSecurityHeaders(request, response);

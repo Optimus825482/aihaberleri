@@ -47,6 +47,14 @@ export async function GET(request: Request) {
       );
     }
 
+    // Prevent excessively long queries that could cause timeouts
+    if (query.trim().length > 200) {
+      return NextResponse.json(
+        { error: "Arama sorgusu en fazla 200 karakter olabilir" },
+        { status: 400 },
+      );
+    }
+
     const searchTerm = query.trim();
     const skip = (page - 1) * limit;
 
@@ -329,9 +337,6 @@ export async function GET(request: Request) {
           {
             excerpt: { contains: searchTerm, mode: "insensitive" as const },
           },
-          {
-            content: { contains: searchTerm, mode: "insensitive" as const },
-          },
         ],
       };
 
@@ -396,9 +401,6 @@ export async function GET(request: Request) {
         { title: { contains: searchTerm, mode: "insensitive" as const } },
         {
           excerpt: { contains: searchTerm, mode: "insensitive" as const },
-        },
-        {
-          content: { contains: searchTerm, mode: "insensitive" as const },
         },
       ],
     };

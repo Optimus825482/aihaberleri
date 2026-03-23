@@ -1,133 +1,130 @@
 import React from "react";
-import { cache } from "react";
-import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
 import { AdSlot } from "@/components/AdSlot";
-import { CategoryHero } from "@/components/CategoryHero";
 import { AD_SLOTS } from "@/lib/ad-slots";
-import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
+import Link from "next/link";
 
-interface CategoryPageProps {
-  params: Promise<{
-    slug: string;
-  }>;
+export const dynamic = "force-dynamic";
+
+interface Props {
+  params: Promise<{ slug: string }>;
 }
 
-// React.cache() — per-request dedup: generateMetadata + page share same DB query
-const getCategory = cache(async (slug: string) => {
-  return db.category.findUnique({ where: { slug } });
-});
-
-export async function generateMetadata({
-  params,
-}: CategoryPageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const category = await getCategory(slug); // Deduped with page
-
-  if (!category) {
-    return { title: "Kategori Bulunamadı" };
-  }
+  const category = await db.category.findFirst({ where: { slug } });
+  if (!category) return { title: "Kategori Bulunamadı" };
 
   return {
-    title: category.name,
+    title: `${category.name} Haberleri | AI Haberleri`,
     description:
       category.description ||
-      `${category.name} kategorisindeki en son haberler ve makaleler`,
+      `${category.name} kategorisindeki en son yapay zeka haberleri.`,
+    alternates: {
+      canonical: `https://aihaberleri.org/category/${slug}`,
+      languages: { en: `https://aihaberleri.org/en/category/${slug}` },
+    },
   };
 }
 
-export default async function CategoryPage({ params }: CategoryPageProps) {
+export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
-  const category = await getCategory(slug); // React.cache — deduped with generateMetadata
-
-  if (!category) {
-    notFound();
-  }
+  const category = await db.category.findFirst({ where: { slug } });
+  if (!category) notFound();
 
   const articles = await db.article.findMany({
-    where: {
-      categoryId: category.id,
-      status: "PUBLISHED",
-      publishedAt: { not: null },
-    },
-    include: {
-      category: {
-        select: {
-          name: true,
-          slug: true,
-        },
-      },
-    },
+    where: { status: "PUBLISHED", categoryId: category.id },
+    include: { category: { select: { name: true, slug: true } } },
     orderBy: { publishedAt: "desc" },
-    take: 24,
+    take: 30,
   });
 
-  type ArticleWithCategory = (typeof articles)[0];
-
   return (
-    <div className="min-h-screen flex flex-col bg-ai-background-dark">
-      <main className="flex-1">
-        {/* Category Hero */}
-        <CategoryHero
-          title={category.name}
-          description={category.description || undefined}
-          articleCount={articles.length}
-        />
+    <div className="container mx-auto px-4 py-12">
+      <div className="mb-10">
+        <nav className="flex items-center gap-2 text-sm text-ai-text-muted mb-4">
+          <Link href="/" className="hover:text-ai-primary transition-colors">
+            Ana Sayfa
+          </Link>
+          <span>/</span>
+          <span className="text-ai-text-primary font-medium">
+            {category.name}
+          </span>
+        </nav>
+        <h1 className="text-4xl font-bold tracking-tight mb-2">
+          {category.name}
+        </h1>
+        {category.description && (
+          <p className="text-muted-foreground text-lg">
+            {category.description}
+          </p>
+        )}
+        <p className="text-sm text-ai-text-muted mt-2">
+          {articles.length} haber bulundu
+        </p>
+      </div>
 
-        {/* Articles Grid */}
-        <section className="container mx-auto px-4 py-12">
-          {/* Top Ad */}
+      <AdSlot
+        slot={AD_SLOTS.BANNER_TOP}
+        format="auto"
+        responsive
+        minHeight={120}
+        label="Sponsorlu"
+        className="mb-8 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+      />
+
+      {articles.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {articles.map((article, index) => (
+            <React.Fragment key={article.id}>
+              <ArticleCard article={article} />
+              {(index + 1) % 6 === 0 && index < articles.length - 1 && (
+                <div className="col-span-1 md:col-span-2 lg:col-span-3">
+                  <AdSlot
+                    slot={AD_SLOTS.INFEED_NEWSLIST}
+                    format="fluid"
+                    layout="in-feed"
+                    layoutKey="-6t+ed+2i-1n-4w"
+                    minHeight={100}
+                    label="Sponsorlu"
+                    className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+                  />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-24 bg-muted/30 rounded-3xl border-2 border-dashed">
+          <h2 className="text-2xl font-semibold mb-2">
+            Bu kategoride henüz haber yok
+          </h2>
+          <p className="text-muted-foreground">
+            Yakında yeni içerikler eklenecek.
+          </p>
+          <Link
+            href="/"
+            className="inline-flex items-center mt-6 text-primary hover:underline font-medium"
+          >
+            Anasayfaya Dön
+          </Link>
+        </div>
+      )}
+
+      {articles.length > 0 && (
+        <div className="mt-10">
           <AdSlot
-            slot={AD_SLOTS.BANNER_TOP}
-            format="auto"
-            responsive
-            minHeight={120}
-            label="Sponsorlu"
-            className="mb-8 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
+            slot={AD_SLOTS.MULTIPLEX_RELATED}
+            format="autorelaxed"
+            minHeight={200}
+            label="Bunları da Okuyun"
+            className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
           />
-
-          {articles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {articles.map((article: ArticleWithCategory, index: number) => (
-                <React.Fragment key={article.id}>
-                  <ArticleCard article={article} />
-                  {(index + 1) % 6 === 0 && index < articles.length - 1 && (
-                    <div className="col-span-1 md:col-span-2 lg:col-span-3">
-                      <AdSlot
-                        slot={AD_SLOTS.INFEED_NEWSLIST}
-                        format="fluid"
-                        layout="in-feed"
-                        layoutKey="-6t+ed+2i-1n-4w"
-                        minHeight={100}
-                        label="Sponsorlu"
-                        className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
-                      />
-                    </div>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-ai-text-secondary">
-                Bu kategoride henüz haber yok.
-              </p>
-            </div>
-          )}
-
-          {/* Multiplex — sayfa sonu öneriler */}
-          <div className="mt-10">
-            <AdSlot
-              slot={AD_SLOTS.MULTIPLEX_RELATED}
-              format="autorelaxed"
-              minHeight={200}
-              label="Bunları da Okuyun"
-              className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
-            />
-          </div>
-        </section>
-      </main>
+        </div>
+      )}
     </div>
   );
 }

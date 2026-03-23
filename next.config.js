@@ -83,16 +83,16 @@ const nextConfig = {
 
   async redirects() {
     return [
-      // Fix: /news/en/news/ double prefix → /news/en/
+      // Fix: /news/en/news/{slug} double prefix → /en/news/{slug}
       {
         source: "/news/en/news/:slug*",
-        destination: "/news/en/:slug*",
+        destination: "/en/news/:slug*",
         permanent: true,
       },
-      // Fix: /en/news/ wrong format → /news/en/
+      // Fix: /news/en/{slug} wrong format → /en/news/{slug}
       {
-        source: "/en/news/:slug*",
-        destination: "/news/en/:slug*",
+        source: "/news/en/:slug*",
+        destination: "/en/news/:slug*",
         permanent: true,
       },
     ];
