@@ -12,10 +12,10 @@ import { Errors, handleApiError } from "@/lib/errors";
 // ============================================
 // CACHE CONFIGURATION
 // ============================================
-const CACHE_TTL_SECONDS = 12 * 60 * 60; // 12 hours (was 3 days — caused Redis OOM at 1GB)
+const CACHE_TTL_SECONDS = 72 * 60 * 60; // 72 hours — haberler günlerce aynı, gereksiz regeneration'ı önle
 const CACHE_PREFIX = "tts:cache:";
 const MAX_CACHE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB - TTS audio genelde 700KB-3MB arası
-const MAX_TTS_CACHE_COUNT = 150; // Max cached TTS entries (~150 * 2MB avg = ~300MB safe limit)
+const MAX_TTS_CACHE_COUNT = 200; // Max cached TTS entries (~200 * 1.5MB avg = ~300MB safe limit)
 
 // ============================================
 // IN-FLIGHT DEDUPLICATION
@@ -25,6 +25,30 @@ const inFlightRequests = new Map<
   string,
   Promise<{ audio: Buffer; metadata: unknown[] }>
 >();
+
+// ============================================
+// CONCURRENCY LIMITER — max 3 simultaneous TTS generations
+// Python process spawn CPU-intensive, bunu sınırla
+// ============================================
+let activeTTSGenerations = 0;
+const MAX_CONCURRENT_TTS = 3;
+const TTS_QUEUE_TIMEOUT_MS = 15_000; // 15s max bekleme
+
+function waitForTTSSlot(): Promise<void> {
+  if (activeTTSGenerations < MAX_CONCURRENT_TTS) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      if (activeTTSGenerations < MAX_CONCURRENT_TTS) {
+        clearInterval(interval);
+        resolve();
+      } else if (Date.now() - start > TTS_QUEUE_TIMEOUT_MS) {
+        clearInterval(interval);
+        reject(new Error("TTS generation queue timeout — server busy"));
+      }
+    }, 200);
+  });
+}
 
 function expandCommonAcronyms(text: string, voice?: string): string {
   const isTurkishVoice = voice?.toLowerCase().startsWith("tr-") ?? false;
@@ -183,6 +207,10 @@ export async function POST(req: NextRequest) {
       audio = result.audio;
       metadata = result.metadata;
     } else {
+      // Concurrency slot bekle — max 3 simultaneous Python process
+      await waitForTTSSlot();
+      activeTTSGenerations++;
+
       // Yeni üretim başlat ve map'e kaydet
       isOriginalGenerator = true;
       const generationPromise = generateSpeech({
@@ -196,6 +224,7 @@ export async function POST(req: NextRequest) {
         audio = result.audio;
         metadata = result.metadata;
       } finally {
+        activeTTSGenerations--;
         inFlightRequests.delete(cacheKey);
       }
     }
