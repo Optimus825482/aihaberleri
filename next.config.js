@@ -30,6 +30,8 @@ const nextConfig = {
     },
     // Disable instrumentation to prevent OpenTelemetry errors
     instrumentationHook: false,
+    // Disable worker threads during build to reduce memory usage
+    workerThreads: false,
     // Optimize page data loading
     optimizePackageImports: [
       "lucide-react",
@@ -147,7 +149,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   typescript: {
-    ignoreBuildErrors: !!process.env.NEXT_SKIP_TYPE_CHECK,
+    // Type checking during Docker build causes OOM on 2GB build containers.
+    // Run `npx tsc --noEmit` separately in CI or locally.
+    ignoreBuildErrors: true,
   },
   // Headers for iOS auto-linking prevention (hydration fix)
   async headers() {
