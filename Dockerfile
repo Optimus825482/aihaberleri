@@ -79,7 +79,7 @@ ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     NEXTAUTH_SECRET="build-secret" \
     NEXTAUTH_URL="http://localhost:3000" \
     NODE_ENV=production \
-    NODE_OPTIONS="--max-old-space-size=1536" \
+    NODE_OPTIONS="--max-old-space-size=2048" \
     NEXT_BUILD_WORKERS=1 \
     NEXT_TELEMETRY_DISABLED=1 \
     SKIP_ENV_VALIDATION=1 \

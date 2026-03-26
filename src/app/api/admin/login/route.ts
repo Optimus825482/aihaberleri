@@ -9,7 +9,7 @@ import {
   createRateLimitHeaders,
   createRateLimitResponse,
 } from "@/lib/rate-limiter";
-import { getJwtSecret } from "@/lib/admin-auth";
+import { getJwtSecret } from "@/lib/auth/jwt-secret";
 import { apiLogger } from "@/lib/logger";
 
 const JWT_SECRET = getJwtSecret();

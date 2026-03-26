@@ -142,7 +142,9 @@ const nextConfig = {
   },
 
   eslint: {
-    ignoreDuringBuilds: !!process.env.NEXT_SKIP_LINT_CHECK,
+    // ESLint 9 flat config is incompatible with Next.js 14's built-in lint runner.
+    // Run lint separately via `npm run lint` or in CI.
+    ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: !!process.env.NEXT_SKIP_TYPE_CHECK,
