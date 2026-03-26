@@ -19,6 +19,3 @@ Disallow: /api/admin/
 Disallow: /search
 Disallow: /en/search
 Disallow: /arama?
-
-# Host
-Host: https://aihaberleri.org
