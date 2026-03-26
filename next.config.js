@@ -95,6 +95,12 @@ const nextConfig = {
         destination: "/en/news/:slug*",
         permanent: true,
       },
+      // Legacy: /haber/{slug} → /news/{slug} (eski URL yapısı)
+      {
+        source: "/haber/:slug*",
+        destination: "/news/:slug*",
+        permanent: true,
+      },
     ];
   },
 
@@ -136,12 +142,10 @@ const nextConfig = {
   },
 
   eslint: {
-    // CI'da (CI=true) ESLint hataları build'i fail eder; yerel/build hızı için CI dışında ignore.
-    ignoreDuringBuilds: !process.env.CI,
+    ignoreDuringBuilds: !!process.env.NEXT_SKIP_LINT_CHECK,
   },
   typescript: {
-    // CI'da (CI=true) TypeScript hataları build'i fail eder; yerel/build hızı için CI dışında ignore.
-    ignoreBuildErrors: !process.env.CI,
+    ignoreBuildErrors: !!process.env.NEXT_SKIP_TYPE_CHECK,
   },
   // Headers for iOS auto-linking prevention (hydration fix)
   async headers() {

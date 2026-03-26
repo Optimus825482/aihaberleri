@@ -7,20 +7,7 @@ import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { isJwtRevokedByTimestamp } from "@/lib/auth/session-revocation";
-
-export const getJwtSecret = (): Uint8Array => {
-  const secret = process.env.NEXTAUTH_SECRET;
-  if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("NEXTAUTH_SECRET must be set in production environment");
-    }
-    console.warn(
-      "⚠️ WARNING: Using dev-only JWT secret. Set NEXTAUTH_SECRET in production!",
-    );
-    return new TextEncoder().encode("dev-only-secret-change-in-production");
-  }
-  return new TextEncoder().encode(secret);
-};
+import { getJwtSecret } from "@/lib/auth/jwt-secret";
 
 const JWT_SECRET = getJwtSecret();
 
@@ -99,34 +86,127 @@ export interface AdminApiPermissionRule {
 /** SUPER_ADMIN her zaman tüm endpoint'lere erişebilir; bu matris diğer roller için geçerli. */
 export const ADMIN_API_PERMISSIONS: AdminApiPermissionRule[] = [
   // Users – liste/oluşturma: ADMIN+
-  { method: "GET", pattern: /^\/api\/admin\/users\/?$/, roles: ["ADMIN", "SUPER_ADMIN"] },
-  { method: "POST", pattern: /^\/api\/admin\/users\/?$/, roles: ["ADMIN", "SUPER_ADMIN"] },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/users\/?$/,
+    roles: ["ADMIN", "SUPER_ADMIN"],
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/admin\/users\/?$/,
+    roles: ["ADMIN", "SUPER_ADMIN"],
+  },
   // Users – güncelleme/silme: sadece SUPER_ADMIN
-  { method: "PATCH", pattern: /^\/api\/admin\/users\/[^/]+$/, roles: ["SUPER_ADMIN"] },
-  { method: "DELETE", pattern: /^\/api\/admin\/users\/[^/]+$/, roles: ["SUPER_ADMIN"] },
-  { method: "POST", pattern: /^\/api\/admin\/users\/bulk-role$/, roles: ["SUPER_ADMIN"] },
-  { method: "GET", pattern: /^\/api\/admin\/users\/[^/]+\/activity/, roles: ["ADMIN", "SUPER_ADMIN"] },
+  {
+    method: "PATCH",
+    pattern: /^\/api\/admin\/users\/[^/]+$/,
+    roles: ["SUPER_ADMIN"],
+  },
+  {
+    method: "DELETE",
+    pattern: /^\/api\/admin\/users\/[^/]+$/,
+    roles: ["SUPER_ADMIN"],
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/admin\/users\/bulk-role$/,
+    roles: ["SUPER_ADMIN"],
+  },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/users\/[^/]+\/activity/,
+    roles: ["ADMIN", "SUPER_ADMIN"],
+  },
   // Articles – okuma: VIEWER+, yazma/bulk: EDITOR+
-  { method: "GET", pattern: /^\/api\/admin\/articles\/?$/, roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "GET", pattern: /^\/api\/admin\/articles\/[^/]+/, roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "POST", pattern: /^\/api\/admin\/articles\/bulk$/, roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "POST", pattern: /^\/api\/admin\/articles\/?$/, roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "PATCH", pattern: /^\/api\/admin\/articles\/[^/]+/, roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "DELETE", pattern: /^\/api\/admin\/articles\/[^/]+/, roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/articles\/?$/,
+    roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/articles\/[^/]+/,
+    roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/admin\/articles\/bulk$/,
+    roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/admin\/articles\/?$/,
+    roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "PATCH",
+    pattern: /^\/api\/admin\/articles\/[^/]+/,
+    roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "DELETE",
+    pattern: /^\/api\/admin\/articles\/[^/]+/,
+    roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
   // Newsletter – abone listesi/gönderim: EDITOR+
-  { method: "GET", pattern: /^\/api\/admin\/newsletter\/subscribers/, roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "POST", pattern: /^\/api\/admin\/newsletter\/send/, roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "POST", pattern: /^\/api\/admin\/newsletter\/send-daily/, roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "POST", pattern: /^\/api\/admin\/newsletter\/preview/, roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/newsletter\/subscribers/,
+    roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/admin\/newsletter\/send/,
+    roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/admin\/newsletter\/send-daily/,
+    roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/admin\/newsletter\/preview/,
+    roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
   // SEO – mevcut auth/middleware ile uyumlu: VIEWER/EDITOR/ADMIN
-  { method: "GET", pattern: /^\/api\/admin\/seo\//, roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "POST", pattern: /^\/api\/admin\/seo\/(optimize|recalculate|export|recommendations)/, roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "POST", pattern: /^\/api\/admin\/seo\/bulk-(optimize|calculate)/, roles: ["ADMIN", "SUPER_ADMIN"] },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/seo\//,
+    roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "POST",
+    pattern:
+      /^\/api\/admin\/seo\/(optimize|recalculate|export|recommendations)/,
+    roles: ["EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/admin\/seo\/bulk-(optimize|calculate)/,
+    roles: ["ADMIN", "SUPER_ADMIN"],
+  },
   // Dashboard, ayarlar, pipeline – ADMIN+ (veya VIEWER dashboard için)
-  { method: "GET", pattern: /^\/api\/admin\/dashboard/, roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
-  { method: "GET", pattern: /^\/api\/admin\/settings/, roles: ["ADMIN", "SUPER_ADMIN"] },
-  { method: "PATCH", pattern: /^\/api\/admin\/settings/, roles: ["ADMIN", "SUPER_ADMIN"] },
-  { method: "GET", pattern: /^\/api\/admin\/pipeline/, roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"] },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/dashboard/,
+    roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/settings/,
+    roles: ["ADMIN", "SUPER_ADMIN"],
+  },
+  {
+    method: "PATCH",
+    pattern: /^\/api\/admin\/settings/,
+    roles: ["ADMIN", "SUPER_ADMIN"],
+  },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/pipeline/,
+    roles: ["VIEWER", "EDITOR", "ADMIN", "SUPER_ADMIN", "MODERATOR"],
+  },
 ];
 
 /**

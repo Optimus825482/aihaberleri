@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } },
 ) {
   try {
+    // Auth check
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) return session;
+
     const { id } = params;
 
     await prisma.sEORecommendation.delete({

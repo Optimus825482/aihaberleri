@@ -4,9 +4,9 @@ import { generateSpeech, isValidVoice, getAllowedVoices } from "@/lib/edge-tts";
 import { getRedis } from "@/lib/redis";
 import {
   checkTTSRateLimit,
-  getRateLimitHeaders,
+  getSimpleRateLimitHeaders as getRateLimitHeaders,
   TTS_RATE_LIMIT,
-} from "@/lib/rate-limit";
+} from "@/lib/rate-limiter";
 import { Errors, handleApiError } from "@/lib/errors";
 
 // ============================================

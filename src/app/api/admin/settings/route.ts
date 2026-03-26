@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { scheduleNewsAgentJob } from "@/lib/queue";
-import { checkRateLimit, getRateLimitHeaders } from "@/lib/rate-limit";
+import {
+  checkSimpleRateLimit as checkRateLimit,
+  getSimpleRateLimitHeaders as getRateLimitHeaders,
+} from "@/lib/rate-limiter";
 
 export const dynamic = "force-dynamic";
 

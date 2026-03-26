@@ -1,6 +1,7 @@
 /**
  * Prisma Client Export
- * Single source of truth for Prisma imports
+ * Re-exports db as prisma for backward compatibility.
+ * Canonical import: import { db } from "@/lib/db"
  */
 
 export { db as prisma } from "./db";

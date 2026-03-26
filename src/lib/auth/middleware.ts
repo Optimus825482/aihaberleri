@@ -11,29 +11,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { Role } from "@prisma/client";
-import { RateLimiter } from "@/lib/rate-limiter";
-
-/**
- * Permission matrix - Endpoint bazlı yetki kontrolü
- */
-const PERMISSIONS = {
-  // Read-only endpoints - VIEWER ve üstü
-  "GET:/api/admin/seo/stats": [Role.VIEWER, Role.EDITOR, Role.ADMIN],
-  "GET:/api/admin/seo/recommendations": [Role.VIEWER, Role.EDITOR, Role.ADMIN],
-  "GET:/api/admin/seo/dashboard": [Role.VIEWER, Role.EDITOR, Role.ADMIN],
-  "GET:/api/admin/seo/export": [Role.VIEWER, Role.EDITOR, Role.ADMIN],
-
-  // Write endpoints - EDITOR ve üstü
-  "POST:/api/admin/seo/recommendations": [Role.EDITOR, Role.ADMIN],
-  "DELETE:/api/admin/seo/recommendations": [Role.EDITOR, Role.ADMIN],
-  "POST:/api/admin/seo/optimize": [Role.EDITOR, Role.ADMIN],
-  "POST:/api/admin/seo/recalculate": [Role.EDITOR, Role.ADMIN],
-
-  // Bulk operations - ADMIN only
-  "POST:/api/admin/seo/bulk-optimize": [Role.ADMIN],
-  "POST:/api/admin/seo/bulk-calculate": [Role.ADMIN],
-  "POST:/api/admin/seo/bulk-recalculate": [Role.ADMIN],
-} as const;
+import { getRequiredRolesForAdminApi } from "@/lib/admin-auth";
 
 /**
  * Authentication check - JWT token verification
@@ -87,21 +65,17 @@ export async function requireRole(
 }
 
 /**
- * Endpoint-based authorization - Permission matrix kontrolü
+ * Endpoint-based authorization - Uses consolidated RBAC from admin-auth.ts
  */
 export async function requirePermission(request: NextRequest) {
   const method = request.method;
   const pathname = new URL(request.url).pathname;
-  const permissionKey = `${method}:${pathname}` as keyof typeof PERMISSIONS;
+  const allowedRoles = getRequiredRolesForAdminApi(method, pathname);
 
-  const allowedRoles = PERMISSIONS[permissionKey];
-
-  if (!allowedRoles) {
-    // Endpoint permission matrix'te tanımlı değil - default ADMIN only
-    return requireRole(request, [Role.ADMIN]);
-  }
-
-  return requireRole(request, allowedRoles);
+  return requireRole(
+    request,
+    allowedRoles.map((r) => r as Role),
+  );
 }
 
 /**
@@ -170,18 +144,4 @@ export async function withAuth(
 
   // Success - return user info
   return authResult;
-}
-
-const authRateLimiter = new RateLimiter();
-
-export async function checkRateLimit(
-  userId: string,
-  limit: number = 100,
-  windowMs: number = 60000, // 1 minute
-): Promise<boolean> {
-  const result = await authRateLimiter.check(`auth:${userId}`, {
-    maxRequests: limit,
-    windowMs,
-  });
-  return result.allowed;
 }

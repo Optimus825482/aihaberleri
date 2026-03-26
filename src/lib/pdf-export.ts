@@ -1,10 +1,7 @@
 /**
  * PDF Export Utility
- * Export data to PDF format using jsPDF
+ * Export data to PDF format using jsPDF (dynamically imported)
  */
-
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 interface PDFColumn {
   header: string;
@@ -22,7 +19,7 @@ interface PDFExportOptions {
 /**
  * Export data to PDF
  */
-export function exportToPDF({
+export async function exportToPDF({
   title,
   filename,
   columns,
@@ -30,6 +27,8 @@ export function exportToPDF({
   orientation = "portrait",
 }: PDFExportOptions) {
   try {
+    const jsPDF = (await import("jspdf")).default;
+    const autoTable = (await import("jspdf-autotable")).default;
     const doc = new jsPDF({
       orientation,
       unit: "mm",
@@ -83,7 +82,7 @@ export function exportToPDF({
 /**
  * Export articles to PDF
  */
-export function exportArticlesToPDF(articles: any[]) {
+export async function exportArticlesToPDF(articles: any[]) {
   return exportToPDF({
     title: "Makale Listesi",
     filename: `articles_${new Date().toISOString().split("T")[0]}`,
@@ -113,12 +112,15 @@ export function exportArticlesToPDF(articles: any[]) {
 /**
  * Export analytics report to PDF
  */
-export function exportAnalyticsReportToPDF(data: {
+export async function exportAnalyticsReportToPDF(data: {
   summary: any;
   topArticles: any[];
   categoryStats: any[];
 }) {
   try {
+    const jsPDF = (await import("jspdf")).default;
+    const autoTable = (await import("jspdf-autotable")).default;
+
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "mm",

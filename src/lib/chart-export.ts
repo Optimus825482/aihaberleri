@@ -1,9 +1,7 @@
 /**
  * Chart Export Utility
- * Export charts to PNG/SVG format
+ * Export charts to PNG/SVG format (dynamically imported)
  */
-
-import html2canvas from "html2canvas";
 
 /**
  * Export chart element to PNG
@@ -13,6 +11,7 @@ export async function exportChartToPNG(
   filename: string,
 ): Promise<boolean> {
   try {
+    const html2canvas = (await import("html2canvas")).default;
     const element = document.getElementById(elementId);
 
     if (!element) {

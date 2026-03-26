@@ -166,6 +166,10 @@ export const getRedis = () => {
           clearInterval(memoryCheckInterval);
           memoryCheckInterval = null;
         }
+        if (oomRecoveryTimer) {
+          clearTimeout(oomRecoveryTimer);
+          oomRecoveryTimer = null;
+        }
       });
     } catch (error) {
       console.error("❌ Redis initialization error:", error);

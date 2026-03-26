@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import {
   notifyNewsToGoogle,
   notifyMultipleNewsToGoogle,
@@ -332,6 +333,10 @@ async function handleBulkGoogleSubmitWithStreaming(articleIds: string[]) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Auth check
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) return session;
+
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
@@ -468,6 +473,10 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) return session;
+
     const body = await request.json();
     const { action, articleIds, streamLogs } = body;
 

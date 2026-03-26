@@ -10,6 +10,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
+    // Auth check
+    const { requireAdminAuth } = await import("@/lib/admin-auth");
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) return session;
+
     // Get all trends (both active and expired) - show last 24 hours
     const trends = await db.$queryRaw<any[]>`
       SELECT 

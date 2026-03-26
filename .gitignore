@@ -77,3 +77,13 @@ __pycache__/
 tsc-errors.txt
 tsc-output.txt
 worker-*.txt
+
+# Checkpoint/recovery files (runtime state)
+scripts/*.json
+!scripts/package.json
+
+# Database backup logs
+backups/postgres/*.txt
+
+# Jupyter notebooks (one-off analysis)
+*.ipynb

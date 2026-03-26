@@ -11,28 +11,42 @@ import {
 } from "./middleware/security-headers";
 import { jwtVerify } from "jose";
 import { REDIRECT_MAP } from "./data/redirect-map";
-
-// CRITICAL: JWT_SECRET must be set in production
-// Using fallback in development is acceptable but not in production
-const getJwtSecret = (): Uint8Array => {
-  const secret = process.env.NEXTAUTH_SECRET;
-  if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("NEXTAUTH_SECRET must be set in production environment");
-    }
-    // Development-only fallback with clear warning
-    console.warn(
-      "⚠️ WARNING: Using dev-only JWT secret. Set NEXTAUTH_SECRET in production!",
-    );
-    return new TextEncoder().encode("dev-only-secret-change-in-production");
-  }
-  return new TextEncoder().encode(secret);
-};
+import { getJwtSecret } from "./lib/auth/jwt-secret";
 
 const JWT_SECRET = getJwtSecret();
 
+// Dead pages that Google still crawls — return 410 Gone so they get deindexed
+const GONE_PAGES = new Set([
+  "/best-open-source-ai-gateways",
+  "/derin-ogrenme-guvenilirligi",
+  "/ai-automation-python",
+  "/ai-psikolojisi-nedir",
+  "/ai-guvenilirlik-olcume-2026",
+  "/ai-autonomy-risks",
+  "/sarvam-30b-karsilastirma",
+  "/2026-ai-forecast-report",
+  "/python-financial-modeling-2026",
+  "/openai-codex-nedir",
+  "/github-copilot-price-analysis",
+  "/data-preprocessing-guide",
+  "/google-ai-sorumluluk-politikasi",
+  "/gpt-4o-vs-deepseek-v4",
+  "/yapay-zeka-not-alma-araclari",
+  "/yapay-zeka-kodlama-araçlari",
+  "/blog/ai-development-trends-2026",
+  "/category/saglik-yz",
+  "/category/bilgisayarli-goru",
+  "/en/category/yapay-zeka-regulasyon",
+  "/hakkimizda",
+]);
+
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Return 410 Gone for dead pages — tells Google to deindex them
+  if (GONE_PAGES.has(pathname)) {
+    return new NextResponse("Gone", { status: 410 });
+  }
 
   // IndexNow key verification: serve key file dynamically
   // This bypasses Cloudflare challenges/caching that block Bing's key verification bot
@@ -94,7 +108,6 @@ export default async function middleware(request: NextRequest) {
     const token = request.cookies.get("admin-session")?.value;
 
     if (!token) {
-      console.log("[MIDDLEWARE] No token, redirecting to login");
       const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
       return NextResponse.redirect(loginUrl);
@@ -102,9 +115,8 @@ export default async function middleware(request: NextRequest) {
 
     try {
       await jwtVerify(token, JWT_SECRET);
-      console.log("[MIDDLEWARE] Token valid, allowing access to:", pathname);
     } catch (error) {
-      console.log("[MIDDLEWARE] Invalid token, redirecting to login");
+      console.warn("[MIDDLEWARE] Invalid token, redirecting to login");
       const loginUrl = new URL("/admin/login", request.url);
       loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
       return NextResponse.redirect(loginUrl);

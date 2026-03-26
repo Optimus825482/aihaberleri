@@ -5,11 +5,13 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    // Auth check
+    const { requireAdminAuth } = await import("@/lib/admin-auth");
+    const { NextResponse } = await import("next/server");
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) return session;
+
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "100");
-    const severityFilter = searchParams.get("severity")?.split(",") || [];
-    const typeFilter = searchParams.get("type")?.split(",") || [];
 
     // Get all articles with unresolved recommendations
     const articles = await prisma.article.findMany({

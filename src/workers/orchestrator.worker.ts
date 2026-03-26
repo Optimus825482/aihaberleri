@@ -21,6 +21,7 @@ import {
   getQueue,
   getAllQueueStats,
   QUEUE_NAMES,
+  setupQueueShutdown,
 } from "@/lib/queue-manager";
 import {
   logPipelineBanner,
@@ -239,6 +240,7 @@ async function main() {
 
   // Initialize queues
   initializeQueues();
+  setupQueueShutdown();
 
   // Initialize agents
   await initializeAgents();

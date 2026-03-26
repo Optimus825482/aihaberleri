@@ -1,9 +1,7 @@
 /**
  * Excel Export Utility
- * Export data to Excel (.xlsx) format
+ * Export data to Excel (.xlsx) format (dynamically imported)
  */
-
-import * as XLSX from "xlsx";
 
 interface ExportColumn {
   header: string;
@@ -21,13 +19,14 @@ interface ExportOptions {
 /**
  * Export data to Excel file
  */
-export function exportToExcel({
+export async function exportToExcel({
   filename,
   sheetName = "Sheet1",
   columns,
   data,
 }: ExportOptions) {
   try {
+    const XLSX = await import("xlsx");
     // Prepare data with headers
     const headers = columns.map((col) => col.header);
     const rows = data.map((row) =>
@@ -89,7 +88,7 @@ export function exportToExcel({
 /**
  * Export articles to Excel
  */
-export function exportArticlesToExcel(articles: any[]) {
+export async function exportArticlesToExcel(articles: any[]) {
   return exportToExcel({
     filename: `articles_${new Date().toISOString().split("T")[0]}`,
     sheetName: "Makaleler",
@@ -117,7 +116,7 @@ export function exportArticlesToExcel(articles: any[]) {
 /**
  * Export audit logs to Excel
  */
-export function exportAuditLogsToExcel(logs: any[]) {
+export async function exportAuditLogsToExcel(logs: any[]) {
   return exportToExcel({
     filename: `audit_logs_${new Date().toISOString().split("T")[0]}`,
     sheetName: "Aktivite Geçmişi",
@@ -143,12 +142,13 @@ export function exportAuditLogsToExcel(logs: any[]) {
 /**
  * Export analytics to Excel
  */
-export function exportAnalyticsToExcel(analytics: {
+export async function exportAnalyticsToExcel(analytics: {
   summary: any;
   articles: any[];
   categories: any[];
 }) {
   try {
+    const XLSX = await import("xlsx");
     const workbook = XLSX.utils.book_new();
 
     // Sheet 1: Summary

@@ -461,13 +461,23 @@ export function initializeQueues(): void {
   logger.info("All queues initialized");
 }
 
-// Graceful shutdown
-process.on("SIGTERM", async () => {
-  logger.info("SIGTERM received, closing queues...");
-  await closeAllQueues();
-});
+let __queueShutdownRegistered = false;
 
-process.on("SIGINT", async () => {
-  logger.info("SIGINT received, closing queues...");
-  await closeAllQueues();
-});
+/**
+ * Register graceful shutdown handlers for queues.
+ * Call explicitly from orchestrator.worker.ts, not at import time.
+ */
+export function setupQueueShutdown(): void {
+  if (__queueShutdownRegistered) return;
+  __queueShutdownRegistered = true;
+
+  process.once("SIGTERM", async () => {
+    logger.info("SIGTERM received, closing queues...");
+    await closeAllQueues();
+  });
+
+  process.once("SIGINT", async () => {
+    logger.info("SIGINT received, closing queues...");
+    await closeAllQueues();
+  });
+}

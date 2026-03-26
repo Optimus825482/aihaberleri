@@ -15,6 +15,11 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   try {
+    // Auth check
+    const { requireAdminAuth } = await import("@/lib/admin-auth");
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) return session;
+
     const { searchParams } = new URL(request.url);
     const minScore = Number(searchParams.get("minScore") || 0);
     const limit = Number(searchParams.get("limit") || 20);

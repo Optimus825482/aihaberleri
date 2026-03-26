@@ -15,7 +15,6 @@ import {
   requirePermission,
   validateCSRFToken,
   withAuth,
-  checkRateLimit,
 } from "@/lib/auth/middleware";
 
 // Mock auth

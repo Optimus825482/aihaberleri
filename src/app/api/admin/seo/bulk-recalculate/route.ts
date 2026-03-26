@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { analyzeArticleSEO, saveSEORecommendations } from "@/lib/seo-analyzer";
 
 export async function POST(request: Request) {
+  // Auth check
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) return session;
+
   const startTime = Date.now();
 
   try {

@@ -94,13 +94,13 @@ if (
 
 // Robust cleanup and connection handling
 if (process.env.NODE_ENV === "production") {
-  // Graceful shutdown on process exit
-  process.on("beforeExit", async () => {
-    console.log("🔄 Process exiting, disconnecting from database...");
-    await (db as PrismaClient).$disconnect();
-  });
-
   if (!globalForPrisma.__dbSignalHandlersRegistered) {
+    // Graceful shutdown on process exit
+    process.on("beforeExit", async () => {
+      console.log("🔄 Process exiting, disconnecting from database...");
+      await (db as PrismaClient).$disconnect();
+    });
+
     // Handle SIGTERM (Docker/Kubernetes shutdown)
     process.once("SIGTERM", async () => {
       console.log("📛 SIGTERM received, closing database connection...");

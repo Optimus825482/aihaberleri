@@ -72,6 +72,12 @@ interface QueueStats {
  * Returns the health status of the worker system
  */
 export async function GET() {
+  // Auth check
+  const { requireAdminAuth } = await import("@/lib/admin-auth");
+  const session = await requireAdminAuth();
+  if (session instanceof (await import("next/server")).NextResponse)
+    return session;
+
   const redis = getRedis();
   const healthStatus: WorkerHealthStatus = {
     status: "unknown",

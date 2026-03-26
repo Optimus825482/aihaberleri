@@ -4,9 +4,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireAdminAuth } from "@/lib/admin-auth";
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check
+    const session = await requireAdminAuth();
+    if (session instanceof NextResponse) return session;
+
     // Dynamically import to avoid issues with workers in API routes
     const { fetchAllTrends } = await import("@/services/trend-fetcher.service");
 

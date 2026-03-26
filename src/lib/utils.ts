@@ -1,5 +1,22 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import slugify from "slugify";
+
+// Configure slugify for Turkish locale
+slugify.extend({
+  ğ: "g",
+  Ğ: "g",
+  ü: "u",
+  Ü: "u",
+  ş: "s",
+  Ş: "s",
+  ı: "i",
+  İ: "i",
+  ö: "o",
+  Ö: "o",
+  ç: "c",
+  Ç: "c",
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -25,50 +42,44 @@ export function calculateReadingMinutes(text: string): number {
   return Math.ceil(words / wordsPerMinute);
 }
 
-export function formatRelativeTime(date: string | Date): string {
+export function formatRelativeTime(
+  date: string | Date,
+  locale: "tr" | "en" = "tr",
+): string {
   const now = new Date();
   const past = new Date(date);
   const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
 
-  if (diffInSeconds < 60) return "Az önce";
+  const labels =
+    locale === "en"
+      ? {
+          justNow: "Just now",
+          minute: (n: number) => `${n} minute${n > 1 ? "s" : ""} ago`,
+          hour: (n: number) => `${n} hour${n > 1 ? "s" : ""} ago`,
+          day: (n: number) => `${n} day${n > 1 ? "s" : ""} ago`,
+          month: (n: number) => `${n} month${n > 1 ? "s" : ""} ago`,
+          year: (n: number) => `${n} year${n > 1 ? "s" : ""} ago`,
+        }
+      : {
+          justNow: "Az önce",
+          minute: (n: number) => `${n} dakika önce`,
+          hour: (n: number) => `${n} saat önce`,
+          day: (n: number) => `${n} gün önce`,
+          month: (n: number) => `${n} ay önce`,
+          year: (n: number) => `${n} yıl önce`,
+        };
+
+  if (diffInSeconds < 60) return labels.justNow;
   if (diffInSeconds < 3600)
-    return `${Math.floor(diffInSeconds / 60)} dakika önce`;
+    return labels.minute(Math.floor(diffInSeconds / 60));
   if (diffInSeconds < 86400)
-    return `${Math.floor(diffInSeconds / 3600)} saat önce`;
+    return labels.hour(Math.floor(diffInSeconds / 3600));
   if (diffInSeconds < 2592000)
-    return `${Math.floor(diffInSeconds / 86400)} gün önce`;
+    return labels.day(Math.floor(diffInSeconds / 86400));
   if (diffInSeconds < 31536000)
-    return `${Math.floor(diffInSeconds / 2592000)} ay önce`;
-  return `${Math.floor(diffInSeconds / 31536000)} yıl önce`;
+    return labels.month(Math.floor(diffInSeconds / 2592000));
+  return labels.year(Math.floor(diffInSeconds / 31536000));
 }
 export function generateSlug(text: string): string {
-  const turkishChars: { [key: string]: string } = {
-    ğ: "g",
-    Ğ: "g",
-    ü: "u",
-    Ü: "u",
-    ş: "s",
-    Ş: "s",
-    ı: "i",
-    İ: "i",
-    ö: "o",
-    Ö: "o",
-    ç: "c",
-    Ç: "c",
-  };
-
-  let slug = text.toLowerCase();
-
-  // Replace Turkish characters
-  Object.keys(turkishChars).forEach((key) => {
-    slug = slug.replace(new RegExp(key, "g"), turkishChars[key]);
-  });
-
-  return slug
-    .replace(/[^a-z0-9\s-]/g, "") // Remove non-alphanumeric characters except spaces and hyphens
-    .replace(/\s+/g, "-") // Replace spaces with hyphens
-    .replace(/-+/g, "-") // Remove redundant hyphens
-    .replace(/^-+/, "") // Remove leading dashes
-    .replace(/-+$/, "") // Remove trailing dashes
-    .trim();
+  return slugify(text, { lower: true, strict: true, locale: "tr" });
 }

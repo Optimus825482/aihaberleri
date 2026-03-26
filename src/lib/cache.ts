@@ -13,11 +13,13 @@
  */
 
 import { getRedis } from "./redis";
+import { cacheLogger } from "./logger";
 import type { Redis } from "ioredis";
 
 interface CacheEntry<T> {
   data: T;
   timestamp: number;
+  lastAccessed: number;
   tags: string[];
 }
 
@@ -107,9 +109,10 @@ class CacheManager {
       if (memoryEntry) {
         const age = Date.now() - memoryEntry.timestamp;
         if (age < this.L1_TTL * 1000) {
+          memoryEntry.lastAccessed = Date.now();
           this.stats.hits++;
           this.stats.l1Hits++;
-          console.log(`✅ Cache HIT (L1): ${key} (age: ${age}ms)`);
+          cacheLogger.hit(key, "L1");
           return memoryEntry.data as T;
         } else {
           // Expired, remove from memory
@@ -132,7 +135,7 @@ class CacheManager {
 
           this.stats.hits++;
           this.stats.l2Hits++;
-          console.log(`✅ Cache HIT (L2): ${key}`);
+          cacheLogger.hit(key, "L2");
           return data;
         }
       } catch (error) {
@@ -142,7 +145,7 @@ class CacheManager {
     }
 
     this.stats.misses++;
-    console.log(`❌ Cache MISS: ${key}`);
+    cacheLogger.miss(key);
     return null;
   }
 
@@ -175,9 +178,7 @@ class CacheManager {
           }
         }
 
-        console.log(
-          `💾 Cache SET (L2): ${key} (TTL: ${ttl}s, Tags: [${tags.join(", ")}])`,
-        );
+        // L2 set logged at debug level only via structured logger
       } catch (error) {
         console.error(`❌ Redis SET error for ${key}:`, error);
         this.stats.errors++;
@@ -189,18 +190,27 @@ class CacheManager {
    * Set memory cache with LRU eviction
    */
   private setMemoryCache<T>(key: string, data: T, tags: string[]): void {
-    // LRU eviction: if cache is full, remove oldest entry
+    // True LRU eviction: if cache is full, remove least recently accessed entry
     if (this.memoryCache.size >= this.MAX_MEMORY_ENTRIES) {
-      const firstKey = this.memoryCache.keys().next().value;
-      if (firstKey) {
-        this.memoryCache.delete(firstKey);
+      let oldestKey: string | null = null;
+      let oldestTime = Infinity;
+      for (const [k, v] of this.memoryCache.entries()) {
+        if (v.lastAccessed < oldestTime) {
+          oldestTime = v.lastAccessed;
+          oldestKey = k;
+        }
+      }
+      if (oldestKey) {
+        this.memoryCache.delete(oldestKey);
         this.stats.evictions++;
       }
     }
 
+    const now = Date.now();
     this.memoryCache.set(key, {
       data,
-      timestamp: Date.now(),
+      timestamp: now,
+      lastAccessed: now,
       tags,
     });
   }
@@ -210,8 +220,6 @@ class CacheManager {
    * Useful for invalidating related data (e.g., all "articles" cache)
    */
   async invalidateByTag(tag: string): Promise<void> {
-    console.log(`🗑️  Invalidating cache by tag: ${tag}`);
-
     // Invalidate L1 (memory)
     for (const [key, entry] of this.memoryCache.entries()) {
       if (entry.tags.includes(tag)) {
@@ -230,10 +238,8 @@ class CacheManager {
           }
           await pipeline.exec();
           await this.redis.del(`cache:tag:${tag}`);
-          console.log(
-            `🗑️  Invalidated ${keys.length} cache entries for tag: ${tag}`,
-          );
         }
+        cacheLogger.invalidate(tag, keys.length);
       } catch (error) {
         console.error(`❌ Redis invalidateByTag error for ${tag}:`, error);
         this.stats.errors++;
@@ -246,8 +252,6 @@ class CacheManager {
    * USE WITH CAUTION: Can be slow on large Redis instances
    */
   async invalidateByPattern(pattern: string): Promise<void> {
-    console.log(`🗑️  Invalidating cache by pattern: ${pattern}`);
-
     // Invalidate L1 (memory) - simple prefix match
     for (const key of this.memoryCache.keys()) {
       const simplePattern = pattern.replace(/\*/g, "");
@@ -262,10 +266,8 @@ class CacheManager {
         const keys = await this.scanKeys(`cache:${pattern}`);
         if (keys.length > 0) {
           await this.redis.del(...keys);
-          console.log(
-            `🗑️  Invalidated ${keys.length} cache entries for pattern: ${pattern}`,
-          );
         }
+        cacheLogger.invalidate(pattern, keys.length);
       } catch (error) {
         console.error(
           `❌ Redis invalidateByPattern error for ${pattern}:`,
@@ -280,7 +282,7 @@ class CacheManager {
    * Clear all cache (both L1 and L2)
    */
   async clearAll(): Promise<void> {
-    console.log("🗑️  Clearing all cache");
+    cacheLogger.invalidate("*", 0);
 
     // Clear L1
     this.memoryCache.clear();
@@ -291,7 +293,6 @@ class CacheManager {
         const keys = await this.scanKeys("cache:*");
         if (keys.length > 0) {
           await this.redis.del(...keys);
-          console.log(`🗑️  Cleared ${keys.length} Redis cache entries`);
         }
       } catch (error) {
         console.error("❌ Redis clearAll error:", error);

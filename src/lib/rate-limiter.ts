@@ -57,7 +57,11 @@ export class RateLimiter {
       const pipeline = redis.pipeline();
       pipeline.zremrangebyscore(key, 0, windowStart);
       pipeline.zcard(key);
-      pipeline.zadd(key, now, `${now}:${Math.random().toString(36).slice(2, 8)}`);
+      pipeline.zadd(
+        key,
+        now,
+        `${now}:${Math.random().toString(36).slice(2, 8)}`,
+      );
       pipeline.expire(key, Math.ceil(config.windowMs / 1000));
 
       const results = await pipeline.exec();
@@ -86,7 +90,10 @@ export class RateLimiter {
 
       return result;
     } catch (error) {
-      console.error("[Rate Limit] Redis error, falling back to memory:", (error as Error).message);
+      console.error(
+        "[Rate Limit] Redis error, falling back to memory:",
+        (error as Error).message,
+      );
       return this.checkInMemory(identifier, config);
     }
   }
@@ -266,5 +273,95 @@ export function createRateLimitResponse(result: RateLimitResult): Response {
         ...createRateLimitHeaders(result),
       },
     },
+  );
+}
+
+// ============================================
+// Legacy rate-limit helpers (migrated from rate-limit.ts)
+// ============================================
+
+interface SimplifiedRateLimitResult {
+  success: boolean;
+  remaining: number;
+  resetInSeconds: number;
+}
+
+/**
+ * Simple Redis-based rate limiting using INCR + EXPIRE pattern
+ * Used by TTS and admin settings routes
+ */
+export async function checkSimpleRateLimit(
+  identifier: string,
+  limit: number,
+  windowSeconds: number,
+): Promise<SimplifiedRateLimitResult> {
+  const redis = (await import("@/lib/redis")).getRedis();
+
+  if (!redis) {
+    return { success: true, remaining: limit, resetInSeconds: 0 };
+  }
+
+  const key = `rate_limit:${identifier}`;
+
+  try {
+    const multi = redis.multi();
+    multi.incr(key);
+    multi.ttl(key);
+
+    const results = await multi.exec();
+    if (!results) {
+      return { success: true, remaining: limit, resetInSeconds: 0 };
+    }
+
+    const currentCount = results[0][1] as number;
+    let ttl = results[1][1] as number;
+
+    if (ttl === -1) {
+      await redis.expire(key, windowSeconds);
+      ttl = windowSeconds;
+    }
+
+    return {
+      success: currentCount <= limit,
+      remaining: Math.max(0, limit - currentCount),
+      resetInSeconds: ttl,
+    };
+  } catch {
+    return { success: true, remaining: limit, resetInSeconds: 0 };
+  }
+}
+
+/**
+ * Get simple rate limit headers for HTTP response
+ */
+export function getSimpleRateLimitHeaders(
+  result: SimplifiedRateLimitResult,
+  limit: number,
+): Record<string, string> {
+  return {
+    "X-RateLimit-Limit": limit.toString(),
+    "X-RateLimit-Remaining": result.remaining.toString(),
+    "X-RateLimit-Reset": result.resetInSeconds.toString(),
+  };
+}
+
+// ============================================
+// TTS-specific rate limit configuration
+// ============================================
+export const TTS_RATE_LIMIT = {
+  limit: 20,
+  windowSeconds: 60,
+} as const;
+
+/**
+ * Check TTS-specific rate limit for an IP
+ */
+export async function checkTTSRateLimit(
+  ip: string,
+): Promise<SimplifiedRateLimitResult> {
+  return checkSimpleRateLimit(
+    `tts:${ip}`,
+    TTS_RATE_LIMIT.limit,
+    TTS_RATE_LIMIT.windowSeconds,
   );
 }
