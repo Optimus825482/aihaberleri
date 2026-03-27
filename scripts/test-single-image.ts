@@ -13,6 +13,7 @@ const DEEPSEEK_API_URL =
   process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1";
 const POLLINATIONS_API_KEY =
   process.env.POLLINATIONS_API_KEY || "pk_sET1VlYd117D84BM";
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 const prisma = new PrismaClient();
 
@@ -179,6 +180,27 @@ RETURN ONLY THE PROMPT.`,
   }
 }
 
+async function fetchFromPollinations(prompt: string): Promise<Buffer> {
+  const encodedPrompt = encodeURIComponent(prompt);
+  const params = new URLSearchParams({
+    width: "1200",
+    height: "630",
+    model: "flux",
+    enhance: "true",
+  });
+  const imageUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?${params.toString()}`;
+  console.log(`🔗 Pollinations URL: ${imageUrl.substring(0, 120)}...`);
+  const resp = await axios.get(imageUrl, {
+    responseType: "arraybuffer",
+    timeout: 120000,
+    headers: {
+      Accept: "image/*",
+      Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+    },
+  });
+  return Buffer.from(resp.data);
+}
+
 async function main() {
   console.log("🧪 Tek makale test — prompt üret + görsel indir\n");
 
@@ -216,30 +238,41 @@ async function main() {
   );
   console.log(`📝 Prompt: ${prompt}\n`);
 
-  // 2. Pollinations'tan görsel al
-  console.log("🖼️  Pollinations'tan görsel alınıyor...");
-  const encodedPrompt = encodeURIComponent(prompt);
-  const params = new URLSearchParams({
-    width: "1200",
-    height: "630",
-    model: "flux",
-    enhance: "true",
-  });
+  // 2. Görsel al (Gemini primary, Pollinations fallback)
+  console.log("🖼️  Görsel üretiliyor...");
+  let buffer: Buffer;
 
-  const imageUrl = `https://gen.pollinations.ai/image/${encodedPrompt}?${params.toString()}`;
-  console.log(`🔗 URL: ${imageUrl.substring(0, 120)}...`);
-
-  const resp = await axios.get(imageUrl, {
-    responseType: "arraybuffer",
-    timeout: 120000,
-    headers: {
-      Accept: "image/*",
-      Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
-    },
-  });
-
-  const buffer = Buffer.from(resp.data);
-  console.log(`📦 İndirilen: ${(buffer.length / 1024).toFixed(0)} KB`);
+  if (GOOGLE_API_KEY) {
+    try {
+      console.log("🤖 Gemini Nano Banana deneniyor...");
+      const geminiRes = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GOOGLE_API_KEY}`,
+        {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseModalities: ["IMAGE"],
+            imageConfig: { aspectRatio: "16:9" },
+          },
+        },
+        { timeout: 30000, headers: { "Content-Type": "application/json" } },
+      );
+      const parts = geminiRes.data?.candidates?.[0]?.content?.parts || [];
+      const imgPart = parts.find((p: any) => p.inlineData?.data);
+      if (imgPart) {
+        buffer = Buffer.from(imgPart.inlineData.data, "base64");
+        console.log(`✅ Gemini: ${(buffer.length / 1024).toFixed(0)} KB`);
+      } else {
+        throw new Error("Gemini returned no image");
+      }
+    } catch (geminiErr: any) {
+      console.warn(
+        `⚠️ Gemini failed: ${geminiErr.message}, trying Pollinations...`,
+      );
+      buffer = await fetchFromPollinations(prompt);
+    }
+  } else {
+    buffer = await fetchFromPollinations(prompt);
+  }
 
   // 3. Locale kaydet
   const outPath = `scripts/test-image-${article.slug.substring(0, 40)}.png`;

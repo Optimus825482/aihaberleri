@@ -11,6 +11,9 @@
 
 import { createHash } from "crypto";
 import { getRedis } from "@/lib/redis";
+import { createModuleLogger } from "@/lib/agent-log-stream";
+
+const imageLog = createModuleLogger("image");
 
 interface PollinationsOptions {
   width?: number;
@@ -189,11 +192,11 @@ async function getCachedImage(prompt: string): Promise<string | null> {
     const cachedUrl = await redis.get(cacheKey);
 
     if (cachedUrl) {
-      console.log("🎯 Cache HIT for prompt:", prompt.substring(0, 50) + "...");
+      imageLog.success(`Cache HIT: ${prompt.substring(0, 50)}...`);
       return cachedUrl;
     }
 
-    console.log("🎯 Cache MISS for prompt:", prompt.substring(0, 50) + "...");
+    imageLog.debug(`Cache MISS: ${prompt.substring(0, 50)}...`);
     return null;
   } catch (error) {
     console.warn("⚠️ Redis cache read error:", error);
@@ -206,6 +209,12 @@ async function getCachedImage(prompt: string): Promise<string | null> {
  */
 async function cacheImageUrl(prompt: string, imageUrl: string): Promise<void> {
   try {
+    // Skip caching base64 data URLs — they're too large for Redis (500KB-2MB each)
+    // Gemini images go through image-optimizer → R2 upload, so caching the data URL is wasteful
+    if (imageUrl.startsWith("data:")) {
+      return;
+    }
+
     const redis = getRedis();
     if (!redis) return;
 
@@ -214,7 +223,6 @@ async function cacheImageUrl(prompt: string, imageUrl: string): Promise<void> {
     console.log("💾 Image cached for 7 days");
   } catch (error) {
     console.warn("⚠️ Redis cache write error:", error);
-    // Don't fail if caching fails
   }
 }
 
@@ -322,8 +330,8 @@ async function fetchGeminiImage(
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
-      console.warn(
-        `⚠️ Gemini ${response.status}: ${errorText.substring(0, 200)}`,
+      imageLog.warn(
+        `Gemini ${response.status}: ${errorText.substring(0, 200)}`,
       );
       return null;
     }
@@ -335,19 +343,21 @@ async function fetchGeminiImage(
       if (part.inlineData?.data) {
         const mime = part.inlineData.mimeType || "image/png";
         const dataUrl = `data:${mime};base64,${part.inlineData.data}`;
-        console.log("✅ Gemini Nano Banana image generated successfully");
+        imageLog.success(
+          `Gemini image generated (${Math.round((part.inlineData.data.length * 0.75) / 1024)}KB)`,
+        );
         return dataUrl;
       }
     }
 
-    console.warn("⚠️ Gemini returned no image data");
+    imageLog.warn("Gemini returned no image data");
     return null;
   } catch (error) {
     clearTimeout(timeoutId);
     if ((error as Error).name === "AbortError") {
-      console.warn("⚠️ Gemini request timed out (30s)");
+      imageLog.warn("Gemini request timed out (30s)");
     } else {
-      console.warn("⚠️ Gemini error:", (error as Error).message);
+      imageLog.warn(`Gemini error: ${(error as Error).message}`);
     }
     return null;
   }
@@ -392,7 +402,7 @@ export async function fetchPollinationsImage(
 
   // 💰 PAYMENT CIRCUIT BREAKER: Skip Pollinations entirely if payment failed recently
   if (isPollinationsPaymentBlocked()) {
-    console.log("⚡ Pollinations payment circuit OPEN — skipping to fallback");
+    imageLog.warn("Pollinations payment circuit OPEN — skipping to fallback");
   }
 
   // ============================================
@@ -406,9 +416,8 @@ export async function fetchPollinationsImage(
         return geminiUrl;
       }
     } catch (geminiError) {
-      console.warn(
-        "⚠️ Gemini failed, trying Pollinations:",
-        (geminiError as Error).message,
+      imageLog.warn(
+        `Gemini failed, trying Pollinations: ${(geminiError as Error).message}`,
       );
     }
   }
@@ -557,13 +566,13 @@ export async function fetchPollinationsImage(
             if (response.status === 402) {
               pollinationsPaymentFailed = true;
               pollinationsPaymentFailedAt = Date.now();
-              console.warn(
-                "💰 Pollinations payment circuit OPENED — will skip for 10 minutes",
+              imageLog.warn(
+                "Pollinations payment circuit OPENED — will skip for 10 minutes",
               );
               break; // Exit retry loop immediately
             }
 
-            console.warn(`⚠️ Trying anonymous fallback...`);
+            imageLog.warn("Trying anonymous fallback...");
             return await fetchPollinationsImageAnonymous(
               sanitizedPrompt,
               options,

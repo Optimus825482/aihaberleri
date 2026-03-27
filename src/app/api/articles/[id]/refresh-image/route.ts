@@ -103,7 +103,10 @@ export async function POST(
       }
 
       newImageUrl = candidateImageUrl;
-      console.log(`✅ Yeni görsel URL (${strategy.model}):`, newImageUrl);
+      const logUrl = newImageUrl.startsWith("data:")
+        ? `data:image/... (${Math.round((newImageUrl.length * 0.75) / 1024)}KB base64)`
+        : newImageUrl;
+      console.log(`✅ Yeni görsel URL (${strategy.model}):`, logUrl);
       break;
     }
 

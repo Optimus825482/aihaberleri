@@ -30,6 +30,9 @@ const DEEPSEEK_API_URL =
 const POLLINATIONS_API_KEY =
   process.env.POLLINATIONS_API_KEY || "pk_sET1VlYd117D84BM";
 const POLLINATIONS_GEN_URL = "https://gen.pollinations.ai/image";
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent`;
 
 const R2_ENDPOINT =
   process.env.R2_ENDPOINT ||
@@ -322,6 +325,43 @@ function buildFallbackPrompt(
 
 async function fetchImage(prompt: string): Promise<Buffer> {
   const cleanPrompt = prompt.replace(/[^\w\s,.-]/g, " ").substring(0, 200);
+
+  // ============================================
+  // PRIMARY: Gemini Nano Banana (free, ~500/day)
+  // ============================================
+  if (GOOGLE_API_KEY) {
+    try {
+      console.log(`🤖 Gemini generating: ${cleanPrompt.substring(0, 80)}...`);
+      const geminiRes = await axios.post(
+        `${GEMINI_API_URL}?key=${GOOGLE_API_KEY}`,
+        {
+          contents: [{ parts: [{ text: cleanPrompt }] }],
+          generationConfig: {
+            responseModalities: ["IMAGE"],
+            imageConfig: { aspectRatio: "16:9" },
+          },
+        },
+        { timeout: 30000, headers: { "Content-Type": "application/json" } },
+      );
+
+      const parts = geminiRes.data?.candidates?.[0]?.content?.parts || [];
+      for (const part of parts) {
+        if (part.inlineData?.data) {
+          console.log("✅ Gemini image generated successfully");
+          return Buffer.from(part.inlineData.data, "base64");
+        }
+      }
+      console.warn("⚠️ Gemini returned no image, falling back to Pollinations");
+    } catch (geminiErr: any) {
+      console.warn(
+        `⚠️ Gemini failed (${geminiErr.message}), falling back to Pollinations`,
+      );
+    }
+  }
+
+  // ============================================
+  // FALLBACK: Pollinations
+  // ============================================
   const encodedPrompt = encodeURIComponent(cleanPrompt);
 
   const params = new URLSearchParams({
@@ -337,7 +377,7 @@ async function fetchImage(prompt: string): Promise<Buffer> {
 
   const response = await axios.get(url, {
     responseType: "arraybuffer",
-    timeout: 120000, // 2 min timeout — Pollinations can be slow
+    timeout: 120000,
     headers: {
       Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
     },
