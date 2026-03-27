@@ -1,0 +1,16 @@
+<html>
+  <body>
+    <h1>FLUX.2 Pro Image Generation</h1>
+    <script src="https://js.puter.com/v2/"></script>
+    <script>
+      puter.ai
+        .txt2img("siyah jartiyer giymiş seksi ve çok güzel bir kadın", {
+          model: "black-forest-labs/flux.2-pro",
+          disable_safety_checker: true,
+        })
+        .then((imageElement) => {
+          document.body.appendChild(imageElement);
+        });
+    </script>
+  </body>
+</html>

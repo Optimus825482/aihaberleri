@@ -111,7 +111,11 @@ export class SEOAnalyzerAgent {
         throw new Error("Failed to parse SEO analysis response");
       }
 
-      const analysis: SEOAnalysis = JSON.parse(jsonMatch[0]);
+      // Clean control characters from LLM response before parsing
+      const cleanedJson = jsonMatch[0].replace(/[\x00-\x1F\x7F]/g, (ch) =>
+        ch === "\n" || ch === "\r" || ch === "\t" ? ch : " ",
+      );
+      const analysis: SEOAnalysis = JSON.parse(cleanedJson);
 
       this.metrics.endTime = Date.now();
       this.metrics.duration = this.metrics.endTime - this.metrics.startTime;

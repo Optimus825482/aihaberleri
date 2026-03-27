@@ -73,6 +73,10 @@ const POLLINATIONS_IMAGE_URL = "https://image.pollinations.ai/prompt"; // Legacy
 const POLLINATIONS_GEN_URL = "https://gen.pollinations.ai/image"; // New authenticated endpoint
 const PICSUM_URL = "https://picsum.photos";
 
+// Together.ai Configuration (Flux Schnell — free tier)
+const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
+const TOGETHER_API_URL = "https://api.together.xyz/v1/images/generations";
+
 // Cache Configuration
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const CACHE_KEY_PREFIX = "pollinations:image:";
@@ -152,6 +156,7 @@ export function isFallbackImageUrl(
     imageUrl.includes("picsum.photos") ||
     imageUrl.includes("/logos/og-image.png")
   );
+  // Note: Together.ai URLs (api.together.ai) are NOT fallback — they're real AI-generated images
 }
 
 export async function fetchFreeBackupImage(
@@ -272,6 +277,97 @@ export function generateImageUrl(
  *
  * OPTIMIZED: Reduced retry delays, better rate limit handling
  */
+// ============================================
+// TOGETHER.AI — Flux Schnell (free tier, server-side)
+// Returns image URL or null on failure
+// ============================================
+async function fetchTogetherImage(
+  prompt: string,
+  options: PollinationsOptions = {},
+): Promise<string | null> {
+  if (!TOGETHER_API_KEY) return null;
+
+  const { width = 1200, height = 630 } = options;
+
+  // Truncate prompt for Together.ai (max ~1000 chars)
+  const cleanPrompt =
+    prompt.length > 900 ? prompt.substring(0, 897) + "..." : prompt;
+
+  console.log(
+    `🤝 Together.ai Flux Schnell generating: ${cleanPrompt.substring(0, 80)}...`,
+  );
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+  try {
+    const response = await fetch(TOGETHER_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${TOGETHER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "black-forest-labs/FLUX.1-schnell-Free",
+        prompt: cleanPrompt,
+        width: Math.min(width, 1440),
+        height: Math.min(height, 1440),
+        steps: 4,
+        n: 1,
+        response_format: "url",
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      console.warn(
+        `⚠️ Together.ai ${response.status}: ${errorText.substring(0, 200)}`,
+      );
+      return null;
+    }
+
+    const data = await response.json();
+    const imageUrl = data?.data?.[0]?.url;
+
+    if (imageUrl) {
+      console.log("✅ Together.ai Flux Schnell image generated successfully");
+      return imageUrl;
+    }
+
+    console.warn("⚠️ Together.ai returned no image URL");
+    return null;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if ((error as Error).name === "AbortError") {
+      console.warn("⚠️ Together.ai request timed out (30s)");
+    } else {
+      console.warn("⚠️ Together.ai error:", (error as Error).message);
+    }
+    return null;
+  }
+}
+
+// ============================================
+// PAYMENT CIRCUIT BREAKER
+// 402 gelince 10 dakika boyunca direkt fallback'e düş, boşa retry yapma
+// ============================================
+let pollinationsPaymentFailed = false;
+let pollinationsPaymentFailedAt = 0;
+const PAYMENT_CIRCUIT_COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+
+function isPollinationsPaymentBlocked(): boolean {
+  if (!pollinationsPaymentFailed) return false;
+  if (Date.now() - pollinationsPaymentFailedAt > PAYMENT_CIRCUIT_COOLDOWN_MS) {
+    pollinationsPaymentFailed = false;
+    console.log("🔄 Pollinations payment circuit reset — retrying");
+    return false;
+  }
+  return true;
+}
+
 export async function fetchPollinationsImage(
   prompt: string,
   options: PollinationsOptions = {},
@@ -289,6 +385,36 @@ export async function fetchPollinationsImage(
   const cachedUrl = await getCachedImage(prompt);
   if (cachedUrl) {
     return cachedUrl;
+  }
+
+  // 💰 PAYMENT CIRCUIT BREAKER: Skip Pollinations entirely if payment failed recently
+  if (isPollinationsPaymentBlocked()) {
+    console.log("⚡ Pollinations payment circuit OPEN — skipping to fallback");
+  }
+
+  // ============================================
+  // PROVIDER 1: Together.ai (Flux Schnell — free tier, server-side)
+  // ============================================
+  if (TOGETHER_API_KEY) {
+    try {
+      const togetherUrl = await fetchTogetherImage(prompt, options);
+      if (togetherUrl) {
+        await cacheImageUrl(prompt, togetherUrl);
+        return togetherUrl;
+      }
+    } catch (togetherError) {
+      console.warn(
+        "⚠️ Together.ai failed, trying Pollinations:",
+        (togetherError as Error).message,
+      );
+    }
+  }
+
+  // ============================================
+  // PROVIDER 2: Pollinations (if not payment-blocked)
+  // ============================================
+  if (isPollinationsPaymentBlocked()) {
+    return await fetchFreeBackupImage(prompt, options);
   }
 
   // CRITICAL: Ensure no humans in prompt - add strong negative prompt
@@ -423,6 +549,17 @@ export async function fetchPollinationsImage(
             console.warn(
               `⚠️ Pollinations API ${response.status}: ${errorText.substring(0, 200)}`,
             );
+
+            // 402 = payment required — set circuit breaker, skip all retries
+            if (response.status === 402) {
+              pollinationsPaymentFailed = true;
+              pollinationsPaymentFailedAt = Date.now();
+              console.warn(
+                "💰 Pollinations payment circuit OPENED — will skip for 10 minutes",
+              );
+              break; // Exit retry loop immediately
+            }
+
             console.warn(`⚠️ Trying anonymous fallback...`);
             return await fetchPollinationsImageAnonymous(
               sanitizedPrompt,
