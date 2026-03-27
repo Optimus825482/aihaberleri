@@ -8,30 +8,12 @@ import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 
 export const maxDuration = 120;
 
-const IMAGE_GENERATION_STRATEGIES = [
-  {
-    model: "flux" as const,
-    width: 1200,
-    height: 630,
-    requestTimeoutMs: 45000,
-    label: "primary",
-  },
-  {
-    model: "zimage" as const,
-    width: 1200,
-    height: 630,
-    requestTimeoutMs: 30000,
-    label: "fallback-model",
-  },
-];
-
-// POST - Refresh article image
+// POST - Refresh article image with improved prompt
 export async function POST(
   request: Request,
   { params }: { params: { id: string } },
 ) {
   try {
-    // Check authentication - support both NextAuth and admin-session JWT
     const [session, adminSession] = await Promise.all([
       auth(),
       getAdminSession(),
@@ -42,15 +24,10 @@ export async function POST(
 
     const { id } = params;
 
-    // Get article
     const article = await db.article.findUnique({
       where: { id },
       include: {
-        category: {
-          select: {
-            name: true,
-          },
-        },
+        category: { select: { name: true } },
       },
     });
 
@@ -58,69 +35,37 @@ export async function POST(
       return NextResponse.json({ error: "Haber bulunamadı" }, { status: 404 });
     }
 
-    console.log("🎨 Yeni görsel oluşturuluyor:", article.title);
+    console.log("🎨 Görsel yenileniyor:", article.title.substring(0, 60));
 
-    // Generate AI image prompt using DeepSeek
+    // Generate a fresh, improved image prompt
     const imagePrompt = await generateImagePrompt(
       article.title,
       article.content,
       article.category.name,
     );
-    console.log("📝 Görsel prompt:", imagePrompt);
+    console.log("📝 Yeni prompt:", imagePrompt.substring(0, 120));
 
-    let newImageUrl: string | null = null;
+    // Use the full provider chain: AI Horde → Pollinations → Gemini → Picsum
+    const newImageUrl = await fetchPollinationsImage(imagePrompt, {
+      width: 1200,
+      height: 630,
+      model: "flux",
+      enhance: true,
+      nologo: true,
+    });
 
-    for (const strategy of IMAGE_GENERATION_STRATEGIES) {
-      let candidateImageUrl: string;
-
-      try {
-        candidateImageUrl = await fetchPollinationsImage(
-          imagePrompt,
-          {
-            width: strategy.width,
-            height: strategy.height,
-            model: strategy.model,
-            enhance: true,
-            nologo: true,
-            allowBackupFallback: false,
-          },
-          1,
-          strategy.requestTimeoutMs,
-        );
-      } catch (error) {
-        console.warn(
-          `⚠️ Pollinations ${strategy.model} (${strategy.label}) isteği başarısız oldu`,
-          error,
-        );
-        continue;
-      }
-
-      if (isFallbackImageUrl(candidateImageUrl)) {
-        console.warn(
-          `⚠️ Pollinations ${strategy.model} (${strategy.label}) gerçek görsel üretemedi`,
-        );
-        continue;
-      }
-
-      newImageUrl = candidateImageUrl;
-      const logUrl = newImageUrl.startsWith("data:")
-        ? `data:image/... (${Math.round((newImageUrl.length * 0.75) / 1024)}KB base64)`
-        : newImageUrl;
-      console.log(`✅ Yeni görsel URL (${strategy.model}):`, logUrl);
-      break;
-    }
-
-    if (!newImageUrl) {
+    if (!newImageUrl || isFallbackImageUrl(newImageUrl)) {
       return NextResponse.json(
         {
           success: false,
           error:
-            "Görsel servisi şu anda gerçek görsel üretemedi. Lütfen daha sonra tekrar deneyin.",
+            "Görsel servisleri şu anda gerçek görsel üretemedi. Lütfen tekrar deneyin.",
         },
         { status: 502 },
       );
     }
 
+    // Optimize and generate multiple sizes
     let imageSizes = {
       large: newImageUrl,
       medium: newImageUrl,
@@ -131,13 +76,10 @@ export async function POST(
     try {
       imageSizes = await optimizeAndGenerateSizes(newImageUrl, article.slug);
     } catch (optimizeError) {
-      console.warn(
-        "⚠️ Görsel optimizasyonu başarısız, orijinal URL kullanılacak",
-        optimizeError,
-      );
+      console.warn("⚠️ Görsel optimizasyonu başarısız:", optimizeError);
     }
 
-    // Update article
+    // Update article with new images and prompt
     const updatedArticle = await db.article.update({
       where: { id },
       data: {
@@ -148,11 +90,19 @@ export async function POST(
       },
     });
 
+    const logUrl = imageSizes.large.startsWith("data:")
+      ? `data:image/... (base64)`
+      : imageSizes.large.substring(0, 80);
+    console.log(`✅ Görsel güncellendi: ${logUrl}`);
+
     return NextResponse.json({
       success: true,
-      usedFallback: false,
       message: "Görsel başarıyla güncellendi",
-      data: updatedArticle,
+      prompt: imagePrompt,
+      data: {
+        id: updatedArticle.id,
+        imageUrl: updatedArticle.imageUrl,
+      },
     });
   } catch (error) {
     console.error("Görsel güncelleme hatası:", error);
