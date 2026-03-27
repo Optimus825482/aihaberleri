@@ -186,6 +186,18 @@ export class ContentValidatorAgent extends BaseAgent<
       reasons.push("english_title");
     }
 
+    // ── 2b. NON-LATIN CHARACTER CHECK (Chinese, Japanese, Korean etc.) ──
+    if (
+      /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(sc.tr.title)
+    ) {
+      reasons.push("non_latin_title_tr");
+    }
+    if (
+      /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(sc.en.title)
+    ) {
+      reasons.push("non_latin_title_en");
+    }
+
     // ── 3. DICTIONARY CONTENT CHECK ──
     if (this.hasDictionaryContent(sc.tr.content)) {
       reasons.push("dictionary_content");

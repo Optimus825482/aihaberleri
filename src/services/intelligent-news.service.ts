@@ -939,7 +939,7 @@ ${sourcesText}
    - Teknik terimleri sadeleştir
 
 4. **YAPI VE SEO KURALLARI (KRİTİK):**
-   - **Başlık (title):** 50-70 karakter. Ana anahtar kelime İLK 5 kelimede. Mümkünse yıl veya rakam ekle.
+   - **Başlık (title):** 50-70 karakter. Ana anahtar kelime İLK 5 kelimede. Başlığa yıl (2025, 2026 vb.) EKLEME — sadece haberin konusu doğrudan bir yıla atıfta bulunuyorsa kullan. Başlıkta Çince, Japonca, Korece veya Latin dışı karakterler ASLA kullanma.
    - **Meta Başlık (metaTitle):** 50-60 karakter. Google SERP için optimize. Ana anahtar kelimeyi başa koy.
    - Özet: 2-3 cümle, haberin özü, ana anahtar kelimeyi içermeli
    - İçerik: HTML formatlı (<p>, <h2>, <ul>), minimum 500 kelime

@@ -28,10 +28,7 @@ import axios from "axios";
 import type { UniqueArticle } from "./duplicate-detector.agent";
 // Re-enrichment path — extra services for rejected articles
 import { exaSearch } from "@/lib/exa";
-import {
-  firecrawlScrape,
-  isFirecrawlAvailable,
-} from "@/lib/firecrawl";
+import { firecrawlScrape, isFirecrawlAvailable } from "@/lib/firecrawl";
 
 export interface EnrichedArticle extends UniqueArticle {
   hasNoExternalSources?: boolean; // true when SearXNG+Jina+Tavily returned 0 results — hallucination risk flag
@@ -788,39 +785,38 @@ export class ContentEnricherAgent extends BaseAgent<
     // ─────────────────────────────────────────────────────────────────────
     // PARALLEL SEARCH LAYERS (run simultaneously to fit 65s budget)
     // ─────────────────────────────────────────────────────────────────────
-    const [searxResults, exaResults] =
-      await Promise.allSettled([
-        // ── Layer 1: SearXNG wide-net (4 queries, month range) ────────────
-        (async () => {
-          const queries = [
-            keywords,
-            `${keywords} news`,
-            `${keywords} AI`,
-            `${article.title.substring(0, 80)}`,
-          ].filter(Boolean);
+    const [searxResults, exaResults] = await Promise.allSettled([
+      // ── Layer 1: SearXNG wide-net (4 queries, month range) ────────────
+      (async () => {
+        const queries = [
+          keywords,
+          `${keywords} news`,
+          `${keywords} AI`,
+          `${article.title.substring(0, 80)}`,
+        ].filter(Boolean);
 
-          const results = await Promise.all(
-            queries.map((q) =>
-              searxngSearch(q, {
-                count: 10,
-                time_range: "month", // wider than normal "week"
-                categories: "general,news",
-              }).catch(() => [] as any[]),
-            ),
-          );
-          return results.flat();
-        })(),
+        const results = await Promise.all(
+          queries.map((q) =>
+            searxngSearch(q, {
+              count: 10,
+              time_range: "month", // wider than normal "week"
+              categories: "general,news",
+            }).catch(() => [] as any[]),
+          ),
+        );
+        return results.flat();
+      })(),
 
-        // ── Layer 2: Exa neural (semantic AI search) ─────────────────────
-        (process.env.EXA_API_KEY
-          ? exaSearch(keywords, {
-              num_results: 8,
-              use_autoprompt: true,
-              type: "neural",
-            })
-          : Promise.resolve([])
-        ).catch(() => []),
-      ]);
+      // ── Layer 2: Exa neural (semantic AI search) ─────────────────────
+      (process.env.EXA_API_KEY
+        ? exaSearch(keywords, {
+            num_results: 8,
+            use_autoprompt: true,
+            type: "neural",
+          })
+        : Promise.resolve([])
+      ).catch(() => []),
+    ]);
 
     // ── Process SearXNG ──────────────────────────────────────────────────
     if (searxResults.status === "fulfilled") {
@@ -868,9 +864,7 @@ export class ContentEnricherAgent extends BaseAgent<
           seenUrls.add(norm); // prevent double-extract
         }
       }
-      this.logger.info(
-        `🤖 Exa neural: ${exaResults.value.length} results`,
-      );
+      this.logger.info(`🤖 Exa neural: ${exaResults.value.length} results`);
     } else if (exaResults.status === "rejected") {
       this.logger.warn(`⚠️ Exa search failed: ${exaResults.reason}`);
     }
@@ -917,7 +911,10 @@ export class ContentEnricherAgent extends BaseAgent<
     // Scrapes the original article URL — highest-relevance, JS-rendered.
     // ─────────────────────────────────────────────────────────────────────
     const MIN_SOURCES_BEFORE_FIRECRAWL = 4;
-    if (sources.length < MIN_SOURCES_BEFORE_FIRECRAWL && isFirecrawlAvailable()) {
+    if (
+      sources.length < MIN_SOURCES_BEFORE_FIRECRAWL &&
+      isFirecrawlAvailable()
+    ) {
       this.logger.warn(
         `🔥 Insufficient sources (${sources.length}/${MIN_SOURCES_BEFORE_FIRECRAWL}), trying Firecrawl as LAST RESORT for original URL...`,
       );
@@ -1171,6 +1168,12 @@ Sadece HABER içeriği yaz — ne oldu, neden önemli, sektöre etkisi ne.`;
             retryInstructions = `
 
 ⚠️ ÖNEMLİ: Yanıtını MUTLAKA geçerli JSON formatında ver. Ekstra metin ekleme, sadece JSON objesi döndür.`;
+          } else if (lastRejectionReason === "non_latin_title") {
+            retryInstructions = `
+
+⚠️ KRİTİK UYARI: Önceki denemende Çince/Japonca/Korece karakterler içeren başlık ürettin!
+Başlıkta SADECE Türkçe ve Latin harfler kullan. Çince (の, 石, 智 vb.), Japonca, Korece karakter ASLA kullanma.
+Kaynak haberdeki yabancı isimler varsa Türkçe'ye çevir veya Latin harflerle yaz.`;
           }
         }
 
@@ -1206,7 +1209,7 @@ ${retrySourcesText}
 5. Benzersiz Anlatım: Her cümlen özgün olsun
 
 ### YAPI VE SEO KURALLARI (KRİTİK — HEPSİNE UY):
-- **Başlık (title):** 50-70 karakter. Ana anahtar kelime İLK 5 kelimede olmalı. Mümkünse yıl veya rakam ekle (CTR artırır).
+- **Başlık (title):** 50-70 karakter. Ana anahtar kelime İLK 5 kelimede olmalı. Başlığa yıl (2025, 2026 vb.) EKLEME — sadece haberin konusu doğrudan bir yıla atıfta bulunuyorsa kullan. Başlıkta Çince, Japonca, Korece veya Latin dışı karakterler ASLA kullanma.
 - **Meta Başlık (metaTitle):** 50-60 karakter. Google SERP için optimize. Ana anahtar kelimeyi başa koy. Başlıktan farklı olabilir, daha kısa ve öz.
 - **Özet (excerpt):** 2-3 cümlelik giriş, ana anahtar kelimeyi içermeli.
 - **Meta Açıklama (metaDescription):** 120-155 karakter. CTA fiili ekle ("Keşfet", "Öğren", "İncele"). Ana anahtar kelimeyi doğal şekilde entegre et.
@@ -1258,6 +1261,20 @@ JSON formatında yanıt ver:
             lastRejectionReason = "english_title";
             trContent = null;
             continue; // Retry with stronger Turkish prompt
+          }
+
+          // 🛡️ Check for non-Latin characters (Chinese, Japanese, Korean)
+          if (
+            /[\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff\uac00-\ud7af]/.test(
+              trContent.title,
+            )
+          ) {
+            this.logger.warn(
+              `🔄 LLM returned title with non-Latin chars (attempt ${trAttempt + 1}): "${trContent.title.substring(0, 60)}"`,
+            );
+            lastRejectionReason = "non_latin_title";
+            trContent = null;
+            continue;
           }
         }
 
@@ -1332,7 +1349,7 @@ ${sourcesText}
 3. Professional tone: Objective, neutral, third-person
 
 ### STRUCTURE & SEO RULES (CRITICAL — FOLLOW ALL):
-- **Title (title):** 50-70 chars. Primary keyword in FIRST 5 words. Include year or number if possible (boosts CTR).
+- **Title (title):** 50-70 chars. Primary keyword in FIRST 5 words. Do NOT add year numbers (2025, 2026 etc.) unless the news specifically references that year. NEVER use Chinese, Japanese, Korean or non-Latin characters in titles.
 - **Meta Title (metaTitle):** 50-60 chars. Optimized for Google SERP. Put primary keyword first. Can differ from title, shorter and more concise.
 - **Excerpt:** 2-3 sentences, must include primary keyword.
 - **Meta Description (metaDescription):** 120-155 chars. Add CTA verb ("Discover", "Learn", "Explore"). Naturally integrate primary keyword.
