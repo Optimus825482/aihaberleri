@@ -44,6 +44,16 @@ async function downloadImage(
   const BASE_DELAY = 3000; // 3 seconds base delay
 
   try {
+    // Handle base64 data URLs (from Gemini Nano Banana)
+    if (url.startsWith("data:")) {
+      const base64Match = url.match(/^data:[^;]+;base64,(.+)$/);
+      if (base64Match) {
+        console.log("📥 Decoding base64 data URL (Gemini image)");
+        return Buffer.from(base64Match[1], "base64");
+      }
+      throw new Error("Invalid data URL format");
+    }
+
     // Pre-request delay for Pollinations to avoid 429 on parallel downloads
     if (url.includes("pollinations.ai") && attempt === 1) {
       const jitter = Math.floor(Math.random() * 500);

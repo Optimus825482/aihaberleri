@@ -74,8 +74,14 @@ const POLLINATIONS_GEN_URL = "https://gen.pollinations.ai/image"; // New authent
 const PICSUM_URL = "https://picsum.photos";
 
 // Together.ai Configuration (Flux Schnell — free tier)
-const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
-const TOGETHER_API_URL = "https://api.together.xyz/v1/images/generations";
+// DEPRECATED: Together.ai artık ücretsiz değil, minimum $5 kredi gerekiyor
+// const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
+// const TOGETHER_API_URL = "https://api.together.xyz/v1/images/generations";
+
+// Gemini Image Generation (Nano Banana — free tier, ~500 images/day)
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent`;
 
 // Cache Configuration
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
@@ -157,6 +163,7 @@ export function isFallbackImageUrl(
     imageUrl.includes("/logos/og-image.png")
   );
   // Note: Together.ai URLs (api.together.ai) are NOT fallback — they're real AI-generated images
+  // Note: Gemini data URLs (data:image/...) are NOT fallback — they're real AI-generated images
 }
 
 export async function fetchFreeBackupImage(
@@ -278,43 +285,35 @@ export function generateImageUrl(
  * OPTIMIZED: Reduced retry delays, better rate limit handling
  */
 // ============================================
-// TOGETHER.AI — Flux Schnell (free tier, server-side)
-// Returns image URL or null on failure
+// GEMINI IMAGE GENERATION — Nano Banana (free tier, ~500 images/day)
+// Returns data URL (base64) or null on failure
 // ============================================
-async function fetchTogetherImage(
+async function fetchGeminiImage(
   prompt: string,
   options: PollinationsOptions = {},
 ): Promise<string | null> {
-  if (!TOGETHER_API_KEY) return null;
+  if (!GOOGLE_API_KEY) return null;
 
-  const { width = 1200, height = 630 } = options;
-
-  // Truncate prompt for Together.ai (max ~1000 chars)
   const cleanPrompt =
     prompt.length > 900 ? prompt.substring(0, 897) + "..." : prompt;
 
   console.log(
-    `🤝 Together.ai Flux Schnell generating: ${cleanPrompt.substring(0, 80)}...`,
+    `🤖 Gemini Nano Banana generating: ${cleanPrompt.substring(0, 80)}...`,
   );
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const response = await fetch(TOGETHER_API_URL, {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GOOGLE_API_KEY}`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${TOGETHER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "black-forest-labs/FLUX.1-schnell-Free",
-        prompt: cleanPrompt,
-        width: Math.min(width, 1440),
-        height: Math.min(height, 1440),
-        steps: 4,
-        n: 1,
-        response_format: "url",
+        contents: [{ parts: [{ text: cleanPrompt }] }],
+        generationConfig: {
+          responseModalities: ["IMAGE"],
+          imageConfig: { aspectRatio: "16:9" },
+        },
       }),
       signal: controller.signal,
     });
@@ -324,27 +323,31 @@ async function fetchTogetherImage(
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");
       console.warn(
-        `⚠️ Together.ai ${response.status}: ${errorText.substring(0, 200)}`,
+        `⚠️ Gemini ${response.status}: ${errorText.substring(0, 200)}`,
       );
       return null;
     }
 
     const data = await response.json();
-    const imageUrl = data?.data?.[0]?.url;
+    const parts = data?.candidates?.[0]?.content?.parts || [];
 
-    if (imageUrl) {
-      console.log("✅ Together.ai Flux Schnell image generated successfully");
-      return imageUrl;
+    for (const part of parts) {
+      if (part.inlineData?.data) {
+        const mime = part.inlineData.mimeType || "image/png";
+        const dataUrl = `data:${mime};base64,${part.inlineData.data}`;
+        console.log("✅ Gemini Nano Banana image generated successfully");
+        return dataUrl;
+      }
     }
 
-    console.warn("⚠️ Together.ai returned no image URL");
+    console.warn("⚠️ Gemini returned no image data");
     return null;
   } catch (error) {
     clearTimeout(timeoutId);
     if ((error as Error).name === "AbortError") {
-      console.warn("⚠️ Together.ai request timed out (30s)");
+      console.warn("⚠️ Gemini request timed out (30s)");
     } else {
-      console.warn("⚠️ Together.ai error:", (error as Error).message);
+      console.warn("⚠️ Gemini error:", (error as Error).message);
     }
     return null;
   }
@@ -393,19 +396,19 @@ export async function fetchPollinationsImage(
   }
 
   // ============================================
-  // PROVIDER 1: Together.ai (Flux Schnell — free tier, server-side)
+  // PROVIDER 1: Gemini Nano Banana (free tier, ~500 images/day)
   // ============================================
-  if (TOGETHER_API_KEY) {
+  if (GOOGLE_API_KEY) {
     try {
-      const togetherUrl = await fetchTogetherImage(prompt, options);
-      if (togetherUrl) {
-        await cacheImageUrl(prompt, togetherUrl);
-        return togetherUrl;
+      const geminiUrl = await fetchGeminiImage(prompt, options);
+      if (geminiUrl) {
+        await cacheImageUrl(prompt, geminiUrl);
+        return geminiUrl;
       }
-    } catch (togetherError) {
+    } catch (geminiError) {
       console.warn(
-        "⚠️ Together.ai failed, trying Pollinations:",
-        (togetherError as Error).message,
+        "⚠️ Gemini failed, trying Pollinations:",
+        (geminiError as Error).message,
       );
     }
   }

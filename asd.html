@@ -1,16 +1,204 @@
-<html>
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gemini Image Generation Test</title>
+    <style>
+      body {
+        font-family: system-ui;
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+        background: #1a1a2e;
+        color: #eee;
+      }
+      h1 {
+        color: #4285f4;
+      }
+      .status {
+        padding: 12px;
+        border-radius: 8px;
+        margin: 10px 0;
+        font-family: monospace;
+        font-size: 13px;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+      .loading {
+        background: #16213e;
+        border: 1px solid #0f3460;
+      }
+      .success {
+        background: #0a3d0a;
+        border: 1px solid #1a8c1a;
+      }
+      .error {
+        background: #3d0a0a;
+        border: 1px solid #8c1a1a;
+      }
+      img {
+        max-width: 100%;
+        border-radius: 12px;
+        margin-top: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      }
+      button {
+        background: #4285f4;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        margin: 6px 4px;
+      }
+      button:hover {
+        background: #3367d6;
+      }
+      button:disabled {
+        background: #555;
+        cursor: not-allowed;
+      }
+      #timer {
+        color: #aaa;
+        font-size: 13px;
+      }
+      .key-input {
+        background: #16213e;
+        border: 1px solid #0f3460;
+        color: #eee;
+        padding: 10px;
+        border-radius: 8px;
+        width: 400px;
+        font-family: monospace;
+      }
+      label {
+        display: block;
+        margin: 12px 0 4px;
+        color: #aaa;
+      }
+    </style>
+  </head>
   <body>
-    <h1>FLUX.2 Pro Image Generation</h1>
-    <script src="https://js.puter.com/v2/"></script>
+    <h1>🎨 Gemini Nano Banana — Image Generation Test</h1>
+    <p>
+      Model: <code>gemini-2.5-flash-image</code> (ücretsiz, günde ~500 görsel)
+    </p>
+
+    <label>Google API Key:</label>
+    <input type="text" id="apiKey" class="key-input" placeholder="AIzaSy..." />
+
+    <div style="margin-top: 16px">
+      <button
+        onclick="
+          generate(
+            'A futuristic AI news website dashboard with holographic displays, dark theme, no people, no humans, empty scene',
+          )
+        "
+      >
+        Test 1: AI Dashboard
+      </button>
+      <button
+        onclick="
+          generate(
+            'Aerial view of a crumbling 1990s server rack buried in overgrown silicon forest, no people, no humans, empty scene',
+          )
+        "
+      >
+        Test 2: Server Rack
+      </button>
+      <button
+        onclick="
+          generate(
+            'A sleek robot hand holding a glowing newspaper, cyberpunk style, neon lights, no people, no humans, empty scene',
+          )
+        "
+      >
+        Test 3: Robot News
+      </button>
+    </div>
+
+    <div id="status"></div>
+    <div id="timer"></div>
+    <div id="result"></div>
+
     <script>
-      puter.ai
-        .txt2img("siyah jartiyer giymiş seksi ve çok güzel bir kadın", {
-          model: "black-forest-labs/flux.2-pro",
-          disable_safety_checker: true,
-        })
-        .then((imageElement) => {
-          document.body.appendChild(imageElement);
-        });
+      async function generate(prompt) {
+        const apiKey = document.getElementById("apiKey").value.trim();
+        if (!apiKey) {
+          alert("API Key gir");
+          return;
+        }
+
+        const statusEl = document.getElementById("status");
+        const timerEl = document.getElementById("timer");
+        const resultEl = document.getElementById("result");
+
+        document.querySelectorAll("button").forEach((b) => (b.disabled = true));
+        statusEl.className = "status loading";
+        statusEl.textContent = "⏳ Gemini generating...";
+        resultEl.innerHTML = "";
+
+        const start = Date.now();
+        const timerInterval = setInterval(() => {
+          timerEl.textContent = `⏱ ${((Date.now() - start) / 1000).toFixed(1)}s`;
+        }, 100);
+
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
+
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseModalities: ["IMAGE"],
+                imageConfig: { aspectRatio: "16:9" },
+              },
+            }),
+          });
+
+          clearInterval(timerInterval);
+          const elapsed = ((Date.now() - start) / 1000).toFixed(2);
+
+          if (!res.ok) {
+            const errText = await res.text();
+            statusEl.className = "status error";
+            statusEl.textContent = `❌ HTTP ${res.status}: ${errText.substring(0, 500)}`;
+            return;
+          }
+
+          const data = await res.json();
+          const parts = data?.candidates?.[0]?.content?.parts || [];
+          let imageFound = false;
+
+          for (const part of parts) {
+            if (part.inlineData) {
+              const mime = part.inlineData.mimeType || "image/png";
+              const b64 = part.inlineData.data;
+              statusEl.className = "status success";
+              statusEl.textContent = `✅ Success in ${elapsed}s — Model: gemini-2.5-flash-image`;
+              resultEl.innerHTML = `<p><strong>Prompt:</strong> ${prompt}</p><img src="data:${mime};base64,${b64}" alt="Generated image">`;
+              imageFound = true;
+              break;
+            }
+          }
+
+          if (!imageFound) {
+            statusEl.className = "status error";
+            statusEl.textContent = `⚠️ No image in response:\n${JSON.stringify(data, null, 2).substring(0, 800)}`;
+          }
+        } catch (err) {
+          clearInterval(timerInterval);
+          statusEl.className = "status error";
+          statusEl.textContent = `❌ Error: ${err.message}`;
+        } finally {
+          document
+            .querySelectorAll("button")
+            .forEach((b) => (b.disabled = false));
+        }
+      }
     </script>
   </body>
 </html>
