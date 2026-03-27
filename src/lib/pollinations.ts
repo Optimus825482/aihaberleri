@@ -81,10 +81,14 @@ const PICSUM_URL = "https://picsum.photos";
 // const TOGETHER_API_KEY = process.env.TOGETHER_API_KEY;
 // const TOGETHER_API_URL = "https://api.together.xyz/v1/images/generations";
 
-// Gemini Image Generation (Nano Banana — free tier, ~500 images/day)
+// Gemini Image Generation (Nano Banana — paid tier)
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent`;
+
+// AI Horde (free, unlimited, crowdsourced GPU cluster)
+const AI_HORDE_API_KEY = process.env.AI_HORDE_API_KEY || "0000000000";
+const AI_HORDE_BASE_URL = "https://aihorde.net/api/v2";
 
 // Cache Configuration
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
@@ -364,6 +368,116 @@ async function fetchGeminiImage(
 }
 
 // ============================================
+// AI HORDE — Free, unlimited, crowdsourced GPU cluster
+// Async: submit → poll → get result (typically 10-30s)
+// ============================================
+async function fetchAIHordeImage(
+  prompt: string,
+  options: PollinationsOptions = {},
+): Promise<string | null> {
+  const cleanPrompt =
+    prompt.length > 500 ? prompt.substring(0, 497) + "..." : prompt;
+
+  imageLog.info(`AI Horde generating: ${cleanPrompt.substring(0, 80)}...`);
+
+  try {
+    // Step 1: Submit async generation
+    const submitRes = await fetch(`${AI_HORDE_BASE_URL}/generate/async`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: AI_HORDE_API_KEY,
+        "Client-Agent": "AIHaberleri:v1.0:info@aihaberleri.org",
+      },
+      body: JSON.stringify({
+        prompt: cleanPrompt,
+        params: {
+          width: 1024,
+          height: 576,
+          steps: 20,
+          cfg_scale: 7,
+          sampler_name: "k_euler",
+          n: 1,
+        },
+        nsfw: false,
+        censor_nsfw: true,
+        models: ["Deliberate"],
+        r2: true,
+      }),
+    });
+
+    if (!submitRes.ok) {
+      const errText = await submitRes.text().catch(() => "");
+      imageLog.warn(
+        `AI Horde submit failed ${submitRes.status}: ${errText.substring(0, 200)}`,
+      );
+      return null;
+    }
+
+    const submitData = await submitRes.json();
+    const genId = submitData.id;
+    if (!genId) {
+      imageLog.warn("AI Horde returned no generation ID");
+      return null;
+    }
+
+    // Step 2: Poll for completion (max 90s, 3s intervals)
+    const maxPolls = 30;
+    for (let i = 0; i < maxPolls; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+
+      const checkRes = await fetch(
+        `${AI_HORDE_BASE_URL}/generate/check/${genId}`,
+        {
+          headers: { "Client-Agent": "AIHaberleri:v1.0:info@aihaberleri.org" },
+        },
+      );
+      const checkData = await checkRes.json();
+
+      if (checkData.done) {
+        // Step 3: Get result
+        const statusRes = await fetch(
+          `${AI_HORDE_BASE_URL}/generate/status/${genId}`,
+          {
+            headers: {
+              "Client-Agent": "AIHaberleri:v1.0:info@aihaberleri.org",
+            },
+          },
+        );
+        const statusData = await statusRes.json();
+        const gen = statusData.generations?.[0];
+
+        if (gen?.img) {
+          const imgUrl = gen.img.startsWith("http")
+            ? gen.img
+            : `data:image/webp;base64,${gen.img}`;
+          imageLog.success(
+            `AI Horde image generated in ${(i + 1) * 3}s (model: ${gen.model || "Deliberate"}, worker: ${gen.worker_name || "unknown"})`,
+          );
+          return imgUrl;
+        }
+
+        imageLog.warn("AI Horde generation completed but no image returned");
+        return null;
+      }
+
+      // Log progress every 5th poll
+      if (i > 0 && i % 5 === 0) {
+        imageLog.debug(
+          `AI Horde waiting... queue: ${checkData.queue_position || "?"}, eta: ${checkData.wait_time || "?"}s`,
+        );
+      }
+    }
+
+    imageLog.warn("AI Horde timeout (90s) — falling back");
+    return null;
+  } catch (error) {
+    imageLog.warn(`AI Horde error: ${(error as Error).message}`);
+    return null;
+  }
+}
+
+// ============================================
 // PAYMENT CIRCUIT BREAKER
 // 402 gelince 10 dakika boyunca direkt fallback'e düş, boşa retry yapma
 // ============================================
@@ -406,7 +520,252 @@ export async function fetchPollinationsImage(
   }
 
   // ============================================
-  // PROVIDER 1: Gemini Nano Banana (free tier, ~500 images/day)
+  // PROVIDER 1: AI Horde (free, unlimited, crowdsourced)
+  // ============================================
+  try {
+    const hordeUrl = await fetchAIHordeImage(prompt, options);
+    if (hordeUrl) {
+      await cacheImageUrl(prompt, hordeUrl);
+      return hordeUrl;
+    }
+  } catch (hordeError) {
+    imageLog.warn(`AI Horde failed: ${(hordeError as Error).message}`);
+  }
+
+  // ============================================
+  // PROVIDER 2: Pollinations (if not payment-blocked)
+  // ============================================
+  if (isPollinationsPaymentBlocked()) {
+    imageLog.warn("Pollinations payment circuit OPEN — skipping");
+  }
+
+  // ============================================
+  // PROVIDER 2: Pollinations (if not payment-blocked)
+  // ============================================
+  if (!isPollinationsPaymentBlocked()) {
+    // CRITICAL: Ensure no humans in prompt - add strong negative prompt
+    let sanitizedPrompt = prompt.trim();
+
+    // Remove any human-related terms that might have slipped through.
+    // FIX (2026-02-28): Negative lookbehind (?<![Nn][Oo]\s) preserves "no people",
+    // "no humans" etc.  Without this, the regex stripped "people" from "no people"
+    // which produced the broken "no , no humans, ..." artifact visible in image URLs.
+    const humanPatterns = [
+      /(?<![Nn][Oo]\s)\b(person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|staff)\b/gi,
+      /(?<![Nn][Oo]\s)\b(head|hand|arm|leg|body|finger|eye|mouth|profile|businessman|businesswoman)\b/gi,
+    ];
+    for (const pattern of humanPatterns) {
+      sanitizedPrompt = sanitizedPrompt
+        .replace(pattern, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    // Ensure negative prompt is present
+    if (
+      !sanitizedPrompt.toLowerCase().includes("no people") &&
+      !sanitizedPrompt.toLowerCase().includes("no humans")
+    ) {
+      sanitizedPrompt +=
+        ", no people, no humans, no faces, no hands, empty scene";
+    }
+
+    const {
+      width = 1200,
+      height = 630,
+      model = "flux", // Use flux as default - most stable model
+      allowBackupFallback = true,
+    } = options;
+    const normalizedModel = normalizeModel(model);
+
+    // Retry loop with exponential backoff (OPTIMIZED: faster retries)
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // If we have an API key, use the new authenticated endpoint
+        if (POLLINATIONS_API_KEY) {
+          console.log(
+            `🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt ${attempt}/${maxRetries})`,
+          );
+          console.log(
+            `🔑 API Key exists: ${POLLINATIONS_API_KEY ? "YES" : "NO"}, length: ${POLLINATIONS_API_KEY?.length || 0}`,
+          );
+
+          // Truncate prompt to avoid issues - use sanitizedPrompt
+          let cleanPrompt = sanitizedPrompt;
+          if (cleanPrompt.length > 800) {
+            console.warn(
+              `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 800`,
+            );
+            cleanPrompt = cleanPrompt.substring(0, 797) + "...";
+          }
+
+          const encodedPrompt = encodeURIComponent(cleanPrompt);
+
+          // Build new API URL: https://gen.pollinations.ai/image/{prompt}
+          const params = buildPollinationsParams({
+            ...options,
+            width,
+            height,
+            model: normalizedModel,
+          });
+
+          const imageUrl = `${POLLINATIONS_GEN_URL}/${encodedPrompt}?${params.toString()}`;
+
+          console.log("📝 Prompt:", cleanPrompt.substring(0, 100));
+          console.log(
+            "🎨 Authenticated URL:",
+            imageUrl.substring(0, 120) + "...",
+          );
+
+          // Verify image is accessible with timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(
+            () => controller.abort(),
+            requestTimeoutMs,
+          );
+
+          try {
+            const response = await fetch(imageUrl, {
+              headers: {
+                Accept: POLLINATIONS_IMAGE_ACCEPT_HEADER,
+                Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
+              },
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+              console.log(
+                "✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)",
+              );
+              // Cache the result for future use
+              await cacheImageUrl(sanitizedPrompt, imageUrl);
+              return imageUrl;
+            }
+
+            // OPTIMIZED: Handle 429 rate limit with exponential backoff
+            if (response.status === 429 && attempt < maxRetries) {
+              const delay = Math.min(2000 * Math.pow(2, attempt - 1), 8000); // Start at 2s, max 8s
+              console.warn(
+                `⚠️ Rate limit (429), retry ${attempt}/${maxRetries} in ${delay}ms`,
+              );
+              await new Promise((resolve) => setTimeout(resolve, delay));
+              continue;
+            }
+
+            // Retry on 502/503/504 (OPTIMIZED: faster retry)
+            if (
+              (response.status === 502 ||
+                response.status === 503 ||
+                response.status === 504) &&
+              attempt < maxRetries
+            ) {
+              const delay = Math.min(1500 * Math.pow(2, attempt - 1), 6000); // Start at 1.5s, max 6s
+              console.warn(
+                `⚠️ Pollinations API ${response.status} (service temporarily down), retry ${attempt}/${maxRetries} in ${delay}ms`,
+              );
+              await new Promise((resolve) => setTimeout(resolve, delay));
+              continue;
+            }
+
+            // For 4xx errors, try anonymous fallback
+            if (response.status >= 400 && response.status < 500) {
+              const errorText = await response.text();
+              console.warn(
+                `⚠️ Pollinations API ${response.status}: ${errorText.substring(0, 200)}`,
+              );
+
+              // 402 = payment required — set circuit breaker, skip all retries
+              if (response.status === 402) {
+                pollinationsPaymentFailed = true;
+                pollinationsPaymentFailedAt = Date.now();
+                imageLog.warn(
+                  "Pollinations payment circuit OPENED — will skip for 10 minutes",
+                );
+                break; // Exit retry loop immediately
+              }
+
+              imageLog.warn("Trying anonymous fallback...");
+              return await fetchPollinationsImageAnonymous(
+                sanitizedPrompt,
+                options,
+                requestTimeoutMs,
+              );
+            }
+          } catch (fetchError) {
+            clearTimeout(timeoutId);
+            throw fetchError;
+          }
+        }
+
+        // No API key, use anonymous method
+        return await fetchPollinationsImageAnonymous(
+          sanitizedPrompt,
+          options,
+          requestTimeoutMs,
+        );
+      } catch (error) {
+        const isLastAttempt = attempt === maxRetries;
+
+        if (isLastAttempt) {
+          console.error(
+            `❌ Pollinations.ai failed after ${maxRetries} attempts:`,
+            error,
+          );
+          if (!allowBackupFallback) {
+            throw error;
+          }
+          // PROVIDER 3: Gemini (paid, last resort before Picsum)
+          if (GOOGLE_API_KEY) {
+            try {
+              const geminiUrl = await fetchGeminiImage(
+                sanitizedPrompt,
+                options,
+              );
+              if (geminiUrl) {
+                await cacheImageUrl(sanitizedPrompt, geminiUrl);
+                return geminiUrl;
+              }
+            } catch {
+              /* fall through to Picsum */
+            }
+          }
+          return await fetchFreeBackupImage(sanitizedPrompt, options);
+        }
+
+        // OPTIMIZED: Faster exponential backoff (start at 1s instead of 2s)
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000); // 1s, 2s, 4s, max 8s
+        console.warn(
+          `⚠️ Pollinations.ai error, retry ${attempt}/${maxRetries} in ${delay}ms:`,
+          error,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    if (!allowBackupFallback) {
+      throw new Error("Pollinations image generation failed without fallback");
+    }
+
+    // PROVIDER 3: Gemini (paid, last resort before Picsum)
+    if (GOOGLE_API_KEY) {
+      try {
+        const geminiUrl = await fetchGeminiImage(sanitizedPrompt, options);
+        if (geminiUrl) {
+          await cacheImageUrl(sanitizedPrompt, geminiUrl);
+          return geminiUrl;
+        }
+      } catch {
+        /* fall through to Picsum */
+      }
+    }
+
+    return await fetchFreeBackupImage(sanitizedPrompt, options);
+  } // end if (!isPollinationsPaymentBlocked)
+
+  // ============================================
+  // PROVIDER 3: Gemini (paid, last resort before Picsum)
   // ============================================
   if (GOOGLE_API_KEY) {
     try {
@@ -415,213 +774,14 @@ export async function fetchPollinationsImage(
         await cacheImageUrl(prompt, geminiUrl);
         return geminiUrl;
       }
-    } catch (geminiError) {
-      imageLog.warn(
-        `Gemini failed, trying Pollinations: ${(geminiError as Error).message}`,
-      );
+    } catch {
+      /* fall through to Picsum */
     }
   }
 
-  // ============================================
-  // PROVIDER 2: Pollinations (if not payment-blocked)
-  // ============================================
-  if (isPollinationsPaymentBlocked()) {
-    return await fetchFreeBackupImage(prompt, options);
-  }
-
-  // CRITICAL: Ensure no humans in prompt - add strong negative prompt
-  let sanitizedPrompt = prompt.trim();
-
-  // Remove any human-related terms that might have slipped through.
-  // FIX (2026-02-28): Negative lookbehind (?<![Nn][Oo]\s) preserves "no people",
-  // "no humans" etc.  Without this, the regex stripped "people" from "no people"
-  // which produced the broken "no , no humans, ..." artifact visible in image URLs.
-  const humanPatterns = [
-    /(?<![Nn][Oo]\s)\b(person|people|man|woman|human|face|portrait|silhouette|figure|employee|worker|staff)\b/gi,
-    /(?<![Nn][Oo]\s)\b(head|hand|arm|leg|body|finger|eye|mouth|profile|businessman|businesswoman)\b/gi,
-  ];
-  for (const pattern of humanPatterns) {
-    sanitizedPrompt = sanitizedPrompt
-      .replace(pattern, "")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  // Ensure negative prompt is present
-  if (
-    !sanitizedPrompt.toLowerCase().includes("no people") &&
-    !sanitizedPrompt.toLowerCase().includes("no humans")
-  ) {
-    sanitizedPrompt +=
-      ", no people, no humans, no faces, no hands, empty scene";
-  }
-
-  const {
-    width = 1200,
-    height = 630,
-    model = "flux", // Use flux as default - most stable model
-    allowBackupFallback = true,
-  } = options;
-  const normalizedModel = normalizeModel(model);
-
-  // Retry loop with exponential backoff (OPTIMIZED: faster retries)
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      // If we have an API key, use the new authenticated endpoint
-      if (POLLINATIONS_API_KEY) {
-        console.log(
-          `🔑 Pollinations.ai API key ile görsel üretiliyor... (attempt ${attempt}/${maxRetries})`,
-        );
-        console.log(
-          `🔑 API Key exists: ${POLLINATIONS_API_KEY ? "YES" : "NO"}, length: ${POLLINATIONS_API_KEY?.length || 0}`,
-        );
-
-        // Truncate prompt to avoid issues - use sanitizedPrompt
-        let cleanPrompt = sanitizedPrompt;
-        if (cleanPrompt.length > 800) {
-          console.warn(
-            `⚠️ Prompt too long (${cleanPrompt.length} chars), truncating to 800`,
-          );
-          cleanPrompt = cleanPrompt.substring(0, 797) + "...";
-        }
-
-        const encodedPrompt = encodeURIComponent(cleanPrompt);
-
-        // Build new API URL: https://gen.pollinations.ai/image/{prompt}
-        const params = buildPollinationsParams({
-          ...options,
-          width,
-          height,
-          model: normalizedModel,
-        });
-
-        const imageUrl = `${POLLINATIONS_GEN_URL}/${encodedPrompt}?${params.toString()}`;
-
-        console.log("📝 Prompt:", cleanPrompt.substring(0, 100));
-        console.log(
-          "🎨 Authenticated URL:",
-          imageUrl.substring(0, 120) + "...",
-        );
-
-        // Verify image is accessible with timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(
-          () => controller.abort(),
-          requestTimeoutMs,
-        );
-
-        try {
-          const response = await fetch(imageUrl, {
-            headers: {
-              Accept: POLLINATIONS_IMAGE_ACCEPT_HEADER,
-              Authorization: `Bearer ${POLLINATIONS_API_KEY}`,
-            },
-            signal: controller.signal,
-          });
-
-          clearTimeout(timeoutId);
-
-          if (response.ok) {
-            console.log(
-              "✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)",
-            );
-            // Cache the result for future use
-            await cacheImageUrl(sanitizedPrompt, imageUrl);
-            return imageUrl;
-          }
-
-          // OPTIMIZED: Handle 429 rate limit with exponential backoff
-          if (response.status === 429 && attempt < maxRetries) {
-            const delay = Math.min(2000 * Math.pow(2, attempt - 1), 8000); // Start at 2s, max 8s
-            console.warn(
-              `⚠️ Rate limit (429), retry ${attempt}/${maxRetries} in ${delay}ms`,
-            );
-            await new Promise((resolve) => setTimeout(resolve, delay));
-            continue;
-          }
-
-          // Retry on 502/503/504 (OPTIMIZED: faster retry)
-          if (
-            (response.status === 502 ||
-              response.status === 503 ||
-              response.status === 504) &&
-            attempt < maxRetries
-          ) {
-            const delay = Math.min(1500 * Math.pow(2, attempt - 1), 6000); // Start at 1.5s, max 6s
-            console.warn(
-              `⚠️ Pollinations API ${response.status} (service temporarily down), retry ${attempt}/${maxRetries} in ${delay}ms`,
-            );
-            await new Promise((resolve) => setTimeout(resolve, delay));
-            continue;
-          }
-
-          // For 4xx errors, try anonymous fallback
-          if (response.status >= 400 && response.status < 500) {
-            const errorText = await response.text();
-            console.warn(
-              `⚠️ Pollinations API ${response.status}: ${errorText.substring(0, 200)}`,
-            );
-
-            // 402 = payment required — set circuit breaker, skip all retries
-            if (response.status === 402) {
-              pollinationsPaymentFailed = true;
-              pollinationsPaymentFailedAt = Date.now();
-              imageLog.warn(
-                "Pollinations payment circuit OPENED — will skip for 10 minutes",
-              );
-              break; // Exit retry loop immediately
-            }
-
-            imageLog.warn("Trying anonymous fallback...");
-            return await fetchPollinationsImageAnonymous(
-              sanitizedPrompt,
-              options,
-              requestTimeoutMs,
-            );
-          }
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-          throw fetchError;
-        }
-      }
-
-      // No API key, use anonymous method
-      return await fetchPollinationsImageAnonymous(
-        sanitizedPrompt,
-        options,
-        requestTimeoutMs,
-      );
-    } catch (error) {
-      const isLastAttempt = attempt === maxRetries;
-
-      if (isLastAttempt) {
-        console.error(
-          `❌ Pollinations.ai failed after ${maxRetries} attempts:`,
-          error,
-        );
-        if (!allowBackupFallback) {
-          throw error;
-        }
-        return await fetchFreeBackupImage(sanitizedPrompt, options);
-      }
-
-      // OPTIMIZED: Faster exponential backoff (start at 1s instead of 2s)
-      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 8000); // 1s, 2s, 4s, max 8s
-      console.warn(
-        `⚠️ Pollinations.ai error, retry ${attempt}/${maxRetries} in ${delay}ms:`,
-        error,
-      );
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
-
-  if (!allowBackupFallback) {
-    throw new Error("Pollinations image generation failed without fallback");
-  }
-
-  return await fetchFreeBackupImage(sanitizedPrompt, options);
+  // PROVIDER 4: Picsum (random stock photo, last resort)
+  return await fetchFreeBackupImage(prompt, options);
 }
-
 /**
  * Anonymous fallback for image generation (has rate limits)
  */

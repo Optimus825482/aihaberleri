@@ -2,7 +2,7 @@
 <html lang="tr">
   <head>
     <meta charset="UTF-8" />
-    <title>Gemini Image Generation Test</title>
+    <title>AI Horde Image Generation Test</title>
     <style>
       body {
         font-family: system-ui;
@@ -13,7 +13,7 @@
         color: #eee;
       }
       h1 {
-        color: #4285f4;
+        color: #e94560;
       }
       .status {
         padding: 12px;
@@ -22,7 +22,6 @@
         font-family: monospace;
         font-size: 13px;
         white-space: pre-wrap;
-        word-break: break-all;
       }
       .loading {
         background: #16213e;
@@ -43,7 +42,7 @@
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
       }
       button {
-        background: #4285f4;
+        background: #e94560;
         color: white;
         border: none;
         padding: 12px 20px;
@@ -53,7 +52,7 @@
         margin: 6px 4px;
       }
       button:hover {
-        background: #3367d6;
+        background: #c73e54;
       }
       button:disabled {
         background: #555;
@@ -63,30 +62,18 @@
         color: #aaa;
         font-size: 13px;
       }
-      .key-input {
+      code {
         background: #16213e;
-        border: 1px solid #0f3460;
-        color: #eee;
-        padding: 10px;
-        border-radius: 8px;
-        width: 400px;
-        font-family: monospace;
-      }
-      label {
-        display: block;
-        margin: 12px 0 4px;
-        color: #aaa;
+        padding: 2px 6px;
+        border-radius: 4px;
       }
     </style>
   </head>
   <body>
-    <h1>🎨 Gemini Nano Banana — Image Generation Test</h1>
+    <h1>🐝 AI Horde — Free Image Generation Test</h1>
     <p>
-      Model: <code>gemini-2.5-flash-image</code> (ücretsiz, günde ~500 görsel)
+      API: <code>https://aihorde.net/api/v2</code> | Async generation + polling
     </p>
-
-    <label>Google API Key:</label>
-    <input type="text" id="apiKey" class="key-input" placeholder="AIzaSy..." />
 
     <div style="margin-top: 16px">
       <button
@@ -101,7 +88,7 @@
       <button
         onclick="
           generate(
-            'Aerial view of a crumbling 1990s server rack buried in overgrown silicon forest, no people, no humans, empty scene',
+            'Aerial view of a crumbling 1990s server rack buried in overgrown silicon forest, no people, no humans',
           )
         "
       >
@@ -110,7 +97,7 @@
       <button
         onclick="
           generate(
-            'A sleek robot hand holding a glowing newspaper, cyberpunk style, neon lights, no people, no humans, empty scene',
+            'A sleek robot hand holding a glowing newspaper, cyberpunk style, neon lights, no people, no humans',
           )
         "
       >
@@ -123,20 +110,17 @@
     <div id="result"></div>
 
     <script>
-      async function generate(prompt) {
-        const apiKey = document.getElementById("apiKey").value.trim();
-        if (!apiKey) {
-          alert("API Key gir");
-          return;
-        }
+      const API_KEY = "iK3KwQwuesUdBhVVvStkAw";
+      const BASE = "https://aihorde.net/api/v2";
 
+      async function generate(prompt) {
         const statusEl = document.getElementById("status");
         const timerEl = document.getElementById("timer");
         const resultEl = document.getElementById("result");
 
         document.querySelectorAll("button").forEach((b) => (b.disabled = true));
         statusEl.className = "status loading";
-        statusEl.textContent = "⏳ Gemini generating...";
+        statusEl.textContent = "⏳ Submitting to AI Horde...";
         resultEl.innerHTML = "";
 
         const start = Date.now();
@@ -145,49 +129,87 @@
         }, 100);
 
         try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
-
-          const res = await fetch(url, {
+          // Step 1: Submit async generation request
+          const submitRes = await fetch(`${BASE}/generate/async`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              apikey: API_KEY,
+              "Client-Agent": "AIHaberleri:v1.0:test",
+            },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                responseModalities: ["IMAGE"],
-                imageConfig: { aspectRatio: "16:9" },
+              prompt: prompt,
+              params: {
+                width: 1024,
+                height: 576,
+                steps: 20,
+                cfg_scale: 7,
+                sampler_name: "k_euler",
+                n: 1,
               },
+              nsfw: false,
+              censor_nsfw: true,
+              models: ["Deliberate"],
+              r2: true,
             }),
           });
 
-          clearInterval(timerInterval);
-          const elapsed = ((Date.now() - start) / 1000).toFixed(2);
-
-          if (!res.ok) {
-            const errText = await res.text();
-            statusEl.className = "status error";
-            statusEl.textContent = `❌ HTTP ${res.status}: ${errText.substring(0, 500)}`;
-            return;
+          if (!submitRes.ok) {
+            const errText = await submitRes.text();
+            throw new Error(`Submit failed ${submitRes.status}: ${errText}`);
           }
 
-          const data = await res.json();
-          const parts = data?.candidates?.[0]?.content?.parts || [];
-          let imageFound = false;
+          const submitData = await submitRes.json();
+          const genId = submitData.id;
+          statusEl.textContent = `✅ Submitted! ID: ${genId}\n⏳ Waiting in queue...`;
 
-          for (const part of parts) {
-            if (part.inlineData) {
-              const mime = part.inlineData.mimeType || "image/png";
-              const b64 = part.inlineData.data;
-              statusEl.className = "status success";
-              statusEl.textContent = `✅ Success in ${elapsed}s — Model: gemini-2.5-flash-image`;
-              resultEl.innerHTML = `<p><strong>Prompt:</strong> ${prompt}</p><img src="data:${mime};base64,${b64}" alt="Generated image">`;
-              imageFound = true;
-              break;
+          // Step 2: Poll for completion
+          let done = false;
+          let pollCount = 0;
+          while (!done && pollCount < 120) {
+            await new Promise((r) => setTimeout(r, 3000)); // 3s interval
+            pollCount++;
+
+            const checkRes = await fetch(`${BASE}/generate/check/${genId}`, {
+              headers: { "Client-Agent": "AIHaberleri:v1.0:test" },
+            });
+            const checkData = await checkRes.json();
+
+            statusEl.textContent = `🔄 Poll #${pollCount} | Queue: ${checkData.queue_position || 0} | Wait: ${checkData.wait_time || 0}s | Done: ${checkData.done}`;
+
+            if (checkData.done) {
+              done = true;
             }
           }
 
-          if (!imageFound) {
+          if (!done) {
+            throw new Error("Timeout: generation took too long (>6 min)");
+          }
+
+          // Step 3: Get result
+          const statusRes = await fetch(`${BASE}/generate/status/${genId}`, {
+            headers: { "Client-Agent": "AIHaberleri:v1.0:test" },
+          });
+          const statusData = await statusRes.json();
+
+          clearInterval(timerInterval);
+          const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+
+          const gen = statusData.generations?.[0];
+          if (gen && gen.img) {
+            statusEl.className = "status success";
+            const model = gen.model || "unknown";
+            const worker = gen.worker_name || "unknown";
+            statusEl.textContent = `✅ Done in ${elapsed}s | Model: ${model} | Worker: ${worker} | Seed: ${gen.seed}`;
+
+            // gen.img is either a URL (r2=true) or base64
+            const imgSrc = gen.img.startsWith("http")
+              ? gen.img
+              : `data:image/webp;base64,${gen.img}`;
+            resultEl.innerHTML = `<p><strong>Prompt:</strong> ${prompt}</p><img src="${imgSrc}" alt="Generated image">`;
+          } else {
             statusEl.className = "status error";
-            statusEl.textContent = `⚠️ No image in response:\n${JSON.stringify(data, null, 2).substring(0, 800)}`;
+            statusEl.textContent = `⚠️ No image in response:\n${JSON.stringify(statusData, null, 2).substring(0, 500)}`;
           }
         } catch (err) {
           clearInterval(timerInterval);
