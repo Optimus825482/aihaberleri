@@ -23,12 +23,6 @@ const hasAdvertisingConsent = () => {
 };
 
 export const AdSenseBootstrap = () => {
-    // ============================================================
-    // ⛔ ADSENSE CEZASI AKTIF — SCRIPT INJECTION DEVRE DIŞI
-    // Ceza süresi bitince bu return'u kaldır.
-    // ============================================================
-    return null;
-
     const pathname = usePathname();
     const [hasConsent, setHasConsent] = useState(false);
     const scriptInjected = useRef(false);

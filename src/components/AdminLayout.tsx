@@ -289,6 +289,14 @@ export function AdminShell({ children }: AdminLayoutProps) {
   const { isInstallable, installApp } = usePWA();
   const router = useRouter();
 
+  // Admin paneline giren tarayıcıya kalıcı işaret bırak
+  // Bu sayede o tarayıcıda reklamlara tıklamak engellenecek
+  useEffect(() => {
+    if (pathname !== "/admin/login") {
+      localStorage.setItem("__admin_browser__", "1");
+    }
+  }, [pathname]);
+
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }

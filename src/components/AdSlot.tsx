@@ -36,19 +36,20 @@ export const AdSlot = ({
   minHeight = 120,
   label,
 }: AdSlotProps) => {
-  // ============================================================
-  // ⛔ ADSENSE CEZASI AKTIF — TÜM REKLAMLAR DEVRE DIŞI
-  // Ceza süresi bitince bu return'u kaldır.
-  // ============================================================
-  return null;
-
   const pathname = usePathname();
+  const { data: session } = useSession();
   const [adElement, setAdElement] = useState<HTMLModElement | null>(null);
   const [isInViewport, setIsInViewport] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
 
   const clientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
   const isEnabled = process.env.NEXT_PUBLIC_ADSENSE_ENABLED === "true";
+
+  // Admin paneline daha önce girilmiş tarayıcılarda reklamları engelle
+  const [isOwner, setIsOwner] = useState(false);
+  useEffect(() => {
+    setIsOwner(localStorage.getItem("__admin_browser__") === "1");
+  }, []);
 
   const shouldRender = useMemo(() => {
     if (!isEnabled || !clientId) return false;
@@ -145,7 +146,7 @@ export const AdSlot = ({
 
   return (
     <div
-      className={`${minHeightClass} ${className || ""}`.trim()}
+      className={`relative ${minHeightClass} ${className || ""}`.trim()}
       aria-label={label || "reklam"}
     >
       {label ? (
@@ -166,6 +167,20 @@ export const AdSlot = ({
           ? { "data-full-width-responsive": responsive ? "true" : "false" }
           : {})}
       />
+
+      {/* Oturum açmış kullanıcılar için öz-tıklama koruması */}
+      {isOwner ? (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center cursor-not-allowed"
+          style={{ pointerEvents: "all" }}
+          onClick={(e) => e.preventDefault()}
+          title="AdSense ihlali önleme: Kendi reklamlarınıza tıklamayın"
+        >
+          <span className="rounded bg-red-600/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white select-none">
+            Reklam Alanı — Tıklamayın
+          </span>
+        </div>
+      ) : null}
 
       {showFallback ? (
         <div className="mt-1 animate-pulse rounded-lg bg-ai-surface-dark/30">

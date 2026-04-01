@@ -14,12 +14,6 @@ import { AD_SLOTS } from "@/lib/ad-slots";
  * - Footer yakınında otomatik gizlenir.
  */
 export function StickyBottomAd() {
-    // ============================================================
-    // ⛔ ADSENSE CEZASI AKTIF — STICKY REKLAM DEVRE DIŞI
-    // Ceza süresi bitince bu return'u kaldır.
-    // ============================================================
-    return null;
-
     const pathname = usePathname();
     const [visible, setVisible] = useState(false);
     const [dismissed, setDismissed] = useState(false);
