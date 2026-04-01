@@ -37,7 +37,6 @@ export const AdSlot = ({
   label,
 }: AdSlotProps) => {
   const pathname = usePathname();
-  const { data: session } = useSession();
   const [adElement, setAdElement] = useState<HTMLModElement | null>(null);
   const [isInViewport, setIsInViewport] = useState(false);
   const [showFallback, setShowFallback] = useState(false);
