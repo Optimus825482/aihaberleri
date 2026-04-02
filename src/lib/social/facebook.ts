@@ -130,7 +130,9 @@ export async function postToFacebookWithMetadata(article: {
 
     const message = `📰 ${article.title}\n\n${article.excerpt}\n\n${hashtags}`;
 
-    console.log("📘 Posting to Facebook Page...");
+    console.log(
+      `📘 Posting to Facebook Page... mode=${article.imageUrl ? "photo" : "feed"}`,
+    );
 
     let postId: string;
 
