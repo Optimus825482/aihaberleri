@@ -9,13 +9,18 @@ import { auth } from "@/lib/auth";
 import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import {
+  buildAdminShareMap,
+  getEffectiveShareStatus,
+  matchesShareStatus,
+  SOCIAL_SHARE_PLATFORMS,
+} from "@/lib/social-share-admin";
 
 export const dynamic = "force-dynamic";
 
 // GET: List articles with social share status
 export async function GET(req: NextRequest) {
   try {
-    // Check authentication - support both NextAuth and admin-session JWT
     const [session, adminSession] = await Promise.all([
       auth(),
       getAdminSession(),
@@ -25,19 +30,22 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const requestedPage = parseInt(searchParams.get("page") || "1");
+    const requestedLimit = parseInt(searchParams.get("limit") || "20");
+    const page =
+      Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+    const limit =
+      Number.isFinite(requestedLimit) && requestedLimit > 0
+        ? Math.min(requestedLimit, 100)
+        : 20;
     const platform = searchParams.get("platform") || null;
     const language = searchParams.get("language") || null;
     const status = searchParams.get("status") || null;
-    const visibility = searchParams.get("visibility") || null; // shared|unshared|pending|failed
+    const visibility = searchParams.get("visibility") || null;
     const search = searchParams.get("search") || null;
     const unsharedOnly =
       searchParams.get("unsharedOnly") === "true" || visibility === "unshared";
 
-    const skip = (page - 1) * limit;
-
-    // Build where clause for articles
     const articleWhere: Prisma.ArticleWhereInput = {
       status: "PUBLISHED",
       ...(language && { language }),
@@ -49,10 +57,6 @@ export async function GET(req: NextRequest) {
       }),
     };
 
-    // Get total count
-    const totalCount = await db.article.count({ where: articleWhere });
-
-    // Get articles with their social shares
     const articles = await db.article.findMany({
       where: articleWhere,
       select: {
@@ -78,68 +82,35 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: { publishedAt: "desc" },
-      skip,
-      take: limit,
     });
 
-    // Transform data for frontend - add missing platforms
-    // CRITICAL: Must match SocialPlatform enum in Prisma schema
-    const platforms = [
-      "FACEBOOK",
-      "FACEBOOK_EN",
-      "BLUESKY",
-      "BLUESKY_EN",
-      "MASTODON",
-      "MASTODON_EN",
-    ];
-
-    const transformedArticles = articles
+    const filteredArticles = articles
       .map((article) => {
-        const shareMap: Record<string, any> = {};
+        const shareMap = buildAdminShareMap(article.socialShares);
+        const visiblePlatforms = platform ? [platform] : [...SOCIAL_SHARE_PLATFORMS];
+        const effectiveStatus = getEffectiveShareStatus(status, visibility);
 
-        // Initialize all platforms as not shared
-        platforms.forEach((p) => {
-          shareMap[p] = { status: "NOT_CREATED", platform: p };
-        });
-
-        // Fill in existing shares
-        // Platform enum may be FACEBOOK or FACEBOOK_EN
-        // Also handle legacy data where language field determines EN variant
-        article.socialShares.forEach((share) => {
-          let key = share.platform;
-
-          // If platform doesn't end with _EN but language is "en", map to _EN variant
-          if (!share.platform.endsWith("_EN") && share.language === "en") {
-            key = `${share.platform}_EN` as any;
-          }
-
-          shareMap[key] = share;
-        });
-
-        // Apply platform+status filter if both are provided
-        if (platform && status && shareMap[platform]?.status !== status) {
+        if (
+          effectiveStatus &&
+          !visiblePlatforms.some((platformKey) =>
+            matchesShareStatus(
+              shareMap[platformKey]?.status || "NOT_CREATED",
+              effectiveStatus,
+            ),
+          )
+        ) {
           return null;
         }
 
-        // Apply general visibility filter (cross-platform, no specific platform required)
-        if (visibility === "unshared" || unsharedOnly) {
-          const hasUnshared = platforms.some(
-            (p) =>
-              shareMap[p].status === "NOT_CREATED" ||
-              shareMap[p].status === "PENDING",
-          );
-          if (!hasUnshared) return null;
-        } else if (visibility === "shared" && !platform) {
-          const hasShared = platforms.some((p) => shareMap[p].status === "SHARED");
-          if (!hasShared) return null;
-        } else if (visibility === "pending" && !platform) {
-          const hasPending = platforms.some((p) =>
-            ["PENDING", "SCHEDULED", "PROCESSING"].includes(shareMap[p].status),
-          );
-          if (!hasPending) return null;
-        } else if (visibility === "failed" && !platform) {
-          const hasFailed = platforms.some((p) => shareMap[p].status === "FAILED");
-          if (!hasFailed) return null;
+        if (
+          unsharedOnly &&
+          !visiblePlatforms.some(
+            (platformKey) =>
+              (shareMap[platformKey]?.status || "NOT_CREATED") ===
+              "NOT_CREATED",
+          )
+        ) {
+          return null;
         }
 
         return {
@@ -148,15 +119,20 @@ export async function GET(req: NextRequest) {
           shares: shareMap,
         };
       })
-      .filter(Boolean);
+      .filter((article): article is NonNullable<typeof article> => Boolean(article));
+
+    const total = filteredArticles.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const currentPage = Math.min(page, totalPages);
+    const skip = (currentPage - 1) * limit;
 
     return NextResponse.json({
-      articles: transformedArticles,
+      articles: filteredArticles.slice(skip, skip + limit),
       pagination: {
-        page,
+        page: currentPage,
         limit,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit),
+        total,
+        totalPages,
       },
     });
   } catch (error) {
@@ -171,7 +147,6 @@ export async function GET(req: NextRequest) {
 // POST: Create share records for specific articles
 export async function POST(req: NextRequest) {
   try {
-    // Check authentication - support both NextAuth and admin-session JWT
     const [session, adminSession] = await Promise.all([
       auth(),
       getAdminSession(),
@@ -194,7 +169,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Platform gerekli" }, { status: 400 });
     }
 
-    // Create share records
     const created = await db.socialShare.createMany({
       data: articleIds.map((articleId: string) => ({
         articleId,

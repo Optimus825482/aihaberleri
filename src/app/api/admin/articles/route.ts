@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { Prisma } from "@prisma/client";
 import { ArticleStatus } from "@prisma/client";
+import { checkRateLimit, createRateLimitHeaders } from "@/lib/rate-limiter";
+import { ADMIN_RATE_LIMITS } from "@/lib/api-middleware";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,15 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
+    // Rate limit: 100 reads per minute per IP
+    const rl = await checkRateLimit(request, ADMIN_RATE_LIMITS.read);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Çok fazla istek. Lütfen bekleyin." },
+        { status: 429, headers: createRateLimitHeaders(rl) },
+      );
+    }
+
     const session = await requireAdminAuth();
     if (session instanceof NextResponse) {
       return session;

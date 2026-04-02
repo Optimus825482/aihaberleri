@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
+import { getCache } from "@/lib/cache";
 import { ShareButtons } from "@/components/ShareButtons";
 import { formatDate, calculateReadingMinutes } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -86,11 +87,27 @@ function extractSourceCountFromContent(content: string, sourceUrl?: string | nul
 }
 
 // React.cache() — per-request dedup: generateMetadata + page share same DB query
+// Redis L2 cache (5 min TTL) sits inside to avoid repeated DB hits across requests
 const getArticle = cache(async (slug: string) => {
-  return db.article.findUnique({
+  const cacheKey = `article:tr:${slug}`;
+  const cacheInstance = getCache();
+
+  const cached = await cacheInstance.get<Awaited<ReturnType<typeof db.article.findUnique>>>(cacheKey);
+  if (cached) return cached;
+
+  const article = await db.article.findUnique({
     where: { slug },
     include: { category: true },
   });
+
+  if (article) {
+    await cacheInstance.set(cacheKey, article, {
+      ttl: 300, // 5 minutes
+      tags: ["articles", `article:${slug}`],
+    });
+  }
+
+  return article;
 });
 
 const getInsightSettings = cache(async () =>

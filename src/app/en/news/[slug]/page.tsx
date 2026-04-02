@@ -9,6 +9,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
+import { getCache } from "@/lib/cache";
 import { formatDate, calculateReadingMinutes } from "@/lib/utils";
 import { ArticleImage } from "@/components/ResponsiveImage";
 import { ViewTracker } from "@/components/ViewTracker";
@@ -40,7 +41,15 @@ interface Props {
 }
 
 // React.cache() — per-request dedup: generateMetadata + page share same DB query
+// Redis L2 cache (5 min TTL) sits inside to avoid repeated DB hits across requests
 const getArticle = cache(async (slug: string) => {
+  const cacheKey = `article:en:${slug}`;
+  const cacheInstance = getCache();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cached = await cacheInstance.get<any>(cacheKey);
+  if (cached) return cached;
+
   const translation = await db.articleTranslation.findFirst({
     where: {
       slug,
@@ -59,7 +68,7 @@ const getArticle = cache(async (slug: string) => {
 
   if (!translation) return null;
 
-  return {
+  const article = {
     id: translation.article.id,
     title: translation.title,
     slug: translation.slug,
@@ -81,6 +90,13 @@ const getArticle = cache(async (slug: string) => {
     author: translation.article.author,
     originalSlug: translation.article.slug,
   };
+
+  await cacheInstance.set(cacheKey, article, {
+    ttl: 300, // 5 minutes
+    tags: ["articles", `article:en:${slug}`],
+  });
+
+  return article;
 });
 
 const getInsightSettings = cache(async () =>

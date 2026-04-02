@@ -49,6 +49,39 @@ function isSocialPlatformKey(value: string): value is SocialPlatformKey {
   return value in platformConfig;
 }
 
+function getBatchPlatforms(platformValue: string | null | undefined) {
+  return String(platformValue || "")
+    .split(",")
+    .map((platform) => platform.trim())
+    .filter(Boolean)
+    .filter(isSocialPlatformKey);
+}
+
+function BatchPlatformBadges({
+  platformValue,
+}: {
+  platformValue: string | null | undefined;
+}) {
+  const platforms = getBatchPlatforms(platformValue);
+
+  if (platforms.length === 0) {
+    return <span className="text-gray-400 text-xs">-</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {platforms.map((platform) => (
+        <span
+          key={platform}
+          className="text-white bg-white/10 px-2 py-0.5 rounded text-xs"
+        >
+          {platformConfig[platform].icon} {platformConfig[platform].label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // Status badge component
 function StatusBadge({ status }: { status: string }) {
   const config: Record<
@@ -99,6 +132,25 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function BatchRunStatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    COMPLETED: "border-emerald-400/30 bg-emerald-500/15 text-emerald-300",
+    PROCESSING: "border-sky-400/30 bg-sky-500/15 text-sky-300",
+    FAILED: "border-rose-400/30 bg-rose-500/15 text-rose-300",
+    CANCELLED: "border-amber-400/30 bg-amber-500/15 text-amber-300",
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+        styles[status] || "border-white/15 bg-white/10 text-gray-300"
+      }`}
+    >
+      {status}
+    </span>
+  );
+}
+
 interface RetryComboSummary {
   key: string;
   platform: string;
@@ -143,6 +195,7 @@ export default function SocialSharesPage() {
   // Selective sharing - NEW FEATURE
   const [selectedArticleIds, setSelectedArticleIds] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);
+  const tableColumnCount = Object.keys(platformConfig).length + 2;
 
   // Batch settings
   const [showBatchModal, setShowBatchModal] = useState(false);
@@ -155,7 +208,8 @@ export default function SocialSharesPage() {
     "MASTODON_EN",
   ]);
   const [batchSize, setBatchSize] = useState(50);
-  const [intervalSeconds, setIntervalSeconds] = useState(10);
+  const [batchIntervalSeconds, setBatchIntervalSeconds] = useState(10);
+  const [retryIntervalSeconds, setRetryIntervalSeconds] = useState(10);
   const [batchTargetMode, setBatchTargetMode] =
     useState<BatchTargetMode>("auto-unshared");
 
@@ -173,40 +227,6 @@ export default function SocialSharesPage() {
 
   // Cancel confirmation dialog
   const [cancelConfirm, setCancelConfirm] = useState(false);
-
-  // Fetch articles
-  const isStatusMatch = useCallback(
-    (article: any) => {
-      if (visibilityFilter === "all") return true;
-
-      const statuses: string[] = selectedPlatform
-        ? [article.shares?.[selectedPlatform]?.status || "NOT_CREATED"]
-        : Object.keys(platformConfig).map(
-          (platform) => article.shares?.[platform]?.status || "NOT_CREATED",
-        );
-
-      if (visibilityFilter === "shared") {
-        return statuses.some((status) => status === "SHARED");
-      }
-
-      if (visibilityFilter === "unshared") {
-        return statuses.some((status) => status === "NOT_CREATED");
-      }
-
-      if (visibilityFilter === "pending") {
-        return statuses.some((status) =>
-          ["PENDING", "SCHEDULED", "PROCESSING"].includes(status),
-        );
-      }
-
-      if (visibilityFilter === "failed") {
-        return statuses.some((status) => status === "FAILED");
-      }
-
-      return true;
-    },
-    [selectedPlatform, visibilityFilter],
-  );
 
   const buildArticleParams = useCallback(
     (page: number, limit: number) => {
@@ -398,6 +418,19 @@ export default function SocialSharesPage() {
     fetchSocialInsights();
   }, [fetchSocialInsights]);
 
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [search, selectedPlatform, languageFilter, visibilityFilter]);
+
+  useEffect(() => {
+    const currentPageIds = articles.map((article) => article.id);
+    const allCurrentSelected =
+      currentPageIds.length > 0 &&
+      currentPageIds.every((id) => selectedArticleIds.includes(id));
+
+    setSelectAll(allCurrentSelected);
+  }, [articles, selectedArticleIds]);
+
   // Start batch
   const startBatch = async (mode?: BatchTargetMode) => {
     const effectiveMode = mode || batchTargetMode;
@@ -423,7 +456,7 @@ export default function SocialSharesPage() {
     setBatchLoading(true);
     try {
       const safeIntervalSeconds = Math.max(
-        intervalSeconds,
+        batchIntervalSeconds,
         getRecommendedMinInterval(selectedPlatforms),
       );
 
@@ -458,8 +491,8 @@ export default function SocialSharesPage() {
       const data = await res.json();
 
       if (data.success) {
-        if (safeIntervalSeconds !== intervalSeconds) {
-          setIntervalSeconds(safeIntervalSeconds);
+        if (safeIntervalSeconds !== batchIntervalSeconds) {
+          setBatchIntervalSeconds(safeIntervalSeconds);
           toast({
             title: "Rate-limit koruması uygulandı",
             description: `Aralık ${safeIntervalSeconds} saniye olarak güncellendi.`,
@@ -513,12 +546,18 @@ export default function SocialSharesPage() {
 
   // Toggle select all articles - NEW FEATURE
   const toggleSelectAll = () => {
-    if (selectAll) {
-      setSelectedArticleIds([]);
-    } else {
-      setSelectedArticleIds(articles.map((a) => a.id));
-    }
-    setSelectAll(!selectAll);
+    const currentPageIds = articles.map((article) => article.id);
+    const allCurrentSelected =
+      currentPageIds.length > 0 &&
+      currentPageIds.every((id) => selectedArticleIds.includes(id));
+
+    setSelectedArticleIds((prev) => {
+      if (allCurrentSelected) {
+        return prev.filter((id) => !currentPageIds.includes(id));
+      }
+
+      return Array.from(new Set([...prev, ...currentPageIds]));
+    });
   };
 
   // Start selective batch - NEW FEATURE
@@ -560,7 +599,7 @@ export default function SocialSharesPage() {
         .filter((combo) => selectedRetryCombos.includes(combo.key))
         .map((combo) => combo.platform);
       const safeIntervalSeconds = Math.max(
-        intervalSeconds,
+        retryIntervalSeconds,
         getRecommendedMinInterval(retryPlatforms),
       );
 
@@ -577,8 +616,8 @@ export default function SocialSharesPage() {
       const data = await res.json();
 
       if (data.success) {
-        if (safeIntervalSeconds !== intervalSeconds) {
-          setIntervalSeconds(safeIntervalSeconds);
+        if (safeIntervalSeconds !== retryIntervalSeconds) {
+          setRetryIntervalSeconds(safeIntervalSeconds);
           toast({
             title: "Rate-limit koruması uygulandı",
             description: `Retry aralığı ${safeIntervalSeconds} saniyeye çıkarıldı.`,
@@ -625,9 +664,9 @@ export default function SocialSharesPage() {
   );
 
   const rateLimitRiskLevel =
-    intervalSeconds < recommendedMinIntervalSeconds
+    batchIntervalSeconds < recommendedMinIntervalSeconds
       ? "Yüksek"
-      : intervalSeconds < Math.ceil(recommendedMinIntervalSeconds * 1.5)
+      : batchIntervalSeconds < Math.ceil(recommendedMinIntervalSeconds * 1.5)
         ? "Orta"
         : "Düşük";
 
@@ -699,14 +738,14 @@ export default function SocialSharesPage() {
   }, []);
 
   useEffect(() => {
-    if (intervalSeconds < recommendedMinIntervalSeconds) {
-      setIntervalSeconds(recommendedMinIntervalSeconds);
+    if (batchIntervalSeconds < recommendedMinIntervalSeconds) {
+      setBatchIntervalSeconds(recommendedMinIntervalSeconds);
       toast({
         title: "Rate-limit koruması",
         description: `Seçili platformlara göre aralık ${recommendedMinIntervalSeconds} saniyeye yükseltildi.`,
       });
     }
-  }, [intervalSeconds, recommendedMinIntervalSeconds, toast]);
+  }, [batchIntervalSeconds, recommendedMinIntervalSeconds, toast]);
 
   return (
     <AdminLayout>
@@ -875,8 +914,8 @@ export default function SocialSharesPage() {
           <div className="flex flex-wrap items-center gap-3">
             <select
               aria-label="Retry paylaşım aralığı"
-              value={intervalSeconds}
-              onChange={(e) => setIntervalSeconds(parseInt(e.target.value))}
+              value={retryIntervalSeconds}
+              onChange={(e) => setRetryIntervalSeconds(parseInt(e.target.value))}
               className="px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm"
             >
               <option value={5}>5 saniye</option>
@@ -1029,7 +1068,7 @@ export default function SocialSharesPage() {
                 {loading ? (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={tableColumnCount}
                       className="px-4 py-8 text-center text-gray-400"
                     >
                       <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
@@ -1039,7 +1078,7 @@ export default function SocialSharesPage() {
                 ) : articles.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={tableColumnCount}
                       className="px-4 py-8 text-center text-gray-400"
                     >
                       Haber bulunamadı
@@ -1114,17 +1153,29 @@ export default function SocialSharesPage() {
                     key={article.id}
                     className="p-4 hover:bg-white/5 transition-colors"
                   >
-                    <p className="text-white text-sm font-medium mb-1 line-clamp-2">
-                      {article.title}
-                    </p>
-                    <p className="text-gray-500 text-xs mb-3">
-                      {article.category?.name} •{" "}
-                      {article.publishedAt
-                        ? new Date(article.publishedAt).toLocaleDateString(
-                            "tr-TR",
-                          )
-                        : "-"}
-                    </p>
+                    <div className="flex items-start gap-3 mb-2">
+                      <input
+                        type="checkbox"
+                        aria-label="Haberi seç"
+                        title="Haberi seç"
+                        checked={selectedArticleIds.includes(article.id)}
+                        onChange={() => toggleArticleSelection(article.id)}
+                        className="mt-0.5 w-4 h-4 rounded bg-white/10 border-white/20 text-purple-500 focus:ring-purple-500"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-white text-sm font-medium mb-1 line-clamp-2">
+                          {article.title}
+                        </p>
+                        <p className="text-gray-500 text-xs mb-3">
+                          {article.category?.name} •{" "}
+                          {article.publishedAt
+                            ? new Date(article.publishedAt).toLocaleDateString(
+                                "tr-TR",
+                              )
+                            : "-"}
+                        </p>
+                      </div>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(platformConfig).map(
                         ([platform, config]) => (
@@ -1206,23 +1257,7 @@ export default function SocialSharesPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-400">Platformlar:</span>
-                <div className="flex items-center gap-2">
-                  {activeBatch.platform?.split(",").map((p: string) => (
-                    (() => {
-                      const platformKey = isSocialPlatformKey(p) ? p : null;
-                      const config = platformKey ? platformConfig[platformKey] : null;
-
-                      return (
-                    <span
-                      key={p}
-                      className="text-white bg-white/10 px-2 py-0.5 rounded text-xs"
-                    >
-                          {config?.icon} {config?.label || p}
-                    </span>
-                      );
-                    })()
-                  ))}
-                </div>
+                <BatchPlatformBadges platformValue={activeBatch.platform} />
               </div>
               {activeBatch.progress && (
                 <>
@@ -1251,13 +1286,38 @@ export default function SocialSharesPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-400">
-                      Atlanan (zaten paylaşıldı):
-                    </span>
+                    <span className="text-gray-400">Atlanan:</span>
                     <span className="text-yellow-400">
                       {activeBatch.progress.progress?.skipped || 0}
                     </span>
                   </div>
+                  {activeBatch.progress.progress?.skipBreakdown && (
+                    <div className="grid gap-2 rounded-lg border border-white/10 bg-black/10 p-3 text-xs sm:grid-cols-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-gray-400">Zaten paylaşıldı</span>
+                        <span className="text-yellow-300">
+                          {activeBatch.progress.progress.skipBreakdown
+                            .alreadyShared || 0}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-gray-400">
+                          Retry limiti doldu
+                        </span>
+                        <span className="text-orange-300">
+                          {activeBatch.progress.progress.skipBreakdown
+                            .permanentFailure || 0}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-gray-400">EN çeviri yok</span>
+                        <span className="text-cyan-300">
+                          {activeBatch.progress.progress.skipBreakdown
+                            .missingEnglishTranslation || 0}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
                     <div
                       className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-500"
@@ -1274,61 +1334,6 @@ export default function SocialSharesPage() {
                   </div>
                 </>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* Recent Batches */}
-        {batches.length > 0 && (
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4">
-            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Son Batch İşlemleri
-            </h3>
-            <div className="space-y-2">
-              {batches.slice(0, 5).map((batch) => (
-                (() => {
-                  const batchPlatform = String(batch.platform || "");
-                  const batchPlatformConfig = isSocialPlatformKey(batchPlatform)
-                    ? platformConfig[batchPlatform]
-                    : null;
-
-                  return (
-                <div
-                  key={batch.id}
-                  className="flex items-center justify-between py-2 px-3 bg-white/5 rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                        <span>{batchPlatformConfig?.icon}</span>
-                    <span className="text-white text-sm">
-                          {batchPlatformConfig?.label || batchPlatform}
-                    </span>
-                    <span className="text-gray-400 text-xs">
-                      {batch.processedItems}/{batch.totalItems} işlendi
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-2 py-0.5 rounded text-xs ${
-                        batch.status === "COMPLETED"
-                          ? "bg-green-500/20 text-green-400"
-                          : batch.status === "PROCESSING"
-                            ? "bg-purple-500/20 text-purple-400"
-                            : batch.status === "FAILED"
-                              ? "bg-red-500/20 text-red-400"
-                              : "bg-gray-500/20 text-gray-400"
-                      }`}
-                    >
-                      {batch.status}
-                    </span>
-                    <span className="text-gray-500 text-xs">
-                      {new Date(batch.createdAt).toLocaleString("tr-TR")}
-                    </span>
-                  </div>
-                </div>
-                  );
-                })()
-              ))}
             </div>
           </div>
         )}
@@ -1394,7 +1399,7 @@ export default function SocialSharesPage() {
                     <option value="auto-unshared">
                       Otomatik (Paylaşılmayanlardan)
                     </option>
-                    <option value="selected">
+                    <option value="selected" disabled={selectedArticleIds.length === 0}>
                       Sadece Seçtiklerim ({selectedArticleIds.length})
                     </option>
                     <option value="filtered">
@@ -1441,9 +1446,9 @@ export default function SocialSharesPage() {
                   </label>
                   <select
                     id="interval-seconds"
-                    value={intervalSeconds}
+                    value={batchIntervalSeconds}
                     onChange={(e) =>
-                      setIntervalSeconds(parseInt(e.target.value))
+                      setBatchIntervalSeconds(parseInt(e.target.value))
                     }
                     className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
                   >
@@ -1509,7 +1514,107 @@ export default function SocialSharesPage() {
             </div>
           </div>
         )}
+
+        {/* Recent Batches */}
+        {batches.length > 0 && (
+          <div className="rounded-2xl border border-cyan-500/20 bg-[radial-gradient(circle_at_top_left,rgba(6,182,212,0.14),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 backdrop-blur-sm">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
+                  <Settings className="w-5 h-5 text-cyan-300" />
+                  Batch Otakip
+                </h3>
+                <p className="mt-1 text-xs text-gray-400">
+                  Son batchlerin sonucunu ve atlama nedenlerini hizlica
+                  izleyebilirsin.
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-right">
+                <div className="text-[11px] uppercase tracking-[0.18em] text-gray-500">
+                  Kayit
+                </div>
+                <div className="text-lg font-semibold text-white">
+                  {Math.min(batches.length, 5)}
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {batches.slice(0, 5).map((batch) => (
+                <div
+                  key={batch.id}
+                  className="rounded-2xl border border-white/10 bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 space-y-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <BatchPlatformBadges platformValue={batch.platform} />
+                        <BatchRunStatusBadge status={batch.status} />
+                      </div>
+                      <div className="grid gap-2 text-xs text-gray-300 sm:grid-cols-4">
+                        <div className="rounded-xl border border-white/8 bg-white/5 px-3 py-2">
+                          <div className="text-[11px] text-gray-500">
+                            Islenen
+                          </div>
+                          <div className="mt-1 font-semibold text-white">
+                            {batch.processedItems}/{batch.totalItems}
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-white/8 bg-white/5 px-3 py-2">
+                          <div className="text-[11px] text-gray-500">
+                            Paylasilan
+                          </div>
+                          <div className="mt-1 font-semibold text-emerald-300">
+                            {batch.progress?.progress?.processed ||
+                              batch.processedItems ||
+                              0}
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-white/8 bg-white/5 px-3 py-2">
+                          <div className="text-[11px] text-gray-500">
+                            Atlanan
+                          </div>
+                          <div className="mt-1 font-semibold text-amber-300">
+                            {batch.progress?.progress?.skipped || 0}
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-white/8 bg-white/5 px-3 py-2">
+                          <div className="text-[11px] text-gray-500">
+                            Tarih
+                          </div>
+                          <div className="mt-1 font-semibold text-white">
+                            {new Date(batch.createdAt).toLocaleString("tr-TR")}
+                          </div>
+                        </div>
+                      </div>
+                      {batch.progress?.progress?.skipBreakdown && (
+                        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                          <span className="rounded-full bg-yellow-500/10 px-2.5 py-1 text-yellow-300">
+                            Zaten vardi:{" "}
+                            {batch.progress.progress.skipBreakdown
+                              .alreadyShared || 0}
+                          </span>
+                          <span className="rounded-full bg-orange-500/10 px-2.5 py-1 text-orange-300">
+                            Limit doldu:{" "}
+                            {batch.progress.progress.skipBreakdown
+                              .permanentFailure || 0}
+                          </span>
+                          <span className="rounded-full bg-cyan-500/10 px-2.5 py-1 text-cyan-300">
+                            EN yok:{" "}
+                            {batch.progress.progress.skipBreakdown
+                              .missingEnglishTranslation || 0}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
 }
+
+

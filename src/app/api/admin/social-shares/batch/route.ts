@@ -13,6 +13,10 @@ import {
   getSocialBatchProgress,
   cancelSocialBatchJob,
 } from "@/lib/queue";
+import {
+  buildAdminShareMap,
+  shareNeedsPosting,
+} from "@/lib/social-share-admin";
 import { withRateLimit, ADMIN_RATE_LIMITS } from "@/lib/api-middleware";
 
 export const dynamic = "force-dynamic";
@@ -80,6 +84,19 @@ export async function GET(req: NextRequest) {
       take: 50,
     });
 
+    const batchesWithProgress = await Promise.all(
+      batches.map(async (batch) => {
+        const progress = await getSocialBatchProgress(batch.id);
+
+        return progress
+          ? {
+              ...batch,
+              progress,
+            }
+          : batch;
+      }),
+    );
+
     // Get platform statistics
     const stats = await db.socialShare.groupBy({
       by: ["platform", "status"],
@@ -91,17 +108,24 @@ export async function GET(req: NextRequest) {
       where: { status: "PUBLISHED" },
     });
 
-    // Transform stats
-    const platformStats: Record<string, any> = {};
-    stats.forEach((s) => {
-      if (!platformStats[s.platform]) {
-        platformStats[s.platform] = {
+    const platformStats: Record<string, any> = Object.fromEntries(
+      validPlatforms.map((platform) => [
+        platform,
+        {
           shared: 0,
           pending: 0,
           failed: 0,
           total: totalArticles,
-        };
+          unshared: 0,
+        },
+      ]),
+    );
+
+    stats.forEach((s) => {
+      if (!platformStats[s.platform]) {
+        return;
       }
+
       if (s.status === "SHARED") {
         platformStats[s.platform].shared = s._count.id;
       } else if (
@@ -115,24 +139,41 @@ export async function GET(req: NextRequest) {
       }
     });
 
-    // Calculate unshared for each platform
-    Object.keys(platformStats).forEach((platform) => {
-      const stat = platformStats[platform];
-      stat.unshared = Math.max(
-        0,
-        totalArticles - stat.shared - stat.pending - stat.failed,
-      );
+    const publishedArticles = await db.article.findMany({
+      where: { status: "PUBLISHED" },
+      select: {
+        socialShares: {
+          select: {
+            platform: true,
+            language: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    publishedArticles.forEach((article) => {
+      const shareMap = buildAdminShareMap(article.socialShares);
+
+      validPlatforms.forEach((platform) => {
+        const currentStatus = shareMap[platform]?.status;
+        if (shareNeedsPosting(currentStatus)) {
+          platformStats[platform].unshared += 1;
+        }
+      });
     });
 
     // Check for active batches
-    const activeBatch = batches.find((b) => b.status === "PROCESSING");
+    const activeBatch = batchesWithProgress.find(
+      (b) => b.status === "PROCESSING",
+    );
     let activeProgress = null;
     if (activeBatch) {
-      activeProgress = await getSocialBatchProgress(activeBatch.id);
+      activeProgress = "progress" in activeBatch ? activeBatch.progress : null;
     }
 
     return NextResponse.json({
-      batches,
+      batches: batchesWithProgress,
       stats: platformStats,
       totalArticles,
       activeBatch: activeBatch
@@ -278,25 +319,34 @@ export async function POST(req: NextRequest) {
 
       unsharedCount = existingCount; // Used for message
     } else {
-      // Automatic Mode (Find unshared)
-      // Count unshared articles (based on TR platform - base check)
-      const sharedArticleIds = await db.socialShare.findMany({
-        where: {
-          platform: { in: safePlatforms },
-          language: "tr",
-          status: "SHARED",
-        },
-        select: { articleId: true },
-      });
-
-      const sharedIds = [...new Set(sharedArticleIds.map((s) => s.articleId))];
-
-      unsharedCount = await db.article.count({
+      // Automatic Mode (Find articles that still need at least one selected platform)
+      const candidateArticles = await db.article.findMany({
         where: {
           status: "PUBLISHED",
-          id: { notIn: sharedIds },
+        },
+        select: {
+          id: true,
+          socialShares: {
+            select: {
+              platform: true,
+              language: true,
+              status: true,
+            },
+          },
         },
       });
+
+      const unsharedArticleIds = candidateArticles
+        .filter((article) => {
+          const shareMap = buildAdminShareMap(article.socialShares);
+
+          return safePlatforms.some((platform) =>
+            shareNeedsPosting(shareMap[platform]?.status),
+          );
+        })
+        .map((article) => article.id);
+
+      unsharedCount = unsharedArticleIds.length;
 
       if (unsharedCount === 0) {
         return NextResponse.json({
@@ -429,3 +479,4 @@ export async function DELETE(req: NextRequest) {
     );
   }
 }
+

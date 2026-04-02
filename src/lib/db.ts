@@ -52,7 +52,7 @@ function buildDatabaseUrl(): string {
   const base = process.env.DATABASE_URL ?? "";
   if (!base || base.includes("connection_limit")) return base; // Already configured
   const separator = base.includes("?") ? "&" : "?";
-  return `${base}${separator}connection_limit=5&pool_timeout=30`;
+  return `${base}${separator}connection_limit=5&pool_timeout=30&connect_timeout=10`;
 }
 
 export const db =

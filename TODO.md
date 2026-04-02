@@ -15,15 +15,16 @@
 - [x] `src/lib/rate-limiter.ts` — Sliding window implementasyonu mevcut
 - [x] `src/lib/api-middleware.ts` — `withRateLimit` + `ADMIN_RATE_LIMITS` helper oluşturuldu
 - [x] `POST /api/admin/social-shares/batch` — 5 req/dk rate limit eklendi
-- [ ] `POST /api/admin/articles` — rate limit ekle (write: 30/dk)
-- [ ] `DELETE /api/admin/articles` — rate limit ekle (delete: 10/dk)
+- [x] `GET /api/admin/articles` — 100 req/dk rate limit eklendi
+- [x] `POST /api/admin/articles/bulk` — bulkRateLimit (10/dk) zaten mevcut
+- Note: POST/DELETE /api/admin/articles endpoint'leri yok — ihtiyaç halinde eklenecek
 
 ### ✅ Makale Cache
 - [x] `src/lib/cache.ts` — L1 (memory) + L2 (Redis) implementasyonu mevcut
 - [x] Homepage DB sorgularına cache eklendi (3 dk TTL, `homepage` + `articles` tags)
-- [ ] Article page DB sorgusuna Redis cache ekle (`src/app/news/[slug]/page.tsx`)
-- [ ] EN article page için cache (`src/app/en/news/[slug]/page.tsx`)
-- [ ] Cache invalidation: yeni makale yayınlanınca `articles:*` tag'i temizle
+- [x] Article page DB sorgusuna Redis cache eklendi (`src/app/news/[slug]/page.tsx`) — 5 dk TTL, tags: `articles` + `article:tr:{slug}`
+- [x] EN article page için cache eklendi (`src/app/en/news/[slug]/page.tsx`) — 5 dk TTL, tags: `articles` + `article:en:{slug}`
+- [x] Cache invalidation: `invalidateByTag("articles")` zaten 6 yerde çağrılıyor (content.service, articles/[id], bulk, en-sync, database-publisher)
 
 ### ✅ hreflang Etiketleri
 - [x] TR article page (`/news/[slug]`) — `generateMetadata` ile hreflang mevcut
@@ -102,3 +103,9 @@
 - [x] BullMQ concurrency azaltıldı (58 → 31)
 - [x] Admin polling 5s → 15s
 - [x] removeOnComplete/Fail limitleri düşürüldü
+- [x] EN RSS feed oluşturuldu (`/en/feed.xml`)
+- [x] Sentry config dosyaları oluşturuldu (client/server/edge + instrumentation)
+- [x] View Counter Redis'e taşındı (3 DB sorgu → ~0.3ms Redis, 5 dk cron flush)
+- [x] TR makale sayfasına Redis cache eklendi (`/news/[slug]` — 5 dk TTL)
+- [x] EN makale sayfasına Redis cache eklendi (`/en/news/[slug]` — 5 dk TTL)
+- [x] Admin articles GET endpoint'ine rate limit eklendi (100/dk)

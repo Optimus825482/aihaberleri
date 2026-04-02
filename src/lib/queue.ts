@@ -470,10 +470,40 @@ export async function getSocialBatchProgress(batchId: string) {
 
     const state = await job.getState();
     const progress = job.progress as any;
+    const normalizedProgress = progress
+      ? {
+          processed: progress.processed || 0,
+          failed: progress.failed || 0,
+          skipped: progress.skipped || 0,
+          totalChecked: progress.totalChecked || 0,
+          currentArticle: progress.currentArticle || 0,
+          totalArticles: progress.totalArticles || 0,
+          adaptiveIntervalSeconds: progress.adaptiveIntervalSeconds || 0,
+          skipBreakdown: {
+            alreadyShared: progress.skipBreakdown?.alreadyShared || 0,
+            permanentFailure: progress.skipBreakdown?.permanentFailure || 0,
+            missingEnglishTranslation:
+              progress.skipBreakdown?.missingEnglishTranslation || 0,
+          },
+        }
+      : {
+          processed: 0,
+          failed: 0,
+          skipped: 0,
+          totalChecked: 0,
+          currentArticle: 0,
+          totalArticles: 0,
+          adaptiveIntervalSeconds: 0,
+          skipBreakdown: {
+            alreadyShared: 0,
+            permanentFailure: 0,
+            missingEnglishTranslation: 0,
+          },
+        };
 
     return {
       state,
-      progress: progress || { processed: 0, total: 0, failed: 0 },
+      progress: normalizedProgress,
       finishedOn: job.finishedOn,
       failedReason: job.failedReason,
     };

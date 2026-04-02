@@ -44,6 +44,7 @@ import {
 import { postToBluesky, postToBlueskyEN } from "@/lib/social/bluesky";
 import { postToMastodon, postToMastodonEN } from "@/lib/social/mastodon";
 import { db } from "@/lib/db";
+import { normalizeSocialSharePlatform } from "@/lib/social-share-admin";
 import { PrismaClient, Prisma } from "@prisma/client";
 
 // OOM log suppression — prevent thousands of identical error lines
@@ -1138,6 +1139,11 @@ async function startWorker() {
           let failed = 0;
           let skipped = 0;
           let totalChecked = 0;
+          const skipBreakdown = {
+            alreadyShared: 0,
+            permanentFailure: 0,
+            missingEnglishTranslation: 0,
+          };
           let adaptiveIntervalSeconds = Math.max(intervalSeconds, 5);
 
           for (let i = 0; i < allArticles.length; i++) {
@@ -1174,22 +1180,40 @@ async function startWorker() {
               },
             });
 
-            const sharedPlatforms = new Set(
-              existingShares.map((s) => `${s.platform}_${s.language}`),
+            const existingShareStatusByPlatform = new Map(
+              existingShares.map((share) => [
+                normalizeSocialSharePlatform(share.platform, share.language),
+                share.status,
+              ]),
             );
 
             // Determine which platforms need posting
             const platformsToPost: string[] = [];
             for (const platform of platforms) {
               const language = platformLanguage[platform] || "tr";
-              const key = `${platform}_${language}`;
-              if (sharedPlatforms.has(key)) {
+              const normalizedPlatform = normalizeSocialSharePlatform(
+                platform,
+                language,
+              );
+              const existingStatus =
+                existingShareStatusByPlatform.get(normalizedPlatform);
+
+              if (existingStatus === "SHARED") {
                 skipped++;
+                skipBreakdown.alreadyShared++;
                 continue;
               }
+
+              if (existingStatus === "FAILED") {
+                skipped++;
+                skipBreakdown.permanentFailure++;
+                continue;
+              }
+
               const isEnglish = platform.endsWith("_EN");
               if (isEnglish && !enTranslation) {
                 skipped++;
+                skipBreakdown.missingEnglishTranslation++;
                 continue;
               }
               platformsToPost.push(platform);
@@ -1369,6 +1393,7 @@ async function startWorker() {
               processed,
               failed,
               skipped,
+              skipBreakdown,
               totalChecked,
               currentArticle: i + 1,
               totalArticles: allArticles.length,
