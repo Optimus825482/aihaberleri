@@ -62,18 +62,14 @@ async function diagnoseFacebookPermissionError(
   try {
     const response = await axios.get(`${GRAPH_API_URL}/${pageId}`, {
       params: {
-        fields: "id,name,tasks",
+        fields: "id,name",
         access_token: accessToken,
       },
     });
 
-    const tasks = Array.isArray(response.data?.tasks)
-      ? response.data.tasks.join(", ")
-      : "unknown";
-
     return {
       reason: "missing_scope",
-      detail: `Facebook ${label} token page'e erişebiliyor (${response.data?.name || pageId}) ama paylaşım izni eksik olabilir. Meta tarafında app için pages_manage_posts, pages_read_engagement ve ilgili page task yetkilerini kontrol et. Mevcut tasks: ${tasks}.`,
+      detail: `Facebook ${label} token page'e erişebiliyor (${response.data?.name || pageId}) ama paylaşım izni eksik olabilir. Meta tarafında app için pages_manage_posts, pages_read_engagement ve ilgili sayfa görev yetkilerini kontrol et.`,
     };
   } catch (diagnosisError: any) {
     const diagnosisData = diagnosisError?.response?.data?.error;
@@ -138,17 +134,19 @@ export async function postToFacebookWithMetadata(article: {
 
     let postId: string;
 
-    // Post as link — Facebook scrapes OG tags from the URL for image/title/description
-    // Note: picture param requires domain ownership verification, so we rely on OG tags
-    const response = await axios.post(
-      `${GRAPH_API_URL}/${FACEBOOK_PAGE_ID}/feed`,
-      {
-        message,
-        link: articleUrl,
-        published: 1,
-        access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
-      },
-    );
+    const response = article.imageUrl
+      ? await axios.post(`${GRAPH_API_URL}/${FACEBOOK_PAGE_ID}/photos`, {
+          url: article.imageUrl,
+          caption: `${message}\n\n🔗 ${articleUrl}`,
+          published: 1,
+          access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
+        })
+      : await axios.post(`${GRAPH_API_URL}/${FACEBOOK_PAGE_ID}/feed`, {
+          message,
+          link: articleUrl,
+          published: 1,
+          access_token: FACEBOOK_PAGE_ACCESS_TOKEN,
+        });
     postId = response.data.id;
 
     console.log(`✅ Facebook post successful! ID: ${postId}`);

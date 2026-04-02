@@ -709,6 +709,39 @@ const ENTITY_VISUAL_STYLES: Record<string, string> = {
   security: "encrypted data flow visualization, firewall architecture",
 };
 
+const NEWS_SAFE_SCENE_BY_KEYWORD: Array<{ keywords: string[]; scene: string }> = [
+  {
+    keywords: ["leak", "source code", "github", "repository", "repo", "sız", "sizdi", "kaldır", "takedown"],
+    scene:
+      "close-up of a secure code repository dashboard on dark monitors, redacted commit panels, incident response war room, editorial photo",
+  },
+  {
+    keywords: ["funding", "investment", "series", "valuation", "yatırım", "finansman"],
+    scene:
+      "modern venture capital meeting room with deal documents, analytics wall display, glass architecture, editorial business photo",
+  },
+  {
+    keywords: ["chip", "gpu", "semiconductor", "nvidia", "amd", "intel", "çip", "yarı iletken"],
+    scene:
+      "macro shot of advanced ai chip on circuit board, clean lab environment, precision hardware editorial photo",
+  },
+  {
+    keywords: ["robot", "robotics", "drone", "otonomous", "autonomous", "robotik"],
+    scene:
+      "industrial robotics lab with articulated machine hardware, testing area, clean engineering editorial photo",
+  },
+  {
+    keywords: ["model", "llm", "claude", "chatgpt", "gemini", "deepseek", "assistant", "agent"],
+    scene:
+      "high-end ai development control room with code dashboards, compliance screens, empty operator space, editorial technology photo",
+  },
+  {
+    keywords: ["security", "breach", "hack", "vulnerability", "exploit", "güvenlik", "ihlal"],
+    scene:
+      "cybersecurity operations center with threat map displays, server racks, incident alert panels, editorial photo",
+  },
+];
+
 /**
  * Extract entity from title for visual style matching
  */
@@ -734,6 +767,18 @@ function detectEntityForVisual(title: string): string | null {
   if (lowerTitle.includes("alexa")) return "amazon";
 
   return null;
+}
+
+function buildSafeNewsScene(title: string, content: string, category: string): string {
+  const lower = `${title} ${content.substring(0, 500)} ${category}`.toLowerCase();
+
+  for (const rule of NEWS_SAFE_SCENE_BY_KEYWORD) {
+    if (rule.keywords.some((keyword) => lower.includes(keyword))) {
+      return rule.scene;
+    }
+  }
+
+  return "clean newsroom-style technology illustration of the article subject, devices and interfaces only, editorial photo";
 }
 
 /**
@@ -850,76 +895,8 @@ export async function generateImagePrompt(
     ? ENTITY_VISUAL_STYLES[detectedEntity]
     : null;
 
-  // Diverse camera angles
-  const cameraAngles = [
-    "macro photography",
-    "wide angle shot",
-    "aerial view",
-    "close-up detail",
-    "symmetrical composition",
-    "low angle perspective",
-    "bird's eye view",
-    "cinematic wide shot",
-    "product photography",
-    "architectural photography",
-    "isometric view",
-    "dutch angle",
-    "tilt-shift miniature effect",
-    "extreme close-up",
-    "panoramic shot",
-  ];
-  const randomAngle =
-    cameraAngles[Math.floor(Math.random() * cameraAngles.length)];
-
-  // Diverse lighting styles
-  const lightingStyles = [
-    "golden hour lighting",
-    "blue hour atmosphere",
-    "studio lighting",
-    "natural daylight",
-    "dramatic side lighting",
-    "soft diffused light",
-    "neon accent lighting",
-    "backlit silhouette",
-    "overcast even lighting",
-    "rim lighting with dark background",
-    "chiaroscuro contrast",
-    "volumetric fog lighting",
-    "sunset warm tones",
-    "fluorescent lab lighting",
-  ];
-  const randomLighting =
-    lightingStyles[Math.floor(Math.random() * lightingStyles.length)];
-
-  // Visual style variation — pick a random rendering approach
-  const visualStyles = [
-    "photorealistic editorial photography",
-    "hyper-detailed 3D render, octane render quality",
-    "technical illustration with depth",
-    "documentary-style photojournalism",
-    "minimalist product photography",
-    "cinematic still frame, anamorphic lens",
-    "scientific visualization, data-driven aesthetic",
-    "architectural interior photography",
-  ];
-  const randomVisualStyle =
-    visualStyles[Math.floor(Math.random() * visualStyles.length)];
-
-  // Color mood variation
-  const colorMoods = [
-    "cool blue-steel palette",
-    "warm amber and gold tones",
-    "monochromatic with single color accent",
-    "high contrast black and white with color pop",
-    "muted desaturated tones",
-    "vivid saturated colors",
-    "earth tones with metallic accents",
-    "deep teal and copper",
-  ];
-  const randomColorMood =
-    colorMoods[Math.floor(Math.random() * colorMoods.length)];
-
   const entityHint = entityStyle ? `\nENTITY STYLE HINT: ${entityStyle}` : "";
+  const safeScene = buildSafeNewsScene(title, content, category);
 
   // Extract a unique content excerpt — skip first 100 chars to avoid boilerplate
   const contentExcerpt = content
@@ -927,38 +904,33 @@ export async function generateImagePrompt(
     .replace(/\n+/g, " ")
     .trim();
 
-  const prompt = `You are a creative director creating a UNIQUE editorial image for this specific AI news story. Each image must be visually distinct from all others.
+  const prompt = `You are creating a safe editorial image prompt for a technology news story.
 
 ARTICLE TITLE: ${title}
 CATEGORY: ${category}
 CONTENT EXCERPT: ${contentExcerpt.substring(0, 300)}
-${entityContext}${entityHint}
-
-VISUAL DIRECTION:
-- Style: ${randomVisualStyle}
-- Camera: ${randomAngle}
-- Lighting: ${randomLighting}
-- Color mood: ${randomColorMood}
+SAFE SCENE BASE: ${safeScene}${entityContext}${entityHint}
 
 YOUR TASK:
-Create a single image description that captures the SPECIFIC subject of THIS article — not generic "AI technology" imagery. 
+Create a single concise image description that captures the SPECIFIC subject of THIS article.
 
-Think about: What PHYSICAL OBJECT, DEVICE, ENVIRONMENT, or SCENE best represents this specific news story? Be concrete and literal.
+Think about: what OBJECT, DEVICE, INTERFACE, LAB, SERVER ROOM, REPOSITORY VIEW, or CORPORATE ENVIRONMENT best represents this story? Be literal and concrete.
 
 ABSOLUTE RULES:
 1. NO humans, faces, hands, body parts — EVER
 2. NO text, logos, brand names, or writing visible in the image
-3. NO generic clichés: "holographic brain", "digital network", "glowing circuits", "abstract data"
-4. Focus on TANGIBLE subjects: specific devices, real environments, actual hardware, physical spaces
-5. Each prompt must describe a UNIQUE scene — avoid repeating common tech stock photo compositions
-6. Output ONLY the prompt text (max 190 chars). No explanation, no quotes.`;
+3. NO NSFW, no sensual, no lingerie, no skin focus, no bedroom, no censorship themes
+4. NO generic clichés: "holographic brain", "digital network", "glowing circuits", "abstract data", "mysterious woman", "cinematic character"
+5. Focus on TANGIBLE subjects: specific devices, dashboards, hardware, server rooms, offices, labs
+6. Prefer square-safe compositions with one clear subject, clean background, editorial realism
+7. Output ONLY the prompt text in English, max 170 chars. No explanation, no quotes.`;
 
   const response = await callDeepSeek(
     [
       {
         role: "system",
         content:
-          "You are an award-winning editorial photographer. Generate ONE unique, specific image prompt for this news article. Be concrete and original — never generic. No humans. Just the prompt text.",
+          "You are a news photo editor. Return one short, brand-safe, editorial image prompt in English. No humans, no NSFW, no text, no logos, no characters, no body parts. Focus on tangible tech/news scenes only.",
       },
       {
         role: "user",
@@ -967,7 +939,7 @@ ABSOLUTE RULES:
     ],
     {
       maxTokens: 200,
-      temperature: 1.2, // Higher temperature for more creative variety
+      temperature: 0.65,
     },
   );
 
@@ -985,6 +957,7 @@ ABSOLUTE RULES:
 
   // Remove any remaining tags
   cleanPrompt = cleanPrompt.replace(/<[^>]+>/g, "").trim();
+  cleanPrompt = cleanPrompt.replace(/\b(nsfw|nude|naked|lingerie|sensual|censored|erotic|seductive|woman|man|girl|boy)\b/gi, "").replace(/\s+/g, " ").trim();
 
   // CRITICAL: Enforce max length (matches pollinations.ts 200 char URL limit)
   if (cleanPrompt.length > 200) {
@@ -1002,6 +975,15 @@ ABSOLUTE RULES:
     if (topicKeywords.includes("security") || topicKeywords.includes("hack")) {
       cleanPrompt =
         "Cybersecurity operations center, threat monitoring screens, empty workstations, professional setting, no people";
+    } else if (
+      topicKeywords.includes("claude") ||
+      topicKeywords.includes("source code") ||
+      topicKeywords.includes("github") ||
+      topicKeywords.includes("repo") ||
+      topicKeywords.includes("sız")
+    ) {
+      cleanPrompt =
+        "Secure code repository dashboard on dual monitors, incident response room, redacted panels, editorial technology photo";
     } else if (
       topicKeywords.includes("launch") ||
       topicKeywords.includes("release")
