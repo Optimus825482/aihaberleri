@@ -30,14 +30,17 @@ export async function GET(req: NextRequest) {
     const platform = searchParams.get("platform") || null;
     const language = searchParams.get("language") || null;
     const status = searchParams.get("status") || null;
+    const visibility = searchParams.get("visibility") || null; // shared|unshared|pending|failed
     const search = searchParams.get("search") || null;
-    const unsharedOnly = searchParams.get("unsharedOnly") === "true";
+    const unsharedOnly =
+      searchParams.get("unsharedOnly") === "true" || visibility === "unshared";
 
     const skip = (page - 1) * limit;
 
     // Build where clause for articles
     const articleWhere: Prisma.ArticleWhereInput = {
       status: "PUBLISHED",
+      ...(language && { language }),
       ...(search && {
         OR: [
           { title: { contains: search, mode: "insensitive" } },
@@ -113,19 +116,30 @@ export async function GET(req: NextRequest) {
           shareMap[key] = share;
         });
 
-        // Apply filters if specified
+        // Apply platform+status filter if both are provided
         if (platform && status && shareMap[platform]?.status !== status) {
           return null;
         }
 
-        // Filter unshared only
-        if (unsharedOnly) {
+        // Apply general visibility filter (cross-platform, no specific platform required)
+        if (visibility === "unshared" || unsharedOnly) {
           const hasUnshared = platforms.some(
             (p) =>
               shareMap[p].status === "NOT_CREATED" ||
               shareMap[p].status === "PENDING",
           );
           if (!hasUnshared) return null;
+        } else if (visibility === "shared" && !platform) {
+          const hasShared = platforms.some((p) => shareMap[p].status === "SHARED");
+          if (!hasShared) return null;
+        } else if (visibility === "pending" && !platform) {
+          const hasPending = platforms.some((p) =>
+            ["PENDING", "SCHEDULED", "PROCESSING"].includes(shareMap[p].status),
+          );
+          if (!hasPending) return null;
+        } else if (visibility === "failed" && !platform) {
+          const hasFailed = platforms.some((p) => shareMap[p].status === "FAILED");
+          if (!hasFailed) return null;
         }
 
         return {

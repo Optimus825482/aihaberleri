@@ -9,7 +9,6 @@
 export type SocialPlatformKey =
   | "FACEBOOK"
   | "FACEBOOK_EN"
-  | "TWITTER"
   | "BLUESKY"
   | "BLUESKY_EN"
   | "MASTODON"
@@ -27,7 +26,6 @@ export interface PlatformConfig {
 export const platformConfig: Record<SocialPlatformKey, PlatformConfig> = {
   FACEBOOK: { icon: "📘", color: "bg-blue-600", label: "Facebook TR" },
   FACEBOOK_EN: { icon: "📘", color: "bg-blue-500", label: "Facebook EN" },
-  TWITTER: { icon: "𝕏", color: "bg-black", label: "Twitter" },
   BLUESKY: { icon: "🦋", color: "bg-sky-500", label: "Bluesky TR" },
   BLUESKY_EN: { icon: "🦋", color: "bg-sky-400", label: "Bluesky EN" },
   MASTODON: { icon: "🐘", color: "bg-purple-600", label: "Mastodon TR" },
@@ -40,7 +38,6 @@ export const platformConfig: Record<SocialPlatformKey, PlatformConfig> = {
  */
 export const platformRateProfiles: Record<string, { minIntervalSeconds: number }> = {
   FACEBOOK: { minIntervalSeconds: 30 },
-  TWITTER: { minIntervalSeconds: 5 },
   BLUESKY: { minIntervalSeconds: 5 },
   MASTODON: { minIntervalSeconds: 5 },
 };

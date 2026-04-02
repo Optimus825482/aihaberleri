@@ -161,6 +161,7 @@ export default function SocialSharesPage() {
 
   // Active batch tracking
   const [activeBatch, setActiveBatch] = useState<any>(null);
+  const activeBatchRef = useRef<any>(null);
   const progressPollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Unified social insights (from old separate pages)
@@ -220,10 +221,11 @@ export default function SocialSharesPage() {
         params.set("language", languageFilter);
       }
 
-      if (visibilityFilter === "unshared") {
-        params.set("unsharedOnly", "true");
+      if (visibilityFilter !== "all") {
+        params.set("visibility", visibilityFilter);
       }
 
+      // When platform is selected, also send status for precise server-side filter
       if (
         selectedPlatform &&
         ["shared", "failed", "pending"].includes(visibilityFilter)
@@ -252,7 +254,7 @@ export default function SocialSharesPage() {
       const data = await res.json();
 
       if (data.articles) {
-        setArticles(data.articles.filter(isStatusMatch));
+        setArticles(data.articles);
         setPagination(data.pagination);
       }
     } catch (error) {
@@ -261,7 +263,6 @@ export default function SocialSharesPage() {
     setLoading(false);
   }, [
     buildArticleParams,
-    isStatusMatch,
     pagination.page,
     pagination.limit,
   ]);
@@ -280,8 +281,7 @@ export default function SocialSharesPage() {
 
       if (!res.ok) break;
 
-      const filteredRows = (data.articles || []).filter(isStatusMatch);
-      for (const article of filteredRows) {
+      for (const article of (data.articles || [])) {
         selectedIds.add(article.id);
         if (selectedIds.size >= maxItems) break;
       }
@@ -291,7 +291,7 @@ export default function SocialSharesPage() {
     }
 
     return Array.from(selectedIds);
-  }, [buildArticleParams, isStatusMatch]);
+  }, [buildArticleParams]);
 
   // Fetch batch stats
   const fetchStats = useCallback(async () => {
@@ -304,10 +304,11 @@ export default function SocialSharesPage() {
       if (data.stats) setStats(data.stats);
       if (data.batches) setBatches(data.batches);
       if (data.activeBatch) {
+        activeBatchRef.current = data.activeBatch;
         setActiveBatch(data.activeBatch);
       } else {
         // Batch completed or stopped
-        if (activeBatch) {
+        if (activeBatchRef.current) {
           // Was active, now stopped - refresh articles one more time
           fetchArticles();
           toast({
@@ -315,6 +316,7 @@ export default function SocialSharesPage() {
             description: "Paylaşım işlemi tamamlandı",
           });
         }
+        activeBatchRef.current = null;
         setActiveBatch(null);
         // Stop polling if no active batch
         if (progressPollingRef.current) {
@@ -325,7 +327,7 @@ export default function SocialSharesPage() {
     } catch (error) {
       console.error("Stats fetch error:", error);
     }
-  }, [activeBatch, fetchArticles, toast]);
+  }, [fetchArticles, toast]);
 
   useEffect(() => {
     if (progressPollingRef.current) {

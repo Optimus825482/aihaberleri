@@ -117,7 +117,10 @@ export async function GET(req: NextRequest) {
     // Calculate unshared for each platform
     Object.keys(platformStats).forEach((platform) => {
       const stat = platformStats[platform];
-      stat.unshared = totalArticles - stat.shared - stat.pending - stat.failed;
+      stat.unshared = Math.max(
+        0,
+        totalArticles - stat.shared - stat.pending - stat.failed,
+      );
     });
 
     // Check for active batches
