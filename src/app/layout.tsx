@@ -33,7 +33,6 @@ import "@/lib/init-cron";
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
   display: "swap",
-  preload: false,
   fallback: ["system-ui", "arial"],
 });
 
@@ -151,6 +150,29 @@ export default function RootLayout({
           rel="preconnect"
           href="https://image.pollinations.ai"
           crossOrigin="anonymous"
+        />
+        {/* Preconnect for Google Fonts (Material Symbols) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+
+        {/*
+          Material Symbols Outlined — preloaded with display=optional.
+          Preconnect above ensures early connection; display=optional sets 0ms
+          font-display block period so icons never block rendering.
+          Moving from CSS @import → <link> allows parallel loading with other CSS.
+        */}
+        <link
+          rel="preload"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional"
+          as="style"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional"
         />
 
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />

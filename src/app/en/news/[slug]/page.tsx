@@ -222,6 +222,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       languages: {
         tr: `https://aihaberleri.org/news/${article.originalSlug}`,
         en: `https://aihaberleri.org/en/news/${article.slug}`,
+        // x-default → TR canonical (primary language of the site)
+        "x-default": `https://aihaberleri.org/news/${article.originalSlug}`,
       },
     },
   };

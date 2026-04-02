@@ -50,8 +50,8 @@ export function MainNav({
   return (
     <div className="flex flex-1 items-center justify-between">
       <div className="flex gap-6 md:gap-10 items-center">
-        <Logo className="hidden md:flex" size="md" showText={true} href={locale === "en" ? "/en" : "/"} />
-        <Logo className="flex md:hidden" size="sm" showText={false} href={locale === "en" ? "/en" : "/"} />
+        <Logo className="hidden md:flex" size="md" showText={true} href={locale === "en" ? "/en" : "/"} priority={true} />
+        <Logo className="flex md:hidden" size="sm" showText={false} href={locale === "en" ? "/en" : "/"} priority={true} />
       </div>
 
       <div className="flex items-center gap-6">

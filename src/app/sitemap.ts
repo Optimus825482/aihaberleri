@@ -210,9 +210,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
               languages: {
                 tr: `${baseUrl}/news/${article.slug}`,
                 en: `${baseUrl}/en/news/${article.enSlug}`,
+                "x-default": `${baseUrl}/news/${article.slug}`,
               },
             }
-          : undefined,
+          : {
+              languages: {
+                tr: `${baseUrl}/news/${article.slug}`,
+                "x-default": `${baseUrl}/news/${article.slug}`,
+              },
+            },
       }),
     );
 
@@ -228,6 +234,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           languages: {
             tr: `${baseUrl}/news/${article.slug}`,
             en: `${baseUrl}/en/news/${article.enSlug}`,
+            "x-default": `${baseUrl}/news/${article.slug}`,
           },
         },
       }));

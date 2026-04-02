@@ -398,7 +398,7 @@ function HeroCarouselContent({
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-ai-surface-border z-20 overflow-hidden">
           <div
             key={currentIndex}
-            className="h-full bg-gradient-to-r from-ai-primary via-ai-primary-hover to-ai-primary animate-progress"
+            className="h-full w-full bg-gradient-to-r from-ai-primary via-ai-primary-hover to-ai-primary animate-progress"
             style={{
               animationDuration: `${autoPlayInterval}ms`,
             }}
@@ -409,10 +409,10 @@ function HeroCarouselContent({
       <style jsx>{`
         @keyframes progress {
           from {
-            width: 0%;
+            transform: scaleX(0);
           }
           to {
-            width: 100%;
+            transform: scaleX(1);
           }
         }
 
@@ -451,6 +451,8 @@ function HeroCarouselContent({
 
         .animate-progress {
           animation: progress linear;
+          transform-origin: left center;
+          will-change: transform;
         }
 
         .animate-slide-up-fade {

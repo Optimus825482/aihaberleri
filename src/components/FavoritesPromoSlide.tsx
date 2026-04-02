@@ -103,20 +103,22 @@ export function FavoritesPromoSlide() {
 
             {/* Progress Bar (3 second countdown) */}
             <div className="absolute bottom-0 left-0 right-0 z-20 h-1 overflow-hidden bg-white/10">
-                <div className="h-full animate-promo-progress bg-gradient-to-r from-ai-primary via-ai-primary-hover to-ai-primary" />
+                <div className="h-full w-full animate-promo-progress bg-gradient-to-r from-ai-primary via-ai-primary-hover to-ai-primary" />
             </div>
 
             <style jsx>{`
         @keyframes promo-progress {
           from {
-            width: 100%;
+            transform: scaleX(1);
           }
           to {
-            width: 0%;
+            transform: scaleX(0);
           }
         }
         .animate-promo-progress {
           animation: promo-progress 3s linear;
+          transform-origin: right center;
+          will-change: transform;
         }
         @keyframes bounce-subtle {
           0%, 100% {

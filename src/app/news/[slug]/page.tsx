@@ -144,9 +144,12 @@ export async function generateMetadata({
         ? {
             tr: `${baseUrl}/news/${article.slug}`,
             en: `${baseUrl}/en/news/${enTranslation[0].slug}`,
+            // x-default → TR canonical (primary language of the site)
+            "x-default": `${baseUrl}/news/${article.slug}`,
           }
         : {
             tr: `${baseUrl}/news/${article.slug}`,
+            "x-default": `${baseUrl}/news/${article.slug}`,
           },
     },
   };
