@@ -1,21 +1,27 @@
 # AI Haberleri - robots.txt
+# NOTE: This file is overridden by src/app/robots.ts in Next.js.
+# Both files are kept in sync. The canonical source of truth is robots.ts.
 # https://aihaberleri.org
 
 User-agent: *
 Allow: /
-
-# Sitemaps
-Sitemap: https://aihaberleri.org/sitemap.xml
-Sitemap: https://aihaberleri.org/news-sitemap.xml
-
-# ads.txt için özel izin
-Allow: /ads.txt
-
-# Admin panelini engelle
 Disallow: /admin/
-Disallow: /api/admin/
-
-# Arama sonuçları (duplicate content önleme)
+Disallow: /api/
 Disallow: /search
 Disallow: /en/search
-Disallow: /arama?
+Disallow: /arama
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+User-agent: Googlebot-News
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /search
+Disallow: /en/search
+
+Sitemap: https://aihaberleri.org/sitemap.xml
+Sitemap: https://aihaberleri.org/news-sitemap.xml

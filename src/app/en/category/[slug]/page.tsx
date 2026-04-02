@@ -18,13 +18,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await db.category.findFirst({ where: { slug } });
   if (!category) return { title: "Category Not Found" };
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+  const title = `${category.name} News | AI News`;
+  const description =
+    category.description ||
+    `Latest artificial intelligence news and updates in the ${category.name} category.`;
+
   return {
-    title: `${category.name} News | AI News`,
-    description:
-      category.description || `Latest AI news in ${category.name} category.`,
+    title,
+    description,
     alternates: {
-      canonical: `https://aihaberleri.org/en/category/${slug}`,
-      languages: { tr: `https://aihaberleri.org/category/${slug}` },
+      canonical: `${baseUrl}/en/category/${slug}`,
+      languages: {
+        tr: `${baseUrl}/category/${slug}`,
+        en: `${baseUrl}/en/category/${slug}`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/en/category/${slug}`,
+      siteName: "AI News",
+      type: "website",
+      locale: "en_US",
+      alternateLocale: ["tr_TR"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      site: "@aihaberleri",
     },
   };
 }

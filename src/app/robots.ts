@@ -8,15 +8,26 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
+        disallow: [
+          "/admin/",
+          "/api/",
+          // Search pages → duplicate content risk
+          "/search",
+          "/en/search",
+          "/arama",
+        ],
+      },
+      {
+        // Bing full crawl allowed (no search restriction needed for Bing)
+        userAgent: "Bingbot",
+        allow: "/",
         disallow: ["/admin/", "/api/"],
       },
       {
-        userAgent: "Bingbot",
-        allow: "/",
-      },
-      {
+        // Google News bot — allow all content pages for news indexing
         userAgent: "Googlebot-News",
         allow: "/",
+        disallow: ["/admin/", "/api/", "/search", "/en/search"],
       },
     ],
     sitemap: [`${baseUrl}/sitemap.xml`, `${baseUrl}/news-sitemap.xml`],

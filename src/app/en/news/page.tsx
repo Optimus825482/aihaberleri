@@ -18,9 +18,37 @@ interface ArticleItem {
   views: number;
 }
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+
 export const metadata: Metadata = {
-  title: "Latest News",
-  description: "Latest artificial intelligence news and updates",
+  title: "All AI News | AI News",
+  description:
+    "Latest artificial intelligence news, machine learning breakthroughs, and tech updates. ChatGPT, Gemini, Claude and more.",
+  alternates: {
+    canonical: `${BASE_URL}/en/news`,
+    languages: {
+      tr: `${BASE_URL}/news`,
+      en: `${BASE_URL}/en/news`,
+    },
+  },
+  openGraph: {
+    title: "All AI News | AI News",
+    description:
+      "Latest artificial intelligence news, machine learning breakthroughs, and tech updates.",
+    url: `${BASE_URL}/en/news`,
+    siteName: "AI News",
+    type: "website",
+    locale: "en_US",
+    alternateLocale: ["tr_TR"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "All AI News | AI News",
+    description:
+      "Latest artificial intelligence news, machine learning breakthroughs, and tech updates.",
+    site: "@aihaberleri",
+  },
 };
 
 async function getArticles() {

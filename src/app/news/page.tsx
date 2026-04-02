@@ -7,8 +7,42 @@ import { Calendar, Tag, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { Icons } from "@/components/icons";
 import { AD_SLOTS } from "@/lib/ad-slots";
+import { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+
+export const metadata: Metadata = {
+  title: "Tüm Haberler | AI Haberleri",
+  description:
+    "Yapay zeka dünyasından en son gelişmeler, araştırmalar ve derinlemesine analizler. ChatGPT, Gemini, Claude ve daha fazlası.",
+  alternates: {
+    canonical: `${BASE_URL}/news`,
+    languages: {
+      tr: `${BASE_URL}/news`,
+      en: `${BASE_URL}/en/news`,
+    },
+  },
+  openGraph: {
+    title: "Tüm Haberler | AI Haberleri",
+    description:
+      "Yapay zeka dünyasından en son gelişmeler, araştırmalar ve derinlemesine analizler.",
+    url: `${BASE_URL}/news`,
+    siteName: "AI Haberleri",
+    type: "website",
+    locale: "tr_TR",
+    alternateLocale: ["en_US"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tüm Haberler | AI Haberleri",
+    description:
+      "Yapay zeka dünyasından en son gelişmeler, araştırmalar ve derinlemesine analizler.",
+    site: "@aihaberleri",
+  },
+};
 
 export default async function NewsPage() {
   const articles = await db.article.findMany({

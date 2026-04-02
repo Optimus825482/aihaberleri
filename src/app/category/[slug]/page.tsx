@@ -18,14 +18,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const category = await db.category.findFirst({ where: { slug } });
   if (!category) return { title: "Kategori Bulunamadı" };
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://aihaberleri.org";
+  const title = `${category.name} Haberleri | AI Haberleri`;
+  const description =
+    category.description ||
+    `${category.name} kategorisindeki en son yapay zeka haberleri ve gelişmeleri.`;
+
   return {
-    title: `${category.name} Haberleri | AI Haberleri`,
-    description:
-      category.description ||
-      `${category.name} kategorisindeki en son yapay zeka haberleri.`,
+    title,
+    description,
     alternates: {
-      canonical: `https://aihaberleri.org/category/${slug}`,
-      languages: { en: `https://aihaberleri.org/en/category/${slug}` },
+      canonical: `${baseUrl}/category/${slug}`,
+      languages: {
+        tr: `${baseUrl}/category/${slug}`,
+        en: `${baseUrl}/en/category/${slug}`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${baseUrl}/category/${slug}`,
+      siteName: "AI Haberleri",
+      type: "website",
+      locale: "tr_TR",
+      alternateLocale: ["en_US"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      site: "@aihaberleri",
     },
   };
 }
