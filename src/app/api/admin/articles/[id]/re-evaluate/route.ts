@@ -132,6 +132,7 @@ export async function POST(
         height: 630,
         model: "flux",
         enhance: true,
+        safe: true,
         nologo: true,
       });
 

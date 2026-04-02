@@ -50,8 +50,9 @@ export async function POST(
       width: 1200,
       height: 630,
       model: "flux",
-      enhance: true,
-      nologo: true,
+            enhance: true,
+            safe: true,
+            nologo: true,
     });
 
     if (!newImageUrl || isFallbackImageUrl(newImageUrl)) {

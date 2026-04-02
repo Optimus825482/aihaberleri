@@ -93,6 +93,7 @@ const AI_HORDE_BASE_URL = "https://aihorde.net/api/v2";
 // Cache Configuration
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const CACHE_KEY_PREFIX = "pollinations:image:";
+const CACHE_KEY_VERSION = "v2";
 const DEFAULT_POLLINATIONS_REQUEST_TIMEOUT_MS = 25000;
 const POLLINATIONS_IMAGE_ACCEPT_HEADER =
   "image/jpeg, image/png, image/webp, */*";
@@ -100,8 +101,18 @@ const POLLINATIONS_IMAGE_ACCEPT_HEADER =
 /**
  * Generate cache key from prompt using SHA-256 hash
  */
-function generateCacheKey(prompt: string): string {
-  return `${CACHE_KEY_PREFIX}${createHash("sha256").update(prompt).digest("hex")}`;
+function generateCacheKey(prompt: string, options: PollinationsOptions = {}): string {
+  const signature = JSON.stringify({
+    v: CACHE_KEY_VERSION,
+    prompt,
+    model: options.model ?? "flux",
+    width: options.width ?? 1200,
+    height: options.height ?? 630,
+    safe: options.safe ?? null,
+    enhance: options.enhance ?? true,
+    negativePrompt: options.negativePrompt ?? null,
+  });
+  return `${CACHE_KEY_PREFIX}${createHash("sha256").update(signature).digest("hex")}`;
 }
 
 function normalizeModel(
@@ -187,12 +198,15 @@ export async function fetchFreeBackupImage(
 /**
  * Get cached image URL from Redis
  */
-async function getCachedImage(prompt: string): Promise<string | null> {
+async function getCachedImage(
+  prompt: string,
+  options: PollinationsOptions = {},
+): Promise<string | null> {
   try {
     const redis = getRedis();
     if (!redis) return null;
 
-    const cacheKey = generateCacheKey(prompt);
+    const cacheKey = generateCacheKey(prompt, options);
     const cachedUrl = await redis.get(cacheKey);
 
     if (cachedUrl) {
@@ -211,7 +225,11 @@ async function getCachedImage(prompt: string): Promise<string | null> {
 /**
  * Cache image URL in Redis with 7-day TTL
  */
-async function cacheImageUrl(prompt: string, imageUrl: string): Promise<void> {
+async function cacheImageUrl(
+  prompt: string,
+  imageUrl: string,
+  options: PollinationsOptions = {},
+): Promise<void> {
   try {
     // Skip caching base64 data URLs — they're too large for Redis (500KB-2MB each)
     // Gemini images go through image-optimizer → R2 upload, so caching the data URL is wasteful
@@ -222,7 +240,7 @@ async function cacheImageUrl(prompt: string, imageUrl: string): Promise<void> {
     const redis = getRedis();
     if (!redis) return;
 
-    const cacheKey = generateCacheKey(prompt);
+    const cacheKey = generateCacheKey(prompt, options);
     await redis.setex(cacheKey, CACHE_TTL_SECONDS, imageUrl);
     console.log("💾 Image cached for 7 days");
   } catch (error) {
@@ -509,7 +527,7 @@ export async function fetchPollinationsImage(
   }
 
   // 🚀 CACHE CHECK: Try to get cached image first
-  const cachedUrl = await getCachedImage(prompt);
+  const cachedUrl = await getCachedImage(prompt, options);
   if (cachedUrl) {
     return cachedUrl;
   }
@@ -640,7 +658,7 @@ export async function fetchPollinationsImage(
                 "✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)",
               );
               // Cache the result for future use
-              await cacheImageUrl(sanitizedPrompt, imageUrl);
+            await cacheImageUrl(sanitizedPrompt, imageUrl, options);
               return imageUrl;
             }
 
@@ -818,7 +836,7 @@ async function fetchPollinationsImageAnonymous(
 
     // Return the URL directly (Pollinations.ai provides stable URLs)
     // Cache for future use
-    await cacheImageUrl(prompt, imageUrl);
+    await cacheImageUrl(prompt, imageUrl, options);
     return imageUrl;
   } catch (error) {
     clearTimeout(timeoutId);

@@ -210,6 +210,7 @@ async function generateAndUploadImageInternal(
       model: "flux",
       enhance: true,
       nologo: true,
+      safe: true,
     });
     console.log("✅ Görsel URL:", imageUrl);
 

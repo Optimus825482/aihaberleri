@@ -251,12 +251,13 @@ export class VisualGeneratorAgent extends BaseAgent<
       const imageUrl = await retryWithBackoff(
         () =>
           withTimeout(
-            fetchPollinationsImage(imagePrompt, {
-              width: 1200,
-              height: 630,
-              model: "flux",
-              enhance: true,
-            }),
+          fetchPollinationsImage(imagePrompt, {
+            width: 1200,
+            height: 630,
+            model: "flux",
+            enhance: true,
+            safe: true,
+          }),
             30_000,
             "Pollinations image fetch timeout",
           ),

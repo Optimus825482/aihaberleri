@@ -440,6 +440,7 @@ async function processAggregatedCluster(
       height: 630,
       model: "flux",
       enhance: true,
+      safe: true,
       nologo: true,
     });
 
@@ -937,6 +938,7 @@ export async function processArticle(
       height: 630,
       model: "flux",
       enhance: true,
+      safe: true,
       nologo: true,
     });
     console.log("✅ Görsel URL:", imageUrl);
