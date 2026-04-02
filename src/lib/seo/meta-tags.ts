@@ -5,6 +5,7 @@
 
 import type { Metadata } from "next";
 import type { Article, Category } from "@prisma/client";
+import { toIsoDateString } from "@/lib/date-utils";
 
 interface ArticleWithCategory extends Article {
   category: Category;
@@ -19,6 +20,9 @@ export function generateArticleMetadata(
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "AI Haberleri";
   const articleUrl = `${baseUrl}/news/${article.slug}`;
+
+  const publishedTime = toIsoDateString(article.publishedAt);
+  const modifiedTime = toIsoDateString(article.updatedAt);
 
   return {
     title: article.metaTitle || article.title,
@@ -48,8 +52,8 @@ export function generateArticleMetadata(
             },
           ]
         : [],
-      publishedTime: article.publishedAt?.toISOString(),
-      modifiedTime: article.updatedAt.toISOString(),
+      publishedTime,
+      modifiedTime,
       authors: [siteName],
       section: article.category.name,
       tags: article.keywords,
@@ -81,8 +85,8 @@ export function generateArticleMetadata(
 
     // Additional meta tags
     other: {
-      "article:published_time": article.publishedAt?.toISOString() || "",
-      "article:modified_time": article.updatedAt.toISOString(),
+      "article:published_time": publishedTime || "",
+      "article:modified_time": modifiedTime || "",
       "article:author": siteName,
       "article:section": article.category.name,
       "article:tag": article.keywords.join(","),

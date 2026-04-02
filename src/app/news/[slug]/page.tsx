@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getCache } from "@/lib/cache";
+import { toIsoDateString } from "@/lib/date-utils";
 import { ShareButtons } from "@/components/ShareButtons";
 import { formatDate, calculateReadingMinutes } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -232,6 +233,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const insightSettings = await getInsightSettings();
   const articleUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/news/${article.slug}`;
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const articlePublishedTime = toIsoDateString(article.publishedAt);
   const summaryPoints = buildSummaryPoints(article.excerpt || "", article.content);
 
   const whyImportantPoints = buildWhyImportantPoints({
@@ -318,7 +320,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                     <span className="material-symbols-outlined text-[16px]">
                       calendar_today
                     </span>
-                    <time dateTime={article.publishedAt.toISOString()}>
+                    <time dateTime={articlePublishedTime}>
                       {formatDate(article.publishedAt)}
                     </time>
                   </div>
@@ -683,7 +685,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
                           calendar_today
                         </span>
                         {related.publishedAt && (
-                          <time dateTime={related.publishedAt.toISOString()}>
+                          <time dateTime={toIsoDateString(related.publishedAt)}>
                             {formatDate(related.publishedAt)}
                           </time>
                         )}

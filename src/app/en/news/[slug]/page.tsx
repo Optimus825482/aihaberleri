@@ -10,6 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
 import { getCache } from "@/lib/cache";
+import { toIsoDateString } from "@/lib/date-utils";
 import { formatDate, calculateReadingMinutes } from "@/lib/utils";
 import { ArticleImage } from "@/components/ResponsiveImage";
 import { ViewTracker } from "@/components/ViewTracker";
@@ -215,6 +216,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const publishedTime = toIsoDateString(article.publishedAt);
+
   return {
     title: article.metaTitle || article.title,
     description: article.metaDescription || article.excerpt,
@@ -223,7 +226,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: article.excerpt || "",
       images: article.imageUrl ? [article.imageUrl] : [],
       type: "article",
-      publishedTime: article.publishedAt?.toISOString(),
+      publishedTime,
       locale: "en_US",
       alternateLocale: ["tr_TR"],
     },
@@ -277,6 +280,8 @@ export default async function EnglishArticlePage({ params }: Props) {
 
   const baseUrl = "https://aihaberleri.org";
   const articleUrl = `${baseUrl}/en/news/${article.slug}`;
+  const articlePublishedTime = toIsoDateString(article.publishedAt);
+  const articleModifiedTime = toIsoDateString(article.updatedAt);
 
   // Structured Data (JSON-LD) for English article
   const newsArticleSchema = {
@@ -292,7 +297,8 @@ export default async function EnglishArticlePage({ params }: Props) {
           height: 630,
         }
       : undefined,
-    datePublished: article.publishedAt?.toISOString(),
+    datePublished: articlePublishedTime,
+    dateModified: articleModifiedTime,
     author: {
       "@type": "Organization",
       name: "AI News",
@@ -410,7 +416,7 @@ export default async function EnglishArticlePage({ params }: Props) {
                     <span className="material-symbols-outlined text-[16px]">
                       calendar_today
                     </span>
-                    <time dateTime={article.publishedAt.toISOString()}>
+                    <time dateTime={toIsoDateString(article.publishedAt)}>
                       {formatDate(article.publishedAt)}
                     </time>
                   </span>

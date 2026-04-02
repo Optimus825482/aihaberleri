@@ -4,6 +4,7 @@
  */
 
 import type { Article, Category } from "@prisma/client";
+import { getDateYear, toIsoDateString } from "@/lib/date-utils";
 
 interface ArticleWithCategory extends Article {
   category: Category;
@@ -75,6 +76,9 @@ export function generateNewsArticleSchema(article: ArticleWithCategory) {
   const siteName = process.env.NEXT_PUBLIC_SITE_NAME || "AI Haberleri";
   const articleUrl = `${baseUrl}/news/${article.slug}`;
 
+  const publishedTime = toIsoDateString(article.publishedAt);
+  const modifiedTime = toIsoDateString(article.updatedAt);
+
   // Publisher Organization (sabit)
   const publisherOrg = {
     "@type": "Organization",
@@ -122,8 +126,8 @@ export function generateNewsArticleSchema(article: ArticleWithCategory) {
           height: 630,
         }
       : undefined,
-    datePublished: article.publishedAt?.toISOString(),
-    dateModified: article.updatedAt.toISOString(),
+    datePublished: publishedTime,
+    dateModified: modifiedTime,
     // E-E-A-T: Çoklu author desteği (Person + Organization)
     author: authorInfo,
     publisher: publisherOrg,
@@ -136,8 +140,7 @@ export function generateNewsArticleSchema(article: ArticleWithCategory) {
     url: articleUrl,
     // Google News için ek alanlar
     inLanguage: "tr-TR",
-    copyrightYear:
-      article.publishedAt?.getFullYear() || new Date().getFullYear(),
+    copyrightYear: getDateYear(article.publishedAt) || new Date().getFullYear(),
     copyrightHolder: publisherOrg,
     // Google Discover + Google Haberler için speakable schema
     // Hangi kısımların özet olarak kullanılacağını belirtir
