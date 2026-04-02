@@ -1,4 +1,5 @@
 import React from "react";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -19,8 +20,20 @@ import {
   generateWebSiteSchema,
   generateJsonLd,
 } from "@/lib/seo";
+import { getCache } from "@/lib/cache";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "https://aihaberleri.org",
+    languages: {
+      tr: "https://aihaberleri.org",
+      en: "https://aihaberleri.org/en",
+      "x-default": "https://aihaberleri.org",
+    },
+  },
+};
 
 export default async function HomePage() {
   const formatTopicLabel = (topic: string) => {
@@ -184,18 +197,31 @@ export default async function HomePage() {
   };
 
   try {
+    const cache = getCache();
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
+    const todayKey = todayStart.toISOString().slice(0, 10); // "2026-04-02"
 
-    const [
-      settingsFromDb,
-      articlesFromDb,
-      featuredFromDb,
-      categoriesFromDb,
-      briefingFromDb,
-      topicFromDb,
-      modelTagSource,
-    ] = await Promise.all([
+    // Check L1/L2 cache first — TTL 3 min so fresh articles appear quickly
+    const CACHE_TTL = 180; // 3 minutes
+    const cacheKey = `homepage:v2:${todayKey}`;
+
+    type HomePageData = {
+      settingsFromDb: any[];
+      articlesFromDb: any[];
+      featuredFromDb: any[];
+      categoriesFromDb: any[];
+      briefingFromDb: any[];
+      topicFromDb: any[];
+      modelTagSource: any[];
+    };
+
+    let cached = await cache.get<HomePageData>(cacheKey, {
+      tags: ["homepage", "articles"],
+    });
+
+    if (!cached) {
+      const fetched = await Promise.all([
       // Query 1: Settings
       db.setting.findMany({
         where: {
@@ -319,7 +345,34 @@ export default async function HomePage() {
         orderBy: { publishedAt: "desc" },
         take: 120,
       }),
-    ]);
+      ]);
+
+      // Store in cache
+      cached = {
+        settingsFromDb: fetched[0],
+        articlesFromDb: fetched[1],
+        featuredFromDb: fetched[2],
+        categoriesFromDb: fetched[3],
+        briefingFromDb: fetched[4],
+        topicFromDb: fetched[5],
+        modelTagSource: fetched[6],
+      };
+
+      await cache.set(cacheKey, cached, {
+        ttl: CACHE_TTL,
+        tags: ["homepage", "articles"],
+      });
+    }
+
+    const {
+      settingsFromDb,
+      articlesFromDb,
+      featuredFromDb,
+      categoriesFromDb,
+      briefingFromDb,
+      topicFromDb,
+      modelTagSource,
+    } = cached;
 
     featureSettings = await getArticleInsightDisplaySettings(
       async () => settingsFromDb,
@@ -327,7 +380,7 @@ export default async function HomePage() {
 
     // Process settings
     const settingsMap = settingsFromDb.reduce(
-      (acc, setting) => {
+      (acc: Record<string, number>, setting: { key: string; value: string }) => {
         acc[setting.key] = parseInt(setting.value);
         return acc;
       },

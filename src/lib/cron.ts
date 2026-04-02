@@ -10,6 +10,7 @@ let indexingInterval: NodeJS.Timeout | null = null;
 let trendInterval: NodeJS.Timeout | null = null;
 let youtubeQueueInterval: NodeJS.Timeout | null = null;
 let seoPatrolInterval: NodeJS.Timeout | null = null;
+let viewFlushInterval: NodeJS.Timeout | null = null;
 let isCleanupRunning = false;
 let isIndexingRunning = false;
 let isTrendRunning = false;
@@ -24,7 +25,8 @@ export function startCronJobs() {
     indexingInterval &&
     trendInterval &&
     youtubeQueueInterval &&
-    seoPatrolInterval
+    seoPatrolInterval &&
+    viewFlushInterval
   ) {
     console.log("⏰ Cron jobs already running");
     return;
@@ -73,6 +75,19 @@ export function startCronJobs() {
       await triggerSEOPatrolIfDue();
     },
     2 * 60 * 1000,
+  );
+
+  // Flush Redis view counter buffer to DB every 5 minutes
+  viewFlushInterval = setInterval(
+    async () => {
+      try {
+        const { flushViewCounts } = await import("./view-counter");
+        await flushViewCounts();
+      } catch {
+        // Silent — view counting is non-critical
+      }
+    },
+    5 * 60 * 1000,
   );
 
   // Run immediately on startup (after 30 seconds)

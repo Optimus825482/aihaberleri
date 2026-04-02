@@ -13,6 +13,7 @@ import {
   getSocialBatchProgress,
   cancelSocialBatchJob,
 } from "@/lib/queue";
+import { withRateLimit, ADMIN_RATE_LIMITS } from "@/lib/api-middleware";
 
 export const dynamic = "force-dynamic";
 
@@ -153,6 +154,12 @@ export async function GET(req: NextRequest) {
 // POST: Create and start a batch job in background
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 5 batch starts per minute per IP
+    const rl = await (await import("@/lib/rate-limiter")).checkRateLimit(req, ADMIN_RATE_LIMITS.batch);
+    if (!rl.allowed) {
+      return (await import("@/lib/rate-limiter")).createRateLimitResponse(rl) as NextResponse;
+    }
+
     // Check authentication - support both NextAuth and admin-session JWT
     const [session, adminSession] = await Promise.all([
       auth(),

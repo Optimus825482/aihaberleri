@@ -177,6 +177,20 @@ export default function RootLayout({
 
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
 
+        {/* RSS Feed discovery — TR + EN */}
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="AI Haberleri RSS"
+          href="/feed.xml"
+        />
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="AI News RSS (English)"
+          href="/en/feed.xml"
+        />
+
         {/* WebSite + Organization Schema - Google Haberler için zorunlu (Mart 2025 yeni sistemi) */}
         <script
           type="application/ld+json"

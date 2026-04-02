@@ -28,8 +28,8 @@ const nextConfig = {
     outputFileTracingIncludes: {
       "/": ["./node_modules/sharp/**/*"],
     },
-    // Disable instrumentation to prevent OpenTelemetry errors
-    instrumentationHook: false,
+    // Enable instrumentation for Sentry server-side init
+    instrumentationHook: true,
     // Disable worker threads during build to reduce memory usage
     workerThreads: false,
     // Optimize page data loading
