@@ -172,10 +172,11 @@ interface TraceRecord {
 }
 
 // Type for span groupBy results
+// NOTE: Prisma groupBy({ _count: true }) returns { _count: { _all: number } }, not plain number
 interface SpanGroupResult {
   name: string;
   status: string;
-  _count: number;
+  _count: { _all: number };
   _avg: { duration: number | null };
   _max: { duration: number | null };
   _min: { duration: number | null };
@@ -211,11 +212,12 @@ export async function getPipelineMetrics(days: number = 7) {
       _min: { duration: true },
     }) as Promise<SpanGroupResult[]>,
     // Overall span stats
+    // NOTE: Prisma aggregate({ _count: true }) returns { _count: { _all: number } }
     prisma.pipelineSpan.aggregate({
       where: { startedAt: { gte: since } },
       _count: true,
       _avg: { duration: true },
-    }) as Promise<{ _count: number; _avg: { duration: number | null } }>,
+    }) as Promise<{ _count: { _all: number }; _avg: { duration: number | null } }>,
   ]);
 
   // Build step-level metrics
@@ -247,14 +249,15 @@ export async function getPipelineMetrics(days: number = 7) {
       };
     }
     const m = stepMetrics[s.name];
-    m.totalRuns += s._count;
+    const spanCount = s._count._all;
+    m.totalRuns += spanCount;
     if (s.status === "SUCCESS") {
-      m.successCount += s._count;
+      m.successCount += spanCount;
       m.avgDuration = s._avg.duration || 0;
       m.maxDuration = Math.max(m.maxDuration, s._max.duration || 0);
       m.minDuration = Math.min(m.minDuration, s._min.duration || 0);
     } else if (s.status === "FAILED") {
-      m.failCount += s._count;
+      m.failCount += spanCount;
     }
   }
 
@@ -283,7 +286,7 @@ export async function getPipelineMetrics(days: number = 7) {
             ) / traces.length,
           )
         : 0,
-    totalSpans: spanStats._count,
+    totalSpans: spanStats._count._all ?? 0,
   };
 
   return {

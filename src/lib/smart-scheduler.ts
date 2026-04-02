@@ -95,6 +95,25 @@ const TURKISH_HOLIDAYS_2026 = [
   "05-30",
 ];
 
+const TURKISH_HOLIDAYS_2027 = [
+  "01-01", // New Year
+  "04-23", // National Sovereignty and Children's Day
+  "05-01", // Labor Day
+  "05-19", // Atatürk Commemoration & Youth Day
+  "07-15", // Democracy and National Unity Day
+  "08-30", // Victory Day
+  "10-29", // Republic Day
+  // Ramazan Bayramı 2027 (estimated: March 9-11)
+  "03-09",
+  "03-10",
+  "03-11",
+  // Kurban Bayramı 2027 (estimated: May 16-19)
+  "05-16",
+  "05-17",
+  "05-18",
+  "05-19",
+];
+
 // Redis keys
 const REDIS_KEYS = {
   BREAKING_NEWS: "scheduler:breaking-news",
@@ -182,8 +201,10 @@ export function isWeekend(turkeyTime?: Date): boolean {
  */
 export function isHoliday(turkeyTime?: Date): boolean {
   const time = turkeyTime || getTurkeyTime();
+  const year = time.getFullYear();
   const monthDay = `${String(time.getMonth() + 1).padStart(2, "0")}-${String(time.getDate()).padStart(2, "0")}`;
-  return TURKISH_HOLIDAYS_2026.includes(monthDay);
+  const holidays = year >= 2027 ? TURKISH_HOLIDAYS_2027 : TURKISH_HOLIDAYS_2026;
+  return holidays.includes(monthDay);
 }
 
 /**
@@ -330,11 +351,13 @@ export async function getOptimalInterval(): Promise<number> {
   });
   if (agentIntervalSetting) {
     const adminMinutes = parseFloat(agentIntervalSetting.value) * 60;
+    // Hard cap at 15 minutes to guarantee "at least 1 article per 15 min" SLA
     if (!isNaN(adminMinutes) && adminMinutes >= 5 && adminMinutes <= 120) {
+      const cappedMinutes = Math.min(adminMinutes, 15);
       logger.debug(
-        `⚙️ Admin panel override: ${adminMinutes} dk (agent.intervalHours=${agentIntervalSetting.value}h)`,
+        `⚙️ Admin panel override: ${cappedMinutes} dk (agent.intervalHours=${agentIntervalSetting.value}h, capped at 15)`,
       );
-      return Math.round(adminMinutes);
+      return Math.round(cappedMinutes);
     }
   }
   // ─────────────────────────────────────────────────────────────────────────

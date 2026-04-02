@@ -108,6 +108,33 @@ export async function GET() {
       console.warn("Schedule info unavailable:", scheduleError);
     }
 
+    // Fetch per-step span stats from PipelineSpan (last 24h)
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    let spanStatsByName: Array<{
+      name: string;
+      _count: { _all: number };
+      _avg: { duration: number | null };
+      _max: { completedAt: Date | null };
+    }> = [];
+    try {
+      spanStatsByName = await db.pipelineSpan.groupBy({
+        by: ["name"],
+        where: {
+          startedAt: { gte: since24h },
+          status: "SUCCESS",
+        },
+        _count: true,
+        _avg: { duration: true },
+        _max: { completedAt: true },
+      }) as any;
+    } catch {
+      // PipelineSpan table might not exist yet or no data
+    }
+
+    const spanStatsMap = new Map(
+      spanStatsByName.map((s) => [s.name, s]),
+    );
+
     // Map queue stats to registry-defined pipeline steps
     const agents = PIPELINE_STEP_DEFINITIONS.map((step) => {
       const stat = queueStats.find((s) => s?.queueName === step.queueName);
@@ -126,6 +153,11 @@ export async function GET() {
         status = "error";
       }
 
+      // Try to get real timing from PipelineSpan (matches by step id = span name convention)
+      const spanStat = spanStatsMap.get(step.id);
+      const lastRun = spanStat?._max?.completedAt?.toISOString() ?? null;
+      const avgProcessingTime = Math.round(spanStat?._avg?.duration ?? 0);
+
       return {
         name: step.id,
         displayName: step.displayName,
@@ -133,8 +165,8 @@ export async function GET() {
         queueCount,
         processedCount: stat?.completed || 0,
         failedCount: failed,
-        lastRun: null,
-        avgProcessingTime: 0,
+        lastRun,
+        avgProcessingTime,
       };
     });
 

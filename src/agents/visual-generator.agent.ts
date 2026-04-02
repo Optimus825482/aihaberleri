@@ -247,15 +247,19 @@ export class VisualGeneratorAgent extends BaseAgent<
 
       this.logger.info(`Image prompt: ${imagePrompt.substring(0, 100)}...`);
 
-      // Step 2: Fetch image from Pollinations.ai with retry
+      // Step 2: Fetch image from Pollinations.ai with retry + 30s timeout per attempt
       const imageUrl = await retryWithBackoff(
         () =>
-          fetchPollinationsImage(imagePrompt, {
-            width: 1200,
-            height: 630,
-            model: "flux",
-            enhance: true,
-          }),
+          withTimeout(
+            fetchPollinationsImage(imagePrompt, {
+              width: 1200,
+              height: 630,
+              model: "flux",
+              enhance: true,
+            }),
+            30_000,
+            "Pollinations image fetch timeout",
+          ),
         MAX_RETRIES,
       );
 

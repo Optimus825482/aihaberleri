@@ -344,122 +344,117 @@ export class DatabasePublisherAgent extends BaseAgent<
             );
           }
 
-          // Create article in database
-          const createdArticle = await db.article.create({
-            data: {
-              // Turkish version (primary)
-              title: trContent.title,
-              slug,
-              excerpt: trContent.excerpt,
-              content: trContent.content,
+          // Slug çakışması varsa ID suffix ekle
+          const finalSlug = await (async () => {
+            const exists = await db.article.findUnique({ where: { slug }, select: { id: true } });
+            return exists ? `${slug}-${Date.now().toString(36)}` : slug;
+          })();
 
-              // English version
-              titleEn: enContent?.title || null,
-              excerptEn: enContent?.excerpt || null,
-              contentEn: enContent?.content || null,
-
-              // SEO
-              metaDescription: trContent.metaDescription || null,
-              metaDescriptionEn: enContent?.metaDescription || null,
-              keywords: trContent.keywords || [],
-              keywordsEn: enContent?.keywords || [],
-
-              // Images
-              imageUrl: article.imageUrl,
-              imageUrlMedium: article.imageUrlMedium,
-              imageUrlSmall: article.imageUrlSmall,
-              imageUrlThumb: article.imageUrlThumb,
-
-              // Metadata
-              sourceUrl: article.url,
-              publishedAt: article.publishedDate
-                ? new Date(article.publishedDate)
-                : new Date(),
-              topic: article.topic,
-              trendScore: finalTrendScore,
-              isTrending: finalTrendScore >= 50,
-              score: trContent.score || finalTrendScore || 0,
-
-              // Relations
-              categoryId: category.id,
-              agentLogId: article.agentLogId ?? null,
-
-              // Status
-              status: "PUBLISHED",
-              views: 0,
-            },
-          });
-
-          // Create Turkish translation in ArticleTranslation table (for i18n consistency)
-          try {
-            await db.articleTranslation.create({
-              data: {
-                articleId: createdArticle.id,
-                locale: "tr",
-                title: trContent.title,
-                slug: createdArticle.slug,
-                excerpt: trContent.excerpt || null,
-                content: trContent.content,
-                metaTitle: trContent.metaTitle || trContent.title,
-                metaDescription: trContent.metaDescription || null,
-              },
-            });
-            this.logger.info(
-              `Turkish translation created: ${createdArticle.slug}`,
-            );
-          } catch (trError) {
-            // Ignore if already exists
-            if (!isPrismaError(trError) || trError.code !== "P2002") {
-              this.logger.warn(
-                `Failed to create Turkish translation: ${(trError as Error).message}`,
-              );
-            }
-          }
-
-          // Create English translation in ArticleTranslation table
+          // Create article + translations in a single transaction (rollback on any failure)
+          let createdArticle: Awaited<ReturnType<typeof db.article.create>>;
           let enSlugFinal = "";
-          if (enContent?.title && enContent?.content) {
-            const enSlug = generateSlug(enContent.title);
-            enSlugFinal = enSlug;
-            try {
-              await db.articleTranslation.create({
+
+          try {
+            const result = await db.$transaction(async (tx) => {
+              const article_data = await tx.article.create({
                 data: {
-                  articleId: createdArticle.id,
-                  locale: "en",
-                  title: enContent.title,
-                  slug: enSlug,
-                  excerpt: enContent.excerpt || null,
-                  content: enContent.content,
-                  metaTitle: enContent.metaTitle || enContent.title,
-                  metaDescription: enContent.metaDescription || null,
+                  // Turkish version (primary)
+                  title: trContent.title,
+                  slug: finalSlug,
+                  excerpt: trContent.excerpt,
+                  content: trContent.content,
+
+                  // English version
+                  titleEn: enContent?.title || null,
+                  excerptEn: enContent?.excerpt || null,
+                  contentEn: enContent?.content || null,
+
+                  // SEO
+                  metaDescription: trContent.metaDescription || null,
+                  metaDescriptionEn: enContent?.metaDescription || null,
+                  keywords: trContent.keywords || [],
+                  keywordsEn: enContent?.keywords || [],
+
+                  // Images
+                  imageUrl: article.imageUrl,
+                  imageUrlMedium: article.imageUrlMedium,
+                  imageUrlSmall: article.imageUrlSmall,
+                  imageUrlThumb: article.imageUrlThumb,
+
+                  // Metadata
+                  sourceUrl: article.url,
+                  publishedAt: article.publishedDate
+                    ? new Date(article.publishedDate)
+                    : new Date(),
+                  topic: article.topic,
+                  trendScore: finalTrendScore,
+                  isTrending: finalTrendScore >= 50,
+                  score: trContent.score || finalTrendScore || 0,
+
+                  // Relations
+                  categoryId: category.id,
+                  agentLogId: article.agentLogId ?? null,
+
+                  // Status
+                  status: "PUBLISHED",
+                  views: 0,
                 },
               });
-              this.logger.info(`English translation created: ${enSlug}`);
-            } catch (enError) {
-              // If English slug already exists, create with unique suffix
-              if (isPrismaError(enError) && enError.code === "P2002") {
-                enSlugFinal = `${enSlug}-${createdArticle.id.slice(-6)}`;
-                await db.articleTranslation.create({
+
+              // Turkish translation
+              await tx.articleTranslation.create({
+                data: {
+                  articleId: article_data.id,
+                  locale: "tr",
+                  title: trContent.title,
+                  slug: article_data.slug,
+                  excerpt: trContent.excerpt || null,
+                  content: trContent.content,
+                  metaTitle: trContent.metaTitle || trContent.title,
+                  metaDescription: trContent.metaDescription || null,
+                },
+              });
+
+              // English translation
+              let enSlug = "";
+              if (enContent?.title && enContent?.content) {
+                enSlug = generateSlug(enContent.title);
+                const enExists = await tx.articleTranslation.findFirst({
+                  where: { slug: enSlug, locale: "en" },
+                  select: { id: true },
+                });
+                if (enExists) {
+                  enSlug = `${enSlug}-${article_data.id.slice(-6)}`;
+                }
+                await tx.articleTranslation.create({
                   data: {
-                    articleId: createdArticle.id,
+                    articleId: article_data.id,
                     locale: "en",
                     title: enContent.title,
-                    slug: enSlugFinal,
+                    slug: enSlug,
                     excerpt: enContent.excerpt || null,
                     content: enContent.content,
                     metaTitle: enContent.metaTitle || enContent.title,
                     metaDescription: enContent.metaDescription || null,
                   },
                 });
-                this.logger.info(
-                  `English translation created with unique slug: ${enSlugFinal}`,
-                );
-              } else {
-                this.logger.warn(
-                  `Failed to create English translation: ${(enError as Error).message}`,
-                );
               }
+
+              return { article_data, enSlug };
+            });
+
+            createdArticle = result.article_data;
+            enSlugFinal = result.enSlug;
+            this.logger.info(`TR+EN translations created in transaction: ${createdArticle.slug}`);
+          } catch (txError) {
+            // Full rollback happened — log and skip this article
+            this.logger.error(
+              `Transaction rolled back for "${trContent.title.substring(0, 60)}": ${(txError as Error).message}`,
+            );
+            if (isPrismaError(txError)) {
+              this.logger.error(`Prisma code: ${txError.code}, meta: ${JSON.stringify(txError.meta || {})}`);
             }
+            continue;
           }
 
           // Submit to IndexNow + Google Indexing API (both TR and EN)

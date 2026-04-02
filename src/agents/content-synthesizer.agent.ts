@@ -499,8 +499,21 @@ JSON formatında yanıt ver:
       );
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
-      this.logger.error(`❌ LLM EN failed: ${msg}, using emergency template`);
-      return this.generateEmergencyTemplate(article);
+      this.logger.warn(
+        `⚠️ LLM EN failed: ${msg} — proceeding with TR-only article (no EN translation)`,
+      );
+      // EN synthesis failure should NOT kill the whole article.
+      // Return TR content as-is; EN fields will be null → DatabasePublisher
+      // will publish without English translation (still fully valid TR article).
+      enContent = {
+        title: "",
+        excerpt: "",
+        content: "",
+        metaTitle: "",
+        metaDescription: "",
+        keywords: [],
+        score: 0,
+      } as SynthesizedContentEN;
     }
 
     // ── AI Disclaimer & sources footer ──

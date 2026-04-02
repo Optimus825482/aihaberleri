@@ -26,10 +26,13 @@ export interface ScoredArticle extends DeduplicatedArticle {
   suggestedTags?: string[];
 }
 
-// 🔧 FIX: 65 → 45 → 35 — threshold was too aggressive for YouTube-sourced content
-// YouTube articles have clickbait titles that LLM scores lower than their actual relevance
+// 🔧 FIX: 35 → 55 — threshold too low was letting low-quality content through
+// YouTube articles still handled via bypass mode when DeepSeek unavailable
 // Content-collector already has negative keyword filtering for non-AI content
-const RELEVANCE_THRESHOLD = 35; // Minimum score to pass
+const RELEVANCE_THRESHOLD = 55; // Primary minimum score to pass
+const FALLBACK_THRESHOLD_1 = 40; // 1st fallback: if 0 pass at 55, try 40
+const FALLBACK_THRESHOLD_2 = 30; // 2nd fallback: if 0 pass at 40, try 30 (last resort)
+const FALLBACK_MAX_ARTICLES = 2; // Max articles to publish from fallback (quality cap)
 const BATCH_SIZE = 15; // Articles per batch (10 → 15 for faster processing)
 
 // BYPASS MODE: If DeepSeek fails, apply basic AI keyword validation instead of passing everything
@@ -96,15 +99,50 @@ export class RelevanceFilterAgent extends BaseAgent<
         }
       }
 
-      // Filter by threshold
-      const relevantArticles = scoredArticles.filter(
+      // Filter by primary threshold
+      let relevantArticles = scoredArticles.filter(
         (article) => (article.relevanceScore ?? 0) >= RELEVANCE_THRESHOLD,
       );
+
+      // ⚡ ADAPTIVE FALLBACK: If nothing passes at 55, try lower thresholds
+      // This guarantees at least 1 article per run during slow news periods
+      if (relevantArticles.length === 0 && scoredArticles.length > 0) {
+        // Sort by score descending so we pick the best available
+        const sortedByScore = [...scoredArticles].sort(
+          (a, b) => (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0),
+        );
+
+        // Try fallback threshold 1: 40
+        const fallback1 = sortedByScore.filter(
+          (a) => (a.relevanceScore ?? 0) >= FALLBACK_THRESHOLD_1,
+        );
+        if (fallback1.length > 0) {
+          relevantArticles = fallback1.slice(0, FALLBACK_MAX_ARTICLES);
+          this.logger.warn(
+            `⚡ ADAPTIVE FALLBACK (threshold 40): ${relevantArticles.length} makale alındı — primary threshold ${RELEVANCE_THRESHOLD}'e ulaşan yoktu`,
+          );
+        } else {
+          // Try fallback threshold 2: 30 (last resort)
+          const fallback2 = sortedByScore.filter(
+            (a) => (a.relevanceScore ?? 0) >= FALLBACK_THRESHOLD_2,
+          );
+          if (fallback2.length > 0) {
+            relevantArticles = fallback2.slice(0, FALLBACK_MAX_ARTICLES);
+            this.logger.warn(
+              `⚡ ADAPTIVE FALLBACK (threshold 30 — son çare): ${relevantArticles.length} makale alındı`,
+            );
+          } else {
+            this.logger.warn(
+              `⚠️ Hiçbir makale threshold ${FALLBACK_THRESHOLD_2}'yi geçemedi — bu run'da yeni içerik yok`,
+            );
+          }
+        }
+      }
 
       // P0-3: Track YouTube relevance failures for blacklisting
       const rejectedYouTube = scoredArticles.filter(
         (a) =>
-          (a.relevanceScore ?? 0) < RELEVANCE_THRESHOLD &&
+          !relevantArticles.includes(a) &&
           a.url?.includes("youtube.com/watch"),
       );
       if (rejectedYouTube.length > 0) {
@@ -238,7 +276,7 @@ export class RelevanceFilterAgent extends BaseAgent<
     articles: CollectedArticle[],
     reason: string,
   ): ScoredArticle[] {
-    const MIN_TREND_FOR_BYPASS = 30; // Lowered from 50 — was too strict (12.02.2026)
+    const MIN_TREND_FOR_BYPASS = 20; // Lowered from 30 — adaptive fallback handles quality gate now
 
     return articles.map((article) => {
       const trendScore = article.trendScore || 0;

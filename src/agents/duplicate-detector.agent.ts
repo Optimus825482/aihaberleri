@@ -8,7 +8,7 @@
  */
 
 import { Job } from "bullmq";
-import { BaseAgent, AgentResult } from "./base-agent";
+import { BaseAgent, AgentResult, withTimeout } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
 import { db } from "@/lib/db";
 import { isDuplicateNews } from "@/services/news.service";
@@ -93,11 +93,17 @@ export class DuplicateDetectorAgent extends BaseAgent<
           try {
             const combinedText =
               `${article.title}. ${article.description || ""}`.trim();
-            embedding = await generateEmbedding(combinedText);
+            // 15s timeout — embedding generation can hang on large payloads
+            embedding = await withTimeout(
+              generateEmbedding(combinedText),
+              15_000,
+              "Embedding generation timeout",
+            );
           } catch (embeddingError) {
             this.logger.warn(
-              `Failed to generate embedding for: ${article.title.substring(0, 30)}...`,
+              `Failed to generate embedding for: ${article.title.substring(0, 30)}... (${(embeddingError as Error).message})`,
             );
+            // Non-critical — article still passes without embedding
           }
 
           uniqueArticles.push({

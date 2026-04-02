@@ -122,13 +122,23 @@ export async function postToFacebookWithMetadata(article: {
 
       // Handle specific errors
       if (errorData.code === 190) {
-        console.warn("   📌 Token expired. Generate a new Page Access Token.");
+        console.error(
+          "🔑 FACEBOOK TOKEN EXPIRED (code 190) — Yeni token almanız gerekiyor!\n" +
+          "   Adımlar:\n" +
+          "   1. https://developers.facebook.com/tools/explorer adresine git\n" +
+          "   2. 'Get User Access Token' seç → pages_manage_posts + pages_read_engagement izinleri\n" +
+          "   3. Token'ı long-lived token'a çevir (graph.facebook.com/oauth/access_token)\n" +
+          "   4. /me/accounts ile Page Access Token al\n" +
+          "   5. Coolify'da FACEBOOK_PAGE_ACCESS_TOKEN değerini güncelle",
+        );
       } else if (errorData.code === 200) {
         console.warn(
           "   📌 Permission denied. Check pages_manage_posts permission.",
         );
       } else if (errorData.code === 368) {
         console.warn("   📌 Content policy violation. Check post content.");
+      } else if (errorData.code === 4 || errorData.code === 17 || errorData.code === 32) {
+        console.warn(`   📌 Rate limit hit (code ${errorData.code}). Backing off.`);
       }
 
       throw new Error(errMsg);

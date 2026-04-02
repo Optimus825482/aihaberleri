@@ -112,32 +112,32 @@ export const SERVICE_CONFIGS: Record<string, Partial<CircuitBreakerOptions>> = {
     halfOpenSuccessThreshold: 2,
   },
   pollinations: {
-    failureThreshold: 5,
+    failureThreshold: 3, // 5→3: faster circuit open on image gen failures
     resetTimeout: 60_000,
-    halfOpenSuccessThreshold: 3,
+    halfOpenSuccessThreshold: 2, // 3→2: easier recovery
   },
   searxng: {
-    failureThreshold: 5,
+    failureThreshold: 3, // 5→3
     resetTimeout: 30_000, // Faster recovery for search
     halfOpenSuccessThreshold: 2,
   },
   brave: {
-    failureThreshold: 5,
+    failureThreshold: 3, // 5→3
     resetTimeout: 60_000,
     halfOpenSuccessThreshold: 2,
   },
   unsplash: {
-    failureThreshold: 5,
+    failureThreshold: 3, // 5→3
     resetTimeout: 60_000,
     halfOpenSuccessThreshold: 2,
   },
   firecrawl: {
-    failureThreshold: 5,
+    failureThreshold: 3, // 5→3
     resetTimeout: 60_000,
     halfOpenSuccessThreshold: 2,
   },
   tavily: {
-    failureThreshold: 5,
+    failureThreshold: 3, // 5→3
     resetTimeout: 60_000,
     halfOpenSuccessThreshold: 2,
   },
@@ -147,7 +147,7 @@ export const SERVICE_CONFIGS: Record<string, Partial<CircuitBreakerOptions>> = {
     halfOpenSuccessThreshold: 2,
   },
   exa: {
-    failureThreshold: 5,
+    failureThreshold: 3, // 5→3
     resetTimeout: 60_000,
     halfOpenSuccessThreshold: 2,
   },
