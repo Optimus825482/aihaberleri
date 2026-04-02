@@ -3,10 +3,9 @@
 import Script from "next/script";
 import { useEffect, useState } from "react";
 
-// İki GA4 property: ana hesap + yeni akış
-const GA_PRIMARY =
-  process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-LXSS4L3D1Y";
-const GA_SECONDARY = "G-MH4761CLYD";
+// GA4 property — loaded only if env var is explicitly set.
+// GTM (GoogleTagManager component) already handles G-MH4761CLYD tracking.
+const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 export function GoogleAnalytics() {
   const [isClient, setIsClient] = useState(false);
@@ -15,12 +14,12 @@ export function GoogleAnalytics() {
     setIsClient(true);
   }, []);
 
-  // Production'da değilse GA'yi yükleme
-  if (process.env.NODE_ENV !== "production") {
+  // Only load in production and only if GA_ID is explicitly configured
+  if (process.env.NODE_ENV !== "production" || !GA_ID) {
     return null;
   }
 
-  // Client-side render olana kadar bekleme (hydration fix)
+  // Wait for client-side render (hydration fix)
   if (!isClient) {
     return null;
   }
@@ -28,7 +27,7 @@ export function GoogleAnalytics() {
   return (
     <>
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_PRIMARY}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
         strategy="afterInteractive"
       />
       <Script id="google-analytics" strategy="afterInteractive">
@@ -36,10 +35,7 @@ export function GoogleAnalytics() {
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '${GA_PRIMARY}', {
-            page_path: window.location.pathname,
-          });
-          gtag('config', '${GA_SECONDARY}', {
+          gtag('config', '${GA_ID}', {
             page_path: window.location.pathname,
           });
         `}

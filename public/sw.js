@@ -1,17 +1,26 @@
 // Service Worker for AI Haberleri PWA
 const CACHE_NAME = "ai-haberleri-v2";
 const urlsToCache = [
-  "/",
   "/manifest.json",
   "/logos/brand/logo-icon.png",
-  "/logos/brand/logo-primary.png",
+  "/logos/brand/ai-logo-dark.webp",
 ];
 
-// Install event
+// Install event — cache only static assets, skip any that fail
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
+    caches.open(CACHE_NAME).then((cache) => {
+      return Promise.allSettled(
+        urlsToCache.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn("[SW] Failed to cache:", url, err);
+          })
+        )
+      );
+    })
   );
+  // Force activation without waiting for old SW to be unregistered
+  self.skipWaiting();
 });
 
 // Fetch event - Network first, fallback to cache
@@ -90,15 +99,18 @@ self.addEventListener("fetch", (event) => {
 // Activate event - Clean up old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        }),
-      );
-    }),
+    Promise.all([
+      clients.claim(),
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              return caches.delete(cacheName);
+            }
+          }),
+        );
+      }),
+    ]),
   );
 });
 

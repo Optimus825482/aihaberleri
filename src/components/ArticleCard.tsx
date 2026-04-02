@@ -9,6 +9,22 @@ import { TrendingBadge } from "@/components/TrendingBadge";
 import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 import { SaveArticleButton } from "@/components/article/SaveArticleButton";
 
+/**
+ * Generates a Cloudflare Image Resizing URL for images hosted on images.aihaberleri.org.
+ * Falls back to original src if not a supported domain.
+ */
+function getCfImageUrl(src: string, width: number): string {
+  if (src.includes("images.aihaberleri.org")) {
+    try {
+      const url = new URL(src);
+      return `https://${url.hostname}/cdn-cgi/image/width=${width},quality=82,format=webp${url.pathname}`;
+    } catch {
+      return src;
+    }
+  }
+  return src;
+}
+
 interface ArticleCardProps {
   article: {
     id: string;
@@ -105,10 +121,19 @@ export const ArticleCard = memo(function ArticleCard({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={article.imageUrl}
+              srcSet={
+                article.imageUrl.includes("images.aihaberleri.org")
+                  ? `${getCfImageUrl(article.imageUrl, 400)} 400w, ${getCfImageUrl(article.imageUrl, 700)} 700w, ${getCfImageUrl(article.imageUrl, 1024)} 1024w`
+                  : undefined
+              }
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               alt={article.title}
+              width={1024}
+              height={576}
               className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
               loading={priority ? "eager" : "lazy"}
               fetchPriority={priority ? "high" : "auto"}
+              decoding="async"
             />
           ) : (
             <Image
@@ -157,7 +182,7 @@ export const ArticleCard = memo(function ArticleCard({
               <span className="material-symbols-outlined text-[14px]">
                 schedule
               </span>
-              <span className="font-medium">
+              <span className="font-medium" suppressHydrationWarning>
                 {formatRelativeTime(article.publishedAt)}
               </span>
             </div>

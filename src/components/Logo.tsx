@@ -38,7 +38,7 @@ export function Logo({
 
   // Logo source - Always use the main dark logo
   // We will handle dark mode visibility using CSS filters
-  const logoSrc = "/logos/brand/ai-logo-dark.png";
+  const logoSrc = "/logos/brand/ai-logo-dark.webp";
 
   const logoContent = (
     <div className={`flex items-center gap-3 ${className}`}>
