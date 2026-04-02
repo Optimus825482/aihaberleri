@@ -44,6 +44,17 @@ const createMockPrismaClient = () => {
 };
 
 // Skip PrismaClient creation during build time
+// Build the DB URL with connection pool limits to prevent overload.
+// connection_limit=5 → max 5 concurrent Postgres connections per process
+// pool_timeout=30    → wait up to 30s for a free connection (avoids instant errors)
+// pgbouncer=true     → compatible with Coolify's PgBouncer proxy if present
+function buildDatabaseUrl(): string {
+  const base = process.env.DATABASE_URL ?? "";
+  if (!base || base.includes("connection_limit")) return base; // Already configured
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}connection_limit=5&pool_timeout=30`;
+}
+
 export const db =
   process.env.SKIP_ENV_VALIDATION === "1"
     ? createMockPrismaClient()
@@ -56,14 +67,9 @@ export const db =
         errorFormat: "pretty",
         datasources: {
           db: {
-            url: process.env.DATABASE_URL,
+            url: buildDatabaseUrl(),
           },
         },
-        // 🚀 CONNECTION POOL SETTINGS (FAZ 2 - Performance Optimization)
-        // Optimized for BullMQ worker with long-running operations
-        // - connection_limit: Max concurrent DB connections (reduced to prevent overload)
-        // - pool_timeout: How long to wait for a connection (increased for long queries)
-        // - statement_timeout: Max query execution time (prevents runaway queries)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any));
 

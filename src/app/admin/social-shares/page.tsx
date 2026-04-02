@@ -344,7 +344,7 @@ export default function SocialSharesPage() {
         fetchStats();
         fetchArticles();
       }
-    }, 5000);
+    }, 15000); // 15s — was 5s; reduces server load by 3x during batch
 
     return () => {
       if (progressPollingRef.current) {

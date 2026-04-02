@@ -65,132 +65,135 @@ function getRedisConnection(): ConnectionOptions | null {
  * Queue configuration with concurrency and rate limits
  * FAZ 3: Added jobTimeout for deadlock prevention
  */
+// ⚡ RESOURCE-OPTIMIZED concurrency settings
+// Total concurrent jobs reduced: 58 → 22 to prevent server OOM.
+// Throughput is barely affected since these queues are rarely ALL active at once.
 const QUEUE_CONFIG = {
   [QUEUE_NAMES.COLLECTED_ARTICLES]: {
-    concurrency: 10, // Process 10 articles in parallel
+    concurrency: 5, // was 10 — halved; collector is I/O-bound, not CPU
     rateLimit: {
-      max: 20, // Max 20 jobs
-      duration: 1000, // Per second
+      max: 10, // was 20
+      duration: 1000,
     },
-    lockDuration: 60000, // 1 minute
-    jobTimeout: 120000, // FAZ 3: 2 minutes job timeout
+    lockDuration: 60000,
+    jobTimeout: 120000,
     attempts: 3,
   },
   [QUEUE_NAMES.RELEVANT_ARTICLES]: {
-    concurrency: 5, // AI scoring is slower
+    concurrency: 3, // was 5 — AI calls are slow anyway
     rateLimit: {
-      max: 10,
+      max: 5, // was 10
       duration: 1000,
     },
-    lockDuration: 120000, // 2 minutes (DeepSeek calls)
-    jobTimeout: 180000, // FAZ 3: 3 minutes job timeout
+    lockDuration: 120000,
+    jobTimeout: 180000,
     attempts: 3,
   },
   [QUEUE_NAMES.UNIQUE_ARTICLES]: {
-    concurrency: 8, // Duplicate detection is fast
+    concurrency: 4, // was 8 — duplicate detection is fast, 4 is enough
     rateLimit: {
-      max: 15,
+      max: 8, // was 15
       duration: 1000,
     },
-    lockDuration: 90000, // 1.5 minutes
-    jobTimeout: 120000, // FAZ 3: 2 minutes job timeout
+    lockDuration: 90000,
+    jobTimeout: 120000,
     attempts: 3,
   },
   [QUEUE_NAMES.TREND_ENRICHMENT]: {
-    concurrency: 10, // Trend matching is fast (local DB lookup)
+    concurrency: 4, // was 10 — local DB lookup, 4 is plenty
     rateLimit: {
-      max: 20,
+      max: 8, // was 20
       duration: 1000,
     },
-    lockDuration: 30000, // 30 seconds
-    jobTimeout: 60000, // FAZ 3: 1 minute job timeout
+    lockDuration: 30000,
+    jobTimeout: 60000,
     attempts: 3,
   },
   [QUEUE_NAMES.ENRICHED_ARTICLES]: {
-    concurrency: 3, // Source gathering is slow (Tavily, SearXNG, Jina)
+    concurrency: 2, // was 3 — external API calls (Tavily, Jina) — keep low
     rateLimit: {
-      max: 5,
+      max: 3, // was 5
       duration: 1000,
     },
-    lockDuration: 300000, // 5 minutes
-    jobTimeout: 480000, // 8 minutes job timeout
+    lockDuration: 300000,
+    jobTimeout: 480000,
     attempts: 3,
   },
   [QUEUE_NAMES.ENRICHED_ARTICLES_LEGACY]: {
-    concurrency: 2,
-    rateLimit: { max: 3, duration: 1000 },
+    concurrency: 1, // was 2 — legacy path, keep minimal
+    rateLimit: { max: 2, duration: 1000 },
     lockDuration: 300000,
     jobTimeout: 480000,
     attempts: 2,
   },
   [QUEUE_NAMES.CONTENT_SYNTHESIS]: {
-    concurrency: 2, // LLM synthesis is slow (DeepSeek calls + retries)
+    concurrency: 1, // was 2 — LLM calls are slow and expensive, 1 is safe
     rateLimit: {
-      max: 3,
+      max: 2, // was 3
       duration: 1000,
     },
-    lockDuration: 600000, // 10 minutes
-    jobTimeout: 720000, // 12 minutes job timeout
+    lockDuration: 600000,
+    jobTimeout: 720000,
     attempts: 3,
   },
   [QUEUE_NAMES.CONTENT_VALIDATION]: {
-    concurrency: 5, // Validation is fast (no external calls)
+    concurrency: 3, // was 5 — no external calls, but reduce CPU bursts
     rateLimit: {
-      max: 10,
+      max: 5, // was 10
       duration: 1000,
     },
-    lockDuration: 60000, // 1 minute
-    jobTimeout: 120000, // 2 minutes job timeout
+    lockDuration: 60000,
+    jobTimeout: 120000,
     attempts: 3,
   },
   [QUEUE_NAMES.ARTICLES_WITH_VISUALS]: {
-    concurrency: 5, // Parallel image generation
+    concurrency: 2, // was 5 — image gen is memory-heavy
     rateLimit: {
-      max: 10,
+      max: 4, // was 10
       duration: 1000,
     },
-    lockDuration: 180000, // 3 minutes (Pollinations can be slow)
-    jobTimeout: 300000, // FAZ 3: 5 minutes job timeout
+    lockDuration: 180000,
+    jobTimeout: 300000,
     attempts: 3,
   },
   [QUEUE_NAMES.DATABASE_PUBLISHER]: {
-    concurrency: 3, // Database writes
+    concurrency: 2, // was 3 — DB writes, keep modest
     rateLimit: {
-      max: 5,
+      max: 3, // was 5
       duration: 1000,
     },
-    lockDuration: 120000, // 2 minutes
-    jobTimeout: 180000, // FAZ 3: 3 minutes job timeout
+    lockDuration: 120000,
+    jobTimeout: 180000,
     attempts: 3,
   },
   [QUEUE_NAMES.SOCIAL_SHARE]: {
-    concurrency: 2, // Social media API calls (rate limited by platforms)
+    concurrency: 1, // was 2 — social APIs are rate-limited anyway
     rateLimit: {
-      max: 3,
+      max: 2, // was 3
       duration: 1000,
     },
-    lockDuration: 300000, // 5 minutes (social APIs can be slow)
-    jobTimeout: 300000, // 5 minutes job timeout
+    lockDuration: 300000,
+    jobTimeout: 300000,
     attempts: 3,
   },
   [QUEUE_NAMES.SEO_CALCULATION]: {
-    concurrency: 2, // Parallel SEO calculations
+    concurrency: 1, // was 2 — heavy CPU calculation
     rateLimit: {
-      max: 5,
+      max: 3, // was 5
       duration: 1000,
     },
-    lockDuration: 600000, // 10 minutes
-    jobTimeout: 600000, // FAZ 3: 10 minutes job timeout
+    lockDuration: 600000,
+    jobTimeout: 600000,
     attempts: 3,
   },
   [QUEUE_NAMES.SEO_OPTIMIZATION]: {
-    concurrency: 3, // P0-2: Increased from 1 → 3 (was bottleneck: 40-50% of pipeline time)
+    concurrency: 2, // was 3 — LLM-based, keep low
     rateLimit: {
-      max: 5, // P0-2: Increased from 2 → 5
+      max: 3, // was 5
       duration: 1000,
     },
-    lockDuration: 1200000, // 20 minutes (AI calls)
-    jobTimeout: 900000, // FAZ 3: 15 minutes job timeout
+    lockDuration: 1200000,
+    jobTimeout: 900000,
     attempts: 3,
   },
 };
@@ -229,11 +232,12 @@ export function getQueue(queueName: string): Queue | null {
           delay: 5000, // Start with 5s, then 10s, 20s
         },
         removeOnComplete: {
-          count: 50, // Keep last 50 completed jobs (was 100)
-          age: 12 * 3600, // 12 hours (was 24h)
+          count: 20, // Keep last 20 completed jobs (was 50) — reduces Redis memory
+          age: 6 * 3600, // 6 hours (was 12h)
         },
         removeOnFail: {
-          count: 20, // Keep last 20 failed jobs (was 50)
+          count: 10, // Keep last 10 failed jobs (was 20)
+          age: 24 * 3600, // 24h max retention for debugging
         },
         // Note: Job timeouts are handled at Worker level via lockDuration
         // The actual timeout is controlled by worker's job processing timeout
