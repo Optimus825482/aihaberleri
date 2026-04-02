@@ -26,6 +26,11 @@ export interface FacebookPostResult {
   rateLimitHeaders?: FacebookRateLimitHeaders;
 }
 
+interface FacebookPermissionDiagnosis {
+  reason: "missing_scope" | "page_token_mismatch" | "unknown";
+  detail: string;
+}
+
 const FACEBOOK_ENABLED = process.env.FACEBOOK_ENABLED === "true";
 const FACEBOOK_PAGE_ID = process.env.FACEBOOK_PAGE_ID;
 const FACEBOOK_PAGE_ACCESS_TOKEN = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
@@ -47,6 +52,44 @@ function extractFacebookRateLimitHeaders(
     xBusinessUseCaseUsage: headers["x-business-use-case-usage"],
     retryAfter: headers["retry-after"],
   };
+}
+
+async function diagnoseFacebookPermissionError(
+  pageId: string,
+  accessToken: string,
+  label: "TR" | "EN",
+): Promise<FacebookPermissionDiagnosis> {
+  try {
+    const response = await axios.get(`${GRAPH_API_URL}/${pageId}`, {
+      params: {
+        fields: "id,name,tasks",
+        access_token: accessToken,
+      },
+    });
+
+    const tasks = Array.isArray(response.data?.tasks)
+      ? response.data.tasks.join(", ")
+      : "unknown";
+
+    return {
+      reason: "missing_scope",
+      detail: `Facebook ${label} token page'e erişebiliyor (${response.data?.name || pageId}) ama paylaşım izni eksik olabilir. Meta tarafında app için pages_manage_posts, pages_read_engagement ve ilgili page task yetkilerini kontrol et. Mevcut tasks: ${tasks}.`,
+    };
+  } catch (diagnosisError: any) {
+    const diagnosisData = diagnosisError?.response?.data?.error;
+
+    if (diagnosisData?.code === 200 || diagnosisData?.code === 190) {
+      return {
+        reason: "page_token_mismatch",
+        detail: `Facebook ${label} token bu page ID ile eşleşmiyor olabilir ya da token süresi/bağlantısı bozulmuş olabilir. FACEBOOK_${label}_PAGE_ID ile FACEBOOK_${label}_PAGE_ACCESS_TOKEN çiftini aynı sayfadan yeniden üret.`,
+      };
+    }
+
+    return {
+      reason: "unknown",
+      detail: `Facebook ${label} izin teşhisi tamamlanamadı: ${diagnosisData?.message || diagnosisError?.message || "unknown error"}`,
+    };
+  }
 }
 
 /**
@@ -132,9 +175,15 @@ export async function postToFacebookWithMetadata(article: {
           "   5. Coolify'da FACEBOOK_PAGE_ACCESS_TOKEN değerini güncelle",
         );
       } else if (errorData.code === 200) {
+        const diagnosis = await diagnoseFacebookPermissionError(
+          FACEBOOK_PAGE_ID!,
+          FACEBOOK_PAGE_ACCESS_TOKEN!,
+          "TR",
+        );
         console.warn(
           "   📌 Permission denied. Check pages_manage_posts permission.",
         );
+        console.warn(`   📌 ${diagnosis.detail}`);
       } else if (errorData.code === 368) {
         console.warn("   📌 Content policy violation. Check post content.");
       } else if (errorData.code === 4 || errorData.code === 17 || errorData.code === 32) {
@@ -291,6 +340,27 @@ export async function postToFacebookENWithMetadata(article: {
     if (errorData) {
       const errMsg = `Facebook EN API Error: ${errorData.message} (code: ${errorData.code}, type: ${errorData.type})`;
       console.error(`❌ ${errMsg}`);
+
+      if (errorData.code === 190) {
+        console.warn(
+          "   📌 Facebook EN token expired. Generate a new EN Page Access Token.",
+        );
+      } else if (errorData.code === 200) {
+        const diagnosis = await diagnoseFacebookPermissionError(
+          FACEBOOK_EN_PAGE_ID!,
+          FACEBOOK_EN_PAGE_ACCESS_TOKEN!,
+          "EN",
+        );
+        console.warn(
+          "   📌 Permission denied. Check pages_manage_posts permission.",
+        );
+        console.warn(`   📌 ${diagnosis.detail}`);
+      } else if (errorData.code === 368) {
+        console.warn(
+          "   📌 Facebook EN content policy violation. Check post content.",
+        );
+      }
+
       throw new Error(errMsg);
     } else {
       const errMsg = `Facebook EN post failed: ${error?.message || error}`;
