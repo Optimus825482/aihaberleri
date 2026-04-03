@@ -12,7 +12,6 @@
 import { db } from "@/lib/db";
 import { exaSearch } from "@/lib/exa";
 import { callDeepSeek } from "@/lib/deepseek";
-import { saveArticleTranslation } from "@/lib/translation";
 import { generateSlug } from "@/lib/utils";
 import axios from "axios";
 
@@ -233,61 +232,160 @@ export async function publishRecoveredArticle(
   content: SlugGeneratedContent,
   categoryId: string,
 ): Promise<SlugPublishResult> {
-  // Mevcut makale kontrolü
-  const existing = await db.article.findUnique({ where: { slug } });
-  if (existing) {
-    throw new Error(`Bu slug zaten mevcut: ${slug}`);
+  // ── 1. Article tablosunda slug kontrolü ─────────────────────────────────────
+  //    Eğer Article zaten bu slug ile varsa ve translation'ı da varsa → atla.
+  //    Translation'ı yoksa → kurtarma işlemini tamamla.
+  const existingArticle = await db.article.findUnique({ where: { slug } });
+  if (existingArticle) {
+    const existingTrForArticle = await db.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "ArticleTranslation"
+      WHERE "articleId" = ${existingArticle.id} AND locale = 'tr'
+      LIMIT 1
+    `;
+    if (existingTrForArticle.length > 0) {
+      // Her şey tamam — zaten yayınlı
+      console.log(`[SLUG-RECOVERY] ⏭️ Zaten yayınlı, atlandı: ${slug}`);
+      return { articleId: existingArticle.id, trSlug: slug, enSlug: "" };
+    }
+    // Article var ama translation yok — aşağıda translation oluşturulacak
+    console.log(`[SLUG-RECOVERY] 🔧 Article var, translation eksik — tamamlanıyor: ${slug}`);
   }
 
-  // EN slug çakışma kontrolü
+  // ── 2. ArticleTranslation tablosunda (slug, tr) çakışma kontrolü ────────────
+  //    Başka bir makalenin TR translation'ı bu slug'ı kullanıyorsa,
+  //    o makaleyi 404 hedef slug'ına taşı — yeni Article oluşturma.
+  const existingTrTranslation = await db.$queryRaw<{ id: string; articleId: string }[]>`
+    SELECT id, "articleId" FROM "ArticleTranslation"
+    WHERE slug = ${slug} AND locale = 'tr'
+    LIMIT 1
+  `;
+
+  if (existingTrTranslation.length > 0) {
+    const ownerArticleId = existingTrTranslation[0].articleId;
+    const ownerArticle = await db.article.findUnique({ where: { id: ownerArticleId } });
+
+    if (ownerArticle) {
+      // Sahip makale farklı bir slug'da yaşıyor — onu 404 hedef slug'ına taşı
+      if (ownerArticle.slug !== slug) {
+        await db.article.update({
+          where: { id: ownerArticleId },
+          data: { slug },
+        });
+        console.log(`[SLUG-RECOVERY] ♻️ Mevcut makale slug'ı güncellendi: ${ownerArticle.slug} → ${slug}`);
+      }
+      // EN translation'ı da kontrol et, yoksa oluştur
+      const existingEnForOwner = await db.$queryRaw<{ id: string }[]>`
+        SELECT id FROM "ArticleTranslation"
+        WHERE "articleId" = ${ownerArticleId} AND locale = 'en'
+        LIMIT 1
+      `;
+      if (existingEnForOwner.length === 0) {
+        const enSlugFallback = `${content.en.slug}-${Date.now()}`;
+        await db.$executeRaw`
+          INSERT INTO "ArticleTranslation" (
+            id, "articleId", locale, title, slug, excerpt, content,
+            "metaTitle", "metaDescription", "createdAt", "updatedAt"
+          ) VALUES (
+            gen_random_uuid(), ${ownerArticleId}, 'en', ${content.en.title},
+            ${enSlugFallback}, ${content.en.excerpt}, ${content.en.content},
+            ${content.en.metaTitle || null}, ${content.en.metaDescription || null},
+            NOW(), NOW()
+          )
+          ON CONFLICT (slug, locale) DO NOTHING
+        `;
+        await db.$executeRaw`
+          UPDATE "Article" SET
+            "titleEn"   = ${content.en.title},
+            "excerptEn" = ${content.en.excerpt},
+            "contentEn" = ${content.en.content}
+          WHERE id = ${ownerArticleId}
+        `;
+      }
+      return { articleId: ownerArticleId, trSlug: slug, enSlug: content.en.slug };
+    } else {
+      // Orphan translation — temizle ve devam et
+      await db.$executeRaw`
+        DELETE FROM "ArticleTranslation" WHERE id = ${existingTrTranslation[0].id}
+      `;
+      console.log(`[SLUG-RECOVERY] 🧹 Orphan TR translation temizlendi: ${existingTrTranslation[0].id}`);
+    }
+  }
+
+  // ── 3. EN slug çakışma kontrolü ─────────────────────────────────────────────
   const existingEn = await db.$queryRaw<{ id: string }[]>`
     SELECT id FROM "ArticleTranslation"
     WHERE slug = ${content.en.slug} AND locale = 'en'
     LIMIT 1
   `;
-
   const enSlug =
     existingEn.length > 0 ? `${content.en.slug}-${Date.now()}` : content.en.slug;
 
-  // Ana makaleyi oluştur (slug ZORLA orijinal 404 slug)
-  const article = await db.article.create({
-    data: {
-      title: content.tr.title,
-      slug, // ← orijinal 404 slug korunuyor
-      excerpt: content.tr.excerpt,
-      content: content.tr.content,
-      metaTitle: content.tr.metaTitle,
-      metaDescription: content.tr.metaDescription,
-      keywords: content.tr.keywords,
-      categoryId,
-      status: "PUBLISHED",
-      publishedAt: new Date(),
-      score: 800,
-    },
-  });
+  // ── 4. Transaction ile atomik kayıt ─────────────────────────────────────────
+  const result = await db.$transaction(async (tx) => {
+    // Article zaten varsa yeniden oluşturma — mevcut olanı kullan
+    const article = existingArticle
+      ? existingArticle
+      : await tx.article.create({
+          data: {
+            title: content.tr.title,
+            slug, // ← orijinal 404 slug korunuyor
+            excerpt: content.tr.excerpt,
+            content: content.tr.content,
+            metaTitle: content.tr.metaTitle,
+            metaDescription: content.tr.metaDescription,
+            keywords: content.tr.keywords,
+            categoryId,
+            status: "PUBLISHED",
+            publishedAt: new Date(),
+            score: 800,
+          },
+        });
 
-  // TR çevirisini kaydet
-  await saveArticleTranslation(article.id, "tr", {
-    title: content.tr.title,
-    slug,
-    excerpt: content.tr.excerpt,
-    content: content.tr.content,
-    metaTitle: content.tr.metaTitle,
-    metaDescription: content.tr.metaDescription,
-  });
+    // TR çevirisini kaydet
+    await tx.$executeRaw`
+      INSERT INTO "ArticleTranslation" (
+        id, "articleId", locale, title, slug, excerpt, content,
+        "metaTitle", "metaDescription", "createdAt", "updatedAt"
+      ) VALUES (
+        gen_random_uuid(), ${article.id}, 'tr', ${content.tr.title},
+        ${slug}, ${content.tr.excerpt}, ${content.tr.content},
+        ${content.tr.metaTitle || null}, ${content.tr.metaDescription || null},
+        NOW(), NOW()
+      )
+      ON CONFLICT (slug, locale) DO UPDATE SET
+        "updatedAt" = NOW()
+    `;
 
-  // EN çevirisini kaydet (saveArticleTranslation titleEn/excerptEn/contentEn'i de günceller)
-  await saveArticleTranslation(article.id, "en", {
-    title: content.en.title,
-    slug: enSlug,
-    excerpt: content.en.excerpt,
-    content: content.en.content,
-    metaTitle: content.en.metaTitle,
-    metaDescription: content.en.metaDescription,
+    // EN çevirisini kaydet
+    await tx.$executeRaw`
+      INSERT INTO "ArticleTranslation" (
+        id, "articleId", locale, title, slug, excerpt, content,
+        "metaTitle", "metaDescription", "createdAt", "updatedAt"
+      ) VALUES (
+        gen_random_uuid(), ${article.id}, 'en', ${content.en.title},
+        ${enSlug}, ${content.en.excerpt}, ${content.en.content},
+        ${content.en.metaTitle || null}, ${content.en.metaDescription || null},
+        NOW(), NOW()
+      )
+      ON CONFLICT (slug, locale) DO UPDATE SET
+        slug = ${enSlug},
+        "updatedAt" = NOW()
+    `;
+
+    // Article.titleEn/excerptEn/contentEn denormalize güncelle
+    await tx.$executeRaw`
+      UPDATE "Article" SET
+        "titleEn"   = ${content.en.title},
+        "excerptEn" = ${content.en.excerpt},
+        "contentEn" = ${content.en.content}
+      WHERE id = ${article.id}
+    `;
+
+    return { articleId: article.id };
   });
 
   return {
-    articleId: article.id,
+    articleId: result.articleId,
     trSlug: slug,
     enSlug,
   };
