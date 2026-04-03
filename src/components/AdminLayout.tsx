@@ -32,6 +32,8 @@ import {
   DollarSign,
   Sparkles,
   Languages,
+  Globe,
+  Wand2,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -106,6 +108,20 @@ const menuGroups = [
         title: "TR-EN Senkron",
         href: "/admin/articles/en-sync",
         icon: Languages,
+        requiredResource: "articles" as const,
+        matchMode: "exact",
+      },
+      {
+        title: "EN Çevirisi Eksik",
+        href: "/admin/articles/missing-en",
+        icon: Globe,
+        requiredResource: "articles" as const,
+        matchMode: "exact",
+      },
+      {
+        title: "404 Slug Kurtarma",
+        href: "/admin/articles/slug-recovery",
+        icon: Wand2,
         requiredResource: "articles" as const,
         matchMode: "exact",
       },
