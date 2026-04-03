@@ -9,7 +9,7 @@ Disallow: /admin/
 Disallow: /api/
 Disallow: /search
 Disallow: /en/search
-Disallow: /arama
+# /arama kaldırıldı — bu route mevcut değil
 
 User-agent: Bingbot
 Allow: /

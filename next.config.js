@@ -85,6 +85,7 @@ const nextConfig = {
 
   async redirects() {
     return [
+      // ─── Mevcut URL düzeltmeleri ───────────────────────────────────────────
       // Fix: /news/en/news/{slug} double prefix → /en/news/{slug}
       {
         source: "/news/en/news/:slug*",
@@ -103,6 +104,80 @@ const nextConfig = {
         destination: "/news/:slug*",
         permanent: true,
       },
+
+      // ─── Türkçe sayfa alias'ları ──────────────────────────────────────────
+      // /hakkimizda → /about
+      {
+        source: "/hakkimizda",
+        destination: "/about",
+        permanent: true,
+      },
+      // /iletisim → /contact
+      {
+        source: "/iletisim",
+        destination: "/contact",
+        permanent: true,
+      },
+      // /kategoriler → /categories
+      {
+        source: "/kategoriler",
+        destination: "/categories",
+        permanent: true,
+      },
+      // /veri-silme-talebi → /kvkk (KVKK/GDPR sayfası)
+      {
+        source: "/veri-silme-talebi",
+        destination: "/kvkk",
+        permanent: true,
+      },
+
+      // ─── Eski içerik prefix'leri → güncel URL yapısı ─────────────────────
+      // /blog/:slug → /en/news/:slug
+      {
+        source: "/blog/:slug*",
+        destination: "/en/news/:slug*",
+        permanent: true,
+      },
+      // /guides/:slug → /en/news/:slug
+      {
+        source: "/guides/:slug*",
+        destination: "/en/news/:slug*",
+        permanent: true,
+      },
+      // /tutorials/:slug → /en/news/:slug
+      {
+        source: "/tutorials/:slug*",
+        destination: "/en/news/:slug*",
+        permanent: true,
+      },
+      // /developer-tools/:slug → /en/news/:slug
+      {
+        source: "/developer-tools/:slug*",
+        destination: "/en/news/:slug*",
+        permanent: true,
+      },
+      // /guide/:slug → /en/news/:slug (tekil form)
+      {
+        source: "/guide/:slug*",
+        destination: "/en/news/:slug*",
+        permanent: true,
+      },
+      // /teknoloji/:slug → /news/:slug (Türkçe teknoloji içerikleri)
+      {
+        source: "/teknoloji/:slug*",
+        destination: "/news/:slug*",
+        permanent: true,
+      },
+      // /kariyer/:slug → ana sayfa (kariyer sayfası yok)
+      {
+        source: "/kariyer/:slug*",
+        destination: "/",
+        permanent: false,
+      },
+
+      // NOT: /category/ ve /en/category/ 404'leri not-found.tsx ile handle ediliyor.
+      // next.config.js'de catch-all category redirect EKLEME — tüm geçerli
+      // kategorileri de ezer.
     ];
   },
 

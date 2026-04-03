@@ -14,7 +14,7 @@ export default function robots(): MetadataRoute.Robots {
           // Search pages → duplicate content risk
           "/search",
           "/en/search",
-          "/arama",
+          // Not: /arama kaldırıldı — bu route mevcut değil, gereksiz kural
         ],
       },
       {
