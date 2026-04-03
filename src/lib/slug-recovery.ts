@@ -15,6 +15,7 @@ import { callDeepSeek } from "@/lib/deepseek";
 import { generateSlug } from "@/lib/utils";
 import { fetchGeminiImage, fetchAIHordeImage, fetchPollinationsImage, fetchFreeBackupImage } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
+import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import axios from "axios";
 
 // ─── Slug → arama sorgusu ─────────────────────────────────────────────────────
@@ -559,6 +560,41 @@ export async function publishRecoveredArticle(
 
     return { articleId: article.id };
   });
+
+  // ── 6. Sosyal medya paylaşım kuyruğuna ekle ─────────────────────────────────
+  try {
+    const socialShareQueue = getQueue(QUEUE_NAMES.SOCIAL_SHARE);
+    if (socialShareQueue) {
+      // categoryName'i DB'den çek (SocialShareInput zorunlu alan)
+      const category = await db.category.findUnique({
+        where: { id: categoryId },
+        select: { name: true },
+      });
+      const categoryName = category?.name ?? "Yapay Zeka";
+
+      await socialShareQueue.add(
+        "share-articles",
+        [
+          {
+            articleId: result.articleId,
+            slug,
+            title: content.tr.title,
+            excerpt: content.tr.excerpt,
+            imageUrl,
+            categoryName,
+            enSlug,
+            enTitle: content.en.title,
+            enExcerpt: content.en.excerpt,
+          },
+        ],
+        { removeOnComplete: 100, removeOnFail: 50, attempts: 3 },
+      );
+      console.log(`[SLUG-RECOVERY] 📱 Sosyal paylaşım kuyruğuna eklendi: ${slug}`);
+    }
+  } catch (shareErr) {
+    // Paylaşım hatası makaleyi etkilemesin
+    console.warn(`[SLUG-RECOVERY] ⚠️ Sosyal paylaşım kuyruğu hatası: ${(shareErr as Error).message}`);
+  }
 
   return {
     articleId: result.articleId,
