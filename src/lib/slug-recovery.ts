@@ -10,7 +10,7 @@
  */
 
 import { db } from "@/lib/db";
-import { braveSearch } from "@/lib/brave";
+import { exaSearch } from "@/lib/exa";
 import { callDeepSeek } from "@/lib/deepseek";
 import { saveArticleTranslation } from "@/lib/translation";
 import { generateSlug } from "@/lib/utils";
@@ -23,11 +23,13 @@ import axios from "axios";
  * Örnek: "qwen35-35b-a3b-turkiyede-yapay-zeka" → "qwen35 35b a3b türkiye yapay zeka"
  */
 export function slugToQuery(slug: string): string {
-  return slug
+  const cleaned = slug
     .replace(/-/g, " ")
     .replace(/\b(ve|ile|icin|bir|bu|de|da|ki|ne|mi)\b/g, "") // Türkçe stop kelimeler
     .replace(/\s+/g, " ")
     .trim();
+  // Exa / arama API limiti — ilk 8 anlamlı kelimeyi al
+  return cleaned.split(" ").filter(Boolean).slice(0, 8).join(" ");
 }
 
 // ─── URL içerik okuma ─────────────────────────────────────────────────────────
@@ -90,7 +92,11 @@ export interface SlugPublishResult {
 
 export async function researchBySlug(slug: string): Promise<SlugResearchResult> {
   const query = slugToQuery(slug);
-  const results = await braveSearch(query, { count: 8 });
+  const results = await exaSearch(query, {
+    num_results: 8,
+    use_autoprompt: true,
+    type: "neural",
+  });
 
   return {
     slug,
@@ -98,7 +104,7 @@ export async function researchBySlug(slug: string): Promise<SlugResearchResult> 
     sources: results.slice(0, 8).map((r) => ({
       title: r.title,
       url: r.url,
-      description: r.description || "",
+      description: r.text ? r.text.substring(0, 300) : "",
     })),
   };
 }
@@ -111,9 +117,13 @@ export async function generateContentForSlug(
 ): Promise<SlugGeneratedContent> {
   const query = research.query;
 
-  // En iyi 4 kaynağı oku (paralel)
+  // En iyi 4 kaynağı oku — Exa zaten text döndürüyor, kısa olanlar için Jina fallback
   const sourcesWithContent = await Promise.all(
     research.sources.slice(0, 4).map(async (s) => {
+      // Exa'dan gelen description (text snippet) yeterliyse Jina'ya gitme
+      if (s.description && s.description.length >= 200) {
+        return { ...s, content: s.description };
+      }
       const content = await readUrlWithJina(s.url);
       return { ...s, content: content || s.description };
     }),
