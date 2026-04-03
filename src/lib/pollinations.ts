@@ -318,7 +318,7 @@ export function generateImageUrl(
 // GEMINI IMAGE GENERATION — Nano Banana (free tier, ~500 images/day)
 // Returns data URL (base64) or null on failure
 // ============================================
-async function fetchGeminiImage(
+export async function fetchGeminiImage(
   prompt: string,
   options: PollinationsOptions = {},
 ): Promise<string | null> {
@@ -389,7 +389,7 @@ async function fetchGeminiImage(
 // AI HORDE — Free, unlimited, crowdsourced GPU cluster
 // Async: submit → poll → get result (typically 10-30s)
 // ============================================
-async function fetchAIHordeImage(
+export async function fetchAIHordeImage(
   prompt: string,
   options: PollinationsOptions = {},
 ): Promise<string | null> {

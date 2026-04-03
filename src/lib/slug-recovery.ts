@@ -13,6 +13,8 @@ import { db } from "@/lib/db";
 import { exaSearch } from "@/lib/exa";
 import { callDeepSeek } from "@/lib/deepseek";
 import { generateSlug } from "@/lib/utils";
+import { fetchGeminiImage, fetchAIHordeImage, fetchPollinationsImage, fetchFreeBackupImage } from "@/lib/pollinations";
+import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import axios from "axios";
 
 // ─── Slug → arama sorgusu ─────────────────────────────────────────────────────
@@ -49,6 +51,150 @@ async function readUrlWithJina(url: string): Promise<string> {
   return "";
 }
 
+// ─── NSFW-safe görsel üretimi ────────────────────────────────────────────────
+
+/**
+ * Slug recovery için NSFW-güvenli görsel üretir.
+ *
+ * Öncelik sırası:
+ *  1. Gemini (Google safety filter — en katı, NSFW üretmez)
+ *  2. Pollinations flux + safe=true (platform seviyesi filtre)
+ *  3. Picsum (stock fotoğraf, garantili güvenli)
+ *
+ * Prompt mühendisliği kuralları:
+ *  - Her zaman "SFW, safe for work, professional" ile başla
+ *  - İnsan/yüz/vücut içeren terimleri kesinlikle ekleme
+ *  - Teknoloji temasını somut nesnelerle ifade et (devre, ekran, ağ vs.)
+ */
+async function generateSafeRecoveryImage(
+  title: string,
+  customPrompt?: string,
+): Promise<string> {
+  // ── Güvenli, NSFW'den uzak prompt oluştur ───────────────────────────────────
+  const safeBase =
+    "SFW, safe for work, professional technology news illustration, " +
+    "modern digital art, clean minimal design, 4k, high quality, " +
+    "abstract tech aesthetic, no people, no humans, no faces, no hands, " +
+    "no body parts, no text, no watermark, no logo, " +
+    "studio lighting, sharp focus, editorial style";
+
+  // Başlıktan konuya özgü güvenli anahtar kelimeler çıkar
+  const topicKeywords = extractSafeTopicKeywords(title);
+
+  const finalPrompt = customPrompt
+    ? `${safeBase}, ${customPrompt.replace(/nsfw|adult|explicit|sexy|nude/gi, "").trim()}`
+    : `${topicKeywords}, ${safeBase}`;
+
+  console.log(`[SLUG-RECOVERY] 🎨 Görsel prompt: ${finalPrompt.substring(0, 120)}`);
+
+  // ── 1. AI Horde (ücretsiz, sınırsız, nsfw=false + censor_nsfw=true) ──────────
+  try {
+    const hordeUrl = await fetchAIHordeImage(finalPrompt, { width: 1200, height: 630 });
+    if (hordeUrl) {
+      console.log("[SLUG-RECOVERY] ✅ AI Horde görsel başarılı");
+      return hordeUrl;
+    }
+  } catch (e) {
+    console.warn(`[SLUG-RECOVERY] ⚠️ AI Horde görsel başarısız: ${(e as Error).message}`);
+  }
+
+  // ── 2. Gemini (Google safety filter) ────────────────────────────────────────
+  try {
+    const geminiUrl = await fetchGeminiImage(finalPrompt);
+    if (geminiUrl) {
+      console.log("[SLUG-RECOVERY] ✅ Gemini görsel başarılı");
+      return geminiUrl;
+    }
+  } catch (e) {
+    console.warn(`[SLUG-RECOVERY] ⚠️ Gemini görsel başarısız: ${(e as Error).message}`);
+  }
+
+  // ── 3. Pollinations flux + safe=true (fallback) ──────────────────────────────
+  try {
+    const pollUrl = await fetchPollinationsImage(finalPrompt, {
+      model: "flux",
+      width: 1200,
+      height: 630,
+      safe: true,
+      enhance: true,
+      negativePrompt:
+        "nsfw, nude, explicit, sexual, violent, gore, blood, weapon, " +
+        "people, humans, faces, hands, portraits, body parts, " +
+        "watermark, text, logo, signature, low quality, blurry",
+      allowBackupFallback: false,
+    });
+    if (pollUrl) {
+      console.log("[SLUG-RECOVERY] ✅ Pollinations görsel başarılı");
+      return pollUrl;
+    }
+  } catch (e) {
+    console.warn(`[SLUG-RECOVERY] ⚠️ Pollinations görsel başarısız: ${(e as Error).message}`);
+  }
+
+  // ── 3. Picsum (garantili güvenli stock fotoğraf) ─────────────────────────────
+  console.warn("[SLUG-RECOVERY] 📷 Picsum fallback kullanılıyor");
+  return fetchFreeBackupImage(finalPrompt);
+}
+
+/**
+ * Haber başlığından NSFW riski taşımayan, konuya özgü görsel anahtar kelimeleri çıkarır.
+ */
+function extractSafeTopicKeywords(title: string): string {
+  const lower = title.toLowerCase();
+
+  const topicMap: Array<{ terms: string[]; keywords: string }> = [
+    {
+      terms: ["yapay zeka", "ai", "llm", "model", "chatgpt", "gpt", "claude", "gemini"],
+      keywords: "glowing neural network visualization, AI chip, digital brain, circuit board",
+    },
+    {
+      terms: ["robot", "otomasyon", "automation"],
+      keywords: "industrial robotic arm, factory automation, mechanical components, metallic machinery",
+    },
+    {
+      terms: ["güvenlik", "security", "siber", "cyber", "hack", "şifre"],
+      keywords: "digital lock, cybersecurity shield, encrypted data streams, firewall visualization",
+    },
+    {
+      terms: ["bulut", "cloud", "sunucu", "server", "veri merkezi", "data center"],
+      keywords: "server rack, data center infrastructure, glowing cables, cloud computing visualization",
+    },
+    {
+      terms: ["telefon", "phone", "mobil", "mobile", "iphone", "android"],
+      keywords: "sleek smartphone floating, mobile app interface, device screen glow",
+    },
+    {
+      terms: ["chip", "işlemci", "processor", "gpu", "nvidia", "intel", "amd"],
+      keywords: "semiconductor chip close-up, microprocessor architecture, silicon wafer",
+    },
+    {
+      terms: ["araç", "araba", "otomotiv", "ev", "akıllı ev", "iot"],
+      keywords: "smart home devices, IoT connected objects, glowing interface on objects",
+    },
+    {
+      terms: ["para", "fintech", "kripto", "bitcoin", "ekonomi", "finance"],
+      keywords: "digital currency visualization, financial data graph, holographic chart",
+    },
+    {
+      terms: ["sağlık", "health", "tıp", "medical", "hastane", "hospital"],
+      keywords: "medical technology, digital health visualization, futuristic medical equipment",
+    },
+    {
+      terms: ["uzay", "space", "nasa", "roket", "rocket", "satellite"],
+      keywords: "spacecraft in orbit, satellite visualization, cosmic technology",
+    },
+  ];
+
+  for (const { terms, keywords } of topicMap) {
+    if (terms.some((t) => lower.includes(t))) {
+      return keywords;
+    }
+  }
+
+  // Varsayılan — genel teknoloji
+  return "abstract technology background, digital grid, glowing data streams, futuristic interface";
+}
+
 // ─── Tipler ──────────────────────────────────────────────────────────────────
 
 export interface SlugResearchResult {
@@ -79,6 +225,7 @@ export interface SlugGeneratedContent {
     metaDescription: string;
     keywords: string[];
   };
+  imagePrompt?: string;
 }
 
 export interface SlugPublishResult {
@@ -175,7 +322,8 @@ SADECE aşağıdaki JSON formatında yanıt ver (başka açıklama ekleme):
     "metaTitle": "Google SERP title (50-60 chars)",
     "metaDescription": "Meta description with CTA (120-155 chars)",
     "keywords": ["keyword1", "keyword2", "keyword3"]
-  }
+  },
+  "imagePrompt": "professional tech illustration, [topic specific], digital art, 4k, no people, no humans, no faces"
 }`;
 
   const rawResponse = await callDeepSeek(
@@ -222,6 +370,7 @@ SADECE aşağıdaki JSON formatında yanıt ver (başka açıklama ekleme):
       metaDescription: String(parsed.en.metaDescription || ""),
       keywords: Array.isArray(parsed.en.keywords) ? parsed.en.keywords.map(String) : [],
     },
+    imagePrompt: parsed.imagePrompt ? String(parsed.imagePrompt) : undefined,
   };
 }
 
@@ -320,7 +469,30 @@ export async function publishRecoveredArticle(
   const enSlug =
     existingEn.length > 0 ? `${content.en.slug}-${Date.now()}` : content.en.slug;
 
-  // ── 4. Transaction ile atomik kayıt ─────────────────────────────────────────
+  // ── 4. Görsel üret (transaction öncesi — zaman alabilir) ────────────────────
+  let imageUrl: string | null = null;
+  let imageUrlMedium: string | null = null;
+  let imageUrlSmall: string | null = null;
+  let imageUrlThumb: string | null = null;
+
+  try {
+    const rawImageUrl = await generateSafeRecoveryImage(
+      content.tr.title,
+      content.imagePrompt,
+    );
+    if (rawImageUrl) {
+      const sizes = await optimizeAndGenerateSizes(rawImageUrl, slug);
+      imageUrl = sizes.original ?? rawImageUrl;
+      imageUrlMedium = sizes.medium ?? null;
+      imageUrlSmall = sizes.small ?? null;
+      imageUrlThumb = sizes.thumb ?? null;
+      console.log(`[SLUG-RECOVERY] 🖼️ Görsel oluşturuldu: ${imageUrl?.substring(0, 80)}`);
+    }
+  } catch (imgErr) {
+    console.warn(`[SLUG-RECOVERY] ⚠️ Görsel üretilemedi, görselsiz devam: ${(imgErr as Error).message}`);
+  }
+
+  // ── 5. Transaction ile atomik kayıt ─────────────────────────────────────────
   const result = await db.$transaction(async (tx) => {
     // Article zaten varsa yeniden oluşturma — mevcut olanı kullan
     const article = existingArticle
@@ -338,6 +510,10 @@ export async function publishRecoveredArticle(
             status: "PUBLISHED",
             publishedAt: new Date(),
             score: 800,
+            imageUrl,
+            imageUrlMedium,
+            imageUrlSmall,
+            imageUrlThumb,
           },
         });
 
