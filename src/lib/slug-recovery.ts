@@ -145,44 +145,56 @@ function extractSafeTopicKeywords(title: string): string {
 
   const topicMap: Array<{ terms: string[]; keywords: string }> = [
     {
-      terms: ["yapay zeka", "ai", "llm", "model", "chatgpt", "gpt", "claude", "gemini"],
-      keywords: "glowing neural network visualization, AI chip, digital brain, circuit board",
+      terms: ["yapay zeka", "llm", "chatgpt", "gpt", "claude", "gemini", "qwen", "deepseek", "mistral", "yapay", "zeka"],
+      keywords: "glowing fiber optic network, abstract data flow, luminous circuit patterns, floating geometric nodes, neon blue digital grid",
     },
     {
-      terms: ["robot", "otomasyon", "automation"],
-      keywords: "industrial robotic arm, factory automation, mechanical components, metallic machinery",
+      terms: ["ai model", "dil modeli", "language model", "transformer", "neural"],
+      keywords: "abstract neural network graph, interconnected glowing dots, data stream visualization, holographic matrix",
     },
     {
-      terms: ["güvenlik", "security", "siber", "cyber", "hack", "şifre"],
-      keywords: "digital lock, cybersecurity shield, encrypted data streams, firewall visualization",
+      terms: ["robot", "otomasyon", "automation", "android", "cyborg"],
+      keywords: "mechanical gears and cogs, factory conveyor belt, industrial machinery close-up, metallic components abstract",
+    },
+    {
+      terms: ["güvenlik", "security", "siber", "cyber", "hack", "şifre", "saldırı"],
+      keywords: "glowing padlock on dark background, binary code rain, hexagonal shield pattern, encrypted data visualization",
     },
     {
       terms: ["bulut", "cloud", "sunucu", "server", "veri merkezi", "data center"],
-      keywords: "server rack, data center infrastructure, glowing cables, cloud computing visualization",
+      keywords: "illuminated server rack rows, blue LED data center, cable management art, cloud architecture diagram",
     },
     {
-      terms: ["telefon", "phone", "mobil", "mobile", "iphone", "android"],
-      keywords: "sleek smartphone floating, mobile app interface, device screen glow",
+      terms: ["telefon", "phone", "mobil", "mobile", "iphone", "android", "akıllı telefon"],
+      keywords: "floating smartphone device, glowing app icons grid, mobile screen interface close-up, device hardware macro",
     },
     {
-      terms: ["chip", "işlemci", "processor", "gpu", "nvidia", "intel", "amd"],
-      keywords: "semiconductor chip close-up, microprocessor architecture, silicon wafer",
+      terms: ["chip", "işlemci", "processor", "gpu", "nvidia", "intel", "amd", "yarı iletken"],
+      keywords: "macro shot of microchip, silicon wafer surface, transistor gate close-up, CPU die shot neon lit",
     },
     {
-      terms: ["araç", "araba", "otomotiv", "ev", "akıllı ev", "iot"],
-      keywords: "smart home devices, IoT connected objects, glowing interface on objects",
+      terms: ["akıllı ev", "iot", "akıllı", "smart home", "bağlantılı"],
+      keywords: "glowing smart home devices on desk, connected gadgets abstract, wireless signal visualization, home automation hub",
     },
     {
-      terms: ["para", "fintech", "kripto", "bitcoin", "ekonomi", "finance"],
-      keywords: "digital currency visualization, financial data graph, holographic chart",
+      terms: ["para", "fintech", "kripto", "bitcoin", "ekonomi", "borsa", "finans"],
+      keywords: "glowing stock market graph lines, abstract financial data chart, digital ledger visualization, currency symbol holograms",
     },
     {
-      terms: ["sağlık", "health", "tıp", "medical", "hastane", "hospital"],
-      keywords: "medical technology, digital health visualization, futuristic medical equipment",
+      terms: ["sağlık", "health", "tıp", "medical", "ilaç", "hastane"],
+      keywords: "glowing DNA double helix, medical scanner interface, digital health dashboard, laboratory equipment close-up",
     },
     {
-      terms: ["uzay", "space", "nasa", "roket", "rocket", "satellite"],
-      keywords: "spacecraft in orbit, satellite visualization, cosmic technology",
+      terms: ["uzay", "space", "nasa", "roket", "rocket", "uydu", "satellite"],
+      keywords: "satellite orbiting earth from space, rocket exhaust plume, deep space nebula abstract, mission control screens",
+    },
+    {
+      terms: ["oyun", "gaming", "game", "konsol", "console"],
+      keywords: "glowing gaming peripherals, RGB keyboard macro, game controller floating, neon lit gaming setup",
+    },
+    {
+      terms: ["enerji", "energy", "güneş", "solar", "elektrik", "batarya"],
+      keywords: "solar panel array aerial view, glowing battery cells, energy flow visualization, power grid abstract",
     },
   ];
 
@@ -192,8 +204,8 @@ function extractSafeTopicKeywords(title: string): string {
     }
   }
 
-  // Varsayılan — genel teknoloji
-  return "abstract technology background, digital grid, glowing data streams, futuristic interface";
+  // Varsayılan — genel teknoloji (insan/vücut içermeyen soyut)
+  return "glowing fiber optic cables macro, abstract blue digital network, luminous data streams, futuristic technology background, no objects with human shape";
 }
 
 // ─── Tipler ──────────────────────────────────────────────────────────────────

@@ -412,14 +412,20 @@ export async function fetchAIHordeImage(
         params: {
           width: 1024,
           height: 576,
-          steps: 20,
-          cfg_scale: 7,
-          sampler_name: "k_euler",
+          steps: 25,
+          cfg_scale: 7.5,
+          sampler_name: "k_euler_a",
           n: 1,
+          negative_prompt:
+            "nsfw, nude, explicit, sexual, " +
+            "people, person, human, man, woman, face, body, hands, fingers, " +
+            "humanoid, mannequin, figure, portrait, silhouette, " +
+            "robot body, android body, cyborg body, robot face, robot head, " +
+            "watermark, text, logo, signature, blurry, low quality, deformed",
         },
         nsfw: false,
         censor_nsfw: true,
-        models: ["Deliberate"],
+        models: ["AlbedoBase XL (SDXL)"],
         r2: true,
       }),
     });
