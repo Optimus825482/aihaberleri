@@ -36,6 +36,7 @@ export const QUEUE_NAMES = {
   SOCIAL_SHARE: "social-share", // NEW: Social media sharing (split from publisher) (2026-02-12)
   SEO_CALCULATION: "seo-calculation", // Bulk SEO calculation
   SEO_OPTIMIZATION: "seo-optimization", // Bulk SEO optimization
+  SLUG_RECOVERY: "slug-recovery", // 404 slug recovery pipeline
 } as const;
 
 // Queue instances (lazy initialization)
@@ -195,6 +196,13 @@ const QUEUE_CONFIG = {
     lockDuration: 1200000,
     jobTimeout: 900000,
     attempts: 3,
+  },
+  [QUEUE_NAMES.SLUG_RECOVERY]: {
+    concurrency: 3, // Exa + DeepSeek + image — 3 paralel yeterli
+    rateLimit: { max: 5, duration: 1000 },
+    lockDuration: 300000, // 5 dk — AI+görsel üretimi uzun sürebilir
+    jobTimeout: 300000,
+    attempts: 2,
   },
 };
 

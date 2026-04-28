@@ -46,6 +46,7 @@
     "@atproto/api": "^0.18.20",
     "@auth/prisma-adapter": "^2.7.4",
     "@bull-board/api": "^6.16.4",
+    "@aws-sdk/client-s3": "^3.0.0",
     "@bull-board/express": "^6.16.4",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",

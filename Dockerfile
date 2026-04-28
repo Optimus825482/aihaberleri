@@ -145,23 +145,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libvips42 \
     && rm -rf /var/lib/apt/lists/* \
     && addgroup --system --gid 1001 nodejs \
-    && adduser --system --uid 1001 --home /home/worker --shell /bin/sh worker \
+    && adduser --system --uid 1001 --ingroup nodejs --home /home/worker --shell /bin/sh worker \
     && mkdir -p /home/worker/.npm /home/worker/.cache /tmp/tsx-1001 /app/public/images/optimized \
-    && chown -R worker:nodejs /home/worker /tmp/tsx-1001 /app/public
+    && chown -R 1001:1001 /home/worker /tmp/tsx-1001 /app/public
 
 WORKDIR /app
 
 # Prod deps + tsx/typescript for running .ts files
-COPY --link --from=deps --chown=worker:nodejs /app/node_modules ./node_modules
-COPY --link --chown=worker:nodejs package.json package-lock.json* ./
+COPY --link --from=deps --chown=1001:1001 /app/node_modules ./node_modules
+COPY --link --chown=1001:1001 package.json package-lock.json* ./
 
 RUN rm -rf node_modules/.cache 2>/dev/null || true && \
     echo "✓ worker deps: $(ls -1 node_modules | wc -l) packages"
 
-COPY --link --chown=worker:nodejs prisma ./prisma
-COPY --link --chown=worker:nodejs src ./src
-COPY --link --chown=worker:nodejs scripts/worker-healthcheck.js ./scripts/worker-healthcheck.js
-COPY --link --chown=worker:nodejs tsconfig.json ./tsconfig.json
+COPY --link --chown=1001:1001 prisma ./prisma
+COPY --link --chown=1001:1001 src ./src
+COPY --link --chown=1001:1001 scripts/worker-healthcheck.js ./scripts/worker-healthcheck.js
+COPY --link --chown=1001:1001 tsconfig.json ./tsconfig.json
 
 ENV NODE_ENV=production \
     TSX_TSCONFIG_PATH="/app/tsconfig.json" \
