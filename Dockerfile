@@ -100,26 +100,26 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && python3 -m venv /app/venv \
     && /app/venv/bin/pip install --no-cache-dir edge-tts \
     && addgroup --system --gid 1001 nodejs \
-    && adduser --system --uid 1001 --home /home/nextjs --shell /bin/sh nextjs \
+    && adduser --system --uid 1001 --ingroup nodejs --home /home/nextjs --shell /bin/sh nextjs \
     && mkdir -p /home/nextjs/.npm /home/nextjs/.cache \
-    && chown -R nextjs:nodejs /home/nextjs
+    && chown -R 1001:1001 /home/nextjs
 
 WORKDIR /app
 
 # Production deps — direkt prod-deps stage'den (prune yok, zaten temiz)
-COPY --link --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --link --from=prod-deps --chown=1001:1001 /app/node_modules ./node_modules
 
 # Copy standalone build
-COPY --link --from=app-builder --chown=nextjs:nodejs /app/public ./public
-COPY --link --from=app-builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --link --from=app-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --link --from=app-builder --chown=nextjs:nodejs /app/prisma ./prisma
-COPY --link --from=app-builder --chown=nextjs:nodejs /app/src/lib/tts_engine.py ./src/lib/tts_engine.py
-COPY --link --from=app-builder --chown=nextjs:nodejs /app/server.js ./server.js
-COPY --link --from=app-builder --chown=nextjs:nodejs /app/package.json ./package.json
-COPY --link --from=app-builder --chown=nextjs:nodejs /app/scripts ./scripts
+COPY --link --from=app-builder --chown=1001:1001 /app/public ./public
+COPY --link --from=app-builder --chown=1001:1001 /app/.next/standalone ./
+COPY --link --from=app-builder --chown=1001:1001 /app/.next/static ./.next/static
+COPY --link --from=app-builder --chown=1001:1001 /app/prisma ./prisma
+COPY --link --from=app-builder --chown=1001:1001 /app/src/lib/tts_engine.py ./src/lib/tts_engine.py
+COPY --link --from=app-builder --chown=1001:1001 /app/server.js ./server.js
+COPY --link --from=app-builder --chown=1001:1001 /app/package.json ./package.json
+COPY --link --from=app-builder --chown=1001:1001 /app/scripts ./scripts
 
-COPY --from=app-builder --chown=nextjs:nodejs /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --from=app-builder --chown=1001:1001 /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
 ENV NODE_ENV=production \
