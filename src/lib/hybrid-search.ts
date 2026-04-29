@@ -5,7 +5,7 @@
 
 import {
   googleNewsSearch,
-  calculateTrendScoreGoogle News,
+  calculateTrendScoreGoogleNews,
 } from "./google-news-search";
 
 type SearchProvider = "google-news";
@@ -100,7 +100,7 @@ export async function calculateTrendScoreHybrid(
   description: string,
 ): Promise<number> {
   try {
-    const score = await calculateTrendScoreGoogle News(title, description);
+    const score = await calculateTrendScoreGoogleNews(title, description);
     markProviderSuccess();
     return score;
   } catch {
