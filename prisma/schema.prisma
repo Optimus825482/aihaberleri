@@ -22,9 +22,10 @@ model User {
   permissions   String[]          @default([])
   isActive      Boolean           @default(true)
   deletedAt     DateTime?
-  articles      Article[]
-  auditLogs     AuditLog[]
-  userSessions  UserSession[]
+  articles                Article[]
+  coverageRecoveryBatches CoverageRecoveryBatch[]
+  auditLogs               AuditLog[]
+  userSessions            UserSession[]
 
   @@index([email])
   @@index([role])
@@ -40,9 +41,10 @@ model Category {
   slug        String    @unique
   description String?
   order       Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  articles    Article[]
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  articles                Article[]
+  coverageRecoveryBatches CoverageRecoveryBatch[]
 
   @@index([slug])
   @@index([name])
