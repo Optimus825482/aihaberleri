@@ -113,7 +113,7 @@ JSON formatında yanıt ver:
         return await callDeepSeek(
           [{ role: "user", content: prompt }],
           {
-            model: "deepseek-chat",
+            model: "deepseek-v4-flash",
             temperature: 0.3,
             maxTokens: 3000,
           }

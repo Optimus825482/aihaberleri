@@ -27,6 +27,7 @@ yarn-error.log*
 .env*.local
 .env.production
 .env.staging
+.env.coolify
 
 # Firebase / Google Service Account Keys
 *firebase-adminsdk*.json

@@ -133,7 +133,7 @@ JSON formatında yanıt ver:
         },
       ],
       {
-        model: "deepseek-chat",
+        model: "deepseek-v4-flash",
         maxTokens: 2000,
         temperature: 0.9,
       },

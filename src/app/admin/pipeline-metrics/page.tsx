@@ -513,7 +513,7 @@ export default function PipelineMetricsPage() {
                                 📏 tokens: {(v.config as any)?.maxTokens ?? "?"}
                               </span>
                               <span>
-                                🤖 {(v.config as any)?.model ?? "deepseek-chat"}
+                                🤖 {(v.config as any)?.model ?? "deepseek-v4-flash"}
                               </span>
                               <span>
                                 📅{" "}

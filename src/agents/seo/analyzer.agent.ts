@@ -99,7 +99,7 @@ export class SEOAnalyzerAgent {
           { role: "user", content: prompt },
         ],
         {
-          model: "deepseek-chat",
+          model: "deepseek-v4-flash",
           maxTokens: 3000,
           temperature: 0.7,
         },

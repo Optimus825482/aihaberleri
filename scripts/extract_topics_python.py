@@ -201,7 +201,7 @@ SADECE TOPIC'İ YANIT VER (örnek: nvidia_openai_investment)"""
                 "Content-Type": "application/json"
             },
             json={
-                "model": "deepseek-chat",
+                "model": "deepseek-v4-flash",
                 "messages": [
                     {
                         "role": "system",

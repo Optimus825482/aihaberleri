@@ -61,7 +61,7 @@ async function generateEnContent(title: string): Promise<{
     const resp = await axios.post(
       `${DEEPSEEK_API_URL}/chat/completions`,
       {
-        model: "deepseek-chat",
+        model: "deepseek-v4-flash",
         messages: [
           {
             role: "system",

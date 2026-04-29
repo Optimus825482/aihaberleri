@@ -1234,7 +1234,7 @@ JSON formatında yanıt ver:
         const trResponse = await callDeepSeek(
           [{ role: "user", content: currentTrPrompt }],
           {
-            model: "deepseek-chat",
+            model: "deepseek-v4-flash",
             maxTokens: 6000,
             temperature: trAttempt === 0 ? 0.7 : 0.5, // Lower temperature on retry for more predictable output
           },
@@ -1375,7 +1375,7 @@ Respond in JSON:
       const enResponse = await callDeepSeek(
         [{ role: "user", content: enPrompt }],
         {
-          model: "deepseek-chat",
+          model: "deepseek-v4-flash",
           maxTokens: 6000,
           temperature: 0.7,
         },

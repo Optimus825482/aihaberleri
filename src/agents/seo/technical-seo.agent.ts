@@ -166,7 +166,7 @@ SADECE GEÇERLİ JSON YANIT VER. AÇIKLAMA YOK.`;
           },
         ],
         {
-          model: "deepseek-chat",
+          model: "deepseek-v4-flash",
           temperature: 0.3,
           maxTokens: 2000,
         },
@@ -220,7 +220,7 @@ Sadece slug'ı yanıtla, açıklama yok.`;
 
     try {
       const response = await callDeepSeek([{ role: "user", content: prompt }], {
-        model: "deepseek-chat",
+        model: "deepseek-v4-flash",
         temperature: 0.2,
         maxTokens: 100,
       });
@@ -273,7 +273,7 @@ Sadece alt text'i yanıtla, açıklama yok.`;
 
     try {
       const response = await callDeepSeek([{ role: "user", content: prompt }], {
-        model: "deepseek-chat",
+        model: "deepseek-v4-flash",
         temperature: 0.5,
         maxTokens: 150,
       });

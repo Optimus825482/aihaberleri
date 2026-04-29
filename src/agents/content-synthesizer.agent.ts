@@ -272,7 +272,7 @@ Respond in JSON:
 
     // Start EN synthesis immediately (non-blocking)
     const enPromise = callDeepSeek([{ role: "user", content: enPrompt }], {
-      model: "deepseek-chat",
+      model: "deepseek-v4-flash",
       maxTokens: 6000,
       temperature: 0.7,
     }).catch((err: unknown) => {
@@ -388,7 +388,7 @@ JSON formatında yanıt ver:
         const trResponse = await callDeepSeek(
           [{ role: "user", content: currentTrPrompt }],
           {
-            model: "deepseek-chat",
+            model: "deepseek-v4-flash",
             maxTokens: 6000,
             temperature: trAttempt === 0 ? 0.7 : 0.5,
           },

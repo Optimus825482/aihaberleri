@@ -217,7 +217,7 @@ async function callProvider(
   const isNvidia = provider === "nvidia";
   const apiUrl = isNvidia ? NVIDIA_API_URL : DEEPSEEK_API_URL;
   const apiKey = isNvidia ? NVIDIA_API_KEY : DEEPSEEK_API_KEY;
-  const model = isNvidia ? NVIDIA_MODEL : options.model || "deepseek-chat";
+  const model = isNvidia ? NVIDIA_MODEL : options.model || "deepseek-v4-flash";
   const breaker = isNvidia ? nvidiaCircuitBreaker : deepSeekCircuitBreaker;
   const providerLabel = isNvidia ? `NVIDIA/${NVIDIA_MODEL}` : "DeepSeek-chat";
 
