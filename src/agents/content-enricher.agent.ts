@@ -453,7 +453,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
           if (this.shouldSkipUrl(result.url)) continue;
 
-          const relevanceScore = this.calculateRelevanceScoreGoogle News(
+          const relevanceScore = this.calculateRelevanceScoreGoogleNews(
             result,
             article.title,
           );
@@ -581,7 +581,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
         if (this.shouldSkipUrl(result.url)) continue;
 
-        const relevanceScore = this.calculateRelevanceScoreGoogle News(
+        const relevanceScore = this.calculateRelevanceScoreGoogleNews(
           result,
           article.title,
         );
@@ -828,7 +828,7 @@ export class ContentEnricherAgent extends BaseAgent<
         if (innerSeen.has(norm)) continue;
         innerSeen.add(norm);
 
-        const score = this.calculateRelevanceScoreGoogle News(r, article.title);
+        const score = this.calculateRelevanceScoreGoogleNews(r, article.title);
         if (score >= 10) {
           // Relaxed threshold (normal: 20)
           deduped.push({ title: r.title, url: r.url, relevanceScore: score });
@@ -1680,7 +1680,7 @@ Respond in JSON:
    * Calculate relevance score for Google News results
    * 🛡️ UPDATED: Penalize dictionary/reference results and check for news relevance
    */
-  private calculateRelevanceScoreGoogle News(
+  private calculateRelevanceScoreGoogleNews(
     result: GoogleNewsResult,
     originalTitle: string,
   ): number {

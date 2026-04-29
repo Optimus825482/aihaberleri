@@ -335,7 +335,7 @@ export class SourceGathererAgent extends BaseAgent<
           seenUrls.add(normalizedUrl);
           if (this.shouldSkipUrl(result.url)) continue;
 
-          const relevanceScore = this.calculateRelevanceScoreGoogle News(
+          const relevanceScore = this.calculateRelevanceScoreGoogleNews(
             result,
             article.title,
           );
@@ -440,7 +440,7 @@ export class SourceGathererAgent extends BaseAgent<
         seenUrls.add(normalizedUrl);
         if (this.shouldSkipUrl(result.url)) continue;
 
-        const relevanceScore = this.calculateRelevanceScoreGoogle News(
+        const relevanceScore = this.calculateRelevanceScoreGoogleNews(
           result,
           article.title,
         );
@@ -676,7 +676,7 @@ export class SourceGathererAgent extends BaseAgent<
         if (innerSeen.has(norm)) continue;
         innerSeen.add(norm);
 
-        const score = this.calculateRelevanceScoreGoogle News(r, article.title);
+        const score = this.calculateRelevanceScoreGoogleNews(r, article.title);
         if (score >= 10) {
           deduped.push({ title: r.title, url: r.url, relevanceScore: score });
         }
@@ -1113,7 +1113,7 @@ export class SourceGathererAgent extends BaseAgent<
   // HELPER: Calculate Google News relevance score
   // ─────────────────────────────────────────────────────────────────────────
 
-  private calculateRelevanceScoreGoogle News(
+  private calculateRelevanceScoreGoogleNews(
     result: GoogleNewsResult,
     originalTitle: string,
   ): number {
