@@ -191,8 +191,10 @@ export class SourceGathererAgent extends BaseAgent<
               sources,
               hasNoExternalSources: hadNoExternalSources,
               // Re-enrich metadata passthrough
-              _forceReEnrich: article._forceReEnrich,
-              _rejectionReason: article._rejectionReason,
+              _forceReEnrich: article._forceReEnrich || hadNoExternalSources,
+              _rejectionReason:
+                article._rejectionReason ||
+                (hadNoExternalSources ? "no_external_sources_degraded" : undefined),
               _retryCount: article._retryCount,
             };
 
@@ -212,10 +214,10 @@ export class SourceGathererAgent extends BaseAgent<
             // P0-1: Filter out 0-source articles — don't waste LLM compute
             if (r.value.data.hasNoExternalSources) {
               this.logger.warn(
-                `🚫 FILTERED: "${r.value.data.title.substring(0, 60)}" — 0 external sources, skipping synthesis`,
+                `DEGRADED: "${r.value.data.title.substring(0, 60)}" - 0 external sources, forwarding with re-enrich flag`,
               );
-              continue;
             }
+            results.push(r.value.data);
             results.push(r.value.data);
           }
         }

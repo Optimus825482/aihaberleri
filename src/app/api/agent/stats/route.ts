@@ -9,9 +9,13 @@ import { getQueueStats, getUpcomingJobs } from "@/lib/queue";
 
 export const dynamic = "force-dynamic";
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-this",
-);
+const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+
+if (!nextAuthSecret) {
+  throw new Error("NEXTAUTH_SECRET is required for /api/agent/stats");
+}
+
+const JWT_SECRET = new TextEncoder().encode(nextAuthSecret);
 
 export async function GET(request: NextRequest) {
   try {

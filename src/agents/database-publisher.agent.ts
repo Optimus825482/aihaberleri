@@ -112,15 +112,22 @@ export class DatabasePublisherAgent extends BaseAgent<
         article: ArticleWithVisuals;
         reason: string;
       }[] = [];
-      const MAX_PIPELINE_RETRIES = 1; // Max 1 re-queue (2 total chances per article)
+      const MAX_PIPELINE_RETRIES = 2; // Max 2 re-queues (3 total chances per article)
 
       for (let index = 0; index < articles.length; index++) {
         const article = articles[index];
         // Enforce targetCount limit — stop publishing after reaching max
         if (publishedArticles.length >= maxPublish) {
+          const remaining = articles.length - index;
           this.logger.info(
-            `Target reached (${maxPublish}) — skipping remaining ${articles.length - index} articles`,
+            `Target reached (${maxPublish}) - deferring remaining ${remaining} articles to re-enrich queue`,
           );
+          for (let j = index; j < articles.length; j++) {
+            rejectedForRetry.push({
+              article: articles[j],
+              reason: "publish_cap_overflow",
+            });
+          }
           break;
         }
 
@@ -662,7 +669,7 @@ export class DatabasePublisherAgent extends BaseAgent<
               await enricherQueue.add(RE_ENRICH_JOB_NAME, retryArticles, {
                 removeOnComplete: 100,
                 removeOnFail: 50,
-                attempts: 1,
+                attempts: 3,
                 delay: 5 * 60 * 1000, // 5 minutes — conditions change, LLM gets fresh context
               });
 

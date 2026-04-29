@@ -210,15 +210,12 @@ export abstract class BaseAgent<TInput = any, TOutput = any> {
             );
           }
 
-          return {
-            success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
-            metrics: {
-              processingTime,
-              apiCalls: 0,
-              itemsProcessed: 0,
-            },
-          };
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
+
+          throw new Error(
+            `[${this.config.name}] ${errorMessage} (processingTime=${processingTime}ms)`,
+          );
         }
       },
       {
