@@ -145,7 +145,7 @@ const CIRCUIT_DISPLAY_NAMES: Record<string, string> = {
   deepseek: "DeepSeek AI",
   gemini: "Gemini AI",
   pollinations: "Pollinations",
-  searxng: "SearXNG",
+  searxng: "Google News",
   jina: "Jina Reader",
   tavily: "Tavily",
 };

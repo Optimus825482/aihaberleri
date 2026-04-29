@@ -15,7 +15,7 @@
 import { Job } from "bullmq";
 import { BaseAgent, AgentResult, retryWithBackoff } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
-import { searxngSearch, type SearXNGResult } from "@/lib/searxng";
+import { googleNewsSearch as searxngSearch, type GoogleNewsSearchResult as SearXNGResult } from "@/lib/google-news-search";
 import { callDeepSeek } from "@/lib/deepseek";
 // callGemini REMOVED - Using DeepSeek-only (Gemini API deprecated due to 404 errors)
 

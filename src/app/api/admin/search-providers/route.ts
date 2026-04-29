@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
-import { getSharedWhoogleStats, getWhoogleStats } from "@/lib/searxng";
+import { getSharedGoogleNewsStats, getGoogleNewsStats } from "@/lib/google-news-search";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -11,22 +11,22 @@ export async function GET() {
     return session;
   }
 
-  const localWhoogle = getWhoogleStats();
-  const sharedWhoogle = await getSharedWhoogleStats();
+  const localGoogleNews = getGoogleNewsStats();
+  const sharedGoogleNews = await getSharedGoogleNewsStats();
   const useSharedSnapshot =
-    !!sharedWhoogle &&
-    ((sharedWhoogle.requests ?? 0) > (localWhoogle.requests ?? 0) ||
-      (!!sharedWhoogle.updatedAt &&
-        (!localWhoogle.updatedAt ||
-          new Date(sharedWhoogle.updatedAt).getTime() >=
-            new Date(localWhoogle.updatedAt).getTime())));
-  const whoogle = useSharedSnapshot ? sharedWhoogle : localWhoogle;
+    !!sharedGoogleNews &&
+    ((sharedGoogleNews.requests ?? 0) > (localGoogleNews.requests ?? 0) ||
+      (!!sharedGoogleNews.updatedAt &&
+        (!localGoogleNews.updatedAt ||
+          new Date(sharedGoogleNews.updatedAt).getTime() >=
+            new Date(localGoogleNews.updatedAt).getTime())));
+  const googleNews = useSharedSnapshot ? sharedGoogleNews : localGoogleNews;
 
   return NextResponse.json(
     {
       success: true,
       data: {
-        whoogle,
+        googleNews,
         source: useSharedSnapshot ? "redis" : "memory",
         timestamp: new Date().toISOString(),
       },

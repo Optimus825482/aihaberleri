@@ -7,7 +7,7 @@
 
 import { db } from "@/lib/db";
 import { getProviderStats } from "@/lib/hybrid-search";
-import { getWhoogleStats } from "@/lib/searxng";
+import { getGoogleNewsStats } from "@/lib/google-news-search";
 
 /**
  * Provider istatistiklerini database'e kaydet
@@ -28,7 +28,7 @@ export async function saveProviderStats(): Promise<void> {
 
     // Mevcut stats'ı al
     const stats = getProviderStats();
-    const whoogleStats = getWhoogleStats();
+    const googleNewsStats = getGoogleNewsStats();
     const timestamp = new Date();
 
     // Her provider için ayrı kayıt oluştur
@@ -58,12 +58,12 @@ export async function saveProviderStats(): Promise<void> {
         avgResponseTime: null,
       },
       {
-        provider: "whoogle",
+        provider: "google-news",
         timestamp,
-        requests: whoogleStats.requests,
-        errors: whoogleStats.errors + whoogleStats.timeouts,
-        available: whoogleStats.available,
-        avgResponseTime: whoogleStats.avgLatencyMs,
+        requests: googleNewsStats.requests,
+        errors: googleNewsStats.errors + googleNewsStats.timeouts,
+        available: googleNewsStats.available,
+        avgResponseTime: googleNewsStats.avgLatencyMs,
       },
     ];
 
@@ -76,7 +76,7 @@ export async function saveProviderStats(): Promise<void> {
       brave: `${stats.brave.requests} requests, ${stats.brave.errors} errors`,
       tavily: `${stats.tavily.requests} requests, ${stats.tavily.errors} errors`,
       searxng: `${stats.searxng.requests} requests, ${stats.searxng.errors} errors`,
-      whoogle: `${whoogleStats.requests} requests, ${whoogleStats.successes} success, ${whoogleStats.timeouts} timeout, ${whoogleStats.fallbacks} fallback`,
+      googleNews: `${googleNewsStats.requests} requests, ${googleNewsStats.successes} success, ${googleNewsStats.timeouts} timeout, ${googleNewsStats.fallbacks} fallback`,
     });
   } catch (error) {
     console.error("❌ Search provider stats kaydetme hatası:", error);

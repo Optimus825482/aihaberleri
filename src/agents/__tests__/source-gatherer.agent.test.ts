@@ -1,5 +1,5 @@
 import { SourceGathererAgent } from "../source-gatherer.agent";
-import { searxngSearch } from "@/lib/searxng";
+import { googleNewsSearch } from "@/lib/google-news-search";
 import { tavilySearch } from "@/lib/tavily";
 
 jest.mock("../base-agent", () => ({
@@ -22,8 +22,8 @@ jest.mock("@/lib/queue-manager", () => ({
   },
 }));
 
-jest.mock("@/lib/searxng", () => ({
-  searxngSearch: jest.fn(),
+jest.mock("@/lib/google-news-search", () => ({
+  googleNewsSearch: jest.fn(),
 }));
 
 jest.mock("@/lib/tavily", () => ({
@@ -44,8 +44,8 @@ jest.mock("@/lib/firecrawl", () => ({
   isFirecrawlAvailable: jest.fn(() => false),
 }));
 
-const mockedSearxngSearch = searxngSearch as jest.MockedFunction<
-  typeof searxngSearch
+const mockedSearxngSearch = googleNewsSearch as jest.MockedFunction<
+  typeof googleNewsSearch
 >;
 const mockedTavilySearch = tavilySearch as jest.MockedFunction<
   typeof tavilySearch
@@ -81,12 +81,12 @@ describe("SourceGathererAgent - Whoogle haber toplama simulasyonu", () => {
       .mockResolvedValueOnce([
         {
           title: "Whoogle bulunan kaynak",
-          url: "https://news.example.com/whoogle-source",
+          url: "https://news.example.com/google-news-source",
           content: "",
-          engine: "whoogle",
-          parsed_url: ["https", "news.example.com", "/whoogle-source"],
+          engine: "google-news",
+          parsed_url: ["https", "news.example.com", "/google-news-source"],
           template: "default.html",
-          engines: ["whoogle"],
+          engines: ["google-news"],
           positions: [1],
           score: 0.9,
           category: "news",
@@ -111,7 +111,7 @@ describe("SourceGathererAgent - Whoogle haber toplama simulasyonu", () => {
     expect(sources).toHaveLength(1);
     expect(sources[0]).toMatchObject({
       title: "Whoogle bulunan kaynak",
-      url: "https://news.example.com/whoogle-source",
+      url: "https://news.example.com/google-news-source",
       relevanceScore: 92,
     });
   });

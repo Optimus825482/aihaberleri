@@ -1,88 +1,39 @@
-import axios from "axios";
-import {
-  getWhoogleStats,
-  resetWhoogleStats,
-  searxngSearch,
-  type SearXNGResult,
-} from "../searxng";
+import { googleNewsSearch } from "../google-news-search";
 
-jest.mock("@/lib/redis", () => ({
-  getRedis: jest.fn(() => null),
-}));
+describe("googleNewsSearch", () => {
+  const originalFetch = global.fetch;
 
-jest.mock("axios", () => ({
-  __esModule: true,
-  default: {
-    create: jest.fn(),
-    get: jest.fn(),
-    isAxiosError: jest.fn(() => false),
-  },
-}));
-
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-
-function createSearxngResult(
-  overrides?: Partial<SearXNGResult>,
-): SearXNGResult {
-  return {
-    title: "Fallback result",
-    url: "https://fallback.example.com/article",
-    content: "fallback content",
-    engine: "google",
-    parsed_url: ["https", "fallback.example.com", "/article"],
-    template: "default.html",
-    engines: ["google"],
-    positions: [1],
-    score: 1,
-    category: "general",
-    ...overrides,
-  };
-}
-
-function mockWhoogleClientWithEmptyResults() {
-  const get = jest
-    .fn()
-    .mockResolvedValueOnce({ headers: { "set-cookie": [] } })
-    .mockResolvedValueOnce({ data: { results: [] } });
-
-  mockedAxios.create.mockReturnValue({ get } as any);
-}
-
-describe("searxngSearch Whoogle stats", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    resetWhoogleStats();
   });
 
-  it("Whoogle boş dönse bile SearXNG fallback sonuç ürettiğinde zeroResults artırmaz", async () => {
-    mockWhoogleClientWithEmptyResults();
-    mockedAxios.get.mockResolvedValue({
-      data: {
-        results: [createSearxngResult()],
-      },
-    } as any);
-
-    const results = await searxngSearch("openai reasoning model", { count: 5 });
-    const stats = getWhoogleStats();
-
-    expect(results).toHaveLength(1);
-    expect(stats.fallbacks).toBe(1);
-    expect(stats.zeroResults).toBe(0);
+  afterEach(() => {
+    global.fetch = originalFetch;
   });
 
-  it("Whoogle ve SearXNG birlikte boş dönerse zeroResults artırır", async () => {
-    mockWhoogleClientWithEmptyResults();
-    mockedAxios.get.mockResolvedValue({
-      data: {
-        results: [],
-      },
-    } as any);
+  it("normalizes rss item into result", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      text: async () => `<?xml version="1.0"?><rss><channel><item><title>AI Headline</title><link>https://news.google.com/rss/articles/CBMiXGh0dHBzOi8vZXhhbXBsZS5jb20vbmV3cw?oc=5&amp;url=https://example.com/news</link><description><![CDATA[<p>Summary content</p>]]></description><pubDate>Tue, 29 Apr 2026 10:00:00 GMT</pubDate></item></channel></rss>`,
+    } as unknown as Response);
 
-    const results = await searxngSearch("nonexistent query", { count: 5 });
-    const stats = getWhoogleStats();
+    const results = await googleNewsSearch("openai", { count: 5, language: "en" });
 
-    expect(results).toHaveLength(0);
-    expect(stats.fallbacks).toBe(1);
-    expect(stats.zeroResults).toBe(1);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].title).toBe("AI Headline");
+    expect(results[0].engine).toBe("google-news");
+    expect(results[0].url).toContain("https://example.com/news");
+  });
+
+  it("throws on http errors", async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: async () => "",
+    } as unknown as Response);
+
+    await expect(
+      googleNewsSearch("test", { count: 3, language: "en" }),
+    ).rejects.toThrow("Google News RSS request failed: 500");
   });
 });

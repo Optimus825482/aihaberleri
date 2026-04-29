@@ -78,32 +78,6 @@ healthcheck:
       - aihaberleri-network
 
   # SearXNG (Self-hosted metasearch engine)
-  searxng:
-    image: searxng/searxng:latest
-    container_name: aihaberleri-searxng
-    ports:
-      - "${SEARXNG_PORT:-8080}:8080"
-    volumes:
-      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
-      - ./searxng/limiter.toml:/etc/searxng/limiter.toml:ro
-      - ./searxng/uwsgi.ini:/etc/searxng/uwsgi.ini:ro
-    environment:
-      - SEARXNG_SECRET=${SEARXNG_SECRET_KEY}
-      - SEARXNG_LIMITER=false
-      - SEARXNG_VALKEY_URL=valkey://valkey:6379/0
-      - SEARXNG_BIND_ADDRESS=0.0.0.0:8080
-    depends_on:
-      valkey:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - aihaberleri-network
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
   # Next.js App
   app:
     build:
@@ -132,7 +106,6 @@ healthcheck:
       BRAVE_API_KEY: ${BRAVE_API_KEY}
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       EXA_API_KEY: ${EXA_API_KEY}
-      SEARXNG_BASE_URL: ${SEARXNG_BASE_URL:-http://searxng:8080}
 
       # Email
       SMTP_HOST: ${SMTP_HOST}
@@ -174,8 +147,6 @@ healthcheck:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      searxng:
         condition: service_healthy
     restart: unless-stopped
     networks:

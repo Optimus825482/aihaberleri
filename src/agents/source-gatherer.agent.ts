@@ -17,7 +17,7 @@
 import type { Job } from "bullmq";
 import { BaseAgent, AgentResult } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
-import { searxngSearch, type SearXNGResult } from "@/lib/searxng";
+import { googleNewsSearch as searxngSearch, type GoogleNewsSearchResult as SearXNGResult } from "@/lib/google-news-search";
 import { batchExtract, filterQualityResults } from "@/lib/tavily-extract";
 import { tavilySearch } from "@/lib/tavily";
 import axios from "axios";
