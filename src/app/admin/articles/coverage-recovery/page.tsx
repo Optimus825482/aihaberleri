@@ -297,8 +297,25 @@ export default function CoverageRecoveryPage() {
     }
   };
 
+  const ensureCsrfToken = async (): Promise<string> => {
+    const existing = Cookies.get("csrf-token") || Cookies.get("csrf_token") || "";
+    if (existing) return existing;
+
+    const response = await fetch("/api/auth/csrf", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data?.csrfToken) {
+      throw new Error("CSRF token alınamadı");
+    }
+
+    return data.csrfToken as string;
+  };
+
   const submit = async () => {
-    const csrfToken = Cookies.get("csrf-token") || Cookies.get("csrf_token") || "";
     if (!categoryId) {
       toast({ variant: "destructive", title: "Kategori gerekli" });
       return;
@@ -311,6 +328,8 @@ export default function CoverageRecoveryPage() {
 
     setLoading(true);
     try {
+      const csrfToken = await ensureCsrfToken();
+
       const response = await fetch("/api/admin/articles/coverage-recovery", {
         method: "POST",
         credentials: "include",
