@@ -37,6 +37,9 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
+  const isCleanAccess =
+    (await cookies()).get("clean_access")?.value === "ok";
+
   const formatTopicLabel = (topic: string) => {
     return topic
       .replace(/[_-]+/g, " ")
