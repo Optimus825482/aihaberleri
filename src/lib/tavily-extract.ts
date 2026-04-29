@@ -214,7 +214,7 @@ export async function priorityExtract(
     return batchExtract(urls, options);
   } else {
     console.log(
-      `📊 Low priority (${priority}): Skipping Tavily (use SearXNG fallback)`,
+      `📊 Low priority (${priority}): Skipping Tavily (use Google News fallback)`,
     );
     // Return empty results to signal fallback needed
     return urls.map((url) => ({

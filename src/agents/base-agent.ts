@@ -21,7 +21,7 @@ import {
 const AGENT_TIMEOUTS: Record<string, number> = {
   "relevance-filter": 3 * 60 * 1000, // 3 minutes
   "duplicate-detector": 2 * 60 * 1000, // 2 minutes
-  "source-gatherer": 8 * 60 * 1000, // 8 minutes (external API calls: Tavily, SearXNG, Jina)
+  "source-gatherer": 8 * 60 * 1000, // 8 minutes (external API calls: Tavily, Google News, Jina)
   "content-synthesizer": 12 * 60 * 1000, // 12 minutes (LLM synthesis with retries)
   "content-validator": 2 * 60 * 1000, // 2 minutes (fast validation)
   "content-enricher": 12 * 60 * 1000, // 12 minutes (LEGACY — backward compat, will be removed)

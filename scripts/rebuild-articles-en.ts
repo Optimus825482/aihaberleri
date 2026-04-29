@@ -4,7 +4,7 @@
  * CORRECT FLOW:
  * 1. Match EN Facebook slugs with TR articles by post time (minute-level)
  * 2. Matched: Translate TR article content to English via DeepSeek
- * 3. Unmatched: Generate new EN content via SearXNG + DeepSeek
+ * 3. Unmatched: Generate new EN content via Google News + DeepSeek
  * 4. Update TR Article's EN fields (titleEn, contentEn, excerptEn, etc.)
  * 5. Create ArticleTranslation record (locale: "en") for routing
  *
@@ -18,7 +18,7 @@
 import { PrismaClient } from "@prisma/client";
 import * as fs from "fs";
 import axios from "axios";
-import { searxngSearch } from "../src/lib/searxng";
+import { googleNewsSearch } from "../src/lib/google-news-search";
 
 const DEEPSEEK_API_KEY =
   process.env.DEEPSEEK_API_KEY || "sk-2750fa1691164dd2940c2ec3cb37d2e6";
@@ -186,7 +186,7 @@ async function generateEnContent(
 } | null> {
   let webContext = "No web results found.";
   try {
-    const results = await searxngSearch(title, {
+    const results = await googleNewsSearch(title, {
       count: 5,
       language: "en",
       safesearch: 1,

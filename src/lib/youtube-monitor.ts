@@ -3,7 +3,7 @@
  *
  * Monitors AI-focused YouTube channels via RSS feeds (no API key needed).
  * Extracts video titles & descriptions, filters for AI relevance,
- * and feeds topics into the news pipeline for deep research via SearXNG.
+ * and feeds topics into the news pipeline for deep research via Google News.
  *
  * FLOW:
  * YouTube RSS → Parse Videos → AI Filter → Extract Topics → Pipeline

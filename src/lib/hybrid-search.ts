@@ -4,9 +4,9 @@
  */
 
 import {
-  searxngSearch,
-  calculateTrendScoreSearXNG,
-} from "./searxng";
+  googleNewsSearch,
+  calculateTrendScoreGoogle News,
+} from "./google-news-search";
 
 type SearchProvider = "google-news";
 
@@ -43,7 +43,7 @@ export function getProviderStats() {
   return {
     brave: { available: false, requests: 0, errors: 0, lastError: null as Date | null },
     tavily: { available: false, requests: 0, errors: 0, lastError: null as Date | null },
-    searxng: {
+    "google-news": {
       available: providerState.available,
       requests: providerState.requestCount,
       errors: providerState.errorCount,
@@ -75,7 +75,7 @@ export async function hybridSearch(
   } = {},
 ): Promise<HybridSearchResult[]> {
   try {
-    const results = await searxngSearch(query, {
+    const results = await googleNewsSearch(query, {
       count: options.count || 10,
       time_range: options.freshness === "pw" ? "week" : undefined,
     });
@@ -100,7 +100,7 @@ export async function calculateTrendScoreHybrid(
   description: string,
 ): Promise<number> {
   try {
-    const score = await calculateTrendScoreSearXNG(title, description);
+    const score = await calculateTrendScoreGoogle News(title, description);
     markProviderSuccess();
     return score;
   } catch {

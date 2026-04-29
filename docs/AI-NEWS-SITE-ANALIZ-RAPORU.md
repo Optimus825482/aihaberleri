@@ -42,7 +42,7 @@ Bu rapor **paralel orkestrasyon** ile üretilmiştir: mimari, backend/API, front
 - **Validation:** Zod kullanımı (lib/validation-schemas.ts, lib/validation/admin.ts, lib/email.ts); bulk optimize/calculate, SEO update, newsletter, contact, push subscribe vb. için şemalar var.
 - **Hata yönetimi:** Merkezi `lib/errors/error-handler.ts` (AppError, ErrorCode, createErrorResponse); production’da mesaj sadeleştirme; logger entegrasyonu.
 - **Rate limiting:** `lib/rate-limiter.ts` (Redis tabanlı, sliding window, X-RateLimit-* header’ları); login, contact, newsletter subscribe, TTS, pageview, admin users, admin settings’te kullanılıyor. Bazı admin route’larda devre dışı/yorumda.
-- **Dış servisler:** Firebase Admin, Resend (email – README’de SendGrid geçse de kod Resend), Google (GA4, Search Console, Indexing API, AdSense), Firecrawl, Tavily (search/crawl/research/extract), Brave Search, SearXNG, DeepSeek/NVIDIA (LLM), Pollinations (görsel), Exa, hybrid-search.
+- **Dış servisler:** Firebase Admin, Resend (email – README’de SendGrid geçse de kod Resend), Google (GA4, Search Console, Indexing API, AdSense), Firecrawl, Tavily (search/crawl/research/extract), Brave Search, Google News, DeepSeek/NVIDIA (LLM), Pollinations (görsel), Exa, hybrid-search.
 
 ### Güçlü Yönler
 - Zod ile tip güvenli validasyon ve merkezi hata formatı.

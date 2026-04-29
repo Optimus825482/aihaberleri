@@ -75,7 +75,7 @@ BEGIN
     FOR i IN 0..23 LOOP
         test_timestamp := NOW() - (i || ' hours')::INTERVAL;
         
-        -- SearXNG (primary provider - daha fazla request)
+        -- Google News (primary provider - daha fazla request)
         INSERT INTO "SearchProviderMetric" (
             "id", 
             "provider", 
@@ -86,7 +86,7 @@ BEGIN
             "available"
         ) VALUES (
             gen_random_uuid()::TEXT,
-            'searxng',
+            'google-news',
             test_timestamp,
             FLOOR(RANDOM() * 50 + 20)::INTEGER,  -- 20-70 requests
             FLOOR(RANDOM() * 3)::INTEGER,         -- 0-2 errors

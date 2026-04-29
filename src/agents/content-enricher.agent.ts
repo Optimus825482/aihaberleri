@@ -6,7 +6,7 @@
  * Yeni pipeline: TrendEnricher → ENRICHED_ARTICLES → SourceGatherer → CONTENT_SYNTHESIS → …
  *
  * RESPONSIBILITIES:
- * 1. Multi-source research (SearXNG + Jina Reader)
+ * 1. Multi-source research (Google News + Jina Reader)
  * 2. Gather sources, LLM synthesis (TR + EN), emit to articles-with-visuals
  *
  * EXTRACTED FROM: src/services/intelligent-news.service.ts
@@ -15,7 +15,7 @@
 import { Job } from "bullmq";
 import { BaseAgent, AgentResult, retryWithBackoff } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
-import { googleNewsSearch as searxngSearch, type GoogleNewsSearchResult as SearXNGResult } from "@/lib/google-news-search";
+import { googleNewsSearch, type GoogleNewsSearchResult as GoogleNewsResult } from "@/lib/google-news-search";
 import { callDeepSeek } from "@/lib/deepseek";
 // callGemini REMOVED - Using DeepSeek-only (Gemini API deprecated due to 404 errors)
 
@@ -31,7 +31,7 @@ import { exaSearch } from "@/lib/exa";
 import { firecrawlScrape, isFirecrawlAvailable } from "@/lib/firecrawl";
 
 export interface EnrichedArticle extends UniqueArticle {
-  hasNoExternalSources?: boolean; // true when SearXNG+Jina+Tavily returned 0 results — hallucination risk flag
+  hasNoExternalSources?: boolean; // true when Google News+Jina+Tavily returned 0 results — hallucination risk flag
   sources: Array<{
     title: string;
     url: string;
@@ -68,7 +68,7 @@ const TARGET_SOURCE_COUNT = 3; // Keep at 3 for speed
 
 // Layer timeouts for fallback strategy
 const LAYER_1_TIMEOUT = 20000; // 20s for Tavily (high-priority)
-const LAYER_2_TIMEOUT = 25000; // 25s for SearXNG + Jina
+const LAYER_2_TIMEOUT = 25000; // 25s for Google News + Jina
 const LAYER_3_TIMEOUT = 30000; // 30s for LLM synthesis
 const MAX_ARTICLE_TIMEOUT = 90000; // FIX: 90s HARD LIMIT per article (was 60s — too tight for heavy enrichment)
 
@@ -206,8 +206,8 @@ export class ContentEnricherAgent extends BaseAgent<
             }
 
             // Step 1: Gather sources
-            // • Normal path  (40s)  — SearXNG + Tavily/Jina
-            // • Re-enrich path (65s) — Exa + SearXNG wide-net + Firecrawl fallback
+            // • Normal path  (40s)  — Google News + Tavily/Jina
+            // • Re-enrich path (65s) — Exa + Google News wide-net + Firecrawl fallback
             const sourceTimeout = isReEnrich ? 65_000 : 40_000;
             const sources = await Promise.race([
               isReEnrich
@@ -306,7 +306,7 @@ export class ContentEnricherAgent extends BaseAgent<
         for (const result of results) {
           if (result.status === "fulfilled" && result.value.success) {
             enrichedArticles.push(result.value.data);
-            apiCalls += 8; // Approximate: 5 SearXNG + 2 LLM + 1 A/B test
+            apiCalls += 8; // Approximate: 5 Google News + 2 LLM + 1 A/B test
             tokensUsed += 12500;
           }
         }
@@ -349,7 +349,7 @@ export class ContentEnricherAgent extends BaseAgent<
   }
 
   /**
-   * Gather sources using Tavily (DEEP RESEARCH) + SearXNG + Jina Reader
+   * Gather sources using Tavily (DEEP RESEARCH) + Google News + Jina Reader
    * UPDATED: 2026-02-08 - Added Tavily deep research for richer content
    */
   private async gatherSources(article: UniqueArticle): Promise<
@@ -376,7 +376,7 @@ export class ContentEnricherAgent extends BaseAgent<
       article.description,
     );
 
-    this.logger.info(`🔍 Deep research: Tavily + SearXNG for "${keywords}"`);
+    this.logger.info(`🔍 Deep research: Tavily + Google News for "${keywords}"`);
 
     // ============================================
     // STEP 1: Tavily Deep Research (5-8 sources)
@@ -412,16 +412,16 @@ export class ContentEnricherAgent extends BaseAgent<
 
       this.logger.info(`✅ Tavily: ${tavilySourceCount} sources collected`);
     } catch (tavilyError) {
-      this.logger.warn(`⚠️ Tavily failed, falling back to SearXNG`);
+      this.logger.warn(`⚠️ Tavily failed, falling back to Google News`);
     }
 
     // ============================================
-    // STEP 2: SearXNG (if Tavily insufficient)
+    // STEP 2: Google News (if Tavily insufficient)
     // ============================================
     if (sources.length < TARGET_SOURCE_COUNT) {
       const searchQueries = [keywords, `${keywords} news`];
 
-      this.logger.info(`🔍 SearXNG search: ${keywords}`);
+      this.logger.info(`🔍 Google News search: ${keywords}`);
 
       const candidateUrls: Array<{
         title: string;
@@ -432,7 +432,7 @@ export class ContentEnricherAgent extends BaseAgent<
       const searchResults = await Promise.all(
         searchQueries.map(async (query) => {
           try {
-            return await searxngSearch(query, {
+            return await googleNewsSearch(query, {
               count: 8,
               time_range: "week",
               categories: "general,news",
@@ -453,7 +453,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
           if (this.shouldSkipUrl(result.url)) continue;
 
-          const relevanceScore = this.calculateRelevanceScoreSearXNG(
+          const relevanceScore = this.calculateRelevanceScoreGoogle News(
             result,
             article.title,
           );
@@ -498,11 +498,11 @@ export class ContentEnricherAgent extends BaseAgent<
       }
 
       this.logger.info(
-        `✅ SearXNG: ${sources.length - tavilySourceCount} additional sources`,
+        `✅ Google News: ${sources.length - tavilySourceCount} additional sources`,
       );
     }
 
-    this.logger.info(`✅ Total sources: ${sources.length} (Tavily + SearXNG)`);
+    this.logger.info(`✅ Total sources: ${sources.length} (Tavily + Google News)`);
 
     // Sort by relevance
     sources.sort((a, b) => b.relevanceScore - a.relevanceScore);
@@ -546,9 +546,9 @@ export class ContentEnricherAgent extends BaseAgent<
     );
 
     // ============================================
-    // STEP 1: Find candidate URLs using SearXNG
+    // STEP 1: Find candidate URLs using Google News
     // ============================================
-    this.logger.info(`🔍 SearXNG search: "${keywords}"`);
+    this.logger.info(`🔍 Google News search: "${keywords}"`);
 
     const candidateUrls: Array<{
       title: string;
@@ -560,7 +560,7 @@ export class ContentEnricherAgent extends BaseAgent<
     const searchResults = await Promise.all(
       searchQueries.map(async (query) => {
         try {
-          return await searxngSearch(query, {
+          return await googleNewsSearch(query, {
             count: 10,
             time_range: "week",
             categories: "general,news",
@@ -581,7 +581,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
         if (this.shouldSkipUrl(result.url)) continue;
 
-        const relevanceScore = this.calculateRelevanceScoreSearXNG(
+        const relevanceScore = this.calculateRelevanceScoreGoogle News(
           result,
           article.title,
         );
@@ -596,10 +596,10 @@ export class ContentEnricherAgent extends BaseAgent<
       }
     }
 
-    // Fallback: if no candidates found with threshold, take top 3 from all results by raw SearXNG score
+    // Fallback: if no candidates found with threshold, take top 3 from all results by raw Google News score
     if (candidateUrls.length === 0) {
       this.logger.warn(
-        `⚠️ No candidates above threshold, falling back to top SearXNG results`,
+        `⚠️ No candidates above threshold, falling back to top Google News results`,
       );
       const allResults = searchResults.flat();
       const uniqueResults: typeof allResults = [];
@@ -615,7 +615,7 @@ export class ContentEnricherAgent extends BaseAgent<
           uniqueResults.push(r);
         }
       }
-      // Sort by SearXNG native score (descending), take top 3
+      // Sort by Google News native score (descending), take top 3
       uniqueResults.sort((a, b) => (b.score || 0) - (a.score || 0));
       for (const r of uniqueResults.slice(0, 3)) {
         candidateUrls.push({
@@ -625,7 +625,7 @@ export class ContentEnricherAgent extends BaseAgent<
         });
       }
       this.logger.info(
-        `📋 Fallback: ${candidateUrls.length} candidates from raw SearXNG scores`,
+        `📋 Fallback: ${candidateUrls.length} candidates from raw Google News scores`,
       );
     }
 
@@ -727,7 +727,7 @@ export class ContentEnricherAgent extends BaseAgent<
   // English title, missing content, or emergency template.
   //
   // Strategy (parallel 4-layer):
-  //   Layer 1 — SearXNG wide-net  (4 queries, relaxed threshold, 1-month range)
+  //   Layer 1 — Google News wide-net  (4 queries, relaxed threshold, 1-month range)
   //   Layer 2 — Exa neural search (semantic/AI understanding)
   //   Layer 3 — Brave Search      (independent web index)
   //   Layer 4 — Firecrawl scrape  (clean extraction of the original article URL)
@@ -786,7 +786,7 @@ export class ContentEnricherAgent extends BaseAgent<
     // PARALLEL SEARCH LAYERS (run simultaneously to fit 65s budget)
     // ─────────────────────────────────────────────────────────────────────
     const [searxResults, exaResults] = await Promise.allSettled([
-      // ── Layer 1: SearXNG wide-net (4 queries, month range) ────────────
+      // ── Layer 1: Google News wide-net (4 queries, month range) ────────────
       (async () => {
         const queries = [
           keywords,
@@ -797,7 +797,7 @@ export class ContentEnricherAgent extends BaseAgent<
 
         const results = await Promise.all(
           queries.map((q) =>
-            searxngSearch(q, {
+            googleNewsSearch(q, {
               count: 10,
               time_range: "month", // wider than normal "week"
               categories: "general,news",
@@ -818,7 +818,7 @@ export class ContentEnricherAgent extends BaseAgent<
       ).catch(() => []),
     ]);
 
-    // ── Process SearXNG ──────────────────────────────────────────────────
+    // ── Process Google News ──────────────────────────────────────────────────
     if (searxResults.status === "fulfilled") {
       const deduped: typeof candidateUrls = [];
       const innerSeen = new Set<string>();
@@ -828,7 +828,7 @@ export class ContentEnricherAgent extends BaseAgent<
         if (innerSeen.has(norm)) continue;
         innerSeen.add(norm);
 
-        const score = this.calculateRelevanceScoreSearXNG(r, article.title);
+        const score = this.calculateRelevanceScoreGoogle News(r, article.title);
         if (score >= 10) {
           // Relaxed threshold (normal: 20)
           deduped.push({ title: r.title, url: r.url, relevanceScore: score });
@@ -840,7 +840,7 @@ export class ContentEnricherAgent extends BaseAgent<
         pushCandidate(c.title, c.url, c.relevanceScore);
       }
       this.logger.info(
-        `🔍 SearXNG wide-net: ${deduped.length} candidates (took ${deduped.slice(0, 10).length})`,
+        `🔍 Google News wide-net: ${deduped.length} candidates (took ${deduped.slice(0, 10).length})`,
       );
     }
 
@@ -952,9 +952,9 @@ export class ContentEnricherAgent extends BaseAgent<
   }
 
   /**
-   * Read URL content using Jina Reader with Tavily and SearXNG fallbacks
+   * Read URL content using Jina Reader with Tavily and Google News fallbacks
    * FIXED: Added detailed error logging and increased timeout
-   * UPDATED: Added SearXNG as third fallback option
+   * UPDATED: Added Google News as third fallback option
    */
   private async readUrlContent(url: string): Promise<string> {
     // Try Jina Reader first
@@ -1011,7 +1011,7 @@ export class ContentEnricherAgent extends BaseAgent<
       }
     }
 
-    // Fallback 2: SearXNG (search for URL content)
+    // Fallback 2: Google News (search for URL content)
     try {
       // Extract meaningful search query from URL
       const urlObj = new URL(url);
@@ -1024,10 +1024,10 @@ export class ContentEnricherAgent extends BaseAgent<
 
       if (searchQuery.length > 10) {
         this.logger.info(
-          `🔍 SearXNG fallback: searching for "${searchQuery.substring(0, 50)}..."`,
+          `🔍 Google News fallback: searching for "${searchQuery.substring(0, 50)}..."`,
         );
 
-        const results = await searxngSearch(searchQuery, {
+        const results = await googleNewsSearch(searchQuery, {
           count: 5,
           language: "en",
           categories: "general",
@@ -1042,17 +1042,17 @@ export class ContentEnricherAgent extends BaseAgent<
 
           if (combinedContent.length > 200) {
             this.logger.info(
-              `✅ SearXNG fallback succeeded for ${url} (${combinedContent.length} chars)`,
+              `✅ Google News fallback succeeded for ${url} (${combinedContent.length} chars)`,
             );
             return combinedContent.substring(0, 5000);
           }
         }
 
-        this.logger.warn(`⚠️ SearXNG returned insufficient content for ${url}`);
+        this.logger.warn(`⚠️ Google News returned insufficient content for ${url}`);
       }
-    } catch (searxngError: any) {
+    } catch (googleNewsError: any) {
       this.logger.warn(
-        `⚠️ SearXNG fallback failed for ${url}: ${searxngError.message}`,
+        `⚠️ Google News fallback failed for ${url}: ${googleNewsError.message}`,
       );
     }
 
@@ -1677,11 +1677,11 @@ Respond in JSON:
   }
 
   /**
-   * Calculate relevance score for SearXNG results
+   * Calculate relevance score for Google News results
    * 🛡️ UPDATED: Penalize dictionary/reference results and check for news relevance
    */
-  private calculateRelevanceScoreSearXNG(
-    result: SearXNGResult,
+  private calculateRelevanceScoreGoogle News(
+    result: GoogleNewsResult,
     originalTitle: string,
   ): number {
     let score = 0;
@@ -1754,7 +1754,7 @@ Respond in JSON:
       if (resultContentLower.includes(word)) score += 5;
     }
 
-    // SearXNG provides publishedDate
+    // Google News provides publishedDate
     if (result.publishedDate) {
       const publishedDate = new Date(result.publishedDate);
       const now = new Date();
@@ -1784,9 +1784,9 @@ Respond in JSON:
       score += 15;
     }
 
-    // SearXNG score (if available)
+    // Google News score (if available)
     if (result.score) {
-      score += result.score * 10; // Normalize SearXNG score
+      score += result.score * 10; // Normalize Google News score
     }
 
     // 🛡️ BONUS: Results with tech/news context are more likely relevant

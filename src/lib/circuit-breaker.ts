@@ -2,7 +2,7 @@
  * Circuit Breaker Pattern Implementation
  *
  * Prevents cascade failures in the AI news pipeline by temporarily
- * blocking requests to failing services (DeepSeek, Gemini, Pollinations, SearXNG).
+ * blocking requests to failing services (DeepSeek, Gemini, Pollinations, Google News).
  *
  * @example
  * const breaker = CircuitBreaker.getCircuit('deepseek');
@@ -116,7 +116,7 @@ export const SERVICE_CONFIGS: Record<string, Partial<CircuitBreakerOptions>> = {
     resetTimeout: 60_000,
     halfOpenSuccessThreshold: 2, // 3→2: easier recovery
   },
-  searxng: {
+  "google-news": {
     failureThreshold: 3, // 5→3
     resetTimeout: 30_000, // Faster recovery for search
     halfOpenSuccessThreshold: 2,

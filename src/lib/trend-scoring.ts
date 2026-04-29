@@ -2,7 +2,7 @@
  * Multi-Signal Trend Scoring System v3.0
  *
  * 7 bağımsız sinyal ile trend puanlama — harici API bağımlılığı YOK.
- * SearXNG kaldırıldı (v2'de %85+ sorgu 0 sonuç dönüyordu).
+ * Google News kaldırıldı (v2'de %85+ sorgu 0 sonuç dönüyordu).
  *
  * SIGNALS (v3.1 — 28.02.2026):
  * 1. AI Relevance (0-30)        — AI keyword density & specificity  [↑ 25→30]

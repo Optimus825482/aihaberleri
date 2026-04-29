@@ -2,7 +2,7 @@
  * Source Gatherer Agent
  *
  * RESPONSIBILITIES:
- * 1. Multi-source research (SearXNG + Tavily + Exa + Firecrawl)
+ * 1. Multi-source research (Google News + Tavily + Exa + Firecrawl)
  * 2. Gather 3-7 sources per article depending on priority
  * 3. Handle re-enrichment path (aggressive multi-service gathering)
  * 4. Emit articles with gathered sources to content-synthesis queue
@@ -17,7 +17,7 @@
 import type { Job } from "bullmq";
 import { BaseAgent, AgentResult } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
-import { googleNewsSearch as searxngSearch, type GoogleNewsSearchResult as SearXNGResult } from "@/lib/google-news-search";
+import { googleNewsSearch, type GoogleNewsSearchResult as GoogleNewsResult } from "@/lib/google-news-search";
 import { batchExtract, filterQualityResults } from "@/lib/tavily-extract";
 import { tavilySearch } from "@/lib/tavily";
 import axios from "axios";
@@ -168,7 +168,7 @@ export class SourceGathererAgent extends BaseAgent<
               });
             }
 
-            apiCalls += 5; // Approximate: SearXNG + content extraction
+            apiCalls += 5; // Approximate: Google News + content extraction
 
             const output: ArticleWithSources = {
               // Pass-through all UniqueArticle fields
@@ -252,7 +252,7 @@ export class SourceGathererAgent extends BaseAgent<
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // SOURCE GATHERING: NORMAL (Tavily + SearXNG)
+  // SOURCE GATHERING: NORMAL (Tavily + Google News)
   // ─────────────────────────────────────────────────────────────────────────
 
   private async gatherSources(
@@ -267,7 +267,7 @@ export class SourceGathererAgent extends BaseAgent<
       article.description,
     );
     this.logger.info(
-      `🔍 Deep research: Tavily + Whoogle-first web search for "${keywords}"`,
+      `🔍 Deep research: Tavily + Google News-first web search for "${keywords}"`,
     );
 
     // STEP 1: Tavily Deep Research (circuit breaker + retry)
@@ -298,13 +298,13 @@ export class SourceGathererAgent extends BaseAgent<
       }
       this.logger.info(`✅ Tavily: ${tavilySourceCount} sources collected`);
     } catch {
-      this.logger.warn(`⚠️ Tavily failed, falling back to SearXNG`);
+      this.logger.warn(`⚠️ Tavily failed, falling back to Google News`);
     }
 
-    // STEP 2: SearXNG (if Tavily insufficient)
+    // STEP 2: Google News (if Tavily insufficient)
     if (sources.length < TARGET_SOURCE_COUNT) {
       const searchQueries = [keywords, `${keywords} news`];
-      this.logger.info(`🔍 Whoogle-first web search: ${keywords}`);
+      this.logger.info(`🔍 Google News-first web search: ${keywords}`);
 
       const candidateUrls: Array<{
         title: string;
@@ -313,11 +313,11 @@ export class SourceGathererAgent extends BaseAgent<
       }> = [];
 
       const searchResults = await withCircuitBreakerAndRetry(
-        "searxng",
+        "google-news",
         () =>
           Promise.all(
             searchQueries.map((query) =>
-              searxngSearch(query, {
+              googleNewsSearch(query, {
                 count: 8,
                 time_range: "week",
                 categories: "general,news",
@@ -325,7 +325,7 @@ export class SourceGathererAgent extends BaseAgent<
             ),
           ),
         { retries: 1, baseDelayMs: 500 },
-      ).catch(() => [] as SearXNGResult[][]);
+      ).catch(() => [] as GoogleNewsResult[][]);
 
       for (const results of searchResults) {
         for (const result of results) {
@@ -335,7 +335,7 @@ export class SourceGathererAgent extends BaseAgent<
           seenUrls.add(normalizedUrl);
           if (this.shouldSkipUrl(result.url)) continue;
 
-          const relevanceScore = this.calculateRelevanceScoreSearXNG(
+          const relevanceScore = this.calculateRelevanceScoreGoogle News(
             result,
             article.title,
           );
@@ -388,7 +388,7 @@ export class SourceGathererAgent extends BaseAgent<
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // SOURCE GATHERING: PRIORITY-BASED (SearXNG → Tavily extract / Jina)
+  // SOURCE GATHERING: PRIORITY-BASED (Google News → Tavily extract / Jina)
   // ─────────────────────────────────────────────────────────────────────────
 
   private async gatherSourcesWithPriority(
@@ -409,8 +409,8 @@ export class SourceGathererAgent extends BaseAgent<
       `🔍 Source gathering: ${isHighPriority ? "HIGH" : "LOW"} priority (score: ${trendScore})`,
     );
 
-    // STEP 1: Find candidate URLs using SearXNG
-    this.logger.info(`🔍 Whoogle-first web search: "${keywords}"`);
+    // STEP 1: Find candidate URLs using Google News
+    this.logger.info(`🔍 Google News-first web search: "${keywords}"`);
     const candidateUrls: Array<{
       title: string;
       url: string;
@@ -421,7 +421,7 @@ export class SourceGathererAgent extends BaseAgent<
     const searchResults = await Promise.all(
       searchQueries.map(async (query) => {
         try {
-          return await searxngSearch(query, {
+          return await googleNewsSearch(query, {
             count: 10,
             time_range: "week",
             categories: "general,news",
@@ -440,7 +440,7 @@ export class SourceGathererAgent extends BaseAgent<
         seenUrls.add(normalizedUrl);
         if (this.shouldSkipUrl(result.url)) continue;
 
-        const relevanceScore = this.calculateRelevanceScoreSearXNG(
+        const relevanceScore = this.calculateRelevanceScoreGoogle News(
           result,
           article.title,
         );
@@ -484,7 +484,7 @@ export class SourceGathererAgent extends BaseAgent<
 
     if (candidateUrls.length === 0) {
       this.logger.warn(
-        `⚠️ Whoogle-first web search produced no candidates, trying Tavily fallback`,
+        `⚠️ Google News-first web search produced no candidates, trying Tavily fallback`,
       );
 
       try {
@@ -591,7 +591,7 @@ export class SourceGathererAgent extends BaseAgent<
 
   // ─────────────────────────────────────────────────────────────────────────
   // SOURCE GATHERING: AGGRESSIVE (re-enrich only)
-  // 4-layer parallel: SearXNG wide-net + Exa + content extraction + Firecrawl
+  // 4-layer parallel: Google News wide-net + Exa + content extraction + Firecrawl
   // ─────────────────────────────────────────────────────────────────────────
 
   private async gatherSourcesAggressive(
@@ -638,11 +638,11 @@ export class SourceGathererAgent extends BaseAgent<
 
     const [searxResults, exaResults] = await Promise.allSettled([
       withCircuitBreakerAndRetry(
-        "searxng",
+        "google-news",
         () =>
           Promise.all(
             queries.map((q) =>
-              searxngSearch(q, {
+              googleNewsSearch(q, {
                 count: 10,
                 time_range: "month",
                 categories: "general,news",
@@ -650,7 +650,7 @@ export class SourceGathererAgent extends BaseAgent<
             ),
           ).then((r) => r.flat()),
         { retries: 1, baseDelayMs: 500 },
-      ).catch(() => [] as SearXNGResult[]),
+      ).catch(() => [] as GoogleNewsResult[]),
 
       process.env.EXA_API_KEY
         ? withCircuitBreakerAndRetry(
@@ -666,7 +666,7 @@ export class SourceGathererAgent extends BaseAgent<
         : Promise.resolve([]),
     ]);
 
-    // Process SearXNG
+    // Process Google News
     if (searxResults.status === "fulfilled") {
       const deduped: typeof candidateUrls = [];
       const innerSeen = new Set<string>();
@@ -676,7 +676,7 @@ export class SourceGathererAgent extends BaseAgent<
         if (innerSeen.has(norm)) continue;
         innerSeen.add(norm);
 
-        const score = this.calculateRelevanceScoreSearXNG(r, article.title);
+        const score = this.calculateRelevanceScoreGoogle News(r, article.title);
         if (score >= 10) {
           deduped.push({ title: r.title, url: r.url, relevanceScore: score });
         }
@@ -685,7 +685,7 @@ export class SourceGathererAgent extends BaseAgent<
       for (const c of deduped.slice(0, 10)) {
         pushCandidate(c.title, c.url, c.relevanceScore);
       }
-      this.logger.info(`🔍 SearXNG wide-net: ${deduped.length} candidates`);
+      this.logger.info(`🔍 Google News wide-net: ${deduped.length} candidates`);
     }
 
     // Process Exa
@@ -784,7 +784,7 @@ export class SourceGathererAgent extends BaseAgent<
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // URL CONTENT READING (Jina → Tavily → SearXNG fallback chain)
+  // URL CONTENT READING (Jina → Tavily → Google News fallback chain)
   // ─────────────────────────────────────────────────────────────────────────
 
   private async readUrlContent(url: string): Promise<string> {
@@ -837,7 +837,7 @@ export class SourceGathererAgent extends BaseAgent<
       }
     }
 
-    // Fallback 2: SearXNG (search for URL content)
+    // Fallback 2: Google News (search for URL content)
     try {
       const urlObj = new URL(url);
       const pathParts = urlObj.pathname.split("/").filter(Boolean);
@@ -849,9 +849,9 @@ export class SourceGathererAgent extends BaseAgent<
 
       if (searchQuery.length > 10) {
         this.logger.info(
-          `🔍 SearXNG fallback: searching for "${searchQuery.substring(0, 50)}..."`,
+          `🔍 Google News fallback: searching for "${searchQuery.substring(0, 50)}..."`,
         );
-        const results = await searxngSearch(searchQuery, {
+        const results = await googleNewsSearch(searchQuery, {
           count: 5,
           language: "en",
           categories: "general",
@@ -865,19 +865,19 @@ export class SourceGathererAgent extends BaseAgent<
 
           if (combinedContent.length > 200) {
             this.logger.info(
-              `✅ SearXNG fallback succeeded for ${url} (${combinedContent.length} chars)`,
+              `✅ Google News fallback succeeded for ${url} (${combinedContent.length} chars)`,
             );
             return combinedContent.substring(0, 5000);
           }
         }
-        this.logger.warn(`⚠️ SearXNG returned insufficient content for ${url}`);
+        this.logger.warn(`⚠️ Google News returned insufficient content for ${url}`);
       }
-    } catch (searxngError: unknown) {
+    } catch (googleNewsError: unknown) {
       const msg =
-        searxngError instanceof Error
-          ? searxngError.message
-          : String(searxngError);
-      this.logger.warn(`⚠️ SearXNG fallback failed for ${url}: ${msg}`);
+        googleNewsError instanceof Error
+          ? googleNewsError.message
+          : String(googleNewsError);
+      this.logger.warn(`⚠️ Google News fallback failed for ${url}: ${msg}`);
     }
 
     this.logger.error(`❌ All extraction methods failed for ${url}`);
@@ -1110,11 +1110,11 @@ export class SourceGathererAgent extends BaseAgent<
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // HELPER: Calculate SearXNG relevance score
+  // HELPER: Calculate Google News relevance score
   // ─────────────────────────────────────────────────────────────────────────
 
-  private calculateRelevanceScoreSearXNG(
-    result: SearXNGResult,
+  private calculateRelevanceScoreGoogle News(
+    result: GoogleNewsResult,
     originalTitle: string,
   ): number {
     let score = 0;
@@ -1210,7 +1210,7 @@ export class SourceGathererAgent extends BaseAgent<
     ];
     if (authorityDomains.some((d) => result.url.includes(d))) score += 15;
 
-    // SearXNG native score
+    // Google News native score
     if (result.score) score += result.score * 10;
 
     // Tech context bonus / penalty

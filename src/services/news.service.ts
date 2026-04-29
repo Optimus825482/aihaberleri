@@ -844,7 +844,7 @@ export async function fetchAINews(
       })),
     );
 
-    // v3.0: No SearXNG verification — all signals are local
+    // v3.0: No Google News verification — all signals are local
     const verifiedRankings = trendRankings;
 
     // Step 4: Sort by trend score and take top articles with EARLY DB CHECK

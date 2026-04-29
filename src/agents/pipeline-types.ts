@@ -63,7 +63,7 @@
  * and is re-queued to ContentEnricher (now SourceGatherer) for a deeper pass.
  */
 export interface ReEnrichMetadata {
-  /** Forces aggressive multi-service source gathering (Exa, Firecrawl, SearXNG wide-net) */
+  /** Forces aggressive multi-service source gathering (Exa, Firecrawl, Google News wide-net) */
   _forceReEnrich?: boolean;
   /** Why the article was rejected: english_title | dictionary_content | low_quality | missing_content | emergency_template */
   _rejectionReason?: string;

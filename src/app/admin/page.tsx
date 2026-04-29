@@ -841,8 +841,8 @@ export default function AdminDashboard() {
   const { data: gaRealtimeLiteData } = useGA4RealtimeLite(60000); // 60s refresh, düşük yük
   const { data: adSenseData } = useAdSenseSummary(30000); // 5 dakika
   const systemStats = systemData?.success ? systemData.data : null;
-  const whoogleStats = searchProviderData?.success
-    ? searchProviderData.data?.whoogle
+  const googleNewsStats = searchProviderData?.success
+    ? searchProviderData.data?.googleNews
     : null;
   const adSense = adSenseData?.success ? adSenseData.data : null;
   const adSenseConfigured = adSenseData?.configured !== false;
@@ -974,10 +974,10 @@ export default function AdminDashboard() {
           error={!!pipelineHealthError || pipelineHealthData?.success === false}
         />
 
-        {whoogleStats && (
+        {googleNewsStats && (
           <Card
             className={
-              whoogleStats.shouldAlert
+              googleNewsStats.shouldAlert
                 ? "border-amber-500/30 bg-amber-500/5"
                 : "border-emerald-500/20 bg-emerald-500/5"
             }
@@ -986,12 +986,12 @@ export default function AdminDashboard() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <CardTitle className="text-sm font-black uppercase tracking-tight flex items-center gap-2">
-                    {whoogleStats.shouldAlert ? (
+                    {googleNewsStats.shouldAlert ? (
                       <AlertTriangle className="h-4 w-4 text-amber-500" />
                     ) : (
                       <Activity className="h-4 w-4 text-emerald-500" />
                     )}
-                    Whoogle Sağlığı
+                    Google News Sağlığı
                   </CardTitle>
                   <CardDescription className="text-[11px]">
                     Worker ve web process'lerinden paylasilan son snapshot
@@ -1000,16 +1000,16 @@ export default function AdminDashboard() {
                 <Badge
                   variant="outline"
                   className={
-                    whoogleStats.shouldAlert
+                    googleNewsStats.shouldAlert
                       ? "border-amber-500/30 bg-amber-500/10 text-amber-500"
-                      : whoogleStats.available
+                      : googleNewsStats.available
                         ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
                         : "border-red-500/30 bg-red-500/10 text-red-500"
                   }
                 >
-                  {whoogleStats.shouldAlert
+                  {googleNewsStats.shouldAlert
                     ? "Alarm"
-                    : whoogleStats.available
+                    : googleNewsStats.available
                       ? "Stabil"
                       : "Degraded"}
                 </Badge>
@@ -1021,14 +1021,14 @@ export default function AdminDashboard() {
                   <p className="text-[11px] uppercase text-muted-foreground font-bold">
                     İstek
                   </p>
-                  <p className="text-2xl font-black">{whoogleStats.requests}</p>
+                  <p className="text-2xl font-black">{googleNewsStats.requests}</p>
                 </div>
                 <div>
                   <p className="text-[11px] uppercase text-muted-foreground font-bold">
                     Başarı
                   </p>
                   <p className="text-2xl font-black text-emerald-500">
-                    %{whoogleStats.successRate}
+                    %{googleNewsStats.successRate}
                   </p>
                 </div>
                 <div>
@@ -1038,12 +1038,12 @@ export default function AdminDashboard() {
                   <p
                     className={
                       "text-2xl font-black " +
-                      (whoogleStats.shouldAlert
+                      (googleNewsStats.shouldAlert
                         ? "text-amber-500"
                         : "text-primary")
                     }
                   >
-                    %{whoogleStats.fallbackRate}
+                    %{googleNewsStats.fallbackRate}
                   </p>
                 </div>
                 <div>
@@ -1051,7 +1051,7 @@ export default function AdminDashboard() {
                     Timeout
                   </p>
                   <p className="text-2xl font-black text-orange-500">
-                    {whoogleStats.timeouts}
+                    {googleNewsStats.timeouts}
                   </p>
                 </div>
                 <div>
@@ -1059,9 +1059,9 @@ export default function AdminDashboard() {
                     Ortalama
                   </p>
                   <p className="text-2xl font-black text-blue-500">
-                    {whoogleStats.avgLatencyMs === null
+                    {googleNewsStats.avgLatencyMs === null
                       ? "-"
-                      : `${whoogleStats.avgLatencyMs}ms`}
+                      : `${googleNewsStats.avgLatencyMs}ms`}
                   </p>
                 </div>
               </div>
@@ -1069,17 +1069,17 @@ export default function AdminDashboard() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
-                    Fallback oranı alarm eşiği: %{whoogleStats.alertThreshold}
+                    Fallback oranı alarm eşiği: %{googleNewsStats.alertThreshold}
                   </span>
-                  <span>Fallback: {whoogleStats.fallbacks}</span>
+                  <span>Fallback: {googleNewsStats.fallbacks}</span>
                 </div>
-                <Progress value={Math.min(whoogleStats.fallbackRate, 100)} className="h-2" />
+                <Progress value={Math.min(googleNewsStats.fallbackRate, 100)} className="h-2" />
               </div>
 
-              {whoogleStats.lastError && (
+              {googleNewsStats.lastError && (
                 <div className="rounded-xl border border-border/60 bg-background/60 px-3 py-2 text-xs text-muted-foreground">
                   <span className="font-semibold text-foreground">Son hata:</span>{" "}
-                  {whoogleStats.lastError}
+                  {googleNewsStats.lastError}
                 </div>
               )}
             </CardContent>

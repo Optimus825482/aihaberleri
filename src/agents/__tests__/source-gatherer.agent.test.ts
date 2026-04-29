@@ -68,19 +68,19 @@ function createArticle(overrides?: Partial<any>) {
   };
 }
 
-describe("SourceGathererAgent - Whoogle haber toplama simulasyonu", () => {
+describe("SourceGathererAgent - Google News haber toplama simulasyonu", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("Whoogle-first arama sonucunu kullanarak haber kaynakları toplar", async () => {
+  it("Google News-first arama sonucunu kullanarak haber kaynakları toplar", async () => {
     const agent = new SourceGathererAgent();
     const article = createArticle();
 
     mockedSearxngSearch
       .mockResolvedValueOnce([
         {
-          title: "Whoogle bulunan kaynak",
+          title: "Google News bulunan kaynak",
           url: "https://news.example.com/google-news-source",
           content: "",
           engine: "google-news",
@@ -97,7 +97,7 @@ describe("SourceGathererAgent - Whoogle haber toplama simulasyonu", () => {
     mockedTavilySearch.mockResolvedValue([] as any);
 
     jest
-      .spyOn(agent as any, "calculateRelevanceScoreSearXNG")
+      .spyOn(agent as any, "calculateRelevanceScoreGoogle News")
       .mockReturnValue(92);
     jest.spyOn(agent as any, "shouldSkipUrl").mockReturnValue(false);
     jest
@@ -110,13 +110,13 @@ describe("SourceGathererAgent - Whoogle haber toplama simulasyonu", () => {
     expect(mockedTavilySearch).not.toHaveBeenCalled();
     expect(sources).toHaveLength(1);
     expect(sources[0]).toMatchObject({
-      title: "Whoogle bulunan kaynak",
+      title: "Google News bulunan kaynak",
       url: "https://news.example.com/google-news-source",
       relevanceScore: 92,
     });
   });
 
-  it("Whoogle-first arama boş dönerse Tavily fallback ile haber oluşturma akışını sürdürür", async () => {
+  it("Google News-first arama boş dönerse Tavily fallback ile haber oluşturma akışını sürdürür", async () => {
     const agent = new SourceGathererAgent();
     const article = createArticle({
       title: "Anthropic yeni coding agent yetenekleri ekledi",

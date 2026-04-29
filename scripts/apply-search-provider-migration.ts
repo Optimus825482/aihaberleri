@@ -125,9 +125,9 @@ async function addTestData() {
       avgResponseTime: Math.random() * 500 + 100,
     });
 
-    // SearXNG (primary, daha fazla request)
+    // Google News (primary, daha fazla request)
     testData.push({
-      provider: "searxng",
+      provider: "google-news",
       timestamp,
       requests: Math.floor(Math.random() * 50) + 20, // 20-70
       errors: Math.floor(Math.random() * 3), // 0-2

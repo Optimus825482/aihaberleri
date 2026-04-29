@@ -61,7 +61,7 @@ services:
     networks:
       - aihaberleri-network
 
-  # Valkey (Redis fork - SearXNG limiter için)
+  # Valkey (Redis fork - Google News limiter için)
   valkey:
     image: valkey/valkey:7-alpine
     container_name: aihaberleri-valkey
@@ -77,7 +77,7 @@ healthcheck:
     networks:
       - aihaberleri-network
 
-  # SearXNG (Self-hosted metasearch engine)
+  # Google News (Self-hosted metasearch engine)
   # Next.js App
   app:
     build:

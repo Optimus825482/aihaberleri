@@ -3,7 +3,7 @@
  *
  * Premium web scraping — LAST RESORT only.
  * Used ONLY for articles that failed the DatabasePublisher quality gate
- * AND only when cheaper layers (SearXNG + Exa) returned insufficient sources.
+ * AND only when cheaper layers (Google News + Exa) returned insufficient sources.
  *
  * Credit budget: 500 scrapes maximum (1 credit = 1 page).
  * Counter is persisted in Redis so it survives restarts.

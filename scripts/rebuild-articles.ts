@@ -2,7 +2,7 @@
  * Rebuild Articles from Facebook Recovery Data — PARALLEL & FAST
  *
  * Pipeline per article:
- * 1. SearXNG search + R2 image check (PARALLEL)
+ * 1. Google News search + R2 image check (PARALLEL)
  * 2. DeepSeek content generation (enriched with web results)
  * 3. Create Article with exact slug, publishedAt = facebookDate
  *
@@ -12,7 +12,7 @@
  *   --dry-run       Preview without DB writes
  *   --batch=N       Concurrent articles per batch (default: 5)
  *   --start=N       Resume from index N
- *   --skip-search   Skip SearXNG enrichment
+ *   --skip-search   Skip Google News enrichment
  *   --skip-images   Skip image processing
  */
 
@@ -21,7 +21,7 @@ import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
 import * as crypto from "crypto";
-import { searxngSearch } from "../src/lib/searxng";
+import { googleNewsSearch } from "../src/lib/google-news-search";
 
 // ============================================================================
 // CONFIG
@@ -141,7 +141,7 @@ function extractCategorySlug(msg: string): string {
 async function searchWeb(query: string): Promise<SearchResult[]> {
   if (SKIP_SEARCH) return [];
   try {
-    const results = await searxngSearch(query, {
+    const results = await googleNewsSearch(query, {
       count: 5,
       language: "tr-TR",
       safesearch: 1,
@@ -365,7 +365,7 @@ async function processArticle(
 
     console.log(`${label} 🔄 ${article.title.substring(0, 60)}...`);
 
-    // PARALLEL: SearXNG + R2 check
+    // PARALLEL: Google News + R2 check
     const [webResults, r2Result] = await Promise.all([
       searchWeb(article.title),
       checkR2Image(article.slug),

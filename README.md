@@ -193,7 +193,7 @@ AGENT_MIN_INTERVAL_HOURS=5
 2. **Duplicate Filtreleme**: Son 12 saatteki yayınlarla karşılaştırır
 3. **Trend Skorlama**: Makaleleri trend puanlarına göre sıralar
 4. **EN İYİ 1 SEÇİMİ**: Sadece en yüksek puanlı 1 makale işlenir ★
-5. **İçerik Zenginleştirme**: SearXNG ile kaynak toplama, DeepSeek ile yeniden yazım
+5. **İçerik Zenginleştirme**: Google News ile kaynak toplama, DeepSeek ile yeniden yazım
 6. **Görsel Oluşturma**: Pollinations.ai ile AI görseli
 7. **SEO Optimizasyonu**: Meta başlık, açıklama, slug optimizasyonu
 8. **Yayınlama**: Web sitesine otomatik olarak yayınlar
