@@ -50,9 +50,11 @@ export async function POST(
       width: 1200,
       height: 630,
       model: "flux",
-            enhance: true,
-            safe: true,
-            nologo: true,
+      enhance: true,
+      safe: true,
+      nologo: true,
+      skipCache: true,
+      seed: Math.floor(Math.random() * 1_000_000_000),
     });
 
     if (!newImageUrl || isFallbackImageUrl(newImageUrl)) {

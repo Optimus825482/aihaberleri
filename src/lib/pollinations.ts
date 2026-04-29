@@ -19,6 +19,7 @@ interface PollinationsOptions {
   width?: number;
   height?: number;
   seed?: number;
+  skipCache?: boolean;
   model?:
     | "kontext"
     | "nanobanana"
@@ -297,7 +298,7 @@ export function generateImageUrl(
   }
 
   const params = buildPollinationsParams({
-    ...options,
+    ...providerOptions,
     width,
     height,
     model: normalizedModel,
@@ -525,6 +526,7 @@ export async function fetchPollinationsImage(
   maxRetries = 3,
   requestTimeoutMs = DEFAULT_POLLINATIONS_REQUEST_TIMEOUT_MS,
 ): Promise<string> {
+  const { skipCache = false, ...providerOptions } = options;
   // Validate prompt
   if (!prompt || typeof prompt !== "string" || prompt.trim().length === 0) {
     console.warn("⚠️  Empty prompt received, using fallback");
@@ -533,7 +535,7 @@ export async function fetchPollinationsImage(
   }
 
   // 🚀 CACHE CHECK: Try to get cached image first
-  const cachedUrl = await getCachedImage(prompt, options);
+  const cachedUrl = skipCache ? null : await getCachedImage(prompt, providerOptions);
   if (cachedUrl) {
     return cachedUrl;
   }
@@ -549,7 +551,7 @@ export async function fetchPollinationsImage(
   try {
     const hordeUrl = await fetchAIHordeImage(prompt, options);
     if (hordeUrl) {
-      await cacheImageUrl(prompt, hordeUrl);
+      await cacheImageUrl(prompt, hordeUrl, providerOptions);
       return hordeUrl;
     }
   } catch (hordeError) {
@@ -627,7 +629,7 @@ export async function fetchPollinationsImage(
 
           // Build new API URL: https://gen.pollinations.ai/image/{prompt}
           const params = buildPollinationsParams({
-            ...options,
+            ...providerOptions,
             width,
             height,
             model: normalizedModel,

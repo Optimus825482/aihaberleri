@@ -1,4 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
+import { getRedis } from "@/lib/redis";
 
 export interface GoogleNewsSearchResult {
   title: string;
@@ -149,32 +150,113 @@ async function normalizeItems(
   return out;
 }
 
-export function getGoogleNewsStats() {
-  return {
-    requests: 0,
-    successes: 0,
-    timeouts: 0,
-    errors: 0,
-    fallbacks: 0,
-    zeroResults: 0,
-    lastLatencyMs: null as number | null,
-    avgLatencyMs: null as number | null,
-    fallbackRate: 0,
-    available: true,
-    lastError: null as string | null,
-    updatedAt: new Date().toISOString(),
-    alertThreshold: 0,
+type GoogleNewsStats = {
+  requests: number;
+  successes: number;
+  timeouts: number;
+  errors: number;
+  fallbacks: number;
+  zeroResults: number;
+  lastLatencyMs: number | null;
+  avgLatencyMs: number | null;
+  fallbackRate: number;
+  available: boolean;
+  lastError: string | null;
+  updatedAt: string;
+  alertThreshold: number;
+  shouldAlert: boolean;
+  consecutiveFailures: number;
+};
+
+const GOOGLE_NEWS_STATS_KEY = "stats:google-news:v1";
+const GOOGLE_NEWS_ALERT_THRESHOLD = 20;
+const GOOGLE_NEWS_STATS_TTL_SECONDS = 7 * 24 * 60 * 60;
+
+const defaultGoogleNewsStats: GoogleNewsStats = {
+  requests: 0,
+  successes: 0,
+  timeouts: 0,
+  errors: 0,
+  fallbacks: 0,
+  zeroResults: 0,
+  lastLatencyMs: null,
+  avgLatencyMs: null,
+  fallbackRate: 0,
+  available: true,
+  lastError: null,
+  updatedAt: new Date().toISOString(),
+  alertThreshold: GOOGLE_NEWS_ALERT_THRESHOLD,
+  shouldAlert: false,
+  consecutiveFailures: 0,
+};
+
+let inMemoryGoogleNewsStats: GoogleNewsStats = { ...defaultGoogleNewsStats };
+
+function clampNonNegativeInt(value: unknown): number {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0;
+  return Math.max(0, Math.floor(num));
+}
+
+function normalizeStats(input: Partial<GoogleNewsStats> | null | undefined): GoogleNewsStats {
+  const requests = clampNonNegativeInt(input?.requests);
+  const fallbacks = clampNonNegativeInt(input?.fallbacks);
+  const fallbackRate = requests > 0 ? Math.round((fallbacks / requests) * 100) : 0;
+
+  const normalized: GoogleNewsStats = {
+    requests,
+    successes: clampNonNegativeInt(input?.successes),
+    timeouts: clampNonNegativeInt(input?.timeouts),
+    errors: clampNonNegativeInt(input?.errors),
+    fallbacks,
+    zeroResults: clampNonNegativeInt(input?.zeroResults),
+    lastLatencyMs:
+      typeof input?.lastLatencyMs === "number" && Number.isFinite(input.lastLatencyMs)
+        ? Math.max(0, Math.round(input.lastLatencyMs))
+        : null,
+    avgLatencyMs:
+      typeof input?.avgLatencyMs === "number" && Number.isFinite(input.avgLatencyMs)
+        ? Math.max(0, Math.round(input.avgLatencyMs))
+        : null,
+    fallbackRate,
+    available: input?.available !== false,
+    lastError: typeof input?.lastError === "string" && input.lastError.trim().length > 0
+      ? input.lastError.trim()
+      : null,
+    updatedAt:
+      typeof input?.updatedAt === "string" && input.updatedAt
+        ? input.updatedAt
+        : new Date().toISOString(),
+    alertThreshold: clampNonNegativeInt(input?.alertThreshold) || GOOGLE_NEWS_ALERT_THRESHOLD,
     shouldAlert: false,
-    consecutiveFailures: 0,
+    consecutiveFailures: clampNonNegativeInt(input?.consecutiveFailures),
   };
+
+  normalized.shouldAlert = normalized.fallbackRate >= normalized.alertThreshold;
+  return normalized;
+}
+
+export function getGoogleNewsStats(): GoogleNewsStats {
+  return normalizeStats(inMemoryGoogleNewsStats);
 }
 
 export function resetGoogleNewsStats(): void {
-  return;
+  inMemoryGoogleNewsStats = { ...defaultGoogleNewsStats, updatedAt: new Date().toISOString() };
 }
 
-export async function getSharedGoogleNewsStats() {
-  return null;
+export async function getSharedGoogleNewsStats(): Promise<GoogleNewsStats | null> {
+  const redis = getRedis();
+  if (!redis) return null;
+
+  try {
+    const raw = await redis.get(GOOGLE_NEWS_STATS_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<GoogleNewsStats>;
+    return normalizeStats(parsed);
+  } catch {
+    return null;
+  }
 }
 
 export async function googleNewsSearch(
@@ -187,36 +269,93 @@ export async function googleNewsSearch(
     categories?: string;
   } = {},
 ): Promise<GoogleNewsSearchResult[]> {
+  const startedAt = Date.now();
   const count = Math.min(Math.max(options.count ?? 10, 1), 50);
   const language = options.language === "tr" ? "tr" : "en";
   const url = buildRssUrl(query, language);
 
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "User-Agent": "AIHaberleri-GoogleNewsSearch/1.0",
-      Accept: "application/rss+xml, application/xml, text/xml",
-    },
-    cache: "no-store",
-  });
+  const current = getGoogleNewsStats();
+  let nextStats: GoogleNewsStats = {
+    ...current,
+    requests: current.requests + 1,
+    updatedAt: new Date().toISOString(),
+  };
 
-  if (!response.ok) {
-    throw new Error(`Google News RSS request failed: ${response.status}`);
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent": "AIHaberleri-GoogleNewsSearch/1.0",
+        Accept: "application/rss+xml, application/xml, text/xml",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Google News RSS request failed: ${response.status}`);
+    }
+
+    const xml = await response.text();
+    const parser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: "",
+      parseTagValue: true,
+      trimValues: true,
+    });
+
+    const parsed = parser.parse(xml) as GoogleNewsRss;
+    const itemNode = parsed.rss?.channel?.item;
+    const items = Array.isArray(itemNode) ? itemNode : itemNode ? [itemNode] : [];
+    const normalized = await normalizeItems(items, count);
+
+    const latency = Date.now() - startedAt;
+    const successes = current.successes + 1;
+    const avgLatencyMs = current.avgLatencyMs === null
+      ? latency
+      : Math.round((current.avgLatencyMs * current.successes + latency) / Math.max(successes, 1));
+
+    nextStats = normalizeStats({
+      ...nextStats,
+      successes,
+      zeroResults: current.zeroResults + (normalized.length === 0 ? 1 : 0),
+      lastLatencyMs: latency,
+      avgLatencyMs,
+      available: true,
+      lastError: null,
+      consecutiveFailures: 0,
+      updatedAt: new Date().toISOString(),
+    });
+
+    inMemoryGoogleNewsStats = nextStats;
+    const redis = getRedis();
+    if (redis) {
+      await redis.setex(GOOGLE_NEWS_STATS_KEY, GOOGLE_NEWS_STATS_TTL_SECONDS, JSON.stringify(nextStats));
+    }
+
+    return normalized;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Google News request failed";
+    const isTimeout = /timeout|abort/i.test(message);
+
+    nextStats = normalizeStats({
+      ...nextStats,
+      errors: current.errors + (isTimeout ? 0 : 1),
+      timeouts: current.timeouts + (isTimeout ? 1 : 0),
+      fallbacks: current.fallbacks + 1,
+      available: false,
+      lastError: message,
+      consecutiveFailures: current.consecutiveFailures + 1,
+      updatedAt: new Date().toISOString(),
+    });
+
+    inMemoryGoogleNewsStats = nextStats;
+    const redis = getRedis();
+    if (redis) {
+      await redis.setex(GOOGLE_NEWS_STATS_KEY, GOOGLE_NEWS_STATS_TTL_SECONDS, JSON.stringify(nextStats));
+    }
+
+    throw error;
   }
-
-  const xml = await response.text();
-  const parser = new XMLParser({
-    ignoreAttributes: false,
-    attributeNamePrefix: "",
-    parseTagValue: true,
-    trimValues: true,
-  });
-
-  const parsed = parser.parse(xml) as GoogleNewsRss;
-  const itemNode = parsed.rss?.channel?.item;
-  const items = Array.isArray(itemNode) ? itemNode : itemNode ? [itemNode] : [];
-
-  return await normalizeItems(items, count);
 }
 
 export async function calculateTrendScoreGoogleNews(
