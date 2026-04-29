@@ -52,6 +52,54 @@ function decodeGoogleRedirect(link: string): string {
   }
 }
 
+async function resolveGoogleNewsLink(link: string): Promise<string> {
+  const decoded = decodeGoogleRedirect(link);
+
+  try {
+    const u = new URL(decoded);
+    const isGoogleNewsArticleLink =
+      u.hostname === "news.google.com" && u.pathname.startsWith("/rss/articles/");
+
+    if (!isGoogleNewsArticleLink) {
+      return decoded;
+    }
+
+    try {
+      const headResponse = await fetch(decoded, {
+        method: "HEAD",
+        redirect: "follow",
+        headers: {
+          "User-Agent": "AIHaberleri-GoogleNewsSearch/1.0",
+        },
+        cache: "no-store",
+      });
+
+      if (headResponse.url && headResponse.url !== decoded) {
+        return decodeGoogleRedirect(headResponse.url);
+      }
+    } catch {
+      // fall through to GET fallback
+    }
+
+    const getResponse = await fetch(decoded, {
+      method: "GET",
+      redirect: "follow",
+      headers: {
+        "User-Agent": "AIHaberleri-GoogleNewsSearch/1.0",
+      },
+      cache: "no-store",
+    });
+
+    if (getResponse.url && getResponse.url !== decoded) {
+      return decodeGoogleRedirect(getResponse.url);
+    }
+
+    return decoded;
+  } catch {
+    return decoded;
+  }
+}
+
 function stripHtml(input: string): string {
   return input.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
@@ -63,13 +111,16 @@ function buildRssUrl(query: string, language: string): string {
   return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
 }
 
-function normalizeItems(items: GoogleNewsRssItem[], count: number): GoogleNewsSearchResult[] {
+async function normalizeItems(
+  items: GoogleNewsRssItem[],
+  count: number,
+): Promise<GoogleNewsSearchResult[]> {
   const seen = new Set<string>();
   const out: GoogleNewsSearchResult[] = [];
 
   for (const [idx, item] of items.entries()) {
     const rawLink = item.link || "";
-    const resolvedUrl = decodeGoogleRedirect(rawLink);
+    const resolvedUrl = await resolveGoogleNewsLink(rawLink);
     if (!resolvedUrl || seen.has(resolvedUrl)) continue;
     seen.add(resolvedUrl);
 
@@ -165,7 +216,7 @@ export async function googleNewsSearch(
   const itemNode = parsed.rss?.channel?.item;
   const items = Array.isArray(itemNode) ? itemNode : itemNode ? [itemNode] : [];
 
-  return normalizeItems(items, count);
+  return await normalizeItems(items, count);
 }
 
 export async function calculateTrendScoreGoogleNews(

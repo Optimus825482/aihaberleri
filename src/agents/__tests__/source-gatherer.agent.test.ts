@@ -97,7 +97,7 @@ describe("SourceGathererAgent - Google News haber toplama simulasyonu", () => {
     mockedTavilySearch.mockResolvedValue([] as any);
 
     jest
-      .spyOn(agent as any, "calculateRelevanceScoreGoogle News")
+      .spyOn(agent as any, "calculateRelevanceScoreGoogleNews")
       .mockReturnValue(92);
     jest.spyOn(agent as any, "shouldSkipUrl").mockReturnValue(false);
     jest
