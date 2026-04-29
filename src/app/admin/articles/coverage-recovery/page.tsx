@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,10 +15,49 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { AlertTriangle, Link2, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, Link2, Loader2, RefreshCw, Upload } from "lucide-react";
 
 type CoverageAction = "queue_recovery" | "notify_google" | "both";
 type ResultStatus = "queued" | "notified" | "both" | "skipped" | "failed";
+
+function isLikelyHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function parseUploadedUrls(content: string, fileName: string): {
+  urls: string[];
+  skipped: number;
+} {
+  const lines = content
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const isCsv = fileName.toLowerCase().endsWith(".csv");
+  const extracted: string[] = [];
+  let skipped = 0;
+
+  for (const line of lines) {
+    if (isCsv) {
+      const parts = line.split(/[\t,;]/).map((part) => part.trim().replace(/^"|"$/g, ""));
+      const candidate = parts.find((part) => isLikelyHttpUrl(part));
+      if (candidate) {
+        extracted.push(candidate);
+      } else {
+        skipped++;
+      }
+      continue;
+    }
+
+    if (isLikelyHttpUrl(line)) {
+      extracted.push(line);
+    } else {
+      skipped++;
+    }
+  }
+
+  return { urls: extracted, skipped };
+}
 
 interface Category {
   id: string;
@@ -92,11 +131,53 @@ export default function CoverageRecoveryPage() {
   }, [toast]);
 
   const parsedUrls = useMemo(() => {
-    return urlInput
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
+    return Array.from(
+      new Set(
+        urlInput
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean),
+      ),
+    );
   }, [urlInput]);
+
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const isAccepted = /\.(txt|csv)$/i.test(file.name);
+    if (!isAccepted) {
+      toast({
+        variant: "destructive",
+        title: "Desteklenmeyen dosya",
+        description: "Lütfen .txt veya .csv dosyası yükleyin.",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const content = await file.text();
+      const { urls, skipped } = parseUploadedUrls(content, file.name);
+
+      const merged = Array.from(new Set([...parsedUrls, ...urls]));
+      setUrlInput(merged.join("\n"));
+
+      const added = Math.max(0, merged.length - parsedUrls.length);
+      toast({
+        title: "Dosya işlendi",
+        description: `${added} URL eklendi${skipped > 0 ? `, ${skipped} satır atlandı` : ""}.`,
+      });
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Dosya okunamadı",
+        description: "Dosya içeriği işlenemedi.",
+      });
+    } finally {
+      event.target.value = "";
+    }
+  };
 
   const submit = async () => {
     if (!categoryId) {
@@ -161,6 +242,22 @@ export default function CoverageRecoveryPage() {
             <CardTitle>URL Girişi</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              <label className="inline-flex items-center gap-2 cursor-pointer rounded-md border px-3 py-2 text-sm hover:bg-muted/50">
+                <Upload className="h-4 w-4" />
+                TXT/CSV Yükle
+                <input
+                  type="file"
+                  accept=".txt,.csv,text/plain,text/csv"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </label>
+              <span className="text-xs text-muted-foreground">
+                Dosyadaki URL&apos;ler otomatik parse edilip listeye eklenir.
+              </span>
+            </div>
+
             <Textarea
               value={urlInput}
               onChange={(e) => setUrlInput(e.target.value)}
