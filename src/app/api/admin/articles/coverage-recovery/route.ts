@@ -292,6 +292,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const category = await db.category.findUnique({
+      where: { id: categoryId },
+      select: { id: true },
+    });
+    if (!category) {
+      return NextResponse.json(
+        { success: false, error: "Geçersiz kategori" },
+        { status: 400 },
+      );
+    }
+
     if (!isAction(action)) {
       return NextResponse.json(
         {
