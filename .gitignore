@@ -88,3 +88,5 @@ backups/postgres/*.txt
 
 # Jupyter notebooks (one-off analysis)
 *.ipynb
+
+aihaberleri.org-Coverage-Validation-2026-04-29

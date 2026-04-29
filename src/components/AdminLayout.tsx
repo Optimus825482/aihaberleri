@@ -34,6 +34,7 @@ import {
   Languages,
   Globe,
   Wand2,
+  Link2,
 } from "lucide-react";
 import { usePWA } from "@/context/PWAContext";
 import { Button } from "@/components/ui/button";
@@ -122,6 +123,13 @@ const menuGroups = [
         title: "404 Slug Kurtarma",
         href: "/admin/articles/slug-recovery",
         icon: Wand2,
+        requiredResource: "articles" as const,
+        matchMode: "exact",
+      },
+      {
+        title: "Coverage Recovery",
+        href: "/admin/articles/coverage-recovery",
+        icon: Link2,
         requiredResource: "articles" as const,
         matchMode: "exact",
       },
