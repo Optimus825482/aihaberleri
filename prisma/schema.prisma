@@ -664,6 +664,56 @@ model SocialShareBatch {
   @@index([scheduledFor])
 }
 
+model CoverageRecoveryBatch {
+  id              String                 @id @default(cuid())
+  createdById     String
+  categoryId      String
+  action          CoverageRecoveryAction
+  status          CoverageBatchStatus    @default(RUNNING)
+  totalItems      Int
+  recoverableItems Int                   @default(0)
+  queuedItems     Int                    @default(0)
+  notifiedItems   Int                    @default(0)
+  skippedItems    Int                    @default(0)
+  failedItems     Int                    @default(0)
+  startedAt       DateTime               @default(now())
+  completedAt     DateTime?
+  error           String?                @db.Text
+  metadata        Json?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  createdBy       User                   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  category        Category               @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  items           CoverageRecoveryItem[]
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([createdById])
+}
+
+model CoverageRecoveryItem {
+  id            String               @id @default(cuid())
+  batchId       String
+  inputUrl      String
+  normalizedUrl String?
+  slug          String?
+  locale        String?
+  jobId         String?
+  status        CoverageItemStatus
+  reason        String?              @db.Text
+  queued        Boolean              @default(false)
+  notified      Boolean              @default(false)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  batch         CoverageRecoveryBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([batchId])
+  @@index([status])
+  @@index([jobId])
+}
+
 enum SocialPlatform {
   FACEBOOK
   FACEBOOK_EN
@@ -681,6 +731,28 @@ enum ShareStatus {
   SHARED
   FAILED
   SKIPPED
+}
+
+enum CoverageRecoveryAction {
+  QUEUE_RECOVERY
+  NOTIFY_GOOGLE
+  BOTH
+  RECOVER_THEN_NOTIFY
+}
+
+enum CoverageBatchStatus {
+  RUNNING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum CoverageItemStatus {
+  QUEUED
+  NOTIFIED
+  BOTH
+  SKIPPED
+  FAILED
 }
 
 // =============================================

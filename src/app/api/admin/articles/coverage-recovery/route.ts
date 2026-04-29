@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  CoverageBatchStatus,
+  CoverageItemStatus,
+  CoverageRecoveryAction as CoverageRecoveryActionEnum,
+} from "@prisma/client";
 import { requireAdminAuth } from "@/lib/admin-auth";
+import { validateCSRFToken } from "@/lib/auth/middleware";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import { notifyGoogle } from "@/lib/seo/google-indexing-api";
 import { db } from "@/lib/db";
+import {
+  checkSimpleRateLimit,
+  getSimpleRateLimitHeaders,
+} from "@/lib/rate-limiter";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -17,6 +27,22 @@ type RecoveryStatus = "queued" | "notified" | "both" | "skipped" | "failed";
 
 const MAX_URLS_PER_REQUEST = 100;
 const MAX_URL_LENGTH = 2048;
+const COVERAGE_READ_LIMIT = 120;
+const COVERAGE_WRITE_LIMIT = 30;
+const COVERAGE_WINDOW_SECONDS = 60;
+
+function getClientIp(request: NextRequest): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]?.trim() || "unknown";
+
+  const realIp = request.headers.get("x-real-ip");
+  if (realIp) return realIp;
+
+  const cfConnectingIp = request.headers.get("cf-connecting-ip");
+  if (cfConnectingIp) return cfConnectingIp;
+
+  return "unknown";
+}
 
 interface CoverageRecoveryResult {
   inputUrl: string;
@@ -28,6 +54,37 @@ interface CoverageRecoveryResult {
   jobId?: string;
   queued: boolean;
   notified: boolean;
+}
+
+function toActionEnum(action: CoverageRecoveryAction): CoverageRecoveryActionEnum {
+  const map: Record<CoverageRecoveryAction, CoverageRecoveryActionEnum> = {
+    queue_recovery: CoverageRecoveryActionEnum.QUEUE_RECOVERY,
+    notify_google: CoverageRecoveryActionEnum.NOTIFY_GOOGLE,
+    both: CoverageRecoveryActionEnum.BOTH,
+    recover_then_notify: CoverageRecoveryActionEnum.RECOVER_THEN_NOTIFY,
+  };
+  return map[action];
+}
+
+function toUiAction(action: CoverageRecoveryActionEnum): CoverageRecoveryAction {
+  const map: Record<CoverageRecoveryActionEnum, CoverageRecoveryAction> = {
+    QUEUE_RECOVERY: "queue_recovery",
+    NOTIFY_GOOGLE: "notify_google",
+    BOTH: "both",
+    RECOVER_THEN_NOTIFY: "recover_then_notify",
+  };
+  return map[action];
+}
+
+function toItemStatusEnum(status: RecoveryStatus): CoverageItemStatus {
+  const map: Record<RecoveryStatus, CoverageItemStatus> = {
+    queued: CoverageItemStatus.QUEUED,
+    notified: CoverageItemStatus.NOTIFIED,
+    both: CoverageItemStatus.BOTH,
+    skipped: CoverageItemStatus.SKIPPED,
+    failed: CoverageItemStatus.FAILED,
+  };
+  return map[status];
 }
 
 function normalizeUrl(raw: string): string | null {
@@ -127,9 +184,81 @@ async function isPublishedForSlug(slug: string, locale: RecoveryLocale): Promise
   return Boolean(translation);
 }
 
+export async function GET(request: NextRequest) {
+  const session = await requireAdminAuth();
+  if (session instanceof NextResponse) return session;
+
+  const rateLimitResult = await checkSimpleRateLimit(
+    `admin:coverage-recovery:get:${session.id}:${getClientIp(request)}`,
+    COVERAGE_READ_LIMIT,
+    COVERAGE_WINDOW_SECONDS,
+  );
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { success: false, error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: getSimpleRateLimitHeaders(rateLimitResult, COVERAGE_READ_LIMIT),
+      },
+    );
+  }
+
+  const limitParam = Number(request.nextUrl.searchParams.get("limit") || "20");
+  const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 100) : 20;
+
+  const whereClause = session.role === "SUPER_ADMIN" ? {} : { createdById: session.id };
+
+  const batches = await db.coverageRecoveryBatch.findMany({
+    where: whereClause,
+    take: limit,
+    orderBy: { createdAt: "desc" },
+    include: {
+      category: { select: { id: true, name: true } },
+      createdBy: { select: { id: true, name: true } },
+      _count: { select: { items: true } },
+    },
+  });
+
+  const activeBatchId = batches.find((batch) => batch.status === CoverageBatchStatus.RUNNING)?.id ?? null;
+
+  return NextResponse.json({
+    success: true,
+    activeBatchId,
+    batches: batches.map((batch) => ({
+      ...batch,
+      action: toUiAction(batch.action),
+    })),
+  });
+}
+
 export async function POST(request: NextRequest) {
   const session = await requireAdminAuth();
   if (session instanceof NextResponse) return session;
+
+  const isCsrfValid = validateCSRFToken(request);
+  if (!isCsrfValid) {
+    return NextResponse.json(
+      { success: false, error: "Geçersiz CSRF token" },
+      { status: 403 },
+    );
+  }
+
+  const rateLimitResult = await checkSimpleRateLimit(
+    `admin:coverage-recovery:post:${session.id}:${getClientIp(request)}`,
+    COVERAGE_WRITE_LIMIT,
+    COVERAGE_WINDOW_SECONDS,
+  );
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { success: false, error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: getSimpleRateLimitHeaders(rateLimitResult, COVERAGE_WRITE_LIMIT),
+      },
+    );
+  }
+
+  let createdBatchId: string | null = null;
 
   try {
     const body = await request.json();
@@ -184,6 +313,18 @@ export async function POST(request: NextRequest) {
         { status: 503 },
       );
     }
+
+    const batch = await db.coverageRecoveryBatch.create({
+      data: {
+        createdById: session.id,
+        categoryId,
+        action: toActionEnum(action),
+        status: CoverageBatchStatus.RUNNING,
+        totalItems: urls.length,
+      },
+      select: { id: true },
+    });
+    createdBatchId = batch.id;
 
     const dedupe = new Set<string>();
     const results: CoverageRecoveryResult[] = [];
@@ -354,8 +495,44 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    await db.coverageRecoveryItem.createMany({
+      data: results.map((result) => ({
+        batchId: batch.id,
+        inputUrl: result.inputUrl,
+        normalizedUrl: result.normalizedUrl,
+        slug: result.slug,
+        locale: result.locale,
+        jobId: result.jobId,
+        status: toItemStatusEnum(result.status),
+        reason: result.reason,
+        queued: result.queued,
+        notified: result.notified,
+      })),
+    });
+
+    const finalBatchStatus =
+      failedCount > 0 && failedCount === results.length
+        ? CoverageBatchStatus.FAILED
+        : failedCount > 0
+          ? CoverageBatchStatus.PARTIAL
+          : CoverageBatchStatus.COMPLETED;
+
+    await db.coverageRecoveryBatch.update({
+      where: { id: batch.id },
+      data: {
+        recoverableItems: recoverable,
+        queuedItems: queuedCount,
+        notifiedItems: notifiedCount,
+        skippedItems: skippedCount,
+        failedItems: failedCount,
+        status: finalBatchStatus,
+        completedAt: new Date(),
+      },
+    });
+
     return NextResponse.json({
       success: true,
+      batchId: batch.id,
       action,
       summary: {
         total: urls.length,
@@ -368,10 +545,24 @@ export async function POST(request: NextRequest) {
       results,
     });
   } catch (error: unknown) {
+    if (createdBatchId) {
+      try {
+        await db.coverageRecoveryBatch.update({
+          where: { id: createdBatchId },
+          data: {
+            status: CoverageBatchStatus.FAILED,
+            completedAt: new Date(),
+            error: error instanceof Error ? error.message : "Bilinmeyen hata",
+          },
+        });
+      } catch {
+      }
+    }
+
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Bilinmeyen hata",
+        error: "Coverage recovery işlemi tamamlanamadı",
       },
       { status: 500 },
     );
