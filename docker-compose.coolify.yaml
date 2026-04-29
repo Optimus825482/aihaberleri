@@ -1,11 +1,5 @@
 version: "3.8"
 
-networks:
-  # SearXNG network - allows worker to access self-hosted SearXNG
-  searxng-network:
-    external: true
-    name: pwcsc8ow08oks0ggokwoo8ww
-
 services:
   # PostgreSQL Database
   postgres:
@@ -170,9 +164,6 @@ services:
       AGENT_SKIP_EMPTY_DELAY: ${AGENT_SKIP_EMPTY_DELAY:-true}
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: 1
-    networks:
-      - default
-      - searxng-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -284,9 +275,6 @@ services:
       PORT: 3001
     ports:
       - "3001:3001"
-    networks:
-      - default
-      - searxng-network
     depends_on:
       postgres:
         condition: service_healthy
