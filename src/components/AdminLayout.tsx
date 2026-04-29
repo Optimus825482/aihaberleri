@@ -134,6 +134,13 @@ const menuGroups = [
         matchMode: "exact",
       },
       {
+        title: "AI News Tracker",
+        href: "/admin/ai-news-tracker",
+        icon: Newspaper,
+        requiredResource: null,
+        matchMode: "exact",
+      },
+      {
         title: "Yeni Haber Ekle",
         href: "/admin/add-news",
         icon: PlusCircle,
