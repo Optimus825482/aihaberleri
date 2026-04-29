@@ -788,6 +788,11 @@ export class SourceGathererAgent extends BaseAgent<
   // ─────────────────────────────────────────────────────────────────────────
 
   private async readUrlContent(url: string): Promise<string> {
+    if (/^https?:\/\/news\.google\.com\/rss\/articles\//i.test(url)) {
+      this.logger.warn(`Skipping unresolved Google News RSS article URL: ${url}`);
+      return "";
+    }
+
     // Try Jina Reader first
     try {
       const response = await axios.get(`${JINA_READER_URL}/${url}`, {
@@ -1259,6 +1264,7 @@ export class SourceGathererAgent extends BaseAgent<
       /amazon\.com/i,
       /ebay\.com/i,
       /aliexpress\.com/i,
+      /news\.google\.com\/rss\/articles\//i,
     ];
     return skipPatterns.some((pattern) => pattern.test(url));
   }
