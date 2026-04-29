@@ -22,7 +22,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma Client with correct binary target for Alpine + OpenSSL 3.x
-RUN npx prisma generate
+RUN npx prisma@5.22.0 generate
 
 # Build Next.js (standalone output)
 # Skip build-time checks that require external services

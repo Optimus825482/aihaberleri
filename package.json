@@ -14,7 +14,7 @@
     "start:with-trends": "tsx scripts/recalculate-trends.ts && node server.js",
     "lint": "next lint",
     "postinstall": "prisma generate || echo 'Prisma generate failed (schema not found?), skipping...'",
-    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:deploy": "npx prisma@5.22.0 migrate deploy",
     "agent:start": "ts-node src/scripts/agent-runner.ts",
     "worker": "tsx src/workers/orchestrator.worker.ts",
     "test:queue": "tsx src/scripts/test-queue-connection.ts",
