@@ -189,7 +189,7 @@ async function getRealtimeData() {
               { name: "deepseek", state: "CLOSED", failureRate: 0 },
               { name: "gemini", state: "CLOSED", failureRate: 0 },
               { name: "pollinations", state: "CLOSED", failureRate: 0 },
-              { name: "searxng", state: "CLOSED", failureRate: 0 },
+              { name: "google-news", state: "CLOSED", failureRate: 0 },
               { name: "jina", state: "CLOSED", failureRate: 0 },
               { name: "tavily", state: "CLOSED", failureRate: 0 },
             ],

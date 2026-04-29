@@ -61,7 +61,7 @@ export async function GET() {
         "deepseek",
         "gemini",
         "pollinations",
-        "searxng",
+        "google-news",
         "jina",
         "tavily",
       ];
