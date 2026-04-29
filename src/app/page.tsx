@@ -1,4 +1,5 @@
 import React from "react";
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
@@ -651,12 +652,14 @@ export default async function HomePage() {
             </section>
           )}
 
+          {!isCleanAccess ? (
           <AdSlot
             slot={AD_SLOTS.HOME_BANNER_TR}
             minHeight={120}
             label="Sponsorlu"
             className="mt-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
           />
+          ) : null}
 
           {/* Category Filter Chips (kompakt) */}
           <CategoryFilters categories={categories} locale="tr" />
@@ -690,7 +693,7 @@ export default async function HomePage() {
                   <React.Fragment key={article.id}>
                     <ArticleCard article={article} priority={index < 4} />
                     {/* In-feed ad after every 4th article */}
-                    {(index + 1) % 4 === 0 && index < articles.length - 1 && (
+                    {!isCleanAccess && (index + 1) % 4 === 0 && index < articles.length - 1 && (
                       <div className="col-span-1 sm:col-span-2">
                         <AdSlot
                           slot={AD_SLOTS.HOME_INFEED_TR}
@@ -772,6 +775,7 @@ export default async function HomePage() {
 
           {/* Multiplex — sayfa sonu öneriler */}
           <div className="mt-10">
+            {!isCleanAccess ? (
             <AdSlot
               slot={AD_SLOTS.MULTIPLEX_RELATED}
               format="autorelaxed"
@@ -779,6 +783,7 @@ export default async function HomePage() {
               label="Bunları da Okuyun"
               className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
             />
+            ) : null}
           </div>
         </div>
       </main>

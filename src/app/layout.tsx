@@ -22,6 +22,7 @@ import { VisitorTracker } from "@/components/VisitorTracker";
 import { AdSenseBootstrap } from "@/components/AdSenseBootstrap";
 import { StickyBottomAd } from "@/components/StickyBottomAd";
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { PageLoadingIndicator } from "@/components/PageLoadingIndicator";
 
 // Initialize scheduler (in-process fallback if worker not available)
@@ -135,6 +136,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const isCleanAccess = cookies().get("clean_access")?.value === "ok";
+
   return (
     <html lang="tr" className="dark" suppressHydrationWarning>
       <head>
@@ -265,7 +268,7 @@ export default function RootLayout({
                 <GoogleTagManagerNoScript />
                 <GoogleAnalytics />
                 <GoogleTagManager />
-                <AdSenseBootstrap />
+                {!isCleanAccess ? <AdSenseBootstrap /> : null}
                 <YandexMetrika />
                 <VisitorTracker />
                 <LayoutWrapper
@@ -277,7 +280,7 @@ export default function RootLayout({
                   {children}
                 </LayoutWrapper>
 
-                <StickyBottomAd />
+                {!isCleanAccess ? <StickyBottomAd /> : null}
                 <ClientProviders />
                 <ServiceWorkerRegistration />
                 <TailwindIndicator />
