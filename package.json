@@ -4,6 +4,9 @@
   "private": true,
   "description": "AI Haberleri - Next.js App",
   "_cacheBust": "2026-01-30-v2",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "node server.js",
     "build": "next build",
