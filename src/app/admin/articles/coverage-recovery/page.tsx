@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { AlertTriangle, Link2, Loader2, RefreshCw, Upload } from "lucide-react";
 
-type CoverageAction = "queue_recovery" | "notify_google" | "both";
+type CoverageAction = "queue_recovery" | "notify_google" | "both" | "recover_then_notify";
 type ResultStatus = "queued" | "notified" | "both" | "skipped" | "failed";
 
 function isLikelyHttpUrl(value: string): boolean {
@@ -292,6 +292,7 @@ export default function CoverageRecoveryPage() {
                     <SelectItem value="queue_recovery">queue_recovery</SelectItem>
                     <SelectItem value="notify_google">notify_google</SelectItem>
                     <SelectItem value="both">both</SelectItem>
+                    <SelectItem value="recover_then_notify">recover_then_notify</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

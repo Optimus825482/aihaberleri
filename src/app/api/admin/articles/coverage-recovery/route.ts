@@ -2,11 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/lib/admin-auth";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import { notifyGoogle } from "@/lib/seo/google-indexing-api";
+import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-type CoverageRecoveryAction = "queue_recovery" | "notify_google" | "both";
+type CoverageRecoveryAction =
+  | "queue_recovery"
+  | "notify_google"
+  | "both"
+  | "recover_then_notify";
 type RecoveryLocale = "tr" | "en";
 type RecoveryStatus = "queued" | "notified" | "both" | "skipped" | "failed";
 
@@ -69,7 +74,12 @@ function extractNewsSlug(
 }
 
 function isAction(value: unknown): value is CoverageRecoveryAction {
-  return value === "queue_recovery" || value === "notify_google" || value === "both";
+  return (
+    value === "queue_recovery" ||
+    value === "notify_google" ||
+    value === "both" ||
+    value === "recover_then_notify"
+  );
 }
 
 function isAllowedHost(normalizedUrl: string): boolean {
@@ -84,11 +94,37 @@ function isAllowedHost(normalizedUrl: string): boolean {
 }
 
 function shouldQueue(action: CoverageRecoveryAction): boolean {
-  return action === "queue_recovery" || action === "both";
+  return action === "queue_recovery" || action === "both" || action === "recover_then_notify";
 }
 
 function shouldNotify(action: CoverageRecoveryAction): boolean {
   return action === "notify_google" || action === "both";
+}
+
+async function isPublishedForSlug(slug: string, locale: RecoveryLocale): Promise<boolean> {
+  if (locale === "tr") {
+    const article = await db.article.findFirst({
+      where: {
+        slug,
+        status: "PUBLISHED",
+      },
+      select: { id: true },
+    });
+    return Boolean(article);
+  }
+
+  const translation = await db.articleTranslation.findFirst({
+    where: {
+      slug,
+      locale: "en",
+      article: {
+        status: "PUBLISHED",
+      },
+    },
+    select: { id: true },
+  });
+
+  return Boolean(translation);
 }
 
 export async function POST(request: NextRequest) {
@@ -131,7 +167,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "action değeri geçersiz. queue_recovery, notify_google veya both olmalı",
+          error:
+            "action değeri geçersiz. queue_recovery, notify_google, both veya recover_then_notify olmalı",
         },
         { status: 400 },
       );
@@ -268,14 +305,23 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      const shouldDeferNotifyUntilRecovered = action === "recover_then_notify";
+
       if (notifyEnabled) {
-        const notifyResult = await notifyGoogle(normalizedUrl, "URL_UPDATED");
-        if (notifyResult.success) {
-          notified = true;
-          notifiedCount++;
+        const published = await isPublishedForSlug(slug, locale);
+        if (!published) {
+          notifyError = "not_published_yet";
         } else {
-          notifyError = notifyResult.error || "notify_failed";
+          const notifyResult = await notifyGoogle(normalizedUrl, "URL_UPDATED");
+          if (notifyResult.success) {
+            notified = true;
+            notifiedCount++;
+          } else {
+            notifyError = notifyResult.error || "notify_failed";
+          }
         }
+      } else if (shouldDeferNotifyUntilRecovered && queued) {
+        notifyError = "queued_for_recovery";
       }
 
       let status: RecoveryStatus;
@@ -285,12 +331,15 @@ export async function POST(request: NextRequest) {
         status = "queued";
       } else if (notified) {
         status = "notified";
+      } else if (notifyError === "not_published_yet" || notifyError === "queued_for_recovery") {
+        status = "skipped";
       } else {
         status = "failed";
       }
 
       const reasons = [queueError, notifyError].filter(Boolean).join(" | ");
       if (status === "failed") failedCount++;
+      if (status === "skipped") skippedCount++;
 
       results.push({
         inputUrl,
