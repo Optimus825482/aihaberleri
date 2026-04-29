@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
+import Cookies from "js-cookie";
 import { AdminLayout } from "@/components/AdminLayout";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -297,6 +298,7 @@ export default function CoverageRecoveryPage() {
   };
 
   const submit = async () => {
+    const csrfToken = Cookies.get("csrf-token") || Cookies.get("csrf_token") || "";
     if (!categoryId) {
       toast({ variant: "destructive", title: "Kategori gerekli" });
       return;
@@ -312,7 +314,10 @@ export default function CoverageRecoveryPage() {
       const response = await fetch("/api/admin/articles/coverage-recovery", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
         body: JSON.stringify({ urls: parsedUrls, categoryId, action }),
       });
 
