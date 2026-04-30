@@ -22,16 +22,23 @@ export class HydrationErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    // React Error #418 = Hydration mismatch
-    if (
-      error.message.includes("Minified React error #418") ||
-      error.message.includes("Minified React error #423") ||
-      error.message.includes("Hydration")
-    ) {
-      console.error("🔴 Hydration error detected:", {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
+    const errMsg = error?.message || "";
+
+    // React Error #418 = Hydration mismatch (server HTML ≠ client render)
+    // React Error #423 = Hydration error occurred but React recovered
+    // These areminified strings — check for partial match on both variants
+    const isHydrationError =
+      errMsg.includes("Minified React error #418") ||
+      errMsg.includes("Minified React error #423") ||
+      errMsg.includes("418") ||
+      errMsg.includes("423") ||
+      errMsg.includes("Hydration") ||
+      errMsg.includes("Text content did not match");
+
+    if (isHydrationError) {
+      console.error("Hydration error detected:", {
+        error: errMsg,
+        componentStack: errorInfo?.componentStack,
       });
 
       // Sentry veya başka bir error tracking servisine gönder
