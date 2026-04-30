@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { FavoritesPromoSlide } from "@/components/FavoritesPromoSlide";
@@ -105,6 +105,41 @@ function HeroCarouselContent({
 
   // Ref for auto-resume timeout cleanup
   const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Per-slide image fallback state for handling 429/403 errors
+  const [imageFailedSlide, setImageFailedSlide] = useState<Set<number>>(new Set());
+
+  const handleSlideImageError = useCallback(
+    (index: number) => {
+      setImageFailedSlide((prev) => {
+        if (prev.has(index)) return prev;
+        const next = new Set(prev);
+        next.add(index);
+        console.warn(
+          `[HeroCarousel] Slide ${index} image failed, using fallback`,
+        );
+        return next;
+      });
+    },
+    [],
+  );
+
+  /**
+   * Get image src for a slide — uses fallback picsum on error
+   */
+  const getSlideImageSrc = useCallback(
+    (article: Article, index: number): string => {
+      if (imageFailedSlide.has(index)) {
+        const seed =
+          article.slug
+            .replace(/[^a-zA-Z0-9]/g, "")
+            .slice(0, 12) || `slide${index}`;
+        return `https://picsum.photos/seed/${seed}/1920/1080`;
+      }
+      return article.imageUrl || "";
+    },
+    [imageFailedSlide],
+  );
 
   const labels = {
     tr: {
@@ -252,14 +287,13 @@ function HeroCarouselContent({
               willChange: index === currentIndex ? "opacity" : "auto",
             }}
           >
-            {article.imageUrl &&
-              (article.imageUrl.includes("pollinations.ai") ||
-              article.imageUrl.includes("r2.dev") ||
-              article.imageUrl.includes("images.aihaberleri.org") ? (
-                // Use native img for Pollinations and R2 to avoid Next.js optimization issues
+            {article.imageUrl && (
+              getSlideImageSrc(article, index).includes("pollinations.ai") ||
+              getSlideImageSrc(article, index).includes("r2.dev") ||
+              getSlideImageSrc(article, index).includes("images.aihaberleri.org") ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={article.imageUrl}
+                  src={getSlideImageSrc(article, index)}
                   alt={article.title}
                   className="absolute inset-0 w-full h-full object-cover"
                   loading={index === currentIndex ? "eager" : "lazy"}
@@ -268,10 +302,11 @@ function HeroCarouselContent({
                     transform: "translateZ(0)",
                     willChange: "auto",
                   }}
+                  onError={() => handleSlideImageError(index)}
                 />
               ) : (
                 <Image
-                  src={article.imageUrl}
+                  src={getSlideImageSrc(article, index)}
                   alt={article.title}
                   fill
                   className="object-cover"

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { calculateReadingTime, formatRelativeTime } from "@/lib/utils";
@@ -10,19 +10,30 @@ import { TrendScoreBadge } from "@/components/TrendScoreBadge";
 import { SaveArticleButton } from "@/components/article/SaveArticleButton";
 
 /**
- * Generates a Cloudflare Image Resizing URL for images hosted on images.aihaberleri.org.
- * Falls back to original src if not a supported domain.
+ * Build a Cloudflare Image Resizing URL for images hosted on images.aihaberleri.org.
  */
 function getCfImageUrl(src: string, width: number): string {
-  if (src.includes("images.aihaberleri.org")) {
-    try {
-      const url = new URL(src);
-      return `https://${url.hostname}/cdn-cgi/image/width=${width},quality=82,format=webp${url.pathname}`;
-    } catch {
-      return src;
-    }
+  if (!src.includes("images.aihaberleri.org")) return src;
+  try {
+    const url = new URL(src);
+    return `https://${url.hostname}/cdn-cgi/image/width=${width},quality=82,format=webp${url.pathname}`;
+  } catch {
+    return src;
   }
-  return src;
+}
+
+/**
+ * Generate a deterministic fallback image from picsum.photos when CDN fails.
+ */
+function getFallbackSrc(src: string): string {
+  const seed = src
+    .split("/")
+    .pop()
+    ?.replace(/\.[^.]+$/, "")
+    ?.replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 12)
+    || "ainews";
+  return `https://picsum.photos/seed/${seed}/1200/630`;
 }
 
 interface ArticleCardProps {
@@ -79,6 +90,21 @@ export const ArticleCard = memo(function ArticleCard({
   const newsPath = locale === "en" ? "en/news" : "news";
   const articleUrl = `${baseUrl}/${newsPath}/${article.slug}`;
 
+  // Track image load state to handle 429/403 failures gracefully
+  const [imageSrc, setImageSrc] = useState(article.imageUrl || "");
+  const [imageFailed, setImageFailed] = useState(false);
+
+  const handleImageError = useCallback(() => {
+    if (!imageFailed) {
+      setImageFailed(true);
+      const fallback = getFallbackSrc(article.imageUrl || "");
+      console.warn(
+        `[ArticleCard] Image failed, falling back: ${(article.imageUrl || "").slice(0, 60)}`,
+      );
+      setImageSrc(fallback);
+    }
+  }, [article.imageUrl, imageFailed]);
+
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -113,17 +139,17 @@ export const ArticleCard = memo(function ArticleCard({
         href={`/${newsPath}/${article.slug}`}
         className="block relative aspect-video overflow-hidden bg-gray-200 dark:bg-gray-800"
       >
-        {article.imageUrl ? (
-          article.imageUrl.includes("pollinations.ai") ||
-          article.imageUrl.includes("r2.dev") ||
-          article.imageUrl.includes("images.aihaberleri.org") ||
-          article.imageUrl.includes("googleusercontent.com") ? (
+        {imageSrc ? (
+          imageSrc.includes("pollinations.ai") ||
+          imageSrc.includes("r2.dev") ||
+          imageSrc.includes("images.aihaberleri.org") ||
+          imageSrc.includes("googleusercontent.com") ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={article.imageUrl}
+              src={imageSrc}
               srcSet={
-                article.imageUrl.includes("images.aihaberleri.org")
-                  ? `${getCfImageUrl(article.imageUrl, 400)} 400w, ${getCfImageUrl(article.imageUrl, 700)} 700w, ${getCfImageUrl(article.imageUrl, 1024)} 1024w`
+                imageSrc.includes("images.aihaberleri.org")
+                  ? `${getCfImageUrl(imageSrc, 400)} 400w, ${getCfImageUrl(imageSrc, 700)} 700w, ${getCfImageUrl(imageSrc, 1024)} 1024w`
                   : undefined
               }
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -134,15 +160,17 @@ export const ArticleCard = memo(function ArticleCard({
               loading={priority ? "eager" : "lazy"}
               fetchPriority={priority ? "high" : "auto"}
               decoding="async"
+              onError={handleImageError}
             />
           ) : (
             <Image
-              src={article.imageUrl}
+              src={imageSrc}
               alt={article.title}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               priority={priority}
+              onError={handleImageError}
             />
           )
         ) : (
