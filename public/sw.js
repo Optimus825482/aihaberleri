@@ -1,5 +1,5 @@
 // Service Worker for AI Haberleri PWA
-const CACHE_NAME = "ai-haberleri-v2";
+const CACHE_NAME = "ai-haberleri-v3";
 const urlsToCache = [
   "/manifest.json",
   "/logos/brand/logo-icon.png",
@@ -25,6 +25,13 @@ self.addEventListener("install", (event) => {
 
 // Fetch event - Network first, fallback to cache
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  // Never intercept non-http(s) requests (e.g. chrome-extension://)
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    return;
+  }
+
   // Only cache GET requests, but still handle other methods
   if (event.request.method !== "GET") {
     event.respondWith(fetch(event.request));
@@ -32,7 +39,6 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Skip caching for Next.js API routes and internal resources
-  const url = new URL(event.request.url);
 
   // Skip Service Worker for external scripts (Google Ads, GTM, Analytics)
   // Let browser handle these directly to avoid CSP violations
@@ -51,8 +57,7 @@ self.addEventListener("fetch", (event) => {
   if (
     url.pathname.startsWith("/api/") ||
     url.pathname.startsWith("/admin/") ||
-    url.pathname.startsWith("/_next/") ||
-    url.pathname.includes("extension:")
+    url.pathname.startsWith("/_next/")
   ) {
     event.respondWith(fetch(event.request));
     return;
@@ -72,26 +77,35 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Diğer kaynaklar için cache-first stratejisi
+  const isImageRequest = event.request.destination === "image";
+
   event.respondWith(
     fetch(event.request)
-      .then((response) => {
-        // Check if we received a valid response
-        if (!response || response.status !== 200 || response.type !== "basic") {
+      .then(async (response) => {
+        const cachedResponse = isImageRequest
+          ? await caches.match(event.request)
+          : undefined;
+
+        if (!response || response.status === 429) {
+          return cachedResponse || response;
+        }
+
+        if (response.status !== 200 || response.type !== "basic") {
           return response;
         }
 
-        // Clone the response
         const responseToCache = response.clone();
 
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
+          cache.put(event.request, responseToCache).catch(() => {
+            // Ignore non-cacheable requests safely
+          });
         });
 
         return response;
       })
-      .catch(() => {
-        return caches.match(event.request);
+      .catch(async () => {
+        return (await caches.match(event.request)) || Response.error();
       }),
   );
 });

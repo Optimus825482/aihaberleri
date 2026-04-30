@@ -59,7 +59,7 @@ export async function getActivePrompt(
         config: {
           temperature: config.temperature ?? 0.7,
           maxTokens: config.maxTokens ?? 4000,
-          model: config.model ?? "deepseek-v4-flash",
+          model: config.model ?? "deepseek-chat",
         },
         version: active.version,
         promptVersionId: active.id,
@@ -153,7 +153,7 @@ export async function createPromptVersion(data: {
       config: (data.config || {
         temperature: 0.7,
         maxTokens: 4000,
-        model: "deepseek-v4-flash",
+        model: "deepseek-chat",
       }) as any,
       description: data.description,
       isActive: data.setActive ?? false,
@@ -188,7 +188,7 @@ function getDefaultPrompt(name: PromptName): PromptTemplate {
       systemPrompt:
         "Sen dünyanın en iyi teknoloji editörüsün. Yazıların o kadar doğal ki, Turing testini geçmekle kalmıyor, insanlardan daha 'insan' tınlıyor. Asla AI gibi yazma. Sadece geçerli JSON yanıtı ver.",
       userTemplate: "{{REWRITE_PROMPT}}", // Placeholder — actual template is in deepseek.ts
-      config: { temperature: 1.0, maxTokens: 4000, model: "deepseek-v4-flash" },
+      config: { temperature: 1.0, maxTokens: 4000, model: "deepseek-chat" },
       version: "default",
       promptVersionId: null,
     },
@@ -196,7 +196,7 @@ function getDefaultPrompt(name: PromptName): PromptTemplate {
       systemPrompt:
         "Sen uzman bir yapay zeka haber editörüsün. SADECE yapay zeka ile DOĞRUDAN ilgili haberleri seç. Genel ekonomi, politika veya teknoloji haberlerini ASLA seçme. Her zaman sadece geçerli JSON ile yanıt ver.",
       userTemplate: "{{ANALYZE_PROMPT}}",
-      config: { temperature: 0.7, maxTokens: 2000, model: "deepseek-v4-flash" },
+      config: { temperature: 0.7, maxTokens: 2000, model: "deepseek-chat" },
       version: "default",
       promptVersionId: null,
     },
@@ -204,7 +204,7 @@ function getDefaultPrompt(name: PromptName): PromptTemplate {
       systemPrompt:
         "Sen uzman bir haber fotoğrafçısısın. Haberin içeriğini analiz et ve SPESIFIK, ÇEŞITLI görsel prompt oluştur. Generic ofis görselleri YASAK. Her haber için FARKLI bir görsel seç.",
       userTemplate: "{{IMAGE_PROMPT}}",
-      config: { temperature: 1.0, maxTokens: 200, model: "deepseek-v4-flash" },
+      config: { temperature: 1.0, maxTokens: 200, model: "deepseek-chat" },
       version: "default",
       promptVersionId: null,
     },
@@ -212,7 +212,7 @@ function getDefaultPrompt(name: PromptName): PromptTemplate {
       systemPrompt:
         "You are a professional translator specializing in technology and AI news.",
       userTemplate: "{{TRANSLATION_PROMPT}}",
-      config: { temperature: 0.3, maxTokens: 4000, model: "deepseek-v4-flash" },
+      config: { temperature: 0.3, maxTokens: 4000, model: "deepseek-chat" },
       version: "default",
       promptVersionId: null,
     },
@@ -220,14 +220,14 @@ function getDefaultPrompt(name: PromptName): PromptTemplate {
       systemPrompt:
         "Sen uzman bir haber editörüsün. Admin talimatlarını harfiyen uygulayarak haberi güncelle. Sadece geçerli JSON yanıtı ver.",
       userTemplate: "{{REWRITE_WITH_NOTE_PROMPT}}",
-      config: { temperature: 0.7, maxTokens: 4000, model: "deepseek-v4-flash" },
+      config: { temperature: 0.7, maxTokens: 4000, model: "deepseek-chat" },
       version: "default",
       promptVersionId: null,
     },
     "batch-score": {
       systemPrompt: "Sen bir haber kalite değerlendirme uzmanısın.",
       userTemplate: "{{BATCH_SCORE_PROMPT}}",
-      config: { temperature: 0.3, maxTokens: 2000, model: "deepseek-v4-flash" },
+      config: { temperature: 0.3, maxTokens: 2000, model: "deepseek-chat" },
       version: "default",
       promptVersionId: null,
     },

@@ -899,7 +899,7 @@ model PipelineSpan {
   duration      Int?          // ms
   startedAt     DateTime      @default(now())
   completedAt   DateTime?
-  attributes    Json?         // { model: "deepseek-v4-flash", tokens: 1500, promptVersion: "v2" }
+  attributes    Json?         // { model: "deepseek-chat", tokens: 1500, promptVersion: "v2" }
   error         String?       // Hata mesajı (varsa)
 
   @@index([traceId])
@@ -916,7 +916,7 @@ model PromptVersion {
   isActive      Boolean  @default(false) // Aktif versiyon
   systemPrompt  String   @db.Text
   userTemplate  String   @db.Text // {{title}}, {{content}} gibi placeholder'lar
-  config        Json?    // { temperature: 0.7, maxTokens: 4000, model: "deepseek-v4-flash" }
+  config        Json?    // { temperature: 0.7, maxTokens: 4000, model: "deepseek-chat" }
   description   String?  // Değişiklik açıklaması
   metrics       Json?    // { avgScore: 820, usageCount: 150, avgDuration: 3200 }
   createdAt     DateTime @default(now())

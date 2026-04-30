@@ -979,7 +979,7 @@ JSON formatında yanıt ver:
       },
     ],
     {
-      model: "deepseek-v4-flash",
+      model: "deepseek-chat",
       maxTokens: 6000,
       temperature: 0.9,
     },
@@ -1063,7 +1063,7 @@ Respond in JSON format:
       },
     ],
     {
-      model: "deepseek-v4-flash",
+      model: "deepseek-chat",
       maxTokens: 6000,
       temperature: 0.9,
     },

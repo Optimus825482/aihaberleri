@@ -15,7 +15,10 @@
 import { Job } from "bullmq";
 import { BaseAgent, AgentResult, retryWithBackoff } from "./base-agent";
 import { QUEUE_NAMES } from "@/lib/queue-manager";
-import { googleNewsSearch, type GoogleNewsSearchResult as GoogleNewsResult } from "@/lib/google-news-search";
+import {
+  googleNewsSearch,
+  type GoogleNewsSearchResult as GoogleNewsResult,
+} from "@/lib/google-news-search";
 import { callDeepSeek } from "@/lib/deepseek";
 // callGemini REMOVED - Using DeepSeek-only (Gemini API deprecated due to 404 errors)
 
@@ -376,7 +379,9 @@ export class ContentEnricherAgent extends BaseAgent<
       article.description,
     );
 
-    this.logger.info(`🔍 Deep research: Tavily + Google News for "${keywords}"`);
+    this.logger.info(
+      `🔍 Deep research: Tavily + Google News for "${keywords}"`,
+    );
 
     // ============================================
     // STEP 1: Tavily Deep Research (5-8 sources)
@@ -502,7 +507,9 @@ export class ContentEnricherAgent extends BaseAgent<
       );
     }
 
-    this.logger.info(`✅ Total sources: ${sources.length} (Tavily + Google News)`);
+    this.logger.info(
+      `✅ Total sources: ${sources.length} (Tavily + Google News)`,
+    );
 
     // Sort by relevance
     sources.sort((a, b) => b.relevanceScore - a.relevanceScore);
@@ -958,7 +965,9 @@ export class ContentEnricherAgent extends BaseAgent<
    */
   private async readUrlContent(url: string): Promise<string> {
     if (/^https?:\/\/news\.google\.com\/rss\/articles\//i.test(url)) {
-      this.logger.warn(`Skipping unresolved Google News RSS article URL: ${url}`);
+      this.logger.warn(
+        `Skipping unresolved Google News RSS article URL: ${url}`,
+      );
       return "";
     }
 
@@ -1053,7 +1062,9 @@ export class ContentEnricherAgent extends BaseAgent<
           }
         }
 
-        this.logger.warn(`⚠️ Google News returned insufficient content for ${url}`);
+        this.logger.warn(
+          `⚠️ Google News returned insufficient content for ${url}`,
+        );
       }
     } catch (googleNewsError: any) {
       this.logger.warn(
@@ -1239,7 +1250,7 @@ JSON formatında yanıt ver:
         const trResponse = await callDeepSeek(
           [{ role: "user", content: currentTrPrompt }],
           {
-            model: "deepseek-v4-flash",
+            model: "deepseek-chat",
             maxTokens: 6000,
             temperature: trAttempt === 0 ? 0.7 : 0.5, // Lower temperature on retry for more predictable output
           },
@@ -1380,7 +1391,7 @@ Respond in JSON:
       const enResponse = await callDeepSeek(
         [{ role: "user", content: enPrompt }],
         {
-          model: "deepseek-v4-flash",
+          model: "deepseek-chat",
           maxTokens: 6000,
           temperature: 0.7,
         },

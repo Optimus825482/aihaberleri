@@ -103,7 +103,7 @@ export class ContentOptimizerAgent extends BaseSEOAgent {
             { role: "user", content: prompt },
           ],
           {
-            model: "deepseek-v4-flash",
+            model: "deepseek-chat",
             maxTokens: 4000,
             temperature: 0.8,
           },
@@ -318,7 +318,7 @@ Sadece başlığı yanıtla, açıklama yok.`;
           },
         ],
         {
-          model: "deepseek-v4-flash",
+          model: "deepseek-chat",
           maxTokens: 100,
           temperature: 0.9,
         },
@@ -367,7 +367,7 @@ Sadece meta açıklamayı yanıtla, açıklama yok.`;
           },
         ],
         {
-          model: "deepseek-v4-flash",
+          model: "deepseek-chat",
           maxTokens: 200,
           temperature: 0.8,
         },

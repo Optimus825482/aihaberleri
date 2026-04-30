@@ -110,14 +110,11 @@ JSON formatında yanıt ver:
       this.incrementApiCalls();
 
       const response = await this.retryWithBackoff(async () => {
-        return await callDeepSeek(
-          [{ role: "user", content: prompt }],
-          {
-            model: "deepseek-v4-flash",
-            temperature: 0.3,
-            maxTokens: 3000,
-          }
-        );
+        return await callDeepSeek([{ role: "user", content: prompt }], {
+          model: "deepseek-chat",
+          temperature: 0.3,
+          maxTokens: 3000,
+        });
       });
 
       const jsonMatch = response.match(/\{[\s\S]*\}/);

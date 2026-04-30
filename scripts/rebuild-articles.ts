@@ -211,7 +211,7 @@ KURALLAR:
     const resp = await axios.post(
       `${DEEPSEEK_API_URL}/chat/completions`,
       {
-        model: "deepseek-v4-flash",
+        model: "deepseek-chat",
         messages: [
           {
             role: "system",

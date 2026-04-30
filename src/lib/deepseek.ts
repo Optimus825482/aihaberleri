@@ -217,7 +217,7 @@ async function callProvider(
   const isNvidia = provider === "nvidia";
   const apiUrl = isNvidia ? NVIDIA_API_URL : DEEPSEEK_API_URL;
   const apiKey = isNvidia ? NVIDIA_API_KEY : DEEPSEEK_API_KEY;
-  const model = isNvidia ? NVIDIA_MODEL : options.model || "deepseek-v4-flash";
+  const model = isNvidia ? NVIDIA_MODEL : options.model || "deepseek-chat";
   const breaker = isNvidia ? nvidiaCircuitBreaker : deepSeekCircuitBreaker;
   const providerLabel = isNvidia ? `NVIDIA/${NVIDIA_MODEL}` : "DeepSeek-chat";
 
@@ -709,38 +709,89 @@ const ENTITY_VISUAL_STYLES: Record<string, string> = {
   security: "encrypted data flow visualization, firewall architecture",
 };
 
-const NEWS_SAFE_SCENE_BY_KEYWORD: Array<{ keywords: string[]; scene: string }> = [
-  {
-    keywords: ["leak", "source code", "github", "repository", "repo", "sız", "sizdi", "kaldır", "takedown"],
-    scene:
-      "close-up of a secure code repository dashboard on dark monitors, redacted commit panels, incident response war room, editorial photo",
-  },
-  {
-    keywords: ["funding", "investment", "series", "valuation", "yatırım", "finansman"],
-    scene:
-      "modern venture capital meeting room with deal documents, analytics wall display, glass architecture, editorial business photo",
-  },
-  {
-    keywords: ["chip", "gpu", "semiconductor", "nvidia", "amd", "intel", "çip", "yarı iletken"],
-    scene:
-      "macro shot of advanced ai chip on circuit board, clean lab environment, precision hardware editorial photo",
-  },
-  {
-    keywords: ["robot", "robotics", "drone", "otonomous", "autonomous", "robotik"],
-    scene:
-      "industrial robotics lab with articulated machine hardware, testing area, clean engineering editorial photo",
-  },
-  {
-    keywords: ["model", "llm", "claude", "chatgpt", "gemini", "deepseek", "assistant", "agent"],
-    scene:
-      "high-end ai development control room with code dashboards, compliance screens, empty operator space, editorial technology photo",
-  },
-  {
-    keywords: ["security", "breach", "hack", "vulnerability", "exploit", "güvenlik", "ihlal"],
-    scene:
-      "cybersecurity operations center with threat map displays, server racks, incident alert panels, editorial photo",
-  },
-];
+const NEWS_SAFE_SCENE_BY_KEYWORD: Array<{ keywords: string[]; scene: string }> =
+  [
+    {
+      keywords: [
+        "leak",
+        "source code",
+        "github",
+        "repository",
+        "repo",
+        "sız",
+        "sizdi",
+        "kaldır",
+        "takedown",
+      ],
+      scene:
+        "close-up of a secure code repository dashboard on dark monitors, redacted commit panels, incident response war room, editorial photo",
+    },
+    {
+      keywords: [
+        "funding",
+        "investment",
+        "series",
+        "valuation",
+        "yatırım",
+        "finansman",
+      ],
+      scene:
+        "modern venture capital meeting room with deal documents, analytics wall display, glass architecture, editorial business photo",
+    },
+    {
+      keywords: [
+        "chip",
+        "gpu",
+        "semiconductor",
+        "nvidia",
+        "amd",
+        "intel",
+        "çip",
+        "yarı iletken",
+      ],
+      scene:
+        "macro shot of advanced ai chip on circuit board, clean lab environment, precision hardware editorial photo",
+    },
+    {
+      keywords: [
+        "robot",
+        "robotics",
+        "drone",
+        "otonomous",
+        "autonomous",
+        "robotik",
+      ],
+      scene:
+        "industrial robotics lab with articulated machine hardware, testing area, clean engineering editorial photo",
+    },
+    {
+      keywords: [
+        "model",
+        "llm",
+        "claude",
+        "chatgpt",
+        "gemini",
+        "deepseek",
+        "assistant",
+        "agent",
+      ],
+      scene:
+        "high-end ai development control room with code dashboards, compliance screens, empty operator space, editorial technology photo",
+    },
+    {
+      keywords: [
+        "security",
+        "breach",
+        "hack",
+        "vulnerability",
+        "exploit",
+        "güvenlik",
+        "ihlal",
+      ],
+      scene:
+        "cybersecurity operations center with threat map displays, server racks, incident alert panels, editorial photo",
+    },
+  ];
 
 /**
  * Extract entity from title for visual style matching
@@ -769,8 +820,13 @@ function detectEntityForVisual(title: string): string | null {
   return null;
 }
 
-function buildSafeNewsScene(title: string, content: string, category: string): string {
-  const lower = `${title} ${content.substring(0, 500)} ${category}`.toLowerCase();
+function buildSafeNewsScene(
+  title: string,
+  content: string,
+  category: string,
+): string {
+  const lower =
+    `${title} ${content.substring(0, 500)} ${category}`.toLowerCase();
 
   for (const rule of NEWS_SAFE_SCENE_BY_KEYWORD) {
     if (rule.keywords.some((keyword) => lower.includes(keyword))) {
@@ -957,7 +1013,13 @@ ABSOLUTE RULES:
 
   // Remove any remaining tags
   cleanPrompt = cleanPrompt.replace(/<[^>]+>/g, "").trim();
-  cleanPrompt = cleanPrompt.replace(/\b(nsfw|nude|naked|lingerie|sensual|censored|erotic|seductive|woman|man|girl|boy)\b/gi, "").replace(/\s+/g, " ").trim();
+  cleanPrompt = cleanPrompt
+    .replace(
+      /\b(nsfw|nude|naked|lingerie|sensual|censored|erotic|seductive|woman|man|girl|boy)\b/gi,
+      "",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
 
   // CRITICAL: Enforce max length (matches pollinations.ts 200 char URL limit)
   if (cleanPrompt.length > 200) {

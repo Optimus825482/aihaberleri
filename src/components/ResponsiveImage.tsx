@@ -209,7 +209,11 @@ export function ArticleThumbnail({
             className="object-cover transition-transform group-hover:scale-105"
             sizes="(max-width: 640px) 200px, 300px"
             onError={() => setError(true)}
-            unoptimized={(srcThumb || src).includes('pollinations.ai')}
+            unoptimized={
+                (srcThumb || src).includes('pollinations.ai') ||
+                (srcThumb || src).includes('r2.dev') ||
+                (srcThumb || src).includes('images.aihaberleri.org')
+            }
         />
     );
 }
