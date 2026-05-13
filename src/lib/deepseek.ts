@@ -28,7 +28,7 @@ const AggregationResultSchema = z.object({
 
 // ============================================
 // PROVIDER CONFIGURATION
-// Primary: NVIDIA NIM (Qwen3), Fallback: DeepSeek
+// Primary: DeepSeek Chat
 // ============================================
 
 const NVIDIA_API_URL =
@@ -40,12 +40,18 @@ const NVIDIA_MODEL =
 const DEEPSEEK_API_URL =
   process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1";
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const DEEPSEEK_MODEL = "deepseek-chat";
 
-if (!NVIDIA_API_KEY) {
-  console.warn("⚠️  NVIDIA_API_KEY is not set — will use DeepSeek as primary");
-}
+const KILO_API_URL =
+  process.env.KILO_API_URL || "https://api.kilo.ai/api/gateway";
+const KILO_API_KEY = process.env.KILO_API_KEY;
+const KILO_MODEL = "deepseek/deepseek-v3.2";
+
 if (!DEEPSEEK_API_KEY) {
   console.warn("⚠️  DEEPSEEK_API_KEY is not set");
+}
+if (!KILO_API_KEY) {
+  console.warn("⚠️  KILO_API_KEY is not set — Kilo Gateway fallback disabled");
 }
 
 /**
@@ -89,7 +95,7 @@ export interface DeepSeekResponse {
 
 // ============================================
 // CIRCUIT BREAKER PATTERN — Per-Provider
-// Primary: NVIDIA NIM (Qwen3), Fallback: DeepSeek
+// Active primary: DeepSeek Chat
 // ============================================
 type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
@@ -115,6 +121,13 @@ const nvidiaCircuitBreaker: CircuitBreakerState = {
 };
 
 const deepSeekCircuitBreaker: CircuitBreakerState = {
+  state: "CLOSED",
+  failureCount: 0,
+  lastFailureTime: 0,
+  nextAttemptTime: 0,
+};
+
+const kiloCircuitBreaker: CircuitBreakerState = {
   state: "CLOSED",
   failureCount: 0,
   lastFailureTime: 0,
@@ -162,8 +175,7 @@ function recordProviderFailure(
 // Legacy aliases for backward compat (batchScoreArticles uses these)
 function canProceed(): boolean {
   return (
-    canProceedWith(nvidiaCircuitBreaker) ||
-    canProceedWith(deepSeekCircuitBreaker)
+    canProceedWith(deepSeekCircuitBreaker) || canProceedWith(kiloCircuitBreaker)
   );
 }
 function recordSuccess(): void {
@@ -179,10 +191,12 @@ function recordFailure(): void {
 export function getCircuitBreakerState(): {
   nvidia: CircuitState;
   deepseek: CircuitState;
+  kilo: CircuitState;
 } {
   return {
     nvidia: nvidiaCircuitBreaker.state,
     deepseek: deepSeekCircuitBreaker.state,
+    kilo: kiloCircuitBreaker.state,
   };
 }
 
@@ -190,7 +204,11 @@ export function getCircuitBreakerState(): {
  * Reset circuit breakers (for manual recovery)
  */
 export function resetCircuitBreaker(): void {
-  for (const breaker of [nvidiaCircuitBreaker, deepSeekCircuitBreaker]) {
+  for (const breaker of [
+    nvidiaCircuitBreaker,
+    deepSeekCircuitBreaker,
+    kiloCircuitBreaker,
+  ]) {
     breaker.state = "CLOSED";
     breaker.failureCount = 0;
     breaker.lastFailureTime = 0;
@@ -210,16 +228,33 @@ function stripThinkingTags(text: string): string {
  * Call a single LLM provider (NVIDIA NIM or DeepSeek)
  */
 async function callProvider(
-  provider: "nvidia" | "deepseek",
+  provider: "nvidia" | "deepseek" | "kilo",
   messages: DeepSeekMessage[],
   options: { model?: string; temperature?: number; maxTokens?: number },
 ): Promise<string> {
   const isNvidia = provider === "nvidia";
-  const apiUrl = isNvidia ? NVIDIA_API_URL : DEEPSEEK_API_URL;
-  const apiKey = isNvidia ? NVIDIA_API_KEY : DEEPSEEK_API_KEY;
-  const model = isNvidia ? NVIDIA_MODEL : options.model || "deepseek-chat";
-  const breaker = isNvidia ? nvidiaCircuitBreaker : deepSeekCircuitBreaker;
-  const providerLabel = isNvidia ? `NVIDIA/${NVIDIA_MODEL}` : "DeepSeek-chat";
+  const isKilo = provider === "kilo";
+  const apiUrl = isNvidia
+    ? NVIDIA_API_URL
+    : isKilo
+      ? KILO_API_URL
+      : DEEPSEEK_API_URL;
+  const apiKey = isNvidia
+    ? NVIDIA_API_KEY
+    : isKilo
+      ? KILO_API_KEY
+      : DEEPSEEK_API_KEY;
+  const model = isNvidia ? NVIDIA_MODEL : isKilo ? KILO_MODEL : DEEPSEEK_MODEL;
+  const breaker = isNvidia
+    ? nvidiaCircuitBreaker
+    : isKilo
+      ? kiloCircuitBreaker
+      : deepSeekCircuitBreaker;
+  const providerLabel = isNvidia
+    ? `NVIDIA/${NVIDIA_MODEL}`
+    : isKilo
+      ? `Kilo/${KILO_MODEL}`
+      : "DeepSeek-chat";
 
   if (!apiKey) {
     throw new Error(`${provider.toUpperCase()} API key not configured`);
@@ -295,8 +330,7 @@ async function callProvider(
 }
 
 /**
- * Call LLM API — NVIDIA NIM primary, DeepSeek fallback
- * If NVIDIA fails or circuit is open, automatically falls back to DeepSeek
+ * Call LLM API — DeepSeek Chat primary, Kilo Gateway fallback.
  */
 export async function callDeepSeek(
   messages: DeepSeekMessage[],
@@ -306,55 +340,34 @@ export async function callDeepSeek(
     maxTokens?: number;
   } = {},
 ): Promise<string> {
-  // Determine if NVIDIA is available as primary
-  const nvidiaAvailable =
-    !!NVIDIA_API_KEY && canProceedWith(nvidiaCircuitBreaker);
   const deepseekAvailable =
     !!DEEPSEEK_API_KEY && canProceedWith(deepSeekCircuitBreaker);
+  const kiloAvailable = !!KILO_API_KEY && canProceedWith(kiloCircuitBreaker);
 
-  if (!nvidiaAvailable && !deepseekAvailable) {
+  if (!deepseekAvailable && !kiloAvailable) {
     throw new Error(
-      "Both NVIDIA and DeepSeek circuit breakers are OPEN or unconfigured. Please try again later.",
+      "DeepSeek and Kilo Gateway circuit breakers are OPEN or unconfigured. Please try again later.",
     );
   }
 
-  // Try NVIDIA first (primary)
-  if (nvidiaAvailable) {
+  if (deepseekAvailable) {
     try {
-      const result = await callProvider("nvidia", messages, options);
-      return result;
-    } catch (nvidiaError) {
+      return await callProvider("deepseek", messages, options);
+    } catch (deepseekError) {
       const errMsg =
-        nvidiaError instanceof Error
-          ? nvidiaError.message
-          : String(nvidiaError);
+        deepseekError instanceof Error
+          ? deepseekError.message
+          : String(deepseekError);
 
-      // If retryable (429/5xx), wait and retry once before fallback
-      if ((nvidiaError as any)?.retryable) {
-        const waitMs = (nvidiaError as any).retryAfter || 3000;
-        console.warn(
-          `⏳ NVIDIA retryable error, waiting ${waitMs}ms before retry...`,
-        );
-        await new Promise((resolve) => setTimeout(resolve, waitMs));
-        try {
-          const retryResult = await callProvider("nvidia", messages, options);
-          return retryResult;
-        } catch {
-          console.warn(`⚠️ NVIDIA retry also failed, falling back to DeepSeek`);
-        }
-      } else {
-        console.warn(`⚠️ NVIDIA failed, falling back to DeepSeek: ${errMsg}`);
+      if (!kiloAvailable) {
+        throw new Error(`DeepSeek failed and Kilo Gateway unavailable: ${errMsg}`);
       }
 
-      // Fall through to DeepSeek
-      if (!deepseekAvailable) {
-        throw new Error(`NVIDIA failed and DeepSeek unavailable: ${errMsg}`);
-      }
+      console.warn(`⚠️ DeepSeek failed, falling back to Kilo Gateway: ${errMsg}`);
     }
   }
 
-  // DeepSeek fallback (or primary if NVIDIA not configured)
-  return callProvider("deepseek", messages, options);
+  return callProvider("kilo", messages, options);
 }
 
 /**
@@ -1388,13 +1401,13 @@ export async function batchScoreArticles(
 ): Promise<
   Array<{ score: number; reasoning: string; category: string; tags: string[] }>
 > {
-  if (!DEEPSEEK_API_KEY) {
-    throw new Error("DEEPSEEK_API_KEY is not configured");
+  if (!DEEPSEEK_API_KEY && !KILO_API_KEY) {
+    throw new Error("DEEPSEEK_API_KEY or KILO_API_KEY is required");
   }
 
   if (!canProceed()) {
     throw new Error(
-      "DeepSeek API circuit breaker is OPEN - too many recent failures",
+      "DeepSeek and Kilo Gateway circuit breakers are OPEN - too many recent failures",
     );
   }
 

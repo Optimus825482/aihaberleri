@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Haberleri Splash Preview</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        overflow: hidden;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #06101f;
+        color: white;
+      }
+
+      .screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 24px;
+        background:
+          radial-gradient(circle at 50% 38%, rgba(14, 165, 233, 0.28), transparent 38%),
+          radial-gradient(circle at 72% 62%, rgba(124, 58, 237, 0.22), transparent 32%),
+          #06101f;
+      }
+
+      .card {
+        position: relative;
+        display: flex;
+        width: min(100%, 1024px);
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
+        padding: 48px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 32px;
+        background: rgba(255, 255, 255, 0.04);
+        box-shadow: 0 32px 96px rgba(8, 47, 73, 0.42);
+        backdrop-filter: blur(16px);
+        animation: card-enter 520ms var(--ease-out) both;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        color: rgba(165, 243, 252, 0.82);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.36em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 560px;
+        margin: 0;
+        font-size: clamp(36px, 6vw, 68px);
+        line-height: 0.94;
+        letter-spacing: -0.06em;
+      }
+
+      .copy {
+        max-width: 520px;
+        margin: 20px 0 0;
+        color: rgb(203, 213, 225);
+        font-size: 17px;
+        line-height: 1.7;
+      }
+
+      .orb {
+        position: relative;
+        width: min(42vw, 400px);
+        min-width: 300px;
+        aspect-ratio: 16 / 9;
+        animation: orb-drift 3200ms ease-in-out infinite alternate;
+      }
+
+      .frame {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        opacity: 0;
+        filter: drop-shadow(0 0 46px rgba(34, 211, 238, 0.35));
+        animation: frame-cycle 2000ms steps(1, end) infinite;
+      }
+
+      .frame:nth-child(1) { animation-delay: 0ms; }
+      .frame:nth-child(2) { animation-delay: 83.33ms; }
+      .frame:nth-child(3) { animation-delay: 166.67ms; }
+      .frame:nth-child(4) { animation-delay: 250ms; }
+      .frame:nth-child(5) { animation-delay: 333.33ms; }
+      .frame:nth-child(6) { animation-delay: 416.67ms; }
+      .frame:nth-child(7) { animation-delay: 500ms; }
+      .frame:nth-child(8) { animation-delay: 583.33ms; }
+      .frame:nth-child(9) { animation-delay: 666.67ms; }
+      .frame:nth-child(10) { animation-delay: 750ms; }
+      .frame:nth-child(11) { animation-delay: 833.33ms; }
+      .frame:nth-child(12) { animation-delay: 916.67ms; }
+      .frame:nth-child(13) { animation-delay: 1000ms; }
+      .frame:nth-child(14) { animation-delay: 1083.33ms; }
+      .frame:nth-child(15) { animation-delay: 1166.67ms; }
+      .frame:nth-child(16) { animation-delay: 1250ms; }
+      .frame:nth-child(17) { animation-delay: 1333.33ms; }
+      .frame:nth-child(18) { animation-delay: 1416.67ms; }
+      .frame:nth-child(19) { animation-delay: 1500ms; }
+      .frame:nth-child(20) { animation-delay: 1583.33ms; }
+      .frame:nth-child(21) { animation-delay: 1666.67ms; }
+      .frame:nth-child(22) { animation-delay: 1750ms; }
+      .frame:nth-child(23) { animation-delay: 1833.33ms; }
+      .frame:nth-child(24) { animation-delay: 1916.67ms; }
+
+      .note {
+        position: fixed;
+        left: 24px;
+        bottom: 20px;
+        color: rgba(226, 232, 240, 0.62);
+        font-size: 13px;
+      }
+
+      @keyframes frame-cycle {
+        0%, 4.166% {
+          opacity: 1;
+        }
+        4.167%, 100% {
+          opacity: 0;
+        }
+      }
+
+      @keyframes card-enter {
+        from {
+          opacity: 0;
+          transform: translateY(14px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      @keyframes orb-drift {
+        from {
+          transform: translateY(0) rotate(-1deg);
+        }
+        to {
+          transform: translateY(-10px) rotate(1.5deg);
+        }
+      }
+
+      @media (max-width: 760px) {
+        body {
+          overflow: auto;
+        }
+
+        .card {
+          flex-direction: column;
+          padding: 32px 24px;
+          text-align: center;
+        }
+
+        .orb {
+          width: min(92vw, 380px);
+          min-width: 0;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card,
+        .orb,
+        .frame {
+          animation: none;
+        }
+
+        .frame:first-child {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="screen" aria-label="AI Haberleri animasyonlu splash önizlemesi">
+      <section class="card">
+        <div>
+          <p class="eyebrow">AI Haberleri</p>
+          <h1>Yapay zekâ gündemine bağlanılıyor</h1>
+          <p class="copy">Bu önizleme gerçek Blender 3D animasyon frame’lerini oynatır; yayınlamadan önce hareketi burada kontrol edebilirsin.</p>
+        </div>
+        <div class="orb" aria-label="Animasyonlu 3D AI splash görseli" role="img">
+          <img class="frame" src="./splash/frames/ai-splash-00.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-01.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-02.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-03.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-04.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-05.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-06.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-07.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-08.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-09.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-10.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-11.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-12.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-13.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-14.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-15.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-16.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-17.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-18.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-19.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-20.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-21.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-22.png" alt="" />
+          <img class="frame" src="./splash/frames/ai-splash-23.png" alt="" />
+        </div>
+      </section>
+      <p class="note">Önizleme: http://localhost:4173/splash-preview.html</p>
+    </main>
+  </body>
+</html>

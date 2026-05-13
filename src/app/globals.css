@@ -189,3 +189,94 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+.splash-screen {
+  animation: splash-screen-exit 400ms cubic-bezier(0.23, 1, 0.32, 1) 1.8s forwards;
+}
+
+.splash-card {
+  animation: splash-card-enter 520ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.splash-orb {
+  animation: splash-orb-drift 3200ms ease-in-out infinite alternate;
+}
+
+.splash-frame {
+  opacity: 0;
+  animation: splash-frame-cycle 2000ms steps(1, end) infinite;
+}
+
+.splash-frame:nth-child(1) { animation-delay: 0ms; }
+.splash-frame:nth-child(2) { animation-delay: 83.33ms; }
+.splash-frame:nth-child(3) { animation-delay: 166.67ms; }
+.splash-frame:nth-child(4) { animation-delay: 250ms; }
+.splash-frame:nth-child(5) { animation-delay: 333.33ms; }
+.splash-frame:nth-child(6) { animation-delay: 416.67ms; }
+.splash-frame:nth-child(7) { animation-delay: 500ms; }
+.splash-frame:nth-child(8) { animation-delay: 583.33ms; }
+.splash-frame:nth-child(9) { animation-delay: 666.67ms; }
+.splash-frame:nth-child(10) { animation-delay: 750ms; }
+.splash-frame:nth-child(11) { animation-delay: 833.33ms; }
+.splash-frame:nth-child(12) { animation-delay: 916.67ms; }
+.splash-frame:nth-child(13) { animation-delay: 1000ms; }
+.splash-frame:nth-child(14) { animation-delay: 1083.33ms; }
+.splash-frame:nth-child(15) { animation-delay: 1166.67ms; }
+.splash-frame:nth-child(16) { animation-delay: 1250ms; }
+.splash-frame:nth-child(17) { animation-delay: 1333.33ms; }
+.splash-frame:nth-child(18) { animation-delay: 1416.67ms; }
+.splash-frame:nth-child(19) { animation-delay: 1500ms; }
+.splash-frame:nth-child(20) { animation-delay: 1583.33ms; }
+.splash-frame:nth-child(21) { animation-delay: 1666.67ms; }
+.splash-frame:nth-child(22) { animation-delay: 1750ms; }
+.splash-frame:nth-child(23) { animation-delay: 1833.33ms; }
+.splash-frame:nth-child(24) { animation-delay: 1916.67ms; }
+
+@keyframes splash-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes splash-screen-exit {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes splash-frame-cycle {
+  0%, 4.166% {
+    opacity: 1;
+  }
+  4.167%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes splash-orb-drift {
+  from {
+    transform: translateY(0) rotate(-1deg);
+  }
+  to {
+    transform: translateY(-10px) rotate(1.5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-screen,
+  .splash-card,
+  .splash-orb,
+  .splash-frame {
+    animation: none;
+  }
+
+  .splash-frame:first-child {
+    opacity: 1;
+  }
+}

@@ -15,6 +15,7 @@ import { AITermsGlossary } from "@/components/article/AITermsGlossary";
 import { getArticleInsightDisplaySettings } from "@/lib/article-insights";
 import { AD_SLOTS } from "@/lib/ad-slots";
 import { SavedArticlesSection } from "@/components/SavedArticlesSection";
+import { SplashScreen } from "@/components/SplashScreen";
 
 import {
   generateOrganizationSchema,
@@ -466,6 +467,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-ai-background-dark">
+      <SplashScreen />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={generateJsonLd({
