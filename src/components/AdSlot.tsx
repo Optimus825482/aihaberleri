@@ -46,15 +46,28 @@ export const AdSlot = ({
 
   // Admin paneline daha önce girilmiş tarayıcılarda reklamları engelle
   const [isOwner, setIsOwner] = useState(false);
+  const [hasCleanAccess, setHasCleanAccess] = useState(false);
+  const [hasCheckedAccess, setHasCheckedAccess] = useState(false);
   useEffect(() => {
-    setIsOwner(localStorage.getItem("__admin_browser__") === "1");
+    try {
+      setIsOwner(localStorage.getItem("__admin_browser__") === "1");
+      setHasCleanAccess(
+        document.cookie
+          .split(";")
+          .some((cookie) => cookie.trim() === "clean_access=ok"),
+      );
+    } finally {
+      setHasCheckedAccess(true);
+    }
   }, []);
 
   const shouldRender = useMemo(() => {
+    if (!hasCheckedAccess) return false;
     if (!isEnabled || !clientId) return false;
     if (pathname?.startsWith("/admin")) return false;
-    return true; // Always render — AdSenseBootstrap handles NPA for GDPR
-  }, [isEnabled, clientId, pathname]);
+    if (hasCleanAccess) return false;
+    return true;
+  }, [hasCheckedAccess, isEnabled, clientId, pathname, hasCleanAccess]);
 
   useEffect(() => {
     if (!shouldRender || !adElement) return;

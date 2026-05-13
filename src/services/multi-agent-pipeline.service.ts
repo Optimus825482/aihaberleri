@@ -402,6 +402,19 @@ export async function startMultiAgentPipeline(
  *
  * Pipeline: Duplicate → Relevance → Trend → SourceGather → Synthesize → Validate → Visual → SEO → Publish
  */
+function jobBelongsToAgentLog(data: unknown, agentLogId: string): boolean {
+  if (!data || typeof data !== "object") return false;
+
+  if (Array.isArray(data)) {
+    return data.some((item) => jobBelongsToAgentLog(item, agentLogId));
+  }
+
+  const record = data as Record<string, unknown>;
+  if (record.agentLogId === agentLogId) return true;
+
+  return Object.values(record).some((value) => jobBelongsToAgentLog(value, agentLogId));
+}
+
 export async function monitorPipelineProgress(agentLogId: string): Promise<{
   stage: string;
   articlesInQueue: number;
@@ -409,7 +422,6 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
   failed: number;
   firstQueueCompleted: number;
 }> {
-  // Monitor all active pipeline queues
   const queues = [
     QUEUE_NAMES.UNIQUE_ARTICLES,
     QUEUE_NAMES.RELEVANT_ARTICLES,
@@ -433,12 +445,25 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
     const queue = getQueue(queueName);
     if (!queue) continue;
 
-    const [waiting, active, completedCount, failedCount] = await Promise.all([
-      queue.getWaitingCount(),
-      queue.getActiveCount(),
-      queue.getCompletedCount(),
-      queue.getFailedCount(),
+    const [waitingJobs, activeJobs, completedJobs, failedJobs] = await Promise.all([
+      queue.getJobs(["waiting", "delayed", "prioritized"], 0, 200),
+      queue.getJobs(["active"], 0, 200),
+      queue.getJobs(["completed"], 0, 200),
+      queue.getJobs(["failed"], 0, 200),
     ]);
+
+    const waiting = waitingJobs.filter((job) =>
+      jobBelongsToAgentLog(job.data, agentLogId),
+    ).length;
+    const active = activeJobs.filter((job) =>
+      jobBelongsToAgentLog(job.data, agentLogId),
+    ).length;
+    const completedCount = completedJobs.filter((job) =>
+      jobBelongsToAgentLog(job.data, agentLogId),
+    ).length;
+    const failedCount = failedJobs.filter((job) =>
+      jobBelongsToAgentLog(job.data, agentLogId),
+    ).length;
 
     if (active > 0 || waiting > 0) {
       currentStage = queueName;
@@ -448,7 +473,6 @@ export async function monitorPipelineProgress(agentLogId: string): Promise<{
     completed += completedCount;
     failed += failedCount;
 
-    // Track first queue (duplicate-detector) completed count separately
     if (i === 0) {
       firstQueueCompleted = completedCount;
     }

@@ -1,5 +1,4 @@
 import React from "react";
-import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { ArticleCard } from "@/components/ArticleCard";
@@ -24,7 +23,7 @@ import {
 } from "@/lib/seo";
 import { getCache } from "@/lib/cache";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   alternates: {
@@ -38,9 +37,6 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const isCleanAccess =
-    (await cookies()).get("clean_access")?.value === "ok";
-
   const formatTopicLabel = (topic: string) => {
     return topic
       .replace(/[_-]+/g, " ")
@@ -657,14 +653,12 @@ export default async function HomePage() {
             </section>
           )}
 
-          {!isCleanAccess ? (
           <AdSlot
             slot={AD_SLOTS.HOME_BANNER_TR}
             minHeight={120}
             label="Sponsorlu"
             className="mt-6 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
           />
-          ) : null}
 
           {/* Category Filter Chips (kompakt) */}
           <CategoryFilters categories={categories} locale="tr" />
@@ -698,18 +692,16 @@ export default async function HomePage() {
                   <React.Fragment key={article.id}>
                     <ArticleCard article={article} priority={index < 4} />
                     {/* In-feed ad after every 4th article */}
-                    {!isCleanAccess && (index + 1) % 4 === 0 && index < articles.length - 1 && (
-                      <div className="col-span-1 sm:col-span-2">
-                        <AdSlot
-                          slot={AD_SLOTS.HOME_INFEED_TR}
-                          format="fluid"
-                          layout="in-feed"
-                          layoutKey="-6t+ed+2i-1n-4w"
-                          minHeight={100}
-                          label="Sponsorlu"
-                          className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
-                        />
-                      </div>
+                    {(index + 1) % 4 === 0 && index < articles.length - 1 && (
+                      <AdSlot
+                        slot={AD_SLOTS.HOME_INFEED_TR}
+                        format="fluid"
+                        layout="in-feed"
+                        layoutKey="-6t+ed+2i-1n-4w"
+                        minHeight={100}
+                        label="Sponsorlu"
+                        className="col-span-1 rounded-xl border border-ai-surface-border bg-ai-surface-card p-3 sm:col-span-2"
+                      />
                     )}
                   </React.Fragment>
                 ))}
@@ -780,7 +772,6 @@ export default async function HomePage() {
 
           {/* Multiplex — sayfa sonu öneriler */}
           <div className="mt-10">
-            {!isCleanAccess ? (
             <AdSlot
               slot={AD_SLOTS.MULTIPLEX_RELATED}
               format="autorelaxed"
@@ -788,7 +779,6 @@ export default async function HomePage() {
               label="Bunları da Okuyun"
               className="rounded-xl border border-ai-surface-border bg-ai-surface-card p-3"
             />
-            ) : null}
           </div>
         </div>
       </main>

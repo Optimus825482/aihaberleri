@@ -14,8 +14,7 @@ async function checkAgentSettings() {
       key: {
         in: [
           "agent.enabled",
-          "agent.minArticles",
-          "agent.maxArticles",
+          "agent.articlesPerRun",
           "agent.intervalHours",
           "agent.lastRun",
           "agent.nextRun",
@@ -35,18 +34,17 @@ async function checkAgentSettings() {
   console.log("\n📋 Required Settings (User: 1 article per 15 minutes):");
   console.log("━".repeat(60));
   console.log("agent.enabled            = true");
-  console.log("agent.minArticles        = 1");
-  console.log("agent.maxArticles        = 1");
+  console.log("agent.articlesPerRun    = 1");
   console.log("agent.intervalHours      = 0.25 (15 minutes)");
 
   // Check if settings need update
-  const minArticles = settings.find((s) => s.key === "agent.minArticles");
-  const maxArticles = settings.find((s) => s.key === "agent.maxArticles");
+  const enabled = settings.find((s) => s.key === "agent.enabled");
+  const articlesPerRun = settings.find((s) => s.key === "agent.articlesPerRun");
   const intervalHours = settings.find((s) => s.key === "agent.intervalHours");
 
   const needsUpdate =
-    minArticles?.value !== "1" ||
-    maxArticles?.value !== "1" ||
+    enabled?.value !== "true" ||
+    articlesPerRun?.value !== "1" ||
     intervalHours?.value !== "0.25";
 
   if (needsUpdate) {
@@ -54,13 +52,13 @@ async function checkAgentSettings() {
     console.log("\nRun this SQL to fix:");
     console.log("━".repeat(60));
     console.log(
-      `UPDATE "Setting" SET value = '1' WHERE key = 'agent.minArticles';`,
+      `INSERT INTO "Setting" (key, value) VALUES ('agent.enabled', 'true') ON CONFLICT (key) DO UPDATE SET value = 'true';`,
     );
     console.log(
-      `UPDATE "Setting" SET value = '1' WHERE key = 'agent.maxArticles';`,
+      `INSERT INTO "Setting" (key, value) VALUES ('agent.articlesPerRun', '1') ON CONFLICT (key) DO UPDATE SET value = '1';`,
     );
     console.log(
-      `UPDATE "Setting" SET value = '0.25' WHERE key = 'agent.intervalHours';`,
+      `INSERT INTO "Setting" (key, value) VALUES ('agent.intervalHours', '0.25') ON CONFLICT (key) DO UPDATE SET value = '0.25';`,
     );
   } else {
     console.log("\n✅ Settings are correct!");

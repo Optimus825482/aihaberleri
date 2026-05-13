@@ -83,8 +83,8 @@ export default function AgentSettingsPage() {
 
   const [settings, setSettings] = useState<AgentSettings>({
     enabled: true,
-    intervalHours: 0.167, // 10 minutes default
-    articlesPerRun: 3,
+    intervalHours: 0.25,
+    articlesPerRun: 1,
     categories: [],
     lastRun: null,
     nextRun: null,

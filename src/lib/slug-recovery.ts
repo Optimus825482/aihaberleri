@@ -13,7 +13,7 @@ import { db } from "@/lib/db";
 import { exaSearch } from "@/lib/exa";
 import { callDeepSeek } from "@/lib/deepseek";
 import { generateSlug } from "@/lib/utils";
-import { fetchGeminiImage, fetchAIHordeImage, fetchPollinationsImage, fetchFreeBackupImage } from "@/lib/pollinations";
+import { fetchGeminiImage, fetchPollinationsImage, fetchFreeBackupImage } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 import { getQueue, QUEUE_NAMES } from "@/lib/queue-manager";
 import axios from "axios";
@@ -58,8 +58,8 @@ async function readUrlWithJina(url: string): Promise<string> {
  * Slug recovery için NSFW-güvenli görsel üretir.
  *
  * Öncelik sırası:
- *  1. Gemini (Google safety filter — en katı, NSFW üretmez)
- *  2. Pollinations flux + safe=true (platform seviyesi filtre)
+ *  1. Pollinations flux + safe=true (ücretsiz hızlı üretim)
+ *  2. Gemini (Google safety filter — yapılandırıldıysa)
  *  3. Picsum (stock fotoğraf, garantili güvenli)
  *
  * Prompt mühendisliği kuralları:
@@ -88,29 +88,7 @@ async function generateSafeRecoveryImage(
 
   console.log(`[SLUG-RECOVERY] 🎨 Görsel prompt: ${finalPrompt.substring(0, 120)}`);
 
-  // ── 1. AI Horde (ücretsiz, sınırsız, nsfw=false + censor_nsfw=true) ──────────
-  try {
-    const hordeUrl = await fetchAIHordeImage(finalPrompt, { width: 1200, height: 630 });
-    if (hordeUrl) {
-      console.log("[SLUG-RECOVERY] ✅ AI Horde görsel başarılı");
-      return hordeUrl;
-    }
-  } catch (e) {
-    console.warn(`[SLUG-RECOVERY] ⚠️ AI Horde görsel başarısız: ${(e as Error).message}`);
-  }
-
-  // ── 2. Gemini (Google safety filter) ────────────────────────────────────────
-  try {
-    const geminiUrl = await fetchGeminiImage(finalPrompt);
-    if (geminiUrl) {
-      console.log("[SLUG-RECOVERY] ✅ Gemini görsel başarılı");
-      return geminiUrl;
-    }
-  } catch (e) {
-    console.warn(`[SLUG-RECOVERY] ⚠️ Gemini görsel başarısız: ${(e as Error).message}`);
-  }
-
-  // ── 3. Pollinations flux + safe=true (fallback) ──────────────────────────────
+  // ── 1. Pollinations flux + safe=true ────────────────────────────────────────
   try {
     const pollUrl = await fetchPollinationsImage(finalPrompt, {
       model: "flux",
@@ -130,6 +108,17 @@ async function generateSafeRecoveryImage(
     }
   } catch (e) {
     console.warn(`[SLUG-RECOVERY] ⚠️ Pollinations görsel başarısız: ${(e as Error).message}`);
+  }
+
+  // ── 2. Gemini (Google safety filter) ─────────────────────────────────────────
+  try {
+    const geminiUrl = await fetchGeminiImage(finalPrompt);
+    if (geminiUrl) {
+      console.log("[SLUG-RECOVERY] ✅ Gemini görsel başarılı");
+      return geminiUrl;
+    }
+  } catch (e) {
+    console.warn(`[SLUG-RECOVERY] ⚠️ Gemini görsel başarısız: ${(e as Error).message}`);
   }
 
   // ── 3. Picsum (garantili güvenli stock fotoğraf) ─────────────────────────────
@@ -494,11 +483,15 @@ export async function publishRecoveredArticle(
       content.imagePrompt,
     );
     if (rawImageUrl) {
+      imageUrl = rawImageUrl;
+      imageUrlMedium = rawImageUrl;
+      imageUrlSmall = rawImageUrl;
+      imageUrlThumb = rawImageUrl;
       const sizes = await optimizeAndGenerateSizes(rawImageUrl, slug);
-      imageUrl = sizes.original ?? rawImageUrl;
-      imageUrlMedium = sizes.medium ?? null;
-      imageUrlSmall = sizes.small ?? null;
-      imageUrlThumb = sizes.thumb ?? null;
+      imageUrl = sizes.large ?? rawImageUrl;
+      imageUrlMedium = sizes.medium ?? rawImageUrl;
+      imageUrlSmall = sizes.small ?? rawImageUrl;
+      imageUrlThumb = sizes.thumb ?? rawImageUrl;
       console.log(`[SLUG-RECOVERY] 🖼️ Görsel oluşturuldu: ${imageUrl?.substring(0, 80)}`);
     }
   } catch (imgErr) {

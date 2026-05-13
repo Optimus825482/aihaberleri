@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import { generateImagePrompt } from "@/lib/deepseek";
-import { fetchPollinationsImage, isFallbackImageUrl } from "@/lib/pollinations";
+import { fetchPollinationsImage } from "@/lib/pollinations";
 import { optimizeAndGenerateSizes } from "@/lib/image-optimizer";
 
 export const maxDuration = 120;
@@ -14,11 +13,8 @@ export async function POST(
   { params }: { params: { id: string } },
 ) {
   try {
-    const [session, adminSession] = await Promise.all([
-      auth(),
-      getAdminSession(),
-    ]);
-    if (!session && !adminSession) {
+    const adminSession = await getAdminSession();
+    if (!adminSession) {
       return NextResponse.json({ error: "Yetkisiz erişim" }, { status: 401 });
     }
 
@@ -45,7 +41,7 @@ export async function POST(
     );
     console.log("📝 Yeni prompt:", imagePrompt.substring(0, 120));
 
-    // Use the full provider chain: AI Horde → Pollinations → Gemini → Picsum
+    // Use the full provider chain: Pollinations → Gemini → Picsum
     const newImageUrl = await fetchPollinationsImage(imagePrompt, {
       width: 1200,
       height: 630,
@@ -57,12 +53,12 @@ export async function POST(
       seed: Math.floor(Math.random() * 1_000_000_000),
     });
 
-    if (!newImageUrl || isFallbackImageUrl(newImageUrl)) {
+    if (!newImageUrl) {
       return NextResponse.json(
         {
           success: false,
           error:
-            "Görsel servisleri şu anda gerçek görsel üretemedi. Lütfen tekrar deneyin.",
+            "Görsel servisleri şu anda görsel üretemedi. Lütfen tekrar deneyin.",
         },
         { status: 502 },
       );
@@ -112,7 +108,7 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Bilinmeyen hata",
+        error: "Görsel güncellenemedi. Lütfen tekrar deneyin.",
       },
       { status: 500 },
     );

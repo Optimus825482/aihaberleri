@@ -4,8 +4,11 @@
  */
 
 import axios from "axios";
+import {
+  googleNewsSearch,
+  type GoogleNewsSearchResult,
+} from "@/lib/google-news-search";
 
-const EXA_API_KEY = process.env.EXA_API_KEY;
 const EXA_API_URL = "https://api.exa.ai/search";
 
 export interface ExaSearchResult {
@@ -22,6 +25,34 @@ export interface ExaSearchResponse {
   autopromptString?: string;
 }
 
+function mapGoogleNewsResult(result: GoogleNewsSearchResult): ExaSearchResult {
+  return {
+    title: result.title,
+    url: result.url,
+    publishedDate: result.publishedDate,
+    score: result.score,
+    text: result.content,
+  };
+}
+
+async function googleNewsFallbackSearch(
+  query: string,
+  options: { num_results?: number } = {},
+): Promise<ExaSearchResult[]> {
+  try {
+    const results = await googleNewsSearch(query, {
+      count: options.num_results || 10,
+      time_range: "week",
+      categories: "general,news",
+    });
+
+    return results.map(mapGoogleNewsResult);
+  } catch (error) {
+    console.warn("⚠️ Google News RSS fallback failed", error);
+    return [];
+  }
+}
+
 /**
  * Search using Exa API
  */
@@ -33,8 +64,9 @@ export async function exaSearch(
     type?: "neural" | "keyword";
   } = {},
 ): Promise<ExaSearchResult[]> {
-  if (!EXA_API_KEY) {
-    throw new Error("EXA_API_KEY is not configured");
+  if (!process.env.EXA_API_KEY) {
+    console.warn("⚠️ EXA_API_KEY missing, falling back to Google News RSS");
+    return googleNewsFallbackSearch(query, options);
   }
 
   try {
@@ -42,8 +74,8 @@ export async function exaSearch(
       EXA_API_URL,
       {
         query,
-        num_results: options.num_results || 10,
-        use_autoprompt: options.use_autoprompt !== false,
+        numResults: options.num_results || 10,
+        useAutoprompt: options.use_autoprompt !== false,
         type: options.type || "neural",
         contents: {
           text: true,
@@ -52,13 +84,19 @@ export async function exaSearch(
       {
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": EXA_API_KEY,
+          "x-api-key": process.env.EXA_API_KEY,
         },
         timeout: 10000,
       },
     );
 
-    return response.data.results || [];
+    const results = response.data.results || [];
+    if (results.length === 0) {
+      console.warn("⚠️ Exa returned no results, falling back to Google News RSS");
+      return googleNewsFallbackSearch(query, options);
+    }
+
+    return results;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error("Exa Search API Error:", {
@@ -67,7 +105,9 @@ export async function exaSearch(
         message: error.message,
       });
     }
-    throw error;
+
+    console.warn("⚠️ Exa failed, falling back to Google News RSS");
+    return googleNewsFallbackSearch(query, options);
   }
 }
 

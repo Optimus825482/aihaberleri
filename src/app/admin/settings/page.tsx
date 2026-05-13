@@ -667,45 +667,20 @@ export default function SettingsPage() {
                 </p>
               </div>
 
-              {/* Minimum Haber Sayısı */}
+              {/* Haber Sayısı */}
               <div>
-                <label htmlFor="agent-min-articles" className="text-sm font-bold mb-2 block">
-                  Minimum Haber Sayısı (Her Çalışmada)
+                <label htmlFor="agent-articles-per-run" className="text-sm font-bold mb-2 block">
+                  Haber Sayısı (Her Çalışmada)
                 </label>
                 <select
-                  id="agent-min-articles"
+                  id="agent-articles-per-run"
                   defaultValue={
                     data?.settings.agent.find(
-                      (s) => s.key === "agent.minArticles",
-                    )?.value || "3"
+                      (s) => s.key === "agent.articlesPerRun",
+                    )?.value || "1"
                   }
                   onChange={(e) =>
-                    saveSetting("agent.minArticles", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border rounded-lg bg-background"
-                >
-                  <option value="1">1 Haber</option>
-                  <option value="2">2 Haber</option>
-                  <option value="3">3 Haber</option>
-                  <option value="4">4 Haber</option>
-                  <option value="5">5 Haber</option>
-                </select>
-              </div>
-
-              {/* Maksimum Haber Sayısı */}
-              <div>
-                <label htmlFor="agent-max-articles" className="text-sm font-bold mb-2 block">
-                  Maksimum Haber Sayısı (Her Çalışmada)
-                </label>
-                <select
-                  id="agent-max-articles"
-                  defaultValue={
-                    data?.settings.agent.find(
-                      (s) => s.key === "agent.maxArticles",
-                    )?.value || "5"
-                  }
-                  onChange={(e) =>
-                    saveSetting("agent.maxArticles", e.target.value)
+                    saveSetting("agent.articlesPerRun", e.target.value)
                   }
                   className="w-full px-3 py-2 border rounded-lg bg-background"
                 >
@@ -720,7 +695,7 @@ export default function SettingsPage() {
                   <option value="10">10 Haber</option>
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Her çalışmada min-max arasında rastgele sayıda haber yayınlanır
+                  Her çalışmada yayınlanacak hedef haber sayısını belirler
                 </p>
               </div>
 
@@ -753,12 +728,9 @@ export default function SettingsPage() {
                   </p>
                   <p>
                     <span className="text-muted-foreground">Haber Sayısı:</span>{" "}
-                    {data?.settings.agent.find((s) => s.key === "agent.minArticles")
-                      ?.value || "3"}{" "}
-                    -{" "}
-                    {data?.settings.agent.find((s) => s.key === "agent.maxArticles")
-                      ?.value || "5"}{" "}
-                    arası
+                    {data?.settings.agent.find((s) => s.key === "agent.articlesPerRun")
+                      ?.value || "1"}{" "}
+                    haber
                   </p>
                 </div>
               </div>

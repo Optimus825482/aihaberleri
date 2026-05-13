@@ -81,7 +81,10 @@ export class DatabasePublisherAgent extends BaseAgent<
         where: { key: "agent.articlesPerRun" },
       });
       if (setting) {
-        maxPublish = Math.max(2, parseInt(setting.value)); // Minimum 2 articles per run
+        const configuredMaxPublish = parseInt(setting.value, 10);
+        if (Number.isFinite(configuredMaxPublish)) {
+          maxPublish = Math.max(1, configuredMaxPublish);
+        }
       }
     } catch {
       // Fallback to publishing all articles

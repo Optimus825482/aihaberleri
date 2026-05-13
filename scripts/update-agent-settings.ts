@@ -12,9 +12,8 @@ async function updateAgentSettings() {
   // Upsert settings
   const settings = [
     { key: "agent.enabled", value: "true" },
-    { key: "agent.minArticles", value: "1" },
-    { key: "agent.maxArticles", value: "1" },
-    { key: "agent.intervalHours", value: "0.25" }, // 15 minutes
+    { key: "agent.articlesPerRun", value: "1" },
+    { key: "agent.intervalHours", value: "0.25" },
   ];
 
   for (const setting of settings) {
@@ -30,7 +29,7 @@ async function updateAgentSettings() {
   console.log("\n📊 Summary:");
   console.log("━".repeat(60));
   console.log("• Agent enabled: YES");
-  console.log("• Articles per run: 1 (min=1, max=1)");
+  console.log("• Articles per run: 1");
   console.log("• Interval: 15 minutes (0.25 hours)");
   console.log("• Next run: Will be calculated after first execution");
 

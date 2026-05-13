@@ -15,11 +15,11 @@ const settingsSchema = z.object({
   adminEmail: z.string().email(),
 });
 
-// Default settings - optimized for freshness
+// Default settings - optimized for one article every 15 minutes
 const DEFAULT_SETTINGS = {
   enabled: true,
-  intervalHours: 0.167, // 10 minutes default
-  articlesPerRun: 3,
+  intervalHours: 0.25,
+  articlesPerRun: 1,
   categories: [],
   emailNotifications: true,
   adminEmail: "ikinciyenikitap54@gmail.com",
@@ -80,7 +80,9 @@ export async function GET() {
     // Parse and return settings
     const agentSettings = {
       enabled:
-        settingsMap["agent.enabled"] === "true" || DEFAULT_SETTINGS.enabled,
+        settingsMap["agent.enabled"] !== undefined
+          ? settingsMap["agent.enabled"] === "true"
+          : DEFAULT_SETTINGS.enabled,
       intervalHours: parseFloat(
         settingsMap["agent.intervalHours"] ||
           String(DEFAULT_SETTINGS.intervalHours),
@@ -95,8 +97,9 @@ export async function GET() {
       lastRun: settingsMap["agent.lastRun"] || null,
       nextRun: settingsMap["agent.nextRun"] || null,
       emailNotifications:
-        settingsMap["agent.emailNotifications"] === "true" ||
-        DEFAULT_SETTINGS.emailNotifications,
+        settingsMap["agent.emailNotifications"] !== undefined
+          ? settingsMap["agent.emailNotifications"] === "true"
+          : DEFAULT_SETTINGS.emailNotifications,
       adminEmail:
         settingsMap["agent.adminEmail"] || DEFAULT_SETTINGS.adminEmail,
     };

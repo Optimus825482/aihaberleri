@@ -10,21 +10,23 @@
 
 import { PrismaClient } from "@prisma/client";
 
-// Production database URL
-const PRODUCTION_DB_URL =
-  "postgresql://postgres:518518Erkan@77.42.68.4:5435/postgresainewsdb";
+const productionDbUrl = process.env.DATABASE_URL;
+
+if (!productionDbUrl) {
+  throw new Error("DATABASE_URL is required");
+}
 
 const db = new PrismaClient({
   datasources: {
     db: {
-      url: PRODUCTION_DB_URL,
+      url: productionDbUrl,
     },
   },
 });
 
 async function fixProductionSettings() {
   console.log("🔧 Fixing production agent settings...\n");
-  console.log("📍 Database: 77.42.68.4:5435/postgresainewsdb\n");
+  console.log("📍 Database: DATABASE_URL\n");
 
   try {
     // Check current settings
@@ -36,8 +38,7 @@ async function fixProductionSettings() {
         key: {
           in: [
             "agent.enabled",
-            "agent.minArticles",
-            "agent.maxArticles",
+            "agent.articlesPerRun",
             "agent.intervalHours",
           ],
         },
@@ -58,9 +59,8 @@ async function fixProductionSettings() {
     // Upsert settings
     const settings = [
       { key: "agent.enabled", value: "true" },
-      { key: "agent.minArticles", value: "1" }, // ✅ FIX: 3 → 1
-      { key: "agent.maxArticles", value: "1" }, // ✅ FIX: 5 → 1
-      { key: "agent.intervalHours", value: "0.25" }, // ✅ 15 minutes
+      { key: "agent.articlesPerRun", value: "1" },
+      { key: "agent.intervalHours", value: "0.25" },
     ];
 
     for (const setting of settings) {
@@ -76,7 +76,7 @@ async function fixProductionSettings() {
     console.log("\n📊 Summary:");
     console.log("━".repeat(60));
     console.log("• Agent enabled: YES");
-    console.log("• Articles per run: 1 (was: 3-5)");
+    console.log("• Articles per run: 1");
     console.log("• Interval: 15 minutes (0.25 hours)");
     console.log("\n⚠️  IMPORTANT: Restart worker for changes to take effect!");
     console.log("   Command: docker restart <worker-container>");

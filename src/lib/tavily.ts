@@ -9,9 +9,13 @@
  */
 
 import axios from "axios";
+import {
+  googleNewsSearch,
+  type GoogleNewsSearchResult,
+} from "@/lib/google-news-search";
 
-const TAVILY_API_KEY = process.env.TAVILY_API_KEY;
 const TAVILY_API_URL = "https://api.tavily.com/search";
+const EXA_API_URL = "https://api.exa.ai/search";
 
 // ============================================
 // RATE LIMITER
@@ -70,6 +74,112 @@ export interface TavilySearchResponse {
   response_time: number;
 }
 
+interface ExaSearchResult {
+  title?: string;
+  url: string;
+  text?: string;
+  score?: number;
+  publishedDate?: string;
+}
+
+interface ExaSearchResponse {
+  results?: ExaSearchResult[];
+}
+
+function mapExaResult(result: ExaSearchResult): TavilySearchResult {
+  return {
+    title: result.title || result.url,
+    url: result.url,
+    content: result.text || "",
+    score: result.score ?? 0,
+    published_date: result.publishedDate,
+  };
+}
+
+function mapGoogleNewsResult(result: GoogleNewsSearchResult): TavilySearchResult {
+  return {
+    title: result.title,
+    url: result.url,
+    content: result.content,
+    score: result.score,
+    published_date: result.publishedDate,
+  };
+}
+
+async function googleNewsFallbackSearch(
+  query: string,
+  options: { max_results?: number } = {},
+): Promise<TavilySearchResult[]> {
+  try {
+    const results = await googleNewsSearch(query, {
+      count: options.max_results || 10,
+      time_range: "week",
+      categories: "general,news",
+    });
+
+    return results.map(mapGoogleNewsResult);
+  } catch (error) {
+    console.warn("⚠️ Google News RSS fallback failed", error);
+    return [];
+  }
+}
+
+async function exaSearch(
+  query: string,
+  options: {
+    max_results?: number;
+    include_domains?: string[];
+    exclude_domains?: string[];
+  } = {},
+): Promise<TavilySearchResult[]> {
+  const apiKey = process.env.EXA_API_KEY;
+  if (!apiKey) {
+    console.warn("⚠️ EXA_API_KEY missing, falling back to Google News RSS");
+    return googleNewsFallbackSearch(query, options);
+  }
+
+  try {
+    const response = await axios.post<ExaSearchResponse>(
+      EXA_API_URL,
+      {
+        query,
+        numResults: options.max_results || 10,
+        includeDomains: options.include_domains,
+        excludeDomains: options.exclude_domains,
+        contents: { text: true },
+        useAutoprompt: true,
+        type: "auto",
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+        },
+        timeout: 10000,
+      },
+    );
+
+    const results = response.data.results || [];
+    if (results.length === 0) {
+      console.warn("⚠️ EXA returned no results, falling back to Google News RSS");
+      return googleNewsFallbackSearch(query, options);
+    }
+
+    return results.map(mapExaResult);
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("EXA Search API Error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+    }
+
+    console.warn("⚠️ EXA failed, falling back to Google News RSS");
+    return googleNewsFallbackSearch(query, options);
+  }
+}
+
 /**
  * Search using Tavily API
  */
@@ -82,8 +192,10 @@ export async function tavilySearch(
   } = {},
 ): Promise<TavilySearchResult[]> {
   const apiKey = process.env.TAVILY_API_KEY;
+
   if (!apiKey) {
-    throw new Error("TAVILY_API_KEY is not configured");
+    console.warn("⚠️ TAVILY_API_KEY missing, falling back to EXA/Google News");
+    return exaSearch(query, options);
   }
 
   try {
@@ -104,7 +216,13 @@ export async function tavilySearch(
       },
     );
 
-    return response.data.results || [];
+    const results = response.data.results || [];
+    if (results.length === 0) {
+      console.warn("⚠️ Tavily returned no results, falling back to EXA/Google News");
+      return exaSearch(query, options);
+    }
+
+    return results;
   } catch (error) {
     if (axios.isAxiosError(error)) {
       console.error("Tavily Search API Error:", {
@@ -113,7 +231,8 @@ export async function tavilySearch(
         message: error.message,
       });
     }
-    throw error;
+    console.warn("⚠️ Tavily failed, falling back to EXA/Google News");
+    return exaSearch(query, options);
   }
 }
 

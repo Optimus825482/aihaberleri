@@ -1,6 +1,7 @@
 import { SourceGathererAgent } from "../source-gatherer.agent";
 import { googleNewsSearch } from "@/lib/google-news-search";
 import { tavilySearch } from "@/lib/tavily";
+import { exaSearch } from "@/lib/exa";
 
 jest.mock("../base-agent", () => ({
   BaseAgent: class MockBaseAgent {
@@ -50,6 +51,7 @@ const mockedSearxngSearch = googleNewsSearch as jest.MockedFunction<
 const mockedTavilySearch = tavilySearch as jest.MockedFunction<
   typeof tavilySearch
 >;
+const mockedExaSearch = exaSearch as jest.MockedFunction<typeof exaSearch>;
 
 function createArticle(overrides?: Partial<any>) {
   return {
@@ -147,6 +149,51 @@ describe("SourceGathererAgent - Google News haber toplama simulasyonu", () => {
       title: "Tavily fallback kaynak",
       url: "https://analysis.example.com/tavily-fallback",
       relevanceScore: 73,
+    });
+  });
+
+  it("aggressive re-enrichment continues with Google News when EXA fails", async () => {
+    process.env.EXA_API_KEY = "exa-test";
+    const agent = new SourceGathererAgent();
+    const article = createArticle({
+      title: "DeepSeek yeni açık modelini yayınladı",
+      _forceReEnrich: true,
+      _rejectionReason: "no_external_sources",
+    });
+
+    mockedSearxngSearch.mockResolvedValue([
+      {
+        title: "Google News re-enrich kaynak",
+        url: "https://news.example.com/re-enrich-source",
+        content: "",
+        engine: "google-news",
+        parsed_url: ["https", "news.example.com", "/re-enrich-source"],
+        template: "default.html",
+        engines: ["google-news"],
+        positions: [1],
+        score: 0.95,
+        category: "news",
+      },
+    ]);
+    mockedExaSearch.mockRejectedValue(new Error("EXA quota exceeded"));
+
+    jest
+      .spyOn(agent as any, "calculateRelevanceScoreGoogleNews")
+      .mockReturnValue(88);
+    jest.spyOn(agent as any, "shouldSkipUrl").mockReturnValue(false);
+    jest
+      .spyOn(agent as any, "readUrlContent")
+      .mockResolvedValue("C".repeat(260));
+
+    const sources = await (agent as any).gatherSourcesAggressive(article);
+
+    expect(mockedExaSearch).toHaveBeenCalled();
+    expect(mockedSearxngSearch).toHaveBeenCalled();
+    expect(sources).toHaveLength(1);
+    expect(sources[0]).toMatchObject({
+      title: "Google News re-enrich kaynak",
+      url: "https://news.example.com/re-enrich-source",
+      relevanceScore: 88,
     });
   });
 });

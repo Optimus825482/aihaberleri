@@ -87,10 +87,6 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_IMAGE_MODEL}:generateContent`;
 
-// AI Horde (free, unlimited, crowdsourced GPU cluster)
-const AI_HORDE_API_KEY = process.env.AI_HORDE_API_KEY || "0000000000";
-const AI_HORDE_BASE_URL = "https://aihorde.net/api/v2";
-
 // Cache Configuration
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 const CACHE_KEY_PREFIX = "pollinations:image:";
@@ -298,7 +294,7 @@ export function generateImageUrl(
   }
 
   const params = buildPollinationsParams({
-    ...providerOptions,
+    ...options,
     width,
     height,
     model: normalizedModel,
@@ -387,122 +383,6 @@ export async function fetchGeminiImage(
 }
 
 // ============================================
-// AI HORDE — Free, unlimited, crowdsourced GPU cluster
-// Async: submit → poll → get result (typically 10-30s)
-// ============================================
-export async function fetchAIHordeImage(
-  prompt: string,
-  options: PollinationsOptions = {},
-): Promise<string | null> {
-  const cleanPrompt =
-    prompt.length > 500 ? prompt.substring(0, 497) + "..." : prompt;
-
-  imageLog.info(`AI Horde generating: ${cleanPrompt.substring(0, 80)}...`);
-
-  try {
-    // Step 1: Submit async generation
-    const submitRes = await fetch(`${AI_HORDE_BASE_URL}/generate/async`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: AI_HORDE_API_KEY,
-        "Client-Agent": "AIHaberleri:v1.0:info@aihaberleri.org",
-      },
-      body: JSON.stringify({
-        prompt: cleanPrompt,
-        params: {
-          width: 1024,
-          height: 576,
-          steps: 25,
-          cfg_scale: 7.5,
-          sampler_name: "k_euler_a",
-          n: 1,
-          negative_prompt:
-            "nsfw, nude, explicit, sexual, " +
-            "people, person, human, man, woman, face, body, hands, fingers, " +
-            "humanoid, mannequin, figure, portrait, silhouette, " +
-            "robot body, android body, cyborg body, robot face, robot head, " +
-            "watermark, text, logo, signature, blurry, low quality, deformed",
-        },
-        nsfw: false,
-        censor_nsfw: true,
-        models: ["AlbedoBase XL (SDXL)"],
-        r2: true,
-      }),
-    });
-
-    if (!submitRes.ok) {
-      const errText = await submitRes.text().catch(() => "");
-      imageLog.warn(
-        `AI Horde submit failed ${submitRes.status}: ${errText.substring(0, 200)}`,
-      );
-      return null;
-    }
-
-    const submitData = await submitRes.json();
-    const genId = submitData.id;
-    if (!genId) {
-      imageLog.warn("AI Horde returned no generation ID");
-      return null;
-    }
-
-    // Step 2: Poll for completion (max 90s, 3s intervals)
-    const maxPolls = 30;
-    for (let i = 0; i < maxPolls; i++) {
-      await new Promise((r) => setTimeout(r, 3000));
-
-      const checkRes = await fetch(
-        `${AI_HORDE_BASE_URL}/generate/check/${genId}`,
-        {
-          headers: { "Client-Agent": "AIHaberleri:v1.0:info@aihaberleri.org" },
-        },
-      );
-      const checkData = await checkRes.json();
-
-      if (checkData.done) {
-        // Step 3: Get result
-        const statusRes = await fetch(
-          `${AI_HORDE_BASE_URL}/generate/status/${genId}`,
-          {
-            headers: {
-              "Client-Agent": "AIHaberleri:v1.0:info@aihaberleri.org",
-            },
-          },
-        );
-        const statusData = await statusRes.json();
-        const gen = statusData.generations?.[0];
-
-        if (gen?.img) {
-          const imgUrl = gen.img.startsWith("http")
-            ? gen.img
-            : `data:image/webp;base64,${gen.img}`;
-          imageLog.success(
-            `AI Horde image generated in ${(i + 1) * 3}s (model: ${gen.model || "Deliberate"}, worker: ${gen.worker_name || "unknown"})`,
-          );
-          return imgUrl;
-        }
-
-        imageLog.warn("AI Horde generation completed but no image returned");
-        return null;
-      }
-
-      // Log progress every 5th poll
-      if (i > 0 && i % 5 === 0) {
-        imageLog.debug(
-          `AI Horde waiting... queue: ${checkData.queue_position || "?"}, eta: ${checkData.wait_time || "?"}s`,
-        );
-      }
-    }
-
-    imageLog.warn("AI Horde timeout (90s) — falling back");
-    return null;
-  } catch (error) {
-    imageLog.warn(`AI Horde error: ${(error as Error).message}`);
-    return null;
-  }
-}
-
-// ============================================
 // PAYMENT CIRCUIT BREAKER
 // 402 gelince 10 dakika boyunca direkt fallback'e düş, boşa retry yapma
 // ============================================
@@ -546,27 +426,7 @@ export async function fetchPollinationsImage(
   }
 
   // ============================================
-  // PROVIDER 1: AI Horde (free, unlimited, crowdsourced)
-  // ============================================
-  try {
-    const hordeUrl = await fetchAIHordeImage(prompt, options);
-    if (hordeUrl) {
-      await cacheImageUrl(prompt, hordeUrl, providerOptions);
-      return hordeUrl;
-    }
-  } catch (hordeError) {
-    imageLog.warn(`AI Horde failed: ${(hordeError as Error).message}`);
-  }
-
-  // ============================================
-  // PROVIDER 2: Pollinations (if not payment-blocked)
-  // ============================================
-  if (isPollinationsPaymentBlocked()) {
-    imageLog.warn("Pollinations payment circuit OPEN — skipping");
-  }
-
-  // ============================================
-  // PROVIDER 2: Pollinations (if not payment-blocked)
+  // PROVIDER 1: Pollinations (if not payment-blocked)
   // ============================================
   if (!isPollinationsPaymentBlocked()) {
     // CRITICAL: Ensure no humans in prompt - add strong negative prompt
@@ -742,7 +602,7 @@ export async function fetchPollinationsImage(
           if (!allowBackupFallback) {
             throw error;
           }
-          // PROVIDER 3: Gemini (paid, last resort before Picsum)
+          // PROVIDER 2: Gemini (paid, last resort before Picsum)
           if (GOOGLE_API_KEY) {
             try {
               const geminiUrl = await fetchGeminiImage(
@@ -774,7 +634,7 @@ export async function fetchPollinationsImage(
       throw new Error("Pollinations image generation failed without fallback");
     }
 
-    // PROVIDER 3: Gemini (paid, last resort before Picsum)
+    // PROVIDER 2: Gemini (paid, last resort before Picsum)
     if (GOOGLE_API_KEY) {
       try {
         const geminiUrl = await fetchGeminiImage(sanitizedPrompt, options);
@@ -791,7 +651,7 @@ export async function fetchPollinationsImage(
   } // end if (!isPollinationsPaymentBlocked)
 
   // ============================================
-  // PROVIDER 3: Gemini (paid, last resort before Picsum)
+  // PROVIDER 2: Gemini (paid, last resort before Picsum)
   // ============================================
   if (GOOGLE_API_KEY) {
     try {
@@ -805,7 +665,7 @@ export async function fetchPollinationsImage(
     }
   }
 
-  // PROVIDER 4: Picsum (random stock photo, last resort)
+  // PROVIDER 3: Picsum (random stock photo, last resort)
   return await fetchFreeBackupImage(prompt, options);
 }
 /**
