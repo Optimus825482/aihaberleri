@@ -108,7 +108,7 @@ YANIT FORMATI — SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       ],
       {
         temperature: 0.2, // Düşük sıcaklık = tutarlı sonuçlar
-        maxTokens: 2000,
+        maxTokens: 4000, // 2000→4000: JSON kesilmesini önle (98 trend, 30 assignment)
       },
     );
 
@@ -218,7 +218,23 @@ function extractJsonFromLlmResponse(
   const directResult = tryParse(cleanStr);
   if (directResult) return directResult;
 
-  // 5. Hiçbiri calismadi — DEBUG: ilk 500 karakteri logla
+  // 5. Kesik JSON kurtarma — adim 2'deki {..} JSON kapanmamis olabilir
+  //    Burasi bize `braceMatch` sonucunu donduren regex'in aynisi
+  //    Ama `]}` ekleyerek JSON'i kapatmayi dener
+  const braceRaw = noThink.match(/\{[\s\S]*\}/);
+  if (braceRaw) {
+    // Orijinal `{...}` icerigine `]}` ekle ve dene
+    const withArrayClose = braceRaw[0] + "\n]  \n}";
+    const recovered = tryParse(clean(withArrayClose));
+    if (recovered) {
+      logger.warn(
+        `⚡ Kesik JSON kurtarıldı (eksik array/root kapanışı eklendi)`,
+      );
+      return recovered;
+    }
+  }
+
+  // 6. Hiçbiri calismadi — DEBUG: ilk 500 karakteri logla
   logger.warn(
     `🔍 RAW LLM RESPONSE (first 500 chars): ${cleanStr.substring(0, 500)}`,
   );
@@ -392,7 +408,7 @@ export async function clusterTrendTopics(
     volume: number;
     url?: string;
   }>,
-  maxTrends: number = 40,
+  maxTrends: number = 30,
 ): Promise<ClusteringResult> {
   const startTime = Date.now();
   logger.info(`🔬 Topic clustering başlatılıyor (${trends.length} trend)...`);
