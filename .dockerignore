@@ -34,7 +34,6 @@ logos/
 stitch/
 lll/
 skills/
-/migrations/
 
 # IDE & OS
 .vscode
