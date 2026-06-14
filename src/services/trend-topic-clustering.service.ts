@@ -156,49 +156,72 @@ YANIT FORMATI — SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 function extractJsonFromLlmResponse(
   response: string,
 ): Record<string, any> | null {
-  if (!response) return null;
+  if (!response || !response.trim()) return null;
 
-  // 1. Markdown code block içindeki JSON'ı bul
+  const trimmed = response.trim();
+
+  // ── Boolean check: input'i JSON parse et ──
+  function tryParse(raw: string): Record<string, any> | null {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object") return parsed;
+    } catch {
+      // ignore
+    }
+    return null;
+  }
+
+  // ── Helper: string temizle (control chars, BOM, zero-width) ──
+  function clean(raw: string): string {
+    return raw
+      .replace(/^\uFEFF/, "") // BOM
+      .replace(/[\u200B-\u200D\uFEFF]/g, "") // zero-width chars
+      .replace(/[\x00-\x1F\x7F]/g, " ") // control chars -> space
+      .replace(/\s+/g, " ") // normalize whitespace
+      .trim();
+  }
+
+  const cleanStr = clean(trimmed);
+
+  // 0. Markdown code block (```json ... ```) — JSON'ı al
   const markdownRegex = /```(?:json)?\s*\n?([\s\S]*?)\n?```/;
-  const markdownMatch = response.match(markdownRegex);
+  const markdownMatch = trimmed.match(markdownRegex);
   if (markdownMatch) {
-    try {
-      return JSON.parse(markdownMatch[1].trim());
-    } catch {
-      // Markdown içi JSON parse edilemedi, diğer stratejilere geç
-    }
+    const result = tryParse(clean(markdownMatch[1]));
+    if (result) return result;
   }
 
-  // 2. Süslü parantez ile JSON ara
-  const braceMatch = response.match(/\{[\s\S]*\}/);
+  // 1. <think>...</think> tag'lerini temizle, sonra JSON ara
+  const noThink = trimmed.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+
+  // 2. Süslü parantez ara: ilk { ile son } arasını
+  const braceMatch = noThink.match(/\{[\s\S]*\}/);
   if (braceMatch) {
-    try {
-      return JSON.parse(braceMatch[0]);
-    } catch {
-      // Geçerli JSON değil, array formatını dene
-    }
+    const result = tryParse(clean(braceMatch[0]));
+    if (result) return result;
   }
 
-  // 3. Array formatını dene (bazı modeller direkt dizi döndürür)
-  const arrayMatch = response.match(/\[[\s\S]*\]/);
+  // 3. Array formatı: [ ... ] — bazı modeller direkt dizi döndürür
+  const arrayMatch = noThink.match(/\[[\s\S]*\]/);
   if (arrayMatch) {
     try {
-      const arr = JSON.parse(arrayMatch[0]);
-      if (Array.isArray(arr)) {
+      const arr = JSON.parse(clean(arrayMatch[0]));
+      if (Array.isArray(arr) && arr.length > 0) {
         return { assignments: arr };
       }
     } catch {
-      // Array de parse edilemedi
+      // ignore
     }
   }
 
-  // 4. Tüm yanıtı JSON parse etmeyi dene
-  try {
-    const direct = JSON.parse(response.trim());
-    if (typeof direct === "object") return direct;
-  } catch {
-    // Hiçbiri çalışmadı
-  }
+  // 4. Direkt tüm yanıtı dene
+  const directResult = tryParse(cleanStr);
+  if (directResult) return directResult;
+
+  // 5. Hiçbiri calismadi — DEBUG: ilk 500 karakteri logla
+  logger.warn(
+    `🔍 RAW LLM RESPONSE (first 500 chars): ${cleanStr.substring(0, 500)}`,
+  );
 
   return null;
 }
