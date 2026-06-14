@@ -80,6 +80,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker-runner
+      pull_policy: never
       args:
         BUILDKIT_INLINE_CACHE: 1
         DOCKER_BUILDKIT: 1
@@ -186,6 +187,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      pull_policy: never
       args:
         BUILDKIT_INLINE_CACHE: 1
         DOCKER_BUILDKIT: 1
