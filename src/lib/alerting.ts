@@ -294,7 +294,7 @@ const alertRules: AlertRule[] = [
 
       const elapsed = Date.now() - parseInt(startTime);
       return elapsed > 10 * 60 * 1000; // 10 minutes
-    };,
+    },
     action: async (alert) => {
       await defaultAlertAction(alert);
       // TODO: Send email notification
