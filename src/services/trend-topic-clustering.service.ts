@@ -80,14 +80,18 @@ async function extractTopicsWithLLM(
 
   const systemPrompt = `Sen bir trend analisti ve konu sınıflandırma uzmanısın. Verilen trend başlıklarından kanonik konuları çıkar.
 
+KRITIK KURAL — GRUPLAMA ZORUNLUDUR:
+- AYNI konuyu tartışan trend'lere AYNI kanonik konuyu ata
+- Örneğin: "ChatGPT-5 review", "OpenAI new model", "GPT-5 benchmarks" → hepsi "OpenAI GPT-5"
+- Örneğin: "Claude 4 features", "Anthropic update", "Claude coding" → hepsi "Anthropic Claude"
+- Örneğin: "Tesla FSD update", "Waymo expansion", "Self-driving regulations" → hepsi "Autonomous Driving"
+
 KURALLAR:
-1. Her trend'e TEK BİR kanonik konu ata
+1. 30 trend'i maksimum 3-5 gruba indirge (çok spesifik değil, gruplayarak ata)
 2. Kanonik konu 2-5 kelime, İngilizce olmalı
-3. Aynı olay/konuyu tartışan trend'ler AYNI kanonik konuyu paylaşmalı
-4. Spesifik ol: "OpenAI GPT-5" > "AI Models" > "AI"
-5. Hashtag'leri (#ai, #machinelearning) gerçek konulara dönüştür
-6. Türkçe başlıkları İngilizce konuya çevir
-7. Bilimsel paper başlıklarını ana konularına sadeleştir
+3. Hashtag'leri (#ai, #machinelearning) gerçek konulara dönüştür
+4. Türkçe başlıkları İngilizce konuya çevir
+5. Bilimsel paper başlıklarını ana konularına sadeleştir
 
 YANIT FORMATI — SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 {
@@ -96,7 +100,9 @@ YANIT FORMATI — SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     {"index": 1, "topic": "LLM Code Generation"},
     {"index": 2, "topic": "OpenAI GPT-5"}
   ]
-}`;
+}
+
+ÖNEMLİ: 30 trend'in tamamına topic ata ama en fazla 5 FARKLI topic olsun. Aynı konudaki trend'ler AYNI topic'i paylaşmalı. Gruplama basarisi performans gostergendir.`;
 
   const userPrompt = `Aşağıdaki ${trends.length} trend başlığını analiz et ve her birine kanonik konu ata:\n\n${trendLines}`;
 
