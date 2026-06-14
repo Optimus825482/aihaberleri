@@ -47,7 +47,6 @@ const getArticle = cache(async (slug: string) => {
   const cacheKey = `article:en:${slug}`;
   const cacheInstance = getCache();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const cached = await cacheInstance.get<any>(cacheKey);
   if (cached) return cached;
 

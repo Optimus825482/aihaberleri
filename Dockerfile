@@ -170,4 +170,4 @@ ENV NODE_ENV=production \
 USER worker
 EXPOSE 3001
 
-CMD ["npx", "tsx", "src/workers/news-agent.worker.ts"]
+CMD ["npx", "tsx", "src/workers/orchestrator.worker.ts"]

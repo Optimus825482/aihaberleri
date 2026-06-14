@@ -23,6 +23,8 @@ import {
   generateJsonLd,
 } from "@/lib/seo";
 
+import type { ArticleTranslation } from "@prisma/client";
+
 const EN_CATEGORY_SLUG_TRANSLATIONS: Record<string, string> = {
   "yapay-zeka-haberleri": "AI News",
   "yapay-zeka": "Artificial Intelligence",
@@ -99,7 +101,7 @@ async function getEnglishArticles() {
       take: 12,
     });
 
-    return translations.map((t: any) => ({
+    return translations.map((t: ArticleTranslation & { article: { category: { name: string; slug: string }; imageUrl: string | null; publishedAt: Date | null; id: string; views: number } }) => ({
       id: t.article.id,
       title: t.title,
       slug: t.slug,

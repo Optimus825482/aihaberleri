@@ -28,7 +28,9 @@ const AggregationResultSchema = z.object({
 
 // ============================================
 // PROVIDER CONFIGURATION
-// Primary: DeepSeek Chat
+// Primary: HaberCombo (custom LLM)
+// Fallback 1: DeepSeek Chat
+// Fallback 2: Kilo Gateway
 // ============================================
 
 const NVIDIA_API_URL =
@@ -36,6 +38,12 @@ const NVIDIA_API_URL =
 const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
 const NVIDIA_MODEL =
   process.env.NVIDIA_MODEL || "qwen/qwen3-next-80b-a3b-instruct";
+
+const HABERCOMBO_API_URL =
+  process.env.HABERCOMBO_API_URL || "http://77.42.68.4:20128/v1";
+const HABERCOMBO_API_KEY = process.env.HABERCOMBO_API_KEY;
+const HABERCOMBO_MODEL =
+  process.env.HABERCOMBO_MODEL || "habercombo";
 
 const DEEPSEEK_API_URL =
   process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1";
@@ -47,6 +55,9 @@ const KILO_API_URL =
 const KILO_API_KEY = process.env.KILO_API_KEY;
 const KILO_MODEL = "deepseek/deepseek-v3.2";
 
+if (!HABERCOMBO_API_KEY) {
+  console.warn("⚠️  HABERCOMBO_API_KEY is not set — custom LLM disabled");
+}
 if (!DEEPSEEK_API_KEY) {
   console.warn("⚠️  DEEPSEEK_API_KEY is not set");
 }
@@ -113,6 +124,13 @@ const circuitBreakerConfig = {
 };
 
 // Separate circuit breakers for each provider
+const habercomboCircuitBreaker: CircuitBreakerState = {
+  state: "CLOSED",
+  failureCount: 0,
+  lastFailureTime: 0,
+  nextAttemptTime: 0,
+};
+
 const nvidiaCircuitBreaker: CircuitBreakerState = {
   state: "CLOSED",
   failureCount: 0,
@@ -189,11 +207,13 @@ function recordFailure(): void {
  * Get current circuit breaker states (for monitoring)
  */
 export function getCircuitBreakerState(): {
+  habercombo: CircuitState;
   nvidia: CircuitState;
   deepseek: CircuitState;
   kilo: CircuitState;
 } {
   return {
+    habercombo: habercomboCircuitBreaker.state,
     nvidia: nvidiaCircuitBreaker.state,
     deepseek: deepSeekCircuitBreaker.state,
     kilo: kiloCircuitBreaker.state,
@@ -205,6 +225,7 @@ export function getCircuitBreakerState(): {
  */
 export function resetCircuitBreaker(): void {
   for (const breaker of [
+    habercomboCircuitBreaker,
     nvidiaCircuitBreaker,
     deepSeekCircuitBreaker,
     kiloCircuitBreaker,
@@ -225,36 +246,51 @@ function stripThinkingTags(text: string): string {
 }
 
 /**
- * Call a single LLM provider (NVIDIA NIM or DeepSeek)
+ * Call a single LLM provider (HaberCombo, NVIDIA NIM or DeepSeek)
  */
 async function callProvider(
-  provider: "nvidia" | "deepseek" | "kilo",
+  provider: "habercombo" | "nvidia" | "deepseek" | "kilo",
   messages: DeepSeekMessage[],
   options: { model?: string; temperature?: number; maxTokens?: number },
 ): Promise<string> {
+  const isHabercombo = provider === "habercombo";
   const isNvidia = provider === "nvidia";
   const isKilo = provider === "kilo";
-  const apiUrl = isNvidia
-    ? NVIDIA_API_URL
-    : isKilo
-      ? KILO_API_URL
-      : DEEPSEEK_API_URL;
-  const apiKey = isNvidia
-    ? NVIDIA_API_KEY
-    : isKilo
-      ? KILO_API_KEY
-      : DEEPSEEK_API_KEY;
-  const model = isNvidia ? NVIDIA_MODEL : isKilo ? KILO_MODEL : DEEPSEEK_MODEL;
-  const breaker = isNvidia
-    ? nvidiaCircuitBreaker
-    : isKilo
-      ? kiloCircuitBreaker
-      : deepSeekCircuitBreaker;
-  const providerLabel = isNvidia
-    ? `NVIDIA/${NVIDIA_MODEL}`
-    : isKilo
-      ? `Kilo/${KILO_MODEL}`
-      : "DeepSeek-chat";
+  const apiUrl = isHabercombo
+    ? HABERCOMBO_API_URL
+    : isNvidia
+      ? NVIDIA_API_URL
+      : isKilo
+        ? KILO_API_URL
+        : DEEPSEEK_API_URL;
+  const apiKey = isHabercombo
+    ? HABERCOMBO_API_KEY
+    : isNvidia
+      ? NVIDIA_API_KEY
+      : isKilo
+        ? KILO_API_KEY
+        : DEEPSEEK_API_KEY;
+  const model = isHabercombo
+    ? HABERCOMBO_MODEL
+    : isNvidia
+      ? NVIDIA_MODEL
+      : isKilo
+        ? KILO_MODEL
+        : DEEPSEEK_MODEL;
+  const breaker = isHabercombo
+    ? habercomboCircuitBreaker
+    : isNvidia
+      ? nvidiaCircuitBreaker
+      : isKilo
+        ? kiloCircuitBreaker
+        : deepSeekCircuitBreaker;
+  const providerLabel = isHabercombo
+    ? `HaberCombo/${HABERCOMBO_MODEL}`
+    : isNvidia
+      ? `NVIDIA/${NVIDIA_MODEL}`
+      : isKilo
+        ? `Kilo/${KILO_MODEL}`
+        : "DeepSeek-chat";
 
   if (!apiKey) {
     throw new Error(`${provider.toUpperCase()} API key not configured`);
@@ -330,7 +366,7 @@ async function callProvider(
 }
 
 /**
- * Call LLM API — DeepSeek Chat primary, Kilo Gateway fallback.
+ * Call LLM API — HaberCombo primary, DeepSeek Chat fallback, Kilo Gateway last resort.
  */
 export async function callDeepSeek(
   messages: DeepSeekMessage[],
@@ -340,16 +376,37 @@ export async function callDeepSeek(
     maxTokens?: number;
   } = {},
 ): Promise<string> {
+  const habercomboAvailable =
+    !!HABERCOMBO_API_KEY && canProceedWith(habercomboCircuitBreaker);
   const deepseekAvailable =
     !!DEEPSEEK_API_KEY && canProceedWith(deepSeekCircuitBreaker);
   const kiloAvailable = !!KILO_API_KEY && canProceedWith(kiloCircuitBreaker);
 
-  if (!deepseekAvailable && !kiloAvailable) {
+  if (!habercomboAvailable && !deepseekAvailable && !kiloAvailable) {
     throw new Error(
-      "DeepSeek and Kilo Gateway circuit breakers are OPEN or unconfigured. Please try again later.",
+      "All LLM providers (HaberCombo, DeepSeek, Kilo) circuit breakers are OPEN or unconfigured. Please try again later.",
     );
   }
 
+  // Try HaberCombo first
+  if (habercomboAvailable) {
+    try {
+      return await callProvider("habercombo", messages, options);
+    } catch (habercomboError) {
+      const errMsg =
+        habercomboError instanceof Error
+          ? habercomboError.message
+          : String(habercomboError);
+
+      if (!deepseekAvailable && !kiloAvailable) {
+        throw new Error(`HaberCombo failed and no fallbacks available: ${errMsg}`);
+      }
+
+      console.warn(`⚠️ HaberCombo failed, falling back to DeepSeek: ${errMsg}`);
+    }
+  }
+
+  // Fallback to DeepSeek
   if (deepseekAvailable) {
     try {
       return await callProvider("deepseek", messages, options);
@@ -367,6 +424,7 @@ export async function callDeepSeek(
     }
   }
 
+  // Last resort: Kilo Gateway
   return callProvider("kilo", messages, options);
 }
 

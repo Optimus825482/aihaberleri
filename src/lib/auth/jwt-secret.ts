@@ -9,7 +9,9 @@ export const getJwtSecret = (): Uint8Array => {
       throw new Error("NEXTAUTH_SECRET must be set in production environment");
     }
     console.warn(
-      "⚠️ WARNING: Using dev-only JWT secret. Set NEXTAUTH_SECRET in production!",
+      "⚠️ WARNING: dev-only-secret-change-in-production kullanılıyor. " +
+        "Bu production'da güvenlik riski oluşturur. " +
+        "NEXTAUTH_SECRET environment variable'ını mutlaka ayarlayın!",
     );
     return new TextEncoder().encode("dev-only-secret-change-in-production");
   }

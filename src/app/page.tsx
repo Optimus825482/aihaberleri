@@ -203,7 +203,6 @@ export default async function HomePage() {
     todayStart.setHours(0, 0, 0, 0);
     const todayKey = todayStart.toISOString().slice(0, 10); // "2026-04-02"
 
-    // Check L1/L2 cache first — TTL 3 min so fresh articles appear quickly
     const CACHE_TTL = 180; // 3 minutes
     const cacheKey = `homepage:v2:${todayKey}`;
 

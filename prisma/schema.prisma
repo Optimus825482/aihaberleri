@@ -33,8 +33,6 @@ model User {
   @@index([lastLogin])
 }
 
-// Account, Session, VerificationToken tabloları silindi (boş, kullanılmıyor)
-
 model Category {
   id          String    @id @default(cuid())
   name        String
@@ -538,9 +536,7 @@ model ErrorLog {
   @@index([level, resolved])
 }
 
-// BatchOperation silindi (boş, kullanılmıyor)
-
-// FilterPreset silindi (boş, kullanılmıyor)
+// BatchOperation + FilterPreset silindi (boş, kullanılmıyor)
 
 model SearchProviderMetric {
   id              String   @id @default(cuid())
@@ -555,9 +551,7 @@ model SearchProviderMetric {
   @@index([timestamp])
 }
 
-// GoogleIndexingBatch + GoogleIndexingBatchItem silindi (boş, kullanılmıyor)
-
-// IndexingHistory silindi (boş, kullanılmıyor)
+// GoogleIndexingBatch + GoogleIndexingBatchItem + IndexingHistory silindi (boş, kullanılmıyor)
 
 enum Role {
   ADMIN

@@ -6,7 +6,7 @@ DeepSeek Reasoner kullanarak günde iki kez yapay zeka haberlerini tarayan, yeni
 
 ### Genel Web Sitesi
 
-- ✅ Next.js 15 ile modern, responsive tasarım
+- ✅ Next.js 14 ile modern, responsive tasarım
 - ✅ SEO-optimize (metadata, sitemap, yapılandırılmış veri)
 - ✅ Görsel optimizasyonu ile hızlı yükleme
 - ✅ Kategori tabanlı navigasyon
@@ -405,4 +405,3 @@ Sorunlar ve sorular için:
 
 ---
 
-**Next.js, TypeScript, Prisma ve DeepSeek AI kullanılarak ❤️ ile yapıldı**

@@ -103,7 +103,7 @@ async function readWithJina(url: string): Promise<string | null> {
       return content;
     }
     return null;
-  } catch (error: any) {
+  } catch {
     // Silent fail - will try fallback
     return null;
   }

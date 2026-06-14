@@ -61,23 +61,6 @@ services:
     networks:
       - aihaberleri-network
 
-  # Valkey (Redis fork - Google News limiter için)
-  valkey:
-    image: valkey/valkey:7-alpine
-    container_name: aihaberleri-valkey
-    command: valkey-server --appendonly yes
-    volumes:
-      - valkey_data:/data
-healthcheck:
-      test: ["CMD", "valkey-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    networks:
-      - aihaberleri-network
-
-  # Google News (Self-hosted metasearch engine)
   # Next.js App
   app:
     build:
@@ -171,7 +154,7 @@ volumes:
     driver: local
   redis_data:
     driver: local
-  valkey_data:
+  # valkey_data removed - Valkey service was unused
     driver: local
 
 networks:

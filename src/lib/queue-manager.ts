@@ -120,13 +120,6 @@ const QUEUE_CONFIG = {
     jobTimeout: 480000,
     attempts: 3,
   },
-  [QUEUE_NAMES.ENRICHED_ARTICLES_LEGACY]: {
-    concurrency: 1, // was 2 — legacy path, keep minimal
-    rateLimit: { max: 2, duration: 1000 },
-    lockDuration: 300000,
-    jobTimeout: 480000,
-    attempts: 2,
-  },
   [QUEUE_NAMES.CONTENT_SYNTHESIS]: {
     concurrency: 1, // was 2 — LLM calls are slow and expensive, 1 is safe
     rateLimit: {

@@ -364,7 +364,11 @@ const alertRules: AlertRule[] = [
     check: async () => {
       const { getCircuitBreakerState } = await import("@/lib/deepseek");
       const state = getCircuitBreakerState();
-      return state.nvidia === "OPEN" && state.deepseek === "OPEN";
+      return (
+        state.habercombo === "OPEN" &&
+        state.deepseek === "OPEN" &&
+        state.kilo === "OPEN"
+      );
     },
     action: async (alert) => {
       await defaultAlertAction(alert);

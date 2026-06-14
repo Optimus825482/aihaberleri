@@ -8,6 +8,7 @@ import { toIsoDateString } from "@/lib/date-utils";
 import { ShareButtons } from "@/components/ShareButtons";
 import { formatDate, calculateReadingMinutes } from "@/lib/utils";
 import type { Metadata } from "next";
+import { Prisma } from "@prisma/client";
 import {
   generateNewsArticleSchema,
   generateBreadcrumbSchema,
@@ -87,18 +88,22 @@ function extractSourceCountFromContent(content: string, sourceUrl?: string | nul
   return uniqueSources.size;
 }
 
+// Prisma include definition for type-safe article with category
+const articleWithCategoryInclude = { category: true } as const;
+type ArticleWithCategory = Prisma.ArticleGetPayload<{ include: typeof articleWithCategoryInclude }>;
+
 // React.cache() — per-request dedup: generateMetadata + page share same DB query
 // Redis L2 cache (5 min TTL) sits inside to avoid repeated DB hits across requests
-const getArticle = cache(async (slug: string) => {
+const getArticle = cache(async (slug: string): Promise<ArticleWithCategory | null> => {
   const cacheKey = `article:tr:${slug}`;
   const cacheInstance = getCache();
 
-  const cached = await cacheInstance.get<Awaited<ReturnType<typeof db.article.findUnique>>>(cacheKey);
+  const cached = await cacheInstance.get<ArticleWithCategory>(cacheKey);
   if (cached) return cached;
 
   const article = await db.article.findUnique({
     where: { slug },
-    include: { category: true },
+    include: articleWithCategoryInclude,
   });
 
   if (article) {
