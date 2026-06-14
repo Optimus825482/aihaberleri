@@ -279,12 +279,22 @@ const alertRules: AlertRule[] = [
       const redis = getRedis();
       if (!redis) return false;
 
+      // Pipeline must actually be running (not a stale key)
+      const stateRaw = await redis.get("pipeline:state");
+      if (!stateRaw) return false;
+      try {
+        const state = JSON.parse(stateRaw);
+        if (!state.isRunning) return false; // Pipeline already completed
+      } catch {
+        return false;
+      }
+
       const startTime = await redis.get("pipeline:start-time");
       if (!startTime) return false;
 
       const elapsed = Date.now() - parseInt(startTime);
       return elapsed > 10 * 60 * 1000; // 10 minutes
-    },
+    };,
     action: async (alert) => {
       await defaultAlertAction(alert);
       // TODO: Send email notification

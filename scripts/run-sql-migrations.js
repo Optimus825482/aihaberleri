@@ -33,8 +33,18 @@ function splitStatements(sql) {
     const ch = sql[i];
     const next = sql[i + 1];
 
-    // Dollar-quoted string: $tag$...$tag$
+    // Dollar-quoted string: $tag$...$tag$ or $$...$$
     if (!inQuote && ch === "$") {
+      // For $$ (untagged), skip the second $
+      if (!inDollar && next === "$" && sql.indexOf("$", i + 2) !== -1) {
+        const closePos = sql.indexOf("$$", i + 2);
+        if (closePos !== -1) {
+          // $$...$$ block — add everything until closing $$
+          current += sql.slice(i, closePos + 2);
+          i = closePos + 2;
+          continue;
+        }
+      }
       const end = sql.indexOf("$", i + 1);
       if (end !== -1) {
         const tag = sql.slice(i, end + 1);

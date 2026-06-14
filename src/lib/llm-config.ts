@@ -181,3 +181,57 @@ export async function getLlmEndpoint(): Promise<{
     model,
   };
 }
+
+/**
+ * Get ALL available endpoints (DB provider + all env var fallbacks).
+ * Used by the LLM caller to fall back when one provider fails.
+ * Returns endpoints in priority order: DB → HaberCombo → DeepSeek → Kilo.
+ */
+export async function getAllEndpoints(): Promise<Array<{
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+}>> {
+  const endpoints: Array<{ baseUrl: string; apiKey: string; model: string }> = [];
+
+  // 1. DB provider (highest priority)
+  const dbProvider = await getActiveLlmProvider();
+  if (dbProvider) {
+    endpoints.push({
+      baseUrl: dbProvider.baseUrl,
+      apiKey: dbProvider.apiKey,
+      model: dbProvider.model,
+    });
+  }
+
+  // 2. Env var fallbacks — collect ALL non-empty providers
+  const envProviders = [
+    {
+      apiKey: process.env.HABERCOMBO_API_KEY,
+      baseUrl: process.env.HABERCOMBO_API_URL || "http://77.42.68.4:20128/v1",
+      model: process.env.HABERCOMBO_MODEL || "habercombo",
+    },
+    {
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseUrl: process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1",
+      model: process.env.DEEPSEEK_MODEL || "deepseek-chat",
+    },
+    {
+      apiKey: process.env.KILO_API_KEY,
+      baseUrl: process.env.KILO_API_URL,
+      model: process.env.KILO_MODEL || "kilo-chat",
+    },
+  ];
+
+  for (const ep of envProviders) {
+    if (ep.apiKey && !endpoints.some((e) => e.apiKey === ep.apiKey)) {
+      endpoints.push({
+        baseUrl: (ep.baseUrl || "https://api.deepseek.com/v1").replace(/\/+$/, ""),
+        apiKey: ep.apiKey,
+        model: ep.model || "deepseek-chat",
+      });
+    }
+  }
+
+  return endpoints;
+}

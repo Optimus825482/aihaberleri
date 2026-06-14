@@ -55,7 +55,7 @@ services:
     image: redis:7-alpine
     container_name: aihaberleri-redis
     hostname: aihaberleri-redis
-    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy noeviction
     deploy:
       resources:
         limits:

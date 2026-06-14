@@ -27,8 +27,6 @@ export const QUEUE_NAMES = {
   UNIQUE_ARTICLES: "unique-articles",
   TREND_ENRICHMENT: "trend-enrichment", // NEW: Trend matching & enrichment
   ENRICHED_ARTICLES: "enriched-articles",
-  /** @deprecated ContentEnricher için; SourceGatherer ENRICHED_ARTICLES kullanır. Çakışmayı önlemek için ayrı queue. */
-  ENRICHED_ARTICLES_LEGACY: "enriched-articles-legacy",
   CONTENT_SYNTHESIS: "content-synthesis",
   CONTENT_VALIDATION: "content-validation",
   ARTICLES_WITH_VISUALS: "articles-with-visuals",

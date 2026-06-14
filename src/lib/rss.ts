@@ -100,16 +100,18 @@ export const AI_NEWS_RSS_FEEDS = [
   // ========================================
   // TIER 2: AI-FOCUSED PUBLICATIONS
   // ========================================
-  {
-    name: "AI News",
-    url: "https://www.artificialintelligence-news.com/feed/",
-    language: "en",
-  },
-  {
-    name: "MarkTechPost",
-    url: "https://www.marktechpost.com/feed/",
-    language: "en",
-  },
+  // ❌ AI News - DISABLED (2026-06-14): HTTP 403 Forbidden consistently
+  // {
+  //   name: "AI News",
+  //   url: "https://www.artificialintelligence-news.com/feed/",
+  //   language: "en",
+  // },
+  // ❌ MarkTechPost - DISABLED (2026-06-14): HTTP 403 Forbidden consistently
+  // {
+  //   name: "MarkTechPost",
+  //   url: "https://www.marktechpost.com/feed/",
+  //   language: "en",
+  // },
   {
     name: "THE DECODER - AI News",
     url: "https://the-decoder.com/feed/",
@@ -260,11 +262,12 @@ export const AI_NEWS_RSS_FEEDS = [
     url: "https://machinelearning.apple.com/rss.xml",
     language: "en",
   },
-  {
-    name: "Microsoft AI Blog",
-    url: "https://blogs.microsoft.com/ai/feed/",
-    language: "en",
-  },
+  // ❌ Microsoft AI Blog - DISABLED (2026-06-14): HTTP 410 Gone consistently
+  // {
+  //   name: "Microsoft AI Blog",
+  //   url: "https://blogs.microsoft.com/ai/feed/",
+  //   language: "en",
+  // },
   // DISABLED (12.02.2026): Consistently returns empty RSS feed
   // {
   //   name: "Meta AI Blog",
@@ -674,6 +677,14 @@ function rssCursorKey(feedUrl: string): string {
 const UNRELIABLE_FEEDS = new Set([
   "https://www.jiqizhixin.com/rss",
   "https://www.qbitai.com/feed",
+  // Reddit feeds — always rate-limited (429), reduce retries
+  "https://www.reddit.com/r/MachineLearning/.rss",
+  "https://www.reddit.com/r/artificial/.rss",
+  "https://www.reddit.com/r/ChatGPT/.rss",
+  "https://www.reddit.com/r/LocalLLaMA/.rss",
+  "https://www.reddit.com/r/singularity/.rss",
+  "https://www.reddit.com/r/OpenAI/.rss",
+  "https://www.reddit.com/r/StableDiffusion/.rss",
 ]);
 
 const HTTP_CACHE_PREFIX = "rss:http:";

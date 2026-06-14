@@ -25,39 +25,25 @@ CREATE INDEX IF NOT EXISTS "SearchProviderMetric_provider_timestamp_idx"
 CREATE INDEX IF NOT EXISTS "SearchProviderMetric_timestamp_idx" 
     ON "SearchProviderMetric"("timestamp");
 
--- 3. Tablo oluşturuldu mu kontrol et
-DO $$
-BEGIN
-    IF EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = 'SearchProviderMetric'
-    ) THEN
-        RAISE NOTICE '✅ SearchProviderMetric tablosu başarıyla oluşturuldu';
-    ELSE
-        RAISE EXCEPTION '❌ SearchProviderMetric tablosu oluşturulamadı';
-    END IF;
-END $$;
+-- 3. Tablo oluşturuldu mu kontrol et (basit SELECT ile, DO $$ blokları executeRawUnsafe'de hata veriyor)
+SELECT EXISTS (
+    SELECT FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    AND table_name = 'SearchProviderMetric'
+) AS "table_created";
 
 -- 4. İndeksler oluşturuldu mu kontrol et
-DO $$
-BEGIN
-    IF EXISTS (
-        SELECT FROM pg_indexes 
-        WHERE tablename = 'SearchProviderMetric' 
-        AND indexname = 'SearchProviderMetric_provider_timestamp_idx'
-    ) THEN
-        RAISE NOTICE '✅ Provider-Timestamp indeksi oluşturuldu';
-    END IF;
-    
-    IF EXISTS (
-        SELECT FROM pg_indexes 
-        WHERE tablename = 'SearchProviderMetric' 
-        AND indexname = 'SearchProviderMetric_timestamp_idx'
-    ) THEN
-        RAISE NOTICE '✅ Timestamp indeksi oluşturuldu';
-    END IF;
-END $$;
+SELECT EXISTS (
+    SELECT FROM pg_indexes 
+    WHERE tablename = 'SearchProviderMetric' 
+    AND indexname = 'SearchProviderMetric_provider_timestamp_idx'
+) AS "provider_timestamp_index_created";
+
+SELECT EXISTS (
+    SELECT FROM pg_indexes 
+    WHERE tablename = 'SearchProviderMetric' 
+    AND indexname = 'SearchProviderMetric_timestamp_idx'
+) AS "timestamp_index_created";
 
 -- ============================================
 -- OPSIYONEL: Test Verisi Ekle (İsteğe Bağlı)

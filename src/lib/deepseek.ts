@@ -1,6 +1,6 @@
 import axios from "axios";
 import { z } from "zod";
-import { getLlmEndpoint, invalidateLlmConfigCache } from "@/lib/llm-config";
+import { getAllEndpoints, invalidateLlmConfigCache } from "@/lib/llm-config";
 
 // Zod schemas for validating AI responses
 const AnalysisResultSchema = z.object({
@@ -37,25 +37,6 @@ export type LlmEndpoint = {
   apiKey: string;
   model: string;
 };
-
-/**
- * Resolve LLM endpoint on every call — reads from DB (cached 60s) or env fallback.
- * This ensures admin panel changes take effect within 1 minute without restart.
- */
-async function resolveEndpoint(): Promise<LlmEndpoint | null> {
-  try {
-    const endpoint = await getLlmEndpoint();
-    if (endpoint) return endpoint;
-  } catch (err) {
-    console.warn("⚠️ Failed to resolve LLM endpoint:", err);
-  }
-
-  // Ultimate fallback — nothing configured
-  console.error(
-    "❌ No LLM provider configured. Set one in Admin > LLM Provider or .env",
-  );
-  return null;
-}
 
 /**
  * Sanitize text for safe JSON serialization
@@ -196,74 +177,108 @@ function stripThinkingTags(text: string): string {
 
 /**
  * Call the active LLM provider (configured via Admin panel or .env fallback)
+ * On auth errors (401/403), tries the next available provider automatically.
  */
 async function callProvider(
   messages: DeepSeekMessage[],
   options: { model?: string; temperature?: number; maxTokens?: number },
 ): Promise<string> {
-  const endpoint = await resolveEndpoint();
-  if (!endpoint) {
+  // Get ALL available endpoints (DB provider + all env var fallbacks)
+  const endpoints = await getAllEndpoints();
+  if (endpoints.length === 0) {
     throw new Error(
       "LLM provider not configured. Go to Admin > LLM Provider to set one.",
     );
   }
 
-  const providerLabel = `${endpoint.baseUrl}/${endpoint.model}`;
-  if (!canProceedWith(circuitBreaker)) {
-    throw new Error(`LLM circuit breaker is OPEN (${providerLabel})`);
-  }
+  let lastError: Error | null = null;
 
-  console.log(
-    `🤖 LLM call → ${providerLabel} (circuit: ${circuitBreaker.state})`,
-  );
+  for (let attempt = 0; attempt < endpoints.length; attempt++) {
+    const endpoint = endpoints[attempt];
+    const providerLabel = `${endpoint.baseUrl}/${endpoint.model}`;
 
-  try {
-    const response = await axios.post<DeepSeekResponse>(
-      `${endpoint.baseUrl}/chat/completions`,
-      {
-        model: options.model || endpoint.model,
-        messages,
-        temperature: options.temperature ?? 0.7,
-        max_tokens: options.maxTokens ?? 2000,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${endpoint.apiKey}`,
-        },
-        timeout: 120000,
-      },
+    if (!canProceedWith(circuitBreaker)) {
+      console.warn(
+        `⚠️ ${providerLabel} circuit breaker is OPEN, trying next provider...`,
+      );
+      continue;
+    }
+
+    console.log(
+      `🤖 LLM call → ${providerLabel} (${attempt + 1}/${endpoints.length}, circuit: ${circuitBreaker.state})`,
     );
 
-    recordProviderSuccess(circuitBreaker);
-    return response.data.choices[0]?.message?.content || "";
-  } catch (error) {
-    recordProviderFailure(circuitBreaker, providerLabel);
+    try {
+      const response = await axios.post<DeepSeekResponse>(
+        `${endpoint.baseUrl}/chat/completions`,
+        {
+          model: options.model || endpoint.model,
+          messages,
+          temperature: options.temperature ?? 0.7,
+          max_tokens: options.maxTokens ?? 2000,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${endpoint.apiKey}`,
+          },
+          timeout: 120000,
+        },
+      );
 
-    if (axios.isAxiosError(error)) {
-      const status = error.response?.status;
-      const msg = error.response?.data?.error?.message || error.message;
-      console.error(`LLM API Error:`, { status, msg });
+      recordProviderSuccess(circuitBreaker);
+      return response.data.choices[0]?.message?.content || "";
+    } catch (error) {
+      recordProviderFailure(circuitBreaker, providerLabel);
 
-      if (
-        status === 429 ||
-        status === 500 ||
-        status === 502 ||
-        status === 503
-      ) {
-        const retryAfter = error.response?.headers?.["retry-after"];
-        const err = new Error(`LLM API error (${status}): ${msg}`);
-        (err as any).retryable = true;
-        (err as any).retryAfter = retryAfter
-          ? parseInt(retryAfter) * 1000
-          : 3000;
-        throw err;
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+        const msg = error.response?.data?.error?.message || error.message;
+        console.error(`LLM API Error:`, {
+          status,
+          msg,
+          provider: providerLabel,
+        });
+
+        // Auth errors (401/403) — try next provider
+        if (status === 401 || status === 403) {
+          console.warn(
+            `⚠️ Auth error on ${providerLabel}, falling back to next provider...`,
+          );
+          lastError = new Error(`LLM API error (${status}): ${msg}`);
+          continue; // Try next endpoint
+        }
+
+        // Retryable errors (429, 5xx)
+        if (
+          status === 429 ||
+          status === 500 ||
+          status === 502 ||
+          status === 503
+        ) {
+          const retryAfter = error.response?.headers?.["retry-after"];
+          const err = new Error(`LLM API error (${status}): ${msg}`);
+          (err as any).retryable = true;
+          (err as any).retryAfter = retryAfter
+            ? parseInt(retryAfter) * 1000
+            : 3000;
+          throw err;
+        }
+
+        // Other HTTP errors — stop trying
+        throw new Error(`LLM API error (${status}): ${msg}`);
       }
-
-      throw new Error(`LLM API error (${status}): ${msg}`);
+      // Non-HTTP errors (network, timeout, etc.)
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (attempt < endpoints.length - 1) {
+        console.warn(`⚠️ ${providerLabel} failed, trying next provider...`);
+        continue;
+      }
     }
-    throw error;
   }
+
+  // All providers exhausted
+  throw lastError || new Error("All LLM providers failed");
 }
 
 /**
