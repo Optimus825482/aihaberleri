@@ -164,7 +164,7 @@ COPY --link --chown=1001:1001 src ./src
 COPY --link --chown=1001:1001 scripts/worker-healthcheck.js ./scripts/worker-healthcheck.js
 COPY --link --chown=1001:1001 scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 COPY --link --chown=1001:1001 scripts/run-sql-migrations.js ./scripts/run-sql-migrations.js
-COPY --link --chown=1001:1001 migrations ./migrations
+COPY --link --from=app-builder --chown=1001:1001 /app/migrations ./migrations
 COPY --link --chown=1001:1001 tsconfig.json ./tsconfig.json
 
 RUN chmod +x /app/docker-entrypoint.sh

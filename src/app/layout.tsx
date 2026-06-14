@@ -163,19 +163,19 @@ export default function RootLayout({
         />
 
         {/*
-          Material Symbols Outlined — preloaded with display=optional.
-          Preconnect above ensures early connection; display=optional sets 0ms
-          font-display block period so icons never block rendering.
-          Moving from CSS @import → <link> allows parallel loading with other CSS.
-        */}
+        {/* Material Symbols Outlined — display=block ensures font-family loads within 3s.
+            display=optional was causing names (chevron_right) to appear permanently
+            when the font took >100ms to load on cold cache or slow connections.
+            display=block gives 3s invisible period, then falls back briefly,
+            and swaps to icons when font loads. */}
         <link
           rel="preload"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
           as="style"
         />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=optional"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
         />
 
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
