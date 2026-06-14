@@ -112,16 +112,14 @@ YANIT FORMATI — SADECE geçerli JSON döndür, başka hiçbir şey yazma:
       },
     );
 
-    // JSON parse
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
+    // JSON parse — markdown code bloklarını temizle, çoklu format dene
+    const parsed = extractJsonFromLlmResponse(response);
+    if (!parsed) {
       logger.warn("LLM yanıtında JSON bulunamadı, fallback kullanılıyor");
       return fallbackTopicExtraction(trends);
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
     const assignments = parsed.assignments || parsed.clusters || [];
-
     const topicMap = new Map<number, string>();
     for (const a of assignments) {
       if (typeof a.index === "number" && typeof a.topic === "string") {
@@ -146,6 +144,63 @@ YANIT FORMATI — SADECE geçerli JSON döndür, başka hiçbir şey yazma:
     );
     return fallbackTopicExtraction(trends);
   }
+}
+
+/**
+ * LLM yanıtından JSON çıkarmak için çoklu strateji dener:
+ * 1. Markdown code block (```json ... ```)
+ * 2. Süslü parantez ile { ... }
+ * 3. Köşeli parantez ile [ ... ]
+ * 4. Tüm yanıtı JSON parse etmeyi dene
+ */
+function extractJsonFromLlmResponse(
+  response: string,
+): Record<string, any> | null {
+  if (!response) return null;
+
+  // 1. Markdown code block içindeki JSON'ı bul
+  const markdownRegex = /```(?:json)?\s*\n?([\s\S]*?)\n?```/;
+  const markdownMatch = response.match(markdownRegex);
+  if (markdownMatch) {
+    try {
+      return JSON.parse(markdownMatch[1].trim());
+    } catch {
+      // Markdown içi JSON parse edilemedi, diğer stratejilere geç
+    }
+  }
+
+  // 2. Süslü parantez ile JSON ara
+  const braceMatch = response.match(/\{[\s\S]*\}/);
+  if (braceMatch) {
+    try {
+      return JSON.parse(braceMatch[0]);
+    } catch {
+      // Geçerli JSON değil, array formatını dene
+    }
+  }
+
+  // 3. Array formatını dene (bazı modeller direkt dizi döndürür)
+  const arrayMatch = response.match(/\[[\s\S]*\]/);
+  if (arrayMatch) {
+    try {
+      const arr = JSON.parse(arrayMatch[0]);
+      if (Array.isArray(arr)) {
+        return { assignments: arr };
+      }
+    } catch {
+      // Array de parse edilemedi
+    }
+  }
+
+  // 4. Tüm yanıtı JSON parse etmeyi dene
+  try {
+    const direct = JSON.parse(response.trim());
+    if (typeof direct === "object") return direct;
+  } catch {
+    // Hiçbiri çalışmadı
+  }
+
+  return null;
 }
 
 // ============================================================================

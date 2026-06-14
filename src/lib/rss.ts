@@ -699,7 +699,7 @@ export async function fetchRSSFeed(
 
   // Reduce retries and timeout for known unreliable feeds
   const isUnreliable = UNRELIABLE_FEEDS.has(feedUrl);
-  const effectiveRetries = isUnreliable ? 1 : retries;
+  const effectiveRetries = isUnreliable ? 0 : retries;
   const timeout = isUnreliable ? 8000 : 15000;
 
   // ── Load cached HTTP ETag/Last-Modified from Redis ──
@@ -940,14 +940,34 @@ export async function fetchAllRSSFeeds(
       // ── Cursor filtresi ────────────────────────────────────────────────
       let newItems = items;
       if (lastSeenLink) {
+        // Cursor JSON format: {link, ts} veya legacy: düz link string
+        let cursorLink: string | null = null;
+        let cursorTs: number | null = null;
+        try {
+          const parsed = JSON.parse(lastSeenLink);
+          cursorLink = parsed.link || null;
+          cursorTs = parsed.ts || null;
+        } catch {
+          cursorLink = lastSeenLink; // legacy format (düz link)
+        }
+
         const cutoffIdx = items.findIndex(
-          (item) => item.link === lastSeenLink || item.guid === lastSeenLink,
+          (item) => item.link === cursorLink || item.guid === cursorLink,
         );
 
         if (cutoffIdx === 0) {
-          // İlk item aynı → hiçbir şey yeni
-          feedsUnchanged++;
-          newItems = [];
+          // İlk item aynı → cursor yaşı kontrol et
+          const CURSOR_STALE_MS = 4 * 60 * 60 * 1000; // 4 saat
+          if (cursorTs && Date.now() - cursorTs > CURSOR_STALE_MS) {
+            // Cursor bayatlamış → tüm itemları yeni kabul et (cursor'ı sıfırla)
+            console.log(
+              `🔄 Cursor bayat (${Math.round((Date.now() - cursorTs) / 3600000)}s), ${feed.name} tazeleniyor`,
+            );
+            // feedsUnchanged artırma — aslında item dönüyoruz
+          } else {
+            feedsUnchanged++;
+            newItems = [];
+          }
         } else if (cutoffIdx > 0) {
           // Bazı yeni haberler var
           const skippedCount = items.length - cutoffIdx;
@@ -961,10 +981,11 @@ export async function fetchAllRSSFeeds(
         allItems.push(...newItems);
       }
 
-      // ── Cursor güncelle (her başarılı fetch'te en yeni link'i kaydet) ──
+      // ── Cursor güncelle (sadece yeni item varsa link + timestamp) ──
       const newestLink = items[0].link || items[0].guid || null;
-      if (newestLink && newestLink !== lastSeenLink) {
-        cursorUpdates.push({ key: rssCursorKey(feed.url), value: newestLink });
+      if (newestLink && newItems.length > 0) {
+        const cursorData = JSON.stringify({ link: newestLink, ts: Date.now() });
+        cursorUpdates.push({ key: rssCursorKey(feed.url), value: cursorData });
       }
     }
 
@@ -1001,9 +1022,7 @@ export async function fetchAllRSSFeeds(
     try {
       if (feedsUnchanged >= feeds.length && allItems.length === 0) {
         await redis.set("rss:all_feeds_unchanged", "1", "EX", 600); // 10min TTL
-        console.log(
-          `📋 rss:all_feeds_unchanged = 1 (tüm feed'ler değişmemiş)`,
-        );
+        console.log(`📋 rss:all_feeds_unchanged = 1 (tüm feed'ler değişmemiş)`);
       } else {
         await redis.del("rss:all_feeds_unchanged");
       }

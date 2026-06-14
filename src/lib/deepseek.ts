@@ -409,14 +409,39 @@ URL: ${article.url}
     {},
   );
 
-  // Extract JSON from response
-  const jsonMatch = response.match(/\[[\s\S]*\]/);
-  if (!jsonMatch) {
-    throw new Error("Failed to parse DeepSeek response");
+  // Extract JSON from response — markdown code block'larını temizle
+  let jsonStr: string | null = null;
+
+  // 1. Markdown code block içindeki JSON'ı bul
+  const markdownMatch = response.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+  if (markdownMatch) {
+    jsonStr = markdownMatch[1].trim();
+  }
+
+  // 2. Array formatını dene ([ ... ])
+  if (!jsonStr) {
+    const arrayMatch = response.match(/\[[\s\S]*\]/);
+    if (arrayMatch) jsonStr = arrayMatch[0];
+  }
+
+  // 3. Nesne formatını dene ({ ... })
+  if (!jsonStr) {
+    const objMatch = response.match(/\{[\s\S]*\}/);
+    if (objMatch) jsonStr = objMatch[0];
+  }
+
+  if (!jsonStr) {
+    // 4. Tüm yanıtı dene
+    try {
+      JSON.parse(response.trim());
+      jsonStr = response.trim();
+    } catch {
+      throw new Error("Failed to parse DeepSeek response");
+    }
   }
 
   // Validate AI response with Zod schema to prevent invalid data
-  const parsedResults = JSON.parse(jsonMatch[0]);
+  const parsedResults = JSON.parse(jsonStr);
   const results = z.array(AnalysisResultSchema).safeParse(parsedResults);
 
   if (!results.success) {
