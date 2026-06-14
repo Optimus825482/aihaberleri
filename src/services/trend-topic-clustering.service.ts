@@ -147,96 +147,102 @@ YANIT FORMATI — SADECE geçerli JSON döndür, başka hiçbir şey yazma:
 }
 
 /**
- * LLM yanıtından JSON çıkarmak için çoklu strateji dener:
- * 1. Markdown code block (```json ... ```)
- * 2. Süslü parantez ile { ... }
- * 3. Köşeli parantez ile [ ... ]
- * 4. Tüm yanıtı JSON parse etmeyi dene
+ * LLM yanıtından JSON çıkarmak için çoklu strateji dener.
+ * En kritik özellik: kesik JSON'ları bracket sayaciyla kapatabilir.
+ *
+ * Stratejiler (sırayla):
+ * 1. ```json ... ``` markdown code block
+ * 2. Kapsamli JSON temizle + bracket dengesiyle kapat
+ * 3. Array formati [...]
+ * 4. Tüm yaniti direkt dene
+ * 5. Hiçbiri olmazsa debug log
  */
 function extractJsonFromLlmResponse(
   response: string,
 ): Record<string, any> | null {
   if (!response || !response.trim()) return null;
 
-  const trimmed = response.trim();
-
-  // ── Boolean check: input'i JSON parse et ──
+  // ── Helper: JSON parse dene ──
   function tryParse(raw: string): Record<string, any> | null {
     try {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === "object") return parsed;
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
     return null;
   }
 
-  // ── Helper: string temizle (control chars, BOM, zero-width) ──
+  // ── Helper: temizle (control chars, BOM, zero-width) ──
   function clean(raw: string): string {
     return raw
-      .replace(/^\uFEFF/, "") // BOM
-      .replace(/[\u200B-\u200D\uFEFF]/g, "") // zero-width chars
-      .replace(/[\x00-\x1F\x7F]/g, " ") // control chars -> space
-      .replace(/\s+/g, " ") // normalize whitespace
+      .replace(/^\uFEFF/, "")
+      .replace(/[\u200B-\u200D\uFEFF]/g, "")
+      .replace(/[\x00-\x1F\x7F]/g, " ")
+      .replace(/\s+/g, " ")
       .trim();
   }
 
-  const cleanStr = clean(trimmed);
-
-  // 0. Markdown code block (```json ... ```) — JSON'ı al
-  const markdownRegex = /```(?:json)?\s*\n?([\s\S]*?)\n?```/;
-  const markdownMatch = trimmed.match(markdownRegex);
-  if (markdownMatch) {
-    const result = tryParse(clean(markdownMatch[1]));
-    if (result) return result;
+  // ── Helper: eksik kapanislari ekleyerek JSON'i duzelt ──
+  function closeJson(raw: string): string {
+    let fixed = raw;
+    // Sondaki virgul/ tire/ bosluk/ newline temizle
+    fixed = fixed.replace(/[,\s\-]+$/, '');
+    // Açılıp kapanmamış parantezleri say
+    const openBraces = (fixed.match(/\{/g) || []).length;
+    const closeBraces = (fixed.match(/\}/g) || []).length;
+    const openBrackets = (fixed.match(/\[/g) || []).length;
+    const closeBrackets = (fixed.match(/\]/g) || []).length;
+    // Eksik kapanislari ekle: önce array kapat, sonra obj kapat
+    for (let i = 0; i < openBrackets - closeBrackets; i++) fixed += ']';
+    for (let i = 0; i < openBraces - closeBraces; i++) fixed += '}';
+    return fixed;
   }
 
-  // 1. <think>...</think> tag'lerini temizle, sonra JSON ara
+  // ── Helper: tum JSON parse stratejilerini dene ──
+  function tryParseAll(raw: string): Record<string, any> | null {
+    return tryParse(clean(raw))
+      || tryParse(clean(closeJson(raw)))
+      || null;
+  }
+
+  const trimmed = response.trim();
+
+  // 1. Markdown code block
+  const mdMatch = trimmed.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+  if (mdMatch) {
+    const r = tryParseAll(mdMatch[1]);
+    if (r) return r;
+  }
+
+  // 2. <think> tag'lerini temizle, ana JSON bloklarini dene
   const noThink = trimmed.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 
-  // 2. Süslü parantez ara: ilk { ile son } arasını
-  const braceMatch = noThink.match(/\{[\s\S]*\}/);
-  if (braceMatch) {
-    const result = tryParse(clean(braceMatch[0]));
-    if (result) return result;
+  // JSON baslangici ara — { ile baslayan veya [ ile baslayan
+  const jsonStart = noThink.search(/[{[]/);
+  if (jsonStart >= 0) {
+    const jsonPart = noThink.slice(jsonStart);
+    const r = tryParseAll(jsonPart);
+    if (r) return r;
   }
 
-  // 3. Array formatı: [ ... ] — bazı modeller direkt dizi döndürür
-  const arrayMatch = noThink.match(/\[[\s\S]*\]/);
-  if (arrayMatch) {
+  // 3. Array formatini dene — bazı modeller direkt dizi dondurur
+  const arrMatch = noThink.match(/\[[\s\S]*\]/);
+  if (arrMatch) {
+    const arrClean = clean(closeJson(arrMatch[0]));
     try {
-      const arr = JSON.parse(clean(arrayMatch[0]));
+      const arr = JSON.parse(arrClean);
       if (Array.isArray(arr) && arr.length > 0) {
         return { assignments: arr };
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }
 
-  // 4. Direkt tüm yanıtı dene
-  const directResult = tryParse(cleanStr);
-  if (directResult) return directResult;
+  // 4. Tüm yaniti dene
+  const r = tryParseAll(trimmed);
+  if (r) return r;
 
-  // 5. Kesik JSON kurtarma — adim 2'deki {..} JSON kapanmamis olabilir
-  //    Burasi bize `braceMatch` sonucunu donduren regex'in aynisi
-  //    Ama `]}` ekleyerek JSON'i kapatmayi dener
-  const braceRaw = noThink.match(/\{[\s\S]*\}/);
-  if (braceRaw) {
-    // Orijinal `{...}` icerigine `]}` ekle ve dene
-    const withArrayClose = braceRaw[0] + "\n]  \n}";
-    const recovered = tryParse(clean(withArrayClose));
-    if (recovered) {
-      logger.warn(
-        `⚡ Kesik JSON kurtarıldı (eksik array/root kapanışı eklendi)`,
-      );
-      return recovered;
-    }
-  }
-
-  // 6. Hiçbiri calismadi — DEBUG: ilk 500 karakteri logla
+  // 5. Hicbiri calismadi — DEBUG
   logger.warn(
-    `🔍 RAW LLM RESPONSE (first 500 chars): ${cleanStr.substring(0, 500)}`,
+    `🔍 RAW LLM RESPONSE (first 500 chars): ${clean(trimmed).substring(0, 500)}`,
   );
 
   return null;

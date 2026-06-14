@@ -409,35 +409,71 @@ URL: ${article.url}
     {},
   );
 
-  // Extract JSON from response — markdown code block'larını temizle
-  let jsonStr: string | null = null;
-
-  // 1. Markdown code block içindeki JSON'ı bul
-  const markdownMatch = response.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
-  if (markdownMatch) {
-    jsonStr = markdownMatch[1].trim();
+  // Extract JSON from response — markdown code block'larını temizle, kesik JSON kurtar
+  function clean(raw: string): string {
+    return raw
+      .replace(/^\uFEFF/, "")
+      .replace(/[\u200B-\u200D\uFEFF]/g, "")
+      .replace(/[\x00-\x1F\x7F]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
-
-  // 2. Array formatını dene ([ ... ])
-  if (!jsonStr) {
-    const arrayMatch = response.match(/\[[\s\S]*\]/);
-    if (arrayMatch) jsonStr = arrayMatch[0];
+  function closeJson(raw: string): string {
+    let fixed = raw.replace(/[,\s\-]+$/, "");
+    const openBraces = (fixed.match(/\{/g) || []).length;
+    const closeBraces = (fixed.match(/\}/g) || []).length;
+    const openBrackets = (fixed.match(/\[/g) || []).length;
+    const closeBrackets = (fixed.match(/\]/g) || []).length;
+    for (let i = 0; i < openBrackets - closeBrackets; i++) fixed += "]";
+    for (let i = 0; i < openBraces - closeBraces; i++) fixed += "}";
+    return fixed;
   }
-
-  // 3. Nesne formatını dene ({ ... })
-  if (!jsonStr) {
-    const objMatch = response.match(/\{[\s\S]*\}/);
-    if (objMatch) jsonStr = objMatch[0];
-  }
-
-  if (!jsonStr) {
-    // 4. Tüm yanıtı dene
-    try {
-      JSON.parse(response.trim());
-      jsonStr = response.trim();
-    } catch {
-      throw new Error("Failed to parse DeepSeek response");
+  function tryExtract(raw: string): string | null {
+    // Array
+    const arr = raw.match(/\[[\s\S]*\]/);
+    if (arr) {
+      try {
+        JSON.parse(clean(closeJson(arr[0])));
+        return clean(closeJson(arr[0]));
+      } catch {}
     }
+    // Object
+    const obj = raw.match(/\{[\s\S]*\}/);
+    if (obj) {
+      try {
+        JSON.parse(clean(closeJson(obj[0])));
+        return clean(closeJson(obj[0]));
+      } catch {}
+    }
+    // Direct
+    try {
+      JSON.parse(clean(closeJson(raw)));
+      return clean(closeJson(raw));
+    } catch {}
+    return null;
+  }
+
+  let jsonStr = tryExtract(response);
+  if (!jsonStr) {
+    // Try with <think> stripped
+    const noThink = response.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
+    jsonStr = tryExtract(noThink);
+  }
+  if (!jsonStr) {
+    // Try markdown code block
+    const mdMatch = response.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+    if (mdMatch) {
+      try {
+        JSON.parse(clean(closeJson(mdMatch[1])));
+        jsonStr = clean(closeJson(mdMatch[1]));
+      } catch {}
+    }
+  }
+  if (!jsonStr) {
+    console.error(
+      `🔍 RAW LLM RESPONSE (first 500): ${clean(response).substring(0, 500)}`,
+    );
+    throw new Error("Failed to parse DeepSeek response");
   }
 
   // Validate AI response with Zod schema to prevent invalid data
