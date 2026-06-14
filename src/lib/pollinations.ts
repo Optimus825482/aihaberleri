@@ -193,7 +193,18 @@ export async function fetchFreeBackupImage(
 }
 
 /**
- * Get cached image URL from Redis
+ * Domains requiring server-side auth — stale cache entries with these hosts
+ * are invalidated on read to avoid serving broken image URLs.
+ */
+const AUTH_BROKEN_DOMAINS = ["gen.pollinations.ai"];
+
+function isAuthBrokenUrl(url: string): boolean {
+  return AUTH_BROKEN_DOMAINS.some((d) => url.includes(d));
+}
+
+/**
+ * Get cached image URL from Redis.
+ * Invalidates stale auth-domain URLs so they are regenerated.
  */
 async function getCachedImage(
   prompt: string,
@@ -207,6 +218,13 @@ async function getCachedImage(
     const cachedUrl = await redis.get(cacheKey);
 
     if (cachedUrl) {
+      // CRITICAL: gen.pollinations.ai URLs require API key — if cached,
+      // they will 401 in browser. Treat as cache miss and delete.
+      if (isAuthBrokenUrl(cachedUrl)) {
+        imageLog.warn(`Cache HIT but auth domain invalid — regenerating: ${prompt.substring(0, 50)}...`);
+        await redis.del(cacheKey).catch(() => {});
+        return null;
+      }
       imageLog.success(`Cache HIT: ${prompt.substring(0, 50)}...`);
       return cachedUrl;
     }
@@ -229,8 +247,13 @@ async function cacheImageUrl(
 ): Promise<void> {
   try {
     // Skip caching base64 data URLs — they're too large for Redis (500KB-2MB each)
-    // Gemini images go through image-optimizer → R2 upload, so caching the data URL is wasteful
     if (imageUrl.startsWith("data:")) {
+      return;
+    }
+
+    // CRITICAL: Never cache auth-domain URLs — they will 401 in browser
+    if (isAuthBrokenUrl(imageUrl)) {
+      imageLog.warn(`Skipping cache for auth-domain URL: ${imageUrl.substring(0, 60)}...`);
       return;
     }
 
@@ -523,11 +546,19 @@ export async function fetchPollinationsImage(
 
             if (response.ok) {
               console.log(
-                "✅ Pollinations.ai görsel başarıyla oluşturuldu (authenticated)",
+                "✅ Pollinations.ai auth succeeded — using anonymous URL for public display",
               );
-              // Cache the result for future use
-            await cacheImageUrl(sanitizedPrompt, imageUrl, options);
-              return imageUrl;
+              // CRITICAL: Auth endpoint (gen.pollinations.ai) URLs require Authorization
+              // header — they will 401 in the browser. Return anonymous URL instead
+              // so browsers can load the image directly without auth.
+              const publicUrl = generateImageUrl(sanitizedPrompt, {
+                ...options,
+                width,
+                height,
+                model: normalizedModel,
+              });
+              await cacheImageUrl(sanitizedPrompt, publicUrl, options);
+              return publicUrl;
             }
 
             // OPTIMIZED: Handle 429 rate limit with exponential backoff

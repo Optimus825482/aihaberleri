@@ -8,13 +8,22 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  errorCount: number;
 }
 
+/**
+ * HydrationErrorBoundary — only handles NON-hydration errors.
+ *
+ * MANTIK:
+ * - Hydration errors (#418/#423 vs.) browser extension'ların DOM'a müdahalesiyle
+ *   oluşur ve React kendiliğinden recovery dener. Error boundary'in araya girip
+ *   fallback UI göstermesi gereksiz flash'a yol açar.
+ * - Bu nedenle hydration error'ları SADECE loglanır, fallback UI gösterilmez.
+ * - Gerçek hatalar (runtime crash vs.) için normal hata yönetimi uygulanır.
+ */
 export class HydrationErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, errorCount: 0 };
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError() {
@@ -24,24 +33,23 @@ export class HydrationErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: any) {
     const errMsg = error?.message || "";
 
-    // React Error #418 = Hydration mismatch (server HTML ≠ client render)
-    // React Error #423 = Hydration error occurred but React recovered
-    // These areminified strings — check for partial match on both variants
+    // React Error #418 = Hydration mismatch (unrecoverable)
+    // React Error #423 = Hydration mismatch but React recovered
     const isHydrationError =
       errMsg.includes("Minified React error #418") ||
       errMsg.includes("Minified React error #423") ||
-      errMsg.includes("418") ||
-      errMsg.includes("423") ||
       errMsg.includes("Hydration") ||
       errMsg.includes("Text content did not match");
 
     if (isHydrationError) {
-      console.error("Hydration error detected:", {
-        error: errMsg,
-        componentStack: errorInfo?.componentStack,
-      });
+      // Hydration hatalarını sessizce logla, fallback UI GÖSTERME.
+      // React #423'te kendi recovery yapar, #418'de de ekranda bir şey bozulmaz.
+      // Error boundary'in fallback'i sadece gereksiz re-render ve flash yaratır.
+      console.warn(
+        "[Hydration] Extension kaynaklı hydration farkı (önemsiz, görmezden gelindi)",
+      );
 
-      // Sentry veya başka bir error tracking servisine gönder
+      // Sentry'e hydration hata bildirimi (opsiyonel)
       if (typeof window !== "undefined" && (window as any).Sentry) {
         (window as any).Sentry.captureException(error, {
           contexts: {
@@ -51,29 +59,23 @@ export class HydrationErrorBoundary extends Component<Props, State> {
           },
           tags: {
             errorType: "hydration",
+            handled: "silent",
           },
+          level: "info",
         });
       }
 
-      // Otomatik recovery (sadece 1 kere)
-      if (this.state.errorCount === 0) {
-        console.log("🔄 Attempting automatic recovery...");
-        this.setState({ errorCount: 1 });
-
-        // 100ms sonra state'i reset et (React'in re-render yapmasını sağla)
-        setTimeout(() => {
-          this.setState({ hasError: false });
-        }, 100);
-      }
-    } else {
-      // Diğer hatalar için normal error handling
-      console.error("❌ Component error:", error, errorInfo);
+      // Fallback göstermeden children'ı render etmeye devam et
+      this.setState({ hasError: false });
+      return;
     }
+
+    // Gerçek hatalar için normal error handling
+    console.error("❌ Component error:", error, errorInfo);
   }
 
   render() {
-    if (this.state.hasError && this.state.errorCount > 0) {
-      // Recovery başarısız olduysa fallback UI göster
+    if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4">
           <div className="max-w-md w-full bg-card border border-border rounded-lg p-6 shadow-lg">
@@ -105,7 +107,6 @@ export class HydrationErrorBoundary extends Component<Props, State> {
               </button>
               <button
                 onClick={() => {
-                  // Cache'i temizle ve yenile
                   if ("caches" in window) {
                     caches.keys().then((names) => {
                       names.forEach((name) => caches.delete(name));
@@ -118,20 +119,6 @@ export class HydrationErrorBoundary extends Component<Props, State> {
                 Cache Temizle
               </button>
             </div>
-
-            <details className="mt-4">
-              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                Teknik Detaylar
-              </summary>
-              <div className="mt-2 p-3 bg-muted rounded text-xs font-mono overflow-auto max-h-32">
-                <p>Error Count: {this.state.errorCount}</p>
-                <p>Browser: {navigator.userAgent}</p>
-                <p>
-                  Service Worker:{" "}
-                  {"serviceWorker" in navigator ? "Supported" : "Not Supported"}
-                </p>
-              </div>
-            </details>
           </div>
         </div>
       );

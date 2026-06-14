@@ -40,17 +40,23 @@ self.addEventListener("fetch", (event) => {
 
   // Skip caching for Next.js API routes and internal resources
 
-  // Skip Service Worker for external scripts (Google Ads, GTM, Analytics)
-  // Let browser handle these directly to avoid CSP violations
-  if (
-    url.hostname.includes("google") ||
-    url.hostname.includes("googletagmanager.com") ||
-    url.hostname.includes("googlesyndication.com") ||
-    url.hostname.includes("doubleclick.net") ||
-    url.hostname.includes("google-analytics.com") ||
-    url.hostname.includes("cloudflareinsights.com")
-  ) {
-    // Don't intercept, let browser handle directly
+  // Skip Service Worker for external domains — let browser handle directly
+  const EXTERNAL_DOMAINS = [
+    "google",
+    "googletagmanager.com",
+    "googlesyndication.com",
+    "doubleclick.net",
+    "google-analytics.com",
+    "cloudflareinsights.com",
+    "pollinations.ai",
+    "picsum.photos",
+    "yandex",
+    "mc.yandex",
+    "gstatic.com",
+    "fonts.googleapis.com",
+    "fonts.gstatic.com",
+  ];
+  if (EXTERNAL_DOMAINS.some((d) => url.hostname.includes(d))) {
     return;
   }
 
@@ -64,14 +70,19 @@ self.addEventListener("fetch", (event) => {
   }
 
   // CRITICAL FIX: HTML dosyalarını ASLA cache'leme (hydration mismatch önleme)
+  // Navigasyon hatalarında asla undefined dönme — "network error response" hatasını engeller
   if (
     event.request.mode === "navigate" ||
     event.request.headers.get("accept")?.includes("text/html")
   ) {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        // Offline fallback (opsiyonel)
-        return caches.match("/");
+      fetch(event.request).catch(async () => {
+        const cached = await caches.match("/");
+        if (cached) return cached;
+        return new Response(
+          "<!DOCTYPE html><html><head><meta charset='utf-8'><title>AI Haberleri</title><meta name='viewport' content='width=device-width,initial-scale=1'><style>body{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0a0a0f;color:#e2e8f0;text-align:center;padding:20px}div{max-width:400px}h1{font-size:1.5rem;margin-bottom:0.5rem}p{color:#94a3b8;font-size:0.9rem}</style></head><body><div><h1>Bağlantı Sorunu</h1><p>Sayfa yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.</p></div></body></html>",
+          { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } },
+        );
       }),
     );
     return;
@@ -105,7 +116,10 @@ self.addEventListener("fetch", (event) => {
         return response;
       })
       .catch(async () => {
-        return (await caches.match(event.request)) || Response.error();
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        // Never return Response.error() — causes "network error response" in console
+        return new Response(null, { status: 503 });
       }),
   );
 });

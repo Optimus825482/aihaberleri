@@ -24,17 +24,29 @@ function getCfImageUrl(src: string, width: number): string {
 
 /**
  * Generate a deterministic fallback image from picsum.photos when CDN fails.
+ * Properly decodes URL-encoded strings to produce readable seeds.
  */
 function getFallbackSrc(src: string): string {
-  const seed = src
-    .split("/")
-    .pop()
-    ?.replace(/\.[^.]+$/, "")
-    ?.replace(/[^a-zA-Z0-9]/g, "")
-    .slice(0, 12)
-    || "ainews";
-  return `https://picsum.photos/seed/${seed}/1200/630`;
+  try {
+    const decoded = decodeURIComponent(src);
+    const seed = decoded
+      .split("/")
+      .pop()
+      ?.replace(/\.[^.]+$/, "")
+      ?.replace(/[^a-zA-Z0-9]/g, "")
+      .slice(0, 12) || "ainews";
+    return `https://picsum.photos/seed/${seed}/1200/630`;
+  } catch {
+    return "https://picsum.photos/seed/ainews/1200/630";
+  }
 }
+
+/**
+ * Domains whose image URLs require server-side auth and will always 401 in the browser.
+ */
+const AUTH_REQUIRED_DOMAINS = [
+  "gen.pollinations.ai",
+];
 
 interface ArticleCardProps {
   article: {
@@ -90,18 +102,36 @@ export const ArticleCard = memo(function ArticleCard({
   const newsPath = locale === "en" ? "en/news" : "news";
   const articleUrl = `${baseUrl}/${newsPath}/${article.slug}`;
 
-  // Track image load state to handle 429/403 failures gracefully
-  const [imageSrc, setImageSrc] = useState(article.imageUrl || "");
-  const [imageFailed, setImageFailed] = useState(false);
+  // Track image load state — auto-fallback for auth-required domains (gen.pollinations.ai etc.)
+  const requiresAuthDomain = AUTH_REQUIRED_DOMAINS.some((d) =>
+    article.imageUrl?.includes(d),
+  );
+  const [imageSrc, setImageSrc] = useState<string>(() => {
+    if (requiresAuthDomain) {
+      console.warn(
+        `[ArticleCard] Auth-required domain detected, skipping: ${(article.imageUrl || "").slice(0, 60)}`,
+      );
+      return getFallbackSrc(article.imageUrl || "");
+    }
+    return article.imageUrl || "";
+  });
+  const [imageFailed, setImageFailed] = useState(requiresAuthDomain);
 
   const handleImageError = useCallback(() => {
     if (!imageFailed) {
+      // First fallback: try picsum
       setImageFailed(true);
       const fallback = getFallbackSrc(article.imageUrl || "");
       console.warn(
         `[ArticleCard] Image failed, falling back: ${(article.imageUrl || "").slice(0, 60)}`,
       );
       setImageSrc(fallback);
+    } else {
+      // Second fallback also failed — clear src to show gradient placeholder
+      console.warn(
+        `[ArticleCard] Fallback image also failed, showing placeholder`,
+      );
+      setImageSrc("");
     }
   }, [article.imageUrl, imageFailed]);
 
