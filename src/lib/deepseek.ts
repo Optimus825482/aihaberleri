@@ -1,5 +1,6 @@
 import axios from "axios";
 import { z } from "zod";
+import { getLlmEndpoint, invalidateLlmConfigCache } from "@/lib/llm-config";
 
 // Zod schemas for validating AI responses
 const AnalysisResultSchema = z.object({
@@ -28,41 +29,32 @@ const AggregationResultSchema = z.object({
 
 // ============================================
 // PROVIDER CONFIGURATION
-// Primary: HaberCombo (custom LLM)
-// Fallback 1: DeepSeek Chat
-// Fallback 2: Kilo Gateway
+// Reads from database (admin panel) or falls back to env vars
 // ============================================
 
-const NVIDIA_API_URL =
-  process.env.NVIDIA_API_URL || "https://integrate.api.nvidia.com/v1";
-const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
-const NVIDIA_MODEL =
-  process.env.NVIDIA_MODEL || "qwen/qwen3-next-80b-a3b-instruct";
+export type LlmEndpoint = {
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+};
 
-const HABERCOMBO_API_URL =
-  process.env.HABERCOMBO_API_URL || "http://77.42.68.4:20128/v1";
-const HABERCOMBO_API_KEY = process.env.HABERCOMBO_API_KEY;
-const HABERCOMBO_MODEL =
-  process.env.HABERCOMBO_MODEL || "habercombo";
+/**
+ * Resolve LLM endpoint on every call — reads from DB (cached 60s) or env fallback.
+ * This ensures admin panel changes take effect within 1 minute without restart.
+ */
+async function resolveEndpoint(): Promise<LlmEndpoint | null> {
+  try {
+    const endpoint = await getLlmEndpoint();
+    if (endpoint) return endpoint;
+  } catch (err) {
+    console.warn("⚠️ Failed to resolve LLM endpoint:", err);
+  }
 
-const DEEPSEEK_API_URL =
-  process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1";
-const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
-const DEEPSEEK_MODEL = "deepseek-chat";
-
-const KILO_API_URL =
-  process.env.KILO_API_URL || "https://api.kilo.ai/api/gateway";
-const KILO_API_KEY = process.env.KILO_API_KEY;
-const KILO_MODEL = "deepseek/deepseek-v3.2";
-
-if (!HABERCOMBO_API_KEY) {
-  console.warn("⚠️  HABERCOMBO_API_KEY is not set — custom LLM disabled");
-}
-if (!DEEPSEEK_API_KEY) {
-  console.warn("⚠️  DEEPSEEK_API_KEY is not set");
-}
-if (!KILO_API_KEY) {
-  console.warn("⚠️  KILO_API_KEY is not set — Kilo Gateway fallback disabled");
+  // Ultimate fallback — nothing configured
+  console.error(
+    "❌ No LLM provider configured. Set one in Admin > LLM Provider or .env",
+  );
+  return null;
 }
 
 /**
@@ -105,8 +97,7 @@ export interface DeepSeekResponse {
 }
 
 // ============================================
-// CIRCUIT BREAKER PATTERN — Per-Provider
-// Active primary: DeepSeek Chat
+// CIRCUIT BREAKER PATTERN — Single Active Provider
 // ============================================
 type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
@@ -118,34 +109,12 @@ interface CircuitBreakerState {
 }
 
 const circuitBreakerConfig = {
-  threshold: 5, // Open circuit after 5 consecutive failures (was 3 — too sensitive)
-  timeout: 2 * 60 * 1000, // 2 minutes before trying again (was 5min — too long, blocks pipeline)
+  threshold: 5,
+  timeout: 2 * 60 * 1000,
   halfOpenMaxCalls: 1,
 };
 
-// Separate circuit breakers for each provider
-const habercomboCircuitBreaker: CircuitBreakerState = {
-  state: "CLOSED",
-  failureCount: 0,
-  lastFailureTime: 0,
-  nextAttemptTime: 0,
-};
-
-const nvidiaCircuitBreaker: CircuitBreakerState = {
-  state: "CLOSED",
-  failureCount: 0,
-  lastFailureTime: 0,
-  nextAttemptTime: 0,
-};
-
-const deepSeekCircuitBreaker: CircuitBreakerState = {
-  state: "CLOSED",
-  failureCount: 0,
-  lastFailureTime: 0,
-  nextAttemptTime: 0,
-};
-
-const kiloCircuitBreaker: CircuitBreakerState = {
+const circuitBreaker: CircuitBreakerState = {
   state: "CLOSED",
   failureCount: 0,
   lastFailureTime: 0,
@@ -165,9 +134,7 @@ function canProceedWith(breaker: CircuitBreakerState): boolean {
 }
 
 function recordProviderSuccess(breaker: CircuitBreakerState): void {
-  if (breaker.state === "HALF_OPEN") {
-    breaker.state = "CLOSED";
-  }
+  if (breaker.state === "HALF_OPEN") breaker.state = "CLOSED";
   breaker.failureCount = 0;
 }
 
@@ -192,154 +159,92 @@ function recordProviderFailure(
 
 // Legacy aliases for backward compat (batchScoreArticles uses these)
 function canProceed(): boolean {
-  return (
-    canProceedWith(deepSeekCircuitBreaker) || canProceedWith(kiloCircuitBreaker)
-  );
+  return canProceedWith(circuitBreaker);
 }
 function recordSuccess(): void {
-  // Called from batchScoreArticles — no-op, handled internally
+  recordProviderSuccess(circuitBreaker);
 }
 function recordFailure(): void {
-  // Called from batchScoreArticles — no-op, handled internally
+  recordProviderFailure(circuitBreaker, "LLM");
 }
 
 /**
- * Get current circuit breaker states (for monitoring)
+ * Get current circuit breaker state (for monitoring)
  */
-export function getCircuitBreakerState(): {
-  habercombo: CircuitState;
-  nvidia: CircuitState;
-  deepseek: CircuitState;
-  kilo: CircuitState;
-} {
-  return {
-    habercombo: habercomboCircuitBreaker.state,
-    nvidia: nvidiaCircuitBreaker.state,
-    deepseek: deepSeekCircuitBreaker.state,
-    kilo: kiloCircuitBreaker.state,
-  };
+export function getCircuitBreakerState(): { state: CircuitState } {
+  return { state: circuitBreaker.state };
 }
 
 /**
- * Reset circuit breakers (for manual recovery)
+ * Reset circuit breaker (for manual recovery)
  */
 export function resetCircuitBreaker(): void {
-  for (const breaker of [
-    habercomboCircuitBreaker,
-    nvidiaCircuitBreaker,
-    deepSeekCircuitBreaker,
-    kiloCircuitBreaker,
-  ]) {
-    breaker.state = "CLOSED";
-    breaker.failureCount = 0;
-    breaker.lastFailureTime = 0;
-    breaker.nextAttemptTime = 0;
-  }
-  console.log("🔄 All circuit breakers reset to CLOSED");
+  circuitBreaker.state = "CLOSED";
+  circuitBreaker.failureCount = 0;
+  circuitBreaker.lastFailureTime = 0;
+  circuitBreaker.nextAttemptTime = 0;
+  invalidateLlmConfigCache();
+  console.log("🔄 Circuit breaker reset to CLOSED");
 }
 
 /**
- * Strip Qwen3 <think>...</think> reasoning tags from response
+ * Strip <think>...</think> reasoning tags from response
  */
 function stripThinkingTags(text: string): string {
   return text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 }
 
 /**
- * Call a single LLM provider (HaberCombo, NVIDIA NIM or DeepSeek)
+ * Call the active LLM provider (configured via Admin panel or .env fallback)
  */
 async function callProvider(
-  provider: "habercombo" | "nvidia" | "deepseek" | "kilo",
   messages: DeepSeekMessage[],
   options: { model?: string; temperature?: number; maxTokens?: number },
 ): Promise<string> {
-  const isHabercombo = provider === "habercombo";
-  const isNvidia = provider === "nvidia";
-  const isKilo = provider === "kilo";
-  const apiUrl = isHabercombo
-    ? HABERCOMBO_API_URL
-    : isNvidia
-      ? NVIDIA_API_URL
-      : isKilo
-        ? KILO_API_URL
-        : DEEPSEEK_API_URL;
-  const apiKey = isHabercombo
-    ? HABERCOMBO_API_KEY
-    : isNvidia
-      ? NVIDIA_API_KEY
-      : isKilo
-        ? KILO_API_KEY
-        : DEEPSEEK_API_KEY;
-  const model = isHabercombo
-    ? HABERCOMBO_MODEL
-    : isNvidia
-      ? NVIDIA_MODEL
-      : isKilo
-        ? KILO_MODEL
-        : DEEPSEEK_MODEL;
-  const breaker = isHabercombo
-    ? habercomboCircuitBreaker
-    : isNvidia
-      ? nvidiaCircuitBreaker
-      : isKilo
-        ? kiloCircuitBreaker
-        : deepSeekCircuitBreaker;
-  const providerLabel = isHabercombo
-    ? `HaberCombo/${HABERCOMBO_MODEL}`
-    : isNvidia
-      ? `NVIDIA/${NVIDIA_MODEL}`
-      : isKilo
-        ? `Kilo/${KILO_MODEL}`
-        : "DeepSeek-chat";
-
-  if (!apiKey) {
-    throw new Error(`${provider.toUpperCase()} API key not configured`);
-  }
-  if (!canProceedWith(breaker)) {
-    throw new Error(`${provider.toUpperCase()} circuit breaker is OPEN`);
+  const endpoint = await resolveEndpoint();
+  if (!endpoint) {
+    throw new Error(
+      "LLM provider not configured. Go to Admin > LLM Provider to set one.",
+    );
   }
 
-  console.log(`🤖 LLM call → ${providerLabel} (circuit: ${breaker.state})`);
+  const providerLabel = `${endpoint.baseUrl}/${endpoint.model}`;
+  if (!canProceedWith(circuitBreaker)) {
+    throw new Error(`LLM circuit breaker is OPEN (${providerLabel})`);
+  }
+
+  console.log(
+    `🤖 LLM call → ${providerLabel} (circuit: ${circuitBreaker.state})`,
+  );
 
   try {
     const response = await axios.post<DeepSeekResponse>(
-      `${apiUrl}/chat/completions`,
+      `${endpoint.baseUrl}/chat/completions`,
       {
-        model,
+        model: options.model || endpoint.model,
         messages,
         temperature: options.temperature ?? 0.7,
         max_tokens: options.maxTokens ?? 2000,
-        // Qwen3 thinking mode — disable for structured JSON output
-        ...(isNvidia ? { thinking: { type: "disabled" } } : {}),
       },
       {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${endpoint.apiKey}`,
         },
         timeout: 120000,
       },
     );
 
-    recordProviderSuccess(breaker);
-
-    let content = response.data.choices[0]?.message?.content || "";
-
-    // Strip <think> tags if Qwen3 still includes them
-    if (isNvidia && content.includes("<think>")) {
-      content = stripThinkingTags(content);
-    }
-
-    return content;
+    recordProviderSuccess(circuitBreaker);
+    return response.data.choices[0]?.message?.content || "";
   } catch (error) {
-    recordProviderFailure(breaker, provider.toUpperCase());
+    recordProviderFailure(circuitBreaker, providerLabel);
 
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       const msg = error.response?.data?.error?.message || error.message;
-      console.error(`${provider.toUpperCase()} API Error:`, { status, msg });
+      console.error(`LLM API Error:`, { status, msg });
 
-      // Retry-worthy errors: add retry hint for caller
       if (
         status === 429 ||
         status === 500 ||
@@ -347,9 +252,7 @@ async function callProvider(
         status === 503
       ) {
         const retryAfter = error.response?.headers?.["retry-after"];
-        const err = new Error(
-          `${provider.toUpperCase()} API error (${status}): ${msg}`,
-        );
+        const err = new Error(`LLM API error (${status}): ${msg}`);
         (err as any).retryable = true;
         (err as any).retryAfter = retryAfter
           ? parseInt(retryAfter) * 1000
@@ -357,16 +260,15 @@ async function callProvider(
         throw err;
       }
 
-      throw new Error(
-        `${provider.toUpperCase()} API error (${status}): ${msg}`,
-      );
+      throw new Error(`LLM API error (${status}): ${msg}`);
     }
     throw error;
   }
 }
 
 /**
- * Call LLM API — HaberCombo primary, DeepSeek Chat fallback, Kilo Gateway last resort.
+ * Call LLM API — reads active provider from database.
+ * This is the single entry point for all AI operations.
  */
 export async function callDeepSeek(
   messages: DeepSeekMessage[],
@@ -376,56 +278,13 @@ export async function callDeepSeek(
     maxTokens?: number;
   } = {},
 ): Promise<string> {
-  const habercomboAvailable =
-    !!HABERCOMBO_API_KEY && canProceedWith(habercomboCircuitBreaker);
-  const deepseekAvailable =
-    !!DEEPSEEK_API_KEY && canProceedWith(deepSeekCircuitBreaker);
-  const kiloAvailable = !!KILO_API_KEY && canProceedWith(kiloCircuitBreaker);
-
-  if (!habercomboAvailable && !deepseekAvailable && !kiloAvailable) {
+  if (!canProceedWith(circuitBreaker)) {
     throw new Error(
-      "All LLM providers (HaberCombo, DeepSeek, Kilo) circuit breakers are OPEN or unconfigured. Please try again later.",
+      "LLM circuit breaker is OPEN. Please try again later or check Admin > LLM Provider.",
     );
   }
 
-  // Try HaberCombo first
-  if (habercomboAvailable) {
-    try {
-      return await callProvider("habercombo", messages, options);
-    } catch (habercomboError) {
-      const errMsg =
-        habercomboError instanceof Error
-          ? habercomboError.message
-          : String(habercomboError);
-
-      if (!deepseekAvailable && !kiloAvailable) {
-        throw new Error(`HaberCombo failed and no fallbacks available: ${errMsg}`);
-      }
-
-      console.warn(`⚠️ HaberCombo failed, falling back to DeepSeek: ${errMsg}`);
-    }
-  }
-
-  // Fallback to DeepSeek
-  if (deepseekAvailable) {
-    try {
-      return await callProvider("deepseek", messages, options);
-    } catch (deepseekError) {
-      const errMsg =
-        deepseekError instanceof Error
-          ? deepseekError.message
-          : String(deepseekError);
-
-      if (!kiloAvailable) {
-        throw new Error(`DeepSeek failed and Kilo Gateway unavailable: ${errMsg}`);
-      }
-
-      console.warn(`⚠️ DeepSeek failed, falling back to Kilo Gateway: ${errMsg}`);
-    }
-  }
-
-  // Last resort: Kilo Gateway
-  return callProvider("kilo", messages, options);
+  return callProvider(messages, options);
 }
 
 /**

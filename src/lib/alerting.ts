@@ -358,17 +358,13 @@ const alertRules: AlertRule[] = [
   {
     id: "circuit-breaker-open",
     name: "Circuit Breaker Open",
-    description: "DeepSeek API circuit breaker is open",
+    description: "LLM API circuit breaker is open",
     severity: "critical",
     cooldown: 10 * 60 * 1000, // 10 minutes
     check: async () => {
       const { getCircuitBreakerState } = await import("@/lib/deepseek");
       const state = getCircuitBreakerState();
-      return (
-        state.habercombo === "OPEN" &&
-        state.deepseek === "OPEN" &&
-        state.kilo === "OPEN"
-      );
+      return state.state === "OPEN";
     },
     action: async (alert) => {
       await defaultAlertAction(alert);

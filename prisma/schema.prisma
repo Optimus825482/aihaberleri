@@ -710,6 +710,22 @@ model CoverageRecoveryItem {
   @@index([jobId])
 }
 
+// =============================================
+// LLM Provider Configuration (Admin Panel)
+// =============================================
+model LlmProvider {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  baseUrl   String
+  apiKey    String
+  model     String
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
 enum SocialPlatform {
   FACEBOOK
   FACEBOOK_EN

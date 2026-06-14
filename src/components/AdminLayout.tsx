@@ -301,6 +301,13 @@ const menuGroups = [
         matchMode: "exact",
       },
       {
+        title: "LLM Provider",
+        href: "/admin/llm-provider",
+        icon: Bot,
+        requiredResource: "settings" as const,
+        matchMode: "exact",
+      },
+      {
         title: "Ayarlar",
         href: "/admin/settings",
         icon: Settings,

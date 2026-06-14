@@ -118,6 +118,7 @@ COPY --link --from=app-builder --chown=1001:1001 /app/src/lib/tts_engine.py ./sr
 COPY --link --from=app-builder --chown=1001:1001 /app/server.js ./server.js
 COPY --link --from=app-builder --chown=1001:1001 /app/package.json ./package.json
 COPY --link --from=app-builder --chown=1001:1001 /app/scripts ./scripts
+COPY --link --from=app-builder --chown=1001:1001 /app/migrations ./migrations
 
 COPY --from=app-builder --chown=1001:1001 /app/scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
@@ -161,7 +162,12 @@ RUN rm -rf node_modules/.cache 2>/dev/null || true && \
 COPY --link --chown=1001:1001 prisma ./prisma
 COPY --link --chown=1001:1001 src ./src
 COPY --link --chown=1001:1001 scripts/worker-healthcheck.js ./scripts/worker-healthcheck.js
+COPY --link --chown=1001:1001 scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --link --chown=1001:1001 scripts/run-sql-migrations.js ./scripts/run-sql-migrations.js
+COPY --link --chown=1001:1001 migrations ./migrations
 COPY --link --chown=1001:1001 tsconfig.json ./tsconfig.json
+
+RUN chmod +x /app/docker-entrypoint.sh
 
 ENV NODE_ENV=production \
     TSX_TSCONFIG_PATH="/app/tsconfig.json" \
@@ -170,4 +176,5 @@ ENV NODE_ENV=production \
 USER worker
 EXPOSE 3001
 
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["npx", "tsx", "src/workers/orchestrator.worker.ts"]
